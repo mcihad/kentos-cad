@@ -76,7 +76,7 @@ pub const MOUSE_ACTIONS: [(&str, &str); 19] = [
 ];
 
 /// Keys a running tool reads that no command is bound to (docs/adr/0268, 0271): their meaning, then the keys.
-pub const DRAWING_KEYS: [(&str, &str); 4] = [
+pub const DRAWING_KEYS: [(&str, &str); 6] = [
     (
         "Kenet adayları arasında ileri ve geri (imleç dururken)",
         "Tab / Shift+Tab",
@@ -92,6 +92,14 @@ pub const DRAWING_KEYS: [(&str, &str); 4] = [
     (
         "Sıcak tutamakta taban noktası, referans, kopya",
         "B / R / K",
+    ),
+    (
+        "Seçeneği adıyla seç: tam adı ya da başı (kopya, kop)",
+        "Adını yazıp Enter",
+    ),
+    (
+        "Komutu bitirmeden kaydır, yakınlaştır, ölç; Esc ya da Enter komuta döner",
+        "Kaydır / Pencere / Ölç",
     ),
 ];
 
@@ -249,6 +257,28 @@ impl App {
                 })
                 .collect();
             blocks.push((count, group(category, rows)));
+        }
+        // AutoCAD's names in the command line, or where to turn them on (docs/adr/0282).
+        let autocad: Vec<Element<'_, Message>> =
+            crate::alias_profile::shortcut_rows(self.autocad_names())
+                .into_iter()
+                .filter(|(what, how)| {
+                    query.is_empty()
+                        || fold_turkish(what).contains(&query)
+                        || fold_turkish(how).contains(&query)
+                })
+                .map(|(what, how)| {
+                    row![label::body(what).width(Fill), kbd(how)]
+                        .spacing(12)
+                        .align_y(Center)
+                        .into()
+                })
+                .collect();
+        if !autocad.is_empty() {
+            blocks.push((
+                autocad.len(),
+                group("AutoCAD adları (komut satırı)", autocad),
+            ));
         }
         // Two columns, the groups dealt to the shorter one (the web's grid).
         let (mut left, mut right) = (Column::new().spacing(18), Column::new().spacing(18));

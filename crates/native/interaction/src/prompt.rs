@@ -217,6 +217,36 @@ impl Prompt {
     /// The option a pressed letter chooses: its key exactly (Turkish upper
     /// case), else the same letter without Turkish marks, so `Çap (Ç)` also
     /// answers to C (the web's `optionForKey`).
+    /// The option a typed word names (docs/adr/0281): its label in full, Turkish marks and case aside
+    /// (`kopya`, `Olcekle`); with `starts`, also the start of one label only, two letters at least. Several
+    /// labels a start fits: `Err` with them. A word that is no label: `Ok(None)`.
+    pub fn option_for_word(
+        &self,
+        text: &str,
+        starts: bool,
+    ) -> Result<Option<&PromptOption>, Vec<&'static str>> {
+        let word = fold_tr(text.trim());
+        if word.chars().count() < 2 || !word.chars().all(|c| c.is_alphabetic() || c == ' ') {
+            return Ok(None);
+        }
+        if let Some(o) = self.options.iter().find(|o| fold_tr(o.label) == word) {
+            return Ok(Some(o));
+        }
+        if !starts {
+            return Ok(None);
+        }
+        let fit: Vec<&PromptOption> = self
+            .options
+            .iter()
+            .filter(|o| fold_tr(o.label).starts_with(&word))
+            .collect();
+        match fit.as_slice() {
+            [] => Ok(None),
+            [one] => Ok(Some(one)),
+            several => Err(several.iter().map(|o| o.label).collect()),
+        }
+    }
+
     pub fn option_for_key(&self, key: &str) -> Option<&PromptOption> {
         let key = upper_tr(key);
         self.options

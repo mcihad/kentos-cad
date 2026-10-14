@@ -1164,7 +1164,8 @@ impl App {
         // Every command; none is suggested while one runs: what is typed is
         // the running command's (line_commands).
         // The catalog's commands, then the user's models (borrowed from the library).
-        let mut commands: Vec<LineCommand<'_>> = all_line_commands().collect::<Vec<_>>();
+        let mut commands: Vec<LineCommand<'_>> =
+            all_line_commands(self.autocad_names()).collect::<Vec<_>>();
         commands.extend(self.model_line_commands());
         let line = line
             .commands(commands)
@@ -1942,7 +1943,7 @@ impl App {
         if self.session.is_running() {
             return Vec::new();
         }
-        all_line_commands().collect()
+        all_line_commands(self.autocad_names()).collect()
     }
 }
 
@@ -1960,12 +1961,24 @@ impl App {
     }
 }
 
-/// Every command as the command line lists it, made once.
-fn all_line_commands() -> impl Iterator<Item = LineCommand<'static>> {
+/// Every command as the command line lists it, made once; with AutoCAD's
+/// names too when that profile is on (alias_profile.rs, docs/adr/0282).
+fn all_line_commands(autocad: bool) -> impl Iterator<Item = LineCommand<'static>> {
     static ALL: std::sync::OnceLock<Vec<LineCommand<'static>>> = std::sync::OnceLock::new();
-    ALL.get_or_init(|| catalog().commands().iter().map(line_command).collect())
-        .iter()
-        .copied()
+    static AUTOCAD: std::sync::OnceLock<Vec<LineCommand<'static>>> = std::sync::OnceLock::new();
+    let list = if autocad {
+        AUTOCAD.get_or_init(|| {
+            catalog()
+                .commands()
+                .iter()
+                .map(|c| crate::alias_profile::line_command(c, line_command(c)))
+                .chain(crate::alias_profile::method_lines())
+                .collect()
+        })
+    } else {
+        ALL.get_or_init(|| catalog().commands().iter().map(line_command).collect())
+    };
+    list.iter().copied()
 }
 
 fn line_command(command: &Command) -> LineCommand<'static> {

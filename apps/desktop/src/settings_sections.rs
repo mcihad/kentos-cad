@@ -77,7 +77,7 @@ impl Section {
     pub fn lead(self) -> &'static str {
         match self {
             Self::Appearance => {
-                "Tema, vurgu rengi, yazı tipi, yazı boyutu, çizim zemini, artı imleç, coğrafi koordinatlar ve fare yardımcıları."
+                "Tema, vurgu rengi, yazı tipi, yazı boyutu, çizim zemini, artı imleç, coğrafi koordinatlar, fare yardımcıları ve komut satırının AutoCAD adları."
             }
             Self::Snap => {
                 "İmlecin hangi noktalara yapışacağı ve nesneleri ne kadar yakından yakalayacağı; bu oturumun çizim yardımcıları."
@@ -111,6 +111,7 @@ impl Section {
                 "drafting.cursorInput",
                 "drafting.commandBar",
                 "drafting.hoverInfo",
+                "drafting.autocadAliases",
                 "appearance.startScreen",
             ],
             Self::Snap => &[
@@ -433,6 +434,12 @@ impl App {
         ]
         .into_iter()
         .fold(rest, |form, key| f.switch_field(form, key, None));
+        // AutoCAD's names in the command line (alias_profile.rs, docs/adr/0282).
+        let rest = f.switch_field(
+            rest.section("Komut satırı"),
+            crate::alias_profile::SETTING,
+            None,
+        );
         let rest = f.switch_field(rest.section("Açılış"), "appearance.startScreen", None);
         column![theme, accent, typeface, rest].spacing(18).into()
     }

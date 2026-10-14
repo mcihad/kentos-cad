@@ -216,6 +216,15 @@ impl App {
             return Task::none();
         }
         self.field = None;
+        // Kaydır, Pencere yakınlaştır and the measures run over a running command
+        // and give it back as it was (docs/adr/0283): its template's run goes on.
+        if self.session.can_start_over(id) {
+            if self.with_tool(|s, cx| s.start_over(id, cx)) == Some(true) {
+                let name = self.tool_name(id);
+                self.say(Level::Command, name);
+            }
+            return Task::none();
+        }
         // Another command ends an object template's run (docs/adr/0176 §3).
         self.release_template();
         if self.session.start(id) {
@@ -226,24 +235,30 @@ impl App {
                 self.last_template = None;
             }
             // The web logs the tool as a command, by its name (`ToolManager.activate`).
-            let command = catalog().get(&format!("tool.{id}")).or_else(|| {
-                // Koordinat oku and XYZ sor are menu commands, not `tool.<id>`.
-                match id {
-                    kentos_interaction::coordinate::ID => catalog().get("crs.query"),
-                    kentos_interaction::cloud_query::ID => catalog().get("pointcloud.query"),
-                    _ => None,
-                }
-            });
-            // A tool with no command of its own says its own name, never its id.
-            let name = command
-                .map(|command| command.title)
-                .or_else(|| self.session.label())
-                .unwrap_or(id);
+            let name = self.tool_name(id);
             self.say(Level::Command, name);
             // It may act at once: the erase tool deletes a selection and leaves.
             self.with_tool(|s, cx| s.activate(cx));
         }
         Task::none()
+    }
+
+    /// A started tool's name as the log says it: its command's title; a tool
+    /// with no command of its own says its own name, never its id.
+    fn tool_name(&self, id: &str) -> String {
+        let command = catalog().get(&format!("tool.{id}")).or_else(|| {
+            // Koordinat oku and XYZ sor are menu commands, not `tool.<id>`.
+            match id {
+                kentos_interaction::coordinate::ID => catalog().get("crs.query"),
+                kentos_interaction::cloud_query::ID => catalog().get("pointcloud.query"),
+                _ => None,
+            }
+        });
+        command
+            .map(|command| command.title)
+            .or_else(|| self.session.label())
+            .unwrap_or(id)
+            .to_owned()
     }
 
     /// `tool.select`: back to selecting; the running command's draft is
@@ -1061,8 +1076,11 @@ impl App {
         label: &str,
     ) -> Task<Message> {
         let task = self.run(id);
-        let started =
-            self.session.is_running() && id.strip_prefix("tool.") == Some(self.session.tool_id());
+        // A transparent tool run over a command is the one started (docs/adr/0283).
+        let started = id.strip_prefix("tool.").is_some_and(|tool| {
+            self.session.top_id() == Some(tool)
+                || (self.session.is_running() && self.session.tool_id() == tool)
+        });
         if started && self.with_tool(|s, cx| s.input(option, cx)) != Some(true) {
             let title = catalog().get(id).map_or(id, |command| command.title);
             self.warn(crate::ribbon_plan::texts::cannot_start(title, label));

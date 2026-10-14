@@ -509,7 +509,9 @@ impl Viewport {
             // The app fits the store's box (`App::zoom_extents`); this is its objects' boxes.
             Event::Extents => {
                 if let Some(extents) = doc.and_then(scene::extents) {
+                    let at = self.cursor.map(|c| self.camera.world_to_screen(c));
                     self.camera.fit(&extents, FIT_PADDING);
+                    self.cursor = at.map(|[x, y]| self.camera.screen_to_world(x, y));
                 }
             }
             Event::CenterOn(p) => self.camera.center_on(p),
@@ -914,7 +916,10 @@ impl Viewport {
     /// 1:500 000; docs/adr/0165 §3.)
     pub fn show(&mut self, b: &Bounds) {
         if self.sized {
+            // The pointer stays where it is on the area, as with any view change.
+            let at = self.cursor.map(|c| self.camera.world_to_screen(c));
             self.camera.fit(b, FIT_PADDING);
+            self.cursor = at.map(|[x, y]| self.camera.screen_to_world(x, y));
         } else {
             self.fit_pending = true;
             self.opened_extent = Some(*b);
