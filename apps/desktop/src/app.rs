@@ -2593,9 +2593,12 @@ impl App {
             return task;
         }
         let folded = fold(text);
-        let found = catalog().commands().iter().find(|c| {
-            c.aliases.iter().any(|a| fold(a) == folded) || fold(c.title) == folded || c.id == text
-        });
+        // A full name first: an alias, a title (docs/adr/0281).
+        let named = crate::typed_names::named(text, self.sheet_tab);
+        let found = match &named {
+            crate::typed_names::Named::One(command, false) => Some(*command),
+            _ => None,
+        };
         // A model of the user's, by its name (“Parsel ölçüleri”, “Parsel ölçüleri…”).
         let model = found.is_none().then(|| {
             self.user_models()
@@ -2610,6 +2613,21 @@ impl App {
             self.remember(text);
             return self.processing_command(&format!("processing.model.{id}"));
         }
+        // The start of one command's name runs it, said; a name or start several share is said with them.
+        let found = match named {
+            crate::typed_names::Named::One(command, true) => {
+                self.output(format!("“{text}”: {}.", command.title));
+                Some(command)
+            }
+            crate::typed_names::Named::Several(commands) => {
+                self.error(format!(
+                    "“{text}” birden çok komutu anlatıyor: {}. Komutun adını tam yazın.",
+                    crate::typed_names::candidates(&commands)
+                ));
+                return Task::none();
+            }
+            _ => found,
+        };
         match found {
             Some(command) => {
                 // As on the web (`CommandLine.run`): the line's ↑ brings it back; the

@@ -1621,6 +1621,63 @@ enum RawEntry {
 
 #[cfg(test)]
 mod tests {
+    /// Each typed name (a command's alias or title, a method's alias) names one command or one method
+    /// (docs/adr/0281): the command line runs what it names, never the first of several.
+    #[test]
+    fn no_typed_name_names_two_things() {
+        use std::collections::BTreeMap;
+        let mut names: BTreeMap<String, Vec<String>> = BTreeMap::new();
+        // A name means one thing in its context: the sheet designer's commands apart from the drawing's.
+        let key = |id: &str, name: String| {
+            if id.starts_with("sheet.") {
+                format!("pafta: {name}")
+            } else {
+                name
+            }
+        };
+        for c in super::catalog().commands() {
+            let mut own: Vec<String> = c.aliases.iter().map(|a| crate::app::fold(a)).collect();
+            own.sort();
+            own.dedup();
+            for name in own {
+                names
+                    .entry(key(c.id, name))
+                    .or_default()
+                    .push(c.id.to_owned());
+            }
+        }
+        for tab in super::catalog().every_tab() {
+            for panel in &tab.panels {
+                for item in &panel.items {
+                    if let super::Item::Split { entries, .. } = item {
+                        for e in entries.iter().filter(|e| e.option.is_some()) {
+                            for a in e.aliases {
+                                let at = format!("{} {}", e.id, e.option.unwrap_or(""));
+                                let list = names.entry(crate::app::fold(a)).or_default();
+                                if !list.contains(&at) {
+                                    list.push(at);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // A tool and its own method by the method's name are one thing: the method is meant.
+        let base = |id: &String| id.split(' ').next().unwrap_or("").to_owned();
+        let clashes: Vec<String> = names
+            .into_iter()
+            .filter(|(_, ids)| ids.iter().any(|id| base(id) != base(&ids[0])))
+            .map(|(name, ids)| format!("{name}: {}", ids.join(", ")))
+            .collect();
+        assert!(
+            clashes.is_empty(),
+            "{} names name several:\n{}",
+            clashes.len(),
+            clashes.join("\n")
+        );
+    }
+
     use super::*;
     use std::path::PathBuf;
 

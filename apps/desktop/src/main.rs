@@ -185,6 +185,7 @@ mod settings_view;
 mod sub_object;
 #[cfg(test)]
 mod subref_scenes;
+mod typed_names;
 mod ucs;
 #[cfg(test)]
 mod ucs_scenes;

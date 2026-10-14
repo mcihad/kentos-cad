@@ -6,10 +6,10 @@
 //! docs/adr/0272's: Koordinat oku on a parcel's corner, the log saying the snap's object and place; docs/adr/0274's:
 //! inside a room block turned 30°, the midpoint of a nested, mirrored door's swing; docs/adr/0276's: a Ctrl click
 //! on a parcel's corner where a wall crosses it (the corner ringed, the log saying the parcel's id and corner, the
-//! chip for the wall), and the shortcuts window with Ctrl + tık and the drawing keys; docs/adr/0279's: the grip menu of a parcel's corner; docs/adr/0280's: two hot corners turning the parcel. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
+//! chip for the wall), and the shortcuts window with Ctrl + tık and the drawing keys; docs/adr/0279's: the grip menu of a parcel's corner; docs/adr/0280's: two hot corners turning the parcel; docs/adr/0281's: an ambiguous start and a start of one command typed. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma,kenet-oku,kenet-blok-ici,secim-alt-nesne,kisayollar,tutamac-menusu,tutamac-kipleri cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma,kenet-oku,kenet-blok-ici,secim-alt-nesne,kisayollar,tutamac-menusu,tutamac-kipleri,komut-adlari cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -323,6 +323,14 @@ fn grip_mode_keys(app: &mut App) {
     }));
 }
 
+/// docs/adr/0281: names typed in the command line: “ci” several commands start with (said with them), “orta ha”
+/// the start of Orta hat only (run, said), and in it “Adım” by its name.
+fn typed_names(app: &mut App) {
+    sub_ground(app);
+    let _ = app.run_typed("ci");
+    let _ = app.run_typed("orta ha");
+}
+
 /// The shortcuts window, opened from Yardım.
 fn shortcut_list(app: &mut App) {
     open(app, Objects::new());
@@ -336,6 +344,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("kisayollar", shortcut_list),
         ("tutamac-menusu", grip_menu),
         ("tutamac-kipleri", grip_modes),
+        ("komut-adlari", typed_names),
         ("kenet-blok-ici", in_blocks),
         ("kenet-oku", reading),
         ("kenet-dolasma", cycling),

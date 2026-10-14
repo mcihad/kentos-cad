@@ -350,6 +350,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   Köşe ekle/sil aracı onunla yazar (ADR 0279);
   tutamaç kipleri: Shift ile birden çok sıcak tutamaç, E Esnet, T Taşı, D Döndür, L Ölçekle, A Aynala, B taban noktası, R referans,
   K kopya (ADR 0280);
+  yazılan adlar: seçenek adıyla ya da adının başıyla, komut satırında bağlama göre tam ad ve tekil kısaltma, belirsiz olan adaylarıyla
+  söylenir; takma ad ve seçenek harfi çakışmaları testte (ADR 0281);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);

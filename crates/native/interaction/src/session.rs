@@ -45,7 +45,7 @@ use crate::path::{self, Path};
 use crate::perpendicular::{self, Perpendicular};
 use crate::point::{self, Point};
 use crate::polar::{self, Polar};
-use crate::prompt::Prompt;
+use crate::prompt::{Prompt, fold_tr};
 use crate::rectangle::{self, Rectangle};
 use crate::regular::{self, RegularPolygon};
 use crate::reshape::{self, Reshape};
@@ -1286,13 +1286,66 @@ impl Session {
             self.set_reference(p, cx);
             return true;
         }
+        // An option by its name in full (docs/adr/0281): “kopya” is K. A tool taking words (a style's
+        // name) reads the text first.
+        let words = self.takes_words();
+        if !words && let Some(taken) = self.option_word(text, false, cx) {
+            return taken;
+        }
         let taken = match self.tool.as_mut() {
             Some(tool) => tool.input(text, cx),
             // A typed point places a grip being moved.
             None => self.select.input(text, cx),
         };
         self.settle(cx);
-        taken
+        if taken {
+            return true;
+        }
+        // Then the start of one option's name (“kop”); a start several fit is said with them.
+        self.option_word(text, true, cx).unwrap_or(false)
+    }
+
+    /// The running command's (or a hot grip's) option a typed word names, sent as its key: Enter's
+    /// confirms, Esc's cancels. `None` when the word names none.
+    fn option_word(&mut self, text: &str, starts: bool, cx: &mut Context<'_>) -> Option<bool> {
+        if self.tool.is_none() && !self.select.grip_active() {
+            return None;
+        }
+        let prompt = self.prompt();
+        let key = match prompt.option_for_word(text, starts) {
+            Ok(Some(o)) => o.key,
+            Ok(None) => return None,
+            Err(labels) => {
+                cx.say(
+                    Level::Warn,
+                    format!(
+                        "“{}” birden çok seçeneğin başı: {}. Seçeneğin adını tam yazın ya da harfine basın.",
+                        text.trim(),
+                        labels.join(", ")
+                    ),
+                );
+                return Some(true);
+            }
+        };
+        // The word is the key itself (a one-letter key typed as a word is the tool's).
+        if fold_tr(text.trim()) == fold_tr(key) {
+            return None;
+        }
+        Some(match key {
+            "Enter" => {
+                self.confirm(cx);
+                true
+            }
+            "Esc" => self.cancel(cx),
+            key => {
+                let taken = match self.tool.as_mut() {
+                    Some(tool) => tool.input(key, cx),
+                    None => self.select.input(key, cx),
+                };
+                self.settle(cx);
+                taken
+            }
+        })
     }
 
     /// `#ad` typed where a point is asked (docs/adr/0152 §4; the web's
