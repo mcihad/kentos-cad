@@ -404,6 +404,21 @@
       "apply": "live"
     },
     {
+      "key": "snap.insertion",
+      "type": "boolean",
+      "default": true,
+      "scope": "user",
+      "hosts": [
+        "desktop"
+      ],
+      "version": 1,
+      "group": "snap",
+      "title": "Ekleme noktası",
+      "description": "Yazının, blok yerleştirmesinin ve tablonun ekleme noktası.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
       "key": "snap.intersection",
       "type": "boolean",
       "default": true,

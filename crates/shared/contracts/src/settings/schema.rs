@@ -234,6 +234,14 @@ fn settings() -> Vec<SettingDescriptor> {
             "Nokta",
             "Poligon, kot ve tekil noktalar.",
         ),
+        // docs/adr/0269 §1: the desktop's (the web reads the insertion points as Nokta).
+        snap_kind(
+            "snap.insertion",
+            true,
+            "Ekleme noktası",
+            "Yazının, blok yerleştirmesinin ve tablonun ekleme noktası.",
+        )
+        .hosts(&[Desktop]),
         snap_kind(
             "snap.intersection",
             true,

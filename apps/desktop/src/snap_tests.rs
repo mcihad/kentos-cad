@@ -82,8 +82,8 @@ fn down(n: usize, then: &[Named]) -> Vec<Named> {
 }
 
 /// The menu's items taken with the arrows and Enter (its texts are drawn
-/// above the widgets, where `find_text` does not look): the ninth kind,
-/// Ağırlık merkezi, ticked; Karelaj aralığı ▸ (the fourteenth item), its
+/// above the widgets, where `find_text` does not look): the tenth kind,
+/// Ağırlık merkezi, ticked; Karelaj aralığı ▸ (the fifteenth item), its
 /// third spacing, 0.5 m, chosen, which turns Karelaj on.
 #[test]
 fn the_cells_menu_ticks_a_kind_and_chooses_a_spacing() {
@@ -95,7 +95,7 @@ fn the_cells_menu_ticks_a_kind_and_chooses_a_spacing() {
     let on = |app: &App, kind: SnapKind| app.draft.snap_kinds & kind.bit() != 0;
     assert!(!on(&app, SnapKind::Centroid));
     press(&mut snapshot, &mut app, cell.center(), mouse::Button::Right);
-    keys(&mut snapshot, &mut app, &down(9, &[Enter]));
+    keys(&mut snapshot, &mut app, &down(10, &[Enter]));
     assert!(on(&app, SnapKind::Centroid), "Ağırlık merkezi ticked");
     assert!(
         app.draft.snap,
@@ -105,7 +105,7 @@ fn the_cells_menu_ticks_a_kind_and_chooses_a_spacing() {
     keys(
         &mut snapshot,
         &mut app,
-        &down(14, &[ArrowRight, Named::ArrowDown, Named::ArrowDown, Enter]),
+        &down(15, &[ArrowRight, Named::ArrowDown, Named::ArrowDown, Enter]),
     );
     assert_eq!(app.draft.snap_grid, [0.5, 0.5]);
     assert!(on(&app, SnapKind::Grid), "a spacing turns Karelaj on");

@@ -24,7 +24,7 @@ use crate::settings::schema;
 use crate::settings_sections::Section;
 
 /// The settings the window shows, in its order.
-pub const KEYS: [&str; 52] = [
+pub const KEYS: [&str; 53] = [
     "drafting.ortho",
     "drafting.polar",
     "drafting.polarIncrement",
@@ -38,6 +38,7 @@ pub const KEYS: [&str; 52] = [
     "snap.midpoint",
     "snap.center",
     "snap.node",
+    "snap.insertion",
     "snap.intersection",
     "snap.perpendicular",
     "snap.tangent",
@@ -80,11 +81,12 @@ pub const KEYS: [&str; 52] = [
 ];
 
 /// The snap kinds, in the web's order (docs/adr/0029, 0163).
-pub(crate) const SNAP_KINDS: [&str; 12] = [
+pub(crate) const SNAP_KINDS: [&str; 13] = [
     "snap.endpoint",
     "snap.midpoint",
     "snap.center",
     "snap.node",
+    "snap.insertion",
     "snap.intersection",
     "snap.perpendicular",
     "snap.tangent",

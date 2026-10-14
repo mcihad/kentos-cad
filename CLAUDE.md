@@ -339,6 +339,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   çizim yardımlarının önceliği: koordinat kilidi, doğrultu kilidi, Dik açı, kenet ve izleme, Orto, kutupsal izleme (`Aid`,
   `Session::ruling_aid`); Orto ve kutupsal birbirini kapatmaz, Orto önce gelir; Shift ve F8/F10 önizlemeyi hemen yeniler, durum
   çubuğunda Orto'nun geçici hâli ve kutupsalın askısı; izlerin `hold` adımı ve `aid` beklentisi (ADR 0268);
+  kenet türlerinin kapsam matrisi (`snap_coverage_cases.py`), Ekleme noktası türü (yazı, blok, tablo; `snap.insertion`), yayın ve yaylı
+  kenarın çeyrekleri, tek seferlik Merkez'de eğrinin üstünden merkez (ADR 0269);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş

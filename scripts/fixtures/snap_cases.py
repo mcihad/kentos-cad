@@ -61,7 +61,7 @@ OUT = ROOT / "fixtures" / "snap" / "v1" / "cases.json"
 mp.mp.dps = 50
 
 KINDS = ["endpoint", "midpoint", "center", "node", "quadrant", "intersection", "perpendicular", "tangent", "nearest",
-         "centroid", "extension", "parallel", "grid"]
+         "centroid", "extension", "parallel", "grid", "insertion"]
 WEIGHT = {"endpoint": 1, "node": 1, "intersection": F(102, 100), "center": F(108, 100), "centroid": F(108, 100),
           "midpoint": F(115, 100), "extension": 2, "parallel": 2}
 E0, N0 = 487000, 4420000

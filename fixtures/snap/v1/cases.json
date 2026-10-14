@@ -15,7 +15,8 @@
   "centroid",
   "extension",
   "parallel",
-  "grid"
+  "grid",
+  "insertion"
  ],
  "snap": [
   {

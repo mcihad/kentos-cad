@@ -48,6 +48,7 @@ pub fn snap_label(kind: SnapKind) -> &'static str {
         SnapKind::Extension => "Uzantı",
         SnapKind::Parallel => "Paralel",
         SnapKind::Grid => "Karelaj",
+        SnapKind::Insertion => "Ekleme noktası",
     }
 }
 
@@ -67,6 +68,7 @@ pub fn snap_name(kind: SnapKind) -> &'static str {
         SnapKind::Extension => "extension",
         SnapKind::Parallel => "parallel",
         SnapKind::Grid => "grid",
+        SnapKind::Insertion => "insertion",
     }
 }
 
@@ -894,6 +896,11 @@ fn snap_marker(
                 b.move_to(p(-5.0, d));
                 b.line_to(p(5.0, d));
             }
+        }
+        // docs/adr/0269 §1: two squares, one over the other's corner (AutoCAD's insertion mark).
+        SnapKind::Insertion => {
+            b.rectangle(p(-6.0, -6.0), Size::new(7.0, 7.0));
+            b.rectangle(p(-1.0, -1.0), Size::new(7.0, 7.0));
         }
         SnapKind::Endpoint => b.rectangle(p(-5.0, -5.0), Size::new(10.0, 10.0)),
     });

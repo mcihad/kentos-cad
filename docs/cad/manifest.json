@@ -1397,6 +1397,20 @@
    "tests": 3
   },
   {
+   "id": "draft.snap.insertion",
+   "kind": "command",
+   "title": "Ekleme noktası",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Çizim yardımcıları oturumun durumu.",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "draft.snap.intersection",
    "kind": "command",
    "title": "Kenet: Kesişim",

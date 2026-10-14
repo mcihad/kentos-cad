@@ -364,6 +364,7 @@ pub fn snap_kinds(on: impl Fn(&str) -> bool) -> u32 {
         ("snap.extension", SnapKind::Extension),
         ("snap.parallel", SnapKind::Parallel),
         ("snap.grid", SnapKind::Grid),
+        ("snap.insertion", SnapKind::Insertion),
     ] {
         if on(key) {
             kinds |= kind.bit();

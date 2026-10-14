@@ -165,6 +165,9 @@ Liste:
 - [ ] `CAD-INPUT-01` (ADR 0266, 14 Ekim): web'de gerekenler: `coordinateInput.ts`'in metrik birimli uzunluğu (`2.5m`, `250cm`) ve
   parantezli toplamı (`fixtures/point-input/v1`'in 22 yeni satırı), `looksLikeCoordinate`'in `(`'u ve araçların uzunluk alanlarının
   birimli ve toplamlı okunması; web'in iz oynatıcısı `value-entry.json`'u geçmeli (`(`, `)`, `*` tuşları, Tab'ın birimli kilidi).
+- [ ] `CAD-INPUT-05` (ADR 0269, 14 Ekim): web'de gerekenler: WASM'ın kenet türü adlarına `insertion` (bit 13), `snap.insertion` ayarı ve
+  Kenet menüsünde Ekleme noktası, işareti (iki kare), `snapInsertion` ikonu; çekirdeğin yayın çeyrekleri ve tek seferlik Merkez'in eğrinin
+  üstünden gelmesi WASM'la kendiliğinden gelir; web'in donmuş `store-v1.json` yanıtları Nokta'yı Ekleme noktasıyla eşler.
 - [ ] `CAD-INPUT-04` (ADR 0268, 14 Ekim): web'de gerekenler: `tools/` noktalarının yardım önceliği (`Aid`), Shift'e basmak ve bırakmakla
   F8/F10'da önizlemenin imleç kımıldamadan yenilenmesi, `StatusBar.ts`'te Orto hücresinin Shift'li hâli ve Kutupsal'ın Orto açıkken
   `data-out`'u; web'in iz oynatıcısı `hold` adımını ve `aid` beklentisini okumalı, `aid-priority.json`'u geçmeli.
