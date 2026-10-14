@@ -12,7 +12,7 @@ use kentos_contracts::{
     EntitiesSetProperties, EntitiesStretch, EntitiesTransform, EntitiesTrim, EntitiesVertex,
     ImportDxf, LabelsPin, LayersCompose, LayersEdit, LayersFilter, LayersInfo, LayersLabels,
     LayersRenderer, LayersService, LayersSet, LayersStates, LayersTime, LineCreate, NetworkDefine,
-    NurbsCreate, PointCreate, PointsConstruct, PolygonCreate, PolylineCreate, RectangleCreate,
+    NurbsCreate, PointCreate, PointsConstruct, CurvesConstruct, PolygonCreate, PolylineCreate, RectangleCreate,
     RegularPolygonCreate, ScenariosEdit, SettingsSet, SheetsEdit, SnapFind, StylesEdit, UcsSet,
     UnitsChange, ViewsEdit, codes,
 };
@@ -25,7 +25,7 @@ use crate::{
     entities_hatch, entities_join, entities_order, entities_pick, entities_select, entities_trim,
     entities_vertex, file_import, labels_pin, layers_compose, layers_edit, layers_filter,
     layers_info, layers_labels, layers_renderer, layers_service, layers_set, layers_states,
-    layers_time, line, network_define, nurbs, offset, point, points_construct, polygon,
+    layers_time, line, network_define, nurbs, offset, point, points_construct, curves_construct, polygon,
     polygon_regular, polyline, rectangle_create, scenarios_edit, set, settings_set, sheets_edit,
     snap_find, stretch, styles_edit, transform, ucs_set, units_change, views_edit,
 };
@@ -91,6 +91,7 @@ macro_rules! by_command {
             kentos_contracts::CAD_NETWORK_DEFINE => $then!(network_define, NetworkDefine),
             kentos_contracts::CAD_ENTITIES_OFFSET => $then!(offset, EntitiesOffset),
             kentos_contracts::CAD_POINTS_CONSTRUCT => $then!(points_construct, PointsConstruct),
+            kentos_contracts::CAD_CURVES_CONSTRUCT => $then!(curves_construct, CurvesConstruct),
             kentos_contracts::CAD_SNAP_FIND => $then!(snap_find, SnapFind),
             kentos_contracts::CAD_ENTITIES_SELECT => $then!(entities_select, EntitiesSelect),
             kentos_contracts::CAD_ENTITIES_PICK => $then!(entities_pick, EntitiesPick),

@@ -15,19 +15,19 @@
 //! (lines, polylines, closed areas, arcs, circles, construction lines) from
 //! the geometry store; snaps are off while picking. Every circle is written
 //! through `cad.circle.create`, its own object and undo step, and says “Daire
-//! eklendi: r = …”. The circle of each method, the tangent picks' edges and
-//! the previews are the shared core's (`kentos-geometry-core`); none is
-//! computed here.
+//! eklendi: r = …”. The circle of 2N, 3N, TTY and TTT is
+//! `cad.curves.construct`'s (docs/adr/0289), which refuses with the words the
+//! tool says; the previews are the same core's.
 
-use kentos_contracts::CircleCreate;
+use kentos_contracts::{CircleCreate, ConstructedCurve, CurveConstruction, EdgeNear, MeasuredPoint};
 use kentos_geometry_core::entity::tessellate_circle;
-use kentos_geometry_core::geom::arc::{Circle as Round, circle_through};
+use kentos_geometry_core::geom::arc::Circle as Round;
 use kentos_geometry_core::geom::intersect::Edge;
-use kentos_geometry_core::geom::tangent_circle::{tangent_tangent_radius, tangent_tangent_tangent};
+use kentos_geometry_core::geom::tangent_circle::tangent_tangent_radius;
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::ops::edges::nearest_edge;
-use kentos_geometry_core::tools::drawing::circle_on_diameter;
 use kentos_geometry_core::tools::point_text::js_trim;
+use kentos_native_application::curves_construct::{curve, curve_at};
 use kentos_native_application::{ExecutionContext, circle};
 
 use crate::Vec2;
@@ -60,11 +60,37 @@ enum Mode {
     Ttt,
 }
 
-/// An object picked for a tangent circle: its nearest edge and where it was clicked.
-#[derive(Clone, Copy, Debug, PartialEq)]
+/// An object picked for a tangent circle: its persistent id, its nearest edge (for the preview) and where it
+/// was clicked.
+#[derive(Clone, Debug, PartialEq)]
 struct TangentPick {
+    uid: String,
     edge: Edge,
     pick: Vec2,
+}
+
+impl TangentPick {
+    fn near(&self) -> EdgeNear {
+        EdgeNear {
+            uid: self.uid.clone(),
+            near: wire(self.pick),
+        }
+    }
+}
+
+fn at(p: Vec2) -> MeasuredPoint {
+    MeasuredPoint::At { at: wire(p) }
+}
+
+/// The circle of a construction's answer.
+fn round_of(c: &ConstructedCurve) -> Option<Round> {
+    match *c {
+        ConstructedCurve::Circle { c, r } => Some(Round {
+            c: Vec2::new(c.x, c.y),
+            r,
+        }),
+        _ => None,
+    }
 }
 
 /// The circle tool.
@@ -130,19 +156,17 @@ impl Circle {
                 self.commit(a, r, cx);
             }
             (Mode::Two, Some(b), _) => {
-                let round = circle_on_diameter(a, b);
-                self.commit(round.c, round.r, cx);
+                let c = CurveConstruction::CircleTwoPoints { a: at(a), b: at(b) };
+                self.construct(&c, cx);
             }
-            (Mode::Three, Some(b), Some(c)) => match circle_through(a, b, c) {
-                Some(round) => self.commit(round.c, round.r, cx),
-                None => {
-                    cx.say(
-                        Level::Warn,
-                        "Üç nokta aynı doğru üzerinde; daire çizilemez.",
-                    );
-                    self.d.pts.clear();
-                }
-            },
+            (Mode::Three, Some(b), Some(c)) => {
+                let c = CurveConstruction::CircleThreePoints {
+                    a: at(a),
+                    b: at(b),
+                    c: at(c),
+                };
+                self.construct(&c, cx);
+            }
             _ => {}
         }
     }
@@ -203,38 +227,61 @@ impl Circle {
         let Some(edge) = nearest_edge(&record(entity).3, p.raw) else {
             return;
         };
-        self.tangents.push(TangentPick { edge, pick: p.raw });
+        let Some(uid) = cx.doc.uid(kentos_domain::Slot(entity.base().id)) else {
+            return;
+        };
+        self.tangents.push(TangentPick {
+            uid: uid.to_string(),
+            edge,
+            pick: p.raw,
+        });
         if self.mode == Mode::Ttt && self.tangents.len() == 3 {
             let t = std::mem::take(&mut self.tangents);
-            match tangent_tangent_tangent(
-                &[t[0].edge, t[1].edge, t[2].edge],
-                &[t[0].pick, t[1].pick, t[2].pick],
-            ) {
-                Some(round) => self.commit(round.c, round.r, cx),
-                None => cx.say(
-                    Level::Warn,
-                    "Üç nesneye birden teğet bir daire bulunamadı; nesnelere teğet noktalarının yakınından tıklayın.",
-                ),
+            let c = CurveConstruction::CircleTangents {
+                first: t[0].near(),
+                second: t[1].near(),
+                third: t[2].near(),
+            };
+            self.construct(&c, cx);
+        }
+    }
+
+    /// Writes the circle `cad.curves.construct` gives for `c` (docs/adr/0289); when it gives none, says its
+    /// words. The draft's points go either way; whether one was written.
+    fn construct(&mut self, c: &CurveConstruction, cx: &mut Context<'_>) -> bool {
+        match curve(cx.doc, c).map(|curve| round_of(&curve)) {
+            Ok(Some(round)) => {
+                self.commit(round.c, round.r, cx);
+                true
+            }
+            Ok(None) => false,
+            Err(why) => {
+                cx.say(Level::Warn, why);
+                self.d.pts.clear();
+                false
             }
         }
     }
 
-    /// The circle of radius `r` touching the two picked objects.
+    /// The circle of radius `r` touching the two picked objects, for the preview: the command's core.
     fn ttr_circle(&self, r: f64) -> Option<Round> {
         let [t1, t2] = [self.tangents.first()?, self.tangents.get(1)?];
         tangent_tangent_radius(&t1.edge, t1.pick, &t2.edge, t2.pick, r)
     }
 
+    /// TTY's circle through the command; the picks stay when it gives none, for another radius.
     fn commit_tangent(&mut self, r: f64, cx: &mut Context<'_>) {
-        let Some(round) = self.ttr_circle(r) else {
-            cx.say(
-                Level::Warn,
-                "Bu yarıçapla iki nesneye birden teğet bir daire yok.",
-            );
+        let (Some(t1), Some(t2)) = (self.tangents.first(), self.tangents.get(1)) else {
             return;
         };
-        self.tangents.clear();
-        self.commit(round.c, round.r, cx);
+        let c = CurveConstruction::CircleTangentTangentRadius {
+            first: t1.near(),
+            second: t2.near(),
+            r,
+        };
+        if self.construct(&c, cx) {
+            self.tangents.clear();
+        }
     }
 
     /// Writes the circle through `cad.circle.create` (docs/adr/0032) and
@@ -455,6 +502,7 @@ impl Tool for Circle {
             return points::chain_preview(&self.d, format);
         };
         let b = self.d.pts.get(1).copied();
+        let built = |c: CurveConstruction| curve_at(&c).ok().as_ref().and_then(round_of);
         let round = match (self.mode, b) {
             (Mode::Center, _) => Some(Round {
                 c: a,
@@ -464,8 +512,12 @@ impl Tool for Circle {
                     dist(a, h)
                 },
             }),
-            (Mode::Two, _) => Some(circle_on_diameter(a, h)),
-            (_, Some(b)) => circle_through(a, b, h),
+            (Mode::Two, _) => built(CurveConstruction::CircleTwoPoints { a: at(a), b: at(h) }),
+            (_, Some(b)) => built(CurveConstruction::CircleThreePoints {
+                a: at(a),
+                b: at(b),
+                c: at(h),
+            }),
             _ => None,
         };
         let Some(round) = round else {

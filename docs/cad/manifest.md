@@ -17,8 +17,8 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 48 | 93 | 38 | 38 | 217 |
-| geometry | 20 | 82 | 0 | 8 | 110 |
+| semantic | 48 | 109 | 38 | 38 | 233 |
+| geometry | 20 | 66 | 0 | 8 | 94 |
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 20 | 0 | 6 | 26 |
 | query | 0 | 21 | 1 | 4 | 26 |
@@ -31,9 +31,9 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 494 satırdan 153'i: geometry 102, none 20, processing 13, query 18.
+CBS'ye özgü olmayan 494 satırdan 137'i: geometry 86, none 20, processing 13, query 18.
 
-### Sonucu çağıran hesaplar (geometry) — 102
+### Sonucu çağıran hesaplar (geometry) — 86
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -51,27 +51,11 @@ CBS'ye özgü olmayan 494 satırdan 153'i: geometry 102, none 20, processing 13,
 | `table.update` | Tabloyu güncelle | cad | cad.entities.edit `tableUpdate` |  |
 | `text.findReplace` | Bul ve değiştir | shared | cad.entities.edit `replaceText` |  |
 | `tool.adjoin` | Bitişik alan | shared | cad.entities.create `adjoin` |  |
-| `tool.arc` | Yay | shared | cad.arc.create | cad.arc.create merkez, yarıçap ve açılar ister; araç bunları tıklamalardan hesaplar. |
-| `tool.arc#3 nokta` | Yay: 3 nokta | shared | cad.arc.create |  |
-| `tool.arc#Başlangıç, bitiş, açı` | Yay: Başlangıç, bitiş, açı | shared | cad.arc.create |  |
-| `tool.arc#Başlangıç, bitiş, yarıçap` | Yay: Başlangıç, bitiş, yarıçap | shared | cad.arc.create |  |
-| `tool.arc#Başlangıç, bitiş, yön` | Yay: Başlangıç, bitiş, yön | shared | cad.arc.create |  |
-| `tool.arc#Başlangıç, merkez, açı` | Yay: Başlangıç, merkez, açı | shared | cad.arc.create |  |
-| `tool.arc#Başlangıç, merkez, bitiş` | Yay: Başlangıç, merkez, bitiş | shared | cad.arc.create |  |
-| `tool.arc#Başlangıç, merkez, uzunluk` | Yay: Başlangıç, merkez, uzunluk | shared | cad.arc.create |  |
-| `tool.arc#Devam` | Yay: Devam | shared | cad.arc.create |  |
-| `tool.arc#Merkez, başlangıç, açı` | Yay: Merkez, başlangıç, açı | shared | cad.arc.create |  |
-| `tool.arc#Merkez, başlangıç, bitiş` | Yay: Merkez, başlangıç, bitiş | shared | cad.arc.create |  |
-| `tool.arc#Merkez, başlangıç, uzunluk` | Yay: Merkez, başlangıç, uzunluk | shared | cad.arc.create |  |
 | `tool.areaIntersect` | Alan kesiştir | shared | cad.entities.edit `areaIntersect` |  |
 | `tool.areaSplit` | Alan böl | shared | cad.entities.edit `areaSplit` |  |
 | `tool.areaSubtract` | Alan çıkar | shared | cad.entities.edit `areaSubtract` |  |
 | `tool.areaUnion` | Alan birleştir | shared | cad.entities.edit `areaUnion` |  |
 | `tool.centerline` | Orta hat | shared | cad.entities.create `centerline` |  |
-| `tool.circle#2 nokta` | Daire: 2 nokta | shared | cad.circle.create |  |
-| `tool.circle#3 nokta` | Daire: 3 nokta | shared | cad.circle.create |  |
-| `tool.circle#Teğet, teğet, teğet` | Daire: Teğet, teğet, teğet | shared | cad.circle.create |  |
-| `tool.circle#Teğet, teğet, yarıçap` | Daire: Teğet, teğet, yarıçap | shared | cad.circle.create |  |
 | `tool.cleanup` | Çizimi temizle | shared | cad.entities.edit `cleanup` |  |
 | `tool.continue` | Sürdür | shared | cad.entities.edit `continue` |  |
 | `tool.coordinateLabel` | Koordinat yaz | cad | cad.entities.create `coordinates` |  |

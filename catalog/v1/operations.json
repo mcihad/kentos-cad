@@ -973,41 +973,56 @@
       "note": "Alan hesapla çizilen alanı yazar; ölçüsü Document.measure ile."
     },
     "arc": {
-      "level": "geometry",
-      "note": "cad.arc.create merkez, yarıçap ve açılar ister; araç bunları tıklamalardan hesaplar.",
+      "level": "semantic",
+      "via": [
+        "cad.curves.construct",
+        "cad.arc.create"
+      ],
+      "was": "cad.arc.create",
+      "note": "Yöntemin noktaları, açısı, kirişi, yönü, yarıçapı ve Devam'ın nesnesi cad.curves.construct'a verilir; yayı o hesaplar, cad.arc.create yazar (ADR 0289).",
       "methods": {
-        "3 nokta": "geometry",
-        "Merkez, başlangıç, bitiş": "geometry",
-        "Devam": "geometry",
-        "Başlangıç, merkez, bitiş": "geometry",
-        "Başlangıç, merkez, açı": "geometry",
-        "Başlangıç, merkez, uzunluk": "geometry",
-        "Başlangıç, bitiş, açı": "geometry",
-        "Başlangıç, bitiş, yön": "geometry",
-        "Başlangıç, bitiş, yarıçap": "geometry",
-        "Merkez, başlangıç, açı": "geometry",
-        "Merkez, başlangıç, uzunluk": "geometry"
+        "3 nokta": "semantic",
+        "Merkez, başlangıç, bitiş": "semantic",
+        "Devam": "semantic",
+        "Başlangıç, merkez, bitiş": "semantic",
+        "Başlangıç, merkez, açı": "semantic",
+        "Başlangıç, merkez, uzunluk": "semantic",
+        "Başlangıç, bitiş, açı": "semantic",
+        "Başlangıç, bitiş, yön": "semantic",
+        "Başlangıç, bitiş, yarıçap": "semantic",
+        "Merkez, başlangıç, açı": "semantic",
+        "Merkez, başlangıç, uzunluk": "semantic"
       }
     },
     "circle": {
       "level": "semantic",
+      "via": [
+        "cad.curves.construct",
+        "cad.circle.create"
+      ],
+      "note": "2N, 3N, TTY ve TTT'nin noktaları, nesneleri ve yarıçapı cad.curves.construct'a verilir; daireyi o hesaplar, cad.circle.create yazar (ADR 0289).",
       "methods": {
         "Merkez, yarıçap": "semantic",
-        "2 nokta": "geometry",
-        "3 nokta": "geometry",
-        "Teğet, teğet, yarıçap": "geometry",
-        "Teğet, teğet, teğet": "geometry",
+        "2 nokta": "semantic",
+        "3 nokta": "semantic",
+        "Teğet, teğet, yarıçap": "semantic",
+        "Teğet, teğet, teğet": "semantic",
         "Merkez, çap": "semantic"
       }
     },
     "ellipse": {
       "level": "semantic",
+      "via": [
+        "cad.curves.construct",
+        "cad.entities.create"
+      ],
       "operation": null,
       "methods": {
         "Eksen, uç": "semantic",
         "Merkez": "semantic",
         "Eliptik yay": "semantic"
-      }
+      },
+      "note": "Eksen uçları ya da merkez, diğer yarı eksen ya da döndürme ve yayın açıları cad.curves.construct'a verilir; elipsi o hesaplar, cad.entities.create yazar (ADR 0289)."
     },
     "spline": {
       "level": "semantic"
@@ -1257,7 +1272,12 @@
       "level": "semantic"
     },
     "copy": {
-      "level": "semantic"
+      "level": "semantic",
+      "via": [
+        "cad.entities.transform",
+        "cad.entities.array"
+      ],
+      "note": "Her kopya yer değiştirmesiyle cad.entities.transform'a, Dizi adet, yer değiştirme ve Sığdır ile cad.entities.array'in line yerleşimine verilir (ADR 0291)."
     },
     "rotate": {
       "level": "semantic"

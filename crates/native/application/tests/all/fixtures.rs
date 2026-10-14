@@ -38,7 +38,7 @@ use kentos_native_application::{
     entities_fillet, entities_order, entities_pick, entities_select, entities_trim,
     entities_vertex, labels_pin, layers_compose, layers_edit, layers_filter, layers_info,
     layers_labels, layers_renderer, layers_service, layers_set, layers_states, layers_time, line,
-    network_define, nurbs, offset, point, points_construct, polygon, polygon_regular, polyline,
+    network_define, nurbs, offset, point, points_construct, curves_construct, polygon, polygon_regular, polyline,
     rectangle_create, scenarios_edit, set, settings_set, sheets_edit, snap_find, styles_edit,
     transform, ucs_set, units_change, views_edit,
 };
@@ -72,6 +72,7 @@ const STEP_KEYS: &[&str] = &[
     "input",
     "nonFinite",
     "result",
+    "within",
     "returns",
     "as",
     "id",
@@ -91,6 +92,28 @@ fn same(a: &Value, b: &Value) -> bool {
         }
         (Value::Object(x), Value::Object(y)) => {
             x.len() == y.len() && x.iter().all(|(k, v)| y.get(k).is_some_and(|w| same(v, w)))
+        }
+        _ => a == b,
+    }
+}
+
+/// [`same`] with numbers within `within` of each other (metres, radians): a result whose transcendental values
+/// (an arc's angles, a tangent circle's centre) the reference rounds once from 60 digits and the core reaches
+/// by a chain of roundings (docs/adr/0289 §4).
+fn close(a: &Value, b: &Value, within: f64) -> bool {
+    match (a, b) {
+        (_, Value::String(w)) if w == "$any" => true,
+        (Value::Number(x), Value::Number(y)) => match (x.as_f64(), y.as_f64()) {
+            (Some(x), Some(y)) => (x - y).abs() <= within,
+            _ => false,
+        },
+        (Value::Array(x), Value::Array(y)) => {
+            x.len() == y.len() && x.iter().zip(y).all(|(p, q)| close(p, q, within))
+        }
+        (Value::Object(x), Value::Object(y)) => {
+            x.len() == y.len()
+                && x.iter()
+                    .all(|(k, v)| y.get(k).is_some_and(|w| close(v, w, within)))
         }
         _ => a == b,
     }
@@ -678,6 +701,67 @@ impl Input for kentos_domain::contracts::PointsConstruct {
     }
 }
 
+impl Input for kentos_domain::contracts::CurvesConstruct {
+    /// `constructions[i].a.at.x` … (any point), `.first.near.x` …, `.r`, `.angle`, `.chord`, `.direction`,
+    /// `.other`, `.rotation`, `.startAngle`, `.endAngle`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_domain::contracts::CurveConstruction as C;
+        let rest = path.strip_prefix("constructions[")?;
+        let (i, rest) = rest.split_once("].")?;
+        let c = self.constructions.get_mut(i.parse::<usize>().ok()?)?;
+        if let Some((head, axis)) = rest.rsplit_once(".at.") {
+            let p = match (c, head) {
+                (C::CircleTwoPoints { a, .. } | C::CircleThreePoints { a, .. } | C::EllipseAxis { a, .. }, "a") => a,
+                (C::CircleTwoPoints { b, .. } | C::CircleThreePoints { b, .. } | C::EllipseAxis { b, .. }, "b") => b,
+                (C::CircleThreePoints { c, .. }, "c") => c,
+                (
+                    C::ArcThreePoints { start, .. }
+                    | C::ArcStartCentreEnd { start, .. }
+                    | C::ArcStartCentreAngle { start, .. }
+                    | C::ArcStartCentreChord { start, .. }
+                    | C::ArcStartEndAngle { start, .. }
+                    | C::ArcStartEndDirection { start, .. }
+                    | C::ArcStartEndRadius { start, .. },
+                    "start",
+                ) => start,
+                (C::ArcThreePoints { mid, .. }, "mid") => mid,
+                (
+                    C::ArcThreePoints { end, .. }
+                    | C::ArcStartCentreEnd { end, .. }
+                    | C::ArcStartEndAngle { end, .. }
+                    | C::ArcStartEndDirection { end, .. }
+                    | C::ArcStartEndRadius { end, .. }
+                    | C::ArcContinue { end, .. },
+                    "end",
+                ) => end,
+                (
+                    C::ArcStartCentreEnd { centre, .. }
+                    | C::ArcStartCentreAngle { centre, .. }
+                    | C::ArcStartCentreChord { centre, .. }
+                    | C::EllipseCentre { centre, .. },
+                    "centre",
+                ) => centre,
+                (C::EllipseCentre { axis_end, .. }, "axisEnd") => axis_end,
+                _ => return None,
+            };
+            return measured_number(p, axis);
+        }
+        match (c, rest) {
+            (C::CircleTangentTangentRadius { first, .. } | C::CircleTangents { first, .. }, "first.near.x") => Some(&mut first.near.x),
+            (C::CircleTangentTangentRadius { first, .. } | C::CircleTangents { first, .. }, "first.near.y") => Some(&mut first.near.y),
+            (C::CircleTangentTangentRadius { r, .. } | C::ArcStartEndRadius { r, .. }, "r") => Some(r),
+            (C::ArcStartCentreAngle { angle, .. } | C::ArcStartEndAngle { angle, .. }, "angle") => Some(angle),
+            (C::ArcStartCentreChord { chord, .. }, "chord") => Some(chord),
+            (C::ArcStartEndDirection { direction, .. }, "direction") => Some(direction),
+            (C::EllipseAxis { other, .. } | C::EllipseCentre { other, .. }, "other") => other.as_mut(),
+            (C::EllipseAxis { rotation, .. } | C::EllipseCentre { rotation, .. }, "rotation") => rotation.as_mut(),
+            (C::EllipseAxis { start_angle, .. } | C::EllipseCentre { start_angle, .. }, "startAngle") => start_angle.as_mut(),
+            (C::EllipseAxis { end_angle, .. } | C::EllipseCentre { end_angle, .. }, "endAngle") => end_angle.as_mut(),
+            _ => None,
+        }
+    }
+}
+
 impl Input for EntitiesStretch {
     /// `window.min.x` … `window.max.y`, `dx`, `dy`.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -1185,7 +1269,7 @@ impl Input for EntitiesArray {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         let rest = path.strip_prefix("layout.")?;
         match &mut self.layout {
-            ArrayLayout::Grid { dx, dy, .. } => match rest {
+            ArrayLayout::Grid { dx, dy, .. } | ArrayLayout::Line { dx, dy, .. } => match rest {
                 "dx" => Some(dx),
                 "dy" => Some(dy),
                 _ => None,
@@ -1572,6 +1656,9 @@ fn run_op(
         kentos_domain::contracts::CAD_POINTS_CONSTRUCT => {
             run!(points_construct, kentos_domain::contracts::PointsConstruct)
         }
+        kentos_domain::contracts::CAD_CURVES_CONSTRUCT => {
+            run!(curves_construct, kentos_domain::contracts::CurvesConstruct)
+        }
         kentos_domain::contracts::CAD_SNAP_FIND => {
             run!(snap_find, kentos_domain::contracts::SnapFind)
         }
@@ -1716,7 +1803,15 @@ fn run_command(
         }
         state.layer = Some(id.to_owned());
     }
-    expect_same(&got, &fill(&want, doc, state, at)?, "sonuç", at)
+    let want = fill(&want, doc, state, at)?;
+    if let Some(within) = step.get("within").and_then(Value::as_f64) {
+        return if close(&got, &want, within) {
+            Ok(())
+        } else {
+            Err(format!("{at}: sonuç (±{within}): beklenen {want}, bulunan {got}"))
+        };
+    }
+    expect_same(&got, &want, "sonuç", at)
 }
 
 /// The `layer-N` ids in a result the tree did not have before, by N.

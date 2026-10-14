@@ -187,10 +187,30 @@ pub fn arc_start_center_end(start: Vec2, center: Vec2, end: Vec2) -> Option<ArcG
     ccw(center, r, a0, sw)
 }
 
+/// [`arc_start_center_end`] as `cad.curves.construct` takes it (docs/adr/0289): an end on the start's ray gives
+/// no arc, a whole circle being Daire's. The web's call keeps the whole turn (its frozen fixtures).
+pub fn arc_start_center_to(start: Vec2, center: Vec2, end: Vec2) -> Option<ArcGeom> {
+    let sw = norm_angle(ang(center, end) - ang(center, start));
+    if sw < 1e-9 || sw > 2.0 * PI - 1e-9 {
+        return None;
+    }
+    arc_start_center_end(start, center, end)
+}
+
 /// Start, centre, included angle (degrees; negative runs clockwise).
 pub fn arc_start_center_angle(start: Vec2, center: Vec2, degrees: f64) -> Option<ArcGeom> {
     let r = len(sub(start, center));
     ccw(center, r, ang(center, start), (degrees * PI) / 180.0)
+}
+
+/// Start, centre, included angle in radians (negative runs clockwise), as `cad.curves.construct` takes it
+/// (docs/adr/0289): none for a zero or a whole turn or more.
+pub fn arc_start_center_sweep(start: Vec2, center: Vec2, sweep: f64) -> Option<ArcGeom> {
+    if !(sweep.abs() < 2.0 * PI) {
+        return None;
+    }
+    let r = len(sub(start, center));
+    ccw(center, r, ang(center, start), sweep)
 }
 
 /// Start, centre, chord length (positive: minor arc CCW; negative: major arc).
@@ -211,8 +231,12 @@ pub fn arc_start_center_chord(start: Vec2, center: Vec2, chord: f64) -> Option<A
 
 /// Start, end, included angle (degrees; positive counter-clockwise from start to end).
 pub fn arc_start_end_angle(start: Vec2, end: Vec2, degrees: f64) -> Option<ArcGeom> {
-    let t = (degrees * PI) / 180.0;
-    if t.abs() < 1e-9 || t.abs() >= 2.0 * PI {
+    arc_start_end_sweep(start, end, (degrees * PI) / 180.0)
+}
+
+/// Start, end, included angle in radians (positive counter-clockwise from start to end).
+pub fn arc_start_end_sweep(start: Vec2, end: Vec2, t: f64) -> Option<ArcGeom> {
+    if !(t.abs() >= 1e-9 && t.abs() < 2.0 * PI) {
         return None;
     }
     let a = bulge_arc(start, end, tan(t / 4.0))?;
@@ -234,15 +258,15 @@ pub fn arc_start_end_radius(start: Vec2, end: Vec2, radius: f64) -> Option<ArcGe
         return None;
     }
     let half = asin(js_min(1.0, d / (2.0 * r)));
-    arc_start_end_angle(
+    // In radians, without a round trip through degrees (docs/adr/0289).
+    arc_start_end_sweep(
         start,
         end,
-        ((if radius > 0.0 {
+        if radius > 0.0 {
             2.0 * half
         } else {
             2.0 * PI - 2.0 * half
-        }) * 180.0)
-            / PI,
+        },
     )
 }
 

@@ -2,28 +2,29 @@
 //! its `SelectionFirstTool` base ([`crate::modify`]), step for step
 //! (docs/adr/0037):
 //!
-//! - the objects, the centre, then the angle: typed in degrees
-//!   (counter-clockwise), or shown with a point (the direction from the
-//!   centre);
+//! - the objects, the centre, then the angle: typed in the project's way
+//!   (docs/adr/0291: a CAD project's degrees counter-clockwise, a CBS
+//!   project's grads clockwise, its angle unit either way), or shown with a
+//!   point (the direction from the centre);
 //! - Referans (R): the current direction shown with two points or typed as
-//!   an angle, then the new direction shown or typed; the selection turns by
-//!   the difference (a building onto a road);
+//!   a direction (a CBS project's a semt), then the new direction shown from
+//!   the centre, typed, or with Noktalar (N) shown with two points; the
+//!   selection turns by the difference (a building onto a road);
 //! - Kopya (K): the originals stay and turned copies are added.
 //!
 //! Written through `cad.entities.transform` (a rotation about the centre),
-//! one undo step, “Döndür”; says “2 nesne 90.0000° döndürüldü (kopya).” and
-//! leaves. The ghosts and the angle beside the cursor are the web's.
+//! one undo step, “Döndür”; says “2 nesne 90.0000° döndürüldü (kopya).” in
+//! the project's way and leaves. The ghosts are the web's.
 
 use kentos_contracts::Transform;
 use kentos_geometry_core::geom::affine::{Affine, rotation};
 use kentos_geometry_core::geometry::dist;
-use kentos_geometry_core::jsmath::PI;
 use kentos_geometry_core::tools::drawing::direction_angle;
 use kentos_geometry_core::tools::editing::rotation_angle;
 use kentos_geometry_core::tools::point_text::js_trim;
 
 use crate::Vec2;
-use crate::format::{Format, degrees, fixed};
+use crate::format::Format;
 use crate::log::Level;
 use crate::modify::{Modify, Stages, transform_selection};
 use crate::points::{SAME, plain_number, wire};
@@ -43,6 +44,11 @@ pub struct Rotate {
     ref_from: Option<Vec2>,
     ref_angle: Option<f64>,
     ref_mode: bool,
+    /// Noktalar (N): the new direction shown with two points; its first once given.
+    new_points: bool,
+    new_from: Option<Vec2>,
+    /// The project's units and ways, as of the last event.
+    format: Option<Format>,
 }
 
 impl Rotate {
@@ -54,6 +60,11 @@ impl Rotate {
     /// reference is still being shown.
     fn turn(&self, hover: Vec2) -> Option<f64> {
         let base = self.base?;
+        if self.new_points {
+            let from = self.new_from?;
+            return (dist(from, hover) > SAME)
+                .then(|| direction_angle(from, hover) - self.ref_angle.unwrap_or(0.0));
+        }
         if dist(base, hover) < SAME || (self.ref_mode && self.ref_angle.is_none()) {
             return None;
         }
@@ -70,7 +81,7 @@ impl Rotate {
         };
         if let Some(n) = transform_selection(t, self.copy, cx) {
             let copy = if self.copy { " (kopya)" } else { "" };
-            let line = format!("{n} nesne {}° döndürüldü{copy}.", fixed(degrees(angle), 4));
+            let line = format!("{n} nesne {} döndürüldü{copy}.", cx.format().turn(angle));
             cx.say(Level::Success, line);
         }
         Flow::Exit
@@ -91,12 +102,20 @@ impl Stages for Rotate {
         self.ref_mode = false;
         self.ref_from = None;
         self.ref_angle = None;
+        self.new_points = false;
+        self.new_from = None;
         Flow::Stay
+    }
+
+    fn see(&mut self, cx: &Context<'_>) {
+        self.format = Some(cx.format());
     }
 
     fn anchor(&self) -> Option<Vec2> {
         if self.ref_mode && self.ref_angle.is_none() {
             self.ref_from
+        } else if self.new_points {
+            self.new_from.or(self.base)
         } else {
             self.base
         }
@@ -115,16 +134,25 @@ impl Stages for Rotate {
             };
             return Prompt::new(LABEL, step);
         }
+        if self.new_points {
+            let step = if self.new_from.is_some() {
+                "yeni doğrultunun ikinci noktasını gösterin"
+            } else {
+                "yeni doğrultunun ilk noktasını gösterin"
+            };
+            return Prompt::new(LABEL, step);
+        }
         if self.ref_mode {
             return Prompt::new(LABEL, "yeni doğrultuyu gösterin ya da yeni açıyı yazın")
+                .option("Noktalar", "N")
                 .option_with("Kopya", "K", copy);
         }
-        Prompt::new(
-            LABEL,
-            "açıyı yazın (derece, saat yönü tersine) ya da bir nokta gösterin",
-        )
-        .option("Referans", "R")
-        .option_with("Kopya", "K", copy)
+        let words = self
+            .format
+            .map_or_else(|| "derece, saat yönü tersine".to_owned(), |f| f.turn_words());
+        Prompt::new(LABEL, format!("açıyı yazın ({words}) ya da bir nokta gösterin"))
+            .option("Referans", "R")
+            .option_with("Kopya", "K", copy)
     }
 
     fn point(&mut self, p: Vec2, cx: &mut Context<'_>) -> Flow {
@@ -141,6 +169,19 @@ impl Stages for Rotate {
                 Some(_) => {}
             }
             return Flow::Stay;
+        }
+        if self.new_points {
+            return match self.new_from {
+                None => {
+                    self.new_from = Some(p);
+                    Flow::Stay
+                }
+                Some(from) if dist(from, p) > SAME => {
+                    let turn = direction_angle(from, p) - self.ref_angle.unwrap_or(0.0);
+                    self.rotate(turn, cx)
+                }
+                Some(_) => Flow::Stay,
+            };
         }
         if dist(base, p) < SAME {
             return Flow::Stay;
@@ -160,14 +201,23 @@ impl Stages for Rotate {
             self.ref_mode = true;
             return Some(Flow::Stay);
         }
+        if t == "N" && self.ref_mode && self.ref_angle.is_some() && !self.new_points {
+            self.new_points = true;
+            return Some(Flow::Stay);
+        }
         let n = plain_number(text)?;
-        let rad = (n * PI) / 180.0;
+        // The project's way (docs/adr/0291): a turn in its unit and direction; Referans's are directions.
+        let f = cx.format();
         if self.ref_mode && self.ref_angle.is_none() {
-            self.ref_angle = Some(rad);
+            self.ref_angle = Some(f.direction_from_typed(n));
             self.ref_from = None;
             return Some(Flow::Stay);
         }
-        Some(self.rotate(rad - self.ref_angle.unwrap_or(0.0), cx))
+        let turn = match self.ref_angle {
+            Some(reference) => f.direction_from_typed(n) - reference,
+            None => f.turn_from_typed(n),
+        };
+        Some(self.rotate(turn, cx))
     }
 
     fn preview(&self, hover: Vec2) -> Option<Affine> {
@@ -175,9 +225,9 @@ impl Stages for Rotate {
         self.turn(hover).map(|a| rotation(a, base))
     }
 
-    fn tag(&self, hover: Vec2, _format: &Format) -> Vec<String> {
+    fn tag(&self, hover: Vec2, format: &Format) -> Vec<String> {
         self.turn(hover)
-            .map(|a| vec![format!("Açı {}°", fixed(degrees(a), 2))])
+            .map(|a| vec![format!("Açı {}", format.turn(a))])
             .unwrap_or_default()
     }
 }

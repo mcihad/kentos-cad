@@ -92,6 +92,12 @@ def grid(rows, cols, dx, dy):
     return [translation(j * dx, i * dy) for i in range(rows) for j in range(cols) if i or j]
 
 
+def line(count, dx, dy, fit=False):
+    """Kopyala's Dizi (ADR 0291): the k-th copy k displacements along, or k shares of it with fit."""
+    return [translation((k * dx) / (count - 1.0), (k * dy) / (count - 1.0)) if fit else translation(k * dx, k * dy)
+            for k in range(1, count)]
+
+
 def polar(c, count, fill, rotate, middle=None):
     """The k-th copy k steps round the centre: turned about it, or moved as `middle` goes round."""
     step = fill / count if abs(abs(fill) - 360.0) < 1e-9 else fill / (count - 1.0)
@@ -284,6 +290,18 @@ def G(rows, cols, dx, dy):
     return {"kind": "grid", "rows": rows, "cols": cols, "dx": dx, "dy": dy}
 
 
+def L(count, dx, dy, fit=None):
+    out = {"kind": "line", "count": count, "dx": dx, "dy": dy}
+    if fit is not None:
+        out["fit"] = fit
+    return out
+
+
+LINE_COUNT = "Adet 2 ile 10 000 arasında bir tam sayı olmalı; asıllar da sayılır. Başka bir adet verin."
+LINE_ZERO = "Yer değiştirme sıfır; kopyalar asılların üstüne düşer. Sıfırdan farklı bir yer değiştirme verin."
+LINE_FIX = "Yer değiştirmeyi sonlu bir sayıyla verin."
+
+
 def R(cx, cy, count, fill, rotate):
     return {"kind": "polar", "center": P(cx, cy), "count": count, "fill": fill, "rotate": rotate}
 
@@ -466,6 +484,54 @@ cases.append({
         {"op": "execute", "input": {"uids": [U(13)], "layout": Y(U(10), 4, 5.0)}, "result": failed("invalid_spacing", PATH_TOO_SHORT, "layout.spacing"), "expect": untouched},
         {"op": "execute", "input": {"uids": [U(12)], "layout": Y(U(9), 3)}, "result": failed("invalid_path", PATH_NOT_A_PATH, "layout.path"), "expect": untouched},
         {"op": "execute", "input": {"uids": [U(12)], "layout": Y(U(10), 3)}, "result": failed("layer_locked", LOCKED(1), "uids"), "expect": untouched},
+    ],
+})
+
+# ── Kopyala's Dizi (ADR 0291) ────────────────────────────────────────────
+
+made = copies([10], line(4, 10, -5))
+cases.append({
+    "name": "Kopyala'nın Dizi'si: yer değiştirme boyunca 4 yer, kopyalar 1, 2 ve 3 yer değiştirme ötede; tek adımda geri alınır; adım Kopyala",
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(10)], "layout": L(4, 10, -5)}, "result": done(made), "expect": written(made)},
+        {"op": "undo", "returns": "Kopyala", "note": "Kopyala aracının adımı: dizinin bütün kopyaları tek adımda.", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+    ],
+})
+
+made = copies([13, 4], line(5, 20, 10, True))
+cases.append({
+    "name": "Sığdır (fit): son kopya yer değiştirmenin ucunda, öbürleri onu eşit paylaşır (5 yerde dörtte bir); her yerde nesneler girdinin sırasıyla",
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(13), U(4)], "layout": L(5, 20, 10, True)}, "result": done(made), "expect": written(made)},
+    ],
+})
+
+made = copies([11, 16, 17], line(2, -7.5, 12.25))
+cases.append({
+    "name": "iki yerde dizi bir kopya demektir: yay, elips ve ölçü yer değiştirmeyle taşınır; fit: false yazılmasa da olur",
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(11), U(16), U(17)], "layout": L(2, -7.5, 12.25, False)}, "result": done(made), "expect": written(made)},
+    ],
+})
+
+made = copies([10], line(3, 5, 0))
+cases.append({
+    "name": "Kopyala'nın Dizi'si: kilitli katmandaki nesne kopyalanmaz, öbürleri uyarıyla kopyalanır",
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(12), U(10)], "layout": L(3, 5, 0)}, "result": done(made, locked=[U(12)], warnings=[locked_warning(1)]), "expect": written(made)},
+    ],
+})
+
+cases.append({
+    "name": "Kopyala'nın Dizi'sinin retleri, sırasıyla: sonlu olmayan yer değiştirme (önce doğu), adedin aralığı, sıfır yer değiştirme",
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(10)], "layout": L(3, 5, 0)}, "nonFinite": {"layout.dx": "Infinity"},
+         "result": failed("not_finite", NFV("Doğu (Y) yönündeki yer değiştirme", LINE_FIX), "layout.dx"), "expect": untouched},
+        {"op": "execute", "input": {"uids": [U(10)], "layout": L(3, 5, 0)}, "nonFinite": {"layout.dy": "NaN"},
+         "result": failed("not_finite", NFV("Kuzey (X) yönündeki yer değiştirme", LINE_FIX), "layout.dy"), "expect": untouched},
+        {"op": "execute", "input": {"uids": [U(10)], "layout": L(1, 5, 0)}, "result": failed("invalid_count", LINE_COUNT, "layout.count"), "expect": untouched},
+        {"op": "execute", "input": {"uids": [U(10)], "layout": L(10001, 5, 0)}, "result": failed("invalid_count", LINE_COUNT, "layout.count"), "expect": untouched},
+        {"op": "execute", "input": {"uids": [U(10)], "layout": L(3, 0, 0)}, "result": failed("invalid_spacing", LINE_ZERO, "layout"), "expect": untouched},
     ],
 })
 
@@ -677,7 +743,7 @@ def write(command, title, note, cases):
 write(
     "cad.entities.array",
     "Nesneleri diziye kopyala: doğrulama, plan, yazma, geri alma",
-    "ADR 0047, 0140. Denetim sırası: en az bir nesne; her kimliğin yazımı, sonra yol dizisinde yolun kimliğinin yazımı; yerleşimin sayılarının sonlu olması (sırasıyla), satır ve sütunun ya da adedin aralığı, birden çok yeri olan yönün aralığı, yol dizisinin aralığının sıfırdan büyük olması ya da doldurma açısı; beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması, sonra yolun; yolun çizgi, yay, daire ya da çoklu çizgi olması ve bir uzunluğu olması; yerlerin yola sığması; hepsinin kilitli katmanda olmaması; kopyaların sonlu kalması. Yol dizisinin k'ıncı kopyası, yolun o yerdeki noktası eksi başı kadar taşınır; align ile önce yolun başı çevresinde, oradaki doğrultusu eksi baştaki doğrultusu kadar döner. Yol okunur, değişmez. Kopya aslının bütün alanlarını ve yeni bir kalıcı kimlik alır; kopyalar yer yer, her yerde girdinin sırasıyla yazılır. Kilitli katmandaki nesnenin kopyası yapılmaz. Adım aracın adıdır: Dizi, Kutupsal dizi, Yol boyunca dizi. Kurulumdaki en büyük kimlik 20; kopyalar 21'den başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "ADR 0047, 0140. Denetim sırası: en az bir nesne; her kimliğin yazımı, sonra yol dizisinde yolun kimliğinin yazımı; yerleşimin sayılarının sonlu olması (sırasıyla), satır ve sütunun ya da adedin aralığı, birden çok yeri olan yönün aralığı, yol dizisinin aralığının sıfırdan büyük olması ya da doldurma açısı; beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması, sonra yolun; yolun çizgi, yay, daire ya da çoklu çizgi olması ve bir uzunluğu olması; yerlerin yola sığması; hepsinin kilitli katmanda olmaması; kopyaların sonlu kalması. Yol dizisinin k'ıncı kopyası, yolun o yerdeki noktası eksi başı kadar taşınır; align ile önce yolun başı çevresinde, oradaki doğrultusu eksi baştaki doğrultusu kadar döner. Yol okunur, değişmez. Kopya aslının bütün alanlarını ve yeni bir kalıcı kimlik alır; kopyalar yer yer, her yerde girdinin sırasıyla yazılır. Kilitli katmandaki nesnenin kopyası yapılmaz. Kopyala'nın Dizi'sinin (line, ADR 0291) k'ıncı kopyası k yer değiştirme, fit ile k / (adet − 1) yer değiştirme ötededir. Adım aracın adıdır: Dizi, Kutupsal dizi, Yol boyunca dizi, Kopyala. Kurulumdaki en büyük kimlik 20; kopyalar 21'den başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

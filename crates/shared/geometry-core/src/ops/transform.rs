@@ -338,6 +338,8 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
                     let turn = (atan2(x.y, x.x) * 180.0) / PI;
                     carried(pattern, turn, s, is_reflection(m))
                 }
+                // A solid fill has no lines: its angle and spacing are unread and stay (docs/adr/0291).
+                "solid" => pattern.clone(),
                 _ => {
                     let rad = (pattern.angle * PI) / 180.0;
                     let dir = apply_linear(m, Vec2::new(cos(rad), sin(rad)));

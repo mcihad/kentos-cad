@@ -12,18 +12,18 @@
 //!
 //! Every ellipse is written through `cad.entities.create`, its own object
 //! and undo step (“Ekle”), and says “Elips eklendi: 12.000 × 6.000 m (yarı
-//! eksenler)”. The ellipse, its parameters and the preview's points are the
-//! shared core's; none is computed here.
+//! eksenler)”. The ellipse and its arc's parameters are
+//! `cad.curves.construct`'s (docs/adr/0289), which refuses with the words
+//! the tool says; the preview's points are the same core's.
 
-use kentos_contracts::EntityGeometry;
-use kentos_geometry_core::geom::arc::norm_angle;
+use kentos_contracts::{CurveConstruction, EntityGeometry, MeasuredPoint};
 use kentos_geometry_core::geom::ellipse::{
-    EllipseGeom, ellipse_from_axis, ellipse_from_center, ellipse_point, major_length,
-    param_at_polar, tessellate_ellipse,
+    EllipseGeom, ellipse_point, major_length, param_at_polar, tessellate_ellipse,
 };
 use kentos_geometry_core::geometry::dist;
-use kentos_geometry_core::jsmath::PI;
-use kentos_geometry_core::tools::drawing::{ellipse_param_toward, ellipse_rotation_half};
+use kentos_geometry_core::jsmath::{PI, atan2};
+use kentos_geometry_core::tools::drawing::ellipse_param_toward;
+use kentos_native_application::curves_construct::{curve, curve_at, ellipse_geom};
 use kentos_geometry_core::tools::point_input::midpoint;
 use kentos_geometry_core::tools::point_text::js_trim;
 
@@ -52,9 +52,20 @@ pub struct Ellipse {
     arc: bool,
     /// Döndürme (D): the other axis is asked for as an angle.
     rotation_mode: bool,
-    /// The ellipse, fixed while the arc's angles are chosen.
+    /// The ellipse, fixed while the arc's angles are chosen, and its construction.
     geom: Option<EllipseGeom>,
+    base: Option<CurveConstruction>,
+    /// The arc's start: its polar angle from the major axis.
     start_t: Option<f64>,
+}
+
+/// How the other half-axis was given.
+#[derive(Clone, Copy, Debug)]
+enum Half {
+    /// Its length.
+    Other(f64),
+    /// The first axis seen tilted by this many radians.
+    Rotation(f64),
 }
 
 impl Ellipse {
@@ -73,14 +84,41 @@ impl Ellipse {
         true
     }
 
-    /// The ellipse for the second axis given as a half-length.
-    fn ellipse_for(&self, other_half: f64) -> Option<EllipseGeom> {
+    /// `cad.curves.construct`'s construction of the ellipse with its other half-axis (docs/adr/0289), whole.
+    fn construction(&self, half: Half) -> Option<CurveConstruction> {
         let [p0, p1] = [*self.d.pts.first()?, *self.d.pts.get(1)?];
-        if self.from_center {
-            ellipse_from_center(p0, p1, other_half)
+        let (other, rotation) = match half {
+            Half::Other(o) => (Some(o), None),
+            Half::Rotation(r) => (None, Some(r)),
+        };
+        let at = |p: Vec2| MeasuredPoint::At { at: wire(p) };
+        Some(if self.from_center {
+            CurveConstruction::EllipseCentre {
+                centre: at(p0),
+                axis_end: at(p1),
+                other,
+                rotation,
+                start_angle: None,
+                end_angle: None,
+            }
         } else {
-            ellipse_from_axis(p0, p1, other_half)
-        }
+            CurveConstruction::EllipseAxis {
+                a: at(p0),
+                b: at(p1),
+                other,
+                rotation,
+                start_angle: None,
+                end_angle: None,
+            }
+        })
+    }
+
+    /// The ellipse for the second axis given as a half-length, for the preview: the command's answer.
+    fn ellipse_for(&self, other_half: f64) -> Option<EllipseGeom> {
+        curve_at(&self.construction(Half::Other(other_half))?)
+            .ok()
+            .as_ref()
+            .and_then(ellipse_geom)
     }
 
     fn center(&self) -> Option<Vec2> {
@@ -99,7 +137,9 @@ impl Ellipse {
 
     fn on_point(&mut self, p: Vec2, cx: &mut Context<'_>) {
         if let Some(geom) = self.geom {
-            return self.angle(ellipse_param_toward(&geom, p), cx);
+            // The polar angle from the major axis, as seen from the centre.
+            let polar = atan2(p.y - geom.c.y, p.x - geom.c.x) - atan2(geom.major.y, geom.major.x);
+            return self.angle(polar, cx);
         }
         if self.d.last().is_some_and(|last| dist(last, p) < 1e-9) {
             return;
@@ -112,41 +152,63 @@ impl Ellipse {
             return;
         }
         let Some(c) = self.center() else { return };
-        let g = self.ellipse_for(dist(c, p));
-        self.shape(g, cx);
+        self.shape(Half::Other(dist(c, p)), cx);
     }
 
-    /// A whole ellipse is written now; an arc waits for its angles.
-    fn shape(&mut self, g: Option<EllipseGeom>, cx: &mut Context<'_>) {
-        let Some(g) = g else {
-            cx.say(Level::Warn, "Eksenler sıfır uzunlukta olamaz.");
+    /// A whole ellipse is written now; an arc waits for its angles. The command's words when it gives none.
+    fn shape(&mut self, half: Half, cx: &mut Context<'_>) {
+        let Some(c) = self.construction(half) else {
             return;
+        };
+        let g = match curve(cx.doc, &c) {
+            Ok(curve) => match ellipse_geom(&curve) {
+                Some(g) => g,
+                None => return,
+            },
+            Err(why) => {
+                cx.say(Level::Warn, why);
+                return;
+            }
         };
         if self.arc {
             self.geom = Some(g);
+            self.base = Some(c);
             self.d.pts.clear();
             return;
         }
         self.commit(g, cx);
     }
 
-    fn angle(&mut self, t: f64, cx: &mut Context<'_>) {
-        let (Some(geom), Some(start)) = (self.geom, self.start_t) else {
-            self.start_t = Some(t);
+    /// An elliptical arc's polar angle (radians from the major axis): its start, then its end, the arc then
+    /// written through the command.
+    fn angle(&mut self, polar: f64, cx: &mut Context<'_>) {
+        let (Some(base), Some(start)) = (&self.base, self.start_t) else {
+            self.start_t = Some(polar);
             return;
         };
-        if norm_angle(t - start).abs() < 1e-9 {
-            cx.say(Level::Warn, "Bitiş açısı başlangıçla aynı olamaz.");
-            return;
+        let mut c = base.clone();
+        if let CurveConstruction::EllipseAxis {
+            start_angle,
+            end_angle,
+            ..
         }
-        self.commit(
-            EllipseGeom {
-                t0: start,
-                t1: t,
-                ..geom
-            },
-            cx,
-        );
+        | CurveConstruction::EllipseCentre {
+            start_angle,
+            end_angle,
+            ..
+        } = &mut c
+        {
+            *start_angle = Some(start);
+            *end_angle = Some(polar);
+        }
+        match curve(cx.doc, &c) {
+            Ok(curve) => {
+                if let Some(g) = ellipse_geom(&curve) {
+                    self.commit(g, cx);
+                }
+            }
+            Err(why) => cx.say(Level::Warn, why),
+        }
     }
 
     /// Writes through `cad.entities.create` (docs/adr/0057): its own object
@@ -178,6 +240,7 @@ impl Ellipse {
 
     fn reset(&mut self) {
         self.geom = None;
+        self.base = None;
         self.start_t = None;
         self.rotation_mode = false;
         self.d.reset();
@@ -267,26 +330,18 @@ impl Tool for Ellipse {
             return true;
         }
         let plain = points::plain_number(text);
-        if let (Some(n), Some(geom)) = (plain, self.geom) {
-            self.angle(param_at_polar(&geom, n * DEG), cx);
+        if let (Some(n), Some(_)) = (plain, self.geom) {
+            self.angle(n * DEG, cx);
             return true;
         }
         if let (Some(n), 2) = (plain, self.d.pts.len()) {
-            if self.rotation_mode {
-                if !(0.0..=89.4).contains(&n) {
-                    cx.say(
-                        Level::Warn,
-                        "Döndürme açısı 0 ile 89.4 derece arasında olmalı.",
-                    );
-                    return true;
-                }
-                let (p0, p1) = (self.d.pts[0], self.d.pts[1]);
-                let g = self.ellipse_for(ellipse_rotation_half(p0, p1, self.from_center, n));
-                self.shape(g, cx);
-            } else if n > 0.0 {
-                let g = self.ellipse_for(n);
-                self.shape(g, cx);
-            }
+            // Degrees into radians as the command takes them; the command refuses what makes no ellipse.
+            let half = if self.rotation_mode {
+                Half::Rotation((n * PI) / 180.0)
+            } else {
+                Half::Other(n)
+            };
+            self.shape(half, cx);
             return true;
         }
         match cx.typed_point(text, self.d.last(), self.d.hover) {
@@ -327,11 +382,12 @@ impl Tool for Ellipse {
         };
         if let Some(geom) = self.geom {
             let t = ellipse_param_toward(&geom, h);
+            let start_t = self.start_t.map(|polar| param_at_polar(&geom, polar));
             let mut strokes = vec![
                 Stroke::dashed(tessellate_ellipse(&geom, PER_TURN), true, [2.0, 4.0]),
                 Stroke::dashed(vec![geom.c, h], false, [3.0, 3.0]),
             ];
-            strokes.push(match self.start_t {
+            strokes.push(match start_t {
                 Some(start) => Stroke::solid(
                     tessellate_ellipse(
                         &EllipseGeom {

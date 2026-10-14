@@ -11,8 +11,8 @@ import type { ArrayLayout } from "./ArrayLayout";
  * Each copy takes every field of its original (layer, colour, attributes,
  * label, symbol) and a new persistent id; the originals stay. The copies
  * are written place after place, each place the objects in the input's
- * order. The undo step is the tool's name: “Dizi”, “Kutupsal dizi” or
- * “Yol boyunca dizi”.
+ * order. The undo step is the tool's name: “Dizi”, “Kutupsal dizi”,
+ * “Yol boyunca dizi” or, for a line of copies, “Kopyala”.
  *
  * Objects on a locked layer (by itself or a group above it) are not
  * copied: with others they are named in the output's `locked` with a
@@ -26,7 +26,8 @@ import type { ArrayLayout } from "./ArrayLayout";
  * `layout.path`), `not_finite` (the layout's numbers, in their order),
  * `invalid_count` (rows and columns, or the count, out of their range),
  * `invalid_spacing` (a grid direction with more than one place and no
- * spacing; a path array's spacing not above zero), `invalid_fill` (a polar
+ * spacing; a line's displacement of no length; a path array's spacing not
+ * above zero), `invalid_fill` (a polar
  * fill of zero or past a full turn), `invalid_revision`,
  * `revision_conflict` (status `conflict`), `entity_not_found` (each id in
  * order, then the path at `layout.path`), `invalid_path` (a path that is

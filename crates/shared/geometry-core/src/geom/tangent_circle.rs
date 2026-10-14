@@ -26,6 +26,25 @@ pub fn tangent_tangent_radius(
     if !(r > 0.0) {
         return None;
     }
+    // Two parallel lines 2r apart touch every circle of radius r between them (docs/adr/0289): the one beside
+    // the picks, its centre on the middle line across from their midpoint.
+    if let (Edge::Seg { a, b }, Some(gap)) = (*e1, parallel_gap(e1, e2))
+        && (gap - 2.0 * r).abs() <= 1e-9 * js_max(1.0, r)
+    {
+        let Edge::Seg { a: a2, .. } = *e2 else {
+            return None;
+        };
+        let (dx, dy) = (b.x - a.x, b.y - a.y);
+        let l = js_hypot(dx, dy);
+        let (ux, uy) = (dx / l, dy / l);
+        let m = Vec2::new((pick1.x + pick2.x) / 2.0, (pick1.y + pick2.y) / 2.0);
+        let t = (m.x - a.x) * ux + (m.y - a.y) * uy;
+        let side = if ux * (a2.y - a.y) - uy * (a2.x - a.x) > 0.0 { 1.0 } else { -1.0 };
+        return Some(Circle {
+            c: Vec2::new(a.x + ux * t - uy * r * side, a.y + uy * t + ux * r * side),
+            r,
+        });
+    }
     let mut candidates = Vec::new();
     for o1 in parallels(e1, r) {
         for o2 in parallels(e2, r) {
@@ -44,6 +63,21 @@ pub fn tangent_tangent_radius(
         }
     }
     best.map(|(c, _)| Circle { c, r })
+}
+
+/// The distance between two straight edges' lines when they are parallel (the sine between them at most 1e-9);
+/// none for an arc or crossing lines.
+pub fn parallel_gap(e1: &Edge, e2: &Edge) -> Option<f64> {
+    let (Edge::Seg { a, b }, Edge::Seg { a: c, b: d }) = (*e1, *e2) else {
+        return None;
+    };
+    let (ux, uy) = (b.x - a.x, b.y - a.y);
+    let (vx, vy) = (d.x - c.x, d.y - c.y);
+    let (lu, lv) = (js_hypot(ux, uy), js_hypot(vx, vy));
+    if !(lu > 1e-12 && lv > 1e-12) || (ux * vy - uy * vx).abs() > 1e-9 * lu * lv {
+        return None;
+    }
+    Some((ux * (c.y - a.y) - uy * (c.x - a.x)).abs() / lu)
 }
 
 fn parallels(e: &Edge, r: f64) -> Vec<Support> {

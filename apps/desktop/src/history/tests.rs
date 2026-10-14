@@ -162,3 +162,39 @@ fn the_replay_input_is_saved_where_asked_and_cleared_with_the_history() {
     circle_drawn(&mut app);
     assert_eq!(app.history.entries.len(), 1);
 }
+
+#[test]
+fn an_edit_without_a_command_has_no_buttons() {
+    let mut app = drawing();
+    crate::files_testing::make_cad(&mut app);
+    circle_drawn(&mut app);
+    let edit = app
+        .history
+        .entries
+        .iter()
+        .find(|e| {
+            matches!(&e.call, Call::Row(r) if r.kind == kentos_contracts::CallKind::Edit)
+        })
+        .expect("the settings' edit")
+        .clone();
+    let Call::Row(row) = &edit.call else {
+        unreachable!()
+    };
+    assert_eq!(
+        super::text::row_title(row),
+        "Komutsuz düzenleme: Proje ayarları"
+    );
+    assert!(app.python_of(&edit).is_none());
+    assert!(
+        app.call_buttons(&edit, false).is_none(),
+        "no Python, copy, play or save on an edit made without a command"
+    );
+    let call = app
+        .history
+        .entries
+        .iter()
+        .find(|e| matches!(&e.call, Call::Row(r) if r.kind == kentos_contracts::CallKind::Command))
+        .expect("Daire's call")
+        .clone();
+    assert!(app.call_buttons(&call, false).is_some());
+}

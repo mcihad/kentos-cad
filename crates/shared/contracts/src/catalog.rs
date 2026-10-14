@@ -1368,6 +1368,7 @@ pub fn catalog() -> CommandCatalog {
                       Dizi: satır × sütun yer (2 ile 10 000 arası), sütunlar dx, satırlar dy aralıkla; birden çok yeri olan yönün aralığı sıfır olamaz. \
                       Kutupsal dizi: merkezin çevresinde adet kadar öğe (2 ile 1000 arası, asıllar dahil), fill derecelik açıya; 360 tam turu eşit böler, eksi saat yönündedir. rotate ile kopyalar merkez etrafında döner, yoksa yönünü koruyup kopyalanan nesnelerin kutusunun ortasıyla yer değiştirir. \
                       Yol boyunca dizi: kalıcı kimliğiyle verilen yol (çizgi, yay, daire ya da çoklu çizgi) boyunca adet kadar yer (2 ile 10 000 arası, asıllar yolun başında); spacing verilirse yerler yolun başından o aralıkla, verilmezse yolun başından sonuna (kapalı yolda çevresine) eşit dağılır; align ile kopyalar yolun doğrultusuyla döner. Yol okunur, değişmez. \
+                      Kopyala'nın Dizi'si (line): yer değiştirme (dx, dy) boyunca adet kadar yer (2 ile 10 000 arası, asıllar ilk yerde), k'ıncı kopya k yer değiştirme ötede; fit ile son kopya yer değiştirmenin ucunda, öbürleri onu eşit paylaşır; adım Kopyala. \
                       Dizi, Kutupsal dizi ve Yol boyunca dizi araçları seçimi kimlik listesi olarak verip bu komutla yazar; adım aracın adını taşır. Yerleşim geometri çekirdeğindedir: her nesne türü aynı kuralla kopyalanır. \
                       Kopya aslının bütün alanlarını ve yeni bir kalıcı kimlik alır. Kilitli katmandaki nesnenin kopyası yapılmaz: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey yazılmaz. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
@@ -3602,6 +3603,50 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             }],
         },
         CommandDescriptor {
+            id: crate::CAD_CURVES_CONSTRUCT.into(),
+            version: crate::CAD_CURVES_CONSTRUCT_VERSION,
+            title: "Eğri yapımı".into(),
+            summary: "Daire, Yay ve Elips araçlarının yöntemleriyle daireyi, yayı ve elipsi neyle yapıldıklarıyla hesaplar: iki ya da üç noktadan daire, iki nesneye teğet ve yarıçaplı, üç nesneye teğet daire; üç noktadan, başlangıç–merkez–bitiş, –açı, –kiriş, başlangıç–bitiş–açı, –yön, –yarıçap yay ve bir nesnenin ucundan teğet Devam; eksen uçlarından ya da merkezden elips ve eliptik yay (diğer yarı eksen ya da döndürme). \
+                      Açılar doğudan saat yönünün tersine radyan. Cevap cad.circle.create, cad.arc.create ve cad.entities.create'in elipsinin aldığıdır; araçlar aynı hesabı kullanır. Çizimi değiştirmez; plan aynı cevabı verir."
+                .into(),
+            aliases: vec!["egriyap".into(), "egri-yapimi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::CurvesConstruct>(),
+            output: schema::<crate::CurvesConstructed>(),
+            plan: Some(schema::<crate::CurvesConstructed>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Üç noktadan yay ve bir çizginin ucundan teğet devam".into(),
+                    input: json!({ "constructions": [
+                        { "kind": "arcThreePoints", "start": { "kind": "at", "at": { "x": 10.0, "y": 0.0 } }, "mid": { "kind": "at", "at": { "x": 0.0, "y": 10.0 } }, "end": { "kind": "at", "at": { "x": -10.0, "y": 0.0 } } },
+                        { "kind": "arcContinue", "from": { "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f", "place": { "kind": "end" } }, "end": { "kind": "at", "at": { "x": 20.0, "y": 10.0 } } }
+                    ] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "İki nesneye teğet, 5 m yarıçaplı daire".into(),
+                    input: json!({ "constructions": [
+                        { "kind": "circleTangentTangentRadius", "first": { "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f", "near": { "x": 0.0, "y": 3.0 } }, "second": { "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60", "near": { "x": 3.0, "y": 0.0 } }, "r": 5.0 }
+                    ] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Eksen uçlarından eliptik yay".into(),
+                    input: json!({ "constructions": [
+                        { "kind": "ellipseAxis", "a": { "kind": "at", "at": { "x": 0.0, "y": 0.0 } }, "b": { "kind": "at", "at": { "x": 20.0, "y": 0.0 } }, "other": 4.0, "startAngle": 0.0, "endAngle": std::f64::consts::FRAC_PI_2 }
+                    ] }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::FILE_EXPORT_DXF.into(),
             version: crate::FILE_EXPORT_DXF_VERSION,
             title: "DXF dışa aktar".into(),
@@ -4097,6 +4142,10 @@ mod tests {
                     }
                     crate::CAD_POINTS_CONSTRUCT => {
                         serde_json::from_value::<crate::PointsConstruct>(e.input.clone())
+                            .map(|_| ())
+                    }
+                    crate::CAD_CURVES_CONSTRUCT => {
+                        serde_json::from_value::<crate::CurvesConstruct>(e.input.clone())
                             .map(|_| ())
                     }
                     other => panic!("{other}: add its input type to this test"),
