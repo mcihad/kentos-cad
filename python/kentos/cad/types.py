@@ -1108,6 +1108,21 @@ LookPartName = Literal["color", "lineType", "lineWeight", "transparency"]
 """The names of :class:`LookPart`, for a plain string."""
 
 
+class MirrorText(_StrEnum):
+    """What a mirror does to the texts (docs/adr/0292; AutoCAD's MIRRTEXT): texts, multi-line texts, texts along a
+    curve, leaders' notes and tables.
+
+    - ``readable``: Okunur (MIRRTEXT = 0): in its mirrored place, reading upright; its alignment turned so that it fills that
+    - ``mirrored``: Aynalı (MIRRTEXT = 1 without reversed letters): it turns with the drawing, its baseline's image read
+    """
+    READABLE = "readable"
+    MIRRORED = "mirrored"
+
+
+MirrorTextName = Literal["readable", "mirrored"]
+"""The names of :class:`MirrorText`, for a plain string."""
+
+
 class NetworkConnect(_StrEnum):
     """Where edges connect (docs/adr/0209 §3).
 
@@ -20842,7 +20857,9 @@ class ScaleTransform(Transform):
 
 @dataclass(kw_only=True, slots=True)
 class MirrorTransform(Transform):
-    """Mirror (aynala) across the line through `a` and `b`, two different points.
+    """Mirror (aynala) across the line through `a` and `b`, two different points. `text` is what becomes of the
+    texts (docs/adr/0292, AutoCAD's MIRRTEXT): readable (the default) or mirrored. A text's words and a block's
+    attribute values never change; a block's own texts and attributes always read upright.
     Attributes:
         a: Unit: length.
         b: Unit: length.
@@ -20850,11 +20867,14 @@ class MirrorTransform(Transform):
     TAG_VALUE: ClassVar[str] = "mirror"
     a: Vec2
     b: Vec2
+    text: MirrorText | MirrorTextName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "mirror"}
         out["a"] = _vec2_out(self.a)
         out["b"] = _vec2_out(self.b)
+        if self.text is not UNSET:
+            out["text"] = None if self.text is None else _enum_out(self.text)
         return out
 
     @classmethod
@@ -20862,6 +20882,7 @@ class MirrorTransform(Transform):
         return cls(
             a=Vec2.from_json(data["a"]),
             b=Vec2.from_json(data["b"]),
+            text=UNSET if "text" not in data else None if data["text"] is None else _enum_in(MirrorText, data["text"]),
         )
 
 
@@ -21876,6 +21897,8 @@ __all__ = [
     "MeasuredPoint",
     "MidPointConstruction",
     "MidSubPlace",
+    "MirrorText",
+    "MirrorTextName",
     "MirrorTransform",
     "MoveTransform",
     "NamedUcs",

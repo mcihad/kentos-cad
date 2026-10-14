@@ -275,7 +275,7 @@ fn mirror_copies_or_turns_the_source_over() {
     b.start("mirror");
     assert_eq!(
         b.session.prompt().text(),
-        "Aynala: simetri ekseninin ilk noktasını belirtin [Kaynağı sil (S): hayır]"
+        "Aynala: simetri ekseninin ilk noktasını belirtin [Kaynağı sil (S): hayır / Yazılar (Y): okunur]"
     );
     b.click(0.0, -20.0);
     b.click(0.0, 0.0);
@@ -295,7 +295,7 @@ fn mirror_copies_or_turns_the_source_over() {
         b.session
             .prompt()
             .text()
-            .ends_with("[Kaynağı sil (S): evet]")
+            .ends_with("[Kaynağı sil (S): evet / Yazılar (Y): okunur]")
     );
     b.click(0.0, -20.0);
     b.click(0.0, 0.0);

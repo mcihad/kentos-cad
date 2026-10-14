@@ -1286,7 +1286,11 @@
       "level": "semantic"
     },
     "mirror": {
-      "level": "semantic"
+      "level": "semantic",
+      "via": [
+        "cad.entities.transform"
+      ],
+      "note": "Eksen, Kaynağı sil ve Yazılar (okunur ya da aynalı) komuta verilir: aynanın text alanı (ADR 0292)."
     },
     "align": {
       "level": "semantic"

@@ -457,6 +457,8 @@ __all__ = [
     "Measures",
     "MidPointConstruction",
     "MidSubPlace",
+    "MirrorText",
+    "MirrorTextName",
     "MirrorTransform",
     "MoveTransform",
     "NAMESPACES",

@@ -185,6 +185,8 @@ mod segment_scenes;
 mod curve_scenes;
 #[cfg(test)]
 mod transform_scenes;
+#[cfg(test)]
+mod mirror_scenes;
 mod selecting;
 mod selection_chip;
 mod selection_commands;

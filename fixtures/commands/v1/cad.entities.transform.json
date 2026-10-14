@@ -137,7 +137,7 @@
     {
       "name": "simetrik kopya (kaynağı korur): yazı okunur kalır; adım Aynala",
       "steps": [
-        {"op": "execute", "input": {"uids": ["$uidOf:14"], "transform": {"kind": "mirror", "a": {"x": 487025, "y": 4420000}, "b": {"x": 487025, "y": 4420010}}, "copy": true}, "result": {"status": "completed", "output": {"changed": [], "created": ["$uidOf:22"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22], "entities": {"14": {"kind": "text", "id": 14, "layerId": "yapi", "attrs": {}, "p": {"x": 487005, "y": 4420025}, "text": "Ada 101", "height": 2, "rotation": 0}, "22": {"kind": "text", "id": 22, "layerId": "yapi", "attrs": {}, "p": {"x": 487045.0, "y": 4420025.0}, "text": "Ada 101", "height": 2.0, "rotation": 0.0}}, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:14"], "transform": {"kind": "mirror", "a": {"x": 487025, "y": 4420000}, "b": {"x": 487025, "y": 4420010}}, "copy": true}, "result": {"status": "completed", "output": {"changed": [], "created": ["$uidOf:22"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22], "entities": {"14": {"kind": "text", "id": 14, "layerId": "yapi", "attrs": {}, "p": {"x": 487005, "y": 4420025}, "text": "Ada 101", "height": 2, "rotation": 0}, "22": {"kind": "text", "id": 22, "layerId": "yapi", "attrs": {}, "p": {"x": 487045.0, "y": 4420025.0}, "text": "Ada 101", "height": 2.0, "rotation": 0.0, "align": "baselineRight"}}, "revision": "changed"}},
         {"op": "undo", "returns": "Aynala", "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]}}
       ]
     },

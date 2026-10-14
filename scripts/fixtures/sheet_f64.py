@@ -16,6 +16,7 @@ mpmath, and `assert_near_reference` holds this one within its tolerance of that.
 """
 
 import math
+import sys
 import struct
 from fractions import Fraction
 
@@ -251,8 +252,13 @@ class Sheet:
 
 
 def assert_near_reference(links, probes, metres=1e-9):
-    """This sheet against rubber_cases.py's 50-digit solution of the same links, at `probes`."""
-    import rubber_cases
+    """This sheet against rubber_cases.py's 50-digit solution of the same links, at `probes`. Without mpmath (which
+    rubber_cases.py needs) the comparison is skipped and said: the cases this module writes do not depend on it."""
+    try:
+        import rubber_cases
+    except ModuleNotFoundError as missing:
+        print(f"{missing.name} yok: ince plakanın 50 basamaklı karşılaştırması atlandı", file=sys.stderr)
+        return
 
     exact = rubber_cases.solve(links)
     sheet = Sheet(links)

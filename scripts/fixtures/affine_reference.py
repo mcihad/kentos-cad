@@ -88,19 +88,51 @@ def pt(t):
     return {"x": t[0], "y": t[1]}
 
 
-def text_turn(rotation, m):
-    """A text's turn (degrees) under `m`, from 0 up to 360: its baseline's direction mapped; mirrored, a half
-    turn more, so that it stays readable (AutoCAD's MIRRTEXT = 0)."""
+# A text's alignment with its box reflected across its own vertical (left and right swapped) and across its own
+# baseline (the baseline and the bottom become the top, the top the baseline, the middle stays), docs/adr/0292.
+ACROSS = {None: "baselineRight", "baselineRight": None, "bottomLeft": "bottomRight", "bottomRight": "bottomLeft",
+          "middleLeft": "middleRight", "middleRight": "middleLeft", "topLeft": "topRight", "topRight": "topLeft"}
+UP = {None: "topLeft", "bottomLeft": "topLeft", "baselineCenter": "topCenter", "bottomCenter": "topCenter",
+      "baselineRight": "topRight", "bottomRight": "topRight", "topLeft": None, "topCenter": "baselineCenter",
+      "topRight": "baselineRight"}
+
+
+def turn_of(a):
+    t = math.fmod(a, 360.0)
+    return t + 360.0 if t < 0.0 else t
+
+
+def text_frame(rotation, align, m, policy="readable"):
+    """A text's turn (degrees, 0 up to 360) and alignment under `m` (docs/adr/0292), and whether its up turned
+    back. Without a reflection its baseline's direction mapped. Under one, the frame comes out left-handed and one
+    axis turns back: the baseline (a half turn more, left and right swapped) when the baseline's image reads upside
+    down (over 90° and at most 270°) or the policy is mirrored; else the up (top and bottom swapped)."""
     rad = (rotation * math.pi) / 180.0
     d = linear(m, (math.cos(rad), math.sin(rad)))
-    rot = (math.atan2(d[1], d[0]) * 180.0) / math.pi
-    if reflects(m):
-        rot += 180.0
-    return math.fmod(math.fmod(rot, 360.0) + 360.0, 360.0)
+    raw = (math.atan2(d[1], d[0]) * 180.0) / math.pi
+    if not reflects(m):
+        return math.fmod(math.fmod(raw, 360.0) + 360.0, 360.0), align, False
+    r = turn_of(raw)
+    if policy == "readable" and not (90.0 < r <= 270.0):
+        return r, UP.get(align, align), True
+    return turn_of(r + 180.0), ACROSS.get(align, align), False
 
 
-def moved(e, m, new_id=None):
-    """`e` under `m`: the geometry by the transforms' definitions, every other field kept."""
+def text_turn(rotation, m, policy="readable"):
+    """A text's turn alone (a leader's note), by `text_frame`."""
+    return text_frame(rotation, None, m, policy)[0]
+
+
+def set_align(e, align):
+    if align is None:
+        e.pop("align", None)
+    else:
+        e["align"] = align
+
+
+def moved(e, m, new_id=None, policy="readable"):
+    """`e` under `m`: the geometry by the transforms' definitions, every other field kept; a mirror's texts by
+    `policy` (docs/adr/0292)."""
     e = json.loads(json.dumps(e))
     if new_id is not None:
         e["id"] = new_id
@@ -153,12 +185,13 @@ def moved(e, m, new_id=None):
     elif k == "text":
         e["p"] = pt(apply(m, xy(e["p"])))
         e["height"] = e["height"] * s
-        e["rotation"] = text_turn(e["rotation"], m)
+        e["rotation"], align, _ = text_frame(e["rotation"], e.get("align"), m, policy)
+        set_align(e, align)
     elif k == "leader":
         # Its vertices move; its note turns as a text does, readable when mirrored (docs/adr/0146 §4).
         e["pts"] = [pt(apply(m, xy(p))) for p in e["pts"]]
         e["height"] = e["height"] * s
-        e["rotation"] = text_turn(e["rotation"], m)
+        e["rotation"] = text_turn(e["rotation"], m, policy)
     elif k == "dimension":
         style = e.get("style", "aligned")
         assert style in ("aligned", "ordinate", "arcLength", "jogged", "azimuth", "slope"), style

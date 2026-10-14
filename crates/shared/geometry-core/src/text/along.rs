@@ -467,13 +467,14 @@ pub struct Placed {
 /// as its baseline's direction, its curve scaled; mirrored, its curve
 /// mirrored in its frame, turned the other way with its share along
 /// swapped, and again with its share up swapped when the curve then reads
-/// upside down.
+/// upside down and the text is to stay `readable` (docs/adr/0292).
 pub fn transformed(
     p: Vec2,
     rotation: f64,
     curve: &Curve,
     align: Option<TextAlign>,
     m: &Affine,
+    readable: bool,
 ) -> Placed {
     let s = length_scale(m);
     let at = apply(m, p);
@@ -508,7 +509,7 @@ pub fn transformed(
     };
     let (p2, r2, c2) = mirrored.reversed(at, turn);
     let a2 = swapped(align, false);
-    if upside_down(c2.chord(p2, r2)) {
+    if readable && upside_down(c2.chord(p2, r2)) {
         let (p3, r3, c3) = c2.reversed(p2, r2);
         return Placed {
             p: p3,

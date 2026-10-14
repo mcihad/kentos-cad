@@ -738,6 +738,9 @@ pub struct Memory {
     pub copy_single: bool,
     /// The last displacement Taşı or Kopyala used (docs/adr/0291): Yer değiştirme's Enter.
     pub last_displacement: Option<[f64; 2]>,
+    /// Aynala's Yazılar (docs/adr/0292; AutoCAD's MIRRTEXT): the texts turn with the mirror instead of staying
+    /// readable; the tool and the grip mode share it for the session.
+    pub mirror_text_mirrored: bool,
     /// NURBS eğrisi's method (control points, else fit points) and degree
     /// (docs/adr/0259 §6), kept for the session as AutoCAD's SPLINE keeps them.
     pub nurbs_control: bool,
@@ -1053,6 +1056,7 @@ impl Default for Memory {
             arc_drawn_back: None,
             copy_single: false,
             last_displacement: None,
+            mirror_text_mirrored: false,
             nurbs_control: false,
             nurbs_degree: 3,
             block_insert: None,
