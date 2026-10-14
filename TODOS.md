@@ -170,6 +170,11 @@ Liste:
   uyarıları komutun sözleri; paralel iki doğruya TTY, saat yönünde verilen yaydan Devam; araç durumları
   `fixtures/curve-methods/v1/tools.json`. Web'in donmuş çağrı kayıtları eski `arcStartCenterEnd` ve `arcStartCenterAngle`'ı (tam tur)
   tutar; geri dönüşte komutun kuralına getirilir.
+- [ ] `CAD-EDIT-06` (ADR 0292, 14 Ekim): web'de gerekenler: Aynala aracına ve tutamaç kipine Yazılar (Y: okunur/aynalı);
+  `cad.entities.transform` işleyicisine aynanın `text` alanı ve okunur kuralı (taban görüntüsü okunuyorsa yukarısı geri döner, üst ↔ taban;
+  okunmuyorsa taban geri döner, sol ↔ sağ; tablo köşesi; eğri boyunca yazıda Aynalı ikinci çevirmeyi atlar); web'in `transformEntity`'si
+  şimdilik eski kuralda (`TextPolicy::Web`), geri dönüşte okunura geçer ve `calls-*.json` güncellenir; iz `mirror.json`'un seçenekleri.
+  Masaüstünde açık: tutamaç kipinde Döndür'ün yazılan açısı her projede derece (CAD-EDIT-05'in kuralına getirilmeli).
 - [ ] `CAD-EDIT-07` (ADR 0293, 14 Ekim): web'de gerekenler: `cad.entities.offset`'in web işleyicisine delikli ve çok parçalı alanın
   delikleri, fit-point eğrisi ve NURBS (kirişleriyle), `radius_collapse`, `approximate_offset` ve `self_intersecting`; tersine dönen halkanın
   reddi; web'in `offsetEntity`'si geri dönüşte `offset_noted`'ın kuralına getirilir (donmuş çağrı kayıtları güncellenir).
