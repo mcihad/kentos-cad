@@ -383,6 +383,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   dikdörtgen ve düzgün çokgen komutları: `cad.rectangle.create` (iki köşe, boyut, alan ya da kenar ve en; dönüş; keskin, yuvarlak, pah)
   ve `cad.polygon.regular` (çember içinde, dışında, kenardan) halkayı çekirdekle hesaplar ve `cad.polygon.create`'in yolundan yazar;
   araçlar önizlemeyi komutun hesabından (`shapes::rectangle_ring`, `regular_ring`) alır, Çakışma ve Topoloji alanı değiştirince alanın
+  eğri yapımı ve yöntemlerin doğrulanması: salt okunur `cad.curves.construct` (iki ve üç noktadan, TTY ve TTT daire; yayın on bir yöntemi ve
+  Devam; eksen uçlarından ya da merkezden elips ve eliptik yay), Yay, Daire ve Elips eğriyi onun hesabından alır ve reddini söyler;
+  bağımsız başvuru `curve_method_cases.py`, ortak durumlarda `within` (ADR 0289);
   yolundan yazar (`points::write_area_by`) (ADR 0290);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
