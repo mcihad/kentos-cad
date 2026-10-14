@@ -15,6 +15,9 @@ const STILL: f32 = 0.75;
 #[derive(Clone, Debug, PartialEq)]
 pub struct SnapCycle {
     pub at: Point,
+    /// The drawing's revision the candidates were found at: a change (an undo, another's edit) lets them go
+    /// (docs/adr/0273 §2).
+    pub revision: u64,
     pub candidates: Vec<SnapHit>,
     pub pick: usize,
 }
@@ -28,10 +31,11 @@ impl App {
         };
         let [x, y] = self.viewport.camera.world_to_screen(world);
         let at = Point::new(x as f32, y as f32);
+        let revision = self.document.as_ref().map_or(0, |d| d.model.revision());
         let fresh = !self
             .snap_cycle
             .as_ref()
-            .is_some_and(|c| c.at.distance(at) <= STILL);
+            .is_some_and(|c| c.at.distance(at) <= STILL && c.revision == revision);
         if fresh {
             let Some(doc) = &self.document else {
                 return false;
@@ -48,8 +52,10 @@ impl App {
             if candidates.len() < 2 {
                 return false;
             }
+            let revision = self.document.as_ref().map_or(0, |d| d.model.revision());
             self.snap_cycle = Some(SnapCycle {
                 at,
+                revision,
                 candidates,
                 pick: 0,
             });
@@ -70,7 +76,8 @@ impl App {
     /// The snap the cycle holds for a pointer at `at`; the cycle goes once the pointer moved away.
     pub(crate) fn cycled_snap(&mut self, at: Point) -> Option<SnapHit> {
         let cycle = self.snap_cycle.as_ref()?;
-        if cycle.at.distance(at) > STILL {
+        let revision = self.document.as_ref().map_or(0, |d| d.model.revision());
+        if cycle.at.distance(at) > STILL || cycle.revision != revision {
             self.snap_cycle = None;
             return None;
         }

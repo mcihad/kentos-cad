@@ -211,6 +211,8 @@ mod sheet_library;
 mod sheet_pdf;
 mod sheets;
 mod shortcuts;
+#[cfg(test)]
+mod snap_commit_tests;
 mod snap_cycle;
 mod snap_menu;
 #[cfg(test)]
