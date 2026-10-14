@@ -125,6 +125,8 @@ mod message_log;
 mod message_log_tests;
 #[cfg(test)]
 mod method_scenes;
+#[cfg(test)]
+mod mirror_scenes;
 mod modes;
 mod navigation;
 mod navigation_cards;

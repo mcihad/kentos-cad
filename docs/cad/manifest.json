@@ -8194,7 +8194,7 @@
    "operation": null,
    "python": "kentos.cad.entities.transform",
    "mcp": "cad.entities.transform",
-   "note": null,
+   "note": "Eksen, Kaynağı sil ve Yazılar (okunur ya da aynalı) komuta verilir: aynanın text alanı (ADR 0292).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2

@@ -1,6 +1,10 @@
 //! A similarity transform (move, rotate, uniform scale, mirror) applied to
 //! any entity (`apps/web/src/model/ops/transform.ts`). The result keeps the id and
-//! every other field; mirrored text stays readable (MIRRTEXT = 0).
+//! every other field. Under a reflection a text's way is the policy's
+//! (docs/adr/0292, AutoCAD's MIRRTEXT): readable (the default, MIRRTEXT = 0)
+//! takes the text to its mirrored place reading upright, its alignment
+//! turned so that it fills that place; mirrored turns it with the drawing.
+//! A text's words and a block's attribute values never change.
 
 use crate::api::Op;
 use crate::entity::{Entity, HatchAssoc, Part, PointPart, Shape, ellipse_geom};
@@ -11,7 +15,77 @@ use crate::geom::ellipse::is_full_ellipse;
 use crate::geom::hatch_pattern::carried;
 use crate::jsmath::{PI, atan2, cos, js_hypot, or, sin};
 use crate::op;
+use crate::text::TextAlign;
 use crate::vec2::Vec2;
+
+/// How a reflection treats texts (docs/adr/0292): AutoCAD's MIRRTEXT.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum TextPolicy {
+    /// MIRRTEXT = 0: in its mirrored place, reading upright; never upside down.
+    #[default]
+    Readable,
+    /// MIRRTEXT = 1 as far as a text without reversed letters goes: it turns with the drawing, its baseline's
+    /// image read backwards, upside down when that points west.
+    Mirrored,
+    /// The web's frozen rule (docs/adr/0228, 0292): half a turn more, the alignment kept. Only its call table
+    /// (`transformEntity`) uses it until the web comes back (TODOS.md §0.2).
+    Web,
+}
+
+/// A direction in degrees from 0 up to 360 (`a % 360`, plus a turn below 0).
+fn turn_of(a: f64) -> f64 {
+    let t = a % 360.0;
+    if t < 0.0 { t + 360.0 } else { t }
+}
+
+/// Whether a direction (degrees, 0 up to 360) reads upside down: over 90° and at most 270° (ADR 0145 §3).
+fn upside_down(d: f64) -> bool {
+    d > 90.0 && d <= 270.0
+}
+
+/// Left and right swapped: the text's box reflected across its own vertical through its point.
+pub fn align_swapped_across(align: Option<TextAlign>) -> Option<TextAlign> {
+    crate::text::along::swapped(align, false)
+}
+
+/// Top and bottom swapped (the baseline and the bottom become the top, the top the baseline, the middle stays):
+/// the text's box reflected across its own baseline.
+pub fn align_swapped_up(align: Option<TextAlign>) -> Option<TextAlign> {
+    use TextAlign::*;
+    match align {
+        None | Some(BottomLeft) => Some(TopLeft),
+        Some(BaselineCenter) | Some(BottomCenter) => Some(TopCenter),
+        Some(BaselineRight) | Some(BottomRight) => Some(TopRight),
+        Some(TopLeft) => None,
+        Some(TopCenter) => Some(BaselineCenter),
+        Some(TopRight) => Some(BaselineRight),
+        middle => middle,
+    }
+}
+
+/// A text's turn (degrees) and alignment under `m` (docs/adr/0292). Without a reflection, its baseline's
+/// direction mapped. Under one, the text's frame comes out left-handed: one of its axes is turned back. Readable
+/// turns back the one that leaves it upright: its baseline when the baseline's image reads upside down (a half
+/// turn more, left and right swapped), else its up (the baseline's image, top and bottom swapped). Mirrored
+/// always turns back the baseline.
+pub fn text_frame(rotation: f64, align: Option<TextAlign>, m: &Affine, policy: TextPolicy) -> (f64, Option<TextAlign>, bool) {
+    let rad = (rotation * PI) / 180.0;
+    let dir = apply_linear(m, Vec2::new(cos(rad), sin(rad)));
+    let raw = (atan2(dir.y, dir.x) * 180.0) / PI;
+    if !is_reflection(m) {
+        return (((raw % 360.0) + 360.0) % 360.0, align, false);
+    }
+    if policy == TextPolicy::Web {
+        let rot = raw + 180.0;
+        return (((rot % 360.0) + 360.0) % 360.0, align, false);
+    }
+    let r = turn_of(raw);
+    if policy == TextPolicy::Readable && !upside_down(r) {
+        (r, align_swapped_up(align), true)
+    } else {
+        (turn_of(r + 180.0), align_swapped_across(align), false)
+    }
+}
 
 fn angle_of(c: Vec2, p: Vec2) -> f64 {
     norm_angle(atan2(p.y - c.y, p.x - c.x))
@@ -50,6 +124,11 @@ fn transform_holes(holes: &Option<Vec<Ring>>, m: &Affine) -> Option<Vec<Ring>> {
 /// objects with it (move, copy, arrays and paste answer packed, without the
 /// objects crossing as JSON; `Store::transform_packed`).
 pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
+    transform_shape_with(shape, m, TextPolicy::Readable)
+}
+
+/// [`transform_shape`] with a reflection's text policy (docs/adr/0292).
+pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Shape {
     let s = length_scale(m);
     match shape {
         Shape::Point { p, z, parts } => Shape::Point {
@@ -408,12 +487,14 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
             runs,
             face,
             path: None,
-        } => Shape::Text {
+        } => {
+            let (rotation, align, _) = text_frame(*rotation, *align, m, policy);
+            Shape::Text {
             p: apply(m, *p),
             text: text.clone(),
             height: height * s,
-            rotation: text_turn(*rotation, m),
-            align: *align,
+            rotation,
+            align,
             width_factor: *width_factor,
             mask: *mask,
             box_width: box_width.map(|w| w * s),
@@ -421,7 +502,8 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
             runs: runs.clone(),
             face: face.clone(),
             path: None,
-        },
+        }
+        }
         // Along a curve: its frame moves and turns, its curve scales; mirrored,
         // the curve is turned the other way so that it still reads (docs/adr/0196 §3).
         Shape::Text {
@@ -438,7 +520,14 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
             face,
             path: Some(curve),
         } => {
-            let placed = crate::text::along::transformed(*p, *rotation, curve, *align, m);
+            let placed = crate::text::along::transformed(
+                *p,
+                *rotation,
+                curve,
+                *align,
+                m,
+                policy != TextPolicy::Mirrored,
+            );
             Shape::Text {
                 p: placed.p,
                 text: text.clone(),
@@ -467,7 +556,7 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
             pts: pts.iter().map(|&p| apply(m, p)).collect(),
             text: text.clone(),
             height: height * s,
-            rotation: text_turn(*rotation, m),
+            rotation: text_frame(*rotation, None, m, policy).0,
             arrow: arrow.clone(),
             arrow_size: *arrow_size,
             mask: *mask,
@@ -490,16 +579,22 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
             source,
             face,
         } => {
-            let corner = if is_reflection(m) {
-                let width: f64 = columns.iter().sum();
-                let r = (rotation * PI) / 180.0;
-                Vec2::new(p.x + cos(r) * width, p.y + sin(r) * width)
-            } else {
+            // Mirrored, the table's new top left is the image of its top right when its baseline turns back,
+            // of its bottom left when its up does (docs/adr/0292): its rows still read left to right, top down.
+            let (turn, _, up_back) = text_frame(*rotation, None, m, policy);
+            let r = (rotation * PI) / 180.0;
+            let corner = if !is_reflection(m) {
                 *p
+            } else if up_back {
+                let height: f64 = rows.iter().sum();
+                Vec2::new(p.x + sin(r) * height, p.y - cos(r) * height)
+            } else {
+                let width: f64 = columns.iter().sum();
+                Vec2::new(p.x + cos(r) * width, p.y + sin(r) * width)
             };
             Shape::Table {
                 p: apply(m, corner),
-                rotation: text_turn(*rotation, m),
+                rotation: turn,
                 height: height * s,
                 rows: rows.iter().map(|h| h * s).collect(),
                 columns: columns.iter().map(|w| w * s).collect(),
@@ -546,19 +641,6 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
     }
 }
 
-/// A text's turn (degrees) under `m`, from 0 up to 360: its baseline's
-/// direction mapped; mirrored, a half turn more, so that it stays readable
-/// (like AutoCAD's MIRRTEXT = 0).
-fn text_turn(rotation: f64, m: &Affine) -> f64 {
-    let rad = (rotation * PI) / 180.0;
-    let dir = apply_linear(m, Vec2::new(cos(rad), sin(rad)));
-    let mut rot = (atan2(dir.y, dir.x) * 180.0) / PI;
-    if is_reflection(m) {
-        rot += 180.0;
-    }
-    ((rot % 360.0) + 360.0) % 360.0
-}
-
 pub fn transform_entity(e: &Entity, m: &Affine) -> Entity {
     e.with(transform_shape(&e.shape, m))
 }
@@ -578,9 +660,12 @@ pub fn transform_entities(list: &[Entity], ms: &[Affine]) -> Vec<Entity> {
 }
 
 pub(crate) static OPS: &[Op] = &[
-    op!("transformEntity", |e: Entity, m: Affine| transform_entity(
-        &e, &m
-    )),
+    // The web's frozen rule for a mirror's texts (docs/adr/0292).
+    op!("transformEntity", |e: Entity, m: Affine| e.with(transform_shape_with(
+        &e.shape,
+        &m,
+        TextPolicy::Web
+    ))),
     op!("translateEntity", |e: Entity, dx: f64, dy: f64| {
         translate_entity(&e, dx, dy)
     }),

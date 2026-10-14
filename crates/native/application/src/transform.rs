@@ -54,7 +54,7 @@ use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::jsmath::{js_hypot, js_max};
 use kentos_geometry_core::ops::arrange::{self, Mode};
 use kentos_geometry_core::ops::rubber::{Link, RubberError, Sheet};
-use kentos_geometry_core::ops::transform::transform_shape;
+use kentos_geometry_core::ops::transform::{TextPolicy, transform_shape, transform_shape_with};
 use kentos_geometry_core::ops::warp::{CHORD, Warp, sheet_shape, warp_shape};
 use kentos_geometry_core::text::Font;
 
@@ -227,7 +227,7 @@ pub fn affine(transform: &Transform) -> Option<Affine> {
         Transform::Move { dx, dy } => similarity("move", &[dx, dy]),
         Transform::Rotate { center, angle } => similarity("rotate", &[center.x, center.y, angle]),
         Transform::Scale { center, factor } => similarity("scale", &[center.x, center.y, factor]),
-        Transform::Mirror { a, b } => similarity("mirror", &[a.x, a.y, b.x, b.y]),
+        Transform::Mirror { a, b, .. } => similarity("mirror", &[a.x, a.y, b.x, b.y]),
         Transform::Align {
             source: s,
             target: t,
@@ -538,7 +538,7 @@ fn check_transform(transform: &Transform) -> Result<How, Stop> {
                 )));
             }
         }
-        Transform::Mirror { a, b } => {
+        Transform::Mirror { a, b, .. } => {
             checks::point(a, "Eksenin ilk noktasının", "transform.a")?;
             checks::point(b, "Eksenin ikinci noktasının", "transform.b")?;
             // The core's own measure of the axis (`mirror`): zero leaves it no direction.
@@ -584,9 +584,22 @@ fn check_transform(transform: &Transform) -> Result<How, Stop> {
 }
 
 /// The checks in the contract's order.
+/// A mirror's text policy (docs/adr/0292); readable for every other transform.
+pub fn text_policy(transform: &Transform) -> TextPolicy {
+    match transform {
+        Transform::Mirror {
+            text: Some(kentos_contracts::MirrorText::Mirrored),
+            ..
+        } => TextPolicy::Mirrored,
+        _ => TextPolicy::Readable,
+    }
+}
+
 fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
     checks::uids(&input.uids, "Dönüştürülecek nesne verilmedi.")?;
     let how = check_transform(&input.transform)?;
+    // A mirror's texts (docs/adr/0292): readable unless asked otherwise.
+    let policy = text_policy(&input.transform);
     checks::revision(doc, input.expected_revision.as_deref())?;
     let mut sources = Vec::new();
     let mut moved = Vec::new();
@@ -627,7 +640,7 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
                 continue;
             }
             How::Matrix(m) => {
-                let after = transform_shape(&before, m);
+                let after = transform_shape_with(&before, m, policy);
                 overflow |= finite_shape(&before) && !finite_shape(&after);
                 with_shape(entity, after)
             }

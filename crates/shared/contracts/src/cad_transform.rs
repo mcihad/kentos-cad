@@ -24,6 +24,23 @@ use crate::entity::{Entity, Vec2};
 pub const CAD_ENTITIES_TRANSFORM: &str = "cad.entities.transform";
 pub const CAD_ENTITIES_TRANSFORM_VERSION: u32 = 1;
 
+/// What a mirror does to the texts (docs/adr/0292; AutoCAD's MIRRTEXT): texts, multi-line texts, texts along a
+/// curve, leaders' notes and tables.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum MirrorText {
+    /// Okunur (MIRRTEXT = 0): in its mirrored place, reading upright; its alignment turned so that it fills that
+    /// place.
+    #[default]
+    Readable,
+    /// Aynalı (MIRRTEXT = 1 without reversed letters): it turns with the drawing, its baseline's image read
+    /// backwards; upside down when that points west.
+    Mirrored,
+}
+
 /// One transform of the plane: a similarity as the modify tools ask for it
 /// (docs/adr/0037, 0047), Vektör oturtma's similarity, affine or projective
 /// transform in centred form (docs/adr/0156 §6), or Kauçuk levha's links
@@ -56,12 +73,17 @@ pub enum Transform {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         factor: f64,
     },
-    /// Mirror (aynala) across the line through `a` and `b`, two different points.
+    /// Mirror (aynala) across the line through `a` and `b`, two different points. `text` is what becomes of the
+    /// texts (docs/adr/0292, AutoCAD's MIRRTEXT): readable (the default) or mirrored. A text's words and a block's
+    /// attribute values never change; a block's own texts and attributes always read upright.
     Mirror {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         a: Vec2,
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         b: Vec2,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        text: Option<MirrorText>,
     },
     /// Align (hizala, AutoCAD's ALIGN): `source` goes onto `target`. With a
     /// second pair (`source2` and `target2`, given together) the objects

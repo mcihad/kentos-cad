@@ -2965,12 +2965,16 @@ class _EntitiesTransform(LocalCommand[EntitiesTransform, EntitiesTransformed, En
     Döndür, Ölçekle, Aynala ve Hizala araçları seçimi kimlik listesi olarak verip bu
     komutla yazar; adım aracın adını taşır. Dönüşüm geometri çekirdeğindedir: her nesne
     türü (yay, daire, elips, eğri, yazı, ölçü, tarama) aynı kuralla döner; yaylar saat
-    yönünün tersine kalır, aynalanan yazı okunur kalır. Yerinde değişen nesne yuvasını,
-    kalıcı kimliğini ve öbür alanlarını korur; kopya bütün alanları alır, yeni bir
-    kalıcı kimlik alır. Kilitli katmandaki nesne ne değişir ne kopyalanır: öbürleri
-    uyarıyla yazılır, hepsi kilitliyse hiçbir şey yazılmaz. expectedRevision verilmişse
-    ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim
-    izin istemez; bulut projesine değişiklik project.changes ile gider.
+    yönünün tersine kalır. Aynanın text alanı yazıların ne olacağıdır (AutoCAD'in
+    MIRRTEXT'i): readable (varsayılan) yazıyı aynadaki yerinde okunur, baş aşağı
+    olmadan, hizası o yeri dolduracak biçimde yazar; mirrored yazıyı çizimle döndürür;
+    yazıların metni ve bloğun öznitelik değerleri hiç değişmez, bloğun kendi yazıları
+    her zaman okunurdur. Yerinde değişen nesne yuvasını, kalıcı kimliğini ve öbür
+    alanlarını korur; kopya bütün alanları alır, yeni bir kalıcı kimlik alır. Kilitli
+    katmandaki nesne ne değişir ne kopyalanır: öbürleri uyarıyla yazılır, hepsi
+    kilitliyse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde
+    değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut
+    projesine değişiklik project.changes ile gider.
     """
     __slots__ = ()
     id = "cad.entities.transform"
@@ -3001,13 +3005,17 @@ class _EntitiesTransform(LocalCommand[EntitiesTransform, EntitiesTransformed, En
         scale ile boyları da eşitlenir. Taşı, Kopyala, Döndür, Ölçekle, Aynala ve Hizala
         araçları seçimi kimlik listesi olarak verip bu komutla yazar; adım aracın adını
         taşır. Dönüşüm geometri çekirdeğindedir: her nesne türü (yay, daire, elips, eğri,
-        yazı, ölçü, tarama) aynı kuralla döner; yaylar saat yönünün tersine kalır, aynalanan
-        yazı okunur kalır. Yerinde değişen nesne yuvasını, kalıcı kimliğini ve öbür
-        alanlarını korur; kopya bütün alanları alır, yeni bir kalıcı kimlik alır. Kilitli
-        katmandaki nesne ne değişir ne kopyalanır: öbürleri uyarıyla yazılır, hepsi
-        kilitliyse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde
-        değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut
-        projesine değişiklik project.changes ile gider.
+        yazı, ölçü, tarama) aynı kuralla döner; yaylar saat yönünün tersine kalır. Aynanın
+        text alanı yazıların ne olacağıdır (AutoCAD'in MIRRTEXT'i): readable (varsayılan)
+        yazıyı aynadaki yerinde okunur, baş aşağı olmadan, hizası o yeri dolduracak biçimde
+        yazar; mirrored yazıyı çizimle döndürür; yazıların metni ve bloğun öznitelik
+        değerleri hiç değişmez, bloğun kendi yazıları her zaman okunurdur. Yerinde değişen
+        nesne yuvasını, kalıcı kimliğini ve öbür alanlarını korur; kopya bütün alanları
+        alır, yeni bir kalıcı kimlik alır. Kilitli katmandaki nesne ne değişir ne
+        kopyalanır: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey yazılmaz.
+        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+        conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes
+        ile gider.
 
         Args:
             doc: The drawing it works on.

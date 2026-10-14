@@ -34,7 +34,7 @@
     { "key": "Enter", "note": "Kopya 7 m doğudadır; dönüşü ve ölçeği aynıdır.", "expect": { "tool": "copy", "entities": 15, "newest": { "kind": "insert", "points": [[1, 4.8], [1, 3.8], [2, 4.8]] } } },
     { "key": "Enter", "expect": { "tool": "select" } },
     { "click": [8, 4.8], "note": "Doğudaki direk seçilir.", "expect": { "selected": [8] } },
-    { "run": "tool.mirror", "expect": { "tool": "mirror", "options": ["S"] } },
+    { "run": "tool.mirror", "expect": { "tool": "mirror", "options": ["S", "Y"] } },
     { "text": "487020,4420010" },
     { "key": "Enter", "note": "Eksen yolun ekseni." },
     { "text": "487030,4420010" },

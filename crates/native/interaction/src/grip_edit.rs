@@ -74,6 +74,20 @@ impl GripMode {
     ];
 }
 
+/// Aynala's Yazılar as the prompt says it (docs/adr/0292).
+pub fn texts_word(mirrored: bool) -> &'static str {
+    if mirrored { "aynalı" } else { "okunur" }
+}
+
+/// Aynala's Yazılar as the command takes it (docs/adr/0292).
+pub fn mirror_text(mirrored: bool) -> kentos_contracts::MirrorText {
+    if mirrored {
+        kentos_contracts::MirrorText::Mirrored
+    } else {
+        kentos_contracts::MirrorText::Readable
+    }
+}
+
 /// A grip made hot with Shift: its object, its index among the object's grips, where it stands.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct HotGrip {
@@ -109,6 +123,8 @@ pub struct GripModes {
     pub copy: bool,
     /// How many placements were written while Kopya was on.
     pub placed: usize,
+    /// Aynala's Yazılar (docs/adr/0292): the texts turn with the mirror; else they stay readable.
+    pub text_mirrored: bool,
 }
 
 /// What a letter or typed text did to the modes.
@@ -125,6 +141,14 @@ impl GripModes {
         Self {
             base,
             ..Self::default()
+        }
+    }
+
+    /// [`GripModes::new`] with the session's Yazılar (docs/adr/0292).
+    pub fn with_texts(base: Vec2, text_mirrored: bool) -> Self {
+        Self {
+            text_mirrored,
+            ..Self::new(base)
         }
     }
 
@@ -172,6 +196,9 @@ impl GripModes {
         if matches!(self.mode, GripMode::Rotate | GripMode::Scale) {
             prompt = prompt.option("Referans", "R");
         }
+        if self.mode == GripMode::Mirror {
+            prompt = prompt.option_with("Yazılar", "Y", texts_word(self.text_mirrored));
+        }
         prompt.option_with("Kopya", "K", if self.copy { "açık" } else { "kapalı" })
     }
 
@@ -193,6 +220,13 @@ impl GripModes {
                 "R" if matches!(self.mode, GripMode::Rotate | GripMode::Scale) => {
                     self.stage = Stage::RefFrom;
                     return Some(Typed::Said("Referansı gösterin ya da yazın.".to_owned()));
+                }
+                "Y" if self.mode == GripMode::Mirror => {
+                    self.text_mirrored = !self.text_mirrored;
+                    return Some(Typed::Said(format!(
+                        "Yazılar: {}.",
+                        texts_word(self.text_mirrored)
+                    )));
                 }
                 "K" => {
                     self.copy = !self.copy;
@@ -287,6 +321,7 @@ impl GripModes {
             GripMode::Mirror => (dist(base, at) > SAME).then(|| Transform::Mirror {
                 a: wire(base),
                 b: wire(at),
+                text: Some(mirror_text(self.text_mirrored)),
             }),
         }
     }
@@ -304,7 +339,7 @@ impl GripModes {
             Transform::Scale { center, factor } => {
                 Some(scaling(factor, Vec2::new(center.x, center.y)))
             }
-            Transform::Mirror { a, b } => Some(mirror(Vec2::new(a.x, a.y), Vec2::new(b.x, b.y))),
+            Transform::Mirror { a, b, .. } => Some(mirror(Vec2::new(a.x, a.y), Vec2::new(b.x, b.y))),
             _ => None,
         }
     }

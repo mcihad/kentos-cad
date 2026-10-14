@@ -1212,7 +1212,7 @@ impl Input for EntitiesTransform {
                 "factor" => Some(factor),
                 _ => coordinate(center, "center", rest),
             },
-            Transform::Mirror { a, b } => {
+            Transform::Mirror { a, b, .. } => {
                 coordinate(a, "a", rest).or_else(|| coordinate(b, "b", rest))
             }
             Transform::Align {

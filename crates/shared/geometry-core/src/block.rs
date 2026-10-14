@@ -751,6 +751,77 @@ mod tests {
         assert_eq!(pieces[1].color.as_deref(), Some("#FF0000"));
     }
 
+    /// A door: its leaf, its swing arc and its number attribute, base (0, 0). Mirrored in the definition's x
+    /// axis the swing turns over; the number reads upright (docs/adr/0292): its up turned back, top for
+    /// baseline, its value the insert's. Mirrored and turned half a turn (a mirror in the y axis), its baseline
+    /// turns back: right for left, still at 0°.
+    #[test]
+    fn a_mirrored_door_keeps_its_number_readable() {
+        const DOOR: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003";
+        let blocks = Blocks::new(vec![Definition {
+            id: DOOR.into(),
+            base: Vec2::new(0.0, 0.0),
+            entities: vec![
+                entity(r#"{"kind":"line","id":1,"layerId":"","attrs":{},"a":{"x":0,"y":0},"b":{"x":0,"y":0.9}}"#),
+                entity(&format!(
+                    r#"{{"kind":"arc","id":2,"layerId":"","attrs":{{}},"c":{{"x":0,"y":0}},"r":0.9,"a0":0,"a1":{}}}"#,
+                    PI / 2.0
+                )),
+            ],
+            attributes: vec![Attribute {
+                tag: "NO".into(),
+                value: "?".into(),
+                p: Vec2::new(0.45, 0.3),
+                height: 0.15,
+                rotation: 0.0,
+                align: None,
+                width_factor: None,
+            }],
+        }]);
+        let mut attrs = Attrs::default();
+        attrs.0.push(("NO".to_owned(), Json::Str("K-12".to_owned())));
+        let door = |rotation: f64| Shape::Insert {
+            block: DOOR.into(),
+            p: Vec2::new(10.0, 20.0),
+            scale: 1.0,
+            rotation,
+            mirror: Some(true),
+            attrs: Some(attrs.clone()),
+        };
+        let texts = |pieces: &[Piece]| -> Vec<(f64, f64, f64, Option<TextAlign>, String)> {
+            pieces
+                .iter()
+                .filter_map(|q| match &q.shape {
+                    Shape::Text { p, rotation, align, text, .. } => {
+                        let shown = q
+                            .attribute
+                            .as_ref()
+                            .and_then(|tag| attrs.shown(tag).map(str::to_owned))
+                            .unwrap_or_else(|| text.clone());
+                        Some((p.x, p.y, *rotation, *align, shown))
+                    }
+                    _ => None,
+                })
+                .collect()
+        };
+        let pieces = blocks.expand(&door(0.0));
+        // The swing arc mirrored: from east clockwise to south, stored counter-clockwise from 270° to 360°.
+        let Some(Shape::Arc { a0, a1, .. }) = pieces.iter().map(|q| &q.shape).find(|s| matches!(s, Shape::Arc { .. }))
+        else {
+            panic!("an arc");
+        };
+        assert!(((a0 - 3.0 * PI / 2.0).abs() < 1e-12) && a1.abs() < 1e-12, "{a0} {a1}");
+        assert_eq!(texts(&pieces), [(10.45, 19.7, 0.0, Some(TextAlign::TopLeft), "K-12".to_owned())]);
+        let pieces = blocks.expand(&door(PI));
+        let shown = texts(&pieces);
+        let [(x, y, rotation, align, ref value)] = shown[..] else {
+            panic!("one text");
+        };
+        assert!((x - 9.55).abs() < 1e-12 && (y - 20.3).abs() < 1e-12, "{x} {y}");
+        assert!(rotation.abs() < 1e-9 || (rotation - 360.0).abs() < 1e-9, "{rotation}");
+        assert_eq!((align, value.as_str()), (Some(TextAlign::BaselineRight), "K-12"));
+    }
+
     /// Mirrored in the definition's x axis, then a half turn: (x, y) → (x, −y)
     /// → (−x, y). The rectangle (0,0) (2,0) (2,1) (0,1) becomes (0,0) (−2,0)
     /// (−2,1) (0,1), moved to (5, 5).
