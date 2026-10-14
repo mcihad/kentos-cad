@@ -322,6 +322,9 @@ pub struct Viewport {
     styled: RefCell<crate::style::scene::StyledCache>,
     /// The wheel's last zoom: screen-sized symbols wait for it to settle.
     zoomed_at: Option<Instant>,
+    /// The second model view of a split area, not the active one (split_view.rs, docs/adr/0285 §3): its
+    /// events come as `Message::OtherViewport`.
+    pub(crate) other: bool,
 }
 
 /// How long after the wheel's last turn screen-sized symbols are built again (the web's).
@@ -420,6 +423,7 @@ impl Viewport {
             status: Arc::new(Mutex::new(Status::default())),
             styled: RefCell::new(crate::style::scene::StyledCache::default()),
             zoomed_at: None,
+            other: false,
         }
     }
 
@@ -608,6 +612,7 @@ impl Viewport {
                     s.screen_symbols || self.styled.try_borrow().is_ok_and(|c| c.scales_with_view())
                 })
                 .and_then(|_| self.settling()),
+            other: self.other,
         })
         .width(Fill)
         .height(Fill)
@@ -953,6 +958,8 @@ impl Viewport {
             | ViewChange::InfoCard(_)
             | ViewChange::AddressAt(_)
             | ViewChange::PlaceTable(..) => {}
+            // Görünümü döndür: the view turns about its middle (docs/adr/0285 §2).
+            ViewChange::Twist(t) => self.camera.twist = kentos_render_wgpu::normal_twist(t),
         }
         self.cursor = at.map(|[x, y]| self.camera.screen_to_world(x, y));
     }
@@ -962,6 +969,7 @@ impl Viewport {
         Viewpoint {
             center: self.camera.center,
             scale: self.camera.scale,
+            twist: self.camera.twist,
         }
     }
 
@@ -973,7 +981,37 @@ impl Viewport {
         if view.scale.is_finite() && view.scale > 0.0 {
             self.camera.scale = view.scale.clamp(MIN_SCALE, MAX_SCALE);
         }
+        self.camera.twist = kentos_render_wgpu::normal_twist(view.twist);
         self.cursor = at.map(|[x, y]| self.camera.screen_to_world(x, y));
+    }
+
+    /// A named view (docs/adr/0285 §1): its middle in the middle of the area, its width and
+    /// height as large as they fit, turned by its twist; the pointer stays where it is on the area.
+    pub fn show_view(&mut self, view: &kentos_contracts::NamedView) {
+        let at = self.cursor.map(|c| self.camera.world_to_screen(c));
+        self.camera.twist = kentos_render_wgpu::normal_twist(view.twist);
+        self.camera.fit_size(
+            Vec2::new(view.center.x, view.center.y),
+            view.width,
+            view.height,
+            0.0,
+        );
+        self.cursor = at.map(|[x, y]| self.camera.screen_to_world(x, y));
+    }
+
+    /// The view as a named view keeps it: its middle, the world width and height it shows and its twist.
+    pub fn named(&self, name: &str) -> kentos_contracts::NamedView {
+        let (width, height) = self.camera.view_size();
+        kentos_contracts::NamedView {
+            name: name.to_owned(),
+            center: kentos_contracts::Vec2 {
+                x: self.camera.center.x,
+                y: self.camera.center.y,
+            },
+            width,
+            height,
+            twist: self.camera.twist,
+        }
     }
 
     /// The document's start view, else its extents; its origin when it has neither.
@@ -1136,6 +1174,19 @@ struct Program {
     images: Option<Arc<crate::style::images::Images>>,
     /// When the wheel's zoom settles and screen-sized symbols are to be built again.
     settle_at: Option<Instant>,
+    /// The inactive view of a split area (docs/adr/0285 §3).
+    other: bool,
+}
+
+impl Program {
+    /// The area's event as the app takes it: the active view's, or the other view's of a split area.
+    fn message(&self, event: Event) -> Message {
+        if self.other {
+            Message::OtherViewport(event)
+        } else {
+            Message::Viewport(event)
+        }
+    }
 }
 
 /// What the widget remembers between events.
@@ -1169,7 +1220,7 @@ impl shader::Program<Message> for Program {
             && let Some(hold) = right_hold(state, *now)
         {
             return Some(match hold {
-                Hold::Held(at) => shader::Action::publish(Message::Viewport(Event::RightHeld(at))),
+                Hold::Held(at) => shader::Action::publish(self.message(Event::RightHeld(at))),
                 Hold::Wait(until) => shader::Action::request_redraw_at(until),
             });
         }
@@ -1178,7 +1229,7 @@ impl shader::Program<Message> for Program {
             && let Some(at) = self.settle_at
         {
             return Some(if *now >= at {
-                shader::Action::publish(Message::Viewport(Event::Settled))
+                shader::Action::publish(self.message(Event::Settled))
             } else {
                 shader::Action::request_redraw_at(at)
             });
@@ -1195,7 +1246,7 @@ impl shader::Program<Message> for Program {
         }
         let (event, capture) = gesture(state, event, bounds, cursor, Instant::now())?;
         let action = match event {
-            Some(event) => shader::Action::publish(Message::Viewport(event)),
+            Some(event) => shader::Action::publish(self.message(event)),
             None => shader::Action::request_redraw(),
         };
         Some(if capture {
@@ -1227,6 +1278,9 @@ impl shader::Program<Message> for Program {
     ) -> mouse::Interaction {
         if state.pan.is_some() {
             mouse::Interaction::Grabbing
+        } else if self.other && cursor.is_over(bounds) {
+            // The other view of a split area: a click makes it the active one.
+            mouse::Interaction::Pointer
         } else if cursor.is_over(bounds) {
             match self.cursor {
                 // The crosshair is drawn over the drawing (marks.rs), as the

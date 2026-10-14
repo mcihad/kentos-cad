@@ -1,8 +1,8 @@
 {
   "format": "kentos.wgsl-layout",
-  "version": 1,
+  "version": 2,
   "module": "points",
-  "description": "KentOS point clouds (docs/adr/0207 §6): each cloud's points drawn into a picture of its own (the view's size in device pixels, rgba8unorm premultiplied, transparent where no point is) with a depth32float buffer, the highest point nearest (depth compare less); one draw per octree node with its Draw block at a dynamic offset, its points instances of a six-vertex quad. The styled module's cloud pipeline (styled.layout.json, version 7) then shows the picture over the cloud's plan. The web's WebGPU backend builds the same pipeline from this file; its WebGL2 twin is apps/web/src/render/webgl2/pointShaders.ts.",
+  "description": "KentOS point clouds (docs/adr/0207 §6): each cloud's points drawn into a picture of its own (the view's size in device pixels, rgba8unorm premultiplied, transparent where no point is) with a depth32float buffer, the highest point nearest (depth compare less); one draw per octree node with its Draw block at a dynamic offset, its points instances of a six-vertex quad. The styled module's cloud pipeline (styled.layout.json, version 7) then shows the picture over the cloud's plan. The web's WebGPU backend builds the same pipeline from this file; its WebGL2 twin is apps/web/src/render/webgl2/pointShaders.ts. Version 2 (docs/adr/0285 §2) packs the view's twist in depth.zw as cos − 1 and sin (zero with the north up): a node's offset turns by minus it before the clip scale.",
   "sources": ["points/points.wgsl"],
   "bindGroups": [
     {

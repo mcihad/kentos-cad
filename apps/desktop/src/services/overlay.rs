@@ -62,6 +62,9 @@ struct Drawn {
 pub struct Marks {
     labels: Vec<Drawn>,
     pub credits: Vec<Credit>,
+    /// A twisted view (docs/adr/0285 §2): the labels laid out on the upright view (its size) and drawn turned
+    /// by the twist about the area's middle (the area's size).
+    turn: Option<(f32, [f32; 2], [f32; 2])>,
 }
 
 impl Marks {
@@ -99,6 +102,7 @@ pub fn key_of_view(doc: &Document, camera: &Camera, colors: &Colors) -> u64 {
         camera.scale.to_bits(),
         camera.width.to_bits(),
         camera.height.to_bits(),
+        camera.twist.to_bits(),
         doc.generation(),
         super::hub().changes(),
     )
@@ -124,7 +128,18 @@ fn degrees(x: f64, y: f64) -> (f64, f64) {
     (lon, lat)
 }
 
-fn work_out(doc: &Document, camera: &Camera, colors: &Colors) -> Marks {
+fn work_out(doc: &Document, area: &Camera, colors: &Colors) -> Marks {
+    // A twisted view lays its labels out upright and turns them as a picture (docs/adr/0285 §2).
+    let turn = (area.twist != 0.0).then(|| {
+        let up = area.upright();
+        (
+            area.twist as f32,
+            [area.width as f32, area.height as f32],
+            [up.width as f32, up.height as f32],
+        )
+    });
+    let upright = area.upright();
+    let camera = &upright;
     let hub = super::hub();
     let view = camera.visible_bounds();
     let box_world = [view.min_x, view.min_y, view.max_x, view.max_y];
@@ -193,7 +208,11 @@ fn work_out(doc: &Document, camera: &Camera, colors: &Colors) -> Marks {
             })
         })
         .collect();
-    Marks { labels, credits }
+    Marks {
+        labels,
+        credits,
+        turn,
+    }
 }
 
 /// The labels' layer over the drawing area, under the drawing's own text;
@@ -237,9 +256,20 @@ impl canvas::Program<Message> for Labels {
             state.key.set(self.key);
         }
         vec![state.cache.draw(renderer, bounds.size(), |frame| {
-            for d in &self.marks.labels {
-                paint(frame, d);
-            }
+            let Some((twist, area, upright)) = self.marks.turn else {
+                for d in &self.marks.labels {
+                    paint(frame, d);
+                }
+                return;
+            };
+            frame.with_save(|f| {
+                f.translate(Vector::new(area[0] / 2.0, area[1] / 2.0));
+                f.rotate(twist);
+                f.translate(Vector::new(-upright[0] / 2.0, -upright[1] / 2.0));
+                for d in &self.marks.labels {
+                    paint(f, d);
+                }
+            });
         })]
     }
 }

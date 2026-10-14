@@ -262,7 +262,11 @@ mod topology_scenes;
 #[cfg(test)]
 mod topology_tests;
 mod traces;
+mod split_view;
 mod tracking;
+#[cfg(test)]
+mod view_scenes;
+mod views;
 #[cfg(test)]
 mod transparent_tests;
 #[cfg(test)]

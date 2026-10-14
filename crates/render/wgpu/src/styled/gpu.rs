@@ -61,6 +61,21 @@ pub struct StyledFrame {
     pub size_px: [f32; 2],
     /// The screen scale 1:N at 96 dpi (the rules' scale ranges).
     pub scale_denominator: f64,
+    /// The view's twist, radians (docs/adr/0285 §2); 0 with the north up.
+    pub twist: f64,
+}
+
+/// The world box round a view of half size `hw` × `hh` (world units along the screen's axes)
+/// about `center`, turned by `twist`: what may show in it.
+fn view_box(center: [f64; 2], hw: f64, hh: f64, twist: f64) -> [f64; 4] {
+    let (ex, ey) = if twist == 0.0 {
+        (hw, hh)
+    } else {
+        let (s, c) = twist.sin_cos();
+        let (s, c) = (s.abs(), c.abs());
+        (hw * c + hh * s, hw * s + hh * c)
+    };
+    [center[0] - ex, center[1] - ey, center[0] + ex, center[1] + ey]
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -646,14 +661,10 @@ impl StyledGpu {
         let uniform = frame_uniform(frame);
         queue.write_buffer(&view.frame, 0, bytemuck::bytes_of(&uniform));
         view.uniform = uniform;
+        view.twist = frame.twist;
         let hw = f64::from(frame.size_px[0]) / 2.0 / px_per_m;
         let hh = f64::from(frame.size_px[1]) / 2.0 / px_per_m;
-        let box_ = [
-            frame.center[0] - hw,
-            frame.center[1] - hh,
-            frame.center[0] + hw,
-            frame.center[1] + hh,
-        ];
+        let box_ = view_box(frame.center, hw, hh, frame.twist);
         self.atlas.begin_frame();
         // Twice at most: when the page starts over midway, every image is looked up again.
         for _ in 0..2 {
@@ -789,6 +800,7 @@ impl StyledGpu {
             frame.scale * frame.dpr,
             frame.dpr,
             frame.size_px,
+            frame.twist,
             images,
         );
         view.cloud_rev = view.cloud_rev.wrapping_add(1);
@@ -1099,12 +1111,7 @@ impl StyledGpu {
         let hw = f64::from(frame.size_px[0]) / 2.0 / px_per_m;
         let hh = f64::from(frame.size_px[1]) / 2.0 / px_per_m;
         view.lens_view = Some((
-            [
-                frame.center[0] - hw,
-                frame.center[1] - hh,
-                frame.center[0] + hw,
-                frame.center[1] + hh,
-            ],
+            view_box(frame.center, hw, hh, frame.twist),
             px_per_m,
             frame.dpr,
         ));
@@ -1327,6 +1334,12 @@ fn frame_uniform(frame: &StyledFrame) -> StyledFrameUniform {
         px_per_m: (frame.scale * frame.dpr) as f32,
         dpr: frame.dpr as f32,
         viewport: frame.size_px,
+        twist: if frame.twist == 0.0 {
+            [0.0, 0.0]
+        } else {
+            let (s, c) = frame.twist.sin_cos();
+            [(c - 1.0) as f32, s as f32]
+        },
     }
 }
 
@@ -1416,6 +1429,8 @@ pub struct ViewStyled {
     frame_bind: wgpu::BindGroup,
     /// What `frame` holds.
     uniform: StyledFrameUniform,
+    /// The view's twist, radians, as the last prepared frame has it (docs/adr/0285 §2).
+    twist: f64,
     pub(crate) layers: Vec<GpuLayer>,
     /// How many of the view's plain parts draw beneath the styled layers.
     pub under: usize,
@@ -1456,6 +1471,7 @@ impl ViewStyled {
             frame,
             frame_bind,
             uniform: StyledFrameUniform::default(),
+            twist: 0.0,
             layers: Vec::new(),
             under: 0,
             order: None,
@@ -1559,6 +1575,8 @@ impl ViewStyled {
             f64::from(u.offset[1]) + f64::from(u.offset_lo[1]),
         ];
         let (vw, vh) = (f64::from(u.viewport[0]), f64::from(u.viewport[1]));
+        let twist = self.twist;
+        let (ts, tc) = twist.sin_cos();
         for layer in self
             .layers
             .get(layers.start as usize..layers.end as usize)
@@ -1602,10 +1620,15 @@ impl ViewStyled {
                         -anchor[0] * w + offset[0] * k,
                         -anchor[1] * h + offset[1] * k,
                     ];
-                    let (sa, ca) = f64::from(m[2]).sin_cos();
+                    let (sa, ca) = (f64::from(m[2]) - twist).sin_cos();
                     let turned = [ca * q[0] - sa * q[1], sa * q[0] + ca * q[1]];
-                    let x = vw / 2.0 + (f64::from(m[0]) - tile[0]) * px_per_m + turned[0];
-                    let y = vh / 2.0 - (f64::from(m[1]) - tile[1]) * px_per_m - turned[1];
+                    let (dx, dy) = (
+                        (f64::from(m[0]) - tile[0]) * px_per_m,
+                        (f64::from(m[1]) - tile[1]) * px_per_m,
+                    );
+                    let (u, v) = (dx * tc + dy * ts, dy * tc - dx * ts);
+                    let x = vw / 2.0 + u + turned[0];
+                    let y = vh / 2.0 - v - turned[1];
                     let reach = w.max(h) + f64::from(grow) + 2.0;
                     if x < -reach || y < -reach || x > vw + reach || y > vh + reach {
                         continue;
@@ -1625,8 +1648,8 @@ impl ViewStyled {
     }
 
     /// The camera centre from the layers' origin, device pixels per metre, the pixel
-    /// ratio and the target's size, as the last prepared frame has them.
-    pub(crate) fn frame_facts(&self) -> ([f64; 2], f64, f64, [f32; 2]) {
+    /// ratio, the target's size and the view's twist, as the last prepared frame has them.
+    pub(crate) fn frame_facts(&self) -> ([f64; 2], f64, f64, [f32; 2], f64) {
         let u = &self.uniform;
         (
             [
@@ -1636,6 +1659,7 @@ impl ViewStyled {
             f64::from(u.px_per_m),
             f64::from(u.dpr),
             u.viewport,
+            self.twist,
         )
     }
 

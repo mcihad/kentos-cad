@@ -524,7 +524,8 @@ impl canvas::Program<Message> for Draft {
                 &t.text,
                 self.screen(t.p),
                 (t.height * self.camera.scale) as f32,
-                (-t.rotation.to_radians()) as f32,
+                // Clockwise on the screen, the view's twist taken in (docs/adr/0285 §2).
+                (-(t.rotation.to_radians() - self.camera.twist)) as f32,
                 (along as f32, up as f32),
                 (&t.face, t.width_factor as f32),
                 self.font,
@@ -586,10 +587,8 @@ impl canvas::Program<Message> for Draft {
         if let Some(tracking) = self.preview.tracking {
             let o = self.screen(tracking.origin);
             let rad = tracking.angle.to_radians();
-            let far = Point::new(
-                o.x + (rad.cos() * 1e4) as f32,
-                o.y - (rad.sin() * 1e4) as f32,
-            );
+            let (dx, dy) = crate::marks::screen_dir(&self.camera, rad.cos(), rad.sin(), 1e4);
+            let far = Point::new(o.x + dx, o.y + dy);
             let ray = Path::line(o, far);
             frame.stroke(
                 &ray,

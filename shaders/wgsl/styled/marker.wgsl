@@ -21,8 +21,13 @@ struct MarkerOut {
   if (st.flags.y == 0u && st.flags.z == 5u) { box.y = max(h, min(w, h) * 1.1547005); }
   let local = c * (box + 2.0 * pad);
   let q = local - st.a.zw * vec2f(w, h) + st.a.xy * k;
-  let ca = cos(i0.z);
-  let sa = sin(i0.z);
+  // The marker's own turn less the view's twist (docs/adr/0285 §2): it turns with the map.
+  let ca0 = cos(i0.z);
+  let sa0 = sin(i0.z);
+  let tc = 1.0 + frame.twist.x;
+  let ts = frame.twist.y;
+  let ca = ca0 * tc + sa0 * ts;
+  let sa = sa0 * tc - ca0 * ts;
   var o: MarkerOut;
   o.pos = pxToClip(toPx(i0.xy) + vec2f(ca * q.x - sa * q.y, sa * q.x + ca * q.y));
   o.local = local;

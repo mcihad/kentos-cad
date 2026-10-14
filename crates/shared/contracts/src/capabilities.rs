@@ -1118,6 +1118,21 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.views.edit",
+        refusals: &[
+            &[
+                "not_finite",
+                "far_point",
+                "invalid_view_size",
+                "invalid_view_name",
+            ],
+            REVISION,
+            &["unknown_view", "view_exists", "too_many_views"],
+        ],
+        warnings: &["view_replaced"],
+        targets: none,
+    },
+    Entry {
         id: "cad.units.change",
         refusals: &[
             &["same_unit"],

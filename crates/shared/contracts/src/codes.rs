@@ -199,8 +199,8 @@ codes! {
     COINCIDENT_POINTS = "coincident_points", Failed, false, "Ardışık iki geçiş noktası aynı yerde; eğri her noktadan bir kez geçer. Yinelenen noktayı çıkarın.";
     /// A feet-and-inches length style for a metric drawing (docs/adr/0262 §2).
     STYLE_NEEDS_IMPERIAL = "style_needs_imperial", Failed, false, "Ayak ve inç biçimleri yalnız inç ya da ayak birimli projede seçilir.";
-    /// A UCS's point further than 10 000 km from the world's origin (docs/adr/0261 §2).
-    FAR_POINT = "far_point", Failed, false, "UCS'in noktası dünyanın başlangıcından 10 000 km'den uzak.";
+    /// A UCS's or a view's point further than 10 000 km from the world's origin (docs/adr/0261 §2, 0285 §1).
+    FAR_POINT = "far_point", Failed, false, "Nokta dünyanın başlangıcından 10 000 km'den uzak.";
     /// A UCS name blank, longer than 64 characters or with a control character (docs/adr/0261 §1).
     INVALID_UCS_NAME = "invalid_ucs_name", Failed, false, "UCS adı boş, 64 karakterden uzun ya da denetim karakterli.";
     /// Two points nearer than 1 µm where a direction is wanted (docs/adr/0261 §2).
@@ -213,6 +213,18 @@ codes! {
     OBJECT_WITHOUT_AXIS = "object_without_axis", Failed, false, "Bu türden nesneden UCS kurulamaz.";
     /// A named UCS kept over one of the same name (docs/adr/0261 §2).
     UCS_REPLACED = "ucs_replaced", Warning, false, "Aynı adlı UCS'in yerine geçerli UCS kaydedildi.";
+    /// A view's width or height not above 0 or above 20 000 km (docs/adr/0285 §1).
+    INVALID_VIEW_SIZE = "invalid_view_size", Failed, false, "Görünümün eni ve boyu 0'dan büyük ve en çok 20 000 km olmalı.";
+    /// A view name blank, longer than 64 characters or with a control character (docs/adr/0285 §1).
+    INVALID_VIEW_NAME = "invalid_view_name", Failed, false, "Görünüm adı boş, 64 karakterden uzun ya da denetim karakterli.";
+    /// A named view the project has not (docs/adr/0285 §1).
+    UNKNOWN_VIEW = "unknown_view", Failed, false, "Bu adla bir görünüm yok.";
+    /// A rename to the name of another view (docs/adr/0285 §1).
+    VIEW_EXISTS = "view_exists", Failed, false, "Bu adla başka bir görünüm var.";
+    /// A 101st named view (docs/adr/0285 §1).
+    TOO_MANY_VIEWS = "too_many_views", Failed, false, "Projede en çok 100 adlı görünüm olur.";
+    /// A named view kept over one of the same name (docs/adr/0285 §1).
+    VIEW_REPLACED = "view_replaced", Warning, false, "Aynı adlı görünümün yerine yenisi kaydedildi.";
 
     // ── Properties, texts, links ────────────────────────────────────────
     /// A text whose text is empty or only white space.

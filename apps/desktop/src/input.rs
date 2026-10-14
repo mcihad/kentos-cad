@@ -85,6 +85,14 @@ impl View for CameraView<'_> {
     fn visible(&self) -> kentos_render_wgpu::Bounds {
         self.0.visible_bounds()
     }
+
+    fn twist(&self) -> f64 {
+        self.0.twist
+    }
+
+    fn to_world(&self, p: [f64; 2]) -> Option<Vec2> {
+        Some(self.0.screen_to_world(p[0], p[1]))
+    }
 }
 
 impl App {

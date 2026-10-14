@@ -81,8 +81,17 @@ pub trait View {
     /// How much world `px` logical pixels span at the current zoom.
     fn world_length(&self, px: f64) -> f64;
     /// The world box the area shows: the edges a trim or an extend meets by
-    /// default (the web's `camera.visibleBounds()`).
+    /// default (the web's `camera.visibleBounds()`); with a twist, the box round the turned area.
     fn visible(&self) -> Bounds;
+    /// The view's twist (docs/adr/0285 §2): the angle of the screen's x axis from the world's, radians; 0 with the
+    /// north up.
+    fn twist(&self) -> f64 {
+        0.0
+    }
+    /// The world point under a place of the area, in logical pixels; none where the view cannot say.
+    fn to_world(&self, _p: [f64; 2]) -> Option<Vec2> {
+        None
+    }
 }
 
 /// A change of the view a tool asks for (docs/adr/0056): Kaydır drags it,
@@ -148,6 +157,10 @@ pub enum ViewChange {
     /// Konumdan adres's place (docs/adr/0229 §13): the host looks for its
     /// address in the Adres tab's source and shows it there.
     AddressAt(Vec2),
+    /// The view's twist (Görünümü döndür, docs/adr/0285 §2): the angle of the
+    /// screen's x axis from the world's x, counter-clockwise, radians; the
+    /// view turns about its middle.
+    Twist(f64),
 }
 
 /// Where a text field opens and how its text will look: its start, height in

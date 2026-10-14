@@ -407,11 +407,15 @@ pub const SCHEMA_WITH_IMPERIAL: u32 = 50;
 /// insert), written only when a reference has one; older readers refuse the
 /// file instead of losing where the point follows.
 pub const SCHEMA_WITH_SUBREF_EXTRAS: u32 = 51;
+/// Schema 52 (docs/adr/0285): the settings' `namedViews`, the project's
+/// named views (a middle, a width and a height, a twist), written only when
+/// the project keeps one; older readers refuse the file instead of losing them.
+pub const SCHEMA_WITH_VIEWS: u32 = 52;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 50] = [
+pub const SCHEMAS: [u32; 51] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -462,6 +466,7 @@ pub const SCHEMAS: [u32; 50] = [
     SCHEMA_WITH_UCS,
     SCHEMA_WITH_IMPERIAL,
     SCHEMA_WITH_SUBREF_EXTRAS,
+    SCHEMA_WITH_VIEWS,
 ];
 
 /// The file a drawing is saved as.

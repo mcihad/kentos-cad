@@ -5,7 +5,8 @@
 struct Draw {
   d: vec4f,      // xy: the node's centre from the camera's centre (m); z: its height above the cloud's least (m)
   view: vec4f,   // xy: clip units per metre; zw: a point's half size in clip units
-  depth: vec4f,  // x: 1 / the cloud's height range (1 when it has none); y: 1 a round point, 0 a square one
+  depth: vec4f,  // x: 1 / the cloud's height range (1 when it has none); y: 1 a round point, 0 a square one;
+                 // zw: the view's twist as cos − 1 and sin, zero with the north up (version 2, docs/adr/0285 §2)
 };
 @group(0) @binding(0) var<uniform> draw: Draw;
 
@@ -22,7 +23,10 @@ struct PointOut {
   );
   let k = corners[v];
   var o: PointOut;
-  let xy = (draw.d.xy + p.xy) * draw.view.xy + k * draw.view.zw;
+  let q = draw.d.xy + p.xy;
+  let tc = 1.0 + draw.depth.z;
+  let ts = draw.depth.w;
+  let xy = vec2f(q.x * tc + q.y * ts, q.y * tc - q.x * ts) * draw.view.xy + k * draw.view.zw;
   let h = draw.d.z + p.z;
   o.pos = vec4f(xy, clamp(1.0 - h * draw.depth.x, 0.0, 1.0), 1.0);
   o.color = c;
