@@ -157,6 +157,14 @@ fn settings() -> Vec<SettingDescriptor> {
                 "Nesne bilgi kartı",
                 "Seçim aracında bir nesnenin üzerinde durunca türü, katmanı, uzunluğu ya da alanı gösterilir.",
             ),
+        // Off by default (docs/adr/0282): AutoCAD's English names typed in the
+        // command line, beside KentOS's own; the desktop only while the web waits (ADR 0228).
+        boolean("drafting.autocadAliases", false)
+            .hosts(&[Desktop])
+            .text(
+                "AutoCAD takma adları",
+                "Komut satırına AutoCAD'in İngilizce komut adları ve kısaltmaları da yazılabilir (RECTANG, LA, JOG, DT…). KentOS'un kendi adları ve tek harf kısayolları her zaman önce gelir: KentOS'ta başka bir işi olan ad (T, S, P, CP, POLYGON…) eklenmez.",
+            ),
         boolean("drafting.snap", true)
             .scope(SettingScope::Session)
             .hosts(&[Web, Desktop])

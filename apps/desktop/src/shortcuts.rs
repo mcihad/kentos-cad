@@ -250,6 +250,28 @@ impl App {
                 .collect();
             blocks.push((count, group(category, rows)));
         }
+        // AutoCAD's names in the command line, or where to turn them on (docs/adr/0282).
+        let autocad: Vec<Element<'_, Message>> =
+            crate::alias_profile::shortcut_rows(self.autocad_names())
+                .into_iter()
+                .filter(|(what, how)| {
+                    query.is_empty()
+                        || fold_turkish(what).contains(&query)
+                        || fold_turkish(how).contains(&query)
+                })
+                .map(|(what, how)| {
+                    row![label::body(what).width(Fill), kbd(how)]
+                        .spacing(12)
+                        .align_y(Center)
+                        .into()
+                })
+                .collect();
+        if !autocad.is_empty() {
+            blocks.push((
+                autocad.len(),
+                group("AutoCAD adları (komut satırı)", autocad),
+            ));
+        }
         // Two columns, the groups dealt to the shorter one (the web's grid).
         let (mut left, mut right) = (Column::new().spacing(18), Column::new().spacing(18));
         let (mut left_rows, mut right_rows) = (0, 0);

@@ -2579,6 +2579,11 @@ impl App {
         if text.is_empty() {
             return Task::none();
         }
+        // AutoCAD takma adları, when the preference is on (alias_profile.rs, docs/adr/0282):
+        // the profile holds no name of KentOS's, which keep their meaning.
+        if let Some(task) = self.run_profile_name(text) {
+            return task;
+        }
         // A tool's method by its own name (DOR: Ölçülendirme as Koordinat; docs/adr/0147 §7),
         // as the ribbon's menu starts it: the tool, then its option.
         if let Some(method) = catalog().method_by_alias(text)
