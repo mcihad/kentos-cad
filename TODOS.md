@@ -170,6 +170,13 @@ Liste:
   uyarıları komutun sözleri; paralel iki doğruya TTY, saat yönünde verilen yaydan Devam; araç durumları
   `fixtures/curve-methods/v1/tools.json`. Web'in donmuş çağrı kayıtları eski `arcStartCenterEnd` ve `arcStartCenterAngle`'ı (tam tur)
   tutar; geri dönüşte komutun kuralına getirilir.
+- [ ] `CAD-EDIT-09` (ADR 0295, 14 Ekim): web'de gerekenler: `cad.entities.fillet`/`.chamfer`'ın `lines` köşesinde açık çoklu çizginin uç
+  kenarı ve aynı yolun iki ucu (yolu kapatma), Tüm köşeler'de uçları buluşan çizgiler (`line_corners`'ın kuralı), yeni retler; araçların
+  iki tıklaması ve Tüm köşeleri yuvarla/pah'ın önizlemesi çizgilerle; ortak durumlar `cad.entities.{fillet,chamfer}.sides.json`.
+- [ ] `CAD-EDIT-08` (ADR 0294, 14 Ekim): web'de gerekenler: `cad.entities.trim`/`.extend`'in `fence`, `crossing`, `edgeMode`,
+  `eraseUncut` alanları web işleyicisinde; Buda ve Uzat araçlarında Kesişen (K, boş yere tıklama), Uzantılar (U), Sil (R), hızlı kipte
+  kesilmeyenin silinmesi, çitin komuta verilmesi; ortak durumlar `cad.entities.{trim,extend}.modes.json`, iz `trim-modes.json`; tutamaç
+  kipinde Döndür'ün açısı projenin düzeniyle.
 - [ ] `CAD-EDIT-06` (ADR 0292, 14 Ekim): web'de gerekenler: Aynala aracına ve tutamaç kipine Yazılar (Y: okunur/aynalı);
   `cad.entities.transform` işleyicisine aynanın `text` alanı ve okunur kuralı (taban görüntüsü okunuyorsa yukarısı geri döner, üst ↔ taban;
   okunmuyorsa taban geri döner, sol ↔ sağ; tablo köşesi; eğri boyunca yazıda Aynalı ikinci çevirmeyi atlar); web'in `transformEntity`'si

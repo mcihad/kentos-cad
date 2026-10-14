@@ -6,28 +6,29 @@
 
 use kentos_contracts::{
     AddressesDefine, ArcCreate, BlocksDefine, BlocksEdit, CallOp, ChangesetApply, CircleCreate,
-    DimensionsCreate, DimensionsReassociate, EntitiesArray, EntitiesBoundary, EntitiesBreak,
-    EntitiesChamfer, EntitiesCreate, EntitiesDelete, EntitiesDivide, EntitiesEdit, EntitiesFillet,
-    EntitiesHatch, EntitiesJoin, EntitiesReverse, EntitiesOffset, EntitiesOrder, EntitiesPick, EntitiesSelect,
-    EntitiesSetProperties, EntitiesStretch, EntitiesTransform, EntitiesTrim, EntitiesVertex,
-    ImportDxf, LabelsPin, LayersCompose, LayersEdit, LayersFilter, LayersInfo, LayersLabels,
-    LayersRenderer, LayersService, LayersSet, LayersStates, LayersTime, LineCreate, NetworkDefine,
-    NurbsCreate, PointCreate, PointsConstruct, CurvesConstruct, PolygonCreate, PolylineCreate, RectangleCreate,
-    RegularPolygonCreate, ScenariosEdit, SettingsSet, SheetsEdit, SnapFind, StylesEdit, UcsSet,
-    UnitsChange, ViewsEdit, codes,
+    CurvesConstruct, DimensionsCreate, DimensionsReassociate, EntitiesArray, EntitiesBoundary,
+    EntitiesBreak, EntitiesChamfer, EntitiesCreate, EntitiesDelete, EntitiesDivide, EntitiesEdit,
+    EntitiesFillet, EntitiesHatch, EntitiesJoin, EntitiesOffset, EntitiesOrder, EntitiesPick,
+    EntitiesReverse, EntitiesSelect, EntitiesSetProperties, EntitiesStretch, EntitiesTransform,
+    EntitiesTrim, EntitiesVertex, ImportDxf, LabelsPin, LayersCompose, LayersEdit, LayersFilter,
+    LayersInfo, LayersLabels, LayersRenderer, LayersService, LayersSet, LayersStates, LayersTime,
+    LineCreate, NetworkDefine, NurbsCreate, PointCreate, PointsConstruct, PolygonCreate,
+    PolylineCreate, RectangleCreate, RegularPolygonCreate, ScenariosEdit, SettingsSet, SheetsEdit,
+    SnapFind, StylesEdit, UcsSet, UnitsChange, ViewsEdit, codes,
 };
 use serde_json::Value;
 
 use crate::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, blocks_define, blocks_edit,
-    changeset, circle, create, delete, dimensions_create, dimensions_reassociate, divide, edit,
-    entities_boundary, entities_break, entities_chamfer, entities_extend, entities_fillet,
-    entities_hatch, entities_join, entities_reverse, entities_order, entities_pick, entities_select, entities_trim,
-    entities_vertex, file_import, labels_pin, layers_compose, layers_edit, layers_filter,
-    layers_info, layers_labels, layers_renderer, layers_service, layers_set, layers_states,
-    layers_time, line, network_define, nurbs, offset, point, points_construct, curves_construct, polygon,
-    polygon_regular, polyline, rectangle_create, scenarios_edit, set, settings_set, sheets_edit,
-    snap_find, stretch, styles_edit, transform, ucs_set, units_change, views_edit,
+    changeset, circle, create, curves_construct, delete, dimensions_create, dimensions_reassociate,
+    divide, edit, entities_boundary, entities_break, entities_chamfer, entities_extend,
+    entities_fillet, entities_hatch, entities_join, entities_order, entities_pick,
+    entities_reverse, entities_select, entities_trim, entities_vertex, file_import, labels_pin,
+    layers_compose, layers_edit, layers_filter, layers_info, layers_labels, layers_renderer,
+    layers_service, layers_set, layers_states, layers_time, line, network_define, nurbs, offset,
+    point, points_construct, polygon, polygon_regular, polyline, rectangle_create, scenarios_edit,
+    set, settings_set, sheets_edit, snap_find, stretch, styles_edit, transform, ucs_set,
+    units_change, views_edit,
 };
 
 /// Why a command was not run: not a refusal of the command (that is its

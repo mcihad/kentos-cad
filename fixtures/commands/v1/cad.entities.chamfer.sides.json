@@ -1,0 +1,3900 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.entities.chamfer",
+  "commandVersion": 1,
+  "title": "Pah kır: iki nesnenin düz kenarları",
+  "note": "Written by scripts/fixtures/corner_sides_cases.py from the operations' definitions (docs/adr/0250, 0295); do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İki nesnenin köşesi",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 500
+    },
+    "origin": {
+      "x": 487000,
+      "y": 4420000
+    },
+    "layers": [
+      {
+        "id": "yapi",
+        "name": "Yapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "yapi",
+    "entities": [
+      {
+        "kind": "line",
+        "id": 30,
+        "layerId": "yapi",
+        "attrs": {},
+        "color": "#E5484D",
+        "lineWeight": 0.7,
+        "a": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "polyline",
+        "id": 31,
+        "layerId": "yapi",
+        "attrs": {
+          "Tür": "Bordür"
+        },
+        "color": "#3E63DD",
+        "pts": [
+          {
+            "x": 487014,
+            "y": 4420004
+          },
+          {
+            "x": 487014,
+            "y": 4420014
+          },
+          {
+            "x": 487024,
+            "y": 4420014
+          }
+        ]
+      },
+      {
+        "kind": "polyline",
+        "id": 32,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487040,
+            "y": 4420000
+          },
+          {
+            "x": 487050,
+            "y": 4420000
+          },
+          {
+            "x": 487050,
+            "y": 4420010
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 33,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487044,
+          "y": 4420014
+        },
+        "b": {
+          "x": 487056,
+          "y": 4420014
+        }
+      },
+      {
+        "kind": "polyline",
+        "id": 34,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487060,
+            "y": 4420000
+          },
+          {
+            "x": 487070,
+            "y": 4420000
+          },
+          {
+            "x": 487070,
+            "y": 4420008
+          }
+        ],
+        "bulges": [
+          0.5,
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "polyline",
+        "id": 35,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487074,
+            "y": 4420012
+          },
+          {
+            "x": 487084,
+            "y": 4420012
+          },
+          {
+            "x": 487084,
+            "y": 4420020
+          }
+        ]
+      },
+      {
+        "kind": "polyline",
+        "id": 36,
+        "layerId": "yapi",
+        "attrs": {
+          "Ada": "102"
+        },
+        "pts": [
+          {
+            "x": 487100,
+            "y": 4420004
+          },
+          {
+            "x": 487100,
+            "y": 4420010
+          },
+          {
+            "x": 487110,
+            "y": 4420010
+          },
+          {
+            "x": 487110,
+            "y": 4420000
+          },
+          {
+            "x": 487104,
+            "y": 4420000
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 37,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487120,
+            "y": 4420000
+          },
+          {
+            "x": 487130,
+            "y": 4420000
+          },
+          {
+            "x": 487130,
+            "y": 4420010
+          },
+          {
+            "x": 487120,
+            "y": 4420010
+          }
+        ]
+      },
+      {
+        "kind": "polyline",
+        "id": 38,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487140,
+            "y": 4420000
+          },
+          {
+            "x": 487150,
+            "y": 4420000
+          },
+          {
+            "x": 487150,
+            "y": 4420010
+          },
+          {
+            "x": 487140,
+            "y": 4420010
+          }
+        ],
+        "closed": true
+      },
+      {
+        "kind": "line",
+        "id": 39,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487010,
+          "y": 4420016
+        },
+        "b": {
+          "x": 487018,
+          "y": 4420016
+        }
+      },
+      {
+        "kind": "line",
+        "id": 40,
+        "layerId": "kilitli",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420030
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420030
+        }
+      },
+      {
+        "kind": "polyline",
+        "id": 41,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487014,
+            "y": 4420034
+          },
+          {
+            "x": 487014,
+            "y": 4420040
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 42,
+        "layerId": "yapi",
+        "attrs": {},
+        "color": "#E5484D",
+        "a": {
+          "x": 487200,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487210,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "line",
+        "id": 43,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487210,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487210,
+          "y": 4420006
+        }
+      },
+      {
+        "kind": "line",
+        "id": 44,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487210,
+          "y": 4420006
+        },
+        "b": {
+          "x": 487200,
+          "y": 4420006
+        }
+      },
+      {
+        "kind": "line",
+        "id": 45,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487200,
+          "y": 4420006
+        },
+        "b": {
+          "x": 487200,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "line",
+        "id": 46,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487220,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487230,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "line",
+        "id": 47,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487230,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487230,
+          "y": 4420002
+        }
+      },
+      {
+        "kind": "line",
+        "id": 48,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487230,
+          "y": 4420002
+        },
+        "b": {
+          "x": 487240,
+          "y": 4420002
+        }
+      },
+      {
+        "kind": "line",
+        "id": 49,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487240,
+          "y": 4420002
+        },
+        "b": {
+          "x": 487240,
+          "y": 4420012
+        }
+      },
+      {
+        "kind": "line",
+        "id": 50,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487250,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487255,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "line",
+        "id": 51,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487255,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487260,
+          "y": 4420000
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Çizgi ve çoklu çizginin ilk kenarına 2 ve 3 m pah: çizgi uzar, yolun ucu pah noktasına gelir, pah çizgiden yeni çizgi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "lines",
+              "first": {
+                "uid": "$uidOf:30",
+                "at": {
+                  "x": 487005,
+                  "y": 4420000
+                }
+              },
+              "second": {
+                "uid": "$uidOf:31",
+                "at": {
+                  "x": 487014,
+                  "y": 4420008
+                }
+              }
+            },
+            "distance": 2,
+            "second": 3
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:30",
+                "$uidOf:31"
+              ],
+              "created": [
+                "$uidOf:52"
+              ],
+              "done": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52
+            ],
+            "entities": {
+              "30": {
+                "kind": "line",
+                "id": 30,
+                "layerId": "yapi",
+                "attrs": {},
+                "color": "#E5484D",
+                "lineWeight": 0.7,
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487012,
+                  "y": 4420000
+                }
+              },
+              "31": {
+                "kind": "polyline",
+                "id": 31,
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Bordür"
+                },
+                "color": "#3E63DD",
+                "pts": [
+                  {
+                    "x": 487014,
+                    "y": 4420003
+                  },
+                  {
+                    "x": 487014,
+                    "y": 4420014
+                  },
+                  {
+                    "x": 487024,
+                    "y": 4420014
+                  }
+                ]
+              },
+              "52": {
+                "kind": "line",
+                "id": 52,
+                "layerId": "yapi",
+                "attrs": {},
+                "color": "#E5484D",
+                "lineWeight": 0.7,
+                "a": {
+                  "x": 487012,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487014,
+                  "y": 4420003
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Pah",
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "entities": {
+              "30": {
+                "kind": "line",
+                "id": 30,
+                "layerId": "yapi",
+                "attrs": {},
+                "color": "#E5484D",
+                "lineWeight": 0.7,
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                }
+              },
+              "31": {
+                "kind": "polyline",
+                "id": 31,
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Bordür"
+                },
+                "color": "#3E63DD",
+                "pts": [
+                  {
+                    "x": 487014,
+                    "y": 4420004
+                  },
+                  {
+                    "x": 487014,
+                    "y": 4420014
+                  },
+                  {
+                    "x": 487024,
+                    "y": 4420014
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Önce çoklu çizgi: birinci mesafe yolda, pah onun renginde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "lines",
+              "first": {
+                "uid": "$uidOf:31",
+                "at": {
+                  "x": 487014,
+                  "y": 4420008
+                }
+              },
+              "second": {
+                "uid": "$uidOf:30",
+                "at": {
+                  "x": 487005,
+                  "y": 4420000
+                }
+              }
+            },
+            "distance": 2,
+            "second": 3
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:31",
+                "$uidOf:30"
+              ],
+              "created": [
+                "$uidOf:52"
+              ],
+              "done": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52
+            ],
+            "entities": {
+              "31": {
+                "kind": "polyline",
+                "id": 31,
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Bordür"
+                },
+                "color": "#3E63DD",
+                "pts": [
+                  {
+                    "x": 487014,
+                    "y": 4420002
+                  },
+                  {
+                    "x": 487014,
+                    "y": 4420014
+                  },
+                  {
+                    "x": 487024,
+                    "y": 4420014
+                  }
+                ]
+              },
+              "30": {
+                "kind": "line",
+                "id": 30,
+                "layerId": "yapi",
+                "attrs": {},
+                "color": "#E5484D",
+                "lineWeight": 0.7,
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487011,
+                  "y": 4420000
+                }
+              },
+              "52": {
+                "kind": "line",
+                "id": 52,
+                "layerId": "yapi",
+                "attrs": {},
+                "color": "#3E63DD",
+                "a": {
+                  "x": 487014,
+                  "y": 4420002
+                },
+                "b": {
+                  "x": 487011,
+                  "y": 4420000
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Pah",
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "entities": {
+              "31": {
+                "kind": "polyline",
+                "id": 31,
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Bordür"
+                },
+                "color": "#3E63DD",
+                "pts": [
+                  {
+                    "x": 487014,
+                    "y": 4420004
+                  },
+                  {
+                    "x": 487014,
+                    "y": 4420014
+                  },
+                  {
+                    "x": 487024,
+                    "y": 4420014
+                  }
+                ]
+              },
+              "30": {
+                "kind": "line",
+                "id": 30,
+                "layerId": "yapi",
+                "attrs": {},
+                "color": "#E5484D",
+                "lineWeight": 0.7,
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sıfır mesafeler çizgiyle yolun ucunu buluştukları noktada birleştirir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "lines",
+              "first": {
+                "uid": "$uidOf:30",
+                "at": {
+                  "x": 487005,
+                  "y": 4420000
+                }
+              },
+              "second": {
+                "uid": "$uidOf:31",
+                "at": {
+                  "x": 487014,
+                  "y": 4420008
+                }
+              }
+            },
+            "distance": 0,
+            "second": 0
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:30",
+                "$uidOf:31"
+              ],
+              "created": [],
+              "done": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "entities": {
+              "30": {
+                "kind": "line",
+                "id": 30,
+                "layerId": "yapi",
+                "attrs": {},
+                "color": "#E5484D",
+                "lineWeight": 0.7,
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487014,
+                  "y": 4420000
+                }
+              },
+              "31": {
+                "kind": "polyline",
+                "id": 31,
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Bordür"
+                },
+                "color": "#3E63DD",
+                "pts": [
+                  {
+                    "x": 487014,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487014,
+                    "y": 4420014
+                  },
+                  {
+                    "x": 487024,
+                    "y": 4420014
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Pah",
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "entities": {
+              "30": {
+                "kind": "line",
+                "id": 30,
+                "layerId": "yapi",
+                "attrs": {},
+                "color": "#E5484D",
+                "lineWeight": 0.7,
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                }
+              },
+              "31": {
+                "kind": "polyline",
+                "id": 31,
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Bordür"
+                },
+                "color": "#3E63DD",
+                "pts": [
+                  {
+                    "x": 487014,
+                    "y": 4420004
+                  },
+                  {
+                    "x": 487014,
+                    "y": 4420014
+                  },
+                  {
+                    "x": 487024,
+                    "y": 4420014
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kırp kapalı: kenarlar kalır, yalnız pah çizgisi eklenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "lines",
+              "first": {
+                "uid": "$uidOf:30",
+                "at": {
+                  "x": 487005,
+                  "y": 4420000
+                }
+              },
+              "second": {
+                "uid": "$uidOf:31",
+                "at": {
+                  "x": 487014,
+                  "y": 4420008
+                }
+              }
+            },
+            "distance": 2,
+            "second": 3,
+            "trim": false
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "created": [
+                "$uidOf:52"
+              ],
+              "done": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52
+            ],
+            "entities": {
+              "52": {
+                "kind": "line",
+                "id": 52,
+                "layerId": "yapi",
+                "attrs": {},
+                "color": "#E5484D",
+                "lineWeight": 0.7,
+                "a": {
+                  "x": 487012,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487014,
+                  "y": 4420003
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Pah",
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "entities": {
+              "30": {
+                "kind": "line",
+                "id": 30,
+                "layerId": "yapi",
+                "attrs": {},
+                "color": "#E5484D",
+                "lineWeight": 0.7,
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                }
+              },
+              "31": {
+                "kind": "polyline",
+                "id": 31,
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Bordür"
+                },
+                "color": "#3E63DD",
+                "pts": [
+                  {
+                    "x": 487014,
+                    "y": 4420004
+                  },
+                  {
+                    "x": 487014,
+                    "y": 4420014
+                  },
+                  {
+                    "x": 487024,
+                    "y": 4420014
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: çizgi, yol ve pah yazılacakları gibi; hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "corner": {
+              "kind": "lines",
+              "first": {
+                "uid": "$uidOf:30",
+                "at": {
+                  "x": 487005,
+                  "y": 4420000
+                }
+              },
+              "second": {
+                "uid": "$uidOf:31",
+                "at": {
+                  "x": 487014,
+                  "y": 4420008
+                }
+              }
+            },
+            "distance": 2,
+            "second": 3
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                {
+                  "kind": "line",
+                  "id": 30,
+                  "layerId": "yapi",
+                  "attrs": {},
+                  "color": "#E5484D",
+                  "lineWeight": 0.7,
+                  "a": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "b": {
+                    "x": 487012,
+                    "y": 4420000
+                  }
+                },
+                {
+                  "kind": "polyline",
+                  "id": 31,
+                  "layerId": "yapi",
+                  "attrs": {
+                    "Tür": "Bordür"
+                  },
+                  "color": "#3E63DD",
+                  "pts": [
+                    {
+                      "x": 487014,
+                      "y": 4420003
+                    },
+                    {
+                      "x": 487014,
+                      "y": 4420014
+                    },
+                    {
+                      "x": 487024,
+                      "y": 4420014
+                    }
+                  ]
+                }
+              ],
+              "created": [
+                {
+                  "kind": "line",
+                  "id": 0,
+                  "layerId": "yapi",
+                  "attrs": {},
+                  "color": "#E5484D",
+                  "lineWeight": 0.7,
+                  "a": {
+                    "x": 487012,
+                    "y": 4420000
+                  },
+                  "b": {
+                    "x": 487014,
+                    "y": 4420003
+                  }
+                }
+              ],
+              "done": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çoklu çizginin son kenarı ve çizgi: çizginin köşeyi aşan kısmı kesilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "lines",
+              "first": {
+                "uid": "$uidOf:32",
+                "at": {
+                  "x": 487050,
+                  "y": 4420005
+                }
+              },
+              "second": {
+                "uid": "$uidOf:33",
+                "at": {
+                  "x": 487046,
+                  "y": 4420014
+                }
+              }
+            },
+            "distance": 1,
+            "second": 2
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:32",
+                "$uidOf:33"
+              ],
+              "created": [
+                "$uidOf:52"
+              ],
+              "done": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52
+            ],
+            "entities": {
+              "32": {
+                "kind": "polyline",
+                "id": 32,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487050,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487050,
+                    "y": 4420013
+                  }
+                ]
+              },
+              "33": {
+                "kind": "line",
+                "id": 33,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487044,
+                  "y": 4420014
+                },
+                "b": {
+                  "x": 487048,
+                  "y": 4420014
+                }
+              },
+              "52": {
+                "kind": "line",
+                "id": 52,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487050,
+                  "y": 4420013
+                },
+                "b": {
+                  "x": 487048,
+                  "y": 4420014
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Pah",
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "entities": {
+              "32": {
+                "kind": "polyline",
+                "id": 32,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487050,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487050,
+                    "y": 4420010
+                  }
+                ]
+              },
+              "33": {
+                "kind": "line",
+                "id": 33,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487044,
+                  "y": 4420014
+                },
+                "b": {
+                  "x": 487056,
+                  "y": 4420014
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "İki çoklu çizginin uçları",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "lines",
+              "first": {
+                "uid": "$uidOf:34",
+                "at": {
+                  "x": 487070,
+                  "y": 4420004
+                }
+              },
+              "second": {
+                "uid": "$uidOf:35",
+                "at": {
+                  "x": 487080,
+                  "y": 4420012
+                }
+              }
+            },
+            "distance": 2,
+            "second": 2
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:34",
+                "$uidOf:35"
+              ],
+              "created": [
+                "$uidOf:52"
+              ],
+              "done": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52
+            ],
+            "entities": {
+              "34": {
+                "kind": "polyline",
+                "id": 34,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487070,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487070,
+                    "y": 4420010
+                  }
+                ],
+                "bulges": [
+                  0.5,
+                  0,
+                  0
+                ]
+              },
+              "35": {
+                "kind": "polyline",
+                "id": 35,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487072,
+                    "y": 4420012
+                  },
+                  {
+                    "x": 487084,
+                    "y": 4420012
+                  },
+                  {
+                    "x": 487084,
+                    "y": 4420020
+                  }
+                ]
+              },
+              "52": {
+                "kind": "line",
+                "id": 52,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487070,
+                  "y": 4420010
+                },
+                "b": {
+                  "x": 487072,
+                  "y": 4420012
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Pah",
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "entities": {
+              "34": {
+                "kind": "polyline",
+                "id": 34,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487070,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487070,
+                    "y": 4420008
+                  }
+                ],
+                "bulges": [
+                  0.5,
+                  0,
+                  0
+                ]
+              },
+              "35": {
+                "kind": "polyline",
+                "id": 35,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487074,
+                    "y": 4420012
+                  },
+                  {
+                    "x": 487084,
+                    "y": 4420012
+                  },
+                  {
+                    "x": 487084,
+                    "y": 4420020
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aynı yolun ilk ve son kenarına 2 ve 3 m pah: yol kapanır, kapanan kenar pah",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "lines",
+              "first": {
+                "uid": "$uidOf:36",
+                "at": {
+                  "x": 487100,
+                  "y": 4420007
+                }
+              },
+              "second": {
+                "uid": "$uidOf:36",
+                "at": {
+                  "x": 487107,
+                  "y": 4420000
+                }
+              }
+            },
+            "distance": 2,
+            "second": 3
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:36"
+              ],
+              "created": [],
+              "done": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "entities": {
+              "36": {
+                "kind": "polyline",
+                "id": 36,
+                "layerId": "yapi",
+                "attrs": {
+                  "Ada": "102"
+                },
+                "pts": [
+                  {
+                    "x": 487100,
+                    "y": 4420002
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487110,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487110,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487103,
+                    "y": 4420000
+                  }
+                ],
+                "closed": true
+              }
+            },
+            "revision": "changed",
+            "canUndo": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Pah",
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "entities": {
+              "36": {
+                "kind": "polyline",
+                "id": 36,
+                "layerId": "yapi",
+                "attrs": {
+                  "Ada": "102"
+                },
+                "pts": [
+                  {
+                    "x": 487100,
+                    "y": 4420004
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487110,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487110,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487104,
+                    "y": 4420000
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aynı yolun son ve ilk kenarı, ters sırayla: birinci mesafe son kenarda",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "lines",
+              "first": {
+                "uid": "$uidOf:36",
+                "at": {
+                  "x": 487107,
+                  "y": 4420000
+                }
+              },
+              "second": {
+                "uid": "$uidOf:36",
+                "at": {
+                  "x": 487100,
+                  "y": 4420007
+                }
+              }
+            },
+            "distance": 2,
+            "second": 3
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:36"
+              ],
+              "created": [],
+              "done": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "entities": {
+              "36": {
+                "kind": "polyline",
+                "id": 36,
+                "layerId": "yapi",
+                "attrs": {
+                  "Ada": "102"
+                },
+                "pts": [
+                  {
+                    "x": 487100,
+                    "y": 4420003
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487110,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487110,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487102,
+                    "y": 4420000
+                  }
+                ],
+                "closed": true
+              }
+            },
+            "revision": "changed",
+            "canUndo": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Pah",
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "entities": {
+              "36": {
+                "kind": "polyline",
+                "id": 36,
+                "layerId": "yapi",
+                "attrs": {
+                  "Ada": "102"
+                },
+                "pts": [
+                  {
+                    "x": 487100,
+                    "y": 4420004
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487110,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487110,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487104,
+                    "y": 4420000
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aynı yolun uçları sıfır mesafeyle: uçlar buluşur, son köşe düşer",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "lines",
+              "first": {
+                "uid": "$uidOf:36",
+                "at": {
+                  "x": 487100,
+                  "y": 4420007
+                }
+              },
+              "second": {
+                "uid": "$uidOf:36",
+                "at": {
+                  "x": 487107,
+                  "y": 4420000
+                }
+              }
+            },
+            "distance": 0,
+            "second": 0
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:36"
+              ],
+              "created": [],
+              "done": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "entities": {
+              "36": {
+                "kind": "polyline",
+                "id": 36,
+                "layerId": "yapi",
+                "attrs": {
+                  "Ada": "102"
+                },
+                "pts": [
+                  {
+                    "x": 487100,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487110,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487110,
+                    "y": 4420000
+                  }
+                ],
+                "closed": true
+              }
+            },
+            "revision": "changed",
+            "canUndo": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Pah",
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "entities": {
+              "36": {
+                "kind": "polyline",
+                "id": 36,
+                "layerId": "yapi",
+                "attrs": {
+                  "Ada": "102"
+                },
+                "pts": [
+                  {
+                    "x": 487100,
+                    "y": 4420004
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487110,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487110,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487104,
+                    "y": 4420000
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aynı yolun uçlarına eşit 1 m pah",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "lines",
+              "first": {
+                "uid": "$uidOf:36",
+                "at": {
+                  "x": 487100,
+                  "y": 4420007
+                }
+              },
+              "second": {
+                "uid": "$uidOf:36",
+                "at": {
+                  "x": 487107,
+                  "y": 4420000
+                }
+              }
+            },
+            "distance": 1,
+            "second": 1
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:36"
+              ],
+              "created": [],
+              "done": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "entities": {
+              "36": {
+                "kind": "polyline",
+                "id": 36,
+                "layerId": "yapi",
+                "attrs": {
+                  "Ada": "102"
+                },
+                "pts": [
+                  {
+                    "x": 487100,
+                    "y": 4420001
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487110,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487110,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487101,
+                    "y": 4420000
+                  }
+                ],
+                "closed": true
+              }
+            },
+            "revision": "changed",
+            "canUndo": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Pah",
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "entities": {
+              "36": {
+                "kind": "polyline",
+                "id": 36,
+                "layerId": "yapi",
+                "attrs": {
+                  "Ada": "102"
+                },
+                "pts": [
+                  {
+                    "x": 487100,
+                    "y": 4420004
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487110,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487110,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487104,
+                    "y": 4420000
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tüm köşelere pah, uçları buluşan dört çizgi 1 ve 2 m: birinci mesafe önce verilen çizgide",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "all",
+              "uids": [
+                "$uidOf:42",
+                "$uidOf:43",
+                "$uidOf:44",
+                "$uidOf:45"
+              ]
+            },
+            "distance": 1,
+            "second": 2
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:42",
+                "$uidOf:43",
+                "$uidOf:44",
+                "$uidOf:45"
+              ],
+              "created": [
+                "$uidOf:52",
+                "$uidOf:53",
+                "$uidOf:54",
+                "$uidOf:55"
+              ],
+              "done": 4,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55
+            ],
+            "entities": {
+              "52": {
+                "kind": "line",
+                "id": 52,
+                "layerId": "yapi",
+                "attrs": {},
+                "color": "#E5484D",
+                "a": {
+                  "x": 487201,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487200,
+                  "y": 4420002
+                }
+              },
+              "53": {
+                "kind": "line",
+                "id": 53,
+                "layerId": "yapi",
+                "attrs": {},
+                "color": "#E5484D",
+                "a": {
+                  "x": 487209,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487210,
+                  "y": 4420002
+                }
+              },
+              "54": {
+                "kind": "line",
+                "id": 54,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487210,
+                  "y": 4420005
+                },
+                "b": {
+                  "x": 487208,
+                  "y": 4420006
+                }
+              },
+              "55": {
+                "kind": "line",
+                "id": 55,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487201,
+                  "y": 4420006
+                },
+                "b": {
+                  "x": 487200,
+                  "y": 4420004
+                }
+              },
+              "42": {
+                "kind": "line",
+                "id": 42,
+                "layerId": "yapi",
+                "attrs": {},
+                "color": "#E5484D",
+                "a": {
+                  "x": 487201,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487209,
+                  "y": 4420000
+                }
+              },
+              "43": {
+                "kind": "line",
+                "id": 43,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487210,
+                  "y": 4420002
+                },
+                "b": {
+                  "x": 487210,
+                  "y": 4420005
+                }
+              },
+              "44": {
+                "kind": "line",
+                "id": 44,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487208,
+                  "y": 4420006
+                },
+                "b": {
+                  "x": 487201,
+                  "y": 4420006
+                }
+              },
+              "45": {
+                "kind": "line",
+                "id": 45,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487200,
+                  "y": 4420004
+                },
+                "b": {
+                  "x": 487200,
+                  "y": 4420002
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Pah",
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "entities": {
+              "42": {
+                "kind": "line",
+                "id": 42,
+                "layerId": "yapi",
+                "attrs": {},
+                "color": "#E5484D",
+                "a": {
+                  "x": 487200,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487210,
+                  "y": 4420000
+                }
+              },
+              "43": {
+                "kind": "line",
+                "id": 43,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487210,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487210,
+                  "y": 4420006
+                }
+              },
+              "44": {
+                "kind": "line",
+                "id": 44,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487210,
+                  "y": 4420006
+                },
+                "b": {
+                  "x": 487200,
+                  "y": 4420006
+                }
+              },
+              "45": {
+                "kind": "line",
+                "id": 45,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487200,
+                  "y": 4420006
+                },
+                "b": {
+                  "x": 487200,
+                  "y": 4420000
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tüm köşelere pah, merdiven 1,5 m: kısa basamağın köşeleri atlanır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "all",
+              "uids": [
+                "$uidOf:46",
+                "$uidOf:47",
+                "$uidOf:48",
+                "$uidOf:49"
+              ]
+            },
+            "distance": 1.5,
+            "second": 1.5
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:48",
+                "$uidOf:49"
+              ],
+              "created": [
+                "$uidOf:52"
+              ],
+              "done": 1,
+              "skipped": 2,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52
+            ],
+            "entities": {
+              "52": {
+                "kind": "line",
+                "id": 52,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487238.5,
+                  "y": 4420002
+                },
+                "b": {
+                  "x": 487240,
+                  "y": 4420003.5
+                }
+              },
+              "48": {
+                "kind": "line",
+                "id": 48,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487230,
+                  "y": 4420002
+                },
+                "b": {
+                  "x": 487238.5,
+                  "y": 4420002
+                }
+              },
+              "49": {
+                "kind": "line",
+                "id": 49,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487240,
+                  "y": 4420003.5
+                },
+                "b": {
+                  "x": 487240,
+                  "y": 4420012
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Pah",
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "entities": {
+              "46": {
+                "kind": "line",
+                "id": 46,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487220,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487230,
+                  "y": 4420000
+                }
+              },
+              "47": {
+                "kind": "line",
+                "id": 47,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487230,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487230,
+                  "y": 4420002
+                }
+              },
+              "48": {
+                "kind": "line",
+                "id": 48,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487230,
+                  "y": 4420002
+                },
+                "b": {
+                  "x": 487240,
+                  "y": 4420002
+                }
+              },
+              "49": {
+                "kind": "line",
+                "id": 49,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487240,
+                  "y": 4420002
+                },
+                "b": {
+                  "x": 487240,
+                  "y": 4420012
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tüm köşelere pah, çizgiler ters sırayla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "all",
+              "uids": [
+                "$uidOf:45",
+                "$uidOf:44",
+                "$uidOf:43",
+                "$uidOf:42"
+              ]
+            },
+            "distance": 1,
+            "second": 2
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:45",
+                "$uidOf:44",
+                "$uidOf:43",
+                "$uidOf:42"
+              ],
+              "created": [
+                "$uidOf:52",
+                "$uidOf:53",
+                "$uidOf:54",
+                "$uidOf:55"
+              ],
+              "done": 4,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55
+            ],
+            "entities": {
+              "52": {
+                "kind": "line",
+                "id": 52,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487200,
+                  "y": 4420005
+                },
+                "b": {
+                  "x": 487202,
+                  "y": 4420006
+                }
+              },
+              "53": {
+                "kind": "line",
+                "id": 53,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487200,
+                  "y": 4420001
+                },
+                "b": {
+                  "x": 487202,
+                  "y": 4420000
+                }
+              },
+              "54": {
+                "kind": "line",
+                "id": 54,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487209,
+                  "y": 4420006
+                },
+                "b": {
+                  "x": 487210,
+                  "y": 4420004
+                }
+              },
+              "55": {
+                "kind": "line",
+                "id": 55,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487210,
+                  "y": 4420001
+                },
+                "b": {
+                  "x": 487208,
+                  "y": 4420000
+                }
+              },
+              "45": {
+                "kind": "line",
+                "id": 45,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487200,
+                  "y": 4420005
+                },
+                "b": {
+                  "x": 487200,
+                  "y": 4420001
+                }
+              },
+              "44": {
+                "kind": "line",
+                "id": 44,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487209,
+                  "y": 4420006
+                },
+                "b": {
+                  "x": 487202,
+                  "y": 4420006
+                }
+              },
+              "43": {
+                "kind": "line",
+                "id": 43,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487210,
+                  "y": 4420001
+                },
+                "b": {
+                  "x": 487210,
+                  "y": 4420004
+                }
+              },
+              "42": {
+                "kind": "line",
+                "id": 42,
+                "layerId": "yapi",
+                "attrs": {},
+                "color": "#E5484D",
+                "a": {
+                  "x": 487202,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487208,
+                  "y": 4420000
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Pah",
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "entities": {
+              "45": {
+                "kind": "line",
+                "id": 45,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487200,
+                  "y": 4420006
+                },
+                "b": {
+                  "x": 487200,
+                  "y": 4420000
+                }
+              },
+              "44": {
+                "kind": "line",
+                "id": 44,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487210,
+                  "y": 4420006
+                },
+                "b": {
+                  "x": 487200,
+                  "y": 4420006
+                }
+              },
+              "43": {
+                "kind": "line",
+                "id": 43,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487210,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487210,
+                  "y": 4420006
+                }
+              },
+              "42": {
+                "kind": "line",
+                "id": 42,
+                "layerId": "yapi",
+                "attrs": {},
+                "color": "#E5484D",
+                "a": {
+                  "x": 487200,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487210,
+                  "y": 4420000
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tüm köşeler: uçları buluşmayan çizgi köşe değildir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "all",
+              "uids": [
+                "$uidOf:42",
+                "$uidOf:43",
+                "$uidOf:30"
+              ]
+            },
+            "distance": 1
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_corner",
+              "message": "Tüm köşeler çoklu çizgide, alanda ve uçları birbirine değen çizgilerde işlenir.",
+              "path": "corner.uids[2]"
+            }
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tüm köşeler: aynı doğrultudaki çizgilerde köşe yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "all",
+              "uids": [
+                "$uidOf:50",
+                "$uidOf:51"
+              ]
+            },
+            "distance": 1
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_corner",
+              "message": "Çizgilerin buluştuğu yerde köşe yok: ya aynı doğrultudalar ya da bir noktada ikiden çok uç buluşuyor.",
+              "path": "corner.uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tüm köşeler: hiçbir çizgi köşesine sığmıyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "all",
+              "uids": [
+                "$uidOf:42",
+                "$uidOf:43",
+                "$uidOf:44",
+                "$uidOf:45"
+              ]
+            },
+            "distance": 9
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "chamfer_failed",
+              "message": "Hiçbir köşeye sığmadı; daha küçük bir değer verin ya da kenarları uzatın.",
+              "path": "corner.uids"
+            }
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çoklu çizginin iç kenarı başka nesneyle köşe yapmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "lines",
+              "first": {
+                "uid": "$uidOf:30",
+                "at": {
+                  "x": 487005,
+                  "y": 4420000
+                }
+              },
+              "second": {
+                "uid": "$uidOf:36",
+                "at": {
+                  "x": 487105,
+                  "y": 4420010
+                }
+              }
+            },
+            "distance": 1
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_corner",
+              "message": "Çoklu çizgide yalnız ilk ya da son kenar başka bir kenarla köşe yapar; iç köşe için köşenin kendisini (vertex) verin.",
+              "path": "corner"
+            }
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yay kenarı köşe yapmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "lines",
+              "first": {
+                "uid": "$uidOf:34",
+                "at": {
+                  "x": 487065,
+                  "y": 4419997.5
+                }
+              },
+              "second": {
+                "uid": "$uidOf:35",
+                "at": {
+                  "x": 487080,
+                  "y": 4420012
+                }
+              }
+            },
+            "distance": 1
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_corner",
+              "message": "Seçilen kenar yay; yalnız düz kenar köşe yapar.",
+              "path": "corner"
+            }
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alanın kenarı başka nesneyle köşe yapmaz; köşesi kendi köşesiyle verilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "lines",
+              "first": {
+                "uid": "$uidOf:37",
+                "at": {
+                  "x": 487125,
+                  "y": 4420000
+                }
+              },
+              "second": {
+                "uid": "$uidOf:30",
+                "at": {
+                  "x": 487005,
+                  "y": 4420000
+                }
+              }
+            },
+            "distance": 1
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_corner",
+              "message": "İki düz kenar verin: çizgi ya da açık çoklu çizginin ilk ya da son kenarı; çoklu çizginin ve alanın iç köşesi kendi köşesiyle (vertex) verilir.",
+              "path": "corner"
+            }
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kapalı çoklu çizginin kenarı başka nesneyle köşe yapmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "lines",
+              "first": {
+                "uid": "$uidOf:38",
+                "at": {
+                  "x": 487145,
+                  "y": 4420000
+                }
+              },
+              "second": {
+                "uid": "$uidOf:30",
+                "at": {
+                  "x": 487005,
+                  "y": 4420000
+                }
+              }
+            },
+            "distance": 1
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_corner",
+              "message": "İki düz kenar verin: çizgi ya da açık çoklu çizginin ilk ya da son kenarı; çoklu çizginin ve alanın iç köşesi kendi köşesiyle (vertex) verilir.",
+              "path": "corner"
+            }
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Köşe çoklu çizginin iç köşesine düşüyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "lines",
+              "first": {
+                "uid": "$uidOf:31",
+                "at": {
+                  "x": 487014,
+                  "y": 4420008
+                }
+              },
+              "second": {
+                "uid": "$uidOf:39",
+                "at": {
+                  "x": 487011,
+                  "y": 4420016
+                }
+              }
+            },
+            "distance": 1
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_corner",
+              "message": "Köşe çoklu çizginin serbest ucunda değil, iç köşesinde kalıyor; kenarın öbür yanına tıklayın ya da köşeyi kendi köşesiyle (vertex) verin.",
+              "path": "corner"
+            }
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aynı yolun aynı ucu iki kez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "lines",
+              "first": {
+                "uid": "$uidOf:36",
+                "at": {
+                  "x": 487100,
+                  "y": 4420006
+                }
+              },
+              "second": {
+                "uid": "$uidOf:36",
+                "at": {
+                  "x": 487100,
+                  "y": 4420008
+                }
+              }
+            },
+            "distance": 1
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_corner",
+              "message": "Aynı uç iki kez seçildi; yolu kapatmak için ilk ve son kenarını seçin.",
+              "path": "corner"
+            }
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Paralel kenarlar: çizgi ve çoklu çizginin ilk kenarı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "lines",
+              "first": {
+                "uid": "$uidOf:30",
+                "at": {
+                  "x": 487005,
+                  "y": 4420000
+                }
+              },
+              "second": {
+                "uid": "$uidOf:35",
+                "at": {
+                  "x": 487080,
+                  "y": 4420012
+                }
+              }
+            },
+            "distance": 1
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_corner",
+              "message": "Çizgiler paralel ya da seçilen tarafta çizgi yok.",
+              "path": "corner"
+            }
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli katmandaki çizgi ve çoklu çizgi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "lines",
+              "first": {
+                "uid": "$uidOf:41",
+                "at": {
+                  "x": 487014,
+                  "y": 4420036
+                }
+              },
+              "second": {
+                "uid": "$uidOf:40",
+                "at": {
+                  "x": 487005,
+                  "y": 4420030
+                }
+              }
+            },
+            "distance": 1
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli” katmanı kilitli; üzerindeki nesne değiştirilemez. Kilidi Katmanlar panelinden açın.",
+              "path": "corner.second.uid"
+            }
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ölçü kenarlara sığmıyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "corner": {
+              "kind": "lines",
+              "first": {
+                "uid": "$uidOf:30",
+                "at": {
+                  "x": 487005,
+                  "y": 4420000
+                }
+              },
+              "second": {
+                "uid": "$uidOf:31",
+                "at": {
+                  "x": 487014,
+                  "y": 4420008
+                }
+              }
+            },
+            "distance": 40,
+            "second": 40
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "chamfer_failed",
+              "message": "Pah mesafesi çizgi boyundan büyük.",
+              "path": "corner"
+            }
+          },
+          "expect": {
+            "ids": [
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

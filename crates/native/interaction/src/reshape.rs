@@ -28,6 +28,7 @@ use kentos_domain::Slot;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::ops::fillet::CornerOp;
 use kentos_geometry_core::ops::reshape::{all_corners, reverse, simplify};
+use kentos_native_application::corner::{Size, line_corners, line_of};
 use kentos_native_application::{
     ExecutionContext, entities_chamfer, entities_fillet, entities_reverse,
 };
@@ -71,6 +72,8 @@ enum Kind {
 struct Plan {
     /// Each object changed and the geometry it takes.
     edits: Vec<(Slot, Shape)>,
+    /// The lines given to Tüm köşeler: those with an end meeting another's (docs/adr/0295).
+    lines: Vec<Slot>,
     /// Corners done, or vertices removed (Sadeleştir).
     done: usize,
     /// Corners that did not fit or lie beside an arc.
@@ -206,8 +209,49 @@ impl Reshape {
         let [a, b] = self.value(&m);
         let mut plan = Plan::default();
         let arrow = cx.view.world_length(ARROW_PX);
+        // Lines whose ends meet: their corners, as the command finds them (docs/adr/0295).
+        if matches!(self.kind, Kind::FilletAll | Kind::ChamferAll) {
+            let lines: Vec<Slot> = self
+                .targets
+                .iter()
+                .copied()
+                .filter(|s| cx.doc.get(*s).and_then(line_of).is_some())
+                .collect();
+            let size = if self.kind == Kind::FilletAll {
+                Size::Radius(a)
+            } else {
+                Size::Cut(a, b)
+            };
+            let found = line_corners(cx.doc, &lines, size);
+            plan.ignored += found.alone.len();
+            plan.lines = lines
+                .into_iter()
+                .filter(|s| !found.alone.contains(s))
+                .collect();
+            if !plan.lines.is_empty() && found.done == 0 && found.skipped > 0 {
+                plan.idle += 1;
+            }
+            plan.done += found.done;
+            plan.skipped += found.skipped;
+            for (slot, shape) in found.updates {
+                if draw {
+                    plan.add(Outline::of(&shape, None, 2.5, Tone::Accent));
+                }
+                plan.edits.push((slot, shape));
+            }
+            if draw {
+                for (_, piece) in &found.pieces {
+                    plan.add(Outline::of(piece, None, 2.5, Tone::Accent));
+                }
+            }
+        }
         for (i, slot) in self.targets.iter().enumerate() {
             let Some(e) = cx.doc.get(*slot) else { continue };
+            if plan.lines.contains(slot)
+                || (matches!(self.kind, Kind::FilletAll | Kind::ChamferAll) && line_of(e).is_some())
+            {
+                continue;
+            }
             let core = edge::core(e);
             let drawn = draw && i < MAX_GHOSTS;
             match self.kind {
@@ -333,10 +377,10 @@ impl Reshape {
     fn nothing_to_take(&self) -> &'static str {
         match self.kind {
             Kind::FilletAll => {
-                "Seçimde çoklu çizgi ya da kapalı alan yok; Tüm köşeleri yuvarla yalnız onların köşelerini yuvarlar."
+                "Seçimde çoklu çizgi, kapalı alan ya da uçları birbirine değen çizgi yok; Tüm köşeleri yuvarla yalnız onların köşelerini yuvarlar."
             }
             Kind::ChamferAll => {
-                "Seçimde çoklu çizgi ya da kapalı alan yok; Tüm köşelere pah yalnız onların köşelerini keser."
+                "Seçimde çoklu çizgi, kapalı alan ya da uçları birbirine değen çizgi yok; Tüm köşelere pah yalnız onların köşelerini keser."
             }
             Kind::Reverse => {
                 "Seçimde yönü çevrilebilecek çizgi, çoklu çizgi, eğri ya da kapalı alan yok."
@@ -610,7 +654,10 @@ impl Stages for Reshape {
                 uids: plan
                     .edits
                     .iter()
-                    .map(|(slot, _)| edge::uid(cx.doc, *slot))
+                    .map(|(slot, _)| *slot)
+                    .filter(|slot| !plan.lines.contains(slot))
+                    .chain(plan.lines.iter().copied())
+                    .map(|slot| edge::uid(cx.doc, slot))
                     .collect(),
             };
             let mut ecx = ExecutionContext::new(cx.doc);

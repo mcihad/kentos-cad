@@ -66,30 +66,58 @@ fn every_method_draws_the_reference_s_curve() {
             assert_eq!(b.last_text(), Some(words), "{name}");
             continue;
         }
-        assert!(made_before(&b) > count, "{name}: nothing written ({:?})", b.last_text());
-        assert_eq!(b.last_level(), Some(Level::Success), "{name}: {:?}", b.last_text());
+        assert!(
+            made_before(&b) > count,
+            "{name}: nothing written ({:?})",
+            b.last_text()
+        );
+        assert_eq!(
+            b.last_level(),
+            Some(Level::Success),
+            "{name}: {:?}",
+            b.last_text()
+        );
         match b.newest() {
             Entity::Circle(c) => {
                 let want = &expect["circle"];
                 let [x, y] = rel(c.c);
                 let [wx, wy] = pair(&want["c"]);
                 check(name, &[("r", c.r)], want, within);
-                assert!((x - wx).abs() <= within && (y - wy).abs() <= within, "{name}: {x}, {y}");
+                assert!(
+                    (x - wx).abs() <= within && (y - wy).abs() <= within,
+                    "{name}: {x}, {y}"
+                );
             }
             Entity::Arc(a) => {
                 let want = &expect["arc"];
                 let [x, y] = rel(a.c);
                 let [wx, wy] = pair(&want["c"]);
-                check(name, &[("r", a.r), ("a0", a.a0), ("a1", a.a1)], want, within);
-                assert!((x - wx).abs() <= within && (y - wy).abs() <= within, "{name}: {x}, {y}");
+                check(
+                    name,
+                    &[("r", a.r), ("a0", a.a0), ("a1", a.a1)],
+                    want,
+                    within,
+                );
+                assert!(
+                    (x - wx).abs() <= within && (y - wy).abs() <= within,
+                    "{name}: {x}, {y}"
+                );
             }
             Entity::Ellipse(e) => {
                 let want = &expect["ellipse"];
                 let [x, y] = rel(e.c);
                 let [wx, wy] = pair(&want["c"]);
                 let [mx, my] = pair(&want["major"]);
-                check(name, &[("ratio", e.ratio), ("t0", e.t0), ("t1", e.t1)], want, within);
-                assert!((x - wx).abs() <= within && (y - wy).abs() <= within, "{name}: {x}, {y}");
+                check(
+                    name,
+                    &[("ratio", e.ratio), ("t0", e.t0), ("t1", e.t1)],
+                    want,
+                    within,
+                );
+                assert!(
+                    (x - wx).abs() <= within && (y - wy).abs() <= within,
+                    "{name}: {x}, {y}"
+                );
                 assert!(
                     (e.major.x - mx).abs() <= within && (e.major.y - my).abs() <= within,
                     "{name}: major {:?}",

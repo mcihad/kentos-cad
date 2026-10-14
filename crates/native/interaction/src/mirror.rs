@@ -19,8 +19,8 @@ use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::tools::point_text::js_trim;
 
 use crate::Vec2;
-use crate::log::Level;
 use crate::grip_edit::{mirror_text, texts_word};
+use crate::log::Level;
 use crate::modify::{Modify, Stages, transform_selection};
 use crate::points::{SAME, wire};
 use crate::prompt::{Prompt, upper_tr};

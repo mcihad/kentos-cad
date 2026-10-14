@@ -98,8 +98,15 @@ fn a_linked_text_follows_the_first_piece_of_a_break() {
         second: None,
         expected_revision: None,
     };
-    completed(entities_break::execute(&mut ExecutionContext::new(&mut doc), input));
-    assert_eq!(label_of(&doc, 5), of, "still the polyline's, which kept its id");
+    completed(entities_break::execute(
+        &mut ExecutionContext::new(&mut doc),
+        input,
+    ));
+    assert_eq!(
+        label_of(&doc, 5),
+        of,
+        "still the polyline's, which kept its id"
+    );
     doc.undo();
     assert_eq!(label_of(&doc, 5), of);
 }
@@ -113,12 +120,21 @@ fn a_joined_member_takes_its_linked_text_the_kept_one_keeps_its_own() {
         chain: None,
         expected_revision: None,
     };
-    completed(entities_join::execute(&mut ExecutionContext::new(&mut doc), input));
+    completed(entities_join::execute(
+        &mut ExecutionContext::new(&mut doc),
+        input,
+    ));
     assert!(doc.get(Slot(3)).is_none(), "joined into 2");
     assert!(doc.get(Slot(6)).is_none(), "3's label went with it");
-    assert!(matches!(doc.get(Slot(2)), Some(Entity::Line(_))), "two lines in a row: one line");
+    assert!(
+        matches!(doc.get(Slot(2)), Some(Entity::Line(_))),
+        "two lines in a row: one line"
+    );
     doc.undo();
-    assert!(label_of(&doc, 6).is_some(), "undo gives the text back, linked");
+    assert!(
+        label_of(&doc, 6).is_some(),
+        "undo gives the text back, linked"
+    );
 }
 
 #[test]
@@ -129,9 +145,15 @@ fn a_reversed_object_keeps_its_linked_text_and_its_hatch() {
         uids: vec![uid(&doc, 4), uid(&doc, 1)],
         expected_revision: None,
     };
-    completed(entities_reverse::execute(&mut ExecutionContext::new(&mut doc), input));
+    completed(entities_reverse::execute(
+        &mut ExecutionContext::new(&mut doc),
+        input,
+    ));
     assert_eq!(label_of(&doc, 5), of);
-    assert!(hatch_tied(&doc), "the area is closed as before: the hatch follows it");
+    assert!(
+        hatch_tied(&doc),
+        "the area is closed as before: the hatch follows it"
+    );
 }
 
 #[test]
@@ -143,8 +165,14 @@ fn a_hatch_lets_go_of_a_broken_boundary() {
         second: Some(Vec2 { x: 10.0, y: 5.0 }),
         expected_revision: None,
     };
-    completed(entities_break::execute(&mut ExecutionContext::new(&mut doc), input));
-    assert!(!hatch_tied(&doc), "the boundary is open now: the hatch stays and follows nothing");
+    completed(entities_break::execute(
+        &mut ExecutionContext::new(&mut doc),
+        input,
+    ));
+    assert!(
+        !hatch_tied(&doc),
+        "the boundary is open now: the hatch stays and follows nothing"
+    );
     doc.undo();
     assert!(hatch_tied(&doc));
 }

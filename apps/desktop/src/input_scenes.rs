@@ -9,7 +9,7 @@
 //! chip for the wall), and the shortcuts window with Ctrl + tık and the drawing keys; docs/adr/0279's: the grip menu of a parcel's corner; docs/adr/0280's: two hot corners turning the parcel; docs/adr/0281's: an ambiguous start and a start of one command typed; docs/adr/0283's: Pencere yakınlaştır run over a polyline being drawn, and the polyline back after it with its preview in the new view; docs/adr/0286's: Öznitelikler of a mixed selection with a locked wall and shared attributes. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma,kenet-oku,kenet-blok-ici,secim-alt-nesne,kisayollar,tutamac-menusu,tutamac-kipleri,komut-adlari,seffaf-pencere,seffaf-donus,oznitelik-coklu,oznitelik-ortak,dikdortgen-komut,otele-delikli cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma,kenet-oku,kenet-blok-ici,secim-alt-nesne,kisayollar,tutamac-menusu,tutamac-kipleri,komut-adlari,seffaf-pencere,seffaf-donus,oznitelik-coklu,oznitelik-ortak,dikdortgen-komut,otele-delikli,kose-cizgiler,kose-yol-ucu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -444,6 +444,84 @@ fn offset_region(app: &mut App) {
     );
 }
 
+/// docs/adr/0295: Tüm köşeleri yuvarla on lines drawn end to end: a rectangle of four lines and a stair, the arcs
+/// previewed where they fit, the stair's short step left.
+fn corner_lines(app: &mut App) {
+    let mut o = Objects::new();
+    let sq = [[0.0, 0.0], [16.0, 0.0], [16.0, 10.0], [0.0, 10.0]];
+    let mut slots: Vec<u32> = (0..4)
+        .map(|i| o.line("cizim", sq[i], sq[(i + 1) % 4]))
+        .collect();
+    let stair = [
+        [22.0, 0.0],
+        [30.0, 0.0],
+        [30.0, 2.0],
+        [38.0, 2.0],
+        [38.0, 10.0],
+    ];
+    slots.extend((0..4).map(|i| o.line("cizim", stair[i], stair[i + 1])));
+    open(app, o);
+    make_cad(app);
+    app.command_expanded = true;
+    app.selection.set(
+        slots
+            .into_iter()
+            .map(kentos_domain::Slot)
+            .collect::<Vec<_>>(),
+    );
+    run(app, "tool.filletAll");
+    typed(app, "1.5");
+    hover(app, [12.0, 5.0]);
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 3.0,
+            min_y: N - 3.0,
+            max_x: E + 41.0,
+            max_y: N + 13.0,
+        },
+        24.0,
+    );
+}
+
+/// docs/adr/0295: Köşe yuvarla between a line and an open polyline's end edge, the arc previewed; and one open
+/// polyline closed over its ends.
+fn corner_path_end(app: &mut App) {
+    let mut o = Objects::new();
+    o.line("cizim", [0.0, 0.0], [10.0, 0.0]);
+    o.path("parsel", &[[14.0, 4.0], [14.0, 14.0], [24.0, 14.0]], false);
+    o.path(
+        "parsel",
+        &[
+            [30.0, 4.0],
+            [30.0, 14.0],
+            [42.0, 14.0],
+            [42.0, 0.0],
+            [34.0, 0.0],
+        ],
+        false,
+    );
+    open(app, o);
+    make_cad(app);
+    app.command_expanded = true;
+    run(app, "tool.fillet");
+    click(app, [30.0, 9.0]);
+    click(app, [38.0, 0.0]);
+    typed(app, "3");
+    run(app, "tool.fillet");
+    click(app, [5.0, 0.0]);
+    click(app, [14.0, 9.0]);
+    hover(app, [14.0, 2.5]);
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 3.0,
+            min_y: N - 3.0,
+            max_x: E + 45.0,
+            max_y: N + 17.0,
+        },
+        24.0,
+    );
+}
+
 /// The shortcuts window, opened from Yardım.
 fn shortcut_list(app: &mut App) {
     open(app, Objects::new());
@@ -510,6 +588,8 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("oznitelik-ortak", many_attributes),
         ("dikdortgen-komut", rectangle_command),
         ("otele-delikli", offset_region),
+        ("kose-cizgiler", corner_lines),
+        ("kose-yol-ucu", corner_path_end),
         ("kenet-blok-ici", in_blocks),
         ("kenet-oku", reading),
         ("kenet-dolasma", cycling),

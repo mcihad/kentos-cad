@@ -45,7 +45,6 @@ pub mod blocks;
 pub mod blocks_define;
 pub mod blocks_edit;
 pub mod break_join;
-pub mod reverse;
 pub mod call;
 pub mod changeset;
 mod checks;
@@ -69,11 +68,12 @@ pub mod info_templates;
 pub mod jobs;
 pub mod label_texts;
 pub mod labels_pin;
+pub mod reverse;
 pub use break_join::{entities_break, entities_join};
-pub use reverse::entities_reverse;
 pub use dimension_create::dimensions_create;
 pub use edge_commands::{entities_chamfer, entities_extend, entities_fillet, entities_trim};
 pub use region::{entities_boundary, entities_hatch};
+pub use reverse::entities_reverse;
 pub mod entities_order;
 pub mod entities_pick;
 pub mod entities_select;
@@ -91,6 +91,7 @@ pub mod polygon_regular {
         execute_regular as execute, plan_regular as plan, validate_regular as validate,
     };
 }
+pub mod curves_construct;
 pub mod file_import;
 pub mod geometry_store;
 pub mod import_apply;
@@ -111,7 +112,6 @@ pub mod nurbs;
 pub mod offset;
 pub mod point;
 pub mod points_construct;
-pub mod curves_construct;
 pub mod polygon;
 pub mod polyline;
 pub mod python_call;

@@ -62,11 +62,17 @@ fn a_displacement_is_typed_or_taken_again_with_enter() {
     let mut b = bench(&[1]);
     b.start("move");
     assert!(b.type_text("Y"));
-    assert_eq!(b.session.prompt().text(), "Taşı: yer değiştirmeyi yazın: dY,dX");
+    assert_eq!(
+        b.session.prompt().text(),
+        "Taşı: yer değiştirmeyi yazın: dY,dX"
+    );
     let before = b.log.len();
     assert!(b.type_text("12.5,-7.25"));
     assert!(near(line(&b, 1), [[-11.5, -19.25], [4.5, -19.25]]));
-    assert_eq!(b.said(before), [(Level::Success, "1 nesne taşındı: ΔY 12.500  ΔX -7.250")]);
+    assert_eq!(
+        b.said(before),
+        [(Level::Success, "1 nesne taşındı: ΔY 12.500  ΔX -7.250")]
+    );
     assert_eq!(b.session.tool_id(), "select", "a typed displacement leaves");
 
     // Enter at the base point: Yer değiştirme, the last one offered; Enter again takes it.
@@ -92,7 +98,10 @@ fn enter_with_no_displacement_leaves() {
     b.confirm();
     b.confirm();
     assert_eq!(b.session.tool_id(), "select");
-    assert!(near(line(&b, 1), [[-24.0, -12.0], [-8.0, -12.0]]), "nothing moved");
+    assert!(
+        near(line(&b, 1), [[-24.0, -12.0], [-8.0, -12.0]]),
+        "nothing moved"
+    );
 }
 
 // ── Kopyala: Kip and Dizi ───────────────────────────────────────────────────
@@ -111,9 +120,16 @@ fn single_mode_copies_once_and_stays_for_the_next_run() {
     b.click(20.0, -8.0);
     b.click(20.0, -4.0);
     assert_eq!(b.doc.len(), count + 1);
-    assert_eq!(b.session.tool_id(), "select", "one copy, then the tool leaves");
+    assert_eq!(
+        b.session.tool_id(),
+        "select",
+        "one copy, then the tool leaves"
+    );
     b.start("copy");
-    assert!(b.session.prompt().text().ends_with("Kip (P): tek]"), "the session keeps it");
+    assert!(
+        b.session.prompt().text().ends_with("Kip (P): tek]"),
+        "the session keeps it"
+    );
 }
 
 #[test]
@@ -124,7 +140,10 @@ fn an_array_copies_along_the_displacement_or_fits_it() {
     b.start("copy");
     b.click(p0[0], p0[1]);
     assert!(b.type_text("A"));
-    assert_eq!(b.session.prompt().text(), "Kopyala: dizideki öğe sayısını yazın (asıllar dahil)");
+    assert_eq!(
+        b.session.prompt().text(),
+        "Kopyala: dizideki öğe sayısını yazın (asıllar dahil)"
+    );
     assert!(b.type_text("1"));
     assert_eq!(b.last_level(), Some(Level::Warn));
     assert!(b.type_text("4"));
@@ -137,7 +156,11 @@ fn an_array_copies_along_the_displacement_or_fits_it() {
     assert_eq!(got.len(), before.len() + 3, "three copies: {got:?}");
     for k in 1..=3 {
         let want = [p0[0] + 3.0 * f64::from(k), p0[1]];
-        assert!(got.iter().any(|q| (q[0] - want[0]).abs() < 1e-9 && (q[1] - want[1]).abs() < 1e-9), "{want:?}");
+        assert!(
+            got.iter()
+                .any(|q| (q[0] - want[0]).abs() < 1e-9 && (q[1] - want[1]).abs() < 1e-9),
+            "{want:?}"
+        );
     }
     assert_eq!(b.session.tool_id(), "copy", "back to the copies");
     assert_eq!(b.doc.undo().as_deref(), Some("Kopyala"), "one step");
@@ -152,7 +175,11 @@ fn an_array_copies_along_the_displacement_or_fits_it() {
     assert_eq!(got.len(), before.len() + 4);
     for k in 1..=4 {
         let want = [p0[0], p0[1] + 2.0 * f64::from(k)];
-        assert!(got.iter().any(|q| (q[0] - want[0]).abs() < 1e-9 && (q[1] - want[1]).abs() < 1e-9), "{want:?}");
+        assert!(
+            got.iter()
+                .any(|q| (q[0] - want[0]).abs() < 1e-9 && (q[1] - want[1]).abs() < 1e-9),
+            "{want:?}"
+        );
     }
 }
 
@@ -169,7 +196,10 @@ fn a_cad_project_turns_by_degrees_counter_clockwise() {
     );
     let before = b.log.len();
     assert!(b.type_text("90"));
-    assert_eq!(b.said(before), [(Level::Success, "1 nesne 90.0000° döndürüldü.")]);
+    assert_eq!(
+        b.said(before),
+        [(Level::Success, "1 nesne 90.0000° döndürüldü.")]
+    );
     assert!(near(line(&b, 1), [[-24.0, -12.0], [-24.0, 4.0]]));
 }
 
@@ -179,14 +209,20 @@ fn a_cbs_project_turns_by_grads_clockwise_and_reads_semts() {
     b.start("rotate");
     b.click(-24.0, -12.0);
     assert!(b.type_text("100"));
-    assert!(near(line(&b, 1), [[-24.0, -12.0], [-24.0, -28.0]]), "a quarter clockwise");
+    assert!(
+        near(line(&b, 1), [[-24.0, -12.0], [-24.0, -28.0]]),
+        "a quarter clockwise"
+    );
     // Referans typed: the line runs east (semt 100g); the new direction north (0).
     b.start("rotate");
     b.click(-24.0, -12.0);
     assert!(b.type_text("R"));
     assert!(b.type_text("200"), "south: the line's direction now");
     assert!(b.type_text("100"), "east");
-    assert!(near(line(&b, 1), [[-24.0, -12.0], [-8.0, -12.0]]), "back east");
+    assert!(
+        near(line(&b, 1), [[-24.0, -12.0], [-8.0, -12.0]]),
+        "back east"
+    );
 }
 
 #[test]
@@ -198,12 +234,21 @@ fn reference_takes_the_new_direction_from_two_points() {
     b.click(-24.0, -12.0);
     b.click(-8.0, -12.0);
     assert!(b.type_text("N"));
-    assert_eq!(b.session.prompt().text(), "Döndür: yeni doğrultunun ilk noktasını gösterin");
+    assert_eq!(
+        b.session.prompt().text(),
+        "Döndür: yeni doğrultunun ilk noktasını gösterin"
+    );
     b.click(0.0, 0.0);
-    assert_eq!(b.session.prompt().text(), "Döndür: yeni doğrultunun ikinci noktasını gösterin");
+    assert_eq!(
+        b.session.prompt().text(),
+        "Döndür: yeni doğrultunun ikinci noktasını gösterin"
+    );
     b.click(3.0, 3.0);
     let [a, e] = line(&b, 1);
-    assert!((e[0] - a[0] - e[1] + a[1]).abs() < 1e-9, "along north-east: {a:?} {e:?}");
+    assert!(
+        (e[0] - a[0] - e[1] + a[1]).abs() < 1e-9,
+        "along north-east: {a:?} {e:?}"
+    );
     assert!((e[0] - a[0] - 16.0 / 2f64.sqrt()).abs() < 1e-9);
 }
 
@@ -217,9 +262,15 @@ fn reference_takes_the_new_length_from_two_points() {
     assert!(b.type_text("R"));
     assert!(b.type_text("16"), "the reference length typed");
     assert!(b.type_text("N"));
-    assert_eq!(b.session.prompt().text(), "Ölçekle: yeni uzunluğun ilk ucunu gösterin");
+    assert_eq!(
+        b.session.prompt().text(),
+        "Ölçekle: yeni uzunluğun ilk ucunu gösterin"
+    );
     b.click(0.0, 0.0);
     b.click(3.0, 4.0);
-    assert!(near(line(&b, 1), [[-24.0, -12.0], [-19.0, -12.0]]), "16 m became 5 m");
+    assert!(
+        near(line(&b, 1), [[-24.0, -12.0], [-19.0, -12.0]]),
+        "16 m became 5 m"
+    );
     assert_eq!(b.last_text(), Some("1 nesne 0.3125 faktörüyle ölçeklendi."));
 }

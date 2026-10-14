@@ -183,10 +183,18 @@ pub fn breakable(e: &Entity) -> bool {
 
 /// Kır's pieces in place of the object at `slot`: the first is the object, the others new objects from it,
 /// every one keeping all it carried (docs/adr/0296).
-fn piece_changes(doc: &Document, slot: Slot, pieces: &[kentos_geometry_core::entity::Shape]) -> Vec<EntityEdit> {
+fn piece_changes(
+    doc: &Document,
+    slot: Slot,
+    pieces: &[kentos_geometry_core::entity::Shape],
+) -> Vec<EntityEdit> {
     let id = doc.uid(slot).map(|u| u.to_string()).unwrap_or_default();
     let mut changes = Vec::with_capacity(pieces.len());
-    for (k, geometry) in pieces.iter().filter_map(|s| edit_geometry(s.clone())).enumerate() {
+    for (k, geometry) in pieces
+        .iter()
+        .filter_map(|s| edit_geometry(s.clone()))
+        .enumerate()
+    {
         changes.push(if k == 0 {
             EntityEdit::Replace {
                 uid: id.clone(),

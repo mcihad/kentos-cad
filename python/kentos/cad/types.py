@@ -6377,8 +6377,9 @@ class EntitiesFillet(_Model):
     y), `invalid_distance` (a negative radius; zero without Kırp or with
     `all`), `invalid_revision`, `revision_conflict` (status `conflict`),
     `entity_not_found`, `layer_locked` (an object of the corner), `not_a_corner`
-    (a vertex out of its path or not between straight edges, two lines that are
-    one or parallel, an object of another kind), `fillet_failed` (the
+    (a vertex out of its path or not between straight edges, two sides that are
+    one line, the same end of a path or parallel, a polyline's inner or arc edge,
+    a corner at a polyline's inner vertex, an object of another kind), `fillet_failed` (the
     radius does not fit; with `all`, none fits).
     Attributes:
         radius: The arc's radius, metres. Unit: length.
@@ -17668,7 +17669,10 @@ class VertexCornerPick(CornerPick):
 
 @dataclass(kw_only=True, slots=True)
 class LinesCornerPick(CornerPick):
-    """Two lines; each keeps the side of its pick."""
+    """Two straight sides, each keeping the side of its pick (docs/adr/0295): a line, or an open polyline's first or
+    last straight edge (the edge nearest the pick), whose free end moves to the arc or the cut. The first and last
+    edges of one open polyline close it, the arc or the cut its closing edge.
+    """
     TAG_VALUE: ClassVar[str] = "lines"
     first: TrimPick
     second: TrimPick

@@ -18,8 +18,9 @@ import type { CornerPick } from "./CornerPick";
  * y), `invalid_distance` (a negative radius; zero without Kırp or with
  * `all`), `invalid_revision`, `revision_conflict` (status `conflict`),
  * `entity_not_found`, `layer_locked` (an object of the corner), `not_a_corner`
- * (a vertex out of its path or not between straight edges, two lines that are
- * one or parallel, an object of another kind), `fillet_failed` (the
+ * (a vertex out of its path or not between straight edges, two sides that are
+ * one line, the same end of a path or parallel, a polyline's inner or arc edge,
+ * a corner at a polyline's inner vertex, an object of another kind), `fillet_failed` (the
  * radius does not fit; with `all`, none fits).
  */
 export type EntitiesFillet = { corner: CornerPick, 

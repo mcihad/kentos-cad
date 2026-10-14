@@ -34,13 +34,13 @@ use kentos_domain::contracts::{
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, blocks_define, blocks_edit,
-    circle, delete, dimensions_reassociate, edit, entities_chamfer, entities_extend,
-    entities_fillet, entities_order, entities_pick, entities_select, entities_trim,
-    entities_vertex, labels_pin, layers_compose, layers_edit, layers_filter, layers_info,
-    layers_labels, layers_renderer, layers_service, layers_set, layers_states, layers_time, line,
-    network_define, nurbs, offset, point, points_construct, curves_construct, polygon, polygon_regular, polyline,
-    rectangle_create, scenarios_edit, set, settings_set, sheets_edit, snap_find, styles_edit,
-    transform, ucs_set, units_change, views_edit,
+    circle, curves_construct, delete, dimensions_reassociate, edit, entities_chamfer,
+    entities_extend, entities_fillet, entities_order, entities_pick, entities_select,
+    entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit, layers_filter,
+    layers_info, layers_labels, layers_renderer, layers_service, layers_set, layers_states,
+    layers_time, line, network_define, nurbs, offset, point, points_construct, polygon,
+    polygon_regular, polyline, rectangle_create, scenarios_edit, set, settings_set, sheets_edit,
+    snap_find, styles_edit, transform, ucs_set, units_change, views_edit,
 };
 use kentos_native_application::{
     changeset, create, dimensions_create, divide, entities_boundary, entities_break,
@@ -731,8 +731,18 @@ impl Input for kentos_domain::contracts::CurvesConstruct {
         let c = self.constructions.get_mut(i.parse::<usize>().ok()?)?;
         if let Some((head, axis)) = rest.rsplit_once(".at.") {
             let p = match (c, head) {
-                (C::CircleTwoPoints { a, .. } | C::CircleThreePoints { a, .. } | C::EllipseAxis { a, .. }, "a") => a,
-                (C::CircleTwoPoints { b, .. } | C::CircleThreePoints { b, .. } | C::EllipseAxis { b, .. }, "b") => b,
+                (
+                    C::CircleTwoPoints { a, .. }
+                    | C::CircleThreePoints { a, .. }
+                    | C::EllipseAxis { a, .. },
+                    "a",
+                ) => a,
+                (
+                    C::CircleTwoPoints { b, .. }
+                    | C::CircleThreePoints { b, .. }
+                    | C::EllipseAxis { b, .. },
+                    "b",
+                ) => b,
                 (C::CircleThreePoints { c, .. }, "c") => c,
                 (
                     C::ArcThreePoints { start, .. }
@@ -767,16 +777,35 @@ impl Input for kentos_domain::contracts::CurvesConstruct {
             return measured_number(p, axis);
         }
         match (c, rest) {
-            (C::CircleTangentTangentRadius { first, .. } | C::CircleTangents { first, .. }, "first.near.x") => Some(&mut first.near.x),
-            (C::CircleTangentTangentRadius { first, .. } | C::CircleTangents { first, .. }, "first.near.y") => Some(&mut first.near.y),
-            (C::CircleTangentTangentRadius { r, .. } | C::ArcStartEndRadius { r, .. }, "r") => Some(r),
-            (C::ArcStartCentreAngle { angle, .. } | C::ArcStartEndAngle { angle, .. }, "angle") => Some(angle),
+            (
+                C::CircleTangentTangentRadius { first, .. } | C::CircleTangents { first, .. },
+                "first.near.x",
+            ) => Some(&mut first.near.x),
+            (
+                C::CircleTangentTangentRadius { first, .. } | C::CircleTangents { first, .. },
+                "first.near.y",
+            ) => Some(&mut first.near.y),
+            (C::CircleTangentTangentRadius { r, .. } | C::ArcStartEndRadius { r, .. }, "r") => {
+                Some(r)
+            }
+            (C::ArcStartCentreAngle { angle, .. } | C::ArcStartEndAngle { angle, .. }, "angle") => {
+                Some(angle)
+            }
             (C::ArcStartCentreChord { chord, .. }, "chord") => Some(chord),
             (C::ArcStartEndDirection { direction, .. }, "direction") => Some(direction),
-            (C::EllipseAxis { other, .. } | C::EllipseCentre { other, .. }, "other") => other.as_mut(),
-            (C::EllipseAxis { rotation, .. } | C::EllipseCentre { rotation, .. }, "rotation") => rotation.as_mut(),
-            (C::EllipseAxis { start_angle, .. } | C::EllipseCentre { start_angle, .. }, "startAngle") => start_angle.as_mut(),
-            (C::EllipseAxis { end_angle, .. } | C::EllipseCentre { end_angle, .. }, "endAngle") => end_angle.as_mut(),
+            (C::EllipseAxis { other, .. } | C::EllipseCentre { other, .. }, "other") => {
+                other.as_mut()
+            }
+            (C::EllipseAxis { rotation, .. } | C::EllipseCentre { rotation, .. }, "rotation") => {
+                rotation.as_mut()
+            }
+            (
+                C::EllipseAxis { start_angle, .. } | C::EllipseCentre { start_angle, .. },
+                "startAngle",
+            ) => start_angle.as_mut(),
+            (C::EllipseAxis { end_angle, .. } | C::EllipseCentre { end_angle, .. }, "endAngle") => {
+                end_angle.as_mut()
+            }
             _ => None,
         }
     }
@@ -1837,7 +1866,9 @@ fn run_command(
         return if close(&got, &want, within) {
             Ok(())
         } else {
-            Err(format!("{at}: sonuç (±{within}): beklenen {want}, bulunan {got}"))
+            Err(format!(
+                "{at}: sonuç (±{within}): beklenen {want}, bulunan {got}"
+            ))
         };
     }
     expect_same(&got, &want, "sonuç", at)
