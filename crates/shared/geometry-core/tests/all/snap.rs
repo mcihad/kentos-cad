@@ -123,6 +123,13 @@ fn every_kind_covers_the_objects_the_matrix_says() {
     snaps_are_the_references(&fixture_named("coverage"), 40);
 }
 
+/// The snap inside blocks (docs/adr/0274): nested, turned, scaled and mirrored inserts, the insert's layer
+/// deciding, against `scripts/fixtures/snap_block_cases.py`.
+#[test]
+fn a_block_s_pieces_snap_as_the_reference_says() {
+    snaps_are_the_references(&fixture_named("blocks"), 30);
+}
+
 fn snaps_are_the_references(file: &Value, at_least: usize) {
     let names: Vec<&str> = file["kinds"]
         .as_array()
@@ -149,7 +156,16 @@ fn snaps_are_the_references(file: &Value, at_least: usize) {
             })
             .fold(0, |m, b| m | b);
         let from = (!c["from"].is_null()).then(|| pt(&c["from"]));
-        let got = store(c).snap_ex(
+        let mut s = Store::new();
+        // The definitions first: the inserts put after them are expanded as they come.
+        if let Some(blocks) = file.get("blocks") {
+            s.set_blocks_json(&blocks.to_string()).expect("blocks");
+        }
+        s.put_json(&c["entities"].to_string()).expect("entities");
+        if let Some(layers) = c.get("layers") {
+            s.set_layers_json(&layers.to_string()).expect("layers");
+        }
+        let got = s.snap_ex(
             pt(&c["p"]),
             num(&c["tol"]),
             kinds,
@@ -347,4 +363,36 @@ fn candidates_come_best_first_and_the_first_is_the_snap() {
             );
         }
     }
+}
+
+/// Uzantı and Paralel are acquired on a block's pieces too (docs/adr/0274): at the turned room's corner the two
+/// walls' lines beyond it, along the walls the insert turned.
+#[test]
+fn extensions_and_directions_are_acquired_on_a_block_s_pieces() {
+    let file = fixture_named("blocks");
+    let case = &file["snap"][0];
+    let mut s = Store::new();
+    s.set_blocks_json(&file["blocks"].to_string())
+        .expect("blocks");
+    s.put_json(&case["entities"].to_string()).expect("entities");
+    let corner = pt(&case["expect"]["point"]);
+    let got = s.extensions_at(1.0, corner);
+    let (c, si) = (30f64.to_radians().cos(), 30f64.to_radians().sin());
+    // The room's walls at (6, 4) run west (to (0, 4)) and south (to (6, 0)); beyond the corner: east and north,
+    // turned 30°.
+    let want = [Vec2::new(c, si), Vec2::new(-si, c)];
+    assert_eq!(got.len(), 2, "{got:?}");
+    for w in want {
+        assert!(
+            got.iter().any(|e| matches!(e, Extension::Line { end, dir }
+                if (end.x - corner.x).abs() < 1e-9 && (end.y - corner.y).abs() < 1e-9
+                    && (dir.x - w.x).abs() < 1e-12 && (dir.y - w.y).abs() < 1e-12)),
+            "{w:?} in {got:?}"
+        );
+    }
+    // Paralel: the bottom wall's direction at its middle, its own way (west to east), turned 30°.
+    let dir = s
+        .direction_at(pt(&file["snap"][1]["expect"]["point"]), 0.1)
+        .expect("the bottom wall");
+    assert!((dir.x - c).abs() < 1e-12 && (dir.y - si).abs() < 1e-12, "{dir:?}");
 }

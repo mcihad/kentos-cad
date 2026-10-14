@@ -140,12 +140,99 @@
      "x": 487070,
      "y": 4420000
     }
+   },
+   {
+    "kind": "insert",
+    "id": 7,
+    "layerId": "yapi",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4102",
+    "p": {
+     "x": 487080,
+     "y": 4420000
+    },
+    "scale": 2,
+    "rotation": 1.5707963267948966,
+    "mirror": true
    }
   ],
   "styles": {
    "items": [],
    "categories": []
-  }
+  },
+  "blocks": [
+   {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4101",
+    "name": "Kapı",
+    "base": {
+     "x": 0,
+     "y": 0
+    },
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "yapi",
+      "attrs": {},
+      "a": {
+       "x": 0,
+       "y": 0
+      },
+      "b": {
+       "x": 0,
+       "y": 1
+      }
+     }
+    ]
+   },
+   {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4102",
+    "name": "Oda",
+    "base": {
+     "x": 0,
+     "y": 0
+    },
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "yapi",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 4,
+        "y": 0
+       },
+       {
+        "x": 4,
+        "y": 3
+       },
+       {
+        "x": 0,
+        "y": 3
+       }
+      ]
+     },
+     {
+      "kind": "insert",
+      "id": 2,
+      "layerId": "yapi",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4101",
+      "p": {
+       "x": 2,
+       "y": 0
+      },
+      "scale": 1,
+      "rotation": 0
+     }
+    ]
+   }
+  ]
  },
  "cases": [
   {
@@ -190,7 +277,8 @@
        3,
        4,
        5,
-       6
+       6,
+       7
       ],
       "canUndo": false,
       "canRedo": false,
@@ -242,7 +330,8 @@
        3,
        4,
        5,
-       6
+       6,
+       7
       ],
       "canUndo": false,
       "canRedo": false,
@@ -288,7 +377,8 @@
        3,
        4,
        5,
-       6
+       6,
+       7
       ],
       "canUndo": false,
       "canRedo": false,
@@ -337,7 +427,8 @@
        3,
        4,
        5,
-       6
+       6,
+       7
       ],
       "canUndo": false,
       "canRedo": false,
@@ -390,7 +481,8 @@
        3,
        4,
        5,
-       6
+       6,
+       7
       ],
       "canUndo": false,
       "canRedo": false,
@@ -440,7 +532,8 @@
        3,
        4,
        5,
-       6
+       6,
+       7
       ],
       "canUndo": false,
       "canRedo": false,
@@ -490,7 +583,8 @@
        3,
        4,
        5,
-       6
+       6,
+       7
       ],
       "canUndo": false,
       "canRedo": false,
@@ -550,7 +644,8 @@
        3,
        4,
        5,
-       6
+       6,
+       7
       ],
       "canUndo": false,
       "canRedo": false,
@@ -606,7 +701,8 @@
        3,
        4,
        5,
-       6
+       6,
+       7
       ],
       "canUndo": false,
       "canRedo": false,
@@ -655,7 +751,8 @@
        3,
        4,
        5,
-       6
+       6,
+       7
       ],
       "canUndo": false,
       "canRedo": false,
@@ -716,7 +813,175 @@
        3,
        4,
        5,
-       6
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "iç içe bloktaki kapının ucu: bloğun kimliği, parçanın yolu ve yeri",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 487082.1,
+       "y": 4420004.1
+      },
+      "aperture": 0.5,
+      "kinds": [
+       "endpoint"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "snaps": [
+        {
+         "kind": "endpoint",
+         "point": {
+          "x": 487082.0,
+          "y": 4420004.0
+         },
+         "uid": "$uidOf:7",
+         "place": {
+          "kind": "end"
+         },
+         "path": [
+          1,
+          0
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "dönük ve aynalı bloğun odasının köşesi: yol 0, köşe 2",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 487086.1,
+       "y": 4420008.1
+      },
+      "aperture": 0.5
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "snaps": [
+        {
+         "kind": "endpoint",
+         "point": {
+          "x": 487086.0,
+          "y": 4420008.0
+         },
+         "uid": "$uidOf:7",
+         "place": {
+          "kind": "vertex",
+          "part": 0,
+          "ring": 0,
+          "index": 2
+         },
+         "path": [
+          0
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bloğun ekleme noktası: yolsuz düğüm 0",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 487080.1,
+       "y": 4419999.9
+      },
+      "aperture": 0.5,
+      "kinds": [
+       "insertion"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "snaps": [
+        {
+         "kind": "insertion",
+         "point": {
+          "x": 487080.0,
+          "y": 4420000.0
+         },
+         "uid": "$uidOf:7",
+         "place": {
+          "kind": "node",
+          "part": 0
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
       ],
       "canUndo": false,
       "canRedo": false,
@@ -756,7 +1021,8 @@
        3,
        4,
        5,
-       6
+       6,
+       7
       ],
       "canUndo": false,
       "canRedo": false,
@@ -793,7 +1059,8 @@
        3,
        4,
        5,
-       6
+       6,
+       7
       ],
       "canUndo": false,
       "canRedo": false,
@@ -830,7 +1097,8 @@
        3,
        4,
        5,
-       6
+       6,
+       7
       ],
       "canUndo": false,
       "canRedo": false,
@@ -882,7 +1150,8 @@
        3,
        4,
        5,
-       6
+       6,
+       7
       ],
       "canUndo": false,
       "canRedo": false,
@@ -911,7 +1180,8 @@
        3,
        4,
        5,
-       6
+       6,
+       7
       ],
       "canUndo": false,
       "canRedo": false,
@@ -948,7 +1218,8 @@
        3,
        4,
        5,
-       6
+       6,
+       7
       ],
       "canUndo": false,
       "canRedo": false,
@@ -988,7 +1259,8 @@
        3,
        4,
        5,
-       6
+       6,
+       7
       ],
       "canUndo": false,
       "canRedo": false,
@@ -1032,7 +1304,8 @@
        3,
        4,
        5,
-       6
+       6,
+       7
       ],
       "canUndo": false,
       "canRedo": false,
@@ -1072,7 +1345,8 @@
        3,
        4,
        5,
-       6
+       6,
+       7
       ],
       "canUndo": false,
       "canRedo": false,
@@ -1109,7 +1383,8 @@
        3,
        4,
        5,
-       6
+       6,
+       7
       ],
       "canUndo": false,
       "canRedo": false,
@@ -1147,7 +1422,8 @@
        3,
        4,
        5,
-       6
+       6,
+       7
       ],
       "canUndo": false,
       "canRedo": false,
