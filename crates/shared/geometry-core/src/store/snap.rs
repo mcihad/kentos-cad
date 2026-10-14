@@ -46,11 +46,13 @@ pub enum SnapKind {
     Parallel,
     /// Karelaj: the nearest node of the grid, wherever the cursor is.
     Grid,
+    /// Ekleme noktası: a text's, a block insert's and a table's insertion point (docs/adr/0269 §1).
+    Insertion,
 }
 
 impl SnapKind {
     /// Kinds in bit order: the TypeScript names them, the bits carry a set across the boundary.
-    pub const ALL: [SnapKind; 13] = [
+    pub const ALL: [SnapKind; 14] = [
         SnapKind::Endpoint,
         SnapKind::Midpoint,
         SnapKind::Center,
@@ -64,6 +66,7 @@ impl SnapKind {
         SnapKind::Extension,
         SnapKind::Parallel,
         SnapKind::Grid,
+        SnapKind::Insertion,
     ];
 
     pub fn bit(self) -> u32 {
@@ -73,7 +76,7 @@ impl SnapKind {
     /// Distance multiplier when several snaps compete: at equal distance the more meaningful point wins.
     fn weight(self) -> f64 {
         match self {
-            SnapKind::Endpoint | SnapKind::Node => 1.0,
+            SnapKind::Endpoint | SnapKind::Node | SnapKind::Insertion => 1.0,
             SnapKind::Intersection => 1.02,
             SnapKind::Center => 1.08,
             SnapKind::Quadrant => 1.1,
@@ -230,12 +233,32 @@ struct Choice {
     /// The snap kinds of the layer whose object is being considered.
     mask: u32,
     best: Option<(SnapHit, f64)>,
+    /// A circle's or an arc's centre through its curve under the cursor, while Merkez is the only kind asked for
+    /// (the one-shot Merkez, docs/adr/0269 §2); the curve's distance decides between curves.
+    through: Option<(SnapHit, f64)>,
     nearest: Option<(SnapHit, f64)>,
 }
 
 impl Choice {
     fn consider(&mut self, kind: SnapKind, q: Vec2, id: f64) {
         self.consider_as(kind, q, id, kind.weight());
+    }
+
+    /// A centre `q` through a curve `d` from the cursor (docs/adr/0269 §2).
+    fn consider_through(&mut self, q: Vec2, d: f64, id: f64) {
+        if self.kinds != SnapKind::Center.bit() || self.mask & self.kinds == 0 || d > self.tol {
+            return;
+        }
+        if self.through.is_none_or(|(_, b)| d < b) {
+            self.through = Some((
+                SnapHit {
+                    kind: SnapKind::Center,
+                    point: q,
+                    id,
+                },
+                d,
+            ));
+        }
     }
 
     /// `consider` with its own weight: an extension's crossing weighs as a crossing.
@@ -317,6 +340,7 @@ impl Store {
             kinds,
             mask: u32::MAX,
             best: None,
+            through: None,
             nearest: None,
         };
         let mut nearby: Vec<Nearby> = Vec::new();
@@ -327,7 +351,7 @@ impl Store {
             if it.expanded.is_some()
                 && let Shape::Insert { p: q, .. } = &it.shape
             {
-                ch.consider(SnapKind::Node, *q, id);
+                ch.consider(SnapKind::Insertion, *q, id);
             }
             for e in it.shapes() {
                 shape_snaps(&mut ch, &mut nearby, e, id, from, &reach);
@@ -361,7 +385,7 @@ impl Store {
         if kinds & SnapKind::Intersection.bit() != 0 {
             crossings(&mut ch, &nearby, p);
         }
-        let found = ch.best.or(ch.nearest).map(|(h, _)| h);
+        let found = ch.best.or(ch.through).or(ch.nearest).map(|(h, _)| h);
         // Karelaj: the nearest grid node when nothing else is (§1).
         found.or_else(|| {
             let [gx, gy] = extras.grid?;
@@ -474,6 +498,21 @@ impl Store {
 }
 
 /// A point of a circle at an angle.
+/// The circle's quadrants (east, north, west, south of its centre, exactly) on the counter-clockwise arc from `a0`
+/// spanning `sweep`.
+fn quadrants_on(c: Vec2, r: f64, a0: f64, sweep: f64) -> Vec<Vec2> {
+    [
+        (0.0, Vec2::new(c.x + r, c.y)),
+        (PI / 2.0, Vec2::new(c.x, c.y + r)),
+        (PI, Vec2::new(c.x - r, c.y)),
+        (1.5 * PI, Vec2::new(c.x, c.y - r)),
+    ]
+    .into_iter()
+    .filter(|&(t, _)| on_edge_arc(a0, sweep, t))
+    .map(|(_, q)| q)
+    .collect()
+}
+
 fn point_on(c: Vec2, r: f64, a: f64) -> Vec2 {
     Vec2::new(
         c.x + r * crate::jsmath::cos(a),
@@ -788,7 +827,7 @@ fn shape_snaps(
             return;
         }
         Shape::Text { p: q, .. } | Shape::Insert { p: q, .. } => {
-            ch.consider(SnapKind::Node, *q, id);
+            ch.consider(SnapKind::Insertion, *q, id);
             return;
         }
         Shape::Circle { c, .. } => {
@@ -808,6 +847,10 @@ fn shape_snaps(
             ch.consider(SnapKind::Endpoint, arc_start(&g), id);
             ch.consider(SnapKind::Endpoint, arc_end(&g), id);
             ch.consider(SnapKind::Midpoint, arc_mid(&g), id);
+            // The circle's quadrants the arc passes (docs/adr/0269 §2).
+            for q in quadrants_on(*c, *r, *a0, crate::geom::arc::sweep(*a0, *a1)) {
+                ch.consider(SnapKind::Quadrant, q, id);
+            }
         }
         // Its ends, its middle by length, the nearest and perpendicular points on the curve itself
         // (docs/adr/0259 §2); its chords only find crossings, which are then moved onto it.
@@ -930,7 +973,9 @@ fn shape_snaps(
         }
         // Its corners and its lines' ends; its lines give nearest points and crossings below
         // (docs/adr/0184 §2).
-        Shape::Table { .. } => {
+        Shape::Table { p: q0, .. } => {
+            // Its insertion point first: at that corner it is the insertion (docs/adr/0269 §1).
+            ch.consider(SnapKind::Insertion, *q0, id);
             for q in entity_vertices(e) {
                 ch.consider(SnapKind::Endpoint, q, id);
             }
@@ -981,6 +1026,15 @@ fn shape_snaps(
                     ch.consider(SnapKind::Midpoint, segment_mid(a, b, bulge), id);
                     if let Some(arc) = bulge_arc(a, b, bulge) {
                         ch.consider(SnapKind::Center, arc.c, id);
+                        // A bulged edge's quadrants, as an arc's (docs/adr/0269 §2).
+                        let (a0, sweep) = if arc.sweep >= 0.0 {
+                            (arc.a0, arc.sweep)
+                        } else {
+                            (arc.a0 + arc.sweep, -arc.sweep)
+                        };
+                        for q in quadrants_on(arc.c, arc.r, a0, sweep) {
+                            ch.consider(SnapKind::Quadrant, q, id);
+                        }
                     }
                 }
             }
@@ -1006,6 +1060,10 @@ fn shape_snaps(
             mask: ch.mask,
         });
         ch.consider(SnapKind::Nearest, c.p, id);
+        // A circle's or an arc's centre through its curve (docs/adr/0269 §2).
+        if let Edge::Arc { c: centre, .. } = ed {
+            ch.consider_through(centre, c.d, id);
+        }
         if let Some(f) = from {
             if let Some(foot) = perpendicular_foot(&ed, f) {
                 ch.consider(SnapKind::Perpendicular, foot, id);

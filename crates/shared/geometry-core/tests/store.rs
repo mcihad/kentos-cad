@@ -321,10 +321,19 @@ fn check(path: &std::path::Path) {
                 for k in a[3].as_array().unwrap() {
                     let i = KINDS.iter().position(|n| k == *n).expect("snap kind");
                     mask |= SnapKind::ALL[i].bit();
+                    // The TypeScript's Nokta took texts' and inserts' points too: the core's Ekleme noktası
+                    // since docs/adr/0269 §1.
+                    if k == "node" {
+                        mask |= SnapKind::Insertion.bit();
+                    }
                 }
                 let from = (!a[4].is_null()).then(|| Vec2::new(num(&a[4]["x"]), num(&a[4]["y"])));
                 store.snap(p(), num(&a[2]), mask, from).map_or(Value::Null, |h| {
-                    let kind = KINDS[SnapKind::ALL.iter().position(|k| *k == h.kind).unwrap()];
+                    let kind = if h.kind == SnapKind::Insertion {
+                        "node"
+                    } else {
+                        KINDS[SnapKind::ALL.iter().position(|k| *k == h.kind).unwrap()]
+                    };
                     json!({ "kind": kind, "point": point(&h.point), "entityId": h.id })
                 })
             }

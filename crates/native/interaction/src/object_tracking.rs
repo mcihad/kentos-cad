@@ -43,6 +43,7 @@ fn trackable(kind: SnapKind) -> bool {
             | SnapKind::Midpoint
             | SnapKind::Center
             | SnapKind::Node
+            | SnapKind::Insertion
             | SnapKind::Quadrant
             | SnapKind::Intersection
     )

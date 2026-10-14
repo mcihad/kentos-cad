@@ -16,8 +16,12 @@ use kentos_geometry_core::store::snap::{Extension, SnapExtras, SnapKind};
 use serde_json::Value;
 
 fn fixture() -> Value {
+    fixture_named("cases")
+}
+
+fn fixture_named(name: &str) -> Value {
     let path = format!(
-        "{}/../../../fixtures/snap/v1/cases.json",
+        "{}/../../../fixtures/snap/v1/{name}.json",
         env!("CARGO_MANIFEST_DIR")
     );
     let file: Value = serde_json::from_str(&std::fs::read_to_string(path).expect("fixture file"))
@@ -109,7 +113,17 @@ fn extras(v: &Value) -> SnapExtras {
 
 #[test]
 fn every_snap_is_the_references() {
-    let file = fixture();
+    snaps_are_the_references(&fixture(), 35);
+}
+
+/// The snap kinds' coverage (docs/adr/0269): every object kind with every kind it offers, against
+/// `scripts/fixtures/snap_coverage_cases.py`.
+#[test]
+fn every_kind_covers_the_objects_the_matrix_says() {
+    snaps_are_the_references(&fixture_named("coverage"), 40);
+}
+
+fn snaps_are_the_references(file: &Value, at_least: usize) {
     let names: Vec<&str> = file["kinds"]
         .as_array()
         .unwrap()
@@ -119,7 +133,7 @@ fn every_snap_is_the_references() {
     // The fixture's kinds are the core's, bit for bit.
     assert_eq!(names.len(), SnapKind::ALL.len());
     let cases = file["snap"].as_array().expect("snap");
-    assert!(cases.len() >= 35, "{} cases", cases.len());
+    assert!(cases.len() >= at_least, "{} cases", cases.len());
     let mut failures = Vec::new();
     for c in cases {
         let name = c["name"].as_str().unwrap();

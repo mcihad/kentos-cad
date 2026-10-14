@@ -118,6 +118,7 @@ impl Section {
                 "snap.midpoint",
                 "snap.center",
                 "snap.node",
+                "snap.insertion",
                 "snap.intersection",
                 "snap.perpendicular",
                 "snap.tangent",

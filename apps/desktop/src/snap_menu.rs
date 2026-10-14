@@ -19,7 +19,7 @@ use crate::settings_sections::Section;
 
 /// The kinds' commands and the settings they turn, in the menu's order:
 /// the one-shot menu's, then the additions (the web's `KINDS`).
-const KINDS: [(&str, &str); 12] = [
+const KINDS: [(&str, &str); 13] = [
     ("draft.snap.endpoint", "snap.endpoint"),
     ("draft.snap.midpoint", "snap.midpoint"),
     ("draft.snap.intersection", "snap.intersection"),
@@ -27,6 +27,7 @@ const KINDS: [(&str, &str); 12] = [
     ("draft.snap.perpendicular", "snap.perpendicular"),
     ("draft.snap.tangent", "snap.tangent"),
     ("draft.snap.node", "snap.node"),
+    ("draft.snap.insertion", "snap.insertion"),
     ("draft.snap.nearest", "snap.nearest"),
     ("draft.snap.centroid", "snap.centroid"),
     ("draft.snap.extension", "snap.extension"),

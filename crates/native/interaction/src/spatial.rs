@@ -1451,7 +1451,7 @@ pub fn layer_rows(tree: &LayerTree) -> Vec<(String, LayerFlags)> {
 
 /// A layer's own snapping as the store's kinds (docs/adr/0163 §4): none
 /// when off; Uç nokta brings Çeyrek with it, as the settings do (the web's
-/// `layerSnapMask`).
+/// `layerSnapMask`), and Nokta brings Ekleme noktası (docs/adr/0269 §1: a layer's kinds keep their names).
 pub fn layer_snap_mask(snap: &LayerSnap) -> u32 {
     if snap.off {
         return 0;
@@ -1459,6 +1459,7 @@ pub fn layer_snap_mask(snap: &LayerSnap) -> u32 {
     let kinds = snap.kinds.as_deref().unwrap_or_default();
     crate::tool::snap_kinds(|key| {
         key.strip_prefix("snap.")
+            .map(|k| if k == "insertion" { "node" } else { k })
             .is_some_and(|k| kinds.iter().any(|n| n == k))
     })
 }
