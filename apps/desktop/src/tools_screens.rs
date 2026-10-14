@@ -139,6 +139,8 @@ fn pointed_scenes() -> Vec<Pointed> {
     all.extend(crate::renderer_scenes::pointed());
     all.extend(crate::attachment_scenes::pointed());
     all.extend(crate::address_scenes::pointed());
+    all.extend(crate::history_scenes::pointed());
+    all.extend(crate::method_scenes::pointed());
     all.extend(crate::alias_profile_scenes::pointed());
     let menus: Vec<Pointed> = vec![
         (
@@ -460,6 +462,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::subref_scenes::scenes());
     all.extend(crate::input_scenes::scenes());
     all.extend(crate::view_scenes::scenes());
+    all.extend(crate::method_scenes::scenes());
     all.extend(crate::image_scenes::scenes());
     all.extend(crate::temporal_scenes::scenes());
     all.extend(crate::attachment_scenes::scenes());

@@ -17,23 +17,23 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 34 | 92 | 38 | 38 | 202 |
-| geometry | 18 | 74 | 0 | 8 | 100 |
+| semantic | 40 | 93 | 38 | 38 | 209 |
+| geometry | 28 | 82 | 0 | 8 | 118 |
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 20 | 0 | 6 | 26 |
 | query | 0 | 21 | 1 | 4 | 26 |
 | session | 0 | 82 | 47 | 5 | 134 |
 | host | 0 | 15 | 14 | 4 | 33 |
-| **toplam** | 52 | 315 | 102 | 205 | 674 |
+| **toplam** | 68 | 324 | 102 | 205 | 699 |
 
 Kapsam: `cad` yalnız CAD şeridinde, `gis` yalnız CBS şeridinde, `shared` ikisinde, `none` hiçbir şeritte (kısayol, menü,
 komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 469 satırdan 143'i: geometry 92, none 20, processing 13, query 18.
+CBS'ye özgü olmayan 494 satırdan 161'i: geometry 110, none 20, processing 13, query 18.
 
-### Sonucu çağıran hesaplar (geometry) — 92
+### Sonucu çağıran hesaplar (geometry) — 110
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -53,8 +53,16 @@ CBS'ye özgü olmayan 469 satırdan 143'i: geometry 92, none 20, processing 13, 
 | `tool.adjoin` | Bitişik alan | shared | cad.entities.create `adjoin` |  |
 | `tool.arc` | Yay | shared | cad.arc.create | cad.arc.create merkez, yarıçap ve açılar ister; araç bunları tıklamalardan hesaplar. |
 | `tool.arc#3 nokta` | Yay: 3 nokta | shared | cad.arc.create |  |
+| `tool.arc#Başlangıç, bitiş, açı` | Yay: Başlangıç, bitiş, açı | shared | cad.arc.create |  |
+| `tool.arc#Başlangıç, bitiş, yarıçap` | Yay: Başlangıç, bitiş, yarıçap | shared | cad.arc.create |  |
+| `tool.arc#Başlangıç, bitiş, yön` | Yay: Başlangıç, bitiş, yön | shared | cad.arc.create |  |
+| `tool.arc#Başlangıç, merkez, açı` | Yay: Başlangıç, merkez, açı | shared | cad.arc.create |  |
+| `tool.arc#Başlangıç, merkez, bitiş` | Yay: Başlangıç, merkez, bitiş | shared | cad.arc.create |  |
+| `tool.arc#Başlangıç, merkez, uzunluk` | Yay: Başlangıç, merkez, uzunluk | shared | cad.arc.create |  |
 | `tool.arc#Devam` | Yay: Devam | shared | cad.arc.create |  |
+| `tool.arc#Merkez, başlangıç, açı` | Yay: Merkez, başlangıç, açı | shared | cad.arc.create |  |
 | `tool.arc#Merkez, başlangıç, bitiş` | Yay: Merkez, başlangıç, bitiş | shared | cad.arc.create |  |
+| `tool.arc#Merkez, başlangıç, uzunluk` | Yay: Merkez, başlangıç, uzunluk | shared | cad.arc.create |  |
 | `tool.areaIntersect` | Alan kesiştir | shared | cad.entities.edit `areaIntersect` |  |
 | `tool.areaSplit` | Alan böl | shared | cad.entities.edit `areaSplit` |  |
 | `tool.areaSubtract` | Alan çıkar | shared | cad.entities.edit `areaSubtract` |  |
@@ -102,10 +110,18 @@ CBS'ye özgü olmayan 469 satırdan 143'i: geometry 92, none 20, processing 13, 
 | `tool.rangeRings` | Menzil halkaları | shared | cad.entities.create `rangeRings` |  |
 | `tool.readable` | Okunur yap | shared | cad.entities.edit `readable` |  |
 | `tool.rectangle` | Dikdörtgen | cad | cad.polygon.create | Köşeler iki tıklamadan hesaplanıp cad.polygon.create'e verilir. |
+| `tool.rectangle#Dikdörtgen, alanla` | Dikdörtgen: Dikdörtgen, alanla | cad | cad.polygon.create |  |
+| `tool.rectangle#Dikdörtgen, boyutlarla` | Dikdörtgen: Dikdörtgen, boyutlarla | cad | cad.polygon.create |  |
 | `tool.rectangle3` | Döndürülmüş dikdörtgen | cad | cad.polygon.create |  |
 | `tool.regularPolygon` | Düzgün çokgen | cad | cad.polygon.create |  |
+| `tool.regularPolygon#Düzgün çokgen, kenardan` | Düzgün çokgen: Düzgün çokgen, kenardan | cad | cad.polygon.create |  |
+| `tool.regularPolygon#Düzgün çokgen, çember dışında` | Düzgün çokgen: Düzgün çokgen, çember dışında | cad | cad.polygon.create |  |
+| `tool.regularPolygon#Düzgün çokgen, çember içinde` | Düzgün çokgen: Düzgün çokgen, çember içinde | cad | cad.polygon.create |  |
 | `tool.reshape` | Biçim değiştir | shared | cad.entities.edit `reshape` |  |
 | `tool.revcloud` | Revizyon bulutu | cad | cad.polygon.create |  |
+| `tool.revcloud#Dikdörtgen` | Revizyon bulutu: Dikdörtgen | cad | cad.polygon.create |  |
+| `tool.revcloud#Nesne` | Revizyon bulutu: Nesne | cad | cad.polygon.create |  |
+| `tool.revcloud#Çokgen` | Revizyon bulutu: Çokgen | cad | cad.polygon.create |  |
 | `tool.reverse` | Yönü çevir | shared | cad.entities.edit `reverse` |  |
 | `tool.roadJunctions` | Kavşak temizle | shared | cad.entities.edit `roadJunctions` |  |
 | `tool.sector` | Daire dilimi | shared | cad.polygon.create |  |
@@ -129,6 +145,8 @@ CBS'ye özgü olmayan 469 satırdan 143'i: geometry 92, none 20, processing 13, 
 | `tool.toPolyline` | Çizgiye çevir | shared | cad.entities.edit `toPolyline` |  |
 | `tool.topology` | Topolojik temizlik | shared | cad.entities.edit `topology` |  |
 | `tool.vertexPoints` | Köşelere nokta | shared | cad.entities.create `vertexPoints` |  |
+| `tool.xline#Açıortay` | Yardımcı çizgi: Açıortay | cad | cad.entities.create |  |
+| `tool.xline#Paralel` | Yardımcı çizgi: Paralel | cad | cad.entities.create |  |
 
 ### Ürün komutu yok (none) — 20
 

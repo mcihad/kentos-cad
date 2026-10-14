@@ -8,7 +8,11 @@
 //!   or the distance (0: sharp corners);
 //! - before the second: Döndür (D), a typed angle in degrees or a direction
 //!   pointed from the first corner; Boyutlar (B), `uzunluk,genişlik`, then a
-//!   click shows the side it opens to;
+//!   click shows the side it opens to; Alan (A, AutoCAD's Area), the area
+//!   in the project's area unit, then one side's length: the other side is
+//!   the area over it (`rect_side_for_area`), then a click shows the side;
+//! - the ribbon's methods (docs/adr/0287): `BOYUT` and `ALAN` before the first
+//!   corner go to Boyutlar or Alan after every first corner while the tool runs;
 //! - the rotation and the corners stay for the next rectangles, for as long
 //!   as the app lives (the web's static fields, [`crate::tool::Memory`]).
 //!
@@ -18,7 +22,7 @@
 //! are the shared core's (`rectFromCorners`, `rectFromSize`, `cornersOfRing`);
 //! none is computed here.
 
-use kentos_geometry_core::geom::shapes::{rect_from_corners, rect_from_size};
+use kentos_geometry_core::geom::shapes::{rect_from_corners, rect_from_size, rect_side_for_area};
 use kentos_geometry_core::geometry::{dist, signed_area};
 use kentos_geometry_core::jsmath::PI;
 use kentos_geometry_core::ops::fillet::{CornerOp, CornerResult, corners_of_ring};
@@ -37,7 +41,7 @@ pub const ID: &str = "rectangle";
 pub const LABEL: &str = "Dikdörtgen";
 const DEG: f64 = PI / 180.0;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 enum Stage {
     First,
     Second,
@@ -45,6 +49,10 @@ enum Stage {
     Rotation,
     Size,
     Side,
+    /// Alan: the area typed.
+    Area,
+    /// Alan: one side's length typed, the area kept.
+    AreaSide(f64),
 }
 
 /// The corner style being asked for.
@@ -64,6 +72,8 @@ pub struct Rectangle {
     size: Option<(f64, f64)>,
     /// What the session remembered and the project's units, as of the last call.
     seen: Option<(Memory, Format)>,
+    /// The ribbon's method (docs/adr/0287): the stage after every first corner.
+    method: Option<Stage>,
 }
 
 impl Default for Rectangle {
@@ -74,6 +84,7 @@ impl Default for Rectangle {
             pending: Pending::Fillet,
             size: None,
             seen: None,
+            method: None,
         }
     }
 }
@@ -113,6 +124,9 @@ impl Rectangle {
             }
             (Stage::Second, "D") => self.stage = Stage::Rotation,
             (Stage::Second, "B") => self.stage = Stage::Size,
+            (Stage::Second, "A") => self.stage = Stage::Area,
+            (Stage::First, "BOYUT") => self.method = Some(Stage::Size),
+            (Stage::First, "ALAN") => self.method = Some(Stage::Area),
             _ => return false,
         }
         true
@@ -124,7 +138,7 @@ impl Rectangle {
             Some(a) if self.stage != Stage::First => a,
             _ => {
                 self.d.pts = vec![p];
-                self.stage = Stage::Second;
+                self.stage = self.method.unwrap_or(Stage::Second);
                 return;
             }
         };
@@ -250,10 +264,18 @@ impl Tool for Rectangle {
                 "dönme açısını yazın (derece) ya da ilk köşeden bir yön gösterin",
             ),
             Stage::Size => Prompt::new(LABEL, "uzunluk ve genişliği yazın, ör. 20,10"),
+            Stage::Area => {
+                Prompt::new(LABEL, format!("alanı yazın ({})", format.area_unit_label()))
+            }
+            Stage::AreaSide(_) => Prompt::new(
+                LABEL,
+                "bir kenarın uzunluğunu yazın; öbür kenar alandan bulunur",
+            ),
             Stage::Side => Prompt::new(LABEL, "dikdörtgenin hangi yana açılacağını gösterin"),
             Stage::Second => Prompt::new(LABEL, "karşı köşeyi belirtin")
                 .option_with("Döndür", "D", short_degrees(memory.rect_rotation))
-                .option("Boyutlar", "B"),
+                .option("Boyutlar", "B")
+                .option("Alan", "A"),
             Stage::First => {
                 let (fillet, chamfer) = match memory.rect_corners {
                     Corners::Fillet(size) => (format.length(size), "kapalı".to_owned()),
@@ -390,6 +412,35 @@ impl Rectangle {
                 cx.memory.rect_rotation = n * DEG;
                 self.stage = Stage::Second;
                 true
+            }
+            Stage::Area => {
+                // In the project's area unit (m², dönüm, hektar; docs/adr/0191's rule).
+                let f = cx.format();
+                match n.filter(|n| *n > 0.0) {
+                    Some(n) => {
+                        self.stage = Stage::AreaSide(f.area_to_square_metres(n));
+                        true
+                    }
+                    None => false,
+                }
+            }
+            Stage::AreaSide(area) => {
+                let Some((_, side)) = crate::points::plain_value(text, cx)
+                    .or_else(|| n.map(|n| (n, cx.format().to_metres(n))))
+                else {
+                    return false;
+                };
+                match rect_side_for_area(area, side) {
+                    Some(width) => {
+                        self.size = Some((side, width));
+                        self.stage = Stage::Side;
+                        true
+                    }
+                    None => {
+                        cx.say(Level::Warn, "Kenar uzunluğu sıfırdan büyük olmalı.");
+                        true
+                    }
+                }
             }
             Stage::Size => {
                 // Typed in the project's unit (docs/adr/0165 §2), or with their own (docs/adr/0266).

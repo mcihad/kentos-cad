@@ -707,13 +707,17 @@ fn several_objects_what_they_share_and_their_totals() {
         panic!("several");
     };
     assert_eq!((count, kinds.as_str()), (3, "1 kapalı alan, 2 çizgi"));
-    // A line on the locked layer: nothing is edited, the values still named.
-    assert_eq!(
-        value(&app, "Ortak özellikler", "Katman"),
-        "Kilitli katman içeriyor"
-    );
+    // A line on the locked layer: the others stay editable, the note says it is skipped (docs/adr/0286).
+    assert_eq!(value(&app, "Ortak özellikler", "Katman"), "Çeşitli");
     assert_eq!(value(&app, "Ortak özellikler", "Renk"), "Katmana göre");
-    assert!(!editable(&app));
+    assert!(editable(&app));
+    let notes: Vec<String> = rows(&app)
+        .into_iter()
+        .flat_map(|(_, rows)| rows)
+        .filter(|r| r.note && r.warn)
+        .map(|r| r.value)
+        .collect();
+    assert_eq!(notes, ["1 nesne kilitli katmanda: atlanır."]);
     // Lines of 16 and 12 m; the parcel's 120 m².
     assert_eq!(value(&app, "Toplamlar", "Toplam uzunluk"), "28.000 m");
     assert_eq!(value(&app, "Toplamlar", "Toplam alan"), "120.00 m²");
@@ -1241,8 +1245,10 @@ fn a_cell_of_several_objects_sets_every_vertex_of_each_of_them_in_one_step() {
     assert_eq!(p.z, None);
 }
 
+/// A locked layer among several no longer takes the row's cell away (docs/adr/0286): the cell writes the open
+/// objects only; the locked line keeps its elevation.
 #[test]
-fn a_locked_layer_among_several_takes_the_row_s_cell_away() {
+fn a_locked_layer_among_several_leaves_the_cell_to_the_others() {
     let mut app = objects();
     let open = path_z(&mut app, some(&[5.0; 3]));
     let locked = add(
@@ -1259,7 +1265,15 @@ fn a_locked_layer_among_several_takes_the_row_s_cell_away() {
     );
     select(&mut app, &[open, locked]);
     assert_eq!(value(&app, "Ortak özellikler", "Kot"), "5.000 m");
-    assert!(!row_editable(&app, "Ortak özellikler", "Kot"));
+    assert!(row_editable(&app, "Ortak özellikler", "Kot"));
+    event(
+        &mut app,
+        Event::Commit(Field::Elevations(vec![Slot(open)]), "7".to_owned()),
+    );
+    let Entity::Line(l) = entity(&app, locked) else {
+        panic!("a line");
+    };
+    assert_eq!(l.za, Some(5.0));
 }
 
 /// Pictures of Öznitelikler for the owner, over the sample drawing: nothing
@@ -2212,4 +2226,134 @@ fn a_dimensions_line_rows_write_its_colours_weights_and_types() {
         before,
         "both have it already, whatever its case"
     );
+}
+
+/// A selection holding a locked object: Renk ▾ writes the others in one step, the locked one is skipped and
+/// counted (docs/adr/0278, 0286).
+#[test]
+fn a_mixed_selection_changes_the_open_objects_and_counts_the_locked() {
+    let mut app = objects();
+    select(&mut app, &[1, 6]);
+    let ids = vec![Slot(1), Slot(6)];
+    event(&mut app, Event::Color(ids, Some("#E5484D".to_owned())));
+    assert_eq!(entity(&app, 1).base().color.as_deref(), Some("#E5484D"));
+    assert_eq!(entity(&app, 6).base().color, None);
+    assert_eq!(
+        warned(&app).as_deref(),
+        Some(
+            "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın."
+        )
+    );
+    assert_eq!(undo_label(&mut app).as_deref(), Some("Renk değiştir"));
+}
+
+/// Ortak öznitelikler: a value every object shares, else Çeşitli with how many have it; a cell writes them all,
+/// one step (docs/adr/0286).
+#[test]
+fn several_objects_share_their_attributes_and_take_one_value() {
+    let mut app = objects();
+    let line = |a: [f64; 2], attrs: &[(&str, &str)]| {
+        let mut b = base("0");
+        b.attrs = attrs
+            .iter()
+            .map(|(k, v)| ((*k).to_owned(), (*v).to_owned()))
+            .collect();
+        Entity::Line(LineEntity {
+            base: b,
+            a: Wire {
+                x: E + a[0],
+                y: N + a[1],
+            },
+            b: Wire {
+                x: E + a[0] + 5.0,
+                y: N + a[1],
+            },
+            za: None,
+            zb: None,
+            ma: None,
+            mb: None,
+        })
+    };
+    let first = add(
+        &mut app,
+        line([40.0, 0.0], &[("Tür", "Duvar"), ("Kat", "1")]),
+    );
+    let second = add(
+        &mut app,
+        line([40.0, 5.0], &[("Tür", "Duvar"), ("Kat", "2")]),
+    );
+    let third = add(&mut app, line([40.0, 10.0], &[("Tür", "Duvar")]));
+    select(&mut app, &[first, second, third]);
+    assert_eq!(value(&app, "Ortak öznitelikler", "Tür"), "Duvar");
+    assert_eq!(
+        value(&app, "Ortak öznitelikler", "Kat"),
+        "Çeşitli (2/3 nesnede)"
+    );
+    event(
+        &mut app,
+        Event::Commit(
+            Field::Attributes(
+                vec![Slot(first), Slot(second), Slot(third)],
+                "Kat".to_owned(),
+            ),
+            "3".to_owned(),
+        ),
+    );
+    for slot in [first, second, third] {
+        assert_eq!(
+            entity(&app, slot)
+                .base()
+                .attrs
+                .get("Kat")
+                .map(String::as_str),
+            Some("3")
+        );
+    }
+    assert_eq!(value(&app, "Ortak öznitelikler", "Kat"), "3");
+    assert_eq!(undo_label(&mut app).as_deref(), Some("Değiştir"));
+}
+
+/// The panel of a selection of 100 000 objects with attributes is built within a frame's budget (docs/adr/0286).
+#[test]
+#[ignore = "timing; run with --ignored --nocapture in release"]
+fn a_hundred_thousand_objects_build_the_panel_quickly() {
+    let mut app = objects();
+    let mut slots = Vec::new();
+    for i in 0..100_000u32 {
+        let mut b = base("0");
+        b.attrs = BTreeMap::from([
+            ("Tür".to_owned(), "Duvar".to_owned()),
+            ("No".to_owned(), i.to_string()),
+        ]);
+        let x = f64::from(i % 300) * 2.0;
+        let y = f64::from(i / 300) * 2.0;
+        slots.push(add(
+            &mut app,
+            Entity::Line(LineEntity {
+                base: b,
+                a: Wire { x: E + x, y: N + y },
+                b: Wire {
+                    x: E + x + 1.0,
+                    y: N + y,
+                },
+                za: None,
+                zb: None,
+                ma: None,
+                mb: None,
+            }),
+        ));
+    }
+    select(&mut app, &slots);
+    let doc = app.document.as_ref().expect("open");
+    let t = std::time::Instant::now();
+    let panel = app.properties_panel(doc);
+    let took = t.elapsed();
+    println!("100 000 nesnenin paneli: {took:?}");
+    assert!(
+        panel
+            .sections
+            .iter()
+            .any(|s| s.title == "Ortak öznitelikler")
+    );
+    assert!(took.as_millis() < 100, "{took:?}");
 }

@@ -4,7 +4,10 @@
 //!
 //! - a rectangle's two corners (the default), or with Çokgen (Ç, or C) a
 //!   polygon's corners ended by Enter or a quick right click; Dikdörtgen (D)
-//!   goes back; both before the first corner;
+//!   goes back; both before the first corner; Nesne (N, AutoCAD's Object,
+//!   docs/adr/0287): every closed object clicked (an area, a closed polyline,
+//!   a circle, a closed curve, a full ellipse) gets a cloud round its outer
+//!   outline (`cloud_around`), the object stays;
 //! - Yay boyu (U): the arcs' length in paper millimetres at the project's
 //!   plot scale; the shape and the length stay for as long as the app lives.
 //!
@@ -15,7 +18,7 @@
 
 use kentos_geometry_core::geom::arc::DEFAULT_STEP;
 use kentos_geometry_core::geom::bulge::bulge_path_outline;
-use kentos_geometry_core::geom::shapes::cloud_of;
+use kentos_geometry_core::geom::shapes::{cloud_around, cloud_of};
 use kentos_geometry_core::geometry::{dist, signed_area};
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 
@@ -35,6 +38,8 @@ pub const LABEL: &str = "Revizyon bulutu";
 pub struct RevCloud {
     d: Taken,
     ask_arc: bool,
+    /// Nesne: clicks pick closed objects.
+    object: bool,
     /// What the session remembered and the project's plot scale, as of the last call.
     seen: Option<(Memory, f64)>,
 }
@@ -72,8 +77,15 @@ impl RevCloud {
             return false;
         }
         match key {
-            "D" => cx.memory.cloud_rect = true,
-            "Ç" | "C" => cx.memory.cloud_rect = false,
+            "D" => {
+                cx.memory.cloud_rect = true;
+                self.object = false;
+            }
+            "Ç" | "C" => {
+                cx.memory.cloud_rect = false;
+                self.object = false;
+            }
+            "N" => self.object = true,
             "U" => self.ask_arc = true,
             _ => return false,
         }
@@ -88,6 +100,31 @@ impl RevCloud {
         self.d.pts.push(p);
         if cx.memory.cloud_rect && self.d.pts.len() == 2 {
             self.finish(cx);
+        }
+    }
+
+    /// Nesne: the cloud round the closed object under the press, through `cad.polygon.create`.
+    fn around(&mut self, p: &Pointer, cx: &mut Context<'_>) {
+        self.see(cx);
+        let shape = cx
+            .spatial
+            .pick_edge(p.raw, cx.pick_tolerance(), |s| cx.doc.get(s).is_some())
+            .and_then(|slot| cx.doc.get(slot))
+            .map(|e| crate::spatial::record(e).3);
+        let cloud = shape.and_then(|shape| cloud_around(&shape, self.arc_length(), 64.0));
+        match cloud {
+            Some(cloud) => {
+                let pts = cloud.pts.clone();
+                if points::write_ring(&mut self.d, &pts, Some(cloud.bulges), cx) {
+                    let line = format!("Revizyon bulutu eklendi: {} yay.", pts.len());
+                    cx.say(Level::Success, line);
+                }
+                self.d.reset();
+            }
+            None => cx.say(
+                Level::Warn,
+                "Kapalı bir nesneye tıklayın: alan, kapalı çoklu çizgi, daire, kapalı eğri ya da elips.",
+            ),
         }
     }
 
@@ -141,15 +178,21 @@ impl Tool for RevCloud {
         }
         let m = self.memory();
         let n = self.d.pts.len();
+        let object = self.object;
         let first = |step: &'static str| {
             let prompt = Prompt::new(LABEL, step);
-            let prompt = if m.cloud_rect {
-                prompt.option("Çokgen", "Ç")
+            let prompt = if object {
+                prompt.option("Dikdörtgen", "D").option("Çokgen", "Ç")
+            } else if m.cloud_rect {
+                prompt.option("Çokgen", "Ç").option("Nesne", "N")
             } else {
-                prompt.option("Dikdörtgen", "D")
+                prompt.option("Dikdörtgen", "D").option("Nesne", "N")
             };
             prompt.option_with("Yay boyu", "U", format!("{} mm", js_number(m.cloud_arc_mm)))
         };
+        if object {
+            return first("buluta çevrilecek kapalı nesneye tıklayın");
+        }
         match (m.cloud_rect, n) {
             (true, 0) => first("dikdörtgenin bir köşesine tıklayın"),
             (true, _) => Prompt::new(LABEL, "karşı köşeye tıklayın"),
@@ -181,6 +224,10 @@ impl Tool for RevCloud {
     }
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
+        if self.object && !self.ask_arc {
+            self.around(p, cx);
+            return;
+        }
         let p = self.d.constrain(p, cx);
         self.accept(p, cx);
         self.see(cx);

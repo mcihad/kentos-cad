@@ -2049,12 +2049,34 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
     let symbol = same(&|b| b.symbol.as_deref());
     let layers = doc.model.layers();
     // Each layer looked up once: a large selection has many objects on few layers.
-    let mut seen = std::collections::HashSet::new();
-    let any_locked = objects.iter().any(|e| {
+    let mut locked_layers: std::collections::HashMap<&str, bool> = std::collections::HashMap::new();
+    for e in objects {
         let layer = e.base().layer_id.as_str();
-        seen.insert(layer) && layers.is_locked(layer)
-    });
-    let edit = |editor: Editor| (!any_locked).then_some(editor);
+        locked_layers
+            .entry(layer)
+            .or_insert_with(|| layers.is_locked(layer));
+    }
+    let is_locked = |e: &Entity| {
+        locked_layers
+            .get(e.base().layer_id.as_str())
+            .copied()
+            .unwrap_or(false)
+    };
+    let locked_count = objects.iter().filter(|e| is_locked(e)).count();
+    // The objects on locked layers are selected but not changed (docs/adr/0278, 0286): the set commands skip
+    // them and count them; the edits of their geometry and texts are given the others only.
+    let all_locked = locked_count == objects.len();
+    let open: std::collections::HashSet<u32> = if locked_count == 0 {
+        objects.iter().map(|e| e.base().id).collect()
+    } else {
+        objects
+            .iter()
+            .filter(|e| !is_locked(e))
+            .map(|e| e.base().id)
+            .collect()
+    };
+    let any_locked = all_locked;
+    let edit = |editor: Editor| (!all_locked).then_some(editor);
 
     // The weight of the objects drawn with lines; the others have none to show.
     let lined: Vec<&&Entity> = objects.iter().filter(|e| e.draws_lines()).collect();
@@ -2062,8 +2084,9 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
         .iter()
         .all(|e| e.base().line_weight == lined[0].base().line_weight)
         .then(|| lined.first().and_then(|e| e.base().line_weight));
+    let layer_text = layer.map_or_else(|| "Çeşitli".to_owned(), |l| layer_path(layers, l));
     let mut rows = vec![
-        Row::text("Katman", "Kilitli katman içeriyor").editor(edit(layer_editor(doc, &ids, layer))),
+        Row::text("Katman", layer_text).editor(edit(layer_editor(doc, &ids, layer))),
         Row::text("Renk", color_text(color)).editor(edit(color_editor(&ids, color))),
     ];
     if !lined.is_empty() {
@@ -2098,7 +2121,7 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
     // same, `kot yok` when none has one, else Çeşitli. What takes no elevation is left out.
     let takers: Vec<Slot> = objects
         .iter()
-        .filter(|e| elevation::takes(e))
+        .filter(|e| elevation::takes(e) && open.contains(&e.base().id))
         .map(|e| Slot(e.base().id))
         .collect();
     if !takers.is_empty() {
@@ -2111,11 +2134,29 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
             _ => rows.push(Row::text("Kot", "Çeşitli").editor(editor)),
         }
     }
+    if locked_count > 0 {
+        let line = if all_locked {
+            format!("{locked_count} nesnenin hepsi kilitli katmanda: değişmez.")
+        } else {
+            format!("{locked_count} nesne kilitli katmanda: atlanır.")
+        };
+        // First: it says what every row below does to the selection.
+        rows.insert(
+            0,
+            Row {
+                warn: true,
+                ..Row::note(&line)
+            },
+        );
+    }
     let mut sections = vec![Section {
         id: "general",
         title: "Ortak özellikler".into(),
         rows,
     }];
+    if let Some(attrs) = shared_attributes(objects, &ids, all_locked) {
+        sections.push(attrs);
+    }
     // The selection's texts: their Hiza, Genişlik çarpanı and Zemin, common or Çeşitli (docs/adr/0145 §6).
     let texts: Vec<&kentos_contracts::TextEntity> = objects
         .iter()
@@ -2125,7 +2166,11 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
         })
         .collect();
     if !texts.is_empty() {
-        let slots: Vec<Slot> = texts.iter().map(|t| Slot(t.base.id)).collect();
+        let slots: Vec<Slot> = texts
+            .iter()
+            .filter(|t| open.contains(&t.base.id))
+            .map(|t| Slot(t.base.id))
+            .collect();
         sections.push(Section {
             id: "texts",
             title: if texts.len() == objects.len() {
@@ -2159,7 +2204,11 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
         })
         .collect();
     if !leaders.is_empty() {
-        let slots: Vec<Slot> = leaders.iter().map(|l| Slot(l.base.id)).collect();
+        let slots: Vec<Slot> = leaders
+            .iter()
+            .filter(|l| open.contains(&l.base.id))
+            .map(|l| Slot(l.base.id))
+            .collect();
         sections.push(Section {
             id: "leaders",
             title: if leaders.len() == objects.len() {
@@ -2179,7 +2228,11 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
         })
         .collect();
     if !dims.is_empty() {
-        let slots: Vec<Slot> = dims.iter().map(|d| Slot(d.base.id)).collect();
+        let slots: Vec<Slot> = dims
+            .iter()
+            .filter(|d| open.contains(&d.base.id))
+            .map(|d| Slot(d.base.id))
+            .collect();
         sections.push(Section {
             id: "dimensions",
             title: if dims.len() == objects.len() {
@@ -2219,6 +2272,60 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
         });
     }
     sections
+}
+
+/// Ortak öznitelikler of several objects (docs/adr/0286): every key any of them has, in the order first met, its
+/// value when every object has that same value, else “Çeşitli” with how many have it; a cell writes the value to
+/// them all through `cad.entities.set` (the locked ones skipped and counted). At most 200 keys; none, `None`.
+fn shared_attributes(objects: &[&Entity], ids: &[Slot], locked: bool) -> Option<Section> {
+    const MOST: usize = 200;
+    // Each key: its first value, whether every one met so far is the same, how many objects have it.
+    let mut keys: Vec<(&str, &str, bool, usize)> = Vec::new();
+    let mut at: std::collections::HashMap<&str, usize> = std::collections::HashMap::new();
+    for e in objects {
+        for (key, value) in &e.base().attrs {
+            match at.get(key.as_str()) {
+                Some(&i) => {
+                    let k = &mut keys[i];
+                    k.2 &= k.1 == value.as_str();
+                    k.3 += 1;
+                }
+                None if keys.len() < MOST => {
+                    at.insert(key, keys.len());
+                    keys.push((key, value, true, 1));
+                }
+                None => {}
+            }
+        }
+    }
+    if keys.is_empty() {
+        return None;
+    }
+    let n = objects.len();
+    let rows = keys
+        .into_iter()
+        .map(|(key, value, same, count)| {
+            let shown = if same && count == n {
+                value.to_owned()
+            } else if same {
+                format!("Çeşitli ({count}/{n} nesnede {value})")
+            } else {
+                format!("Çeşitli ({count}/{n} nesnede)")
+            };
+            Row {
+                label: Cow::Owned(key.to_owned()),
+                numeric: same && count == n && looks_numeric(value),
+                editor: (!locked)
+                    .then(|| Editor::Text(Field::Attributes(ids.to_vec(), key.to_owned()))),
+                ..Row::text("", shown)
+            }
+        })
+        .collect();
+    Some(Section {
+        id: "sharedAttrs",
+        title: "Ortak öznitelikler".into(),
+        rows,
+    })
 }
 
 /// `+n.toFixed(places)`: a number rounded as the web shows it.

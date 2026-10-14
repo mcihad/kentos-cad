@@ -50,6 +50,7 @@ mod step;
 mod store;
 mod units;
 
+pub use calls::{REFUSED_CALLS, RefusedAs, RefusedCall};
 pub use changes::{ChangeMark, Changes};
 pub use document::Document;
 pub use edit::{Refusal, SlotsExhausted, labels};

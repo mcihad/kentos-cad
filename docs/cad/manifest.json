@@ -6586,6 +6586,102 @@
    "tests": 1
   },
   {
+   "id": "tool.arc#Başlangıç, bitiş, açı",
+   "kind": "method",
+   "title": "Yay: Başlangıç, bitiş, açı",
+   "level": "geometry",
+   "via": [
+    "cad.arc.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.arc.create",
+   "mcp": "cad.arc.create",
+   "note": null,
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 1
+  },
+  {
+   "id": "tool.arc#Başlangıç, bitiş, yarıçap",
+   "kind": "method",
+   "title": "Yay: Başlangıç, bitiş, yarıçap",
+   "level": "geometry",
+   "via": [
+    "cad.arc.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.arc.create",
+   "mcp": "cad.arc.create",
+   "note": null,
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 1
+  },
+  {
+   "id": "tool.arc#Başlangıç, bitiş, yön",
+   "kind": "method",
+   "title": "Yay: Başlangıç, bitiş, yön",
+   "level": "geometry",
+   "via": [
+    "cad.arc.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.arc.create",
+   "mcp": "cad.arc.create",
+   "note": null,
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 1
+  },
+  {
+   "id": "tool.arc#Başlangıç, merkez, açı",
+   "kind": "method",
+   "title": "Yay: Başlangıç, merkez, açı",
+   "level": "geometry",
+   "via": [
+    "cad.arc.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.arc.create",
+   "mcp": "cad.arc.create",
+   "note": null,
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 1
+  },
+  {
+   "id": "tool.arc#Başlangıç, merkez, bitiş",
+   "kind": "method",
+   "title": "Yay: Başlangıç, merkez, bitiş",
+   "level": "geometry",
+   "via": [
+    "cad.arc.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.arc.create",
+   "mcp": "cad.arc.create",
+   "note": null,
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 1
+  },
+  {
+   "id": "tool.arc#Başlangıç, merkez, uzunluk",
+   "kind": "method",
+   "title": "Yay: Başlangıç, merkez, uzunluk",
+   "level": "geometry",
+   "via": [
+    "cad.arc.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.arc.create",
+   "mcp": "cad.arc.create",
+   "note": null,
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 1
+  },
+  {
    "id": "tool.arc#Devam",
    "kind": "method",
    "title": "Yay: Devam",
@@ -6602,9 +6698,41 @@
    "tests": 1
   },
   {
+   "id": "tool.arc#Merkez, başlangıç, açı",
+   "kind": "method",
+   "title": "Yay: Merkez, başlangıç, açı",
+   "level": "geometry",
+   "via": [
+    "cad.arc.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.arc.create",
+   "mcp": "cad.arc.create",
+   "note": null,
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 1
+  },
+  {
    "id": "tool.arc#Merkez, başlangıç, bitiş",
    "kind": "method",
    "title": "Yay: Merkez, başlangıç, bitiş",
+   "level": "geometry",
+   "via": [
+    "cad.arc.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.arc.create",
+   "mcp": "cad.arc.create",
+   "note": null,
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 1
+  },
+  {
+   "id": "tool.arc#Merkez, başlangıç, uzunluk",
+   "kind": "method",
+   "title": "Yay: Merkez, başlangıç, uzunluk",
    "level": "geometry",
    "via": [
     "cad.arc.create"
@@ -6923,6 +7051,22 @@
    "id": "tool.circle#Merkez, yarıçap",
    "kind": "method",
    "title": "Daire: Merkez, yarıçap",
+   "level": "semantic",
+   "via": [
+    "cad.circle.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.circle.create",
+   "mcp": "cad.circle.create",
+   "note": null,
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 3
+  },
+  {
+   "id": "tool.circle#Merkez, çap",
+   "kind": "method",
+   "title": "Daire: Merkez, çap",
    "level": "semantic",
    "via": [
     "cad.circle.create"
@@ -7353,6 +7497,54 @@
    "id": "tool.ellipse",
    "kind": "tool",
    "title": "Elips",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.create",
+   "mcp": "cad.entities.create",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 2
+  },
+  {
+   "id": "tool.ellipse#Eksen, uç",
+   "kind": "method",
+   "title": "Elips: Eksen, uç",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.create",
+   "mcp": "cad.entities.create",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 2
+  },
+  {
+   "id": "tool.ellipse#Eliptik yay",
+   "kind": "method",
+   "title": "Elips: Eliptik yay",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.create",
+   "mcp": "cad.entities.create",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 2
+  },
+  {
+   "id": "tool.ellipse#Merkez",
+   "kind": "method",
+   "title": "Elips: Merkez",
    "level": "semantic",
    "via": [
     "cad.entities.create"
@@ -8444,6 +8636,38 @@
    "tests": 5
   },
   {
+   "id": "tool.rectangle#Dikdörtgen, alanla",
+   "kind": "method",
+   "title": "Dikdörtgen: Dikdörtgen, alanla",
+   "level": "geometry",
+   "via": [
+    "cad.polygon.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.polygon.create",
+   "mcp": "cad.polygon.create",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 5
+  },
+  {
+   "id": "tool.rectangle#Dikdörtgen, boyutlarla",
+   "kind": "method",
+   "title": "Dikdörtgen: Dikdörtgen, boyutlarla",
+   "level": "geometry",
+   "via": [
+    "cad.polygon.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.polygon.create",
+   "mcp": "cad.polygon.create",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 5
+  },
+  {
    "id": "tool.rectangle3",
    "kind": "tool",
    "title": "Döndürülmüş dikdörtgen",
@@ -8463,6 +8687,54 @@
    "id": "tool.regularPolygon",
    "kind": "tool",
    "title": "Düzgün çokgen",
+   "level": "geometry",
+   "via": [
+    "cad.polygon.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.polygon.create",
+   "mcp": "cad.polygon.create",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 2
+  },
+  {
+   "id": "tool.regularPolygon#Düzgün çokgen, kenardan",
+   "kind": "method",
+   "title": "Düzgün çokgen: Düzgün çokgen, kenardan",
+   "level": "geometry",
+   "via": [
+    "cad.polygon.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.polygon.create",
+   "mcp": "cad.polygon.create",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 2
+  },
+  {
+   "id": "tool.regularPolygon#Düzgün çokgen, çember dışında",
+   "kind": "method",
+   "title": "Düzgün çokgen: Düzgün çokgen, çember dışında",
+   "level": "geometry",
+   "via": [
+    "cad.polygon.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.polygon.create",
+   "mcp": "cad.polygon.create",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 2
+  },
+  {
+   "id": "tool.regularPolygon#Düzgün çokgen, çember içinde",
+   "kind": "method",
+   "title": "Düzgün çokgen: Düzgün çokgen, çember içinde",
    "level": "geometry",
    "via": [
     "cad.polygon.create"
@@ -8509,6 +8781,54 @@
    "id": "tool.revcloud",
    "kind": "tool",
    "title": "Revizyon bulutu",
+   "level": "geometry",
+   "via": [
+    "cad.polygon.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.polygon.create",
+   "mcp": "cad.polygon.create",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 2
+  },
+  {
+   "id": "tool.revcloud#Dikdörtgen",
+   "kind": "method",
+   "title": "Revizyon bulutu: Dikdörtgen",
+   "level": "geometry",
+   "via": [
+    "cad.polygon.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.polygon.create",
+   "mcp": "cad.polygon.create",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 2
+  },
+  {
+   "id": "tool.revcloud#Nesne",
+   "kind": "method",
+   "title": "Revizyon bulutu: Nesne",
+   "level": "geometry",
+   "via": [
+    "cad.polygon.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.polygon.create",
+   "mcp": "cad.polygon.create",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 2
+  },
+  {
+   "id": "tool.revcloud#Çokgen",
+   "kind": "method",
+   "title": "Revizyon bulutu: Çokgen",
    "level": "geometry",
    "via": [
     "cad.polygon.create"
@@ -9318,6 +9638,86 @@
    "id": "tool.xline",
    "kind": "tool",
    "title": "Yardımcı çizgi",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.create",
+   "mcp": "cad.entities.create",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 2
+  },
+  {
+   "id": "tool.xline#Açı",
+   "kind": "method",
+   "title": "Yardımcı çizgi: Açı",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.create",
+   "mcp": "cad.entities.create",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 2
+  },
+  {
+   "id": "tool.xline#Açıortay",
+   "kind": "method",
+   "title": "Yardımcı çizgi: Açıortay",
+   "level": "geometry",
+   "via": [
+    "cad.entities.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.create",
+   "mcp": "cad.entities.create",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 2
+  },
+  {
+   "id": "tool.xline#Düşey",
+   "kind": "method",
+   "title": "Yardımcı çizgi: Düşey",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.create",
+   "mcp": "cad.entities.create",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 2
+  },
+  {
+   "id": "tool.xline#Paralel",
+   "kind": "method",
+   "title": "Yardımcı çizgi: Paralel",
+   "level": "geometry",
+   "via": [
+    "cad.entities.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.create",
+   "mcp": "cad.entities.create",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 2
+  },
+  {
+   "id": "tool.xline#Yatay",
+   "kind": "method",
+   "title": "Yardımcı çizgi: Yatay",
    "level": "semantic",
    "via": [
     "cad.entities.create"
