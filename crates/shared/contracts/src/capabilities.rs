@@ -190,6 +190,37 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.rectangle.create",
+        refusals: &[
+            &[
+                "not_finite",
+                "invalid_distance",
+                "degenerate_shape",
+                "invalid_corners",
+                "invalid_line_weight",
+            ],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.polygon.regular",
+        refusals: &[
+            &[
+                "not_finite",
+                "invalid_count",
+                "degenerate_shape",
+                "invalid_line_weight",
+            ],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
         id: "cad.line.create",
         refusals: &[&["not_finite", "invalid_line_weight"], LAYER, REVISION],
         warnings: &["layer_hidden"],

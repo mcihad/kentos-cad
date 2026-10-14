@@ -26,22 +26,23 @@ pub fn direction_angle(a: Vec2, b: Vec2) -> f64 {
 /// Regular polygon for a typed radius: the bottom edge horizontal, so the
 /// edge middle sits straight below the centre.
 pub fn regular_polygon_radius(c: Vec2, sides: f64, r: f64, inscribed: bool) -> Option<Vec<Vec2>> {
-    let a = if inscribed {
-        -PI / 2.0 + PI / sides
-    } else {
-        -PI / 2.0
-    };
     let mode = if inscribed {
         "inscribed"
     } else {
         "circumscribed"
     };
-    regular_polygon(
-        c,
-        sides,
-        Vec2::new(c.x + cos(a) * r, c.y + sin(a) * r),
-        mode,
-    )
+    regular_polygon(c, sides, regular_radius_point(c, sides, r, inscribed), mode)
+}
+
+/// The point a typed radius gives a regular polygon about `c`, its bottom edge horizontal: the first corner
+/// (`inscribed`) or the first edge's middle (docs/adr/0290: the point `cad.polygon.regular` is given).
+pub fn regular_radius_point(c: Vec2, sides: f64, r: f64, inscribed: bool) -> Vec2 {
+    let a = if inscribed {
+        -PI / 2.0 + PI / sides
+    } else {
+        -PI / 2.0
+    };
+    Vec2::new(c.x + cos(a) * r, c.y + sin(a) * r)
 }
 
 /// End point and travel direction of a line, arc or polyline.

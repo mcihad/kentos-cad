@@ -165,6 +165,9 @@ Liste:
 - [ ] `CAD-INPUT-01` (ADR 0266, 14 Ekim): web'de gerekenler: `coordinateInput.ts`'in metrik birimli uzunluğu (`2.5m`, `250cm`) ve
   parantezli toplamı (`fixtures/point-input/v1`'in 22 yeni satırı), `looksLikeCoordinate`'in `(`'u ve araçların uzunluk alanlarının
   birimli ve toplamlı okunması; web'in iz oynatıcısı `value-entry.json`'u geçmeli (`(`, `)`, `*` tuşları, Tab'ın birimli kilidi).
+- [ ] `CAD-EDIT-04` (ADR 0290, 14 Ekim): web'de gerekenler: `cad.rectangle.create` ve `cad.polygon.regular`'ın web işleyicileri (ortak
+  durumlar `fixtures/commands/v1/cad.rectangle.create.json`, `cad.polygon.regular.json`), web'in Dikdörtgen, Döndürülmüş dikdörtgen ve
+  Düzgün çokgen araçlarının önizlemeyi komutun hesabından alıp komutla yazması (Çakışma ve Topoloji değiştirince alanın yolu).
 - [ ] `CAD-EDIT-02` (ADR 0288, 14 Ekim): web'de gerekenler: Çoklu çizgi aracına PLINE'ın yay ikilileri (Açı+Merkez/Yarıçap, Merkez+Açı/Uzunluk,
   Yarıçap+Açı), yay kipinde Genişlik ve teğet yayla Kapat, kenar başına genişlik; tutamaç menüsünde Noktadan ya da yarıçapla yay… ve Kenar
   genişliği… ile Kenar düzenle aracı; `cad.entities.vertex` işleyicisine `through`, `radius`, `width`/`widths` ve `cad.entities.edit`'in

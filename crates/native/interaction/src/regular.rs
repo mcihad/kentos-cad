@@ -11,15 +11,20 @@
 //! - the side count and the circle stay for the next polygons, for as long as
 //!   the app lives ([`crate::tool::Memory`]).
 //!
-//! It is written through `cad.polygon.create` and says “6 kenarlı düzgün
-//! çokgen eklendi: kenar …, alan …”. The polygon is the shared core's
-//! (`regularPolygon`, `regularPolygonOnEdge`, `regularPolygonRadius`).
+//! It is written through `cad.polygon.regular` (docs/adr/0290) and says “6
+//! kenarlı düzgün çokgen eklendi: kenar …, alan …”. The tool gives the command
+//! what was given (the side count, the centre and a corner or an edge's
+//! middle, or an edge; a typed radius as the point it gives,
+//! `regular_radius_point`); the ring, for the preview too, is the command's
+//! (`shapes::regular_ring`). With the overlap control or Topoloji changing the
+//! area, it is written as any new area is (`points::write_area_by`).
 
+use kentos_contracts::{RegularFrame, RegularPolygonCreate};
 use kentos_geometry_core::entity::tessellate_circle;
-use kentos_geometry_core::geom::shapes::{regular_polygon, regular_polygon_on_edge};
 use kentos_geometry_core::geometry::{dist, signed_area};
-use kentos_geometry_core::tools::drawing::regular_polygon_radius;
+use kentos_geometry_core::tools::drawing::regular_radius_point;
 use kentos_geometry_core::tools::point_text::js_trim;
+use kentos_native_application::{ExecutionContext, shapes};
 
 use crate::Vec2;
 use crate::format::Format;
@@ -57,21 +62,58 @@ impl RegularPolygon {
         self.seen.map(|(m, _)| m).unwrap_or_default()
     }
 
-    /// The polygon to `p`: on the edge from the first point, or about it as the centre.
-    fn shape(&self, p: Vec2) -> Option<Vec<Vec2>> {
+    /// What the command is given for `p`: the edge from the first point, or the centre and `p` as a corner or
+    /// an edge's middle.
+    fn frame(&self, p: Vec2) -> Option<RegularFrame> {
         let m = self.memory();
-        let first = *self.d.pts.first()?;
-        let sides = f64::from(m.polygon_sides);
-        if self.by_edge {
-            regular_polygon_on_edge(first, p, sides)
+        let first = points::wire(*self.d.pts.first()?);
+        let p = points::wire(p);
+        Some(if self.by_edge {
+            RegularFrame::Edge { a: first, b: p }
+        } else if m.polygon_inscribed {
+            RegularFrame::Inscribed {
+                center: first,
+                corner: p,
+            }
         } else {
-            let mode = if m.polygon_inscribed {
-                "inscribed"
-            } else {
-                "circumscribed"
-            };
-            regular_polygon(first, sides, p, mode)
+            RegularFrame::Circumscribed {
+                center: first,
+                middle: p,
+            }
+        })
+    }
+
+    /// The command's input for `frame`.
+    fn request(&self, frame: RegularFrame, cx: &Context<'_>) -> RegularPolygonCreate {
+        RegularPolygonCreate {
+            layer_id: cx.doc.layers().active().to_owned(),
+            sides: self.memory().polygon_sides,
+            frame,
+            color: cx.draft.color_text(),
+            line_weight: cx.draft.line_weight,
+            line_type: cx.draft.line_type,
+            attrs: cx.template_attrs(None),
+            label: cx.template_label(),
+            symbol: cx.template_symbol(),
+            expected_revision: None,
         }
+    }
+
+    /// The polygon to `p` as the command makes it: the preview.
+    fn shape(&self, p: Vec2) -> Option<Vec<Vec2>> {
+        let input = RegularPolygonCreate {
+            layer_id: String::new(),
+            sides: self.memory().polygon_sides,
+            frame: self.frame(p)?,
+            color: None,
+            line_weight: None,
+            line_type: None,
+            attrs: None,
+            label: None,
+            symbol: None,
+            expected_revision: None,
+        };
+        shapes::regular_ring(&input).ok()
     }
 
     fn option(&mut self, key: &str, cx: &mut Context<'_>) -> bool {
@@ -108,19 +150,27 @@ impl RegularPolygon {
             return;
         }
         self.see(cx);
-        let ring = self.shape(p);
-        self.commit(ring, cx);
+        let frame = self.frame(p);
+        self.commit(frame, cx);
     }
 
-    fn commit(&mut self, ring: Option<Vec<Vec2>>, cx: &mut Context<'_>) {
-        let Some(ring) = ring else {
+    fn commit(&mut self, frame: Option<RegularFrame>, cx: &mut Context<'_>) {
+        let input = frame.map(|frame| self.request(frame, cx));
+        let ring = input
+            .as_ref()
+            .and_then(|input| shapes::regular_ring(input).ok());
+        let (Some(ring), Some(input)) = (ring, input) else {
             cx.say(
                 Level::Warn,
                 "Çokgen için merkezden uzakta bir nokta gösterin.",
             );
             return;
         };
-        if let Some(area) = points::write_area(&mut self.d, &ring, None, cx) {
+        let mut write = |cx: &mut Context<'_>| {
+            let result = shapes::execute_regular(&mut ExecutionContext::new(cx.doc), input.clone());
+            points::written(result, cx).map(|out| out.id)
+        };
+        if let Some(area) = points::write_area_by(&mut self.d, &ring, None, cx, Some(&mut write)) {
             let format = cx.format();
             let line = format!(
                 "{} kenarlı düzgün çokgen eklendi: kenar {}, alan {}",
@@ -156,13 +206,26 @@ impl RegularPolygon {
                 // The bottom edge horizontal: the edge middle sits straight below the centre.
                 let m = *cx.memory;
                 // A radius typed in the project's unit (docs/adr/0165 §2).
-                let ring = regular_polygon_radius(
-                    self.d.pts[0],
+                let c = self.d.pts[0];
+                let at = points::wire(regular_radius_point(
+                    c,
                     f64::from(m.polygon_sides),
                     metres,
                     m.polygon_inscribed,
-                );
-                self.commit(ring, cx);
+                ));
+                let frame = if m.polygon_inscribed {
+                    RegularFrame::Inscribed {
+                        center: points::wire(c),
+                        corner: at,
+                    }
+                } else {
+                    RegularFrame::Circumscribed {
+                        center: points::wire(c),
+                        middle: at,
+                    }
+                };
+                self.see(cx);
+                self.commit(Some(frame), cx);
                 return true;
             }
         }

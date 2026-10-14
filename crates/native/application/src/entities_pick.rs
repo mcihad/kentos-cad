@@ -6,8 +6,7 @@
 //! (`scripts/fixtures/entities_pick_cases.py`).
 
 use kentos_contracts::{
-    CommandResult, EntitiesPick, EntitiesPicked, EntitiesSelect, Entity, PickedEntity,
-    SelectRegion,
+    CommandResult, EntitiesPick, EntitiesPicked, EntitiesSelect, Entity, PickedEntity, SelectRegion,
 };
 use kentos_domain::dimension_ties::{contract_place, core_blocks};
 use kentos_domain::{Document, Slot};
@@ -37,7 +36,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &EntitiesPick) -> CommandResult<En
 }
 
 /// The objects. Writes nothing.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: EntitiesPick) -> CommandResult<EntitiesPicked> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: EntitiesPick,
+) -> CommandResult<EntitiesPicked> {
     answer(cx.doc, cx.store, &input)
 }
 
@@ -92,7 +94,11 @@ pub fn answer(
 /// object's points are searched half as far again, as the click reaches it (docs/adr/0187 §1).
 pub fn sub_object(doc: &Document, e: &Entity, at: Vec2, tol: f64) -> Option<(Vec<u32>, Place)> {
     let core = core_entity(e);
-    let tol = if matches!(e, Entity::Point(_)) { tol * 1.5 } else { tol };
+    let tol = if matches!(e, Entity::Point(_)) {
+        tol * 1.5
+    } else {
+        tol
+    };
     if matches!(e, Entity::Insert(_)) {
         place_near_in(&core_blocks(doc.blocks()), &core, at, tol).map(|(path, p, _)| (path, p))
     } else {
@@ -112,7 +118,12 @@ fn picked(doc: &Document, slot: Slot, at: Vec2, tol: f64) -> Option<PickedEntity
 
 fn check(input: &EntitiesPick) -> Result<(), Stop> {
     checks::point(input.at, "Tıklamanın", "at")?;
-    checks::finite(input.tolerance, "Tolerans", "Metre olarak bir sayı verin.", "tolerance")?;
+    checks::finite(
+        input.tolerance,
+        "Tolerans",
+        "Metre olarak bir sayı verin.",
+        "tolerance",
+    )?;
     if input.tolerance < 0.0 {
         return Err(Stop::failed(error(
             codes::INVALID_DISTANCE,

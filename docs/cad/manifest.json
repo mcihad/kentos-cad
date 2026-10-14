@@ -8623,14 +8623,14 @@
    "id": "tool.rectangle",
    "kind": "tool",
    "title": "Dikdörtgen",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.polygon.create"
+    "cad.rectangle.create"
    ],
    "operation": null,
-   "python": "kentos.cad.polygon.create",
-   "mcp": "cad.polygon.create",
-   "note": "Köşeler iki tıklamadan hesaplanıp cad.polygon.create'e verilir.",
+   "python": "kentos.cad.rectangle.create",
+   "mcp": "cad.rectangle.create",
+   "note": "Girdi kullanıcının verdiğidir (köşeler, boyut, alan, dönüş, köşe biçimi); halkayı komut hesaplar, önizleme komutun hesabından (ADR 0290).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 5
@@ -8639,13 +8639,13 @@
    "id": "tool.rectangle#Dikdörtgen, alanla",
    "kind": "method",
    "title": "Dikdörtgen: Dikdörtgen, alanla",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.polygon.create"
+    "cad.rectangle.create"
    ],
    "operation": null,
-   "python": "kentos.cad.polygon.create",
-   "mcp": "cad.polygon.create",
+   "python": "kentos.cad.rectangle.create",
+   "mcp": "cad.rectangle.create",
    "note": null,
    "scope": "cad",
    "desktop": "implemented",
@@ -8655,13 +8655,13 @@
    "id": "tool.rectangle#Dikdörtgen, boyutlarla",
    "kind": "method",
    "title": "Dikdörtgen: Dikdörtgen, boyutlarla",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.polygon.create"
+    "cad.rectangle.create"
    ],
    "operation": null,
-   "python": "kentos.cad.polygon.create",
-   "mcp": "cad.polygon.create",
+   "python": "kentos.cad.rectangle.create",
+   "mcp": "cad.rectangle.create",
    "note": null,
    "scope": "cad",
    "desktop": "implemented",
@@ -8671,14 +8671,14 @@
    "id": "tool.rectangle3",
    "kind": "tool",
    "title": "Döndürülmüş dikdörtgen",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.polygon.create"
+    "cad.rectangle.create"
    ],
    "operation": null,
-   "python": "kentos.cad.polygon.create",
-   "mcp": "cad.polygon.create",
-   "note": null,
+   "python": "kentos.cad.rectangle.create",
+   "mcp": "cad.rectangle.create",
+   "note": "Kenar ve en cad.rectangle.create'in edge çerçevesiyle verilir (ADR 0290).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 2
@@ -8687,14 +8687,14 @@
    "id": "tool.regularPolygon",
    "kind": "tool",
    "title": "Düzgün çokgen",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.polygon.create"
+    "cad.polygon.regular"
    ],
    "operation": null,
-   "python": "kentos.cad.polygon.create",
-   "mcp": "cad.polygon.create",
-   "note": null,
+   "python": "kentos.cad.polygon.regular",
+   "mcp": "cad.polygon.regular",
+   "note": "Kenar sayısı ve merkezle köşe ya da kenar ortası, ya da kenar verilir; halkayı komut hesaplar (ADR 0290).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 2
@@ -8703,13 +8703,13 @@
    "id": "tool.regularPolygon#Düzgün çokgen, kenardan",
    "kind": "method",
    "title": "Düzgün çokgen: Düzgün çokgen, kenardan",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.polygon.create"
+    "cad.polygon.regular"
    ],
    "operation": null,
-   "python": "kentos.cad.polygon.create",
-   "mcp": "cad.polygon.create",
+   "python": "kentos.cad.polygon.regular",
+   "mcp": "cad.polygon.regular",
    "note": null,
    "scope": "cad",
    "desktop": "implemented",
@@ -8719,13 +8719,13 @@
    "id": "tool.regularPolygon#Düzgün çokgen, çember dışında",
    "kind": "method",
    "title": "Düzgün çokgen: Düzgün çokgen, çember dışında",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.polygon.create"
+    "cad.polygon.regular"
    ],
    "operation": null,
-   "python": "kentos.cad.polygon.create",
-   "mcp": "cad.polygon.create",
+   "python": "kentos.cad.polygon.regular",
+   "mcp": "cad.polygon.regular",
    "note": null,
    "scope": "cad",
    "desktop": "implemented",
@@ -8735,13 +8735,13 @@
    "id": "tool.regularPolygon#Düzgün çokgen, çember içinde",
    "kind": "method",
    "title": "Düzgün çokgen: Düzgün çokgen, çember içinde",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.polygon.create"
+    "cad.polygon.regular"
    ],
    "operation": null,
-   "python": "kentos.cad.polygon.create",
-   "mcp": "cad.polygon.create",
+   "python": "kentos.cad.polygon.regular",
+   "mcp": "cad.polygon.regular",
    "note": null,
    "scope": "cad",
    "desktop": "implemented",

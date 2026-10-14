@@ -136,7 +136,9 @@ fn next(doc: &Document, input: &ViewsEdit) -> Result<Next, Stop> {
             if to != name && s.named_views.iter().any(|v| v.name == to) {
                 return Err(fail(
                     codes::VIEW_EXISTS,
-                    format!("“{to}” adlı başka bir görünüm var. Başka bir ad yazın ya da önce onu silin."),
+                    format!(
+                        "“{to}” adlı başka bir görünüm var. Başka bir ad yazın ya da önce onu silin."
+                    ),
                     "edit.to",
                 ));
             }

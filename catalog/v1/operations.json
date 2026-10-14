@@ -1043,22 +1043,36 @@
       "level": "semantic"
     },
     "rectangle": {
-      "level": "geometry",
-      "note": "Köşeler iki tıklamadan hesaplanıp cad.polygon.create'e verilir.",
+      "level": "semantic",
+      "via": [
+        "cad.rectangle.create"
+      ],
+      "was": "cad.polygon.create",
+      "note": "Girdi kullanıcının verdiğidir (köşeler, boyut, alan, dönüş, köşe biçimi); halkayı komut hesaplar, önizleme komutun hesabından (ADR 0290).",
       "methods": {
-        "Dikdörtgen, boyutlarla": "geometry",
-        "Dikdörtgen, alanla": "geometry"
+        "Dikdörtgen, boyutlarla": "semantic",
+        "Dikdörtgen, alanla": "semantic"
       }
     },
     "rectangle3": {
-      "level": "geometry"
+      "level": "semantic",
+      "via": [
+        "cad.rectangle.create"
+      ],
+      "was": "cad.polygon.create",
+      "note": "Kenar ve en cad.rectangle.create'in edge çerçevesiyle verilir (ADR 0290)."
     },
     "regularPolygon": {
-      "level": "geometry",
+      "level": "semantic",
+      "via": [
+        "cad.polygon.regular"
+      ],
+      "was": "cad.polygon.create",
+      "note": "Kenar sayısı ve merkezle köşe ya da kenar ortası, ya da kenar verilir; halkayı komut hesaplar (ADR 0290).",
       "methods": {
-        "Düzgün çokgen, çember içinde": "geometry",
-        "Düzgün çokgen, çember dışında": "geometry",
-        "Düzgün çokgen, kenardan": "geometry"
+        "Düzgün çokgen, çember içinde": "semantic",
+        "Düzgün çokgen, çember dışında": "semantic",
+        "Düzgün çokgen, kenardan": "semantic"
       }
     },
     "sector": {

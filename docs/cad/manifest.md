@@ -17,8 +17,8 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 40 | 93 | 38 | 38 | 209 |
-| geometry | 28 | 82 | 0 | 8 | 118 |
+| semantic | 48 | 93 | 38 | 38 | 217 |
+| geometry | 20 | 82 | 0 | 8 | 110 |
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 20 | 0 | 6 | 26 |
 | query | 0 | 21 | 1 | 4 | 26 |
@@ -31,9 +31,9 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 494 satırdan 161'i: geometry 110, none 20, processing 13, query 18.
+CBS'ye özgü olmayan 494 satırdan 153'i: geometry 102, none 20, processing 13, query 18.
 
-### Sonucu çağıran hesaplar (geometry) — 110
+### Sonucu çağıran hesaplar (geometry) — 102
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -109,14 +109,6 @@ CBS'ye özgü olmayan 494 satırdan 161'i: geometry 110, none 20, processing 13,
 | `tool.quickDimension` | Hızlı ölçü | cad | cad.entities.create |  |
 | `tool.rangeRings` | Menzil halkaları | shared | cad.entities.create `rangeRings` |  |
 | `tool.readable` | Okunur yap | shared | cad.entities.edit `readable` |  |
-| `tool.rectangle` | Dikdörtgen | cad | cad.polygon.create | Köşeler iki tıklamadan hesaplanıp cad.polygon.create'e verilir. |
-| `tool.rectangle#Dikdörtgen, alanla` | Dikdörtgen: Dikdörtgen, alanla | cad | cad.polygon.create |  |
-| `tool.rectangle#Dikdörtgen, boyutlarla` | Dikdörtgen: Dikdörtgen, boyutlarla | cad | cad.polygon.create |  |
-| `tool.rectangle3` | Döndürülmüş dikdörtgen | cad | cad.polygon.create |  |
-| `tool.regularPolygon` | Düzgün çokgen | cad | cad.polygon.create |  |
-| `tool.regularPolygon#Düzgün çokgen, kenardan` | Düzgün çokgen: Düzgün çokgen, kenardan | cad | cad.polygon.create |  |
-| `tool.regularPolygon#Düzgün çokgen, çember dışında` | Düzgün çokgen: Düzgün çokgen, çember dışında | cad | cad.polygon.create |  |
-| `tool.regularPolygon#Düzgün çokgen, çember içinde` | Düzgün çokgen: Düzgün çokgen, çember içinde | cad | cad.polygon.create |  |
 | `tool.reshape` | Biçim değiştir | shared | cad.entities.edit `reshape` |  |
 | `tool.revcloud` | Revizyon bulutu | cad | cad.polygon.create |  |
 | `tool.revcloud#Dikdörtgen` | Revizyon bulutu: Dikdörtgen | cad | cad.polygon.create |  |

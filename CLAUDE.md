@@ -380,6 +380,10 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   yay kipinde Genişlik (E) ve teğet yayla Kapat (K), kenar başına başlangıç ve bitiş genişliği; `cad.entities.vertex`'in Yaya dönüştür'ü
   noktadan (`through`) ya da yarıçapla (`radius`), Kenar genişliği (`width`; `cad.entities.edit`'in `EdgeWidth`'i); çekirdeğin `bulge_via`,
   `bulge_of_radius`'u; tutamaç menüsünde Noktadan ya da yarıçapla yay… ve Kenar genişliği… (Kenar düzenle) (ADR 0288);
+  dikdörtgen ve düzgün çokgen komutları: `cad.rectangle.create` (iki köşe, boyut, alan ya da kenar ve en; dönüş; keskin, yuvarlak, pah)
+  ve `cad.polygon.regular` (çember içinde, dışında, kenardan) halkayı çekirdekle hesaplar ve `cad.polygon.create`'in yolundan yazar;
+  araçlar önizlemeyi komutun hesabından (`shapes::rectangle_ring`, `regular_ring`) alır, Çakışma ve Topoloji alanı değiştirince alanın
+  yolundan yazar (`points::write_area_by`) (ADR 0290);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);
