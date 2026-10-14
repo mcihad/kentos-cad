@@ -1,0 +1,149 @@
+{
+ "format": "kentos.interaction-trace",
+ "version": 1,
+ "id": "track-point",
+ "title": "Geçici izleme noktası ve iki nokta ortası: Çoklu çizgi'de Nesne izleme kapalıyken draft.trackPoint sonraki tıklamayı köşe değil izleme noktası yapar; imleç onun dikey hizasına oturur, tık hizada köşe koyar; ORTA (iki nokta ortası) iki tıklamanın ortasını köşe yapar; Esc istenen izleme noktasını bırakır; Enter yazar",
+ "source": "Masaüstünün kentos_interaction::session'ı (ask_track_point), object_tracking'in acquire_point'i, drawing_menus.rs'in tek seferlik menüsü; ADR 0270 §3",
+ "covers": [
+  "CAD-INPUT-06"
+ ],
+ "document": "empty.kcad",
+ "view": {
+  "center": [
+   487000,
+   4420000
+  ],
+  "metresPerPixel": 0.125
+ },
+ "draft": {
+  "snap": false,
+  "grid": false,
+  "ortho": false,
+  "polar": false,
+  "tracking": false
+ },
+ "prefs": {
+  "cursorInput": true
+ },
+ "clickTolerance": 0.125,
+ "steps": [
+  {
+   "run": "tool.polyline"
+  },
+  {
+   "click": [
+    0,
+    0
+   ],
+   "expect": {
+    "points": 1
+   }
+  },
+  {
+   "run": "draft.trackPoint",
+   "note": "İstem geçici izleme noktasını sorar.",
+   "expect": {
+    "prompt": "Çoklu çizgi: geçici izleme noktasını belirtin [Vazgeç (Esc)]"
+   }
+  },
+  {
+   "click": [
+    12,
+    16
+   ],
+   "note": "Tık köşe değil izleme noktasıdır.",
+   "expect": {
+    "points": 1,
+    "trackPoints": [
+     [
+      12,
+      16
+     ]
+    ],
+    "log": "info"
+   }
+  },
+  {
+   "move": [
+    12.4,
+    4
+   ],
+   "note": "Nesne izleme kapalıyken de imleç izleme noktasının dikey hizasına oturur.",
+   "expect": {
+    "aid": "tracking"
+   }
+  },
+  {
+   "click": [
+    12.4,
+    4
+   ],
+   "expect": {
+    "points": 2
+   }
+  },
+  {
+   "run": "draft.trackPoint"
+  },
+  {
+   "key": "Esc",
+   "note": "Esc önce istenen izleme noktasını bırakır; komut sürer.",
+   "expect": {
+    "tool": "polyline",
+    "points": 2
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "ORTA"
+  },
+  {
+   "key": "Enter",
+   "note": "Nokta hesaplayıcının İki nokta ortası.",
+   "expect": {
+    "prompt": "İki nokta ortası: birinci nokta gösterin"
+   }
+  },
+  {
+   "click": [
+    12,
+    4
+   ]
+  },
+  {
+   "click": [
+    30,
+    10
+   ],
+   "note": "İki tıklamanın ortası köşe olur: (21; 7).",
+   "expect": {
+    "points": 3
+   }
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "entities": 1,
+    "newest": {
+     "kind": "polyline",
+     "points": [
+      [
+       0,
+       0
+      ],
+      [
+       12,
+       4
+      ],
+      [
+       21,
+       7
+      ]
+     ]
+    }
+   }
+  }
+ ]
+}

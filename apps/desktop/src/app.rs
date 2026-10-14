@@ -2126,6 +2126,10 @@ impl App {
             "draft.lock.reference" => {
                 self.with_tool(|s, cx| s.ask_reference(cx));
             }
+            // Geçici izleme noktası (docs/adr/0270 §3).
+            "draft.trackPoint" => {
+                self.with_tool(|s, cx| s.ask_track_point(cx));
+            }
             "draft.lock.construction" => {
                 let on = !self.session.construction();
                 self.with_tool(|s, cx| s.set_construction(on, cx));
@@ -2492,7 +2496,9 @@ impl App {
             | "draft.lock.parallel"
             | "draft.lock.perpendicular"
             | "draft.lock.keep" => self.session.lock_reference().is_some(),
-            "draft.lock.reference" | "draft.lock.construction" => self.session.takes_points(),
+            "draft.lock.reference" | "draft.lock.construction" | "draft.trackPoint" => {
+                self.session.takes_points()
+            }
             "draft.lock.deflection" => {
                 self.session.lock_reference().is_some() && self.session.travel().is_some()
             }

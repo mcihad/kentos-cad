@@ -417,6 +417,14 @@ codes! {
     /// A block path that names no piece inside the insert (docs/adr/0263 §3).
     PIECE_GONE = "piece_gone", Failed, false, "Blok yolunda böyle bir parça yok (tanımın dışında bir sıra, yerleştirmede biten ya da yerleştirme olmayandan geçen yol).";
 
+    // ── Point constructions (docs/adr/0270) ─────────────────────────────
+    /// No construction given, or more than 10 000 (`cad.points.construct`).
+    NO_CONSTRUCTIONS = "no_constructions", Failed, false, "Hiç yapım verilmedi ya da 10 000'den çok.";
+    /// An extension's place that is not an object's open end.
+    NOT_AN_END = "not_an_end", Failed, false, "Yer nesnenin açık bir ucu değil (kapalı yolun ya da yolun içindeki köşe, daire); uzantı yalnız uçtan başlar.";
+    /// Paralel's object without a straight edge.
+    NO_STRAIGHT_EDGE = "no_straight_edge", Failed, false, "Nesnede düz kenar yok; paralel doğrultusu düz kenardan alınır.";
+
     // ── Dimensions from what they measure (docs/adr/0255) ───────────────
     /// An object without an edge of the kind a dimension measures.
     NOT_MEASURABLE = "not_measurable", Failed, false, "Nesnede ölçünün aradığı türde kenar yok (düz kenar, uçları olan yay ya da daire).";

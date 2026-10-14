@@ -1551,6 +1551,20 @@
    "tests": 1
   },
   {
+   "id": "draft.trackPoint",
+   "kind": "command",
+   "title": "Geçici izleme noktası",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Çizim yardımcıları oturumun durumu.",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "draft.tracking",
    "kind": "command",
    "title": "Nesne izleme",

@@ -3349,6 +3349,34 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             }],
         },
         CommandDescriptor {
+            id: crate::CAD_POINTS_CONSTRUCT.into(),
+            version: crate::CAD_POINTS_CONSTRUCT_VERSION,
+            title: "Nokta yapımı".into(),
+            summary: "Çizim yardımlarının verdiği noktaları neyle yapıldıklarıyla hesaplar: iki nokta ortası (mid), bir ucun uzantısında uzaklık (extension), bir noktadan nesnenin düz kenarına paralel uzaklık (parallel), birinin X'i ve öbürünün Y'si (track, UCS'te), kutupsal (polar, açı UCS'in x ekseninden saat yönünün tersine radyan) ve hat üzerinde uzaklık (along). \
+                      Noktalar koordinat ya da nesnenin yeri (uç, köşe, kenar ortası, merkez, düğüm) olarak verilir; araçlar aynı kuralla alır. Çizimi değiştirmez; plan aynı cevabı verir."
+                .into(),
+            aliases: vec!["noktayap".into(), "nokta-yapimi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::PointsConstruct>(),
+            output: schema::<crate::PointsConstructed>(),
+            plan: Some(schema::<crate::PointsConstructed>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "İki noktanın ortası ve bir doğrunun ucundan 5 m".into(),
+                input: json!({ "constructions": [
+                    { "kind": "mid", "a": { "kind": "at", "at": { "x": 0.0, "y": 0.0 } }, "b": { "kind": "at", "at": { "x": 10.0, "y": 4.0 } } },
+                    { "kind": "extension", "end": { "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f", "place": { "kind": "end" } }, "distance": 5.0 }
+                ] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::FILE_EXPORT_DXF.into(),
             version: crate::FILE_EXPORT_DXF_VERSION,
             title: "DXF dışa aktar".into(),
@@ -3816,6 +3844,10 @@ mod tests {
                     }
                     crate::FILE_EXPORT_PDF => {
                         serde_json::from_value::<crate::ExportPdf>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_POINTS_CONSTRUCT => {
+                        serde_json::from_value::<crate::PointsConstruct>(e.input.clone())
+                            .map(|_| ())
                     }
                     other => panic!("{other}: add its input type to this test"),
                 };

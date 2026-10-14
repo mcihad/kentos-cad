@@ -110,6 +110,21 @@ pub fn place_point(
     point(&piece, core).ok_or(PlaceMiss::Place)
 }
 
+/// The shape a place is on: `e`'s own, or with a block path the piece it names inside `e` (an insert), placed
+/// with the drawing's definitions; none for a path that names no piece (docs/adr/0270).
+pub fn place_shape(
+    blocks: &[Arc<BlockDefinition>],
+    e: &Entity,
+    path: &[u32],
+) -> Option<kentos_geometry_core::entity::Shape> {
+    let shape = core_entity(e);
+    if path.is_empty() {
+        return Some(shape.shape);
+    }
+    let blocks = kentos_domain::dimension_ties::core_blocks(blocks);
+    kentos_geometry_core::ops::subref::piece(&blocks, &shape, path).map(|p| p.shape)
+}
+
 /// An insert's pieces as objects: each its placed shape, on the insert's
 /// layer, with its own colour and line weight, else the insert's; the
 /// insert's slot, no attributes. A piece the contract cannot hold, and an

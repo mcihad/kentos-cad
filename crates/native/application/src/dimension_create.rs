@@ -347,7 +347,7 @@ fn check_input(input: &DimensionsCreate) -> Result<(), Stop> {
 }
 
 /// The object a place or an edge names.
-fn object<'d>(doc: &'d Document, uid: &str, path: &str) -> Result<&'d Entity, Stop> {
+pub(crate) fn object<'d>(doc: &'d Document, uid: &str, path: &str) -> Result<&'d Entity, Stop> {
     Uuid::parse_str(uid)
         .ok()
         .and_then(|u| doc.slot_of(u))
@@ -364,7 +364,7 @@ fn object<'d>(doc: &'d Document, uid: &str, path: &str) -> Result<&'d Entity, St
 }
 
 /// A measured point now: its coordinates, or its place's on its object.
-fn point_of(doc: &Document, p: &MeasuredPoint, path: &str) -> Result<Vec2, Stop> {
+pub(crate) fn point_of(doc: &Document, p: &MeasuredPoint, path: &str) -> Result<Vec2, Stop> {
     match p {
         MeasuredPoint::At { at } => Ok(v(*at)),
         MeasuredPoint::Place {

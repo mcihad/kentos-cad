@@ -2121,6 +2121,31 @@ class OffsetBy(_Union):
         return _variant(_OFFSET_BY, "OffsetBy", "kind", data).from_json(data)
 
 
+class PointConstruction(_Union):
+    """One point to construct.
+
+    One of:
+
+    - :class:`MidPointConstruction` (``kind: mid``)
+    - :class:`ExtensionPointConstruction` (``kind: extension``)
+    - :class:`ParallelPointConstruction` (``kind: parallel``)
+    - :class:`TrackPointConstruction` (``kind: track``)
+    - :class:`PolarPointConstruction` (``kind: polar``)
+    - :class:`AlongPointConstruction` (``kind: along``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointConstruction:
+        return _variant(_POINT_CONSTRUCTION, "PointConstruction", "kind", data).from_json(data)
+
+
 class SubPlace(_Union):
     """A place on an object.
 
@@ -11328,6 +11353,35 @@ class NurbsPlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ObjectEnd(_Model):
+    """An object's end an extension starts from: a line's or an arc's start or end, an open path's first or last
+    vertex (as a place, docs/adr/0249); inside an insert, the piece's (docs/adr/0263 §3).
+    Attributes:
+        uid: The object's persistent id (lowercase UUID text with hyphens).
+        path: When `uid` is an insert, the piece inside it the end is on. Unit: index.
+    """
+    uid: str
+    place: SubPlace
+    path: list[int] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["place"] = self.place.to_json()
+        if self.path is not UNSET:
+            out["path"] = list(self.path)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ObjectEnd:
+        return cls(
+            uid=data["uid"],
+            place=SubPlace.from_json(data["place"]),
+            path=list(data["path"]) if "path" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PathEntity(_Model):
     """Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.
     Attributes:
@@ -12106,6 +12160,54 @@ class PointStyle(_Model):
         return cls(
             symbol=_enum_in(PointSymbol, data["symbol"]),
             size=float(data["size"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointsConstruct(_Model):
+    """Input of `cad.points.construct` v1: the points the constructions give, in their order. It reads no
+    selection, view or snap setting (TODOS.md CMD-07) and writes nothing.
+
+    Refusals (`CommandError.code`, at `constructions[i]…`), checked construction by construction in order:
+    `no_constructions` (none, or more than 10 000), `not_finite` (a coordinate, the near point, an angle or a
+    distance), `invalid_distance` (an extension's below zero), `invalid_uid`, `entity_not_found`,
+    `no_such_place`, `piece_gone`, `not_an_end` (an extension's place is not an open end: a closed path's vertex,
+    an inner vertex, a circle), `no_straight_edge` (Paralel's object has none), `same_points` (Hat üzerinde's two
+    points in one place).
+    Attributes:
+        constructions: One to 10 000 constructions.
+    """
+    constructions: list[PointConstruction]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["constructions"] = [e0.to_json() for e0 in self.constructions]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointsConstruct:
+        return cls(
+            constructions=[PointConstruction.from_json(e0) for e0 in data["constructions"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointsConstructed(_Model):
+    """Output of `cad.points.construct` v1, and its plan: the points, one per construction, in their order.
+    Attributes:
+        points: Unit: length.
+    """
+    points: list[Vec2]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["points"] = [_vec2_out(e0) for e0 in self.points]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointsConstructed:
+        return cls(
+            points=[Vec2.from_json(e0) for e0 in data["points"]],
         )
 
 
@@ -18248,6 +18350,158 @@ class ThroughOffsetBy(OffsetBy):
 
 
 @dataclass(kw_only=True, slots=True)
+class MidPointConstruction(PointConstruction):
+    """İki nokta ortası: halfway from `a` to `b`."""
+    TAG_VALUE: ClassVar[str] = "mid"
+    a: MeasuredPoint
+    b: MeasuredPoint
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "mid"}
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MidPointConstruction:
+        return cls(
+            a=MeasuredPoint.from_json(data["a"]),
+            b=MeasuredPoint.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExtensionPointConstruction(PointConstruction):
+    """Uzantı: `distance` metres (zero or more) past an object's end along its edge: a straight edge's line,
+    an arc's circle (the distance along the circle).
+    Attributes:
+        distance: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "extension"
+    end: ObjectEnd
+    distance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "extension"}
+        out["end"] = self.end.to_json()
+        out["distance"] = float(self.distance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExtensionPointConstruction:
+        return cls(
+            end=ObjectEnd.from_json(data["end"]),
+            distance=float(data["distance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParallelPointConstruction(PointConstruction):
+    """Paralel: from `through`, `distance` metres (signed) along the object's straight edge nearest
+    `edge.near`, the way the edge runs from its first point to its second.
+    Attributes:
+        distance: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "parallel"
+    through: MeasuredPoint
+    edge: EdgeNear
+    distance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "parallel"}
+        out["through"] = self.through.to_json()
+        out["edge"] = self.edge.to_json()
+        out["distance"] = float(self.distance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParallelPointConstruction:
+        return cls(
+            through=MeasuredPoint.from_json(data["through"]),
+            edge=EdgeNear.from_json(data["edge"]),
+            distance=float(data["distance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TrackPointConstruction(PointConstruction):
+    """Nesne izleme: the UCS x of `x`'s point and the UCS y of `y`'s, where the alignments through the two
+    cross (AutoCAD's .X and .Y point filters).
+    """
+    TAG_VALUE: ClassVar[str] = "track"
+    x: MeasuredPoint
+    y: MeasuredPoint
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "track"}
+        out["x"] = self.x.to_json()
+        out["y"] = self.y.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TrackPointConstruction:
+        return cls(
+            x=MeasuredPoint.from_json(data["x"]),
+            y=MeasuredPoint.from_json(data["y"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PolarPointConstruction(PointConstruction):
+    """From `from`, `distance` metres at `angle`.
+    Attributes:
+        angle: Unit: rad.
+        distance: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "polar"
+    from_: MeasuredPoint
+    angle: float
+    distance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "polar"}
+        out["from"] = self.from_.to_json()
+        out["angle"] = float(self.angle)
+        out["distance"] = float(self.distance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PolarPointConstruction:
+        return cls(
+            from_=MeasuredPoint.from_json(data["from"]),
+            angle=float(data["angle"]),
+            distance=float(data["distance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlongPointConstruction(PointConstruction):
+    """Hat üzerinde: `distance` metres (signed) from `a` towards `b`.
+    Attributes:
+        distance: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "along"
+    a: MeasuredPoint
+    b: MeasuredPoint
+    distance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "along"}
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        out["distance"] = float(self.distance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlongPointConstruction:
+        return cls(
+            a=MeasuredPoint.from_json(data["a"]),
+            b=MeasuredPoint.from_json(data["b"]),
+            distance=float(data["distance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NodeSubPlace(SubPlace):
     """A point object's position: part 0 its own, `k` its `k`th extra point (docs/adr/0174).
     Attributes:
@@ -19080,6 +19334,9 @@ _NURBS_BY: dict[str, type[NurbsBy]] = {"control": ControlNurbsBy, "fit": FitNurb
 _OFFSET_BY: dict[str, type[OffsetBy]] = {"distance": DistanceOffsetBy, "through": ThroughOffsetBy}
 
 
+_POINT_CONSTRUCTION: dict[str, type[PointConstruction]] = {"mid": MidPointConstruction, "extension": ExtensionPointConstruction, "parallel": ParallelPointConstruction, "track": TrackPointConstruction, "polar": PolarPointConstruction, "along": AlongPointConstruction}
+
+
 _SUB_PLACE: dict[str, type[SubPlace]] = {"node": NodeSubPlace, "start": StartSubPlace, "end": EndSubPlace, "center": CenterSubPlace, "vertex": VertexSubPlace, "mid": MidSubPlace, "along": AlongSubPlace}
 
 
@@ -19110,6 +19367,7 @@ __all__ = [
     "AlignedDimensionMeasure",
     "AllCornerPick",
     "AllTrimBoundaries",
+    "AlongPointConstruction",
     "AlongSubPlace",
     "AngleArcDimensionMeasure",
     "AngleDimensionMeasure",
@@ -19290,6 +19548,7 @@ __all__ = [
     "EntityGeometry",
     "ExportDxf",
     "ExportPdf",
+    "ExtensionPointConstruction",
     "FeatureChange",
     "FeatureFeed",
     "FeedKind",
@@ -19442,6 +19701,7 @@ __all__ = [
     "LookPart",
     "LookPartName",
     "MeasuredPoint",
+    "MidPointConstruction",
     "MidSubPlace",
     "MirrorTransform",
     "MoveTransform",
@@ -19469,6 +19729,7 @@ __all__ = [
     "NurbsEntity",
     "NurbsEntityGeometry",
     "NurbsPlan",
+    "ObjectEnd",
     "ObjectUcsTo",
     "ObjectsHatchRegion",
     "ObjectsTrimBoundaries",
@@ -19479,6 +19740,7 @@ __all__ = [
     "OrderToName",
     "OrdinateDimensionMeasure",
     "OriginUcsTo",
+    "ParallelPointConstruction",
     "PartsDivision",
     "PathArrayLayout",
     "PathEntity",
@@ -19491,6 +19753,7 @@ __all__ = [
     "PointCloudEntity",
     "PointCloudFields",
     "PointCloudStyle",
+    "PointConstruction",
     "PointCreate",
     "PointCreated",
     "PointEntity",
@@ -19509,7 +19772,10 @@ __all__ = [
     "PointSymbolName",
     "PointcloudEntity",
     "PointcloudEntityGeometry",
+    "PointsConstruct",
+    "PointsConstructed",
     "PolarArrayLayout",
+    "PolarPointConstruction",
     "PolygonCreate",
     "PolygonCreated",
     "PolygonEntity",
@@ -19655,6 +19921,7 @@ __all__ = [
     "TopologyRuleKind",
     "TopologyRuleKindName",
     "TopologySettings",
+    "TrackPointConstruction",
     "Transform",
     "TrimBoundaries",
     "TrimPick",

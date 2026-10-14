@@ -116,6 +116,9 @@ struct Dwell {
 #[derive(Clone, Debug, Default)]
 pub struct ObjectTracking {
     acquired: Vec<Acquired>,
+    /// A Geçici izleme noktası was given (docs/adr/0270 §3): its alignments hold with Nesne izleme off too,
+    /// until the command ends.
+    temporary: bool,
     track: Option<TrackHit>,
     dwell: Option<Dwell>,
     /// Counts the dwells begun, so a late wait is told from the current one.
@@ -152,7 +155,9 @@ impl ObjectTracking {
     ) {
         self.snap = snap.copied();
         self.from = from;
-        if !aids.any() {
+        // A temporary tracking point aligns whether Nesne izleme is on or not.
+        let aligning = aids.tracking || self.temporary;
+        if !aids.any() && !self.temporary {
             self.track = None;
             self.dwell = None;
             return;
@@ -184,9 +189,7 @@ impl ObjectTracking {
             None => self.dwell = None,
         }
         self.track = match snap {
-            None if aids.tracking => {
-                track_point(raw, &self.points(), from, &track_angles(polar), tol)
-            }
+            None if aligning => track_point(raw, &self.points(), from, &track_angles(polar), tol),
             _ => None,
         };
     }
@@ -268,8 +271,25 @@ impl ObjectTracking {
         }
     }
 
+    /// Geçici izleme noktası (docs/adr/0270 §3): `p` is a tracking point now, as a rest on it would make it,
+    /// and its alignments hold with Nesne izleme off too; one already there stays once.
+    pub fn acquire_point(&mut self, p: Vec2) {
+        self.temporary = true;
+        let there = self
+            .acquired
+            .iter()
+            .any(|a| matches!(a, Acquired::Point { at, .. } if *at == p));
+        if !there {
+            self.push(Acquired::Point {
+                at: p,
+                extensions: Vec::new(),
+            });
+        }
+    }
+
     /// Another command: its acquisitions go (they belong to one command).
     pub fn clear(&mut self) {
+        self.temporary = false;
         self.acquired.clear();
         self.track = None;
         self.dwell = None;
