@@ -9,15 +9,16 @@
 use std::collections::HashSet;
 
 use kentos_contracts::{
-    CommandError, CommandResult, EntitiesSelect, EntitiesSelected, Entity, LayerNodeType, MAX_SELECT_ITEMS,
-    PolygonSelectMode, SelectKind, SelectLeftOut, SelectRegion, SimilarCriteria, Vec2 as Point,
+    CommandError, CommandResult, EntitiesSelect, EntitiesSelected, Entity, LayerNodeType,
+    MAX_SELECT_ITEMS, PolygonSelectMode, SelectKind, SelectLeftOut, SelectRegion, SimilarCriteria,
+    Vec2 as Point,
 };
+use kentos_domain::Uuid;
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::store::polygon::{PolygonMode, ring_problem};
 use kentos_geometry_core::vec2::Vec2;
-use kentos_domain::Uuid;
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error, is_uid_text};
@@ -162,7 +163,9 @@ fn slots(ids: Vec<f64>) -> Vec<Slot> {
 
 /// Whether the store shows the object: its layer visible, a layer's filter and the time window passing it.
 fn shown(store: &Store, slot: Slot) -> bool {
-    store.get(f64::from(slot.0)).is_some_and(|it| store.shown(it))
+    store
+        .get(f64::from(slot.0))
+        .is_some_and(|it| store.shown(it))
 }
 
 /// The objects shown, in the drawing's order.
@@ -215,9 +218,13 @@ fn region(
             radius,
             crossing,
         } => slots(store.in_circle(v(*center), *radius, *crossing)),
-        SelectRegion::Containing { at } => {
-            slots(store.containing(v(*at)).into_iter().map(|(id, _)| id).collect())
-        }
+        SelectRegion::Containing { at } => slots(
+            store
+                .containing(v(*at))
+                .into_iter()
+                .map(|(id, _)| id)
+                .collect(),
+        ),
         SelectRegion::Point { at, tolerance } => slots(store.hits(v(*at), *tolerance)),
         SelectRegion::All => every(doc, store).collect(),
         SelectRegion::Objects { uids } => {
@@ -309,7 +316,9 @@ fn check(doc: &Document, input: &EntitiesSelect) -> Result<(), Stop> {
         if n > MAX_SELECT_ITEMS {
             Err(Stop::failed(error(
                 codes::TOO_MANY_POINTS,
-                format!("{what} en çok 100 000 olur; {n} verildi. Bölgeyi ya da listeyi parçalara ayırın."),
+                format!(
+                    "{what} en çok 100 000 olur; {n} verildi. Bölgeyi ya da listeyi parçalara ayırın."
+                ),
                 Some(path.into()),
             )))
         } else {
@@ -319,7 +328,11 @@ fn check(doc: &Document, input: &EntitiesSelect) -> Result<(), Stop> {
     let points = |pts: &[Point]| -> Result<(), Stop> {
         too_many(pts.len(), "Bölgenin noktaları", "region.points")?;
         for (i, p) in pts.iter().enumerate() {
-            checks::point(*p, &format!("{}. noktanın", i + 1), &format!("region.points[{i}]"))?;
+            checks::point(
+                *p,
+                &format!("{}. noktanın", i + 1),
+                &format!("region.points[{i}]"),
+            )?;
         }
         Ok(())
     };
@@ -341,14 +354,22 @@ fn check(doc: &Document, input: &EntitiesSelect) -> Result<(), Stop> {
             if !is_uid_text(uid) {
                 return Err(Stop::failed(error(
                     codes::INVALID_UID,
-                    format!("“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir."),
+                    format!(
+                        "“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir."
+                    ),
                     path,
                 )));
             }
-            if Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)).is_none() {
+            if Uuid::parse_str(uid)
+                .ok()
+                .and_then(|u| doc.slot_of(u))
+                .is_none()
+            {
                 return Err(Stop::failed(error(
                     codes::ENTITY_NOT_FOUND,
-                    format!("“{uid}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir."),
+                    format!(
+                        "“{uid}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir."
+                    ),
                     path,
                 )));
             }
@@ -429,14 +450,19 @@ fn check(doc: &Document, input: &EntitiesSelect) -> Result<(), Stop> {
                 None => {
                     return Err(Stop::failed(error(
                         codes::LAYER_NOT_FOUND,
-                        format!("“{id}” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin."),
+                        format!(
+                            "“{id}” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin."
+                        ),
                         path,
                     )));
                 }
                 Some(node) if node.kind != LayerNodeType::Layer => {
                     return Err(Stop::failed(error(
                         codes::NOT_A_LAYER,
-                        format!("“{}” bir katman grubu; süzgeç katmanları alır. Grubun katmanlarını verin.", node.name),
+                        format!(
+                            "“{}” bir katman grubu; süzgeç katmanları alır. Grubun katmanlarını verin.",
+                            node.name
+                        ),
                         path,
                     )));
                 }
@@ -446,4 +472,3 @@ fn check(doc: &Document, input: &EntitiesSelect) -> Result<(), Stop> {
     }
     Ok(())
 }
-

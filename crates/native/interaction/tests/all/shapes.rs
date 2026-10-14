@@ -139,7 +139,7 @@ fn two_and_three_points() {
     assert_eq!(b.doc.len(), before);
     assert_eq!(
         b.last_text(),
-        Some("Üç nokta aynı doğru üzerinde; daire çizilemez.")
+        Some("Üç nokta aynı doğru üzerinde; daire geçmez. Doğrunun dışında bir nokta verin.")
     );
     assert_eq!(b.points(), 0);
 }
@@ -329,7 +329,7 @@ fn an_arc_that_cannot_be_made_warns_and_keeps_its_points() {
     assert_eq!(b.doc.len(), 0);
     assert_eq!(
         b.last_text(),
-        Some("Bu değerlerle yay oluşmuyor (noktalar aynı doğruda ya da yarıçap kiriş için küçük).")
+        Some("Üç nokta aynı doğru üzerinde; yay geçmez. Doğrunun dışında bir nokta verin.")
     );
     assert_eq!(b.points(), 2, "the points stay");
 }
@@ -463,4 +463,30 @@ fn a_regular_polygon_by_its_side_count_centre_and_corner() {
             .is_some_and(|t| t.starts_with("4 kenarlı düzgün çokgen eklendi: kenar "))
     );
     assert_eq!(b.memory.polygon_sides, 4, "stays for the next polygons");
+}
+
+/// The rectangle, rotated rectangle and regular polygon tools write through their own commands (docs/adr/0290):
+/// the journal names `cad.rectangle.create` and `cad.polygon.regular`, not `cad.polygon.create`.
+#[test]
+fn the_shape_tools_write_through_their_commands() {
+    let last = |b: &Bench| {
+        b.doc
+            .journal()
+            .last()
+            .and_then(|r| r.command.clone())
+            .unwrap_or_default()
+    };
+    let mut b = Bench::new("rectangle");
+    b.click(0.0, 0.0);
+    b.click(20.0, 10.0);
+    assert_eq!(last(&b), "cad.rectangle.create");
+    let mut b = Bench::new("rectangle3");
+    b.click(0.0, 0.0);
+    b.click(20.0, 0.0);
+    b.click(5.0, 10.0);
+    assert_eq!(last(&b), "cad.rectangle.create");
+    let mut b = Bench::new("regularPolygon");
+    b.click(0.0, 0.0);
+    b.click(5.0, 0.0);
+    assert_eq!(last(&b), "cad.polygon.regular");
 }

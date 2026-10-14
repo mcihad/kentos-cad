@@ -181,6 +181,10 @@ mod search;
 mod second_crs;
 #[cfg(test)]
 mod segment_scenes;
+#[cfg(test)]
+mod curve_scenes;
+#[cfg(test)]
+mod transform_scenes;
 mod selecting;
 mod selection_chip;
 mod selection_commands;

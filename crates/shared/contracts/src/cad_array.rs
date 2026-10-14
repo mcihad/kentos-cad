@@ -64,6 +64,21 @@ pub enum ArrayLayout {
         fill: f64,
         rotate: bool,
     },
+    /// Kopyala's Dizi (docs/adr/0291; AutoCAD COPY's Array): `count` places along the displacement (`dx`,
+    /// `dy`), 2 to 10 000, the originals at the first: the copy `k` moves `k·(dx, dy)`; with `fit` the last one
+    /// moves the whole displacement and the others share it, the copy `k` moving `k·(dx, dy) / (count − 1)`.
+    Line {
+        #[cfg_attr(feature = "schema", schemars(range(min = 2, max = 10000)))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+        count: u32,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        dx: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        dy: f64,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        fit: bool,
+    },
     /// Yol boyunca dizi (docs/adr/0140): `count` places, 2 to 10 000, along
     /// the object `path` names by its persistent id (a line, an arc, a
     /// circle or a polyline), the originals at the first, the path's start.
@@ -96,8 +111,8 @@ pub enum ArrayLayout {
 /// Each copy takes every field of its original (layer, colour, attributes,
 /// label, symbol) and a new persistent id; the originals stay. The copies
 /// are written place after place, each place the objects in the input's
-/// order. The undo step is the tool's name: “Dizi”, “Kutupsal dizi” or
-/// “Yol boyunca dizi”.
+/// order. The undo step is the tool's name: “Dizi”, “Kutupsal dizi”,
+/// “Yol boyunca dizi” or, for a line of copies, “Kopyala”.
 ///
 /// Objects on a locked layer (by itself or a group above it) are not
 /// copied: with others they are named in the output's `locked` with a
@@ -111,7 +126,8 @@ pub enum ArrayLayout {
 /// `layout.path`), `not_finite` (the layout's numbers, in their order),
 /// `invalid_count` (rows and columns, or the count, out of their range),
 /// `invalid_spacing` (a grid direction with more than one place and no
-/// spacing; a path array's spacing not above zero), `invalid_fill` (a polar
+/// spacing; a line's displacement of no length; a path array's spacing not
+/// above zero), `invalid_fill` (a polar
 /// fill of zero or past a full turn), `invalid_revision`,
 /// `revision_conflict` (status `conflict`), `entity_not_found` (each id in
 /// order, then the path at `layout.path`), `invalid_path` (a path that is

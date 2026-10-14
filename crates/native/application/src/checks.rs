@@ -338,10 +338,14 @@ pub(crate) fn skip_locked<'a>(
         && let Some((at, _, e, _)) = locked.first()
     {
         let layer = &e.base().layer_id;
-        let name = layers.get(layer).map_or(layer.as_str(), |n| n.name.as_str());
+        let name = layers
+            .get(layer)
+            .map_or(layer.as_str(), |n| n.name.as_str());
         return Err(Stop::failed(error(
             codes::LAYER_LOCKED,
-            format!("“{name}” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın."),
+            format!(
+                "“{name}” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın."
+            ),
             Some(format!("uids[{at}]")),
         )));
     }

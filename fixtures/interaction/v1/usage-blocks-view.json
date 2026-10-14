@@ -57,7 +57,7 @@
     { "run": "tool.rotate", "expect": { "tool": "rotate" } },
     { "move": [-4, -7] },
     { "click": [-4, -7], "note": "Merkez trafonun yerleştirme noktası." },
-    { "text": "90" },
+    { "text": "-100", "note": "CBS projesinde açı grad ve saat yönündedir (ADR 0291): -100g saat yönünün tersine 90°." },
     { "key": "Enter", "note": "Saat yönünün tersine 90°: trafo taramasıyla ve yazısıyla döner.", "expect": { "tool": "select", "objects": [{ "id": 12, "kind": "insert", "points": [[-4, -7], [-4, -6], [-5, -7]] }] } },
     { "shot": "dondur" },
     { "drag": [[7, 7], [-10.5, 6.5]], "note": "Sağdan sola kesişim penceresi üç ağacın tepesine değer.", "expect": { "selected": [9, 10, 11] } },

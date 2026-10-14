@@ -16,18 +16,22 @@
 //! - the rotation and the corners stay for the next rectangles, for as long
 //!   as the app lives (the web's static fields, [`crate::tool::Memory`]).
 //!
-//! Every rectangle is written through `cad.polygon.create`, one closed area
-//! and one undo step, rounded or cut corners as arcs or extra corners, and
-//! says “Dikdörtgen eklendi: 20.000 × 10.000 m”. The rings and their corners
-//! are the shared core's (`rectFromCorners`, `rectFromSize`, `cornersOfRing`);
-//! none is computed here.
+//! Every rectangle is written through `cad.rectangle.create` (docs/adr/0290),
+//! one closed area and one undo step, rounded or cut corners as arcs or extra
+//! corners, and says “Dikdörtgen eklendi: 20.000 × 10.000 m”. The tool gives
+//! the command what was given (the corners, the size, the rotation, the
+//! corners' style); the ring, for the preview too, is the command's
+//! (`shapes::rectangle_ring`). Corners that do not fit are said and the
+//! rectangle is written sharp. With the overlap control or Topoloji changing
+//! the area, it is written as any new area is (`points::write_area_by`).
 
-use kentos_geometry_core::geom::shapes::{rect_from_corners, rect_from_size, rect_side_for_area};
+use kentos_contracts::{RectangleCorners, RectangleCreate, RectangleFrame};
+use kentos_geometry_core::geom::shapes::rect_side_for_area;
 use kentos_geometry_core::geometry::{dist, signed_area};
 use kentos_geometry_core::jsmath::PI;
-use kentos_geometry_core::ops::fillet::{CornerOp, CornerResult, corners_of_ring};
 use kentos_geometry_core::tools::drawing::direction_angle;
 use kentos_geometry_core::tools::point_text::{is_js_space, js_trim, parse_number};
+use kentos_native_application::{ExecutionContext, shapes};
 
 use crate::Vec2;
 use crate::format::{Format, short_degrees};
@@ -102,14 +106,63 @@ impl Rectangle {
         self.seen.map_or(0.0, |(m, _)| m.rect_rotation)
     }
 
-    /// The ring from corner `a` to `p`: by its size in the Side stage, else by opposite corners.
-    fn ring(&self, a: Vec2, p: Vec2) -> Option<Vec<Vec2>> {
+    /// What the command is given from corner `a` to `p`: by its size in the Side stage, else by opposite
+    /// corners; sharp (the corners are the caller's to add).
+    fn frame(&self, a: Vec2, p: Vec2) -> RectangleFrame {
         match (self.stage, self.size) {
-            (Stage::Side, Some((length, width))) => {
-                rect_from_size(a, length, width, self.rotation(), p)
-            }
-            _ => rect_from_corners(a, p, self.rotation()),
+            (Stage::Side, Some((length, width))) => RectangleFrame::Size {
+                corner: points::wire(a),
+                length,
+                width,
+                toward: points::wire(p),
+            },
+            _ => RectangleFrame::Corners {
+                a: points::wire(a),
+                b: points::wire(p),
+            },
         }
+    }
+
+    /// The command's input from corner `a` to `p`, its corners as given.
+    fn request(
+        &self,
+        a: Vec2,
+        p: Vec2,
+        corners: Option<RectangleCorners>,
+        cx: &Context<'_>,
+    ) -> RectangleCreate {
+        let rotation = self.rotation();
+        RectangleCreate {
+            layer_id: cx.doc.layers().active().to_owned(),
+            frame: self.frame(a, p),
+            rotation: (rotation != 0.0).then_some(rotation),
+            corners,
+            color: cx.draft.color_text(),
+            line_weight: cx.draft.line_weight,
+            line_type: cx.draft.line_type,
+            attrs: cx.template_attrs(None),
+            label: cx.template_label(),
+            symbol: cx.template_symbol(),
+            expected_revision: None,
+        }
+    }
+
+    /// The ring from corner `a` to `p` as the command makes it, sharp: the preview.
+    fn ring(&self, a: Vec2, p: Vec2) -> Option<Vec<Vec2>> {
+        let input = RectangleCreate {
+            layer_id: String::new(),
+            frame: self.frame(a, p),
+            rotation: Some(self.rotation()),
+            corners: None,
+            color: None,
+            line_weight: None,
+            line_type: None,
+            attrs: None,
+            label: None,
+            symbol: None,
+            expected_revision: None,
+        };
+        shapes::rectangle_ring(&input).ok().map(|(pts, _)| pts)
     }
 
     fn option(&mut self, key: &str) -> bool {
@@ -150,7 +203,7 @@ impl Rectangle {
             return;
         }
         match self.ring(a, p) {
-            Some(ring) => self.commit(&ring, cx),
+            Some(ring) => self.commit(a, p, &ring, cx),
             None => cx.say(
                 Level::Warn,
                 "Dikdörtgenin kenarları sıfır olamaz; başka bir köşe gösterin.",
@@ -158,28 +211,34 @@ impl Rectangle {
         }
     }
 
-    /// The ring with the corner style applied to every corner by the core,
-    /// or plain with a warning when it cannot be (the web's `styled`).
-    fn styled(ring: &[Vec2], cx: &mut Context<'_>) -> (Vec<Vec2>, Option<Vec<f64>>) {
-        let op = match cx.memory.rect_corners {
-            Corners::Sharp => return (ring.to_vec(), None),
-            Corners::Fillet(radius) => CornerOp::Radius(radius),
-            Corners::Chamfer(d) => CornerOp::Chamfer(d, d),
+    /// Writes the rectangle from `a` to `p` through `cad.rectangle.create`, its corners as remembered;
+    /// corners that do not fit are said and it is written sharp (the web's `styled`).
+    fn commit(&mut self, a: Vec2, p: Vec2, ring: &[Vec2], cx: &mut Context<'_>) {
+        let corners = match cx.memory.rect_corners {
+            Corners::Sharp => None,
+            Corners::Fillet(radius) => Some(RectangleCorners::Fillet { radius }),
+            Corners::Chamfer(distance) => Some(RectangleCorners::Chamfer { distance }),
         };
-        match corners_of_ring(ring, &op) {
-            Ok(CornerResult::Path(path)) => (path.pts, path.bulges),
-            Ok(CornerResult::Error(error)) | Err(error) => {
-                cx.say(Level::Warn, format!("Köşeler işlenmedi: {error}"));
+        let mut input = self.request(a, p, corners, cx);
+        let (pts, bulges) = match shapes::rectangle_ring(&input) {
+            Ok(ring) => ring,
+            Err(refusal) => {
+                cx.say(
+                    Level::Warn,
+                    format!("Köşeler işlenmedi: {}", refusal.message),
+                );
+                input.corners = None;
                 (ring.to_vec(), None)
             }
-        }
-    }
-
-    fn commit(&mut self, ring: &[Vec2], cx: &mut Context<'_>) {
-        let (pts, bulges) = Self::styled(ring, cx);
+        };
         let w = dist(ring[0], ring[1]);
         let h = dist(ring[1], ring[2]);
-        if points::write_area(&mut self.d, &pts, bulges, cx).is_some() {
+        let mut write = |cx: &mut Context<'_>| {
+            let result =
+                shapes::execute_rectangle(&mut ExecutionContext::new(cx.doc), input.clone());
+            points::written(result, cx).map(|out| out.id)
+        };
+        if points::write_area_by(&mut self.d, &pts, bulges, cx, Some(&mut write)).is_some() {
             let format = cx.format();
             let line = format!(
                 "Dikdörtgen eklendi: {} × {}",

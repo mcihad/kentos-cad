@@ -69,7 +69,7 @@ fn without_a_selection_the_tool_picks_first() {
     b.confirm();
     assert_eq!(
         b.session.prompt().text(),
-        "Taşı: 2 nesne için temel noktayı belirtin"
+        "Taşı: 2 nesne için temel noktayı belirtin [Yer değiştirme (Y)]"
     );
     assert_eq!(b.selection.hover(), None);
 }
@@ -102,7 +102,7 @@ fn a_selection_moves_by_its_base_and_target_in_one_step() {
     b.start("move");
     assert_eq!(
         b.session.prompt().text(),
-        "Taşı: 1 nesne için temel noktayı belirtin"
+        "Taşı: 1 nesne için temel noktayı belirtin [Yer değiştirme (Y)]"
     );
     b.click(-24.0, -12.0);
     assert_eq!(
@@ -143,9 +143,9 @@ fn copies_are_left_at_every_point_until_enter() {
     b.click(20.0, -8.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Kopyala: kopyanın yerini belirtin ya da @dY,dX yazın [Bitir (Enter)]"
+        "Kopyala: kopyanın yerini belirtin ya da @dY,dX yazın [Dizi (A) / Bitir (Enter)]"
     );
-    assert_eq!(b.options(), ["Enter"]);
+    assert_eq!(b.options(), ["A", "Enter"]);
     assert!(b.type_text("@0,4"));
     assert!(b.type_text("@0,8"));
     assert_eq!(b.doc.len(), 9);
@@ -177,15 +177,16 @@ fn rotate_by_a_typed_angle_or_as_a_copy() {
     b.click(-24.0, -12.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Döndür: açıyı yazın (derece, saat yönü tersine) ya da bir nokta gösterin [Referans (R) / Kopya (K): kapalı]"
+        "Döndür: açıyı yazın (grad, saat yönünde) ya da bir nokta gösterin [Referans (R) / Kopya (K): kapalı]"
     );
     assert!(b.type_text("k"), "Kopya turns on");
     assert!(b.session.prompt().text().ends_with("Kopya (K): açık]"));
+    // A CBS project's turn is grads clockwise (docs/adr/0291): -100g is a quarter turn counter-clockwise.
     let before = b.log.len();
-    assert!(b.type_text("90"));
+    assert!(b.type_text("-100"));
     assert_eq!(
         b.said(before),
-        [(Level::Success, "1 nesne 90.0000° döndürüldü (kopya).")]
+        [(Level::Success, "1 nesne -100.0000g döndürüldü (kopya).")]
     );
     assert_eq!(b.doc.len(), 8, "a copy");
     let Entity::Line(l) = b.newest() else {
@@ -214,9 +215,10 @@ fn rotate_by_a_reference_direction() {
     b.click(24.0, 16.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Döndür: yeni doğrultuyu gösterin ya da yeni açıyı yazın [Kopya (K): kapalı]"
+        "Döndür: yeni doğrultuyu gösterin ya da yeni açıyı yazın [Noktalar (N) / Kopya (K): kapalı]"
     );
-    assert!(b.type_text("90"));
+    // A CBS project's direction is a semt (docs/adr/0291): 0 is north.
+    assert!(b.type_text("0"));
     let [a, e] = line(&b, 2);
     assert!((a[0] - 0.0).abs() < 1e-9 && (a[1] - 4.0).abs() < 1e-9);
     assert!(e[0].abs() < 1e-9, "north of the centre: {e:?}");
@@ -252,7 +254,7 @@ fn scale_by_a_factor_and_by_reference() {
     b.click(8.0, -12.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Ölçekle: yeni uzunluğu temel noktadan gösterin ya da yazın [Kopya (K): kapalı]"
+        "Ölçekle: yeni uzunluğu temel noktadan gösterin ya da yazın [Noktalar (N) / Kopya (K): kapalı]"
     );
     b.move_to(-12.0, -12.0);
     let preview = b.session.preview(&Default::default()).expect("a preview");

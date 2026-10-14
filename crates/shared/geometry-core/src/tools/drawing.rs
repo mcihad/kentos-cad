@@ -7,7 +7,7 @@
 
 use crate::api::Op;
 use crate::entity::Shape;
-use crate::geom::arc::{ArcGeom, Circle, arc_end, norm_angle};
+use crate::geom::arc::{ArcGeom, Circle, arc_end, norm_angle, point_on_circle};
 use crate::geom::bulge::{bulge_at, bulge_of_sweep, segment_tangent};
 use crate::geom::ellipse::{EllipseGeom, param_at_polar};
 use crate::geom::shapes::regular_polygon;
@@ -26,22 +26,23 @@ pub fn direction_angle(a: Vec2, b: Vec2) -> f64 {
 /// Regular polygon for a typed radius: the bottom edge horizontal, so the
 /// edge middle sits straight below the centre.
 pub fn regular_polygon_radius(c: Vec2, sides: f64, r: f64, inscribed: bool) -> Option<Vec<Vec2>> {
-    let a = if inscribed {
-        -PI / 2.0 + PI / sides
-    } else {
-        -PI / 2.0
-    };
     let mode = if inscribed {
         "inscribed"
     } else {
         "circumscribed"
     };
-    regular_polygon(
-        c,
-        sides,
-        Vec2::new(c.x + cos(a) * r, c.y + sin(a) * r),
-        mode,
-    )
+    regular_polygon(c, sides, regular_radius_point(c, sides, r, inscribed), mode)
+}
+
+/// The point a typed radius gives a regular polygon about `c`, its bottom edge horizontal: the first corner
+/// (`inscribed`) or the first edge's middle (docs/adr/0290: the point `cad.polygon.regular` is given).
+pub fn regular_radius_point(c: Vec2, sides: f64, r: f64, inscribed: bool) -> Vec2 {
+    let a = if inscribed {
+        -PI / 2.0 + PI / sides
+    } else {
+        -PI / 2.0
+    };
+    Vec2::new(c.x + cos(a) * r, c.y + sin(a) * r)
 }
 
 /// End point and travel direction of a line, arc or polyline.
@@ -54,9 +55,26 @@ pub struct EndTangent {
 crate::json_struct!(EndTangent { p, dir });
 
 /// Where a line, arc or polyline ends and which way it runs there (the arc
-/// tool's "Devam"); None for other kinds and zero-length lines.
+/// tool's "Devam"); None for other kinds and zero-length lines. A closed
+/// polyline ends where its closing edge does, at its first vertex
+/// (docs/adr/0289); a last edge of no length has no direction.
 pub fn end_tangent(e: &Shape) -> Option<EndTangent> {
     match e {
+        Shape::Polyline {
+            pts,
+            bulges,
+            closed: true,
+            ..
+        } if pts.len() >= 2 => {
+            let k = pts.len();
+            (dist(pts[k - 1], pts[0]) > 1e-9).then(|| EndTangent {
+                p: pts[0],
+                dir: segment_tangent(pts[k - 1], pts[0], bulge_at(bulges.as_deref(), k - 1), true),
+            })
+        }
+        Shape::Polyline { pts, .. } if pts.len() >= 2 && dist(pts[pts.len() - 2], pts[pts.len() - 1]) <= 1e-9 => {
+            None
+        }
         Shape::Line { a, b } if dist(*a, *b) > 1e-9 => {
             let l = dist(*a, *b);
             Some(EndTangent {
@@ -83,6 +101,38 @@ pub fn end_tangent(e: &Shape) -> Option<EndTangent> {
                     bulge_at(bulges.as_deref(), k - 2),
                     true,
                 ),
+            })
+        }
+        _ => None,
+    }
+}
+
+/// Where a line, arc or open polyline starts and the way out of it backwards
+/// (docs/adr/0289): continuing from an object's start runs on against its
+/// direction. A closed polyline has no start apart from its end; none.
+pub fn start_tangent(e: &Shape) -> Option<EndTangent> {
+    match e {
+        Shape::Line { a, b } if dist(*a, *b) > 1e-9 => {
+            let l = dist(*a, *b);
+            Some(EndTangent {
+                p: *a,
+                dir: Vec2::new((a.x - b.x) / l, (a.y - b.y) / l),
+            })
+        }
+        Shape::Arc { c, r, a0, .. } => Some(EndTangent {
+            p: point_on_circle(*c, *r, *a0),
+            dir: Vec2::new(sin(*a0), -cos(*a0)),
+        }),
+        Shape::Polyline {
+            pts,
+            bulges,
+            closed: false,
+            ..
+        } if pts.len() >= 2 && dist(pts[0], pts[1]) > 1e-9 => {
+            let t = segment_tangent(pts[0], pts[1], bulge_at(bulges.as_deref(), 0), false);
+            Some(EndTangent {
+                p: pts[0],
+                dir: Vec2::new(-t.x, -t.y),
             })
         }
         _ => None,
@@ -301,6 +351,7 @@ pub(crate) static OPS: &[Op] = &[
         )
     ),
     op!("endTangent", |e: Shape| end_tangent(&e)),
+    op!("startTangent", |e: Shape| start_tangent(&e)),
     op!("degDirection", |deg: f64| deg_direction(deg)),
     op!("circleOnDiameter", |a: Vec2, b: Vec2| circle_on_diameter(
         a, b

@@ -731,6 +731,13 @@ pub struct Memory {
     /// Genişlik's end width, metres (docs/adr/0288): the next edge tapers from `polyline_width` to it, the ones
     /// after keep it.
     pub polyline_width_end: f64,
+    /// The arc Yay wrote last when it was given clockwise (docs/adr/0289): its slot. Its way ends at its stored
+    /// start, so Devam goes on from there, as AutoCAD's ARC goes on from the last point given.
+    pub arc_drawn_back: Option<u32>,
+    /// Kopyala's Kip (docs/adr/0291): one copy, then the tool leaves; AutoCAD's COPYMODE, kept for the session.
+    pub copy_single: bool,
+    /// The last displacement Taşı or Kopyala used (docs/adr/0291): Yer değiştirme's Enter.
+    pub last_displacement: Option<[f64; 2]>,
     /// NURBS eğrisi's method (control points, else fit points) and degree
     /// (docs/adr/0259 §6), kept for the session as AutoCAD's SPLINE keeps them.
     pub nurbs_control: bool,
@@ -1043,6 +1050,9 @@ impl Default for Memory {
             stream_step: 1.0,
             polyline_width: 0.0,
             polyline_width_end: 0.0,
+            arc_drawn_back: None,
+            copy_single: false,
+            last_displacement: None,
             nurbs_control: false,
             nurbs_degree: 3,
             block_insert: None,

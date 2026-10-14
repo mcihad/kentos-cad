@@ -19,23 +19,22 @@
 //!
 //! Arcs are stored counter-clockwise; a clockwise pick gives the same curve.
 //! Every arc is written through `cad.arc.create`, its own object and undo
-//! step, and says “Yay eklendi: r = …, açı …°”; a construction that gives no
-//! arc warns and keeps the points. Every construction and preview is the
-//! shared core's (`kentos-geometry-core`); none is computed here.
+//! step, and says “Yay eklendi: r = …, açı …°”. Every construction and
+//! preview is `cad.curves.construct`'s (docs/adr/0289): a construction that
+//! gives no arc warns with the command's words and keeps the points. Devam
+//! goes on from where the newest line, arc or polyline's way ends: an arc
+//! given clockwise ends at its stored start (`Memory::arc_drawn_back`).
 
-use kentos_contracts::{ArcCreate, Entity};
+use kentos_contracts::{
+    ArcCreate, CurveConstruction, Entity, MeasuredPoint, ObjectEnd, SubPlace,
+};
 use kentos_geometry_core::entity::tessellate_circle;
-use kentos_geometry_core::geom::arc::{
-    ArcGeom, DEFAULT_STEP, arc_through, norm_angle, tessellate_arc,
-};
-use kentos_geometry_core::geom::shapes::{
-    arc_start_center_angle, arc_start_center_chord, arc_start_center_end, arc_start_end_angle,
-    arc_start_end_center, arc_start_end_direction, arc_start_end_radius,
-};
-use kentos_geometry_core::geometry::{angle_deg, dist};
-use kentos_geometry_core::jsmath::PI;
-use kentos_geometry_core::tools::drawing::{deg_direction, end_tangent};
+use kentos_geometry_core::geom::arc::{ArcGeom, DEFAULT_STEP, norm_angle, point_on_circle, tessellate_arc};
+use kentos_geometry_core::geometry::dist;
+use kentos_geometry_core::jsmath::{PI, atan2};
+use kentos_geometry_core::tools::drawing::{end_tangent, start_tangent};
 use kentos_geometry_core::tools::point_text::js_trim;
+use kentos_native_application::curves_construct::{arc_geom, curve, curve_at};
 use kentos_native_application::{ExecutionContext, arc};
 
 use crate::Vec2;
@@ -80,6 +79,8 @@ pub struct Arc {
     sub: Sub,
     /// Devam: the direction the arc leaves its start in.
     cont_dir: Option<Vec2>,
+    /// Devam: the object it goes on from and which of its ends (docs/adr/0289).
+    cont_from: Option<ObjectEnd>,
     /// The ribbon's method (docs/adr/0287): the mode and the third input it
     /// gives every arc from its first point.
     method: Option<(Mode, Sub)>,
@@ -92,9 +93,19 @@ impl Default for Arc {
             mode: Mode::Three,
             sub: Sub::End,
             cont_dir: None,
+            cont_from: None,
             method: None,
         }
     }
+}
+
+fn at(p: Vec2) -> MeasuredPoint {
+    MeasuredPoint::At { at: wire(p) }
+}
+
+/// Degrees typed into radians, as the core turned them.
+fn radians(degrees: f64) -> f64 {
+    (degrees * PI) / 180.0
 }
 
 /// The ribbon's methods by their options (docs/adr/0287): what the arc is
@@ -146,45 +157,154 @@ impl Arc {
         }
     }
 
-    /// The arc the third input, a point, would make in the current mode.
-    fn arc_for(&self, p: Vec2) -> Option<ArcGeom> {
+    /// What the third input, a point, gives in the current mode: `cad.curves.construct`'s construction
+    /// (docs/adr/0289). Devam's names its object; `preview` asks for the same arc by its start and direction.
+    fn construction_for(&self, p: Vec2, preview: bool) -> Option<CurveConstruction> {
         let p0 = *self.d.pts.first()?;
-        match self.mode {
-            Mode::Continue => arc_start_end_direction(p0, p, self.cont_dir?),
-            Mode::Three => arc_through(p0, *self.d.pts.get(1)?, p),
+        Some(match self.mode {
+            Mode::Continue => match (&self.cont_from, preview) {
+                (Some(from), false) => CurveConstruction::ArcContinue {
+                    from: from.clone(),
+                    end: at(p),
+                },
+                _ => {
+                    let dir = self.cont_dir?;
+                    CurveConstruction::ArcStartEndDirection {
+                        start: at(p0),
+                        end: at(p),
+                        direction: atan2(dir.y, dir.x),
+                    }
+                }
+            },
+            Mode::Three => CurveConstruction::ArcThreePoints {
+                start: at(p0),
+                mid: at(*self.d.pts.get(1)?),
+                end: at(p),
+            },
             Mode::StartCenter | Mode::CenterStart => {
                 self.d.pts.get(1)?;
                 let (s, c) = self.start_center();
                 if self.sub == Sub::Chord {
-                    arc_start_center_chord(s, c, dist(s, p))
+                    CurveConstruction::ArcStartCentreChord {
+                        start: at(s),
+                        centre: at(c),
+                        chord: dist(s, p),
+                    }
                 } else {
-                    arc_start_center_end(s, c, p)
+                    CurveConstruction::ArcStartCentreEnd {
+                        start: at(s),
+                        centre: at(c),
+                        end: at(p),
+                    }
                 }
             }
             Mode::StartEnd => {
                 let p1 = *self.d.pts.get(1)?;
                 match self.sub {
-                    Sub::Center => arc_start_end_center(p0, p1, p),
-                    Sub::Direction => {
-                        arc_start_end_direction(p0, p1, Vec2::new(p.x - p0.x, p.y - p0.y))
-                    }
-                    Sub::Radius => arc_start_end_radius(p0, p1, dist(p1, p)),
+                    Sub::Center => CurveConstruction::ArcStartCentreEnd {
+                        start: at(p0),
+                        centre: at(p),
+                        end: at(p1),
+                    },
+                    Sub::Direction => CurveConstruction::ArcStartEndDirection {
+                        start: at(p0),
+                        end: at(p1),
+                        direction: atan2(p.y - p0.y, p.x - p0.x),
+                    },
+                    Sub::Radius => CurveConstruction::ArcStartEndRadius {
+                        start: at(p0),
+                        end: at(p1),
+                        r: dist(p1, p),
+                    },
                     // The included angle shown by a direction from the start, measured from east.
-                    _ => arc_start_end_angle(p0, p1, angle_deg(p0, p)),
+                    _ => CurveConstruction::ArcStartEndAngle {
+                        start: at(p0),
+                        end: at(p1),
+                        angle: atan2(p.y - p0.y, p.x - p0.x),
+                    },
                 }
             }
+        })
+    }
+
+    /// What a typed number gives after the first two points: an angle in degrees, or a chord or a radius in
+    /// the project's unit (docs/adr/0165 §2, 0266).
+    fn construction_typed(&self, n: f64, length: f64) -> CurveConstruction {
+        let (p0, p1) = (self.d.pts[0], self.d.pts[1]);
+        match self.mode {
+            Mode::StartCenter | Mode::CenterStart => {
+                let (s, c) = self.start_center();
+                if self.sub == Sub::Chord {
+                    CurveConstruction::ArcStartCentreChord {
+                        start: at(s),
+                        centre: at(c),
+                        chord: length,
+                    }
+                } else {
+                    CurveConstruction::ArcStartCentreAngle {
+                        start: at(s),
+                        centre: at(c),
+                        angle: radians(n),
+                    }
+                }
+            }
+            _ => match self.sub {
+                Sub::Radius => CurveConstruction::ArcStartEndRadius {
+                    start: at(p0),
+                    end: at(p1),
+                    r: length,
+                },
+                Sub::Direction => CurveConstruction::ArcStartEndDirection {
+                    start: at(p0),
+                    end: at(p1),
+                    direction: radians(n),
+                },
+                _ => CurveConstruction::ArcStartEndAngle {
+                    start: at(p0),
+                    end: at(p1),
+                    angle: radians(n),
+                },
+            },
         }
     }
 
-    /// The end and travel direction of the newest line, arc or polyline (a
-    /// zero-length line is passed over): where Devam starts.
-    fn last_end(cx: &Context<'_>) -> Option<(Vec2, Vec2)> {
+    /// The arc a point would make, for the preview: the command's answer without the drawing.
+    fn arc_for(&self, p: Vec2) -> Option<ArcGeom> {
+        curve_at(&self.construction_for(p, true)?)
+            .ok()
+            .as_ref()
+            .and_then(arc_geom)
+    }
+
+    /// Where the newest line, arc or polyline's way ends and which way it runs there (a zero-length line is
+    /// passed over): where Devam starts, and the object's end it names. An arc Yay was given clockwise ends at
+    /// its stored start (docs/adr/0289).
+    fn last_end(cx: &Context<'_>) -> Option<(Vec2, Vec2, ObjectEnd)> {
+        let back = cx.memory.arc_drawn_back;
         let all: Vec<&Entity> = cx.doc.entities().collect();
         all.into_iter()
             .rev()
             .filter(|e| matches!(e.kind(), "line" | "arc" | "polyline"))
-            .find_map(|e| end_tangent(&record(e).3))
-            .map(|end| (end.p, end.dir))
+            .find_map(|e| {
+                let id = e.base().id;
+                let at_start = e.kind() == "arc" && back == Some(id);
+                let shape = record(e).3;
+                let end = if at_start {
+                    start_tangent(&shape)
+                } else {
+                    end_tangent(&shape)
+                }?;
+                let uid = cx.doc.uid(kentos_domain::Slot(id))?;
+                Some((
+                    end.p,
+                    end.dir,
+                    ObjectEnd {
+                        uid: uid.to_string(),
+                        place: if at_start { SubPlace::Start } else { SubPlace::End },
+                        path: Vec::new(),
+                    },
+                ))
+            })
     }
 
     /// Option letters by step (the web's `option`); false when the key is none of those now.
@@ -207,10 +327,11 @@ impl Arc {
                     );
                     return true;
                 }
-                Some((p, dir)) => {
+                Some((p, dir, from)) => {
                     self.mode = Mode::Continue;
                     self.d.pts = vec![p];
                     self.cont_dir = Some(dir);
+                    self.cont_from = Some(from);
                 }
             },
             (1, Mode::Three, "M") => self.mode = Mode::StartCenter,
@@ -244,8 +365,9 @@ impl Arc {
             return;
         }
         if self.ready() {
-            let arc = self.arc_for(p);
-            self.commit(arc, cx);
+            if let Some(c) = self.construction_for(p, false) {
+                self.commit(&c, cx);
+            }
         } else {
             self.d.pts.push(p);
             // A method that starts at the start point takes its course from it.
@@ -269,16 +391,28 @@ impl Arc {
         }
     }
 
-    /// Writes the arc and starts over; with none, warns and keeps the points.
-    fn commit(&mut self, g: Option<ArcGeom>, cx: &mut Context<'_>) {
-        let Some(g) = g else {
-            cx.say(
-                Level::Warn,
-                "Bu değerlerle yay oluşmuyor (noktalar aynı doğruda ya da yarıçap kiriş için küçük).",
-            );
-            return;
+    /// Writes the arc `cad.curves.construct` gives for `c` and starts over; when it gives none, warns with
+    /// its words and keeps the points.
+    fn commit(&mut self, c: &CurveConstruction, cx: &mut Context<'_>) {
+        let g = match curve(cx.doc, c) {
+            Ok(curve) => match arc_geom(&curve) {
+                Some(g) => g,
+                None => return,
+            },
+            Err(why) => {
+                cx.say(Level::Warn, why);
+                return;
+            }
         };
-        if self.write(&g, cx) {
+        // Where the user started: the arc's way ends at its stored start when it does not start there.
+        let start = match self.mode {
+            Mode::CenterStart => self.d.pts.get(1).copied(),
+            _ => self.d.pts.first().copied(),
+        };
+        if let Some(slot) = self.write(&g, cx) {
+            let back = start
+                .is_some_and(|s| dist(s, point_on_circle(g.c, g.r, g.a0)) > 1e-6 * g.r.max(1.0));
+            cx.memory.arc_drawn_back = back.then_some(slot);
             let format = cx.format();
             let sweep = or_full(norm_angle(g.a1 - g.a0));
             let line = format!(
@@ -290,12 +424,14 @@ impl Arc {
         }
         self.d.pts.clear();
         self.cont_dir = None;
+        self.cont_from = None;
         self.begin_method();
     }
 
     /// One arc through the product command `cad.arc.create` (docs/adr/0032):
-    /// the active layer and the current colour explicit in its input (CMD-07).
-    fn write(&mut self, g: &ArcGeom, cx: &mut Context<'_>) -> bool {
+    /// the active layer and the current colour explicit in its input (CMD-07);
+    /// its slot when written.
+    fn write(&mut self, g: &ArcGeom, cx: &mut Context<'_>) -> Option<u32> {
         let input = ArcCreate {
             line_type: cx.draft.line_type,
             layer_id: cx.doc.layers().active().to_owned(),
@@ -311,17 +447,14 @@ impl Arc {
             symbol: None,
         };
         let result = arc::execute(&mut ExecutionContext::new(cx.doc), input);
-        match points::written(result, cx) {
-            Some(written) => {
-                self.d.note(written.id, cx);
-                true
-            }
-            None => false,
-        }
+        let written = points::written(result, cx)?;
+        self.d.note(written.id, cx);
+        Some(written.id)
     }
 
     fn reset(&mut self) {
         self.cont_dir = None;
+        self.cont_from = None;
         self.begin_method();
         self.d.reset();
     }
@@ -442,25 +575,10 @@ impl Tool for Arc {
             && self.mode != Mode::Three
             && let Some((n, length)) = crate::points::plain_value(text, cx)
         {
-            let (p0, p1) = (self.d.pts[0], self.d.pts[1]);
             // A chord or a radius is a length typed in the project's unit (docs/adr/0165 §2), or with its own
             // (docs/adr/0266); an angle is not.
-            let g = match self.mode {
-                Mode::StartCenter | Mode::CenterStart => {
-                    let (s, c) = self.start_center();
-                    if self.sub == Sub::Chord {
-                        arc_start_center_chord(s, c, length)
-                    } else {
-                        arc_start_center_angle(s, c, n)
-                    }
-                }
-                _ => match self.sub {
-                    Sub::Radius => arc_start_end_radius(p0, p1, length),
-                    Sub::Direction => arc_start_end_direction(p0, p1, deg_direction(n)),
-                    _ => arc_start_end_angle(p0, p1, n),
-                },
-            };
-            self.commit(g, cx);
+            let c = self.construction_typed(n, length);
+            self.commit(&c, cx);
             return true;
         }
         if self.option(&upper_tr(js_trim(text)), cx) {

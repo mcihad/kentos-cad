@@ -95,6 +95,23 @@ pub fn grid_array_transforms(rows: f64, cols: f64, dx: f64, dy: f64) -> Vec<Affi
     out
 }
 
+/// Kopyala's Dizi (docs/adr/0291): the copies `k` = 1 … count − 1 moved
+/// `k·(dx, dy)`, or with `fit` `k·(dx, dy) / (count − 1)`, the last on the
+/// displacement's end exactly.
+pub fn line_array_transforms(count: f64, dx: f64, dy: f64, fit: bool) -> Vec<Affine> {
+    let mut out = Vec::new();
+    let mut k = 1.0;
+    while k < count {
+        out.push(if fit {
+            translation((k * dx) / (count - 1.0), (k * dy) / (count - 1.0))
+        } else {
+            translation(k * dx, k * dy)
+        });
+        k += 1.0;
+    }
+    out
+}
+
 /// The middle of the box around `shapes`, text measured in `font`, as the
 /// geometry store's `extent` takes it and the web's polar array tool took
 /// its middle: where copies that do not turn are placed by. None when there
@@ -144,6 +161,9 @@ pub fn array_transforms(
                 && (2.0..=GRID_PLACES_MAX).contains(&(rows * cols));
             fits.then(|| grid_array_transforms(rows, cols, dx, dy))
         }
+        // Kopyala's Dizi (docs/adr/0291): along the displacement, or shared to fit it.
+        ("line", &[count, dx, dy, fit]) => (whole(count) && (2.0..=GRID_PLACES_MAX).contains(&count))
+            .then(|| line_array_transforms(count, dx, dy, fit != 0.0)),
         ("polar", &[cx, cy, count, fill, rotate]) => {
             if !(whole(count) && (2.0..=POLAR_COUNT_MAX).contains(&count)) {
                 return None;

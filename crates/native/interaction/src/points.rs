@@ -261,6 +261,21 @@ pub(crate) fn write_area(
     bulges: Option<Vec<f64>>,
     cx: &mut Context<'_>,
 ) -> Option<f64> {
+    write_area_by(d, pts, bulges, cx, None)
+}
+
+/// A shape command's writer: the object it wrote, by its slot.
+pub(crate) type Writer<'w> = &'w mut dyn FnMut(&mut Context<'_>) -> Option<u32>;
+
+/// [`write_area`], the plain area written by `writer` when one is given (a shape tool's own command,
+/// docs/adr/0290) and neither the overlap control nor Topoloji changed it; otherwise as [`write_area`] writes.
+pub(crate) fn write_area_by(
+    d: &mut Taken,
+    pts: &[Vec2],
+    bulges: Option<Vec<f64>>,
+    cx: &mut Context<'_>,
+    mut writer: Option<Writer<'_>>,
+) -> Option<f64> {
     use crate::junctions;
     use crate::overlap::{clip_new_area, clipped_geometry, say_clipped, written_area};
     use kentos_domain::labels;
@@ -286,9 +301,15 @@ pub(crate) fn write_area(
         return None;
     }
     let joining = junctions::join(cx, &areas);
+    let plain = clipped.is_none() && joining.is_none();
     let areas = joining.as_ref().map_or(areas, |j| j.areas.clone());
     let noted = d.made.len();
     junctions::with_joined(cx, joining.as_ref(), labels::ADD, |cx| {
+        if let (true, Some(writer)) = (plain, writer.as_mut()) {
+            let id = writer(cx)?;
+            d.note(id, cx);
+            return Some(());
+        }
         if clipped.is_none() {
             let ring = &areas[0].outer;
             return write_ring(d, &ring.pts, ring.bulges.clone(), cx).then_some(());

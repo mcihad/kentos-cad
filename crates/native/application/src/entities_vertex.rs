@@ -41,7 +41,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &EntitiesVertex) -> CommandRes
 }
 
 /// The objects as execute would write them.
-pub fn plan(cx: &ExecutionContext<'_>, input: &EntitiesVertex) -> CommandResult<EntitiesVertexPlan> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &EntitiesVertex,
+) -> CommandResult<EntitiesVertexPlan> {
     let checked = match check(cx.doc, cx.store, input) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
@@ -192,10 +195,14 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesVertex) -> Resul
     let layers = doc.layers();
     let layer = &e.base().layer_id;
     if layers.is_locked(layer) {
-        let name = layers.get(layer).map_or(layer.as_str(), |n| n.name.as_str());
+        let name = layers
+            .get(layer)
+            .map_or(layer.as_str(), |n| n.name.as_str());
         return Err(refuse(
             codes::LAYER_LOCKED,
-            format!("“{name}” katmanı kilitli; üzerindeki nesne değiştirilemez. Kilidi Katmanlar panelinden açın."),
+            format!(
+                "“{name}” katmanı kilitli; üzerindeki nesne değiştirilemez. Kilidi Katmanlar panelinden açın."
+            ),
             "uid",
         ));
     }
@@ -228,7 +235,12 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesVertex) -> Resul
             ));
         }
         (_, SubPlace::Mid { part, ring, index }) => (part, ring, index),
-        (VertexAction::Insert, SubPlace::Along { part, ring, index, .. }) => (part, ring, index),
+        (
+            VertexAction::Insert,
+            SubPlace::Along {
+                part, ring, index, ..
+            },
+        ) => (part, ring, index),
         _ => {
             return Err(refuse(
                 codes::WRONG_PLACE,
@@ -386,12 +398,20 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesVertex) -> Resul
         edited
     };
     let follow = match (input.topology, store) {
-        (Some(t), Some(store)) => {
-            crate::topology_follow::neighbours(doc, store, t.points, &[(slot, whole.clone(), edited.clone())])
-        }
+        (Some(t), Some(store)) => crate::topology_follow::neighbours(
+            doc,
+            store,
+            t.points,
+            &[(slot, whole.clone(), edited.clone())],
+        ),
         (Some(t), None) => {
             let own = crate::geometry_store::store_of(doc);
-            crate::topology_follow::neighbours(doc, &own, t.points, &[(slot, whole.clone(), edited.clone())])
+            crate::topology_follow::neighbours(
+                doc,
+                &own,
+                t.points,
+                &[(slot, whole.clone(), edited.clone())],
+            )
         }
         (None, _) => None,
     };
@@ -532,9 +552,21 @@ fn geometry(g: Result<Geometry, String>) -> Result<Shape, Stop> {
 }
 
 /// The path with edge `segment` bent to `bulge`; its bulges kept only while one is an arc; of `like`'s kind.
-fn with_bulge(like: &Shape, pts: &[Vec2], bulges: Option<&[f64]>, segment: usize, bulge: f64) -> Shape {
+fn with_bulge(
+    like: &Shape,
+    pts: &[Vec2],
+    bulges: Option<&[f64]>,
+    segment: usize,
+    bulge: f64,
+) -> Shape {
     let all: Vec<f64> = (0..pts.len())
-        .map(|i| if i == segment { bulge } else { bulge_at(bulges, i) })
+        .map(|i| {
+            if i == segment {
+                bulge
+            } else {
+                bulge_at(bulges, i)
+            }
+        })
         .collect();
     let bulges = all.iter().any(|&b| is_arc_bulge(b)).then_some(all);
     path_like(like, pts.to_vec(), bulges)

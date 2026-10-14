@@ -1,0 +1,1427 @@
+{
+ "format": "kentos.curve-method-tools",
+ "version": 1,
+ "note": "ADR 0289. Daire, Yay ve Elips araçlarının yöntemleri baştan sona: tıklanan ve yazılan girdiler, beklenen nesne (merkez, eksenler göreli: doğu ve kuzey farkı 487000, 4420000'den) ya da uyarı. Sayılar 10⁻⁹ içinde. Bağımsız başvuru: scripts/fixtures/curve_method_cases.py.",
+ "within": 1e-09,
+ "cases": [
+  {
+   "name": "Daire: merkez tıklanır, yarıçap noktayla",
+   "tool": "circle",
+   "objects": [],
+   "steps": [
+    {
+     "click": [
+      0,
+      0
+     ]
+    },
+    {
+     "click": [
+      3,
+      4
+     ]
+    }
+   ],
+   "expect": {
+    "circle": {
+     "c": [
+      0,
+      0
+     ],
+     "r": 5
+    }
+   }
+  },
+  {
+   "name": "Daire: merkez, yazılan yarıçap",
+   "tool": "circle",
+   "objects": [],
+   "steps": [
+    {
+     "click": [
+      2,
+      1
+     ]
+    },
+    {
+     "type": "7.5"
+    }
+   ],
+   "expect": {
+    "circle": {
+     "c": [
+      2,
+      1
+     ],
+     "r": 7.5
+    }
+   }
+  },
+  {
+   "name": "Daire: Çap (Ç) ile yazılan çap",
+   "tool": "circle",
+   "objects": [],
+   "steps": [
+    {
+     "click": [
+      0,
+      0
+     ]
+    },
+    {
+     "type": "Ç"
+    },
+    {
+     "type": "12"
+    }
+   ],
+   "expect": {
+    "circle": {
+     "c": [
+      0,
+      0
+     ],
+     "r": 6
+    }
+   }
+  },
+  {
+   "name": "Daire: şeridin Merkez, çap yöntemi",
+   "tool": "circle",
+   "objects": [],
+   "steps": [
+    {
+     "type": "MÇ"
+    },
+    {
+     "click": [
+      1,
+      1
+     ]
+    },
+    {
+     "type": "10"
+    }
+   ],
+   "expect": {
+    "circle": {
+     "c": [
+      1,
+      1
+     ],
+     "r": 5
+    }
+   }
+  },
+  {
+   "name": "Daire: 2N, tıklanan iki uç",
+   "tool": "circle",
+   "objects": [],
+   "steps": [
+    {
+     "type": "2N"
+    },
+    {
+     "click": [
+      0,
+      0
+     ]
+    },
+    {
+     "click": [
+      6,
+      8
+     ]
+    }
+   ],
+   "expect": {
+    "circle": {
+     "c": [
+      3,
+      4
+     ],
+     "r": 5
+    }
+   }
+  },
+  {
+   "name": "Daire: 2N, yazılan iki uç",
+   "tool": "circle",
+   "objects": [],
+   "steps": [
+    {
+     "type": "2N"
+    },
+    {
+     "type": "487000,4420000"
+    },
+    {
+     "type": "487006,4420008"
+    }
+   ],
+   "expect": {
+    "circle": {
+     "c": [
+      3,
+      4
+     ],
+     "r": 5
+    }
+   }
+  },
+  {
+   "name": "Daire: 3N, genel üç nokta",
+   "tool": "circle",
+   "objects": [],
+   "steps": [
+    {
+     "type": "3N"
+    },
+    {
+     "click": [
+      1,
+      2
+     ]
+    },
+    {
+     "click": [
+      7,
+      3
+     ]
+    },
+    {
+     "click": [
+      4,
+      9
+     ]
+    }
+   ],
+   "expect": {
+    "circle": {
+     "c": [
+      3.576923076923077,
+      5.038461538461538
+     ],
+     "r": 3.9840658961780187
+    }
+   }
+  },
+  {
+   "name": "Daire: 3N aynı doğruda uyarır",
+   "tool": "circle",
+   "objects": [],
+   "steps": [
+    {
+     "type": "3N"
+    },
+    {
+     "click": [
+      0,
+      0
+     ]
+    },
+    {
+     "click": [
+      1,
+      1
+     ]
+    },
+    {
+     "click": [
+      5,
+      5
+     ]
+    }
+   ],
+   "expect": {
+    "warn": "Üç nokta aynı doğru üzerinde; daire geçmez. Doğrunun dışında bir nokta verin."
+   }
+  },
+  {
+   "name": "Daire: TTY, iki dik doğru ve yazılan yarıçap",
+   "tool": "circle",
+   "objects": [
+    {
+     "line": [
+      [
+       -20,
+       0
+      ],
+      [
+       20,
+       0
+      ]
+     ]
+    },
+    {
+     "line": [
+      [
+       0,
+       -20
+      ],
+      [
+       0,
+       20
+      ]
+     ]
+    }
+   ],
+   "steps": [
+    {
+     "type": "TTY"
+    },
+    {
+     "click": [
+      4,
+      0
+     ]
+    },
+    {
+     "click": [
+      0,
+      4
+     ]
+    },
+    {
+     "type": "3"
+    }
+   ],
+   "expect": {
+    "circle": {
+     "c": [
+      3,
+      3
+     ],
+     "r": 3
+    }
+   }
+  },
+  {
+   "name": "Daire: TTY, 10 m arayla paralel doğrular ve 5 m",
+   "tool": "circle",
+   "objects": [
+    {
+     "line": [
+      [
+       -20,
+       0
+      ],
+      [
+       20,
+       0
+      ]
+     ]
+    },
+    {
+     "line": [
+      [
+       -20,
+       10
+      ],
+      [
+       20,
+       10
+      ]
+     ]
+    }
+   ],
+   "steps": [
+    {
+     "type": "TTY"
+    },
+    {
+     "click": [
+      -6,
+      0
+     ]
+    },
+    {
+     "click": [
+      2,
+      10
+     ]
+    },
+    {
+     "type": "5"
+    }
+   ],
+   "expect": {
+    "circle": {
+     "c": [
+      -2,
+      5
+     ],
+     "r": 5
+    }
+   }
+  },
+  {
+   "name": "Daire: TTY, paralel doğrular ve başka yarıçap uyarır",
+   "tool": "circle",
+   "objects": [
+    {
+     "line": [
+      [
+       -20,
+       0
+      ],
+      [
+       20,
+       0
+      ]
+     ]
+    },
+    {
+     "line": [
+      [
+       -20,
+       10
+      ],
+      [
+       20,
+       10
+      ]
+     ]
+    }
+   ],
+   "steps": [
+    {
+     "type": "TTY"
+    },
+    {
+     "click": [
+      -6,
+      0
+     ]
+    },
+    {
+     "click": [
+      2,
+      10
+     ]
+    },
+    {
+     "type": "3"
+    }
+   ],
+   "expect": {
+    "warn": "İki doğru paralel; yalnız aralarındaki uzaklığın yarısı olan yarıçapla ikisine birden teğet daire olur."
+   }
+  },
+  {
+   "name": "Daire: TTT, üçgenin iç teğet dairesi",
+   "tool": "circle",
+   "objects": [
+    {
+     "line": [
+      [
+       -20,
+       0
+      ],
+      [
+       20,
+       0
+      ]
+     ]
+    },
+    {
+     "line": [
+      [
+       0,
+       -20
+      ],
+      [
+       0,
+       20
+      ]
+     ]
+    },
+    {
+     "line": [
+      [
+       16,
+       -3
+      ],
+      [
+       -4,
+       12
+      ]
+     ]
+    }
+   ],
+   "steps": [
+    {
+     "type": "TTT"
+    },
+    {
+     "click": [
+      3.5,
+      0
+     ]
+    },
+    {
+     "click": [
+      0,
+      2.5
+     ]
+    },
+    {
+     "click": [
+      4.8,
+      5.4
+     ]
+    }
+   ],
+   "expect": {
+    "circle": {
+     "c": [
+      3,
+      3
+     ],
+     "r": 3
+    }
+   }
+  },
+  {
+   "name": "Yay: 3 nokta tıklanır",
+   "tool": "arc",
+   "objects": [],
+   "steps": [
+    {
+     "click": [
+      10,
+      0
+     ]
+    },
+    {
+     "click": [
+      0,
+      10
+     ]
+    },
+    {
+     "click": [
+      -10,
+      0
+     ]
+    }
+   ],
+   "expect": {
+    "arc": {
+     "c": [
+      0,
+      0
+     ],
+     "r": 10,
+     "a0": 0,
+     "a1": 3.141592653589793
+    }
+   }
+  },
+  {
+   "name": "Yay: 3 nokta, genel",
+   "tool": "arc",
+   "objects": [],
+   "steps": [
+    {
+     "click": [
+      1,
+      2
+     ]
+    },
+    {
+     "click": [
+      4,
+      9
+     ]
+    },
+    {
+     "click": [
+      7,
+      3
+     ]
+    }
+   ],
+   "expect": {
+    "arc": {
+     "c": [
+      3.5769230769365095,
+      5.038461538031697
+     ],
+     "r": 3.9840658961780187,
+     "a0": 5.746077053085206,
+     "a1": 4.008998262513427
+    }
+   }
+  },
+  {
+   "name": "Yay: başlangıç, M, merkez, bitiş",
+   "tool": "arc",
+   "objects": [],
+   "steps": [
+    {
+     "click": [
+      10,
+      0
+     ]
+    },
+    {
+     "type": "M"
+    },
+    {
+     "click": [
+      0,
+      0
+     ]
+    },
+    {
+     "click": [
+      0,
+      5
+     ]
+    }
+   ],
+   "expect": {
+    "arc": {
+     "c": [
+      0,
+      0
+     ],
+     "r": 10,
+     "a0": 0,
+     "a1": 1.5707963267948966
+    }
+   }
+  },
+  {
+   "name": "Yay: BMS yöntemi",
+   "tool": "arc",
+   "objects": [],
+   "steps": [
+    {
+     "type": "BMS"
+    },
+    {
+     "click": [
+      10,
+      0
+     ]
+    },
+    {
+     "click": [
+      0,
+      0
+     ]
+    },
+    {
+     "click": [
+      -5,
+      0
+     ]
+    }
+   ],
+   "expect": {
+    "arc": {
+     "c": [
+      0,
+      0
+     ],
+     "r": 10,
+     "a0": 0,
+     "a1": 3.141592653589793
+    }
+   }
+  },
+  {
+   "name": "Yay: BMA yöntemi, yazılan 90",
+   "tool": "arc",
+   "objects": [],
+   "steps": [
+    {
+     "type": "BMA"
+    },
+    {
+     "click": [
+      10,
+      0
+     ]
+    },
+    {
+     "click": [
+      0,
+      0
+     ]
+    },
+    {
+     "type": "90"
+    }
+   ],
+   "expect": {
+    "arc": {
+     "c": [
+      0,
+      0
+     ],
+     "r": 10,
+     "a0": 0,
+     "a1": 1.5707963267948966
+    }
+   }
+  },
+  {
+   "name": "Yay: BMU yöntemi, yazılan kiriş 10",
+   "tool": "arc",
+   "objects": [],
+   "steps": [
+    {
+     "type": "BMU"
+    },
+    {
+     "click": [
+      10,
+      0
+     ]
+    },
+    {
+     "click": [
+      0,
+      0
+     ]
+    },
+    {
+     "type": "10"
+    }
+   ],
+   "expect": {
+    "arc": {
+     "c": [
+      0,
+      0
+     ],
+     "r": 10,
+     "a0": 0,
+     "a1": 1.0471975511965979
+    }
+   }
+  },
+  {
+   "name": "Yay: BMU, çaptan uzun kiriş uyarır",
+   "tool": "arc",
+   "objects": [],
+   "steps": [
+    {
+     "type": "BMU"
+    },
+    {
+     "click": [
+      10,
+      0
+     ]
+    },
+    {
+     "click": [
+      0,
+      0
+     ]
+    },
+    {
+     "type": "25"
+    }
+   ],
+   "expect": {
+    "warn": "Kiriş dairenin çapından uzun; en çok çap kadar bir kiriş verin."
+   }
+  },
+  {
+   "name": "Yay: BSA yöntemi, yazılan 90",
+   "tool": "arc",
+   "objects": [],
+   "steps": [
+    {
+     "type": "BSA"
+    },
+    {
+     "click": [
+      10,
+      0
+     ]
+    },
+    {
+     "click": [
+      0,
+      10
+     ]
+    },
+    {
+     "type": "90"
+    }
+   ],
+   "expect": {
+    "arc": {
+     "c": [
+      0,
+      0
+     ],
+     "r": 10,
+     "a0": 0,
+     "a1": 1.5707963267948966
+    }
+   }
+  },
+  {
+   "name": "Yay: BSY yöntemi, yazılan yön 90",
+   "tool": "arc",
+   "objects": [],
+   "steps": [
+    {
+     "type": "BSY"
+    },
+    {
+     "click": [
+      10,
+      0
+     ]
+    },
+    {
+     "click": [
+      -10,
+      0
+     ]
+    },
+    {
+     "type": "90"
+    }
+   ],
+   "expect": {
+    "arc": {
+     "c": [
+      0,
+      0
+     ],
+     "r": 10,
+     "a0": 4.4493554442714426e-70,
+     "a1": 3.141592653589793
+    }
+   }
+  },
+  {
+   "name": "Yay: BSY yöntemi, tıklanan yön",
+   "tool": "arc",
+   "objects": [],
+   "steps": [
+    {
+     "type": "BSY"
+    },
+    {
+     "click": [
+      10,
+      0
+     ]
+    },
+    {
+     "click": [
+      -10,
+      0
+     ]
+    },
+    {
+     "click": [
+      10,
+      5
+     ]
+    }
+   ],
+   "expect": {
+    "arc": {
+     "c": [
+      0,
+      0
+     ],
+     "r": 10,
+     "a0": 4.4493554442714426e-70,
+     "a1": 3.141592653589793
+    }
+   }
+  },
+  {
+   "name": "Yay: BSR yöntemi, yazılan yarıçap 12,5",
+   "tool": "arc",
+   "objects": [],
+   "steps": [
+    {
+     "type": "BSR"
+    },
+    {
+     "click": [
+      10,
+      0
+     ]
+    },
+    {
+     "click": [
+      -10,
+      0
+     ]
+    },
+    {
+     "type": "12.5"
+    }
+   ],
+   "expect": {
+    "arc": {
+     "c": [
+      0,
+      -7.5
+     ],
+     "r": 12.5,
+     "a0": 0.6435011087932844,
+     "a1": 2.498091544796509
+    }
+   }
+  },
+  {
+   "name": "Yay: BSR, kirişin yarısından küçük yarıçap uyarır",
+   "tool": "arc",
+   "objects": [],
+   "steps": [
+    {
+     "type": "BSR"
+    },
+    {
+     "click": [
+      10,
+      0
+     ]
+    },
+    {
+     "click": [
+      -10,
+      0
+     ]
+    },
+    {
+     "type": "5"
+    }
+   ],
+   "expect": {
+    "warn": "Yarıçap iki uç arasındaki kirişin yarısından küçük; en az kirişin yarısı kadar bir yarıçap verin."
+   }
+  },
+  {
+   "name": "Yay: başlangıç, B, bitiş, M, tıklanan merkez",
+   "tool": "arc",
+   "objects": [],
+   "steps": [
+    {
+     "click": [
+      10,
+      0
+     ]
+    },
+    {
+     "type": "B"
+    },
+    {
+     "click": [
+      0,
+      10
+     ]
+    },
+    {
+     "type": "M"
+    },
+    {
+     "click": [
+      0,
+      0
+     ]
+    }
+   ],
+   "expect": {
+    "arc": {
+     "c": [
+      0,
+      0
+     ],
+     "r": 10,
+     "a0": 0,
+     "a1": 1.5707963267948966
+    }
+   }
+  },
+  {
+   "name": "Yay: MBA yöntemi, yazılan eksi 90",
+   "tool": "arc",
+   "objects": [],
+   "steps": [
+    {
+     "type": "MBA"
+    },
+    {
+     "click": [
+      0,
+      0
+     ]
+    },
+    {
+     "click": [
+      10,
+      0
+     ]
+    },
+    {
+     "type": "-90"
+    }
+   ],
+   "expect": {
+    "arc": {
+     "c": [
+      0,
+      0
+     ],
+     "r": 10,
+     "a0": 4.71238898038469,
+     "a1": 0
+    }
+   }
+  },
+  {
+   "name": "Yay: MBU yöntemi, yazılan eksi kiriş",
+   "tool": "arc",
+   "objects": [],
+   "steps": [
+    {
+     "type": "MBU"
+    },
+    {
+     "click": [
+      0,
+      0
+     ]
+    },
+    {
+     "click": [
+      10,
+      0
+     ]
+    },
+    {
+     "type": "-10"
+    }
+   ],
+   "expect": {
+    "arc": {
+     "c": [
+      0,
+      0
+     ],
+     "r": 10,
+     "a0": 0,
+     "a1": 5.235987755982989
+    }
+   }
+  },
+  {
+   "name": "Yay: önce merkez (M), başlangıç, bitiş",
+   "tool": "arc",
+   "objects": [],
+   "steps": [
+    {
+     "type": "M"
+    },
+    {
+     "click": [
+      0,
+      0
+     ]
+    },
+    {
+     "click": [
+      0,
+      10
+     ]
+    },
+    {
+     "click": [
+      -3,
+      0
+     ]
+    }
+   ],
+   "expect": {
+    "arc": {
+     "c": [
+      0,
+      0
+     ],
+     "r": 10,
+     "a0": 1.5707963267948966,
+     "a1": 3.141592653589793
+    }
+   }
+  },
+  {
+   "name": "Yay: Devam, çizginin bitişinden",
+   "tool": "arc",
+   "objects": [
+    {
+     "line": [
+      [
+       0,
+       0
+      ],
+      [
+       20,
+       0
+      ]
+     ]
+    }
+   ],
+   "steps": [
+    {
+     "type": "D"
+    },
+    {
+     "click": [
+      30,
+      10
+     ]
+    }
+   ],
+   "expect": {
+    "arc": {
+     "c": [
+      20,
+      10
+     ],
+     "r": 10,
+     "a0": 4.71238898038469,
+     "a1": 5e-70
+    }
+   }
+  },
+  {
+   "name": "Yay: saat yönünde verilen yaydan Devam, verilen son noktadan",
+   "tool": "arc",
+   "objects": [],
+   "steps": [
+    {
+     "click": [
+      -10,
+      0
+     ]
+    },
+    {
+     "click": [
+      0,
+      10
+     ]
+    },
+    {
+     "click": [
+      10,
+      0
+     ]
+    },
+    {
+     "type": "D"
+    },
+    {
+     "click": [
+      20,
+      0
+     ]
+    }
+   ],
+   "expect": {
+    "arc": {
+     "c": [
+      15,
+      0
+     ],
+     "r": 5,
+     "a0": 3.141592653589793,
+     "a1": 0
+    }
+   }
+  },
+  {
+   "name": "Yay: Devam, bitiş teğetin doğrusunda uyarır",
+   "tool": "arc",
+   "objects": [
+    {
+     "line": [
+      [
+       0,
+       0
+      ],
+      [
+       20,
+       0
+      ]
+     ]
+    }
+   ],
+   "steps": [
+    {
+     "type": "D"
+    },
+    {
+     "click": [
+      40,
+      0
+     ]
+    }
+   ],
+   "expect": {
+    "warn": "Bitiş noktası başlangıçtaki teğetin doğrusunda; yay değil doğru olur. Doğrunun dışında bir bitiş verin."
+   }
+  },
+  {
+   "name": "Elips: eksen uçları ve yazılan yarı eksen",
+   "tool": "ellipse",
+   "objects": [],
+   "steps": [
+    {
+     "click": [
+      0,
+      0
+     ]
+    },
+    {
+     "click": [
+      20,
+      0
+     ]
+    },
+    {
+     "type": "4"
+    }
+   ],
+   "expect": {
+    "ellipse": {
+     "c": [
+      10,
+      0
+     ],
+     "major": [
+      10,
+      0
+     ],
+     "ratio": 0.4,
+     "t0": 0,
+     "t1": 0
+    }
+   }
+  },
+  {
+   "name": "Elips: eksen uçları ve gösterilen yarı eksen",
+   "tool": "ellipse",
+   "objects": [],
+   "steps": [
+    {
+     "click": [
+      0,
+      0
+     ]
+    },
+    {
+     "click": [
+      20,
+      0
+     ]
+    },
+    {
+     "click": [
+      10,
+      4
+     ]
+    }
+   ],
+   "expect": {
+    "ellipse": {
+     "c": [
+      10,
+      0
+     ],
+     "major": [
+      10,
+      0
+     ],
+     "ratio": 0.4,
+     "t0": 0,
+     "t1": 0
+    }
+   }
+  },
+  {
+   "name": "Elips: Merkez, eksenin ucu, Döndürme 60",
+   "tool": "ellipse",
+   "objects": [],
+   "steps": [
+    {
+     "type": "M"
+    },
+    {
+     "click": [
+      0,
+      0
+     ]
+    },
+    {
+     "click": [
+      0,
+      10
+     ]
+    },
+    {
+     "type": "D"
+    },
+    {
+     "type": "60"
+    }
+   ],
+   "expect": {
+    "ellipse": {
+     "c": [
+      0,
+      0
+     ],
+     "major": [
+      0,
+      10
+     ],
+     "ratio": 0.5,
+     "t0": 0,
+     "t1": 0
+    }
+   }
+  },
+  {
+   "name": "Elips: Döndürme 95 uyarır",
+   "tool": "ellipse",
+   "objects": [],
+   "steps": [
+    {
+     "click": [
+      0,
+      0
+     ]
+    },
+    {
+     "click": [
+      20,
+      0
+     ]
+    },
+    {
+     "type": "D"
+    },
+    {
+     "type": "95"
+    }
+   ],
+   "expect": {
+    "warn": "Döndürme açısı 0 ile 89,4° (1,5603 radyan) arasında olmalı."
+   }
+  },
+  {
+   "name": "Elips: Yay, yazılan açılar 0 ve 90",
+   "tool": "ellipse",
+   "objects": [],
+   "steps": [
+    {
+     "type": "Y"
+    },
+    {
+     "click": [
+      0,
+      0
+     ]
+    },
+    {
+     "click": [
+      20,
+      0
+     ]
+    },
+    {
+     "type": "4"
+    },
+    {
+     "type": "0"
+    },
+    {
+     "type": "90"
+    }
+   ],
+   "expect": {
+    "ellipse": {
+     "c": [
+      10,
+      0
+     ],
+     "major": [
+      10,
+      0
+     ],
+     "ratio": 0.4,
+     "t0": 0,
+     "t1": 1.5707963267948966
+    }
+   }
+  },
+  {
+   "name": "Elips: Yay, gösterilen açılar",
+   "tool": "ellipse",
+   "objects": [],
+   "steps": [
+    {
+     "type": "Y"
+    },
+    {
+     "click": [
+      0,
+      0
+     ]
+    },
+    {
+     "click": [
+      20,
+      0
+     ]
+    },
+    {
+     "type": "4"
+    },
+    {
+     "click": [
+      20,
+      10
+     ]
+    },
+    {
+     "click": [
+      0,
+      10
+     ]
+    }
+   ],
+   "expect": {
+    "ellipse": {
+     "c": [
+      10,
+      0
+     ],
+     "major": [
+      10,
+      0
+     ],
+     "ratio": 0.4,
+     "t0": 1.1902899496825317,
+     "t1": 1.9513027039072615
+    }
+   }
+  }
+ ]
+}

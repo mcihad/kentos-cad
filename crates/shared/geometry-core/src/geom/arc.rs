@@ -45,15 +45,22 @@ pub struct Circle {
 
 crate::json_struct!(Circle { c, r });
 
+/// Three points are collinear when the sine of the angle at the first is at most this (docs/adr/0289): the
+/// circle through them would be at least 5·10⁸ times as large as their spread.
+pub const COLLINEAR: f64 = 1e-9;
+
 pub fn circle_through(p1: Vec2, p2: Vec2, p3: Vec2) -> Option<Circle> {
     let ax = p2.x - p1.x;
     let ay = p2.y - p1.y;
     let bx = p3.x - p1.x;
     let by = p3.y - p1.y;
-    let d = 2.0 * (ax * by - ay * bx);
-    if d.abs() < 1e-12 {
-        return None; // collinear
+    let cross = ax * by - ay * bx;
+    // Collinear (docs/adr/0289): the sine of the angle at p1 at most 1e-9, whatever the scale; a coincident
+    // pair is collinear too.
+    if !(cross.abs() > COLLINEAR * js_hypot(ax, ay) * js_hypot(bx, by)) {
+        return None;
     }
+    let d = 2.0 * cross;
     let a2 = ax * ax + ay * ay;
     let b2 = bx * bx + by * by;
     let cx = (by * a2 - ay * b2) / d;

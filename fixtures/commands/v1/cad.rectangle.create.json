@@ -1,0 +1,2440 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.rectangle.create",
+  "commandVersion": 1,
+  "title": "Dikdörtgen oluştur",
+  "note": "Written by scripts/fixtures/shape_command_cases.py from the shapes' definitions (docs/adr/0290); do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ürün komutu",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "gis",
+      "drawingFont": "barlow"
+    },
+    "origin": {
+      "x": 487000,
+      "y": 4420000
+    },
+    "layers": [
+      {
+        "id": "yapi",
+        "name": "Yapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "pafta",
+        "name": "Pafta",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "arsiv",
+        "name": "Arşiv",
+        "type": "group",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "eski",
+            "name": "Eski",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "taslak",
+        "name": "Taslak",
+        "type": "group",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "notlar",
+            "name": "Notlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "yapi",
+    "entities": [
+      {
+        "kind": "point",
+        "id": 4,
+        "layerId": "yapi",
+        "attrs": {},
+        "p": {
+          "x": 487001,
+          "y": 4420001
+        }
+      },
+      {
+        "kind": "polygon",
+        "id": 9,
+        "layerId": "sinir",
+        "attrs": {
+          "Ada": "101"
+        },
+        "pts": [
+          {
+            "x": 487000,
+            "y": 4420000
+          },
+          {
+            "x": 487040,
+            "y": 4420000
+          },
+          {
+            "x": 487040,
+            "y": 4420030
+          }
+        ]
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "İki köşe: kenarlar doğu ve kuzey boyunca; adım “Ekle”",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "b": {
+                "x": 487030,
+                "y": 4420022.5
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420022.5
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420022.5
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Karşı köşe güneybatıda: halka verilen ilk köşeden",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487030,
+                "y": 4420022.5
+              },
+              "b": {
+                "x": 487010,
+                "y": 4420010
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487030,
+                    "y": 4420022.5
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420022.5
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420010
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dönüş 30°: kenarlar dönüşün doğrultusunda",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "b": {
+                "x": 487030,
+                "y": 4420022.5
+              }
+            },
+            "rotation": 0.5235987755982988
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487030.41265877365,
+                    "y": 4420021.785254038
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420022.5
+                  },
+                  {
+                    "x": 487009.58734122635,
+                    "y": 4420010.714745962
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dönüş 90°",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "b": {
+                "x": 487030,
+                "y": 4420022.5
+              }
+            },
+            "rotation": 1.5707963267948966
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420022.5
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420022.5
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420010
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boy ve en, kuzeydoğuya",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "size",
+              "corner": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "length": 20,
+              "width": 12.5,
+              "toward": {
+                "x": 487015,
+                "y": 4420015
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420022.5
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420022.5
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boy ve en, güneybatıya",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "size",
+              "corner": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "length": 20,
+              "width": 12.5,
+              "toward": {
+                "x": 487005,
+                "y": 4420005
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 486990,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 486990,
+                    "y": 4419997.5
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4419997.5
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boy ve en, kuzeybatıya, 30° dönük",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "size",
+              "corner": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "length": 20,
+              "width": 12.5,
+              "toward": {
+                "x": 487000,
+                "y": 4420020
+              }
+            },
+            "rotation": 0.5235987755982988
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 486992.6794919245,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 486986.4294919243,
+                    "y": 4420010.825317548
+                  },
+                  {
+                    "x": 487003.7499999998,
+                    "y": 4420020.825317548
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alan 250 m² ve boy 20: en 12.5",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "area",
+              "corner": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "area": 250,
+              "length": 20,
+              "toward": {
+                "x": 487015,
+                "y": 4420015
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420022.5
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420022.5
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alan 100 m², boy 8: en 12.5, güneydoğuya",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "area",
+              "corner": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "area": 100,
+              "length": 8,
+              "toward": {
+                "x": 487015,
+                "y": 4420005
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487018,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487018,
+                    "y": 4419997.5
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4419997.5
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kenar ve en solunda",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "edge",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487020,
+                "y": 4420000
+              },
+              "width": 5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420005
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420005
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kenar ve eksi en: sağında",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "edge",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487020,
+                "y": 4420000
+              },
+              "width": -5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4419995
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4419995
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğik kenar (6, 8) ve en 4; dönüş okunmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "edge",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487006,
+                "y": 4420008
+              },
+              "width": 4
+            },
+            "rotation": 1.0
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487006,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487002.8,
+                    "y": 4420010.4
+                  },
+                  {
+                    "x": 486996.8,
+                    "y": 4420002.4
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Köşeler 2 m yuvarlak: her köşede çeyrek yay",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "b": {
+                "x": 487030,
+                "y": 4420022.5
+              }
+            },
+            "corners": {
+              "kind": "fillet",
+              "radius": 2
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487010,
+                    "y": 4420012
+                  },
+                  {
+                    "x": 487012,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487028,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420012
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420020.5
+                  },
+                  {
+                    "x": 487028,
+                    "y": 4420022.5
+                  },
+                  {
+                    "x": 487012,
+                    "y": 4420022.5
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420020.5
+                  }
+                ],
+                "bulges": [
+                  0.41421356237309503,
+                  0,
+                  0.41421356237309503,
+                  0,
+                  0.41421356237309503,
+                  0,
+                  0.41421356237309503,
+                  0
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Köşelere 1.5 m pah",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "b": {
+                "x": 487030,
+                "y": 4420022.5
+              }
+            },
+            "corners": {
+              "kind": "chamfer",
+              "distance": 1.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487010,
+                    "y": 4420011.5
+                  },
+                  {
+                    "x": 487011.5,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487028.5,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420011.5
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420021
+                  },
+                  {
+                    "x": 487028.5,
+                    "y": 4420022.5
+                  },
+                  {
+                    "x": 487011.5,
+                    "y": 4420022.5
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420021
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Keskin köşe açıkça",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "b": {
+                "x": 487030,
+                "y": 4420022.5
+              }
+            },
+            "corners": {
+              "kind": "sharp"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420022.5
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420022.5
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sağa açılan kenarın köşeleri yuvarlak: yaylar halkanın yönünde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "edge",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487020,
+                "y": 4420000
+              },
+              "width": -5
+            },
+            "corners": {
+              "kind": "fillet",
+              "radius": 1
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4419999
+                  },
+                  {
+                    "x": 487001,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487019,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4419999
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4419996
+                  },
+                  {
+                    "x": 487019,
+                    "y": 4419995
+                  },
+                  {
+                    "x": 487001,
+                    "y": 4419995
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4419996
+                  }
+                ],
+                "bulges": [
+                  -0.41421356237309503,
+                  0,
+                  -0.41421356237309503,
+                  0,
+                  -0.41421356237309503,
+                  0,
+                  -0.41421356237309503,
+                  0
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Renk, kalınlık, öznitelik ve etiket taşınır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "b": {
+                "x": 487030,
+                "y": 4420022.5
+              }
+            },
+            "color": "#E5484D",
+            "lineWeight": 0.5,
+            "attrs": {
+              "Tür": "Oda"
+            },
+            "label": "Salon"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "yapi",
+                "color": "#E5484D",
+                "lineWeight": 0.5,
+                "attrs": {
+                  "Tür": "Oda"
+                },
+                "label": "Salon",
+                "pts": [
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420022.5
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420022.5
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gizli katmana uyarıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "gizli",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "b": {
+                "x": 487030,
+                "y": 4420022.5
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "gizli",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420022.5
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420022.5
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: alan olacağı gibi, yuvası 0",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "b": {
+                "x": 487030,
+                "y": 4420022.5
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entity": {
+                "kind": "polygon",
+                "id": 0,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420022.5
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420022.5
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "İlk köşe sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "b": {
+                "x": 487030,
+                "y": 4420022.5
+              }
+            }
+          },
+          "nonFinite": {
+            "frame.a.x": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "İlk köşenin doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "frame.a.x"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dönüş sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "b": {
+                "x": 487030,
+                "y": 4420022.5
+              }
+            }
+          },
+          "nonFinite": {
+            "rotation": "Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Dönüş sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "rotation"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boy sıfır olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "size",
+              "corner": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "length": 0,
+              "width": 12.5,
+              "toward": {
+                "x": 487015,
+                "y": 4420015
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_distance",
+              "message": "Uzunluk sıfırdan büyük olmalı.",
+              "path": "frame.length"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alan eksi olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "area",
+              "corner": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "area": -5,
+              "length": 20,
+              "toward": {
+                "x": 487015,
+                "y": 4420015
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_distance",
+              "message": "Alan sıfırdan büyük olmalı.",
+              "path": "frame.area"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kenarın eni sıfır olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "edge",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487020,
+                "y": 4420000
+              },
+              "width": 0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_distance",
+              "message": "Genişlik sıfır olamaz: kenarın solu için artı, sağı için eksi bir genişlik verin.",
+              "path": "frame.width"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yarıçap sıfır olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "b": {
+                "x": 487030,
+                "y": 4420022.5
+              }
+            },
+            "corners": {
+              "kind": "fillet",
+              "radius": 0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_distance",
+              "message": "Köşe yarıçapı sıfırdan büyük olmalı; keskin köşe için corners'ı vermeyin.",
+              "path": "corners.radius"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Köşeler dönüşün doğrultusunda bir doğru üzerinde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "b": {
+                "x": 487030,
+                "y": 4420010
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "degenerate_shape",
+              "message": "Dikdörtgenin bir kenarı sıfır uzunlukta: köşeler çakışıyor ya da dönüşün doğrultusunda bir doğru üzerinde. Başka bir köşe verin.",
+              "path": "frame"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kenarın iki ucu çakışıyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "edge",
+              "a": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "b": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "width": 5
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "degenerate_shape",
+              "message": "Dikdörtgenin bir kenarı sıfır uzunlukta: köşeler çakışıyor ya da dönüşün doğrultusunda bir doğru üzerinde. Başka bir köşe verin.",
+              "path": "frame"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yarıçap kenarlara sığmıyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "b": {
+                "x": 487030,
+                "y": 4420022.5
+              }
+            },
+            "corners": {
+              "kind": "fillet",
+              "radius": 7
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_corners",
+              "message": "Yarıçap bu kenarlar için çok büyük. Daha küçük bir yarıçap ya da pah verin.",
+              "path": "corners"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pah kenara sığmıyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "b": {
+                "x": 487030,
+                "y": 4420022.5
+              }
+            },
+            "corners": {
+              "kind": "chamfer",
+              "distance": 13
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_corners",
+              "message": "Pah mesafesi kenar boyundan büyük. Daha küçük bir yarıçap ya da pah verin.",
+              "path": "corners"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kalınlık 100 mm'den büyük: cad.polygon.create'in reddi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "b": {
+                "x": 487030,
+                "y": 4420022.5
+              }
+            },
+            "lineWeight": 101
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_line_weight",
+              "message": "Çizgi kalınlığı 0 ile 100 mm arasında bir sayı olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.",
+              "path": "lineWeight"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli katman",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kilitli",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "b": {
+                "x": 487030,
+                "y": 4420022.5
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan katman",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yok",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "b": {
+                "x": 487030,
+                "y": 4420022.5
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Katman değil grup",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "pafta",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "b": {
+                "x": 487030,
+                "y": 4420022.5
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Pafta” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm sayı değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "b": {
+                "x": 487030,
+                "y": 4420022.5
+              }
+            },
+            "expectedRevision": "012"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “012” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm geçmişte kaldıysa conflict, hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "old"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "b": {
+                "x": 487030,
+                "y": 4420022.5
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "frame": {
+              "kind": "corners",
+              "a": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "b": {
+                "x": 487030,
+                "y": 4420022.5
+              }
+            },
+            "expectedRevision": "$old"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

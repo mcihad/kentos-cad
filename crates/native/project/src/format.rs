@@ -409,6 +409,49 @@ impl Format {
         }
     }
 
+    /// A turn typed in the project's angle unit, in radians counter-clockwise: as typed in a CAD project,
+    /// clockwise in a CBS one, its directions running that way (docs/adr/0291, as Görünümü döndür's and UCS's).
+    pub fn turn_from_typed(&self, typed: f64) -> f64 {
+        let rad = self.angle_from_typed(typed);
+        match self.axes {
+            Axes::Cad => rad,
+            Axes::Gis => -rad,
+        }
+    }
+
+    /// A direction typed in the project's way, as a geometry angle in radians (counter-clockwise from east): a
+    /// CAD project's from east counter-clockwise, a CBS project's a semt, from north clockwise (docs/adr/0291).
+    pub fn direction_from_typed(&self, typed: f64) -> f64 {
+        let rad = self.angle_from_typed(typed);
+        match self.axes {
+            Axes::Cad => rad,
+            Axes::Gis => std::f64::consts::FRAC_PI_2 - rad,
+        }
+    }
+
+    /// A turn (radians counter-clockwise) as the project reads it, four decimals and the unit: degrees or grads,
+    /// counter-clockwise in a CAD project, clockwise in a CBS one (docs/adr/0291).
+    pub fn turn(&self, rad: f64) -> String {
+        let way = match self.axes {
+            Axes::Cad => rad,
+            Axes::Gis => -rad,
+        };
+        let v = match self.angle_unit {
+            AngleUnit::Deg => (way * 180.0) / std::f64::consts::PI,
+            AngleUnit::Grad => (way * 200.0) / std::f64::consts::PI,
+        };
+        format!("{}{}", fixed(v, 4), self.angle_unit_label())
+    }
+
+    /// How a typed turn runs, as a prompt says it: “derece, saat yönü tersine” or “grad, saat yönünde”.
+    pub fn turn_words(&self) -> String {
+        let way = match self.axes {
+            Axes::Cad => "saat yönü tersine",
+            Axes::Gis => "saat yönünde",
+        };
+        format!("{}, {way}", self.angle_unit_name())
+    }
+
     /// The project's angle unit as a prompt says it: `derece` or `grad`.
     pub fn angle_unit_name(&self) -> &'static str {
         match self.angle_unit {

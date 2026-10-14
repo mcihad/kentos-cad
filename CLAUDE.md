@@ -380,6 +380,17 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   yay kipinde Genişlik (E) ve teğet yayla Kapat (K), kenar başına başlangıç ve bitiş genişliği; `cad.entities.vertex`'in Yaya dönüştür'ü
   noktadan (`through`) ya da yarıçapla (`radius`), Kenar genişliği (`width`; `cad.entities.edit`'in `EdgeWidth`'i); çekirdeğin `bulge_via`,
   `bulge_of_radius`'u; tutamaç menüsünde Noktadan ya da yarıçapla yay… ve Kenar genişliği… (Kenar düzenle) (ADR 0288);
+  dikdörtgen ve düzgün çokgen komutları: `cad.rectangle.create` (iki köşe, boyut, alan ya da kenar ve en; dönüş; keskin, yuvarlak, pah)
+  ve `cad.polygon.regular` (çember içinde, dışında, kenardan) halkayı çekirdekle hesaplar ve `cad.polygon.create`'in yolundan yazar;
+  araçlar önizlemeyi komutun hesabından (`shapes::rectangle_ring`, `regular_ring`) alır, Çakışma ve Topoloji alanı değiştirince alanın
+  eğri yapımı ve yöntemlerin doğrulanması: salt okunur `cad.curves.construct` (iki ve üç noktadan, TTY ve TTT daire; yayın on bir yöntemi ve
+  Devam; eksen uçlarından ya da merkezden elips ve eliptik yay), Yay, Daire ve Elips eğriyi onun hesabından alır ve reddini söyler;
+  bağımsız başvuru `curve_method_cases.py`, ortak durumlarda `within` (ADR 0289);
+  dönüşüm kuralları: Taşı ve Kopyala'da Yer değiştirme (Y ya da temel noktada Enter; `Memory::last_displacement`), Kopyala'da Kip
+  (`Memory::copy_single`) ve Dizi (adet, Sığdır; `cad.entities.array`'in `line`'ı), Döndür'de projenin açı düzeni
+  (`Format::turn_from_typed`, `direction_from_typed`: CAD derece saat yönü tersine, CBS grad saat yönünde) ve Noktalar, Ölçekle'de
+  Noktalar; her türün dönüşümü bağımsız başvurudan (`transform_kinds_cases.py`), dolu tarama deseniyle kalır (ADR 0291);
+  yolundan yazar (`points::write_area_by`) (ADR 0290);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);

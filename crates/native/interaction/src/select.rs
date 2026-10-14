@@ -311,12 +311,14 @@ impl Select {
                     crate::selectable::point(start.world),
                     crate::selectable::point(current.world),
                 );
-                let region = match crate::selectable::twisted_ring(cx, start.world, current.world, crossing) {
-                    // A twisted view (docs/adr/0285 §2): the box drawn on the screen is a turned ring on the ground.
-                    Some(ring) => ring,
-                    None if crossing => kentos_contracts::SelectRegion::Crossing { a, b },
-                    None => kentos_contracts::SelectRegion::Window { a, b },
-                };
+                let region =
+                    match crate::selectable::twisted_ring(cx, start.world, current.world, crossing)
+                    {
+                        // A twisted view (docs/adr/0285 §2): the box drawn on the screen is a turned ring on the ground.
+                        Some(ring) => ring,
+                        None if crossing => kentos_contracts::SelectRegion::Crossing { a, b },
+                        None => kentos_contracts::SelectRegion::Window { a, b },
+                    };
                 let ids = crate::selectable::query(cx, region);
                 if p.shift {
                     cx.selection.add(ids);
@@ -835,4 +837,3 @@ pub fn sub_line(doc: &kentos_domain::Document, selection: &crate::Selection) -> 
         uid.get(..8).unwrap_or(&uid)
     ))
 }
-

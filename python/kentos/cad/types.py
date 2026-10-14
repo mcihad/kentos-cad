@@ -1790,6 +1790,7 @@ class ArrayLayout(_Union):
 
     - :class:`GridArrayLayout` (``kind: grid``)
     - :class:`PolarArrayLayout` (``kind: polar``)
+    - :class:`LineArrayLayout` (``kind: line``)
     - :class:`PathArrayLayout` (``kind: path``)
     """
     __slots__ = ()
@@ -1826,6 +1827,32 @@ class BlockChange(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> BlockChange:
         return _variant(_BLOCK_CHANGE, "BlockChange", "op", data).from_json(data)
+
+
+class ConstructedCurve(_Union):
+    """A constructed curve, as the create commands take it.
+
+    One of:
+
+    - :class:`CircleConstructedCurve` (``kind: circle``)
+    - :class:`ArcConstructedCurve` (``kind: arc``)
+    - :class:`EllipseConstructedCurve` (``kind: ellipse``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    if TYPE_CHECKING:
+        # Every variant has these.
+        c: Vec2
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ConstructedCurve:
+        return _variant(_CONSTRUCTED_CURVE, "ConstructedCurve", "kind", data).from_json(data)
 
 
 class CornerPick(_Union):
@@ -1893,6 +1920,40 @@ class CrsSystem(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> CrsSystem:
         return _variant(_CRS_SYSTEM, "CrsSystem", "kind", data).from_json(data)
+
+
+class CurveConstruction(_Union):
+    """One curve to construct: Daire's, Yay's and Elips's methods (AutoCAD's CIRCLE, ARC and ELLIPSE). A circle by
+    its centre and radius or diameter needs no construction: `cad.circle.create` takes it (r = diameter / 2).
+
+    One of:
+
+    - :class:`CircleTwoPointsCurveConstruction` (``kind: circleTwoPoints``)
+    - :class:`CircleThreePointsCurveConstruction` (``kind: circleThreePoints``)
+    - :class:`CircleTangentTangentRadiusCurveConstruction` (``kind: circleTangentTangentRadius``)
+    - :class:`CircleTangentsCurveConstruction` (``kind: circleTangents``)
+    - :class:`ArcThreePointsCurveConstruction` (``kind: arcThreePoints``)
+    - :class:`ArcStartCentreEndCurveConstruction` (``kind: arcStartCentreEnd``)
+    - :class:`ArcStartCentreAngleCurveConstruction` (``kind: arcStartCentreAngle``)
+    - :class:`ArcStartCentreChordCurveConstruction` (``kind: arcStartCentreChord``)
+    - :class:`ArcStartEndAngleCurveConstruction` (``kind: arcStartEndAngle``)
+    - :class:`ArcStartEndDirectionCurveConstruction` (``kind: arcStartEndDirection``)
+    - :class:`ArcStartEndRadiusCurveConstruction` (``kind: arcStartEndRadius``)
+    - :class:`ArcContinueCurveConstruction` (``kind: arcContinue``)
+    - :class:`EllipseAxisCurveConstruction` (``kind: ellipseAxis``)
+    - :class:`EllipseCentreCurveConstruction` (``kind: ellipseCentre``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CurveConstruction:
+        return _variant(_CURVE_CONSTRUCTION, "CurveConstruction", "kind", data).from_json(data)
 
 
 class DimensionMeasure(_Union):
@@ -2228,6 +2289,73 @@ class PointConstruction(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> PointConstruction:
         return _variant(_POINT_CONSTRUCTION, "PointConstruction", "kind", data).from_json(data)
+
+
+class RectangleCorners(_Union):
+    """A rectangle's corners: sharp, rounded or cut, every one alike.
+
+    One of:
+
+    - :class:`SharpRectangleCorners` (``kind: sharp``)
+    - :class:`FilletRectangleCorners` (``kind: fillet``)
+    - :class:`ChamferRectangleCorners` (``kind: chamfer``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RectangleCorners:
+        return _variant(_RECTANGLE_CORNERS, "RectangleCorners", "kind", data).from_json(data)
+
+
+class RectangleFrame(_Union):
+    """Where a rectangle lies. Its sides run along `rotation` and across it, but for `edge`, whose edge gives them.
+
+    One of:
+
+    - :class:`CornersRectangleFrame` (``kind: corners``)
+    - :class:`SizeRectangleFrame` (``kind: size``)
+    - :class:`AreaRectangleFrame` (``kind: area``)
+    - :class:`EdgeRectangleFrame` (``kind: edge``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RectangleFrame:
+        return _variant(_RECTANGLE_FRAME, "RectangleFrame", "kind", data).from_json(data)
+
+
+class RegularFrame(_Union):
+    """Where a regular polygon lies.
+
+    One of:
+
+    - :class:`InscribedRegularFrame` (``kind: inscribed``)
+    - :class:`CircumscribedRegularFrame` (``kind: circumscribed``)
+    - :class:`EdgeRegularFrame` (``kind: edge``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RegularFrame:
+        return _variant(_REGULAR_FRAME, "RegularFrame", "kind", data).from_json(data)
 
 
 class SelectRegion(_Union):
@@ -4266,6 +4394,55 @@ class CrsDefinition(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CurvesConstruct(_Model):
+    """Input of `cad.curves.construct` v1: the curves the constructions give, in their order. It reads no
+    selection, view or snap setting (TODOS.md CMD-07) and writes nothing.
+
+    Refusals (`CommandError.code`, at `constructions[i]…`), checked construction by construction in order:
+    `no_constructions` (none, or more than 10 000), `not_finite` (a coordinate, a near point, an angle, a
+    length), `invalid_uid`, `entity_not_found`, `no_such_place`, `piece_gone`; then by kind:
+    `same_points` (two points of it in one place), `collinear_points` (three points on a line, an end on the
+    start's tangent), `invalid_angle` (an angle of zero or a whole turn or more, an end on the start's ray, an
+    elliptical arc's start and end at one place, a rotation outside 0 to 89.4°, one of the arc's angles
+    alone), `invalid_radius` (not above zero), `radius_too_small` (less than half the chord), `invalid_distance`
+    (a chord of zero), `chord_too_long` (more than the diameter), `invalid_half_axis` (the other half-axis not
+    above zero, or both or neither of it and the rotation), `not_tangent_kind` (an object a circle cannot touch),
+    `no_tangent_circle` (no circle touches them so), `not_an_end` (an object Devam cannot continue).
+    Attributes:
+        constructions: One to 10 000 constructions.
+    """
+    constructions: list[CurveConstruction]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["constructions"] = [e0.to_json() for e0 in self.constructions]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CurvesConstruct:
+        return cls(
+            constructions=[CurveConstruction.from_json(e0) for e0 in data["constructions"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CurvesConstructed(_Model):
+    """Output of `cad.curves.construct` v1, and its plan: the curves, one per construction, in their order."""
+    curves: list[ConstructedCurve]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["curves"] = [e0.to_json() for e0 in self.curves]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CurvesConstructed:
+        return cls(
+            curves=[ConstructedCurve.from_json(e0) for e0 in data["curves"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CustomDatum(_Model):
     """A datum the project defines: its ellipsoid and, when it has one, its
     seven parameters to WGS 84 (without them it stands alone).
@@ -5331,8 +5508,8 @@ class EntitiesArray(_Model):
     Each copy takes every field of its original (layer, colour, attributes,
     label, symbol) and a new persistent id; the originals stay. The copies
     are written place after place, each place the objects in the input's
-    order. The undo step is the tool's name: “Dizi”, “Kutupsal dizi” or
-    “Yol boyunca dizi”.
+    order. The undo step is the tool's name: “Dizi”, “Kutupsal dizi”,
+    “Yol boyunca dizi” or, for a line of copies, “Kopyala”.
 
     Objects on a locked layer (by itself or a group above it) are not
     copied: with others they are named in the output's `locked` with a
@@ -5346,7 +5523,8 @@ class EntitiesArray(_Model):
     `layout.path`), `not_finite` (the layout's numbers, in their order),
     `invalid_count` (rows and columns, or the count, out of their range),
     `invalid_spacing` (a grid direction with more than one place and no
-    spacing; a path array's spacing not above zero), `invalid_fill` (a polar
+    spacing; a line's displacement of no length; a path array's spacing not
+    above zero), `invalid_fill` (a polar
     fill of zero or past a full turn), `invalid_revision`,
     `revision_conflict` (status `conflict`), `entity_not_found` (each id in
     order, then the path at `layout.path`), `invalid_path` (a path that is
@@ -14444,6 +14622,138 @@ class RasterStyle(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RectangleCreate(_Model):
+    """Input of `cad.rectangle.create` v1. The ring is the shared core's (`rect_from_corners`, `rect_from_size`,
+    `rect_from_edge`, `corners_of_ring`); it is written as `cad.polygon.create` writes, its checks after the
+    rectangle's own.
+
+    Refusals (`CommandError.code`), checked in this order: `not_finite` (a point, a size, the rotation, a corner
+    size), `invalid_distance` (a size, an area, a width, a radius or a chamfer not above zero: none of them may be
+    zero but a sharp rectangle's), `degenerate_shape` (a side of no length: two corners on a line along the
+    rotation, an edge of no length), `invalid_corners` (the radius or the chamfer does not fit the sides), then
+    `cad.polygon.create`'s: `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`,
+    `not_a_layer`, `layer_locked`.
+    Attributes:
+        layer_id: The layer it goes on: a layer's id, not a group's.
+        corners: Sharp when absent.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        line_weight: Unit: paper-mm.
+        rotation: The direction of the sides along the rectangle, radians from east counter-clockwise; 0 when absent.
+            Not read for `edge`. Unit: rad.
+    """
+    layer_id: str
+    frame: RectangleFrame
+    attrs: dict[str, str] | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    corners: RectangleCorners | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    rotation: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["frame"] = self.frame.to_json()
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.corners is not UNSET:
+            out["corners"] = None if self.corners is None else self.corners.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.rotation is not UNSET:
+            out["rotation"] = None if self.rotation is None else float(self.rotation)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RectangleCreate:
+        return cls(
+            layer_id=data["layerId"],
+            frame=RectangleFrame.from_json(data["frame"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            color=data.get("color", UNSET),
+            corners=UNSET if "corners" not in data else None if data["corners"] is None else RectangleCorners.from_json(data["corners"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            label=data.get("label", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
+            symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RegularPolygonCreate(_Model):
+    """Input of `cad.polygon.regular` v1. The ring is the shared core's (`regular_polygon`, `regular_polygon_on_edge`);
+    it is written as `cad.polygon.create` writes.
+
+    Refusals, in this order: `not_finite` (a point), `invalid_count` (sides out of 3–1024), `degenerate_shape` (the
+    two points meet), then `cad.polygon.create`'s.
+    Attributes:
+        sides: How many sides, 3–1024. Unit: count.
+        line_weight: Unit: paper-mm.
+    """
+    layer_id: str
+    sides: int
+    frame: RegularFrame
+    attrs: dict[str, str] | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["sides"] = self.sides
+        out["frame"] = self.frame.to_json()
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RegularPolygonCreate:
+        return cls(
+            layer_id=data["layerId"],
+            sides=data["sides"],
+            frame=RegularFrame.from_json(data["frame"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            label=data.get("label", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RenamedBlock(_Model):
     """A block whose name the drawing had: as the file names it, as it went in."""
     from_: str
@@ -16959,6 +17269,41 @@ class PolarArrayLayout(ArrayLayout):
 
 
 @dataclass(kw_only=True, slots=True)
+class LineArrayLayout(ArrayLayout):
+    """Kopyala's Dizi (docs/adr/0291; AutoCAD COPY's Array): `count` places along the displacement (`dx`,
+    `dy`), 2 to 10 000, the originals at the first: the copy `k` moves `k·(dx, dy)`; with `fit` the last one
+    moves the whole displacement and the others share it, the copy `k` moving `k·(dx, dy) / (count − 1)`.
+    Attributes:
+        count: Unit: count.
+        dx: Unit: length.
+        dy: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "line"
+    count: int
+    dx: float
+    dy: float
+    fit: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "line"}
+        out["count"] = self.count
+        out["dx"] = float(self.dx)
+        out["dy"] = float(self.dy)
+        if self.fit is not UNSET:
+            out["fit"] = self.fit
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LineArrayLayout:
+        return cls(
+            count=data["count"],
+            dx=float(data["dx"]),
+            dy=float(data["dy"]),
+            fit=data.get("fit", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PathArrayLayout(ArrayLayout):
     """Yol boyunca dizi (docs/adr/0140): `count` places, 2 to 10 000, along
     the object `path` names by its persistent id (a line, an arc, a
@@ -17047,6 +17392,102 @@ class DeleteBlockChange(BlockChange):
     def from_json(cls, data: Mapping[str, Any]) -> DeleteBlockChange:
         return cls(
             id=data["id"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CircleConstructedCurve(ConstructedCurve):
+    """`cad.circle.create`'s `c` and `r`.
+    Attributes:
+        c: Unit: length.
+        r: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "circle"
+    c: Vec2
+    r: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "circle"}
+        out["c"] = _vec2_out(self.c)
+        out["r"] = float(self.r)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CircleConstructedCurve:
+        return cls(
+            c=Vec2.from_json(data["c"]),
+            r=float(data["r"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArcConstructedCurve(ConstructedCurve):
+    """`cad.arc.create`'s `c`, `r`, `a0` and `a1`: counter-clockwise from `a0` to `a1`, both in [0, 2π).
+    Attributes:
+        c: Unit: length.
+        r: Unit: length.
+        a0: Unit: rad.
+        a1: Unit: rad.
+    """
+    TAG_VALUE: ClassVar[str] = "arc"
+    c: Vec2
+    r: float
+    a0: float
+    a1: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "arc"}
+        out["c"] = _vec2_out(self.c)
+        out["r"] = float(self.r)
+        out["a0"] = float(self.a0)
+        out["a1"] = float(self.a1)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArcConstructedCurve:
+        return cls(
+            c=Vec2.from_json(data["c"]),
+            r=float(data["r"]),
+            a0=float(data["a0"]),
+            a1=float(data["a1"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EllipseConstructedCurve(ConstructedCurve):
+    """`cad.entities.create`'s ellipse geometry: the centre, the major half-axis as a vector, the minor to major
+    ratio (above zero, at most 1) and the parameters it runs between (equal: a whole ellipse).
+    Attributes:
+        c: Unit: length.
+        major: Unit: length.
+        ratio: Unit: 1.
+        t0: Unit: rad.
+        t1: Unit: rad.
+    """
+    TAG_VALUE: ClassVar[str] = "ellipse"
+    c: Vec2
+    major: Vec2
+    ratio: float
+    t0: float
+    t1: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "ellipse"}
+        out["c"] = _vec2_out(self.c)
+        out["major"] = _vec2_out(self.major)
+        out["ratio"] = float(self.ratio)
+        out["t0"] = float(self.t0)
+        out["t1"] = float(self.t1)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EllipseConstructedCurve:
+        return cls(
+            c=Vec2.from_json(data["c"]),
+            major=Vec2.from_json(data["major"]),
+            ratio=float(data["ratio"]),
+            t0=float(data["t0"]),
+            t1=float(data["t1"]),
         )
 
 
@@ -17216,6 +17657,406 @@ class LocalCrsSystem(LocalDefinition, CrsSystem):
 
     def to_json(self) -> dict[str, Any]:
         return {"kind": "local", **LocalDefinition.to_json(self)}
+
+
+@dataclass(kw_only=True, slots=True)
+class CircleTwoPointsCurveConstruction(CurveConstruction):
+    """Daire, 2 nokta: the circle on the diameter from `a` to `b`."""
+    TAG_VALUE: ClassVar[str] = "circleTwoPoints"
+    a: MeasuredPoint
+    b: MeasuredPoint
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "circleTwoPoints"}
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CircleTwoPointsCurveConstruction:
+        return cls(
+            a=MeasuredPoint.from_json(data["a"]),
+            b=MeasuredPoint.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CircleThreePointsCurveConstruction(CurveConstruction):
+    """Daire, 3 nokta: the circle through three points."""
+    TAG_VALUE: ClassVar[str] = "circleThreePoints"
+    a: MeasuredPoint
+    b: MeasuredPoint
+    c: MeasuredPoint
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "circleThreePoints"}
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        out["c"] = self.c.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CircleThreePointsCurveConstruction:
+        return cls(
+            a=MeasuredPoint.from_json(data["a"]),
+            b=MeasuredPoint.from_json(data["b"]),
+            c=MeasuredPoint.from_json(data["c"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CircleTangentTangentRadiusCurveConstruction(CurveConstruction):
+    """Daire, teğet-teğet-yarıçap: the circle of radius `r` touching two objects' edges nearest their near
+    points (a straight edge as its whole line, an arc as its whole circle), the one whose touching points are
+    nearest the near points. Two parallel lines `2r` apart give the one across from the near points' middle.
+    Attributes:
+        r: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "circleTangentTangentRadius"
+    first: EdgeNear
+    second: EdgeNear
+    r: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "circleTangentTangentRadius"}
+        out["first"] = self.first.to_json()
+        out["second"] = self.second.to_json()
+        out["r"] = float(self.r)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CircleTangentTangentRadiusCurveConstruction:
+        return cls(
+            first=EdgeNear.from_json(data["first"]),
+            second=EdgeNear.from_json(data["second"]),
+            r=float(data["r"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CircleTangentsCurveConstruction(CurveConstruction):
+    """Daire, teğet-teğet-teğet: the circle touching three objects' edges (Apollonius), the one whose touching
+    points are nearest the near points.
+    """
+    TAG_VALUE: ClassVar[str] = "circleTangents"
+    first: EdgeNear
+    second: EdgeNear
+    third: EdgeNear
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "circleTangents"}
+        out["first"] = self.first.to_json()
+        out["second"] = self.second.to_json()
+        out["third"] = self.third.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CircleTangentsCurveConstruction:
+        return cls(
+            first=EdgeNear.from_json(data["first"]),
+            second=EdgeNear.from_json(data["second"]),
+            third=EdgeNear.from_json(data["third"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArcThreePointsCurveConstruction(CurveConstruction):
+    """Yay, 3 nokta: from `start` through `mid` to `end`."""
+    TAG_VALUE: ClassVar[str] = "arcThreePoints"
+    start: MeasuredPoint
+    mid: MeasuredPoint
+    end: MeasuredPoint
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "arcThreePoints"}
+        out["start"] = self.start.to_json()
+        out["mid"] = self.mid.to_json()
+        out["end"] = self.end.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArcThreePointsCurveConstruction:
+        return cls(
+            start=MeasuredPoint.from_json(data["start"]),
+            mid=MeasuredPoint.from_json(data["mid"]),
+            end=MeasuredPoint.from_json(data["end"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArcStartCentreEndCurveConstruction(CurveConstruction):
+    """Yay, başlangıç–merkez–bitiş (and merkez–başlangıç–bitiş, başlangıç–bitiş–merkez): counter-clockwise
+    from `start` round `centre` to the ray through `end`; the radius is the start's.
+    """
+    TAG_VALUE: ClassVar[str] = "arcStartCentreEnd"
+    start: MeasuredPoint
+    centre: MeasuredPoint
+    end: MeasuredPoint
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "arcStartCentreEnd"}
+        out["start"] = self.start.to_json()
+        out["centre"] = self.centre.to_json()
+        out["end"] = self.end.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArcStartCentreEndCurveConstruction:
+        return cls(
+            start=MeasuredPoint.from_json(data["start"]),
+            centre=MeasuredPoint.from_json(data["centre"]),
+            end=MeasuredPoint.from_json(data["end"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArcStartCentreAngleCurveConstruction(CurveConstruction):
+    """Yay, başlangıç–merkez–açı (and merkez–başlangıç–açı): `angle` radians round `centre` from `start`,
+    counter-clockwise when positive; less than a whole turn.
+    Attributes:
+        angle: Unit: rad.
+    """
+    TAG_VALUE: ClassVar[str] = "arcStartCentreAngle"
+    start: MeasuredPoint
+    centre: MeasuredPoint
+    angle: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "arcStartCentreAngle"}
+        out["start"] = self.start.to_json()
+        out["centre"] = self.centre.to_json()
+        out["angle"] = float(self.angle)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArcStartCentreAngleCurveConstruction:
+        return cls(
+            start=MeasuredPoint.from_json(data["start"]),
+            centre=MeasuredPoint.from_json(data["centre"]),
+            angle=float(data["angle"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArcStartCentreChordCurveConstruction(CurveConstruction):
+    """Yay, başlangıç–merkez–uzunluk (and merkez–başlangıç–uzunluk): counter-clockwise from `start` round
+    `centre` until the chord is `chord` metres; a negative chord gives the major arc.
+    Attributes:
+        chord: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "arcStartCentreChord"
+    start: MeasuredPoint
+    centre: MeasuredPoint
+    chord: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "arcStartCentreChord"}
+        out["start"] = self.start.to_json()
+        out["centre"] = self.centre.to_json()
+        out["chord"] = float(self.chord)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArcStartCentreChordCurveConstruction:
+        return cls(
+            start=MeasuredPoint.from_json(data["start"]),
+            centre=MeasuredPoint.from_json(data["centre"]),
+            chord=float(data["chord"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArcStartEndAngleCurveConstruction(CurveConstruction):
+    """Yay, başlangıç–bitiş–açı: from `start` to `end` turning `angle` radians, counter-clockwise when positive.
+    Attributes:
+        angle: Unit: rad.
+    """
+    TAG_VALUE: ClassVar[str] = "arcStartEndAngle"
+    start: MeasuredPoint
+    end: MeasuredPoint
+    angle: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "arcStartEndAngle"}
+        out["start"] = self.start.to_json()
+        out["end"] = self.end.to_json()
+        out["angle"] = float(self.angle)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArcStartEndAngleCurveConstruction:
+        return cls(
+            start=MeasuredPoint.from_json(data["start"]),
+            end=MeasuredPoint.from_json(data["end"]),
+            angle=float(data["angle"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArcStartEndDirectionCurveConstruction(CurveConstruction):
+    """Yay, başlangıç–bitiş–yön: from `start`, leaving it at `direction` radians, to `end`.
+    Attributes:
+        direction: Unit: rad.
+    """
+    TAG_VALUE: ClassVar[str] = "arcStartEndDirection"
+    start: MeasuredPoint
+    end: MeasuredPoint
+    direction: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "arcStartEndDirection"}
+        out["start"] = self.start.to_json()
+        out["end"] = self.end.to_json()
+        out["direction"] = float(self.direction)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArcStartEndDirectionCurveConstruction:
+        return cls(
+            start=MeasuredPoint.from_json(data["start"]),
+            end=MeasuredPoint.from_json(data["end"]),
+            direction=float(data["direction"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArcStartEndRadiusCurveConstruction(CurveConstruction):
+    """Yay, başlangıç–bitiş–yarıçap: from `start` to `end` with radius `|r|`, counter-clockwise; a positive
+    radius gives the minor arc, a negative one the major.
+    Attributes:
+        r: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "arcStartEndRadius"
+    start: MeasuredPoint
+    end: MeasuredPoint
+    r: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "arcStartEndRadius"}
+        out["start"] = self.start.to_json()
+        out["end"] = self.end.to_json()
+        out["r"] = float(self.r)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArcStartEndRadiusCurveConstruction:
+        return cls(
+            start=MeasuredPoint.from_json(data["start"]),
+            end=MeasuredPoint.from_json(data["end"]),
+            r=float(data["r"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArcContinueCurveConstruction(CurveConstruction):
+    """Yay, Devam: tangent to a line, an arc or a polyline at its end (`place` end: on the way it runs; start:
+    on backwards from its start), to `end`.
+    """
+    TAG_VALUE: ClassVar[str] = "arcContinue"
+    from_: ObjectEnd
+    end: MeasuredPoint
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "arcContinue"}
+        out["from"] = self.from_.to_json()
+        out["end"] = self.end.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArcContinueCurveConstruction:
+        return cls(
+            from_=ObjectEnd.from_json(data["from"]),
+            end=MeasuredPoint.from_json(data["end"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EllipseAxisCurveConstruction(CurveConstruction):
+    """Elips, eksen–uç: one axis from `a` to `b`, the other half-axis `other` metres long or the first axis seen
+    tilted by `rotation` radians (0 to 89.4°): exactly one of the two. With `startAngle` and `endAngle`
+    (both or neither; radians counter-clockwise from the major axis, as seen from the centre), an elliptical
+    arc.
+    Attributes:
+        end_angle: Unit: rad.
+        other: Unit: length.
+        rotation: Unit: rad.
+        start_angle: Unit: rad.
+    """
+    TAG_VALUE: ClassVar[str] = "ellipseAxis"
+    a: MeasuredPoint
+    b: MeasuredPoint
+    end_angle: float | None | Unset = UNSET
+    other: float | None | Unset = UNSET
+    rotation: float | None | Unset = UNSET
+    start_angle: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "ellipseAxis"}
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        if self.end_angle is not UNSET:
+            out["endAngle"] = None if self.end_angle is None else float(self.end_angle)
+        if self.other is not UNSET:
+            out["other"] = None if self.other is None else float(self.other)
+        if self.rotation is not UNSET:
+            out["rotation"] = None if self.rotation is None else float(self.rotation)
+        if self.start_angle is not UNSET:
+            out["startAngle"] = None if self.start_angle is None else float(self.start_angle)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EllipseAxisCurveConstruction:
+        return cls(
+            a=MeasuredPoint.from_json(data["a"]),
+            b=MeasuredPoint.from_json(data["b"]),
+            end_angle=UNSET if "endAngle" not in data else None if data["endAngle"] is None else float(data["endAngle"]),
+            other=UNSET if "other" not in data else None if data["other"] is None else float(data["other"]),
+            rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
+            start_angle=UNSET if "startAngle" not in data else None if data["startAngle"] is None else float(data["startAngle"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EllipseCentreCurveConstruction(CurveConstruction):
+    """Elips, merkez: the centre, one axis's end, then as [`CurveConstruction::EllipseAxis`].
+    Attributes:
+        end_angle: Unit: rad.
+        other: Unit: length.
+        rotation: Unit: rad.
+        start_angle: Unit: rad.
+    """
+    TAG_VALUE: ClassVar[str] = "ellipseCentre"
+    centre: MeasuredPoint
+    axis_end: MeasuredPoint
+    end_angle: float | None | Unset = UNSET
+    other: float | None | Unset = UNSET
+    rotation: float | None | Unset = UNSET
+    start_angle: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "ellipseCentre"}
+        out["centre"] = self.centre.to_json()
+        out["axisEnd"] = self.axis_end.to_json()
+        if self.end_angle is not UNSET:
+            out["endAngle"] = None if self.end_angle is None else float(self.end_angle)
+        if self.other is not UNSET:
+            out["other"] = None if self.other is None else float(self.other)
+        if self.rotation is not UNSET:
+            out["rotation"] = None if self.rotation is None else float(self.rotation)
+        if self.start_angle is not UNSET:
+            out["startAngle"] = None if self.start_angle is None else float(self.start_angle)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EllipseCentreCurveConstruction:
+        return cls(
+            centre=MeasuredPoint.from_json(data["centre"]),
+            axis_end=MeasuredPoint.from_json(data["axisEnd"]),
+            end_angle=UNSET if "endAngle" not in data else None if data["endAngle"] is None else float(data["endAngle"]),
+            other=UNSET if "other" not in data else None if data["other"] is None else float(data["other"]),
+            rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
+            start_angle=UNSET if "startAngle" not in data else None if data["startAngle"] is None else float(data["startAngle"]),
+        )
 
 
 @dataclass(kw_only=True, slots=True)
@@ -19190,6 +20031,257 @@ class AlongPointConstruction(PointConstruction):
 
 
 @dataclass(kw_only=True, slots=True)
+class SharpRectangleCorners(RectangleCorners):
+    TAG_VALUE: ClassVar[str] = "sharp"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "sharp"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SharpRectangleCorners:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class FilletRectangleCorners(RectangleCorners):
+    """Köşe yuvarla: an arc of this radius at every corner.
+    Attributes:
+        radius: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "fillet"
+    radius: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "fillet"}
+        out["radius"] = float(self.radius)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FilletRectangleCorners:
+        return cls(
+            radius=float(data["radius"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ChamferRectangleCorners(RectangleCorners):
+    """Pah: every corner cut this far along both its sides.
+    Attributes:
+        distance: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "chamfer"
+    distance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "chamfer"}
+        out["distance"] = float(self.distance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ChamferRectangleCorners:
+        return cls(
+            distance=float(data["distance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CornersRectangleFrame(RectangleFrame):
+    """Two opposite corners (AutoCAD RECTANG's two points).
+    Attributes:
+        a: Unit: length.
+        b: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "corners"
+    a: Vec2
+    b: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "corners"}
+        out["a"] = _vec2_out(self.a)
+        out["b"] = _vec2_out(self.b)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CornersRectangleFrame:
+        return cls(
+            a=Vec2.from_json(data["a"]),
+            b=Vec2.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SizeRectangleFrame(RectangleFrame):
+    """A corner, the side along the rotation (`length`) and across it (`width`), opening toward `toward`'s quarter
+    (RECTANG's Dimensions).
+    Attributes:
+        corner: Unit: length.
+        length: Unit: length.
+        width: Unit: length.
+        toward: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "size"
+    corner: Vec2
+    length: float
+    width: float
+    toward: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "size"}
+        out["corner"] = _vec2_out(self.corner)
+        out["length"] = float(self.length)
+        out["width"] = float(self.width)
+        out["toward"] = _vec2_out(self.toward)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SizeRectangleFrame:
+        return cls(
+            corner=Vec2.from_json(data["corner"]),
+            length=float(data["length"]),
+            width=float(data["width"]),
+            toward=Vec2.from_json(data["toward"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AreaRectangleFrame(RectangleFrame):
+    """A corner, the area and the side along the rotation; the other side is the area over it (RECTANG's Area).
+    Attributes:
+        corner: Unit: length.
+        area: Unit: area.
+        length: Unit: length.
+        toward: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "area"
+    corner: Vec2
+    area: float
+    length: float
+    toward: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "area"}
+        out["corner"] = _vec2_out(self.corner)
+        out["area"] = float(self.area)
+        out["length"] = float(self.length)
+        out["toward"] = _vec2_out(self.toward)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AreaRectangleFrame:
+        return cls(
+            corner=Vec2.from_json(data["corner"]),
+            area=float(data["area"]),
+            length=float(data["length"]),
+            toward=Vec2.from_json(data["toward"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EdgeRectangleFrame(RectangleFrame):
+    """An edge from `a` to `b` and the width to its left (a minus sign: to its right): Döndürülmüş dikdörtgen.
+    Attributes:
+        a: Unit: length.
+        b: Unit: length.
+        width: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "edge"
+    a: Vec2
+    b: Vec2
+    width: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "edge"}
+        out["a"] = _vec2_out(self.a)
+        out["b"] = _vec2_out(self.b)
+        out["width"] = float(self.width)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EdgeRectangleFrame:
+        return cls(
+            a=Vec2.from_json(data["a"]),
+            b=Vec2.from_json(data["b"]),
+            width=float(data["width"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class InscribedRegularFrame(RegularFrame):
+    """Çember içinde: the centre and the first corner (AutoCAD POLYGON's Inscribed).
+    Attributes:
+        center: Unit: length.
+        corner: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "inscribed"
+    center: Vec2
+    corner: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "inscribed"}
+        out["center"] = _vec2_out(self.center)
+        out["corner"] = _vec2_out(self.corner)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> InscribedRegularFrame:
+        return cls(
+            center=Vec2.from_json(data["center"]),
+            corner=Vec2.from_json(data["corner"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CircumscribedRegularFrame(RegularFrame):
+    """Çember dışında: the centre and the first edge's middle (POLYGON's Circumscribed).
+    Attributes:
+        center: Unit: length.
+        middle: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "circumscribed"
+    center: Vec2
+    middle: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "circumscribed"}
+        out["center"] = _vec2_out(self.center)
+        out["middle"] = _vec2_out(self.middle)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CircumscribedRegularFrame:
+        return cls(
+            center=Vec2.from_json(data["center"]),
+            middle=Vec2.from_json(data["middle"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EdgeRegularFrame(RegularFrame):
+    """Kenardan: an edge from `a` to `b`, the polygon to its left, counter-clockwise (POLYGON's Edge).
+    Attributes:
+        a: Unit: length.
+        b: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "edge"
+    a: Vec2
+    b: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "edge"}
+        out["a"] = _vec2_out(self.a)
+        out["b"] = _vec2_out(self.b)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EdgeRegularFrame:
+        return cls(
+            a=Vec2.from_json(data["a"]),
+            b=Vec2.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class WindowSelectRegion(SelectRegion):
     """Pencere: wholly inside the box from `a` to `b` (an infinite line never is).
     Attributes:
@@ -20301,10 +21393,13 @@ class DeleteViewsOp(ViewsOp):
         )
 
 
-_ARRAY_LAYOUT: dict[str, type[ArrayLayout]] = {"grid": GridArrayLayout, "polar": PolarArrayLayout, "path": PathArrayLayout}
+_ARRAY_LAYOUT: dict[str, type[ArrayLayout]] = {"grid": GridArrayLayout, "polar": PolarArrayLayout, "line": LineArrayLayout, "path": PathArrayLayout}
 
 
 _BLOCK_CHANGE: dict[str, type[BlockChange]] = {"create": CreateBlockChange, "update": UpdateBlockChange, "delete": DeleteBlockChange}
+
+
+_CONSTRUCTED_CURVE: dict[str, type[ConstructedCurve]] = {"circle": CircleConstructedCurve, "arc": ArcConstructedCurve, "ellipse": EllipseConstructedCurve}
 
 
 _CORNER_PICK: dict[str, type[CornerPick]] = {"vertex": VertexCornerPick, "lines": LinesCornerPick, "all": AllCornerPick}
@@ -20314,6 +21409,9 @@ _CRS_PLANE: dict[str, type[CrsPlane]] = {"similarity": SimilarityCrsPlane, "affi
 
 
 _CRS_SYSTEM: dict[str, type[CrsSystem]] = {"tm": TmCrsSystem, "geographic": GeographicCrsSystem, "local": LocalCrsSystem}
+
+
+_CURVE_CONSTRUCTION: dict[str, type[CurveConstruction]] = {"circleTwoPoints": CircleTwoPointsCurveConstruction, "circleThreePoints": CircleThreePointsCurveConstruction, "circleTangentTangentRadius": CircleTangentTangentRadiusCurveConstruction, "circleTangents": CircleTangentsCurveConstruction, "arcThreePoints": ArcThreePointsCurveConstruction, "arcStartCentreEnd": ArcStartCentreEndCurveConstruction, "arcStartCentreAngle": ArcStartCentreAngleCurveConstruction, "arcStartCentreChord": ArcStartCentreChordCurveConstruction, "arcStartEndAngle": ArcStartEndAngleCurveConstruction, "arcStartEndDirection": ArcStartEndDirectionCurveConstruction, "arcStartEndRadius": ArcStartEndRadiusCurveConstruction, "arcContinue": ArcContinueCurveConstruction, "ellipseAxis": EllipseAxisCurveConstruction, "ellipseCentre": EllipseCentreCurveConstruction}
 
 
 _DIMENSION_MEASURE: dict[str, type[DimensionMeasure]] = {"aligned": AlignedDimensionMeasure, "linear": LinearDimensionMeasure, "ordinate": OrdinateDimensionMeasure, "azimuth": AzimuthDimensionMeasure, "slope": SlopeDimensionMeasure, "angle": AngleDimensionMeasure, "angleVertex": AngleVertexDimensionMeasure, "angleArc": AngleArcDimensionMeasure, "radius": RadiusDimensionMeasure, "diameter": DiameterDimensionMeasure, "arcLength": ArcLengthDimensionMeasure, "jogged": JoggedDimensionMeasure}
@@ -20350,6 +21448,15 @@ _OFFSET_BY: dict[str, type[OffsetBy]] = {"distance": DistanceOffsetBy, "through"
 
 
 _POINT_CONSTRUCTION: dict[str, type[PointConstruction]] = {"mid": MidPointConstruction, "extension": ExtensionPointConstruction, "parallel": ParallelPointConstruction, "track": TrackPointConstruction, "polar": PolarPointConstruction, "along": AlongPointConstruction}
+
+
+_RECTANGLE_CORNERS: dict[str, type[RectangleCorners]] = {"sharp": SharpRectangleCorners, "fillet": FilletRectangleCorners, "chamfer": ChamferRectangleCorners}
+
+
+_RECTANGLE_FRAME: dict[str, type[RectangleFrame]] = {"corners": CornersRectangleFrame, "size": SizeRectangleFrame, "area": AreaRectangleFrame, "edge": EdgeRectangleFrame}
+
+
+_REGULAR_FRAME: dict[str, type[RegularFrame]] = {"inscribed": InscribedRegularFrame, "circumscribed": CircumscribedRegularFrame, "edge": EdgeRegularFrame}
 
 
 _SELECT_REGION: dict[str, type[SelectRegion]] = {"window": WindowSelectRegion, "crossing": CrossingSelectRegion, "fence": FenceSelectRegion, "polygon": PolygonSelectRegion, "circle": CircleSelectRegion, "containing": ContainingSelectRegion, "point": PointSelectRegion, "all": AllSelectRegion, "objects": ObjectsSelectRegion, "invert": InvertSelectRegion, "similar": SimilarSelectRegion}
@@ -20399,17 +21506,27 @@ __all__ = [
     "AnnotationHeights",
     "AnnotationStyleKind",
     "AnnotationStyleKindName",
+    "ArcConstructedCurve",
+    "ArcContinueCurveConstruction",
     "ArcCreate",
     "ArcCreated",
     "ArcEntity",
     "ArcEntityGeometry",
     "ArcLengthDimensionMeasure",
     "ArcPlan",
+    "ArcStartCentreAngleCurveConstruction",
+    "ArcStartCentreChordCurveConstruction",
+    "ArcStartCentreEndCurveConstruction",
+    "ArcStartEndAngleCurveConstruction",
+    "ArcStartEndDirectionCurveConstruction",
+    "ArcStartEndRadiusCurveConstruction",
+    "ArcThreePointsCurveConstruction",
     "AreaLabelMode",
     "AreaLabelModeName",
     "AreaLevel",
     "AreaLevelName",
     "AreaPart",
+    "AreaRectangleFrame",
     "AreaSource",
     "AreaTrimBoundaries",
     "AreaUnit",
@@ -20446,6 +21563,7 @@ __all__ = [
     "CalloutKindName",
     "CellRange",
     "CenterSubPlace",
+    "ChamferRectangleCorners",
     "ChangesetApplied",
     "ChangesetApply",
     "ChangesetStep",
@@ -20457,12 +21575,18 @@ __all__ = [
     "CheckpointKind",
     "CheckpointKindName",
     "CheckpointRestore",
+    "CircleConstructedCurve",
     "CircleCreate",
     "CircleCreated",
     "CircleEntity",
     "CircleEntityGeometry",
     "CirclePlan",
     "CircleSelectRegion",
+    "CircleTangentTangentRadiusCurveConstruction",
+    "CircleTangentsCurveConstruction",
+    "CircleThreePointsCurveConstruction",
+    "CircleTwoPointsCurveConstruction",
+    "CircumscribedRegularFrame",
     "ClosedPolylines",
     "ClosedPolylinesName",
     "CloudFormat",
@@ -20471,6 +21595,7 @@ __all__ = [
     "CloudRenderName",
     "CloudSource",
     "CommitResult",
+    "ConstructedCurve",
     "ConstructionEntity",
     "ContainingSelectRegion",
     "ControlNurbsBy",
@@ -20478,6 +21603,7 @@ __all__ = [
     "ConventionName",
     "CoordinatesTableSource",
     "CornerPick",
+    "CornersRectangleFrame",
     "CreateBlockChange",
     "CreateFeatureChange",
     "CreateOperation",
@@ -20487,6 +21613,9 @@ __all__ = [
     "CrsDefinition",
     "CrsPlane",
     "CrsSystem",
+    "CurveConstruction",
+    "CurvesConstruct",
+    "CurvesConstructed",
     "CustomDatum",
     "DatasetDim",
     "DatumTransform",
@@ -20523,8 +21652,13 @@ __all__ = [
     "DxfExported",
     "DxfImported",
     "EdgeNear",
+    "EdgeRectangleFrame",
+    "EdgeRegularFrame",
     "EditOperation",
     "EditOperationName",
+    "EllipseAxisCurveConstruction",
+    "EllipseCentreCurveConstruction",
+    "EllipseConstructedCurve",
     "EllipseEntity",
     "EllipseEntityGeometry",
     "Ellipsoid",
@@ -20595,6 +21729,7 @@ __all__ = [
     "FileTableSource",
     "FileUnit",
     "FileUnitName",
+    "FilletRectangleCorners",
     "FitNurbsBy",
     "FoundSnap",
     "FrameUcsTo",
@@ -20624,6 +21759,7 @@ __all__ = [
     "ImportDxf",
     "ImportedLayer",
     "InfoCard",
+    "InscribedRegularFrame",
     "InsertEntity",
     "InsertEntityGeometry",
     "InvertSelectRegion",
@@ -20721,6 +21857,7 @@ __all__ = [
     "LeaderEntityGeometry",
     "LengthStyle",
     "LengthStyleName",
+    "LineArrayLayout",
     "LineCreate",
     "LineCreated",
     "LineEntity",
@@ -20885,8 +22022,13 @@ __all__ = [
     "RasterStyle",
     "RayEntity",
     "RayEntityGeometry",
+    "RectangleCorners",
+    "RectangleCreate",
+    "RectangleFrame",
     "RegistryDatum",
     "RegistryDatumName",
+    "RegularFrame",
+    "RegularPolygonCreate",
     "RemoveEntityEdit",
     "RenameViewsOp",
     "RenamedBlock",
@@ -20917,6 +22059,7 @@ __all__ = [
     "ServiceParam",
     "SettingsChanged",
     "SettingsSet",
+    "SharpRectangleCorners",
     "SheetInfo",
     "SheetMapInfo",
     "SheetPicture",
@@ -20926,6 +22069,7 @@ __all__ = [
     "SimilarSelectRegion",
     "SimilarityCrsPlane",
     "SimilarityTransform",
+    "SizeRectangleFrame",
     "SlopeDimensionMeasure",
     "SnapFind",
     "SnapFound",
