@@ -368,6 +368,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kaydedilir; ortak komut durumlarının çağrıları `scripts/python/history_calls.py` ile SDK'ya karşı denetlenir (`history/`, ADR 0284);
   büyük seçimde Öznitelikler: karışık seçimde kilitsizler düzenlenir, kilitliler atlanır ve ilk satırda sayılır; Katman ortak ya da Çeşitli;
   Ortak öznitelikler (değer ya da “Çeşitli (k/n nesnede)”, bütün seçime tek adımda); 100 000 nesnede panel 48 ms (ADR 0286);
+  çizim araçlarının yöntemleri: AutoCAD'le karşılaştırma ADR 0287'nin tablosunda; araçların yöntemleri arayüz kaydında
+  (`catalog/v1/additions.json`'un `methods`'u, `AddedMethod`, `place_methods`); şeritte Yay'ın 11 yöntemi, Daire'nin Merkez, çap'ı, Elips
+  ve Revizyon bulutu yöntemleri, Düzgün çokgen'in çember içinde, dışında, kenardan'ı; Dikdörtgen'in Alan'ı (A) ve Boyutlarla, Alanla
+  yöntemleri, Yardımcı çizgi'nin Paralel'i (P, Noktadan), Revizyon bulutu'nun Nesne'si (N); hesap çekirdekte (`rect_side_for_area`,
+  `xline_offset`, `cloud_around`), yazma araçların kendi komutlarıyla (ADR 0287);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);

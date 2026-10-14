@@ -165,6 +165,11 @@ Liste:
 - [ ] `CAD-INPUT-01` (ADR 0266, 14 Ekim): web'de gerekenler: `coordinateInput.ts`'in metrik birimli uzunluğu (`2.5m`, `250cm`) ve
   parantezli toplamı (`fixtures/point-input/v1`'in 22 yeni satırı), `looksLikeCoordinate`'in `(`'u ve araçların uzunluk alanlarının
   birimli ve toplamlı okunması; web'in iz oynatıcısı `value-entry.json`'u geçmeli (`(`, `)`, `*` tuşları, Tab'ın birimli kilidi).
+- [ ] `CAD-EDIT-01` (ADR 0287, 14 Ekim): web'de gerekenler: `catalog/v1/additions.json`'un `methods`'unu şeridin bölünmüş düğmelerine
+  yerleştirmek (aracın düz düğmesini bölünmüş düğmeye çevirmek dahil) ve 24 ikonu; araçlarda yeni seçenekler: Yay'ın `BMS`…`MBU`'su,
+  Daire'nin `MÇ`'si, Düzgün çokgen'in `İÇ`, `DIŞ`'ı, Dikdörtgen'in Alan (A), `BOYUT`, `ALAN`'ı (`rectSideForArea` WASM'da hazır), Yardımcı
+  çizgi'nin Paralel (P) ve Noktadan (N)'ı (`xline_offset`), Revizyon bulutu'nun Nesne (N)'si (`cloud_around`); `construction-lines`,
+  `donut-cloud`, `rect-options` izleri yeni seçenekleri bekliyor.
 - [ ] `CAD-INPUT-22` (ADR 0286, 14 Ekim): web'de gerekenler: `PropertiesPanel`'in karışık seçimde kilitsizleri düzenlemesi ve kilitlileri
   sayan notu, Katman satırının ortak yolu ya da Çeşitli'si, Ortak öznitelikler bölümü (değer ya da “Çeşitli (k/n nesnede)”, bütün seçime
   `cad.entities.set` ile).

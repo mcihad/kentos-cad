@@ -279,7 +279,7 @@ AutoCAD'in hassas çizim referansı; mutlak/göreli/kutupsal giriş, doğrudan m
 
 ## 8. CAD-EDIT — Çizim ve düzenleme araçlarının profesyonel tamamlanması — P1
 
-- [ ] **CAD-EDIT-01:** Her primitive'in bütün yöntemlerini envanterle karşılaştır; eksik yöntem/yöntem seçeneği için mevcut araç ailesini genişlet.
+- [x] **CAD-EDIT-01:** Her primitive'in bütün yöntemlerini envanterle karşılaştır; eksik yöntem/yöntem seçeneği için mevcut araç ailesini genişlet. — *14 Ekim; [ADR 0287](../docs/adr/0287-drawing-tool-methods.md): AutoCAD'le karşılaştırma tablosu (var, eklendi, yapılmadı ve nedeni); şeritte Yay'ın 11 yöntemi, Daire'nin Merkez, çap'ı, Elips ve Revizyon bulutu yöntem düğmeleri, Düzgün çokgen'in çember içinde, dışında ve kenardan yöntemleri; yeni seçenekler: Dikdörtgen'in Alan'ı (A) ve Boyutlarla, Alanla yöntemleri, Yardımcı çizgi'nin Paralel'i (P, Noktadan), Revizyon bulutu'nun Nesne'si (N); yöntemler `catalog/v1/additions.json`'un `methods`'unda, 24 yeni ikonla; hesap çekirdekte (`rect_side_for_area`, `xline_offset`, `cloud_around`), yazma araçların kendi komutlarıyla.*
 - [ ] **CAD-EDIT-02:** Line/polyline üzerinde arc–line geçişi, tangent devam, close/undo, width, eğri düzenleme ve segment conversion desteğini tamamla.
 - [ ] **CAD-EDIT-03:** Daire/yay/elips araçlarında iki/üç nokta, merkez, açı/uzunluk, tangent ve radius/diameter yöntemlerini doğrula.
 - [ ] **CAD-EDIT-04:** Rectangle üzerinde boyut/alan/rotation/fillet/chamfer seçenekleri; polygon üzerinde inscribed/circumscribed ve kenar yöntemlerini tamamla.
