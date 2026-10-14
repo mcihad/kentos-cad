@@ -1,0 +1,5228 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.entities.trim",
+ "commandVersion": 1,
+ "title": "Buda: Uzantılar, hızlı kipin silmesi, Çit ve Kesişen",
+ "note": "ADR 0294. AutoCAD'in TRIM ve EXTEND seçenekleri: Uzantılar (edgeMode), hızlı kipin silmesi (eraseUncut), Çit (fence) ve Kesişen (crossing) komuta verilir. Bağımsız başvuru: scripts/fixtures/trim_modes_cases.py.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Buda ve Uzat kipleri",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 100,
+   "workspace": "cad"
+  },
+  "origin": {
+   "x": 150.0,
+   "y": 120.0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gizli",
+    "name": "Gizli",
+    "type": "layer",
+    "visible": false,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "line",
+    "id": 40,
+    "layerId": "cizim",
+    "attrs": {
+     "Tür": "Duvar"
+    },
+    "color": "#E5484D",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 30,
+     "y": 0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 41,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 5,
+     "y": 2
+    },
+    "b": {
+     "x": 5,
+     "y": 6
+    }
+   },
+   {
+    "kind": "line",
+    "id": 42,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 12,
+     "y": -3
+    },
+    "b": {
+     "x": 12,
+     "y": 3
+    }
+   },
+   {
+    "kind": "arc",
+    "id": 43,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 16,
+     "y": 4
+    },
+    "r": 5,
+    "a0": 0,
+    "a1": 3.141592653589793
+   },
+   {
+    "kind": "polyline",
+    "id": 44,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 28,
+      "y": 8
+     },
+     {
+      "x": 26,
+      "y": 6
+     },
+     {
+      "x": 26,
+      "y": 2
+     }
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 45,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0,
+      "y": -8
+     },
+     {
+      "x": 4,
+      "y": -8
+     },
+     {
+      "x": 9,
+      "y": -3
+     }
+    ],
+    "bulges": [
+     0,
+     0.4142135623730951,
+     0
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 46,
+    "layerId": "gizli",
+    "attrs": {},
+    "a": {
+     "x": 3,
+     "y": -2
+    },
+    "b": {
+     "x": 3,
+     "y": 2
+    }
+   },
+   {
+    "kind": "line",
+    "id": 47,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 60,
+     "y": 30
+    },
+    "b": {
+     "x": 70,
+     "y": 30
+    }
+   },
+   {
+    "kind": "line",
+    "id": 48,
+    "layerId": "kilitli",
+    "attrs": {},
+    "a": {
+     "x": 60,
+     "y": 40
+    },
+    "b": {
+     "x": 70,
+     "y": 40
+    }
+   },
+   {
+    "kind": "line",
+    "id": 50,
+    "layerId": "cizim",
+    "attrs": {
+     "Tür": "Bordür"
+    },
+    "a": {
+     "x": 100,
+     "y": 50
+    },
+    "b": {
+     "x": 130,
+     "y": 50
+    }
+   },
+   {
+    "kind": "line",
+    "id": 51,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 110,
+     "y": 47
+    },
+    "b": {
+     "x": 110,
+     "y": 53
+    }
+   },
+   {
+    "kind": "line",
+    "id": 52,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 120,
+     "y": 47
+    },
+    "b": {
+     "x": 120,
+     "y": 53
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 53,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 100,
+      "y": 60
+     },
+     {
+      "x": 110,
+      "y": 60
+     },
+     {
+      "x": 110,
+      "y": 70
+     },
+     {
+      "x": 100,
+      "y": 70
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 54,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 105,
+     "y": 55
+    },
+    "b": {
+     "x": 105,
+     "y": 75
+    }
+   },
+   {
+    "kind": "circle",
+    "id": 55,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 150,
+     "y": 100
+    },
+    "r": 5
+   },
+   {
+    "kind": "line",
+    "id": 56,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 140,
+     "y": 103
+    },
+    "b": {
+     "x": 160,
+     "y": 103
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 57,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 200,
+      "y": 20
+     },
+     {
+      "x": 210,
+      "y": 20
+     },
+     {
+      "x": 210,
+      "y": 30
+     },
+     {
+      "x": 200,
+      "y": 30
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 202,
+        "y": 22
+       },
+       {
+        "x": 204,
+        "y": 22
+       },
+       {
+        "x": 204,
+        "y": 24
+       },
+       {
+        "x": 202,
+        "y": 24
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 70,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 300,
+     "y": 200
+    },
+    "b": {
+     "x": 303,
+     "y": 200
+    }
+   },
+   {
+    "kind": "line",
+    "id": 71,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 305,
+     "y": 202
+    },
+    "b": {
+     "x": 305,
+     "y": 206
+    }
+   },
+   {
+    "kind": "line",
+    "id": 72,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 300,
+     "y": 210
+    },
+    "b": {
+     "x": 303,
+     "y": 210
+    }
+   },
+   {
+    "kind": "arc",
+    "id": 73,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 310,
+     "y": 214
+    },
+    "r": 5,
+    "a0": 0,
+    "a1": 3.141592653589793
+   },
+   {
+    "kind": "line",
+    "id": 74,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 300,
+     "y": 220
+    },
+    "b": {
+     "x": 303,
+     "y": 220
+    }
+   },
+   {
+    "kind": "polyline",
+    "id": 75,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 310,
+      "y": 230
+     },
+     {
+      "x": 310,
+      "y": 226
+     },
+     {
+      "x": 309,
+      "y": 225
+     }
+    ]
+   },
+   {
+    "kind": "arc",
+    "id": 76,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 330,
+     "y": 190
+    },
+    "r": 5,
+    "a0": 0,
+    "a1": 1.5707963267948966
+   },
+   {
+    "kind": "line",
+    "id": 77,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 327,
+     "y": 196
+    },
+    "b": {
+     "x": 327,
+     "y": 198
+    }
+   },
+   {
+    "kind": "line",
+    "id": 78,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 300,
+     "y": 240
+    },
+    "b": {
+     "x": 303,
+     "y": 240
+    }
+   },
+   {
+    "kind": "line",
+    "id": 79,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 306,
+     "y": 238
+    },
+    "b": {
+     "x": 306,
+     "y": 246
+    }
+   },
+   {
+    "kind": "line",
+    "id": 80,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 300,
+     "y": 244
+    },
+    "b": {
+     "x": 303,
+     "y": 244
+    }
+   },
+   {
+    "kind": "line",
+    "id": 81,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 296,
+     "y": 238
+    },
+    "b": {
+     "x": 296,
+     "y": 246
+    }
+   },
+   {
+    "kind": "line",
+    "id": 82,
+    "layerId": "kilitli",
+    "attrs": {},
+    "a": {
+     "x": 300,
+     "y": 260
+    },
+    "b": {
+     "x": 303,
+     "y": 260
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 83,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 320,
+      "y": 240
+     },
+     {
+      "x": 324,
+      "y": 240
+     },
+     {
+      "x": 324,
+      "y": 244
+     },
+     {
+      "x": 320,
+      "y": 244
+     }
+    ]
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Uzantılar kapalı: 41 T'ye ulaşmıyor, budanacak kısım yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 3,
+         "y": 0
+        }
+       }
+      ],
+      "boundaries": {
+       "kind": "objects",
+       "uids": [
+        "$uidOf:41"
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "trim_failed",
+       "message": "Tıklanan kısmı kesen bir kenar yok.",
+       "path": "picks"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Uzantılar açık: 41'in doğrusu T'yi x = 5'te keser; uçla arası gider, tek parça verisini korur",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 3,
+         "y": 0
+        }
+       }
+      ],
+      "boundaries": {
+       "kind": "objects",
+       "uids": [
+        "$uidOf:41"
+       ]
+      },
+      "edgeMode": "extend"
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 40,
+         "layerId": "cizim",
+         "attrs": {
+          "Tür": "Duvar"
+         },
+         "color": "#E5484D",
+         "a": {
+          "x": 5.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         }
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 3,
+         "y": 0
+        }
+       }
+      ],
+      "boundaries": {
+       "kind": "objects",
+       "uids": [
+        "$uidOf:41"
+       ]
+      },
+      "edgeMode": "extend"
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:40"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Buda",
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Uzantılar açık: yay çemberiyle keser (x = 13 ve 19); arası gider, iki parça kalır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 16,
+         "y": 0
+        }
+       }
+      ],
+      "boundaries": {
+       "kind": "objects",
+       "uids": [
+        "$uidOf:43"
+       ]
+      },
+      "edgeMode": "extend"
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 40,
+         "layerId": "cizim",
+         "attrs": {},
+         "color": "#E5484D",
+         "a": {
+          "x": 0.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 13.0,
+          "y": 0.0
+         }
+        }
+       ],
+       "created": [
+        {
+         "kind": "line",
+         "id": 0,
+         "layerId": "cizim",
+         "attrs": {},
+         "color": "#E5484D",
+         "a": {
+          "x": 19.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         }
+        }
+       ],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 16,
+         "y": 0
+        }
+       }
+      ],
+      "boundaries": {
+       "kind": "objects",
+       "uids": [
+        "$uidOf:43"
+       ]
+      },
+      "edgeMode": "extend"
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:40"
+       ],
+       "created": [
+        "$uidOf:84"
+       ],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83,
+       84
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Buda",
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Uzantılar kapalı: yayın kendisi T'ye ulaşmıyor",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 16,
+         "y": 0
+        }
+       }
+      ],
+      "boundaries": {
+       "kind": "objects",
+       "uids": [
+        "$uidOf:43"
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "trim_failed",
+       "message": "Tıklanan kısmı kesen bir kenar yok.",
+       "path": "picks"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Uzantılar açık: çoklu çizginin son kenarı ucunun ötesinde keser (x = 26); ilk kenarı geriye uzar ama T'ye değmez",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 28,
+         "y": 0
+        }
+       }
+      ],
+      "boundaries": {
+       "kind": "objects",
+       "uids": [
+        "$uidOf:44"
+       ]
+      },
+      "edgeMode": "extend"
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 40,
+         "layerId": "cizim",
+         "attrs": {
+          "Tür": "Duvar"
+         },
+         "color": "#E5484D",
+         "a": {
+          "x": 0.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 26.0,
+          "y": 0.0
+         }
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 28,
+         "y": 0
+        }
+       }
+      ],
+      "boundaries": {
+       "kind": "objects",
+       "uids": [
+        "$uidOf:44"
+       ]
+      },
+      "edgeMode": "extend"
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:40"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Buda",
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Uzantılar açık: çoklu çizginin son kenarı yay: çemberiyle keser (x = 8); başlangıçtaki kesişim T'nin ucunda sayılmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 6,
+         "y": 0
+        }
+       }
+      ],
+      "boundaries": {
+       "kind": "objects",
+       "uids": [
+        "$uidOf:45"
+       ]
+      },
+      "edgeMode": "extend"
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 40,
+         "layerId": "cizim",
+         "attrs": {
+          "Tür": "Duvar"
+         },
+         "color": "#E5484D",
+         "a": {
+          "x": 8.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         }
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 6,
+         "y": 0
+        }
+       }
+      ],
+      "boundaries": {
+       "kind": "objects",
+       "uids": [
+        "$uidOf:45"
+       ]
+      },
+      "edgeMode": "extend"
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:40"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Buda",
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Uzantılar açık, bütün görünen sınırlar: 12 ile 13 arası gider",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 12.5,
+         "y": 0
+        }
+       }
+      ],
+      "edgeMode": "extend"
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 40,
+         "layerId": "cizim",
+         "attrs": {},
+         "color": "#E5484D",
+         "a": {
+          "x": 0.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 12.0,
+          "y": 0.0
+         }
+        }
+       ],
+       "created": [
+        {
+         "kind": "line",
+         "id": 0,
+         "layerId": "cizim",
+         "attrs": {},
+         "color": "#E5484D",
+         "a": {
+          "x": 13.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         }
+        }
+       ],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 12.5,
+         "y": 0
+        }
+       }
+      ],
+      "edgeMode": "extend"
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:40"
+       ],
+       "created": [
+        "$uidOf:84"
+       ],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83,
+       84
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Buda",
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Uzantılar açık, bütün görünen sınırlar: gizli katmanın çizgisi (x = 3) uzantısıyla da sınır değildir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 2,
+         "y": 0
+        }
+       }
+      ],
+      "edgeMode": "extend"
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 40,
+         "layerId": "cizim",
+         "attrs": {
+          "Tür": "Duvar"
+         },
+         "color": "#E5484D",
+         "a": {
+          "x": 5.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         }
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 2,
+         "y": 0
+        }
+       }
+      ],
+      "edgeMode": "extend"
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:40"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Buda",
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Hızlı kip: hiçbir sınırın kesmediği nesne bütünüyle silinir (eraseUncut)",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 47,
+     "as": "gone47"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:47",
+        "at": {
+         "x": 65,
+         "y": 30
+        }
+       }
+      ],
+      "eraseUncut": true
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [],
+       "created": [],
+       "removed": [
+        "$uidOf:47"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:47",
+        "at": {
+         "x": 65,
+         "y": 30
+        }
+       }
+      ],
+      "eraseUncut": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [],
+       "created": [],
+       "removed": [
+        "$uid:gone47"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Buda",
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "eraseUncut olmadan kesilmeyen nesne trim_failed ile kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:47",
+        "at": {
+         "x": 65,
+         "y": 30
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "trim_failed",
+       "message": "Tıklanan kısmı kesen bir kenar yok.",
+       "path": "picks"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "eraseUncut: kesilen nesne yalnız tıklanan kısmından budanır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 8,
+         "y": 0
+        }
+       }
+      ],
+      "eraseUncut": true
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 40,
+         "layerId": "cizim",
+         "attrs": {
+          "Tür": "Duvar"
+         },
+         "color": "#E5484D",
+         "a": {
+          "x": 12.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         }
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 8,
+         "y": 0
+        }
+       }
+      ],
+      "eraseUncut": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:40"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Buda",
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "eraseUncut ve Uzantılar: 41'in doğrusu keser, silinmez",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 3,
+         "y": 0
+        }
+       }
+      ],
+      "boundaries": {
+       "kind": "objects",
+       "uids": [
+        "$uidOf:41"
+       ]
+      },
+      "edgeMode": "extend",
+      "eraseUncut": true
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 40,
+         "layerId": "cizim",
+         "attrs": {
+          "Tür": "Duvar"
+         },
+         "color": "#E5484D",
+         "a": {
+          "x": 5.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         }
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 3,
+         "y": 0
+        }
+       }
+      ],
+      "boundaries": {
+       "kind": "objects",
+       "uids": [
+        "$uidOf:41"
+       ]
+      },
+      "edgeMode": "extend",
+      "eraseUncut": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:40"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Buda",
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kalan parçayı kesen sınır yoksa parça bütünüyle gider: iki ucu da kesimdir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 8,
+         "y": 0
+        }
+       },
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 3,
+         "y": 0
+        }
+       }
+      ],
+      "boundaries": {
+       "kind": "objects",
+       "uids": [
+        "$uidOf:41",
+        "$uidOf:42"
+       ]
+      },
+      "edgeMode": "extend"
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 40,
+         "layerId": "cizim",
+         "attrs": {
+          "Tür": "Duvar"
+         },
+         "color": "#E5484D",
+         "a": {
+          "x": 12.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         }
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 8,
+         "y": 0
+        }
+       },
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 3,
+         "y": 0
+        }
+       }
+      ],
+      "boundaries": {
+       "kind": "objects",
+       "uids": [
+        "$uidOf:41",
+        "$uidOf:42"
+       ]
+      },
+      "edgeMode": "extend"
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:40"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Buda",
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çit: U ve kapalı alan kesildikleri yerden; alanın ikinci kesişimi gitmiş parçadadır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "fence": [
+       {
+        "x": 101,
+        "y": 45
+       },
+       {
+        "x": 101,
+        "y": 72
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 50,
+         "layerId": "cizim",
+         "attrs": {
+          "Tür": "Bordür"
+         },
+         "a": {
+          "x": 110.0,
+          "y": 50.0
+         },
+         "b": {
+          "x": 130.0,
+          "y": 50.0
+         }
+        },
+        {
+         "kind": "polyline",
+         "id": 53,
+         "layerId": "cizim",
+         "attrs": {},
+         "pts": [
+          {
+           "x": 105.0,
+           "y": 60.0
+          },
+          {
+           "x": 110.0,
+           "y": 60.0
+          },
+          {
+           "x": 110.0,
+           "y": 70.0
+          },
+          {
+           "x": 105.0,
+           "y": 70.0
+          }
+         ]
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "fence": [
+       {
+        "x": 101,
+        "y": 45
+       },
+       {
+        "x": 101,
+        "y": 72
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:50",
+        "$uidOf:53"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Buda",
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çit ve Uzantılar: 41 ile 42'nin doğruları T'yi keser, çitin geçtiği iki parça gider",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "fence": [
+       {
+        "x": 3,
+        "y": -1
+       },
+       {
+        "x": 3,
+        "y": 1
+       },
+       {
+        "x": 8,
+        "y": 1
+       },
+       {
+        "x": 8,
+        "y": -1
+       }
+      ],
+      "boundaries": {
+       "kind": "objects",
+       "uids": [
+        "$uidOf:41",
+        "$uidOf:42"
+       ]
+      },
+      "edgeMode": "extend"
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 40,
+         "layerId": "cizim",
+         "attrs": {
+          "Tür": "Duvar"
+         },
+         "color": "#E5484D",
+         "a": {
+          "x": 12.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         }
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "fence": [
+       {
+        "x": 3,
+        "y": -1
+       },
+       {
+        "x": 3,
+        "y": 1
+       },
+       {
+        "x": 8,
+        "y": 1
+       },
+       {
+        "x": 8,
+        "y": -1
+       }
+      ],
+      "boundaries": {
+       "kind": "objects",
+       "uids": [
+        "$uidOf:41",
+        "$uidOf:42"
+       ]
+      },
+      "edgeMode": "extend"
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:40"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Buda",
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çit kilitli çizgiyi geçer: sayısıyla atlanır; kesilmeyen öbürü eraseUncut ile silinir",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 47,
+     "as": "gone47"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "fence": [
+       {
+        "x": 65,
+        "y": 45
+       },
+       {
+        "x": 65,
+        "y": 25
+       }
+      ],
+      "eraseUncut": true
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "layer_locked",
+        "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.",
+        "path": "fence"
+       }
+      ],
+      "output": {
+       "changed": [],
+       "created": [],
+       "removed": [
+        "$uidOf:47"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "fence": [
+       {
+        "x": 65,
+        "y": 45
+       },
+       {
+        "x": 65,
+        "y": 25
+       }
+      ],
+      "eraseUncut": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "layer_locked",
+        "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.",
+        "path": "fence"
+       }
+      ],
+      "output": {
+       "changed": [],
+       "created": [],
+       "removed": [
+        "$uid:gone47"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Buda",
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çit hiçbir nesneyi kesmiyor: trim_failed",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "fence": [
+       {
+        "x": 80,
+        "y": 80
+       },
+       {
+        "x": 90,
+        "y": 90
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "trim_failed",
+       "message": "Çit hiçbir nesneyi kesmiyor; çiti budanacak nesnelerin üstünden geçirin.",
+       "path": "fence"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kesişen: U'nun pencereye değen iki parçası gider (110'a kadar ve 110–120), kalan 120'den sona; 51 iki parçasıyla gider",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 51,
+     "as": "gone51"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "crossing": {
+       "min": {
+        "x": 105,
+        "y": 48
+       },
+       "max": {
+        "x": 115,
+        "y": 52
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 50,
+         "layerId": "cizim",
+         "attrs": {
+          "Tür": "Bordür"
+         },
+         "a": {
+          "x": 120.0,
+          "y": 50.0
+         },
+         "b": {
+          "x": 130.0,
+          "y": 50.0
+         }
+        }
+       ],
+       "created": [],
+       "removed": [
+        "$uidOf:51"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "crossing": {
+       "min": {
+        "x": 105,
+        "y": 48
+       },
+       "max": {
+        "x": 115,
+        "y": 52
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:50"
+       ],
+       "created": [],
+       "removed": [
+        "$uid:gone51"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Buda",
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kesişen: pencere içindeki iki kesim arası ve ona değen parçalar gider; Uzantılar açık",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "crossing": {
+       "min": {
+        "x": 11,
+        "y": -1
+       },
+       "max": {
+        "x": 14,
+        "y": 1
+       }
+      },
+      "edgeMode": "extend"
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 40,
+         "layerId": "cizim",
+         "attrs": {},
+         "color": "#E5484D",
+         "a": {
+          "x": 0.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 8.0,
+          "y": 0.0
+         }
+        },
+        {
+         "kind": "line",
+         "id": 42,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 12.0,
+          "y": 1.0
+         },
+         "b": {
+          "x": 12.0,
+          "y": 3.0
+         }
+        }
+       ],
+       "created": [
+        {
+         "kind": "line",
+         "id": 0,
+         "layerId": "cizim",
+         "attrs": {},
+         "color": "#E5484D",
+         "a": {
+          "x": 19.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         }
+        }
+       ],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "crossing": {
+       "min": {
+        "x": 11,
+        "y": -1
+       },
+       "max": {
+        "x": 14,
+        "y": 1
+       }
+      },
+      "edgeMode": "extend"
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:40",
+        "$uidOf:42"
+       ],
+       "created": [
+        "$uidOf:84"
+       ],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83,
+       84
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Buda",
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kesişen: çember iki kesişim arasındaki üst yayından budanır, alt yayı kalır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "crossing": {
+       "min": {
+        "x": 148,
+        "y": 104
+       },
+       "max": {
+        "x": 152,
+        "y": 106
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "arc",
+         "id": 55,
+         "layerId": "cizim",
+         "attrs": {},
+         "c": {
+          "x": 150,
+          "y": 100
+         },
+         "r": 5,
+         "a0": 2.498091544796509,
+         "a1": 0.6435011087932851
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "crossing": {
+       "min": {
+        "x": 148,
+        "y": 104
+       },
+       "max": {
+        "x": 152,
+        "y": 106
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:55"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Buda",
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kesişen: kapalı alanın pencereye değen kenarı gider; kalan açık çoklu çizgi",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "crossing": {
+       "min": {
+        "x": 98,
+        "y": 64
+       },
+       "max": {
+        "x": 102,
+        "y": 66
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "polyline",
+         "id": 53,
+         "layerId": "cizim",
+         "attrs": {},
+         "pts": [
+          {
+           "x": 105.0,
+           "y": 60.0
+          },
+          {
+           "x": 110.0,
+           "y": 60.0
+          },
+          {
+           "x": 110.0,
+           "y": 70.0
+          },
+          {
+           "x": 105.0,
+           "y": 70.0
+          }
+         ]
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "crossing": {
+       "min": {
+        "x": 98,
+        "y": 64
+       },
+       "max": {
+        "x": 102,
+        "y": 66
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:53"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Buda",
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kesişen: hiçbir sınırın kesmediği nesne eraseUncut ile silinir, kilitli olan sayıyla atlanır",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 47,
+     "as": "gone47"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "crossing": {
+       "min": {
+        "x": 62,
+        "y": 25
+       },
+       "max": {
+        "x": 64,
+        "y": 45
+       }
+      },
+      "eraseUncut": true
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "layer_locked",
+        "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.",
+        "path": "crossing"
+       }
+      ],
+      "output": {
+       "changed": [],
+       "created": [],
+       "removed": [
+        "$uidOf:47"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "crossing": {
+       "min": {
+        "x": 62,
+        "y": 25
+       },
+       "max": {
+        "x": 64,
+        "y": 45
+       }
+      },
+      "eraseUncut": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "layer_locked",
+        "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.",
+        "path": "crossing"
+       }
+      ],
+      "output": {
+       "changed": [],
+       "created": [],
+       "removed": [
+        "$uid:gone47"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Buda",
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kesişen: kesilmeyen nesne eraseUncut olmadan kalır; hiçbir şey yazılmaz, ilk nedenle reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "crossing": {
+       "min": {
+        "x": 62,
+        "y": 25
+       },
+       "max": {
+        "x": 64,
+        "y": 45
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "trim_failed",
+       "message": "Tıklanan kısmı kesen bir kenar yok.",
+       "path": "crossing"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kesişen: adalı alan uyarıyla atlanır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "crossing": {
+       "min": {
+        "x": 199,
+        "y": 25
+       },
+       "max": {
+        "x": 201,
+        "y": 26
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "trim_failed",
+       "message": "Adalı alanda budama yapılamaz; iç halkalar kaybolurdu. Önce Patlat ile halkalarına ayırın ya da Alan böl kullanın.",
+       "path": "crossing"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Seçim, çit ve pencere birlikte: önce seçimler, sonra çit, sonra pencere",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 13,
+         "y": 0
+        }
+       }
+      ],
+      "fence": [
+       {
+        "x": 101,
+        "y": 45
+       },
+       {
+        "x": 101,
+        "y": 55
+       }
+      ],
+      "crossing": {
+       "min": {
+        "x": 148,
+        "y": 104
+       },
+       "max": {
+        "x": 152,
+        "y": 106
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 40,
+         "layerId": "cizim",
+         "attrs": {
+          "Tür": "Duvar"
+         },
+         "color": "#E5484D",
+         "a": {
+          "x": 0.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 12.0,
+          "y": 0.0
+         }
+        },
+        {
+         "kind": "line",
+         "id": 50,
+         "layerId": "cizim",
+         "attrs": {
+          "Tür": "Bordür"
+         },
+         "a": {
+          "x": 110.0,
+          "y": 50.0
+         },
+         "b": {
+          "x": 130.0,
+          "y": 50.0
+         }
+        },
+        {
+         "kind": "arc",
+         "id": 55,
+         "layerId": "cizim",
+         "attrs": {},
+         "c": {
+          "x": 150,
+          "y": 100
+         },
+         "r": 5,
+         "a0": 2.498091544796509,
+         "a1": 0.6435011087932851
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "picks": [
+       {
+        "uid": "$uidOf:40",
+        "at": {
+         "x": 13,
+         "y": 0
+        }
+       }
+      ],
+      "fence": [
+       {
+        "x": 101,
+        "y": 45
+       },
+       {
+        "x": 101,
+        "y": 55
+       }
+      ],
+      "crossing": {
+       "min": {
+        "x": 148,
+        "y": 104
+       },
+       "max": {
+        "x": 152,
+        "y": 106
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:40",
+        "$uidOf:50",
+        "$uidOf:55"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Buda",
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Seçim, çit ve pencere yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_entities",
+       "message": "Budanacak nesne yok. En az bir nesneyi ve tıklandığı yeri verin.",
+       "path": "picks"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çit tek noktalı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "fence": [
+       {
+        "x": 1,
+        "y": 1
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "too_few_points",
+       "message": "Çit için en az iki nokta gerekir; çitin noktalarını sırayla verin.",
+       "path": "fence"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çitin noktası sonlu değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "fence": [
+       {
+        "x": 1,
+        "y": 1
+       },
+       {
+        "x": 2,
+        "y": 2
+       }
+      ]
+     },
+     "nonFinite": {
+      "fence[1].x": "NaN"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Çitin noktasının doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+       "path": "fence[1].x"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Pencerenin köşesi sonlu değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "crossing": {
+       "min": {
+        "x": 0,
+        "y": 0
+       },
+       "max": {
+        "x": 1,
+        "y": 1
+       }
+      }
+     },
+     "nonFinite": {
+      "crossing.max.y": "Infinity"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Pencerenin köşesinin kuzey (X) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+       "path": "crossing.max.y"
+      }
+     },
+     "expect": {
+      "ids": [
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -68,7 +68,7 @@ codes! {
     /// A closed area with fewer than 3 corners (`cad.polygon.create`).
     TOO_FEW_CORNERS = "too_few_corners", Failed, false, "Kapalı alanın en az üç köşesi olmalı.";
     /// A polyline with fewer than 2 points (`cad.polyline.create`).
-    TOO_FEW_POINTS = "too_few_points", Failed, false, "Çoklu çizginin en az iki noktası olmalı.";
+    TOO_FEW_POINTS = "too_few_points", Failed, false, "Çoklu çizginin ve çitin en az iki noktası olmalı.";
     /// A polyline's part with holes: only an area's parts have them (docs/adr/0174).
     PART_HOLES = "part_holes", Failed, false, "Delik yalnız alanın parçasında olur; çoklu çizginin parçasında olmaz.";
     /// A coordinate, a bulge, a radius, an angle or an elevation that is NaN or ±∞.

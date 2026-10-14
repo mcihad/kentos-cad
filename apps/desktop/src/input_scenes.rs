@@ -552,7 +552,8 @@ mod tests {
     }
 
     /// docs/adr/0280 on the desktop: Shift heats two corners, a click starts the edit, the letter D is the grip's
-    /// Döndür (not a shortcut), a typed angle turns the parcel a quarter about the grip in one step.
+    /// Döndür (not a shortcut), a typed angle (100g, the project's unit) turns the parcel a quarter about the grip in
+    /// one step.
     #[test]
     fn two_hot_corners_take_the_rotate_letter_and_a_typed_angle() {
         use kentos_domain::Slot;
@@ -564,7 +565,8 @@ mod tests {
         assert!(app.session.prompt().text().starts_with("Tutamaç · Döndür"));
         let _ = app.update(crate::app::Message::PromptOption("K"));
         let _ = app.update(crate::app::Message::PromptOption("K"));
-        app.with_tool(|s, cx| s.input("90", cx));
+        // A CAD project whose angles are grads: a typed turn is counter-clockwise in grads (docs/adr/0291, 0294).
+        app.with_tool(|s, cx| s.input("100", cx));
         let doc = app.document.as_ref().expect("open");
         let slot = app.selection.ids().first().copied().unwrap_or(Slot(0));
         let Some(kentos_contracts::Entity::Polygon(p)) = doc.model.get(slot) else {

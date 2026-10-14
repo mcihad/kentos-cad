@@ -38,7 +38,10 @@
       "expect": {
         "tool": "trim",
         "options": [
-          "S"
+          "S",
+          "K",
+          "U",
+          "R"
         ]
       }
     },

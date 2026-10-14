@@ -650,6 +650,18 @@ fn short_lines() -> Objects {
     o
 }
 
+/// A street and walls that stop short of it, an arc whose circle crosses it, and a short line Uzat grows to a
+/// wall's line (docs/adr/0294).
+fn short_walls() -> Objects {
+    let mut o = Objects::new();
+    o.line("yol", [0.0, 4.0], [58.0, 4.0]);
+    o.line("cizim", [14.0, 10.0], [14.0, 32.0]);
+    o.line("cizim", [30.0, 10.0], [30.0, 32.0]);
+    o.arc("cizim", [46.0, 9.0], 8.0, 0.0, std::f64::consts::PI);
+    o.line("cizim", [4.0, 28.0], [10.0, 28.0]);
+    o
+}
+
 /// A road with a corner and a parcel, to be offset to both sides.
 fn kerbs() -> Objects {
     let mut o = Objects::new();
@@ -1046,6 +1058,51 @@ fn third_phase() -> Vec<Scene> {
             forget(app);
             run(app, "tool.confirm");
             hover(app, [40.0, 30.0]);
+        }),
+        // AutoCAD's TRIM and EXTEND options (docs/adr/0294).
+        ("buda-uzanti-onizleme", |app| {
+            open(app, short_walls());
+            run(app, "tool.trim");
+            typed(app, "U");
+            forget(app);
+            hover(app, [22.0, 4.0]);
+        }),
+        ("buda-uzanti-sonuc", |app| {
+            open(app, short_walls());
+            run(app, "tool.trim");
+            typed(app, "U");
+            click(app, [22.0, 4.0]);
+            forget(app);
+            click(app, [46.0, 4.0]);
+            hover(app, [28.0, 36.0]);
+        }),
+        ("buda-kesisen-onizleme", |app| {
+            open(app, fence_roads());
+            run(app, "tool.trim");
+            click(app, [15.0, 12.0]);
+            hover(app, [44.0, 20.0]);
+        }),
+        ("buda-kesisen-sonuc", |app| {
+            open(app, fence_roads());
+            run(app, "tool.trim");
+            click(app, [15.0, 12.0]);
+            forget(app);
+            click(app, [44.0, 20.0]);
+            hover(app, [56.0, 30.0]);
+        }),
+        ("buda-sil", |app| {
+            open(app, fence_roads());
+            run(app, "tool.trim");
+            typed(app, "R");
+            click(app, [50.0, 28.0]);
+            hover(app, [8.0, 28.0]);
+        }),
+        ("uzat-uzanti-onizleme", |app| {
+            open(app, short_walls());
+            run(app, "tool.extend");
+            typed(app, "U");
+            forget(app);
+            hover(app, [12.0, 28.0]);
         }),
         ("otele-istem", |app| {
             open(app, kerbs());

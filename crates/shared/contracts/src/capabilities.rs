@@ -640,10 +640,10 @@ const ENTRIES: &[Entry] = &[
         id: "cad.entities.trim",
         refusals: &[
             OBJECTS,
-            &["not_finite", "not_trimmable", "trim_failed"],
+            &["too_few_points", "not_finite", "not_trimmable", "trim_failed"],
             REVISION,
         ],
-        warnings: &["trim_failed"],
+        warnings: &["trim_failed", "layer_locked"],
         targets: || {
             vec![target(
                 None,
@@ -658,8 +658,12 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.entities.extend",
-        refusals: &[OBJECTS, &["not_finite", "extend_failed"], REVISION],
-        warnings: &["extend_failed"],
+        refusals: &[
+            OBJECTS,
+            &["too_few_points", "not_finite", "extend_failed"],
+            REVISION,
+        ],
+        warnings: &["extend_failed", "layer_locked"],
         targets: || {
             vec![target(
                 None,

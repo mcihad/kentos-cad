@@ -25,14 +25,15 @@ use std::collections::BTreeMap;
 
 use kentos_contracts::{
     CommandResult, CommandWarning, EditOperation, EntitiesEdit, EntitiesTrim, EntitiesTrimPlan,
-    EntitiesTrimmed, Entity, EntityEdit, TrimBoundaries,
+    EntitiesTrimmed, Entity, EntityEdit, TrimBoundaries, TrimEdgeMode,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::{Entity as CoreEntity, Shape};
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::ops::curve_cuts::{Cut, Geometry};
 use kentos_geometry_core::ops::offset::through_distance;
-use kentos_geometry_core::ops::path::{nearest_s, path_of};
+use kentos_geometry_core::ops::path::{nearest_s, path_of, point_at_s};
+use kentos_geometry_core::ops::trim::{fence_crossings, trimmable, window_point, window_points};
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::vec2::Vec2;
 
@@ -228,7 +229,8 @@ fn check(
     input: &EntitiesTrim,
     act: Act,
 ) -> Result<Checked, Stop> {
-    if input.picks.is_empty() {
+    let fence = input.fence.as_deref();
+    if input.picks.is_empty() && fence.is_none() && input.crossing.is_none() {
         let what = match act {
             Act::Trim => "Budanacak",
             Act::Extend => "Uzatılacak",
@@ -249,6 +251,13 @@ fn check(
             "Sınır nesnesi yok. Sınırları verin ya da bütün görünen nesneler için “all”u kullanın."
                 .into(),
             "boundaries.uids",
+        ));
+    }
+    if fence.is_some_and(|f| f.len() < 2) {
+        return Err(refuse(
+            codes::TOO_FEW_POINTS,
+            "Çit için en az iki nokta gerekir; çitin noktalarını sırayla verin.".into(),
+            "fence",
         ));
     }
     let uids = input
@@ -276,6 +285,13 @@ fn check(
     }
     for (i, p) in input.picks.iter().enumerate() {
         checks::point(p.at, "Tıklanan noktanın", &format!("picks[{i}].at"))?;
+    }
+    for (i, p) in fence.unwrap_or_default().iter().enumerate() {
+        checks::point(*p, "Çitin noktasının", &format!("fence[{i}]"))?;
+    }
+    if let Some(w) = &input.crossing {
+        checks::point(w.min, "Pencerenin köşesinin", "crossing.min")?;
+        checks::point(w.max, "Pencerenin köşesinin", "crossing.max")?;
     }
     if let Some(TrimBoundaries::Area { min, max }) = &input.boundaries {
         checks::point(*min, "Dikdörtgenin köşesinin", "boundaries.min")?;
@@ -311,12 +327,10 @@ fn check(
                 &format!("picks[{i}]"),
             ));
         }
-        if act == Act::Trim
-            && matches!(e, Entity::Polygon(p) if p.holes.as_ref().is_some_and(|h| !h.is_empty()))
-        {
+        if act == Act::Trim && holed(e) {
             return Err(refuse(
                 codes::NOT_TRIMMABLE,
-                "Adalı alanda budama yapılamaz; iç halkalar kaybolurdu. Önce Patlat ile halkalarına ayırın ya da Alan böl kullanın.".into(),
+                HOLES.into(),
                 &format!("picks[{i}]"),
             ));
         }
@@ -331,12 +345,7 @@ fn check(
         }
     };
     let view = match &input.boundaries {
-        Some(TrimBoundaries::Area { min, max }) => Bounds {
-            min_x: min.x.min(max.x),
-            min_y: min.y.min(max.y),
-            max_x: min.x.max(max.x),
-            max_y: min.y.max(max.y),
-        },
+        Some(TrimBoundaries::Area { min, max }) => rect(*min, *max),
         _ => Bounds {
             min_x: f64::MIN,
             min_y: f64::MIN,
@@ -344,102 +353,98 @@ fn check(
             max_y: f64::MAX,
         },
     };
-    // The picks of each object, in the order the objects are first picked.
-    let mut order: Vec<Slot> = Vec::new();
-    let mut picks: BTreeMap<Slot, Vec<(usize, Vec2)>> = BTreeMap::new();
-    for (i, (p, slot)) in input.picks.iter().zip(&slots).enumerate() {
-        let at = Vec2::new(p.at.x, p.at.y);
-        let list = picks.entry(*slot).or_default();
-        if list.is_empty() {
-            order.push(*slot);
-        }
-        list.push((i, at));
-    }
-    let mut changes = Vec::new();
-    let mut warnings = Vec::new();
-    let mut first_why: Option<String> = None;
-    let mut warn = |i: usize, why: String, warnings: &mut Vec<CommandWarning>| {
-        if first_why.is_none() {
-            first_why = Some(why.clone());
-        }
-        warnings.push(CommandWarning {
-            code: act.failed().into(),
-            message: why,
-            path: Some(format!("picks[{i}]")),
-        });
+    let mut run = Run {
+        doc,
+        store,
+        chosen,
+        view,
+        extended: input.edge_mode == Some(TrimEdgeMode::Extend),
+        erase: act == Act::Trim && input.erase_uncut == Some(true),
+        act,
+        warnings: Vec::new(),
+        first_why: None,
+        order: Vec::new(),
+        work: BTreeMap::new(),
     };
-    for slot in order {
-        let Some(e) = doc.get(slot) else { continue };
-        let except = Some(f64::from(slot.0));
-        let list = &picks[&slot];
-        match act {
-            Act::Trim => {
-                let mut pieces = vec![shape(e)];
-                let mut done = false;
-                for (n, &(i, at)) in list.iter().enumerate() {
-                    // The first pick is on the object as it is; a later one on what is left of it.
-                    let k = if n == 0 {
-                        Some(0)
-                    } else {
-                        piece_at(&pieces, at)
-                    };
-                    let Some(k) = k else { continue };
-                    let target = CoreEntity::new(pieces[k].clone());
-                    match store.trim_preview(&target, at, except, chosen.as_deref(), &view) {
-                        Cut::Pieces(now) => {
-                            pieces.splice(k..=k, now.into_iter().map(|p| p.shape));
-                            done = true;
-                        }
-                        Cut::Error(why) => {
-                            let why = if why.is_empty() {
-                                NOTHING[0].into()
-                            } else {
-                                why
-                            };
-                            warn(i, why, &mut warnings);
-                        }
-                    }
-                }
-                if done {
-                    changes.extend(replace_changes(doc, slot, &pieces));
-                }
+    for (i, (p, slot)) in input.picks.iter().zip(&slots).enumerate() {
+        run.pick(*slot, Vec2::new(p.at.x, p.at.y), &format!("picks[{i}]"));
+    }
+    let mut locked = 0;
+    if let Some(points) = fence {
+        let pts: Vec<Vec2> = points.iter().map(|p| Vec2::new(p.x, p.y)).collect();
+        let mut crossed = false;
+        for (slot, shut) in run.shown_in(&rect_of(&pts)) {
+            let Some(e) = doc.get(slot) else { continue };
+            let at = fence_crossings(&CoreEntity::new(shape(e)), &pts);
+            if at.is_empty() {
+                continue;
             }
+            if shut {
+                locked += 1;
+                continue;
+            }
+            crossed = true;
+            if act == Act::Trim && holed(e) {
+                run.warn("fence", HOLES.into());
+                continue;
+            }
+            for p in at {
+                run.pick(slot, p, "fence");
+            }
+        }
+        // Only locked objects crossed: the count says it.
+        if !crossed && locked == 0 {
+            let verb = match act {
+                Act::Trim => "budanacak",
+                Act::Extend => "uzatılacak",
+            };
+            run.warn(
+                "fence",
+                format!("Çit hiçbir nesneyi kesmiyor; çiti {verb} nesnelerin üstünden geçirin."),
+            );
+        }
+    }
+    if let Some(w) = &input.crossing {
+        let window = rect(w.min, w.max);
+        let mut met = false;
+        let before = locked;
+        for (slot, shut) in run.shown_in(&window) {
+            match run.window(slot, &window, shut) {
+                Met::No => {}
+                Met::Locked => locked += 1,
+                Met::Yes => met = true,
+            }
+        }
+        if !met && locked == before {
+            let what = match act {
+                Act::Trim => "budanacak bir parçaya",
+                Act::Extend => "uzatılacak bir uca",
+            };
+            run.warn(
+                "crossing",
+                format!("Pencere {what} değmiyor; pencereyi nesnelerin üstüne çizin."),
+            );
+        }
+    }
+    let skipped = (locked > 0).then(|| CommandWarning {
+        code: codes::LAYER_LOCKED.into(),
+        message: format!(
+            "{locked} nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın."
+        ),
+        path: Some(if fence.is_some() { "fence" } else { "crossing" }.into()),
+    });
+    let mut changes = Vec::new();
+    for slot in &run.order {
+        let w = &run.work[slot];
+        if !w.done {
+            continue;
+        }
+        match act {
+            Act::Trim => changes.extend(replace_changes(doc, *slot, &w.pieces)),
             Act::Extend => {
-                let mut current = shape(e);
-                let mut used = [false; 2];
-                let mut done = false;
-                for &(i, at) in list {
-                    let Some(path) = path_of(&current).filter(|p| !p.closed) else {
-                        warn(
-                            i,
-                            "Yalnız açık çizgiler, çoklu çizgiler ve yaylar uzatılabilir.".into(),
-                            &mut warnings,
-                        );
-                        continue;
-                    };
-                    let end = usize::from(nearest_s(&path, at) > path.length / 2.0);
-                    if std::mem::replace(&mut used[end], true) {
-                        continue;
-                    }
-                    let target = CoreEntity::new(current.clone());
-                    match store.extend_preview(&target, at, except, chosen.as_deref(), &view) {
-                        Geometry::Ok(g) => {
-                            current = g.shape;
-                            done = true;
-                        }
-                        Geometry::Error(why) => {
-                            let why = if why.is_empty() {
-                                NOTHING[1].into()
-                            } else {
-                                why
-                            };
-                            warn(i, why, &mut warnings);
-                        }
-                    }
-                }
-                if let (true, Some(geometry)) = (done, edit_geometry(current)) {
+                if let Some(geometry) = edit_geometry(w.current.clone()) {
                     changes.push(EntityEdit::Update {
-                        uid: doc.uid(slot).map(|u| u.to_string()).unwrap_or_default(),
+                        uid: doc.uid(*slot).map(|u| u.to_string()).unwrap_or_default(),
                         geometry,
                     });
                 }
@@ -447,10 +452,24 @@ fn check(
         }
     }
     if changes.is_empty() {
-        let i = act as usize;
-        let why = first_why.unwrap_or_else(|| NOTHING[i].into());
-        return Err(refuse(act.failed(), why, "picks"));
+        let path = if !input.picks.is_empty() {
+            "picks"
+        } else if fence.is_some() {
+            "fence"
+        } else {
+            "crossing"
+        };
+        return Err(match (run.first_why, skipped) {
+            (None, Some(w)) => refuse(codes::LAYER_LOCKED, w.message, path),
+            (why, _) => refuse(
+                act.failed(),
+                why.unwrap_or_else(|| NOTHING[act as usize].into()),
+                path,
+            ),
+        });
     }
+    let mut warnings = run.warnings;
+    warnings.extend(skipped);
     Ok(Checked {
         edit: EntitiesEdit {
             operation: act.operation(),
@@ -459,4 +478,334 @@ fn check(
         },
         warnings,
     })
+}
+
+/// The words of an area with holes Buda refuses.
+const HOLES: &str = "Adalı alanda budama yapılamaz; iç halkalar kaybolurdu. Önce Patlat ile halkalarına ayırın ya da Alan böl kullanın.";
+
+/// Whether `e` is an area with holes (Buda would lose them).
+fn holed(e: &Entity) -> bool {
+    matches!(e, Entity::Polygon(p) if p.holes.as_ref().is_some_and(|h| !h.is_empty()))
+}
+
+fn rect(a: kentos_contracts::Vec2, b: kentos_contracts::Vec2) -> Bounds {
+    Bounds {
+        min_x: a.x.min(b.x),
+        min_y: a.y.min(b.y),
+        max_x: a.x.max(b.x),
+        max_y: a.y.max(b.y),
+    }
+}
+
+fn rect_of(pts: &[Vec2]) -> Bounds {
+    pts.iter().fold(
+        Bounds {
+            min_x: f64::INFINITY,
+            min_y: f64::INFINITY,
+            max_x: f64::NEG_INFINITY,
+            max_y: f64::NEG_INFINITY,
+        },
+        |b, p| Bounds {
+            min_x: b.min_x.min(p.x),
+            min_y: b.min_y.min(p.y),
+            max_x: b.max_x.max(p.x),
+            max_y: b.max_y.max(p.y),
+        },
+    )
+}
+
+/// What a window did with one object.
+enum Met {
+    /// Nothing it acts on: a kind it does not cut or grow, or only touched.
+    No,
+    /// Something it would act on, on a locked layer: left alone, counted.
+    Locked,
+    Yes,
+}
+
+/// Steps a window takes on one object at most: each takes a piece away.
+const WINDOW_STEPS: usize = 10_000;
+
+/// One object as the picks leave it.
+struct Work {
+    /// Buda: the pieces left, in order along the object; none: it went whole.
+    pieces: Vec<Shape>,
+    /// Buda: a pick has cut it: every piece is one an earlier cut left, so
+    /// one no boundary cuts goes whole (its ends are cuts or the object's).
+    cut: bool,
+    /// Uzat: the object as grown so far, and which ends grew.
+    current: Shape,
+    used: [bool; 2],
+    done: bool,
+}
+
+/// The command's walk over its picks.
+struct Run<'a> {
+    doc: &'a Document,
+    store: &'a Store,
+    chosen: Option<Vec<f64>>,
+    view: Bounds,
+    extended: bool,
+    erase: bool,
+    act: Act,
+    warnings: Vec<CommandWarning>,
+    first_why: Option<String>,
+    order: Vec<Slot>,
+    work: BTreeMap<Slot, Work>,
+}
+
+impl Run<'_> {
+    fn warn(&mut self, path: &str, why: String) {
+        if self.first_why.is_none() {
+            self.first_why = Some(why.clone());
+        }
+        self.warnings.push(CommandWarning {
+            code: self.act.failed().into(),
+            message: why,
+            path: Some(path.into()),
+        });
+    }
+
+    /// The shown objects meeting `r` in the drawing's order, each with whether its layer is locked.
+    fn shown_in(&self, r: &Bounds) -> Vec<(Slot, bool)> {
+        let mut ids = self.store.in_rect(r, true);
+        ids.sort_by(f64::total_cmp);
+        let layers = self.doc.layers();
+        ids.into_iter()
+            .filter_map(|id| {
+                let slot = Slot(id as u32);
+                let e = self.doc.get(slot)?;
+                Some((slot, layers.is_locked(&e.base().layer_id)))
+            })
+            .collect()
+    }
+
+    fn work(&mut self, slot: Slot) -> Option<&mut Work> {
+        if !self.work.contains_key(&slot) {
+            let e = self.doc.get(slot)?;
+            let s = shape(e);
+            self.order.push(slot);
+            self.work.insert(
+                slot,
+                Work {
+                    pieces: vec![s.clone()],
+                    cut: false,
+                    current: s,
+                    used: [false; 2],
+                    done: false,
+                },
+            );
+        }
+        self.work.get_mut(&slot)
+    }
+
+    fn cut(&self, slot: Slot, piece: &Shape, at: Vec2) -> Cut {
+        let target = CoreEntity::new(piece.clone());
+        self.store.trim_preview_in(
+            &target,
+            at,
+            Some(f64::from(slot.0)),
+            self.chosen.as_deref(),
+            &self.view,
+            self.extended,
+        )
+    }
+
+    /// Whether a pick at `at` cuts the object as it is (a boundary is around it).
+    fn cuts_at(&self, slot: Slot, original: &Shape, at: Vec2) -> bool {
+        matches!(self.cut(slot, original, at), Cut::Pieces(_))
+    }
+
+    fn grow(&self, slot: Slot, current: &Shape, at: Vec2) -> Geometry {
+        let target = CoreEntity::new(current.clone());
+        self.store.extend_preview_in(
+            &target,
+            at,
+            Some(f64::from(slot.0)),
+            self.chosen.as_deref(),
+            &self.view,
+            self.extended,
+        )
+    }
+
+    /// A pick on the object at `slot`: Buda cuts the piece it lies on, Uzat grows the end nearest it.
+    fn pick(&mut self, slot: Slot, at: Vec2, path: &str) {
+        match self.act {
+            Act::Trim => {
+                self.trim_at(slot, at, path);
+            }
+            Act::Extend => self.extend_at(slot, at, path),
+        };
+    }
+
+    /// Buda at `at`: whether something went. A first pick is on the object as it is (wherever it lies, as a
+    /// click near it); a later one on the piece an earlier left it lies on, or nothing.
+    fn trim_at(&mut self, slot: Slot, at: Vec2, path: &str) {
+        let Some(w) = self.work(slot) else { return };
+        let k = if w.cut {
+            piece_at(&w.pieces, at)
+        } else {
+            Some(0)
+        };
+        if let Some(k) = k {
+            self.trim_piece(slot, k, at, path);
+        }
+    }
+
+    /// Buda of the `k`th piece at `at`: whether something went.
+    fn trim_piece(&mut self, slot: Slot, k: usize, at: Vec2, path: &str) -> bool {
+        let Some(w) = self.work(slot) else {
+            return false;
+        };
+        let piece = w.pieces[k].clone();
+        let was_cut = w.cut;
+        let result = self.cut(slot, &piece, at);
+        let erase = self.erase && trimmable(&piece);
+        let now = match result {
+            Cut::Pieces(now) => Some(now.into_iter().map(|p| p.shape).collect()),
+            // A piece an earlier cut left that no boundary cuts goes whole: its ends are cuts.
+            Cut::Error(_) if was_cut => Some(Vec::new()),
+            // Quick mode: what no boundary cuts goes whole.
+            Cut::Error(_) if erase => None,
+            Cut::Error(why) => {
+                let why = if why.is_empty() {
+                    NOTHING[0].into()
+                } else {
+                    why
+                };
+                self.warn(path, why);
+                return false;
+            }
+        };
+        let Some(w) = self.work.get_mut(&slot) else {
+            return false;
+        };
+        match now {
+            Some(now) => {
+                w.pieces.splice(k..=k, now);
+            }
+            None => w.pieces.clear(),
+        }
+        w.cut = true;
+        w.done = true;
+        true
+    }
+
+    /// Uzat at `at`: the end of the object nearest it grows, once.
+    fn extend_at(&mut self, slot: Slot, at: Vec2, path: &str) {
+        let Some(w) = self.work(slot) else { return };
+        let Some(line) = path_of(&w.current).filter(|p| !p.closed) else {
+            self.warn(
+                path,
+                "Yalnız açık çizgiler, çoklu çizgiler ve yaylar uzatılabilir.".into(),
+            );
+            return;
+        };
+        let end = usize::from(nearest_s(&line, at) > line.length / 2.0);
+        if std::mem::replace(&mut w.used[end], true) {
+            return;
+        }
+        let current = w.current.clone();
+        match self.grow(slot, &current, at) {
+            Geometry::Ok(g) => {
+                if let Some(w) = self.work.get_mut(&slot) {
+                    w.current = g.shape;
+                    w.done = true;
+                }
+            }
+            Geometry::Error(why) => {
+                let why = if why.is_empty() {
+                    NOTHING[1].into()
+                } else {
+                    why
+                };
+                self.warn(path, why);
+            }
+        }
+    }
+
+    /// Kesişen on one object: Buda takes away every piece between the boundaries that meets the window
+    /// (each in turn, from the object's start), Uzat grows every end inside it. Whether the window met
+    /// something it could act on (on a locked layer: left alone); kinds it cannot are passed over without
+    /// a word.
+    fn window(&mut self, slot: Slot, window: &Bounds, locked: bool) -> Met {
+        let Some(e) = self.doc.get(slot) else {
+            return Met::No;
+        };
+        let s = shape(e);
+        match self.act {
+            Act::Trim => {
+                let pieces = match self.work.get(&slot) {
+                    Some(w) => w.pieces.clone(),
+                    None => vec![s.clone()],
+                };
+                if !trimmable(&s) || pieces.iter().all(|p| window_point(p, window).is_none()) {
+                    return Met::No;
+                }
+                if locked {
+                    return Met::Locked;
+                }
+                if holed(e) {
+                    self.warn("crossing", HOLES.into());
+                    return Met::Yes;
+                }
+                for _ in 0..WINDOW_STEPS {
+                    let pieces = match self.work.get(&slot) {
+                        Some(w) => w.pieces.clone(),
+                        None => vec![s.clone()],
+                    };
+                    let Some((k, at)) = pieces.iter().enumerate().find_map(|(k, p)| {
+                        let at = window_points(p, window);
+                        (!at.is_empty()).then_some((k, at))
+                    }) else {
+                        break;
+                    };
+                    // On the object as it is, a pick that lands on its only crossing finds none around it:
+                    // the part's other points are tried first.
+                    let fresh = !self.work.get(&slot).is_some_and(|w| w.cut);
+                    let q = if fresh && !self.cuts_at(slot, &pieces[0], at[0]) {
+                        at[1..]
+                            .iter()
+                            .copied()
+                            .find(|q| self.cuts_at(slot, &pieces[0], *q))
+                            .unwrap_or(at[0])
+                    } else {
+                        at[0]
+                    };
+                    if !self.trim_piece(slot, k, q, "crossing") {
+                        break;
+                    }
+                }
+                Met::Yes
+            }
+            Act::Extend => {
+                let current = match self.work.get(&slot) {
+                    Some(w) => w.current.clone(),
+                    None => s,
+                };
+                let Some(line) = path_of(&current).filter(|p| !p.closed) else {
+                    return Met::No;
+                };
+                let ends: Vec<Vec2> = [point_at_s(&line, 0.0), point_at_s(&line, line.length)]
+                    .into_iter()
+                    .filter(|p| {
+                        p.x >= window.min_x
+                            && p.x <= window.max_x
+                            && p.y >= window.min_y
+                            && p.y <= window.max_y
+                    })
+                    .collect();
+                if ends.is_empty() {
+                    return Met::No;
+                }
+                if locked {
+                    return Met::Locked;
+                }
+                for p in ends {
+                    self.extend_at(slot, p, "crossing");
+                }
+                Met::Yes
+            }
+        }
+    }
 }

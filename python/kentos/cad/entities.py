@@ -84,7 +84,10 @@ from .types import (  # noqa: F401
     SubPlace,
     Transform,
     TrimBoundaries,
+    TrimEdgeMode,
+    TrimEdgeModeName,
     TrimPick,
+    TrimWindow,
     Vec2,
     Vec2Like,
     VertexAction,
@@ -1374,11 +1377,12 @@ edit = _EntitiesEdit()
 class _EntitiesExtend(LocalCommand[EntitiesTrim, EntitiesTrimmed, EntitiesTrimPlan]):
     """``cad.entities.extend`` v1. Nesneleri uzat: Kalıcı kimlikleriyle verilen açık
     çizgileri, çoklu çizgileri ve yayları tıklanan yere yakın uçlarından ilk sınıra
-    kadar uzatır; tek geri alma adımı “Uzat”. Seçimler ve sınırlar
-    cad.entities.trim'deki gibidir; aynı nesnenin iki seçimi iki ucunu uzatabilir, bir
-    uç bir kez uzar. Uç hiçbir sınıra ulaşmıyorsa seçim extend_failed uyarısıyla
-    atlanır; hiçbir uç uzamazsa hiçbir şey yazılmaz. expectedRevision verilmişse ve
-    çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    kadar uzatır; tek geri alma adımı “Uzat”. Seçimler, sınırlar, fence (Çit), crossing
+    (Kesişen: penceredeki her uç uzar) ve edgeMode cad.entities.trim'deki gibidir (ADR
+    0294); eraseUncut yok sayılır. Aynı nesnenin iki seçimi iki ucunu uzatabilir, bir uç
+    bir kez uzar. Uç hiçbir sınıra ulaşmıyorsa seçim extend_failed uyarısıyla atlanır;
+    hiçbir uç uzamazsa hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o
+    sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.entities.extend"
@@ -1394,27 +1398,39 @@ class _EntitiesExtend(LocalCommand[EntitiesTrim, EntitiesTrimmed, EntitiesTrimPl
         doc: Document,
         /,
         *,
-        picks: Sequence[TrimPick],
         boundaries: TrimBoundaries | None | Unset = UNSET,
+        crossing: TrimWindow | None | Unset = UNSET,
+        edge_mode: TrimEdgeMode | TrimEdgeModeName | None | Unset = UNSET,
+        erase_uncut: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        fence: Sequence[Vec2Like] | None | Unset = UNSET,
+        picks: Sequence[TrimPick] | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> EntitiesTrimmed:
         """Nesneleri uzat: Kalıcı kimlikleriyle verilen açık çizgileri, çoklu çizgileri ve
         yayları tıklanan yere yakın uçlarından ilk sınıra kadar uzatır; tek geri alma adımı
-        “Uzat”. Seçimler ve sınırlar cad.entities.trim'deki gibidir; aynı nesnenin iki
-        seçimi iki ucunu uzatabilir, bir uç bir kez uzar. Uç hiçbir sınıra ulaşmıyorsa seçim
-        extend_failed uyarısıyla atlanır; hiçbir uç uzamazsa hiçbir şey yazılmaz.
-        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-        conflict olur.
+        “Uzat”. Seçimler, sınırlar, fence (Çit), crossing (Kesişen: penceredeki her uç uzar)
+        ve edgeMode cad.entities.trim'deki gibidir (ADR 0294); eraseUncut yok sayılır. Aynı
+        nesnenin iki seçimi iki ucunu uzatabilir, bir uç bir kez uzar. Uç hiçbir sınıra
+        ulaşmıyorsa seçim extend_failed uyarısıyla atlanır; hiçbir uç uzamazsa hiçbir şey
+        yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+        yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.
-            picks: The picks, at least one.
             boundaries: The boundaries; absent: every shown object (`all`).
+            crossing: Kesişen: a crossing window.
+            edge_mode: AutoCAD's EDGEMODE; absent: `none`.
+            erase_uncut: Buda: an object no boundary cuts goes whole where it is picked
+                (AutoCAD's quick mode) instead of being left with a `trim_failed`
+                warning. Uzat ignores it.
             expected_revision: The document revision the input was prepared against, as decimal
                 text. When given and the document is no longer at it, nothing is
                 written and the answer is `conflict`.
+            fence: Çit: a drawn open path, at least two points; every shown object it
+                crosses is picked where it crosses. Unit: length.
+            picks: The picks; none when a fence or a window picks.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -1428,9 +1444,13 @@ class _EntitiesExtend(LocalCommand[EntitiesTrim, EntitiesTrimmed, EntitiesTrimPl
                 nothing was written. Warnings go to :mod:`warnings` as CommandWarning.
         """
         return self.execute_input(doc, EntitiesTrim(
-            picks=list(picks),
             boundaries=boundaries,
+            crossing=crossing,
+            edge_mode=edge_mode,
+            erase_uncut=erase_uncut,
             expected_revision=expected_revision,
+            fence=_opt(fence, lambda x: [Vec2.of(p) for p in x]),
+            picks=list() if picks is UNSET else _opt(picks, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -1438,17 +1458,25 @@ class _EntitiesExtend(LocalCommand[EntitiesTrim, EntitiesTrimmed, EntitiesTrimPl
         doc: Document,
         /,
         *,
-        picks: Sequence[TrimPick],
         boundaries: TrimBoundaries | None | Unset = UNSET,
+        crossing: TrimWindow | None | Unset = UNSET,
+        edge_mode: TrimEdgeMode | TrimEdgeModeName | None | Unset = UNSET,
+        erase_uncut: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        fence: Sequence[Vec2Like] | None | Unset = UNSET,
+        picks: Sequence[TrimPick] | Unset = UNSET,
     ) -> EntitiesTrimPlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
         """
         return self.plan_input(doc, EntitiesTrim(
-            picks=list(picks),
             boundaries=boundaries,
+            crossing=crossing,
+            edge_mode=edge_mode,
+            erase_uncut=erase_uncut,
             expected_revision=expected_revision,
+            fence=_opt(fence, lambda x: [Vec2.of(p) for p in x]),
+            picks=list() if picks is UNSET else _opt(picks, lambda x: list(x)),
         ))
 
     def validate(
@@ -1456,17 +1484,25 @@ class _EntitiesExtend(LocalCommand[EntitiesTrim, EntitiesTrimmed, EntitiesTrimPl
         doc: Document,
         /,
         *,
-        picks: Sequence[TrimPick],
         boundaries: TrimBoundaries | None | Unset = UNSET,
+        crossing: TrimWindow | None | Unset = UNSET,
+        edge_mode: TrimEdgeMode | TrimEdgeModeName | None | Unset = UNSET,
+        erase_uncut: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        fence: Sequence[Vec2Like] | None | Unset = UNSET,
+        picks: Sequence[TrimPick] | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
         """
         return self.validate_input(doc, EntitiesTrim(
-            picks=list(picks),
             boundaries=boundaries,
+            crossing=crossing,
+            edge_mode=edge_mode,
+            erase_uncut=erase_uncut,
             expected_revision=expected_revision,
+            fence=_opt(fence, lambda x: [Vec2.of(p) for p in x]),
+            picks=list() if picks is UNSET else _opt(picks, lambda x: list(x)),
         ))
 
     def answer(
@@ -1474,9 +1510,13 @@ class _EntitiesExtend(LocalCommand[EntitiesTrim, EntitiesTrimmed, EntitiesTrimPl
         doc: Document,
         /,
         *,
-        picks: Sequence[TrimPick],
         boundaries: TrimBoundaries | None | Unset = UNSET,
+        crossing: TrimWindow | None | Unset = UNSET,
+        edge_mode: TrimEdgeMode | TrimEdgeModeName | None | Unset = UNSET,
+        erase_uncut: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        fence: Sequence[Vec2Like] | None | Unset = UNSET,
+        picks: Sequence[TrimPick] | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -1487,9 +1527,13 @@ class _EntitiesExtend(LocalCommand[EntitiesTrim, EntitiesTrimmed, EntitiesTrimPl
         before (``replayed``) and its journal row (``call``).
         """
         return self.answer_input(doc, EntitiesTrim(
-            picks=list(picks),
             boundaries=boundaries,
+            crossing=crossing,
+            edge_mode=edge_mode,
+            erase_uncut=erase_uncut,
             expected_revision=expected_revision,
+            fence=_opt(fence, lambda x: [Vec2.of(p) for p in x]),
+            picks=list() if picks is UNSET else _opt(picks, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 
 
@@ -3126,11 +3170,19 @@ class _EntitiesTrim(LocalCommand[EntitiesTrim, EntitiesTrimmed, EntitiesTrimPlan
     aracın görünümü) ya da objects (verilen nesneler, Sınır seç). Nesne kendini
     sınırlamaz; her nesne komuttan önceki çizimle sınırlanır. Nesnenin yerini kalan ilk
     parça alır, öbür parçalar ondan yeni nesnelerdir; tek parça kalırsa özellikleri
-    korunur (kapalı alan değilse). Adalı alan budanmaz. Bir şey yapamayan seçim
-    trim_failed uyarısıyla atlanır; hiçbiri bir şey yapamazsa hiçbir şey yazılmaz.
-    Parçaları paylaşılan geometri çekirdeği bulur: Buda aracı, Python ve ajan aynı
-    isteğe aynı parçaları alır. expectedRevision verilmişse ve çizim o sürümde değilse
-    hiçbir şey yazılmaz, sonuç conflict olur.
+    korunur (kapalı alan değilse). Adalı alan budanmaz. Sonraki seçimin durduğu parçayı
+    hiçbir sınır kesmiyorsa parça bütünüyle kalkar: uçları önceki kesimlerdir.
+    AutoCAD'in TRIM seçenekleri (ADR 0294): fence (Çit) açık bir yoldur, geçtiği her
+    görünen nesne geçtiği yerden seçilir; crossing (Kesişen) bir penceredir, ona değen
+    her görünen nesnenin sınırlar arasındaki pencereye değen her parçası kalkar. Çit ve
+    pencerenin kilitli katmandaki nesneleri sayılarak atlanır (layer_locked uyarısı).
+    edgeMode extend (AutoCAD'in EDGEMODE 1'i) sınırları uzantılarıyla da sayar: çizgi
+    bütün doğrusuyla, yay çemberiyle, açık çoklu çizginin ilk ve son kenarı uçlarının
+    ötesine. eraseUncut (hızlı kip) hiçbir sınırın kesmediği nesneyi seçildiği yerden
+    bütünüyle siler. Bir şey yapamayan seçim trim_failed uyarısıyla atlanır; hiçbiri bir
+    şey yapamazsa hiçbir şey yazılmaz. Parçaları paylaşılan geometri çekirdeği bulur:
+    Buda aracı, Python ve ajan aynı isteğe aynı parçaları alır. expectedRevision
+    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.entities.trim"
@@ -3146,9 +3198,13 @@ class _EntitiesTrim(LocalCommand[EntitiesTrim, EntitiesTrimmed, EntitiesTrimPlan
         doc: Document,
         /,
         *,
-        picks: Sequence[TrimPick],
         boundaries: TrimBoundaries | None | Unset = UNSET,
+        crossing: TrimWindow | None | Unset = UNSET,
+        edge_mode: TrimEdgeMode | TrimEdgeModeName | None | Unset = UNSET,
+        erase_uncut: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        fence: Sequence[Vec2Like] | None | Unset = UNSET,
+        picks: Sequence[TrimPick] | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> EntitiesTrimmed:
@@ -3162,18 +3218,34 @@ class _EntitiesTrim(LocalCommand[EntitiesTrim, EntitiesTrimmed, EntitiesTrimPlan
         objects (verilen nesneler, Sınır seç). Nesne kendini sınırlamaz; her nesne komuttan
         önceki çizimle sınırlanır. Nesnenin yerini kalan ilk parça alır, öbür parçalar ondan
         yeni nesnelerdir; tek parça kalırsa özellikleri korunur (kapalı alan değilse). Adalı
-        alan budanmaz. Bir şey yapamayan seçim trim_failed uyarısıyla atlanır; hiçbiri bir
-        şey yapamazsa hiçbir şey yazılmaz. Parçaları paylaşılan geometri çekirdeği bulur:
-        Buda aracı, Python ve ajan aynı isteğe aynı parçaları alır. expectedRevision
-        verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        alan budanmaz. Sonraki seçimin durduğu parçayı hiçbir sınır kesmiyorsa parça
+        bütünüyle kalkar: uçları önceki kesimlerdir. AutoCAD'in TRIM seçenekleri (ADR 0294):
+        fence (Çit) açık bir yoldur, geçtiği her görünen nesne geçtiği yerden seçilir;
+        crossing (Kesişen) bir penceredir, ona değen her görünen nesnenin sınırlar
+        arasındaki pencereye değen her parçası kalkar. Çit ve pencerenin kilitli katmandaki
+        nesneleri sayılarak atlanır (layer_locked uyarısı). edgeMode extend (AutoCAD'in
+        EDGEMODE 1'i) sınırları uzantılarıyla da sayar: çizgi bütün doğrusuyla, yay
+        çemberiyle, açık çoklu çizginin ilk ve son kenarı uçlarının ötesine. eraseUncut
+        (hızlı kip) hiçbir sınırın kesmediği nesneyi seçildiği yerden bütünüyle siler. Bir
+        şey yapamayan seçim trim_failed uyarısıyla atlanır; hiçbiri bir şey yapamazsa hiçbir
+        şey yazılmaz. Parçaları paylaşılan geometri çekirdeği bulur: Buda aracı, Python ve
+        ajan aynı isteğe aynı parçaları alır. expectedRevision verilmişse ve çizim o sürümde
+        değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.
-            picks: The picks, at least one.
             boundaries: The boundaries; absent: every shown object (`all`).
+            crossing: Kesişen: a crossing window.
+            edge_mode: AutoCAD's EDGEMODE; absent: `none`.
+            erase_uncut: Buda: an object no boundary cuts goes whole where it is picked
+                (AutoCAD's quick mode) instead of being left with a `trim_failed`
+                warning. Uzat ignores it.
             expected_revision: The document revision the input was prepared against, as decimal
                 text. When given and the document is no longer at it, nothing is
                 written and the answer is `conflict`.
+            fence: Çit: a drawn open path, at least two points; every shown object it
+                crosses is picked where it crosses. Unit: length.
+            picks: The picks; none when a fence or a window picks.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -3187,9 +3259,13 @@ class _EntitiesTrim(LocalCommand[EntitiesTrim, EntitiesTrimmed, EntitiesTrimPlan
                 nothing was written. Warnings go to :mod:`warnings` as CommandWarning.
         """
         return self.execute_input(doc, EntitiesTrim(
-            picks=list(picks),
             boundaries=boundaries,
+            crossing=crossing,
+            edge_mode=edge_mode,
+            erase_uncut=erase_uncut,
             expected_revision=expected_revision,
+            fence=_opt(fence, lambda x: [Vec2.of(p) for p in x]),
+            picks=list() if picks is UNSET else _opt(picks, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -3197,17 +3273,25 @@ class _EntitiesTrim(LocalCommand[EntitiesTrim, EntitiesTrimmed, EntitiesTrimPlan
         doc: Document,
         /,
         *,
-        picks: Sequence[TrimPick],
         boundaries: TrimBoundaries | None | Unset = UNSET,
+        crossing: TrimWindow | None | Unset = UNSET,
+        edge_mode: TrimEdgeMode | TrimEdgeModeName | None | Unset = UNSET,
+        erase_uncut: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        fence: Sequence[Vec2Like] | None | Unset = UNSET,
+        picks: Sequence[TrimPick] | Unset = UNSET,
     ) -> EntitiesTrimPlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
         """
         return self.plan_input(doc, EntitiesTrim(
-            picks=list(picks),
             boundaries=boundaries,
+            crossing=crossing,
+            edge_mode=edge_mode,
+            erase_uncut=erase_uncut,
             expected_revision=expected_revision,
+            fence=_opt(fence, lambda x: [Vec2.of(p) for p in x]),
+            picks=list() if picks is UNSET else _opt(picks, lambda x: list(x)),
         ))
 
     def validate(
@@ -3215,17 +3299,25 @@ class _EntitiesTrim(LocalCommand[EntitiesTrim, EntitiesTrimmed, EntitiesTrimPlan
         doc: Document,
         /,
         *,
-        picks: Sequence[TrimPick],
         boundaries: TrimBoundaries | None | Unset = UNSET,
+        crossing: TrimWindow | None | Unset = UNSET,
+        edge_mode: TrimEdgeMode | TrimEdgeModeName | None | Unset = UNSET,
+        erase_uncut: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        fence: Sequence[Vec2Like] | None | Unset = UNSET,
+        picks: Sequence[TrimPick] | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
         """
         return self.validate_input(doc, EntitiesTrim(
-            picks=list(picks),
             boundaries=boundaries,
+            crossing=crossing,
+            edge_mode=edge_mode,
+            erase_uncut=erase_uncut,
             expected_revision=expected_revision,
+            fence=_opt(fence, lambda x: [Vec2.of(p) for p in x]),
+            picks=list() if picks is UNSET else _opt(picks, lambda x: list(x)),
         ))
 
     def answer(
@@ -3233,9 +3325,13 @@ class _EntitiesTrim(LocalCommand[EntitiesTrim, EntitiesTrimmed, EntitiesTrimPlan
         doc: Document,
         /,
         *,
-        picks: Sequence[TrimPick],
         boundaries: TrimBoundaries | None | Unset = UNSET,
+        crossing: TrimWindow | None | Unset = UNSET,
+        edge_mode: TrimEdgeMode | TrimEdgeModeName | None | Unset = UNSET,
+        erase_uncut: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        fence: Sequence[Vec2Like] | None | Unset = UNSET,
+        picks: Sequence[TrimPick] | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -3246,9 +3342,13 @@ class _EntitiesTrim(LocalCommand[EntitiesTrim, EntitiesTrimmed, EntitiesTrimPlan
         before (``replayed``) and its journal row (``call``).
         """
         return self.answer_input(doc, EntitiesTrim(
-            picks=list(picks),
             boundaries=boundaries,
+            crossing=crossing,
+            edge_mode=edge_mode,
+            erase_uncut=erase_uncut,
             expected_revision=expected_revision,
+            fence=_opt(fence, lambda x: [Vec2.of(p) for p in x]),
+            picks=list() if picks is UNSET else _opt(picks, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 
 

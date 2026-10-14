@@ -30,7 +30,7 @@ use crate::ops::curve_cuts::{Cut, Geometry};
 use crate::ops::edges::{entity_edges, entity_edges_in};
 use crate::ops::stretch::stretch_entity;
 use crate::ops::transform::transform_shape;
-use crate::ops::trim::{extend_entity, trim_entity};
+use crate::ops::trim::{extend_entity, extended_edges, trim_entity};
 use crate::vec2::Vec2;
 
 /// A box widened for the intersection tests' tolerances (1e-9 of an edge's
@@ -247,6 +247,21 @@ impl Store {
         chosen: Option<&[f64]>,
         view: &Bounds,
     ) -> Cut {
+        self.trim_preview_in(target, pick, except, chosen, view, false)
+    }
+
+    /// [`Store::trim_preview`], the boundaries along their extensions too
+    /// when `extended` (AutoCAD's EDGEMODE 1, docs/adr/0294): see
+    /// `ops::trim::extended_edges`.
+    pub fn trim_preview_in(
+        &self,
+        target: &Entity,
+        pick: Vec2,
+        except: Option<f64>,
+        chosen: Option<&[f64]>,
+        view: &Bounds,
+        extended: bool,
+    ) -> Cut {
         let own: Vec<(u32, Bounds)> = match &target.shape {
             // Crossings are found on the true curve: take the whole ellipse's box.
             Shape::Ellipse { .. } => match reach_of(&target.shape, pick) {
@@ -268,12 +283,19 @@ impl Store {
         let mut hits = Vec::new();
         let mut edges = Vec::new();
         for it in self.boundary_items(except, chosen, view) {
-            if !loose_box(it) && !overlaps(&it.bounds, &whole) {
+            if !extended && !loose_box(it) && !overlaps(&it.bounds, &whole) {
                 continue;
             }
             // An insert's pieces cut and stop as objects of their own (docs/adr/0144); a
             // curve is split only where it can reach the target (docs/adr/0149 §5.3).
-            for ed in it.shapes().flat_map(|s| entity_edges_in(s, &whole)) {
+            let of = |s: &Shape| {
+                if extended {
+                    extended_edges(s).unwrap_or_else(|| entity_edges_in(s, &whole))
+                } else {
+                    entity_edges_in(s, &whole)
+                }
+            };
+            for ed in it.shapes().flat_map(of) {
                 hits.clear();
                 near.search(&edge_box(&ed), &mut hits);
                 if !hits.is_empty() {
@@ -294,14 +316,35 @@ impl Store {
         chosen: Option<&[f64]>,
         view: &Bounds,
     ) -> Geometry {
+        self.extend_preview_in(target, pick, except, chosen, view, false)
+    }
+
+    /// [`Store::extend_preview`], the boundaries along their extensions too
+    /// when `extended` (AutoCAD's EDGEMODE 1, docs/adr/0294).
+    pub fn extend_preview_in(
+        &self,
+        target: &Entity,
+        pick: Vec2,
+        except: Option<f64>,
+        chosen: Option<&[f64]>,
+        view: &Bounds,
+        extended: bool,
+    ) -> Geometry {
         let reach = reach_of(&target.shape, pick);
         let mut edges = Vec::new();
         for it in self.boundary_items(except, chosen, view) {
-            if !loose_box(it) && !reach.may_meet(&grow(it.bounds)) {
+            if !extended && !loose_box(it) && !reach.may_meet(&grow(it.bounds)) {
                 continue;
             }
             // An insert's pieces cut and stop as objects of their own (docs/adr/0144).
-            for ed in it.shapes().flat_map(entity_edges) {
+            let of = |s: &Shape| {
+                if extended {
+                    extended_edges(s).unwrap_or_else(|| entity_edges(s))
+                } else {
+                    entity_edges(s)
+                }
+            };
+            for ed in it.shapes().flat_map(of) {
                 if reach.may_meet(&edge_box(&ed)) {
                     edges.push(ed);
                 }
