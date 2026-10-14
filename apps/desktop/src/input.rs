@@ -718,7 +718,8 @@ impl App {
             return Task::none();
         }
         // 3. An option letter of the running command beats the shortcuts.
-        if self.session.is_running()
+        // A hot grip's modes are letters too (docs/adr/0280).
+        if (self.session.is_running() || self.session.grip_active())
             && let Some(letter) = keys::option_letter(&press)
             && let Some(option) = self.session.prompt().option_for_key(&letter)
         {

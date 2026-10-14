@@ -26,6 +26,7 @@ mod feature_export;
 mod fencing;
 mod find_replace;
 mod gnss;
+mod grip_modes;
 mod grips;
 mod hatch;
 mod join_chain;

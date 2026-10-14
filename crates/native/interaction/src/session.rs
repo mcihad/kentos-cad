@@ -714,6 +714,15 @@ impl Session {
     }
 
     /// The grip being moved, drawn larger (the web's `activeGrip`).
+    /// The hot grips, drawn larger: the one being moved, those moved with it, those made hot with Shift
+    /// (docs/adr/0280).
+    pub fn hot_grips(&self) -> Vec<(kentos_domain::Slot, usize)> {
+        if self.tool.is_some() {
+            return Vec::new();
+        }
+        self.select.hot_grips()
+    }
+
     pub fn active_grip(&self) -> Option<(kentos_domain::Slot, usize)> {
         if self.tool.is_some() {
             return None;

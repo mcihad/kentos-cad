@@ -65,17 +65,6 @@ pub fn neighbours_in(
     topology_follow::neighbours(doc, spatial.store(), points, edits)
 }
 
-/// The neighbours the object at `slot` becoming `after` (from `before`)
-/// puts right: a grip, the grip menu.
-pub(crate) fn neighbours(
-    cx: &Context<'_>,
-    slot: Slot,
-    before: &Shape,
-    after: &Shape,
-) -> Option<Neighbours> {
-    neighbours_of(cx, &[(slot, before.clone(), after.clone())])
-}
-
 /// Says what the neighbours did, once the edit is written: how many changed
 /// with it, how many could not (the web's `sayNeighbours`).
 pub(crate) fn say(n: Option<&Neighbours>, cx: &mut Context<'_>) {
