@@ -373,6 +373,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   ve Revizyon bulutu yöntemleri, Düzgün çokgen'in çember içinde, dışında, kenardan'ı; Dikdörtgen'in Alan'ı (A) ve Boyutlarla, Alanla
   yöntemleri, Yardımcı çizgi'nin Paralel'i (P, Noktadan), Revizyon bulutu'nun Nesne'si (N); hesap çekirdekte (`rect_side_for_area`,
   `xline_offset`, `cloud_around`), yazma araçların kendi komutlarıyla (ADR 0287);
+  görünümler: adlı görünümler projenin ayarı (`.kcad` şema 52 `namedViews`, `cad.views.edit`: keep, rename, remove; Görünümler penceresi;
+  Python, MCP), Görünümü döndür (iki nokta ya da açı, UCS'e göre, Kuzey yukarı; kamera dönüşü `crates/render/wgpu` kamerasında, dönmüş
+  görünümde seçim kutusu çokgen sorgusu), Görünümü böl (yan yana iki model görünümü, etkin olan basmayla değişir) (ADR 0285);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);
