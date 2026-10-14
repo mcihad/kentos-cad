@@ -65,7 +65,9 @@ fn a_start_several_names_fit_is_said() {
     assert!(b.type_text("ta"));
     assert_eq!(
         b.last_text(),
-        Some("“ta” birden çok seçeneğin başı: Taşı, Taban noktası. Seçeneğin adını tam yazın ya da harfine basın.")
+        Some(
+            "“ta” birden çok seçeneğin başı: Taşı, Taban noktası. Seçeneğin adını tam yazın ya da harfine basın."
+        )
     );
     assert!(b.session.prompt().text().starts_with("Tutamaç: "));
 }

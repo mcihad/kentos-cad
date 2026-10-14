@@ -90,6 +90,24 @@ impl App {
         }
     }
 
+    /// After a message: when the view moved under a running command (the
+    /// wheel, Tümünü göster, Önceki görünüm, a transparent Pencere
+    /// yakınlaştır) or the command came back from a tool run over it, it sees
+    /// the pointer again where it is, so its preview follows (docs/adr/0283).
+    /// Kaydır itself is left alone: it reads the drag, not the view.
+    pub(crate) fn follow_view(&mut self, before: Viewpoint) {
+        let resumed = self.session.take_resumed();
+        if !resumed && self.viewpoint() == before {
+            return;
+        }
+        if !(self.session.is_running() || self.session.grip_active())
+            || self.session.top_id() == Some(kentos_interaction::navigate::PAN_ID)
+        {
+            return;
+        }
+        self.repoint();
+    }
+
     /// Önceki görünüm: back to the last view left, this one kept for Sonraki görünüm.
     fn view_back(&mut self) {
         let here = self.viewpoint();

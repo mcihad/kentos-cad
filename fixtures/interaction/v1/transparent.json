@@ -1,0 +1,33 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "transparent",
+  "title": "Şeffaf komutlar: Çoklu çizgi iki köşeyle sürerken Kaydır sürükleyerek görünümü taşır, köşe koymaz, Esc çoklu çizgiyi kaldığı yerden getirir; Pencere yakınlaştır'ın iki tıkı görünümü kutuya getirir ve kendiliğinden çoklu çizgiye döner, tıkları köşe olmaz; Mesafe ölç iki noktayla ölçer, Enter toplamı söyler, ikinci Enter çoklu çizgiye döner; komutun üstündeki Kaydır'ı Enter da bitirir; sonra çoklu çizgi üçüncü köşeyi alır ve yazılır",
+  "source": "ADR 0283; AutoCAD'in 'pan, 'zoom ve 'dist şeffaf komutları; Session::start_over",
+  "covers": ["UX-01"],
+  "document": "objects.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.125,
+  "steps": [
+    { "run": "tool.polyline", "expect": { "tool": "polyline", "points": 0 } },
+    { "click": [0, 0], "expect": { "points": 1 } },
+    { "click": [4, 0], "expect": { "points": 2 } },
+    { "run": "tool.pan", "note": "Kaydır çoklu çizginin üstünde çalışır: komut çoklu çizgi kalır, istem Kaydır'ındır.", "expect": { "tool": "polyline", "points": 0, "prompt": "Kaydır: sürükleyerek görünümü taşıyın. Çıkmak için Esc" } },
+    { "drag": [[0, 0], [8, 4]], "note": "Görünüm imleçle gelir; köşe konmaz.", "expect": { "tool": "polyline", "viewCenter": [-8, -4], "metresPerPixel": 0.125, "entities": 7 } },
+    { "key": "Esc", "note": "Esc yalnız Kaydır'ı bitirir: çoklu çizgi iki köşesiyle döner.", "expect": { "tool": "polyline", "points": 2, "viewCenter": [-8, -4] } },
+    { "run": "tool.zoomWindow", "expect": { "tool": "polyline", "points": 0, "prompt": "Pencere yakınlaştır: ilk köşeyi belirtin" } },
+    { "click": [-18, -10], "expect": { "tool": "polyline", "prompt": "Pencere yakınlaştır: karşı köşeyi belirtin" } },
+    { "click": [2, 6], "note": "Karşı köşe: görünüm kutuyu gösterir, araç kendiliğinden çıkar; tıklar köşe olmaz.", "expect": { "tool": "polyline", "points": 2, "viewCenter": [-8, -2], "entities": 7 } },
+    { "run": "tool.measure", "expect": { "tool": "polyline", "points": 0 } },
+    { "click": [-12, -6], "expect": { "points": 1 } },
+    { "click": [-9, -2], "expect": { "points": 2 } },
+    { "key": "Enter", "note": "Mesafe ölç toplamı söyler, çizime bir şey yazmaz.", "expect": { "tool": "polyline", "points": 0, "entities": 7 } },
+    { "key": "Enter", "note": "Ölçülecek bir şey yokken Enter ölçmeyi bitirir: çoklu çizgi döner.", "expect": { "tool": "polyline", "points": 2 } },
+    { "run": "tool.pan", "expect": { "tool": "polyline", "points": 0 } },
+    { "key": "Enter", "note": "Komutun üstündeki Kaydır Enter'la biter: çoklu çizgi yeniden başlamaz, iki köşesiyle döner.", "expect": { "tool": "polyline", "points": 2 } },
+    { "click": [0, 4], "expect": { "tool": "polyline", "points": 3 } },
+    { "key": "Enter", "note": "Üç köşeli çoklu çizgi yazılır.", "expect": { "entities": 8 } }
+  ]
+}
