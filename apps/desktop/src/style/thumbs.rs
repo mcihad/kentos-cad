@@ -276,6 +276,7 @@ impl shader::Primitive for Frame {
             scale: self.built.px_per_mm,
             width: f64::from(bounds.width),
             height: f64::from(bounds.height),
+            twist: 0.0,
         };
         let mut settings = RenderSettings::new(self.background);
         settings.samples = SAMPLES;

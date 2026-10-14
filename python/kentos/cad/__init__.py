@@ -30,7 +30,7 @@ from .errors import *  # noqa: F403
 from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 
-from . import addresses, arc, blocks, changeset, circle, dimensions, entities, file, labels, layers, line, network, nurbs, point, points, polygon, polyline, project, scenarios, settings, sheets, snap, styles, ucs, units  # noqa: E402  isort: skip
+from . import addresses, arc, blocks, changeset, circle, dimensions, entities, file, labels, layers, line, network, nurbs, point, points, polygon, polyline, project, scenarios, settings, sheets, snap, styles, ucs, units, views  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -165,6 +165,7 @@ __all__ = [
     "DeleteBlockChange",
     "DeleteFeatureChange",
     "DeleteUcsTo",
+    "DeleteViewsOp",
     "DiameterDimensionMeasure",
     "DigitizedNetworkDirection",
     "DimensionArrow",
@@ -431,6 +432,7 @@ __all__ = [
     "NAMESPACES",
     "NamedUcs",
     "NamedUcsTo",
+    "NamedView",
     "NeedsInput",
     "NetworkConnect",
     "NetworkConnectName",
@@ -585,6 +587,7 @@ __all__ = [
     "RegistryDatum",
     "RegistryDatumName",
     "RemoveEntityEdit",
+    "RenameViewsOp",
     "RenamedBlock",
     "ReplaceEntityEdit",
     "ReplayReport",
@@ -596,6 +599,7 @@ __all__ = [
     "RubberLink",
     "RubbersheetTransform",
     "SaveUcsTo",
+    "SaveViewsOp",
     "Saved",
     "ScaleTransform",
     "ScenarioInfo",
@@ -717,6 +721,9 @@ __all__ = [
     "VertexActionName",
     "VertexCornerPick",
     "VertexSubPlace",
+    "ViewsEdit",
+    "ViewsEdited",
+    "ViewsOp",
     "WORLD_UCS",
     "WindowSelectRegion",
     "Workspace",
@@ -753,4 +760,5 @@ __all__ = [
     "types",
     "ucs",
     "units",
+    "views",
 ]

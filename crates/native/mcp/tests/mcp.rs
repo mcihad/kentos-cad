@@ -106,6 +106,7 @@ fn a_modern_client_discovers_lists_and_draws_a_measured_polygon_it_saves_and_rea
         "cad.layers.states",
         "cad.styles.edit",
         "cad.settings.set",
+        "cad.views.edit",
     ] {
         let tool = tools
             .iter()
@@ -1337,6 +1338,45 @@ fn an_agent_imports_a_dxf_in_its_unit() {
         .as_array()
         .expect("warnings");
     assert_eq!(warnings[0]["code"], "unit_assumed", "{unitless}");
+}
+
+#[test]
+fn an_agent_keeps_and_renames_a_named_view() {
+    // docs/adr/0285 §1: the project's named views through the catalog's command.
+    let mut server = Server::new();
+    let made = call(
+        &mut server,
+        "drawing.new",
+        json!({ "name": "Ada", "workspace": "cad", "drawingUnit": "m" }),
+    );
+    let drawing = made["structuredContent"]["drawing"]
+        .as_str()
+        .expect("a handle")
+        .to_owned();
+    let saved = call(
+        &mut server,
+        "cad.views.edit",
+        json!({ "drawing": drawing, "edit": { "kind": "save", "name": "Ada 112", "center": { "x": 120.0, "y": 80.0 }, "width": 60.0, "height": 40.0, "twist": 7.0 } }),
+    );
+    assert_eq!(saved["isError"], false, "{saved}");
+    let view = &saved["structuredContent"]["output"]["view"];
+    assert_eq!(view["name"], "Ada 112");
+    assert_eq!(view["twist"], 7.0 - 2.0 * std::f64::consts::PI);
+    let renamed = call(
+        &mut server,
+        "cad.views.edit",
+        json!({ "drawing": drawing, "edit": { "kind": "rename", "name": "Ada 112", "to": "Kuzey" } }),
+    );
+    assert_eq!(
+        renamed["structuredContent"]["output"]["views"][0]["name"],
+        "Kuzey"
+    );
+    let refused = call(
+        &mut server,
+        "cad.views.edit",
+        json!({ "drawing": drawing, "edit": { "kind": "delete", "name": "Yok" } }),
+    );
+    assert_eq!(refused["isError"], true, "{refused}");
 }
 
 #[test]

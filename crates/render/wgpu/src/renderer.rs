@@ -401,6 +401,7 @@ impl Renderer {
             origin: [frame.origin.x, frame.origin.y],
             scale: camera.scale,
             screen_scale: camera.screen_scale(),
+            twist: camera.twist,
         };
         let uniform = camera.frame_uniform(
             frame.origin,
@@ -501,6 +502,7 @@ impl Renderer {
                 dpr: d.scale_factor,
                 size_px: d.size_px,
                 scale_denominator: d.screen_scale,
+                twist: d.twist,
             },
             samples,
             images,
@@ -529,7 +531,7 @@ impl Renderer {
                     Some(ComposeTargets::new(format, targets.size, targets.samples));
             }
             if let Some(ct) = state.compose_targets.as_mut() {
-                let (_, px_per_m, dpr, _) = styled.frame_facts();
+                let (_, px_per_m, dpr, _, _) = styled.frame_facts();
                 let mut planner = Planner::new(composer, ct, device, px_per_m, dpr);
                 plan_composed(&mut planner, styled);
                 state.compose = Some(planner.finish(queue));
@@ -744,6 +746,7 @@ impl Renderer {
                     dpr: lens.scale_factor,
                     size_px: lens.size_px,
                     scale_denominator: state.drawn.screen_scale,
+                    twist: lens.camera.twist,
                 },
             );
         }
@@ -855,16 +858,23 @@ fn plan_composed(planner: &mut Planner<'_>, view: &ViewStyled) {
         planner.layer_clear();
         runs(planner, view, start..i, ComposeInto::Layer);
         let draw = &view.compose[c].1;
-        let (centre, px_per_m, dpr, size) = view.frame_facts();
+        let (centre, px_per_m, dpr, size, twist) = view.frame_facts();
+        let (ts, tc) = twist.sin_cos();
         let mut boxes: Vec<[f32; 7]> = Vec::new();
         for m in &draw.masks {
             let grow = m.grow * dpr as f32;
             for b in m.labels.iter() {
-                // The turn as the screen turns (y down), its sine and cosine made here in double precision.
-                let (sin, cos) = (-f64::from(b.turn).to_radians()).sin_cos();
+                // The turn as the screen turns (y down), the view's twist with it (docs/adr/0285 §2), its
+                // sine and cosine made here in double precision.
+                let (sin, cos) = (-(f64::from(b.turn).to_radians() - twist)).sin_cos();
+                let (dx, dy) = (
+                    (b.centre[0] - centre[0]) * px_per_m,
+                    (b.centre[1] - centre[1]) * px_per_m,
+                );
+                let (u, v) = (dx * tc + dy * ts, dy * tc - dx * ts);
                 boxes.push([
-                    (f64::from(size[0]) / 2.0 + (b.centre[0] - centre[0]) * px_per_m) as f32,
-                    (f64::from(size[1]) / 2.0 - (b.centre[1] - centre[1]) * px_per_m) as f32,
+                    (f64::from(size[0]) / 2.0 + u) as f32,
+                    (f64::from(size[1]) / 2.0 - v) as f32,
                     b.size[0] * dpr as f32 / 2.0,
                     b.size[1] * dpr as f32 / 2.0,
                     cos as f32,
@@ -1051,6 +1061,8 @@ struct Drawn {
     scale: f64,
     /// The screen scale 1:N at 96 dpi.
     screen_scale: f64,
+    /// The view's twist, radians (docs/adr/0285 §2).
+    twist: f64,
 }
 
 /// The area `origin`, `size` (device pixels) with its corners on whole pixels, as Iced snaps a
@@ -1071,11 +1083,16 @@ fn camera_at(camera: &Camera, area: [f32; 4], placed: [f32; 4], scale_factor: f6
     }
     let off =
         |i: usize| f64::from(area[i] - placed[i]) + f64::from(area[i + 2] - placed[i + 2]) / 2.0;
+    // The offset is along the screen's axes: a twisted view turns it into the world (docs/adr/0285 §2).
+    let (u, v) = (off(0) / px_per_unit, -off(1) / px_per_unit);
+    let (dx, dy) = if camera.twist == 0.0 {
+        (u, v)
+    } else {
+        let (s, c) = camera.twist.sin_cos();
+        (u * c - v * s, u * s + v * c)
+    };
     Camera {
-        center: Vec2::new(
-            camera.center.x - off(0) / px_per_unit,
-            camera.center.y + off(1) / px_per_unit,
-        ),
+        center: Vec2::new(camera.center.x - dx, camera.center.y - dy),
         ..*camera
     }
 }
@@ -1396,6 +1413,7 @@ mod tests {
             scale: 3.7,
             width: 400.0,
             height: 420.0,
+            twist: 0.0,
         };
         for scale in [1.0, 1.25] {
             let moved = camera_at(&camera, area, placed, scale);

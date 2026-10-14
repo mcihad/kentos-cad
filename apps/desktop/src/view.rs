@@ -802,7 +802,7 @@ impl App {
                 let typing = self.text_field_view();
                 // The paragraph editor over the drawing (paragraph_editor.rs, docs/adr/0182 §4).
                 let writing = self.paragraph_view();
-                ContextMenu::controlled(
+                let active: Element<'_, Message> = ContextMenu::controlled(
                     stack![area]
                         .extend(service_labels)
                         .push(labels)
@@ -823,7 +823,9 @@ impl App {
                     move |_| self.drawing_menu_items(),
                     Message::DrawingMenu(crate::drawing_menus::Event::Closed),
                 )
-                .into()
+                .into();
+                // Görünümü böl: the other view beside it (split_view.rs, docs/adr/0285 §3).
+                self.with_split(active)
             }
             None => container(
                 EmptyState::new(Icon::Document, "Açık çizim yok")
@@ -1741,6 +1743,7 @@ impl App {
             Asking::TimeLayer => self.time_layer_view(),
             Asking::Scenario => self.scenario_view(),
             Asking::LayerStates => self.layer_states_view(),
+            Asking::Views => self.views_view(),
             Asking::AnnotationStyles => self.annotation_styles_view(),
             Asking::LayerPurge => self.layer_purge_view(),
             Asking::TakeFrom => self.take_from_view(),
@@ -2119,7 +2122,7 @@ pub(crate) fn rgba_color(c: Rgba8) -> Color {
     Color::from_rgba8(r, g, b, f32::from(a) / 255.0)
 }
 
-fn rgba8(color: Color) -> Rgba8 {
+pub(crate) fn rgba8(color: Color) -> Rgba8 {
     Rgba8(color.into_rgba8())
 }
 

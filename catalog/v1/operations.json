@@ -939,6 +939,17 @@
         "cad.ucs.set"
       ],
       "note": "Ad named, save ya da delete ile komuta verilir (ADR 0261 §2)."
+    },
+    "tool.viewTwist": {
+      "level": "session",
+      "note": "Görünümün dönüşü oturumun kamerasıdır; çizim değişmez. Adlı görünümün dönüşü cad.views.edit ile saklanır (ADR 0285 §2)."
+    },
+    "view.namedViews": {
+      "level": "semantic",
+      "via": [
+        "cad.views.edit"
+      ],
+      "note": "Kaydet, Güncelle, Yeniden adlandır ve Sil komuta verilir; Göster oturumun kamerasıdır (ADR 0285 §1)."
     }
   },
   "tools": {

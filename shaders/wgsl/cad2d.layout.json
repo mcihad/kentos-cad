@@ -1,6 +1,6 @@
 {
   "format": "kentos.wgsl-layout",
-  "version": 1,
+  "version": 2,
   "module": "cad2d",
   "description": "KentOS CAD 2D drawing: shared WGSL and its binding, vertex and uniform layout (docs/adr/0019). The native renderer (crates/render/wgpu) is tested against this file and the WGSL; scripts/wgsl/browser-check.mjs compiles the same sources in a browser's WebGPU and builds these pipelines. Any change to a struct, attribute or binding raises the version.",
   "sources": [
@@ -32,7 +32,9 @@
         { "name": "dpi", "type": "f32", "offset": 28 },
         { "name": "background", "type": "vec4<f32>", "offset": 32 },
         { "name": "line_width", "type": "f32", "offset": 48 },
-        { "name": "srgb_target", "type": "u32", "offset": 52 }
+        { "name": "srgb_target", "type": "u32", "offset": 52 },
+        { "name": "twist_c", "type": "f32", "offset": 56 },
+        { "name": "twist_s", "type": "f32", "offset": 60 }
       ]
     }
   },

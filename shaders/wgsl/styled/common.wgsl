@@ -6,6 +6,7 @@ struct Frame {
   dpr: f32,
   viewport: vec2f,   // device px
   offsetLo: vec2f,   // the camera centre's low part (contract version 3)
+  twist: vec2f,      // the view's twist as cos − 1 and sin; zero with the north up (contract version 8)
 };
 struct SStyle {
   color: vec4f,
@@ -29,7 +30,12 @@ struct SStyle {
 // A position is from its batch's tile (docs/adr/0157). The camera's high part less the tile's origin is exact (the
 // origin is a whole multiple of 2^16 m near it); a position near the camera less that is exact too, and small; the
 // camera's low part comes off last, so no step of the camera is lost however far the tile lies from the anchor.
-fn toPx(p: vec2f) -> vec2f { return ((p - (frame.offset - st.origin.xy)) - frame.offsetLo) * frame.pxPerM; }
+fn toPx(p: vec2f) -> vec2f {
+  let d = ((p - (frame.offset - st.origin.xy)) - frame.offsetLo) * frame.pxPerM;
+  // The view's twist turns the world by minus its angle about the camera's middle (docs/adr/0285 §2).
+  let c = 1.0 + frame.twist.x;
+  return vec2f(d.x * c + d.y * frame.twist.y, d.y * c - d.x * frame.twist.y);
+}
 fn pxToClip(px: vec2f) -> vec4f { return vec4f(px / (0.5 * frame.viewport), 0.0, 1.0); }
 fn unitK() -> f32 { if (st.flags.x == 0u) { return frame.pxPerM; } return frame.dpr; }
 fn fmod(x: f32, y: f32) -> f32 { return x - y * floor(x / y); }

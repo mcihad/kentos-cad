@@ -13,7 +13,7 @@ use kentos_contracts::{
     LayersEdit, LayersFilter, LayersInfo, LayersLabels, LayersRenderer, LayersService, LayersSet,
     LayersStates, LayersTime, LineCreate, NetworkDefine, NurbsCreate, PointCreate, PointsConstruct,
     PolygonCreate, PolylineCreate, ScenariosEdit, SettingsSet, SheetsEdit, SnapFind, StylesEdit,
-    UcsSet, UnitsChange, codes,
+    UcsSet, UnitsChange, ViewsEdit, codes,
 };
 use serde_json::Value;
 
@@ -25,7 +25,7 @@ use crate::{
     layers_compose, layers_edit, layers_filter, layers_info, layers_labels, layers_renderer,
     layers_service, layers_set, layers_states, layers_time, line, network_define, nurbs, offset,
     point, points_construct, polygon, polyline, scenarios_edit, set, settings_set, sheets_edit,
-    snap_find, stretch, styles_edit, transform, ucs_set, units_change,
+    snap_find, stretch, styles_edit, transform, ucs_set, units_change, views_edit,
 };
 
 /// Why a command was not run: not a refusal of the command (that is its
@@ -96,6 +96,7 @@ macro_rules! by_command {
             kentos_contracts::CAD_NURBS_CREATE => $then!(nurbs, NurbsCreate),
             kentos_contracts::CAD_ENTITIES_ORDER => $then!(entities_order, EntitiesOrder),
             kentos_contracts::CAD_UCS_SET => $then!(ucs_set, UcsSet),
+            kentos_contracts::CAD_VIEWS_EDIT => $then!(views_edit, ViewsEdit),
             kentos_contracts::CAD_ENTITIES_TRIM => $then!(entities_trim, EntitiesTrim),
             kentos_contracts::CAD_ENTITIES_EXTEND => $then!(entities_extend, EntitiesTrim),
             kentos_contracts::CAD_ENTITIES_FILLET => $then!(entities_fillet, EntitiesFillet),

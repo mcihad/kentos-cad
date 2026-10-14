@@ -243,6 +243,7 @@ pub mod trim;
 pub mod vertex;
 pub mod vertex_points;
 pub mod view_history;
+pub mod view_twist;
 
 pub use clipboard::Clipboard;
 pub use format::{Axes, Format, fixed};

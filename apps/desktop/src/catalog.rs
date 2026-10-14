@@ -1858,8 +1858,16 @@ mod tests {
                 ("tool.rectangle", "Dikdörtgen, alanla", Some("ALAN")),
                 ("tool.rectangle3", "Döndürülmüş dikdörtgen", None),
                 ("tool.regularPolygon", "Düzgün çokgen", None),
-                ("tool.regularPolygon", "Düzgün çokgen, çember içinde", Some("İÇ")),
-                ("tool.regularPolygon", "Düzgün çokgen, çember dışında", Some("DIŞ")),
+                (
+                    "tool.regularPolygon",
+                    "Düzgün çokgen, çember içinde",
+                    Some("İÇ")
+                ),
+                (
+                    "tool.regularPolygon",
+                    "Düzgün çokgen, çember dışında",
+                    Some("DIŞ")
+                ),
                 ("tool.regularPolygon", "Düzgün çokgen, kenardan", Some("K")),
             ]
         );
@@ -1899,7 +1907,9 @@ mod tests {
             let tool = m.id.strip_prefix("tool.").unwrap_or(m.id);
             assert_eq!(app.session.tool_id(), tool, "{} › {}", m.id, m.label);
             assert!(
-                !app.log.lines().any(|l| l.level == kentos_interaction::Level::Warn),
+                !app.log
+                    .lines()
+                    .any(|l| l.level == kentos_interaction::Level::Warn),
                 "{} › {} ({option}) is taken",
                 m.id,
                 m.label

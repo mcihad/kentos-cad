@@ -57,6 +57,7 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
     ProjectSettings {
         length_style: None,
         named_ucs: Vec::new(),
+        named_views: Vec::new(),
         ucs: None,
         srid,
         length_decimals: 3,

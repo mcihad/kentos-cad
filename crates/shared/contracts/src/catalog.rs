@@ -3122,6 +3122,53 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // The project's named views (docs/adr/0285), held together by
+        // fixtures/commands/v1/cad.views.edit.json. The web is paused (docs/adr/0228).
+        CommandDescriptor {
+            id: crate::CAD_VIEWS_EDIT.into(),
+            version: crate::CAD_VIEWS_EDIT_VERSION,
+            title: "Adlı görünümler".into(),
+            summary: "Projenin adlı görünümlerini düzenler. Görünüm, kameranın baktığı yerdir: alanın ortasındaki dünya noktası (center), gösterilen dünya eni ve boyu (width, height; ekranın x ve y'si boyunca) ve dönüşü (twist: ekranın x ekseninin doğudan saat yönünün tersine açısı, radyan, [0, 2π)'ye getirilir; 0 kuzeyi yukarıda gösterir). \
+                      edit.kind: save (görünümü adla saklar; aynı adlı varsa yerine geçer, view_replaced uyarısı), rename (adlı görünümün adını to yapar, listedeki yeri kalır; to başka bir görünümün adıysa view_exists), delete (adlı görünümü siler). \
+                      Adlar baştaki ve sondaki boşluklar atılarak karşılaştırılır; 1–64 karakter, denetim karakteri yok; projede en çok 100 görünüm. \
+                      Proje ayarıdır, geri alma adımı değildir; bir görünüme gitmek arayüzün kamerasıdır, komut değildir; nesneler değişmez. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ViewsEdit>(),
+            output: schema::<crate::ViewsEdited>(),
+            plan: Some(schema::<crate::ViewsEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Parselin çevresini “Ada 112” adıyla sakla, 30° döndürülmüş".into(),
+                    input: json!({ "edit": { "kind": "save", "name": "Ada 112", "center": { "x": 487020.0, "y": 4420015.0 }, "width": 60.0, "height": 40.0, "twist": std::f64::consts::FRAC_PI_6 } }),
+                    output: Some(json!({
+                        "views": [{ "name": "Ada 112", "center": { "x": 487020.0, "y": 4420015.0 }, "width": 60.0, "height": 40.0, "twist": std::f64::consts::FRAC_PI_6 }],
+                        "view": { "name": "Ada 112", "center": { "x": 487020.0, "y": 4420015.0 }, "width": 60.0, "height": 40.0, "twist": std::f64::consts::FRAC_PI_6 },
+                        "changed": true,
+                        "revision": "7"
+                    })),
+                },
+                CommandExample {
+                    title: "Yeniden adlandır".into(),
+                    input: json!({ "edit": { "kind": "rename", "name": "Ada 112", "to": "Ada 112 kuzey" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Sil".into(),
+                    input: json!({ "edit": { "kind": "delete", "name": "Ada 112 kuzey" } }),
+                    output: None,
+                },
+            ],
+        },
         // A local project's unit, keeping the sizes or the numbers (docs/adr/0256 §1), held together
         // by fixtures/commands/v1/cad.units.change.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -3939,6 +3986,9 @@ mod tests {
                     crate::CAD_UCS_SET => {
                         serde_json::from_value::<crate::UcsSet>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_VIEWS_EDIT => {
+                        serde_json::from_value::<crate::ViewsEdit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SHEETS_EDIT => {
                         serde_json::from_value::<crate::SheetsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -4136,6 +4186,10 @@ mod tests {
                         }
                         crate::CAD_UCS_SET => {
                             serde_json::from_value::<crate::UcsChanged>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_VIEWS_EDIT => {
+                            serde_json::from_value::<crate::ViewsEdited>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_SHEETS_EDIT => {
                             serde_json::from_value::<crate::SheetsEdited>(output.clone())

@@ -359,6 +359,7 @@ impl App {
                 accent: tokens.accent,
                 muted: tokens.muted,
                 middle: Point::new((camera.width / 2.0) as f32, (camera.height / 2.0) as f32),
+                twist: camera.twist,
             })
             .width(OVERVIEW.0 as f32)
             .height(OVERVIEW.1 as f32);
@@ -389,6 +390,8 @@ impl App {
                         scale: self.viewport.camera.scale * f64::from(zoom),
                         width: LENS.0,
                         height: LENS.1,
+                        // Büyüteç looks as the area does, turned with it (docs/adr/0285 §2).
+                        twist: self.viewport.camera.twist,
                     };
                     camera.center = at;
                     self.lens_view(doc, camera)
@@ -523,6 +526,8 @@ struct OverviewCanvas<'a> {
     muted: Color,
     /// The drawing area's middle, where the wheel zooms the view about.
     middle: Point,
+    /// The view's twist (docs/adr/0285 §2): its frame is the area turned on the ground.
+    twist: f64,
 }
 
 /// The pointer's state over the overview.
@@ -633,8 +638,15 @@ impl canvas::Program<Message> for OverviewCanvas<'_> {
             } else {
                 let at = Point::new(u0 as f32, v0 as f32);
                 let size = Size::new((u1 - u0) as f32, (v1 - v0) as f32);
-                over.fill_rectangle(at, size, self.accent.scale_alpha(0.14));
-                over.stroke(&Path::rectangle(at, size), stroke);
+                // A twisted view's area lies turned on the ground: counter-clockwise by its twist.
+                let middle = iced::Vector::new(((u0 + u1) / 2.0) as f32, ((v0 + v1) / 2.0) as f32);
+                over.with_save(|f| {
+                    f.translate(middle);
+                    f.rotate(-(self.twist as f32));
+                    f.translate(iced::Vector::new(-middle.x, -middle.y));
+                    f.fill_rectangle(at, size, self.accent.scale_alpha(0.14));
+                    f.stroke(&Path::rectangle(at, size), stroke);
+                });
             }
         }
         vec![picture, over.into_geometry()]
