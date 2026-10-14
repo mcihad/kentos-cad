@@ -214,6 +214,21 @@
       "apply": "live"
     },
     {
+      "key": "drafting.autocadAliases",
+      "type": "boolean",
+      "default": false,
+      "scope": "user",
+      "hosts": [
+        "desktop"
+      ],
+      "version": 1,
+      "group": "drafting",
+      "title": "AutoCAD takma adları",
+      "description": "Komut satırına AutoCAD'in İngilizce komut adları ve kısaltmaları da yazılabilir (RECTANG, LA, JOG, DT…). KentOS'un kendi adları ve tek harf kısayolları her zaman önce gelir: KentOS'ta başka bir işi olan ad (T, S, P, CP, POLYGON…) eklenmez.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
       "key": "drafting.snap",
       "type": "boolean",
       "default": true,

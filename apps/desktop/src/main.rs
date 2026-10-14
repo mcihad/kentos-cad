@@ -10,6 +10,9 @@ mod address;
 #[cfg(test)]
 mod address_scenes;
 mod aids;
+mod alias_profile;
+#[cfg(test)]
+mod alias_profile_scenes;
 mod annotation_scale;
 mod annotation_styles;
 mod app;
