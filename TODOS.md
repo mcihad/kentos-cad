@@ -165,6 +165,10 @@ Liste:
 - [ ] `CAD-INPUT-01` (ADR 0266, 14 Ekim): web'de gerekenler: `coordinateInput.ts`'in metrik birimli uzunluğu (`2.5m`, `250cm`) ve
   parantezli toplamı (`fixtures/point-input/v1`'in 22 yeni satırı), `looksLikeCoordinate`'in `(`'u ve araçların uzunluk alanlarının
   birimli ve toplamlı okunması; web'in iz oynatıcısı `value-entry.json`'u geçmeli (`(`, `)`, `*` tuşları, Tab'ın birimli kilidi).
+- [ ] `CAD-INPUT-20` (ADR 0284, 14 Ekim): web'de gerekenler: Komut geçmişi'nin belgenin kaydından ve reddedilen çağrılarından (web
+  belgesinde `note_refusal`'ın karşılığı) okunur çağrı satırları (başlık, Türkçe girdi, sonuç, uyarı ve hata kodları, adıma göre gruplama,
+  geri alındı), çekirdeğin `python_call`'ı WASM'la ya da TS ikiziyle Python kodu, “Python” göster, kopyala, `kentos.replay/1` kopyala ve
+  indir düğmeleri.
 - [ ] `CAD-INPUT-19` (ADR 0283, 14 Ekim): web'de gerekenler: ToolManager'da şeffaf araçlar (Kaydır, Pencere yakınlaştır, Mesafe ölç,
   Açı ölç, Koordinat oku) komutun üstünde `nest` ile, komutun kilitleri ve referansıyla askıda; askıdakiler yığını (hesaplayıcı şeffaf
   ölçmenin üstünde); Enter'ın şeffaf aracı bitirmesi; şeffaf aracın altında komutun taslağı; görünüm değişince ve komut dönünce
