@@ -64,6 +64,11 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
     (
+        "cad.entities.select",
+        "too_many_points",
+        "100 001 noktalı ya da kimlikli durum dosyayı megabaytlarca büyütür; bu dosyanın selections_beyond_the_limit testinde",
+    ),
+    (
         "*",
         "slots_exhausted",
         "4 milyarı aşkın yuvanın tükenmesi ortak durumla kurulamaz; masaüstünün kendi testinde (fixtures/commands/README.md)",
@@ -380,4 +385,18 @@ fn a_listed_kind_is_taken_and_another_is_refused_with_the_listed_code() {
         }
     }
     assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+/// `cad.entities.select`'s `too_many_points`, which no shared case reaches (see [`UNREACHED`]): a fence of more than
+/// 100 000 points and a list of more than 100 000 objects are refused at the list, before any is read.
+#[test]
+fn selections_beyond_the_limit_are_refused() {
+    let (mut doc, _) = one_of_each_kind().into_values().next().expect("a drawing");
+    let n = kentos_contracts::MAX_SELECT_ITEMS + 1;
+    let points: Vec<Value> = (0..n).map(|i| json!({ "x": i as f64, "y": (i % 7) as f64 })).collect();
+    let fence = json!({ "region": { "kind": "fence", "points": points, "tolerance": 0 } });
+    assert_eq!(refusal(&mut doc, "cad.entities.select", fence).as_deref(), Some("too_many_points"));
+    let uids = vec![json!("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"); n];
+    let list = json!({ "region": { "kind": "objects", "uids": uids } });
+    assert_eq!(refusal(&mut doc, "cad.entities.select", list).as_deref(), Some("too_many_points"));
 }

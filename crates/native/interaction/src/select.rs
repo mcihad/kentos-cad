@@ -242,8 +242,16 @@ impl Select {
                     to: current.screen,
                 }
                 .crossing();
-                let ids = cx.spatial.in_rect(start.world, current.world, crossing);
-                let ids = crate::selectable::ids(cx, ids);
+                let (a, b) = (
+                    crate::selectable::point(start.world),
+                    crate::selectable::point(current.world),
+                );
+                let region = if crossing {
+                    kentos_contracts::SelectRegion::Crossing { a, b }
+                } else {
+                    kentos_contracts::SelectRegion::Window { a, b }
+                };
+                let ids = crate::selectable::query(cx, region);
                 if p.shift {
                     cx.selection.add(ids);
                 } else {

@@ -155,13 +155,31 @@
       "level": "session"
     },
     "edit.invertSelection": {
-      "level": "session"
+      "level": "session",
+      "via": [
+        "cad.entities.select"
+      ],
+      "python": "kentos.cad.entities.select",
+      "mcp": "cad.entities.select",
+      "note": "Seçim oturumundur; aynı sorgu cad.entities.select (ADR 0275)."
     },
     "edit.previousSelection": {
-      "level": "session"
+      "level": "session",
+      "via": [
+        "cad.entities.select"
+      ],
+      "python": "kentos.cad.entities.select",
+      "mcp": "cad.entities.select",
+      "note": "Seçim oturumundur; aynı sorgu cad.entities.select (ADR 0275)."
     },
     "edit.selectAll": {
-      "level": "session"
+      "level": "session",
+      "via": [
+        "cad.entities.select"
+      ],
+      "python": "kentos.cad.entities.select",
+      "mcp": "cad.entities.select",
+      "note": "Seçim oturumundur; aynı sorgu cad.entities.select (ADR 0275)."
     },
     "edit.copy": {
       "level": "session",
@@ -1515,22 +1533,58 @@
       "level": "session"
     },
     "select": {
-      "level": "session"
+      "level": "session",
+      "via": [
+        "cad.entities.select"
+      ],
+      "python": "kentos.cad.entities.select",
+      "mcp": "cad.entities.select",
+      "note": "Seçim oturumundur; aynı sorgu cad.entities.select (ADR 0275)."
     },
     "selectCircle": {
-      "level": "session"
+      "level": "session",
+      "via": [
+        "cad.entities.select"
+      ],
+      "python": "kentos.cad.entities.select",
+      "mcp": "cad.entities.select",
+      "note": "Seçim oturumundur; aynı sorgu cad.entities.select (ADR 0275)."
     },
     "selectContaining": {
-      "level": "session"
+      "level": "session",
+      "via": [
+        "cad.entities.select"
+      ],
+      "python": "kentos.cad.entities.select",
+      "mcp": "cad.entities.select",
+      "note": "Seçim oturumundur; aynı sorgu cad.entities.select (ADR 0275)."
     },
     "selectFence": {
-      "level": "session"
+      "level": "session",
+      "via": [
+        "cad.entities.select"
+      ],
+      "python": "kentos.cad.entities.select",
+      "mcp": "cad.entities.select",
+      "note": "Seçim oturumundur; aynı sorgu cad.entities.select (ADR 0275)."
     },
     "selectPolygon": {
-      "level": "session"
+      "level": "session",
+      "via": [
+        "cad.entities.select"
+      ],
+      "python": "kentos.cad.entities.select",
+      "mcp": "cad.entities.select",
+      "note": "Seçim oturumundur; aynı sorgu cad.entities.select (ADR 0275)."
     },
     "selectSimilar": {
-      "level": "session"
+      "level": "session",
+      "via": [
+        "cad.entities.select"
+      ],
+      "python": "kentos.cad.entities.select",
+      "mcp": "cad.entities.select",
+      "note": "Seçim oturumundur; aynı sorgu cad.entities.select (ADR 0275)."
     },
     "stakeout": {
       "level": "query"

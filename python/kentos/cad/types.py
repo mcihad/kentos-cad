@@ -1232,6 +1232,22 @@ PointSymbolName = Literal["ring", "cross", "triangle"]
 """The names of :class:`PointSymbol`, for a plain string."""
 
 
+class PolygonSelectMode(_StrEnum):
+    """How a polygon selects (Çokgenle seç, docs/adr/0187 §2).
+
+    - ``inside``: İçindekiler: wholly inside.
+    - ``crossing``: Kesişenler: inside or touching.
+    - ``outside``: Dışındakiler: every object it does not touch.
+    """
+    INSIDE = "inside"
+    CROSSING = "crossing"
+    OUTSIDE = "outside"
+
+
+PolygonSelectModeName = Literal["inside", "crossing", "outside"]
+"""The names of :class:`PolygonSelectMode`, for a plain string."""
+
+
 class ProjectPermission(_StrEnum):
     """A permission in a project. The names are fixed: commands (`permissions`
     in the catalog), the web, the desktop, Python and AI use them as they are.
@@ -1463,6 +1479,31 @@ class ScenarioOperation(_StrEnum):
 
 ScenarioOperationName = Literal["create", "apply"]
 """The names of :class:`ScenarioOperation`, for a plain string."""
+
+
+class SelectKind(_StrEnum):
+    """A kind the selection filter holds (docs/adr/0187 §5): a NURBS curve is an Eğri (`spline`)."""
+    POINT = "point"
+    LINE = "line"
+    POLYLINE = "polyline"
+    POLYGON = "polygon"
+    CIRCLE = "circle"
+    ARC = "arc"
+    ELLIPSE = "ellipse"
+    SPLINE = "spline"
+    XLINE = "xline"
+    RAY = "ray"
+    TEXT = "text"
+    DIMENSION = "dimension"
+    HATCH = "hatch"
+    INSERT = "insert"
+    LEADER = "leader"
+    TABLE = "table"
+    IMAGE = "image"
+
+
+SelectKindName = Literal["point", "line", "polyline", "polygon", "circle", "arc", "ellipse", "spline", "xline", "ray", "text", "dimension", "hatch", "insert", "leader", "table", "image"]
+"""The names of :class:`SelectKind`, for a plain string."""
 
 
 class ServiceKind(_StrEnum):
@@ -2165,6 +2206,36 @@ class PointConstruction(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> PointConstruction:
         return _variant(_POINT_CONSTRUCTION, "PointConstruction", "kind", data).from_json(data)
+
+
+class SelectRegion(_Union):
+    """Where the objects are, or which they are.
+
+    One of:
+
+    - :class:`WindowSelectRegion` (``kind: window``)
+    - :class:`CrossingSelectRegion` (``kind: crossing``)
+    - :class:`FenceSelectRegion` (``kind: fence``)
+    - :class:`PolygonSelectRegion` (``kind: polygon``)
+    - :class:`CircleSelectRegion` (``kind: circle``)
+    - :class:`ContainingSelectRegion` (``kind: containing``)
+    - :class:`PointSelectRegion` (``kind: point``)
+    - :class:`AllSelectRegion` (``kind: all``)
+    - :class:`ObjectsSelectRegion` (``kind: objects``)
+    - :class:`InvertSelectRegion` (``kind: invert``)
+    - :class:`SimilarSelectRegion` (``kind: similar``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SelectRegion:
+        return _variant(_SELECT_REGION, "SelectRegion", "kind", data).from_json(data)
 
 
 class SubPlace(_Union):
@@ -6488,6 +6559,72 @@ class EntitiesPropertiesSet(_Model):
         return cls(
             changed=list(data["changed"]),
             ids=list(data["ids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesSelect(_Model):
+    """Input of `cad.entities.select` v1: the objects the region gives that pass the kinds and the layers, in the
+    region's order (the drawing's, the smallest first for `containing`, the most specific first for `point`).
+    Only objects shown count: a hidden layer's, and what a layer's filter or the time window leaves out, never
+    (docs/adr/0211 §1, 0210); a locked layer's do (a lock forbids editing, not selecting).
+
+    Refusals (`CommandError.code`), the region's in its fields' order, then the layers': `not_finite` (a point, a
+    tolerance, a radius), `too_many_points` (more than 100 000 points or objects), `too_few_points` (a fence of
+    fewer than two points), `too_few_corners` (a polygon of fewer than three), `invalid_ring` (a polygon crossing
+    itself or without area), `invalid_radius` (a circle's not above zero), `invalid_distance` (a tolerance below
+    zero), `invalid_uid`, `entity_not_found` (an object given), `no_objects` (Benzerini seç without an example),
+    `layer_not_found`, `not_a_layer` (a group in `layers`).
+    Attributes:
+        kinds: Seçim süzgeci: only these kinds; absent: every kind.
+        layers: Only on these layers (their ids); absent: every layer.
+    """
+    region: SelectRegion
+    kinds: list[SelectKind | SelectKindName] | None | Unset = UNSET
+    layers: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["region"] = self.region.to_json()
+        if self.kinds is not UNSET:
+            out["kinds"] = None if self.kinds is None else [_enum_out(e0) for e0 in self.kinds]
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else list(self.layers)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesSelect:
+        return cls(
+            region=SelectRegion.from_json(data["region"]),
+            kinds=UNSET if "kinds" not in data else None if data["kinds"] is None else [_enum_in(SelectKind, e0) for e0 in data["kinds"]],
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesSelected(_Model):
+    """Output of `cad.entities.select` v1, and its plan: the objects' persistent ids in the region's order, what was
+    left out, and the revision they were read at.
+    Attributes:
+        revision: The document's revision the objects were read at, as decimal text.
+    """
+    uids: list[str]
+    left_out: SelectLeftOut
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["leftOut"] = self.left_out.to_json()
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesSelected:
+        return cls(
+            uids=list(data["uids"]),
+            left_out=SelectLeftOut.from_json(data["leftOut"]),
             revision=data["revision"],
         )
 
@@ -14270,6 +14407,34 @@ class ScenariosEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SelectLeftOut(_Model):
+    """What the kinds and the layers left out of the region's objects, and the objects given that are not shown.
+    Attributes:
+        kinds: By the kinds (the selection filter). Unit: count.
+        layers: By the layers. Unit: count.
+        hidden: Objects given (`objects`) that are not shown. Unit: count.
+    """
+    kinds: int
+    layers: int
+    hidden: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kinds"] = self.kinds
+        out["layers"] = self.layers
+        out["hidden"] = self.hidden
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SelectLeftOut:
+        return cls(
+            kinds=data["kinds"],
+            layers=data["layers"],
+            hidden=data["hidden"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ServiceConnection(_Model):
     """A connection of the project (docs/adr/0208 §2): what proof requests to
     its origin carry, without the secrets.
@@ -14773,6 +14938,39 @@ class SheetsEdited(_Model):
             inverse=list(data["inverse"]),
             sheets=[SheetInfo.from_json(e0) for e0 in data["sheets"]],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SimilarCriteria(_Model):
+    """What Benzerini seç compares (docs/adr/0187 §4): an object is like an example when it equals it in every
+    criterion that is on; none on: every object.
+    Attributes:
+        kind: Tür: the kind, an insert's block too.
+        layer: Katman.
+        color: Renk: the object's own colour (“by layer” is a value of its own).
+        symbol: Sembol: the object's own symbol.
+    """
+    kind: bool
+    layer: bool
+    color: bool
+    symbol: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["layer"] = self.layer
+        out["color"] = self.color
+        out["symbol"] = self.symbol
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SimilarCriteria:
+        return cls(
+            kind=data["kind"],
+            layer=data["layer"],
+            color=data["color"],
+            symbol=data["symbol"],
         )
 
 
@@ -18627,6 +18825,257 @@ class AlongPointConstruction(PointConstruction):
 
 
 @dataclass(kw_only=True, slots=True)
+class WindowSelectRegion(SelectRegion):
+    """Pencere: wholly inside the box from `a` to `b` (an infinite line never is).
+    Attributes:
+        a: Unit: length.
+        b: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "window"
+    a: Vec2
+    b: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "window"}
+        out["a"] = _vec2_out(self.a)
+        out["b"] = _vec2_out(self.b)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WindowSelectRegion:
+        return cls(
+            a=Vec2.from_json(data["a"]),
+            b=Vec2.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CrossingSelectRegion(SelectRegion):
+    """Kesişen: inside the box or touching it (an edge across it, a point of it inside, the box's middle in its
+    area).
+    Attributes:
+        a: Unit: length.
+        b: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "crossing"
+    a: Vec2
+    b: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "crossing"}
+        out["a"] = _vec2_out(self.a)
+        out["b"] = _vec2_out(self.b)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CrossingSelectRegion:
+        return cls(
+            a=Vec2.from_json(data["a"]),
+            b=Vec2.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FenceSelectRegion(SelectRegion):
+    """Çitle seç: what the open path crosses; a point, `tolerance` metres from it.
+    Attributes:
+        points: Unit: length.
+        tolerance: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "fence"
+    points: list[Vec2]
+    tolerance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "fence"}
+        out["points"] = [_vec2_out(e0) for e0 in self.points]
+        out["tolerance"] = float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FenceSelectRegion:
+        return cls(
+            points=[Vec2.from_json(e0) for e0 in data["points"]],
+            tolerance=float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PolygonSelectRegion(SelectRegion):
+    """Çokgenle seç: a simple ring's inside, crossing or outside.
+    Attributes:
+        points: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "polygon"
+    points: list[Vec2]
+    mode: PolygonSelectMode | PolygonSelectModeName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "polygon"}
+        out["points"] = [_vec2_out(e0) for e0 in self.points]
+        out["mode"] = _enum_out(self.mode)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PolygonSelectRegion:
+        return cls(
+            points=[Vec2.from_json(e0) for e0 in data["points"]],
+            mode=_enum_in(PolygonSelectMode, data["mode"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CircleSelectRegion(SelectRegion):
+    """Daireyle seç: wholly inside the circle, and with `crossing` touching it too.
+    Attributes:
+        center: Unit: length.
+        radius: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "circle"
+    center: Vec2
+    radius: float
+    crossing: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "circle"}
+        out["center"] = _vec2_out(self.center)
+        out["radius"] = float(self.radius)
+        if self.crossing is not UNSET:
+            out["crossing"] = self.crossing
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CircleSelectRegion:
+        return cls(
+            center=Vec2.from_json(data["center"]),
+            radius=float(data["radius"]),
+            crossing=data.get("crossing", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ContainingSelectRegion(SelectRegion):
+    """İçeren alanı seç: the closed shapes around the point, the smallest first.
+    Attributes:
+        at: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "containing"
+    at: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "containing"}
+        out["at"] = _vec2_out(self.at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ContainingSelectRegion:
+        return cls(
+            at=Vec2.from_json(data["at"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointSelectRegion(SelectRegion):
+    """A click: what a click at `at` selects within `tolerance` metres, the most specific first (Sıradakini seç's
+    candidates, docs/adr/0187 §1).
+    Attributes:
+        at: Unit: length.
+        tolerance: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "point"
+    at: Vec2
+    tolerance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "point"}
+        out["at"] = _vec2_out(self.at)
+        out["tolerance"] = float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointSelectRegion:
+        return cls(
+            at=Vec2.from_json(data["at"]),
+            tolerance=float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AllSelectRegion(SelectRegion):
+    """Tümünü seç: every object shown."""
+    TAG_VALUE: ClassVar[str] = "all"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "all"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AllSelectRegion:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class ObjectsSelectRegion(SelectRegion):
+    """The objects given, those shown (Önceki seçim: the list the caller kept)."""
+    TAG_VALUE: ClassVar[str] = "objects"
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "objects"}
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ObjectsSelectRegion:
+        return cls(
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class InvertSelectRegion(SelectRegion):
+    """Seçimi ters çevir: every object shown but those given."""
+    TAG_VALUE: ClassVar[str] = "invert"
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "invert"}
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> InvertSelectRegion:
+        return cls(
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SimilarSelectRegion(SelectRegion):
+    """Benzerini seç: every object shown like one of those given.
+    Attributes:
+        criteria: Absent: every criterion on.
+    """
+    TAG_VALUE: ClassVar[str] = "similar"
+    uids: list[str]
+    criteria: SimilarCriteria | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "similar"}
+        out["uids"] = list(self.uids)
+        if self.criteria is not UNSET:
+            out["criteria"] = None if self.criteria is None else self.criteria.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SimilarSelectRegion:
+        return cls(
+            uids=list(data["uids"]),
+            criteria=UNSET if "criteria" not in data else None if data["criteria"] is None else SimilarCriteria.from_json(data["criteria"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NodeSubPlace(SubPlace):
     """A point object's position: part 0 its own, `k` its `k`th extra point (docs/adr/0174).
     Attributes:
@@ -19462,6 +19911,9 @@ _OFFSET_BY: dict[str, type[OffsetBy]] = {"distance": DistanceOffsetBy, "through"
 _POINT_CONSTRUCTION: dict[str, type[PointConstruction]] = {"mid": MidPointConstruction, "extension": ExtensionPointConstruction, "parallel": ParallelPointConstruction, "track": TrackPointConstruction, "polar": PolarPointConstruction, "along": AlongPointConstruction}
 
 
+_SELECT_REGION: dict[str, type[SelectRegion]] = {"window": WindowSelectRegion, "crossing": CrossingSelectRegion, "fence": FenceSelectRegion, "polygon": PolygonSelectRegion, "circle": CircleSelectRegion, "containing": ContainingSelectRegion, "point": PointSelectRegion, "all": AllSelectRegion, "objects": ObjectsSelectRegion, "invert": InvertSelectRegion, "similar": SimilarSelectRegion}
+
+
 _SUB_PLACE: dict[str, type[SubPlace]] = {"node": NodeSubPlace, "start": StartSubPlace, "end": EndSubPlace, "center": CenterSubPlace, "vertex": VertexSubPlace, "mid": MidSubPlace, "along": AlongSubPlace}
 
 
@@ -19491,6 +19943,7 @@ __all__ = [
     "AlignTransform",
     "AlignedDimensionMeasure",
     "AllCornerPick",
+    "AllSelectRegion",
     "AllTrimBoundaries",
     "AlongPointConstruction",
     "AlongSubPlace",
@@ -19565,6 +20018,7 @@ __all__ = [
     "CircleEntity",
     "CircleEntityGeometry",
     "CirclePlan",
+    "CircleSelectRegion",
     "ClosedPolylines",
     "ClosedPolylinesName",
     "CloudFormat",
@@ -19574,6 +20028,7 @@ __all__ = [
     "CloudSource",
     "CommitResult",
     "ConstructionEntity",
+    "ContainingSelectRegion",
     "ControlNurbsBy",
     "Convention",
     "ConventionName",
@@ -19583,6 +20038,7 @@ __all__ = [
     "CreateFeatureChange",
     "CreateOperation",
     "CreateOperationName",
+    "CrossingSelectRegion",
     "CrsBase",
     "CrsDefinition",
     "CrsPlane",
@@ -19657,6 +20113,8 @@ __all__ = [
     "EntitiesOrderPlan",
     "EntitiesOrdered",
     "EntitiesPropertiesSet",
+    "EntitiesSelect",
+    "EntitiesSelected",
     "EntitiesSetProperties",
     "EntitiesSetPropertiesPlan",
     "EntitiesStretch",
@@ -19678,6 +20136,7 @@ __all__ = [
     "FeatureFeed",
     "FeedKind",
     "FeedKindName",
+    "FenceSelectRegion",
     "FieldChoice",
     "FieldNetworkDirection",
     "FieldRename",
@@ -19717,6 +20176,7 @@ __all__ = [
     "InfoCard",
     "InsertEntity",
     "InsertEntityGeometry",
+    "InvertSelectRegion",
     "InvitationChange",
     "InvitationRevoke",
     "InvitationState",
@@ -19858,6 +20318,7 @@ __all__ = [
     "ObjectEnd",
     "ObjectUcsTo",
     "ObjectsHatchRegion",
+    "ObjectsSelectRegion",
     "ObjectsTrimBoundaries",
     "ObstacleKind",
     "ObstacleKindName",
@@ -19889,6 +20350,7 @@ __all__ = [
     "PointLabelModeName",
     "PointPart",
     "PointPlan",
+    "PointSelectRegion",
     "PointShape",
     "PointShapeName",
     "PointSizeUnit",
@@ -19907,6 +20369,9 @@ __all__ = [
     "PolygonEntity",
     "PolygonEntityGeometry",
     "PolygonPlan",
+    "PolygonSelectMode",
+    "PolygonSelectModeName",
+    "PolygonSelectRegion",
     "PolylineCreate",
     "PolylineCreated",
     "PolylineEntity",
@@ -19987,6 +20452,10 @@ __all__ = [
     "ScenariosEdit",
     "ScenariosEditPlan",
     "ScenariosEdited",
+    "SelectKind",
+    "SelectKindName",
+    "SelectLeftOut",
+    "SelectRegion",
     "ServiceConnection",
     "ServiceKind",
     "ServiceKindName",
@@ -19999,6 +20468,8 @@ __all__ = [
     "SheetPicture",
     "SheetsEdit",
     "SheetsEdited",
+    "SimilarCriteria",
+    "SimilarSelectRegion",
     "SimilarityCrsPlane",
     "SimilarityTransform",
     "SlopeDimensionMeasure",
@@ -20078,6 +20549,7 @@ __all__ = [
     "Vec2Like",
     "VertexCornerPick",
     "VertexSubPlace",
+    "WindowSelectRegion",
     "Workspace",
     "WorkspaceName",
     "WorldUcsTo",

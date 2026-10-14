@@ -35,7 +35,7 @@ use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, blocks_define, blocks_edit,
     circle, delete, dimensions_reassociate, edit, entities_chamfer, entities_extend,
-    entities_fillet, entities_order, entities_trim, labels_pin, layers_compose, layers_edit,
+    entities_fillet, entities_order, entities_select, entities_trim, labels_pin, layers_compose, layers_edit,
     layers_filter, layers_info, layers_labels, layers_renderer, layers_service, layers_set,
     layers_states, layers_time, line, network_define, nurbs, offset, point, points_construct,
     polygon, polyline, scenarios_edit, set, settings_set, sheets_edit, snap_find, styles_edit,
@@ -515,6 +515,37 @@ impl Input for kentos_domain::contracts::SnapFind {
             "aperture" => Some(&mut self.aperture),
             "from.x" => self.from.as_mut().map(|f| &mut f.x),
             "from.y" => self.from.as_mut().map(|f| &mut f.y),
+            _ => None,
+        }
+    }
+}
+
+/// A coordinate of a point by its axis name.
+fn axis<'a>(p: &'a mut kentos_domain::contracts::Vec2, a: &str) -> Option<&'a mut f64> {
+    match a {
+        "x" => Some(&mut p.x),
+        "y" => Some(&mut p.y),
+        _ => None,
+    }
+}
+
+impl Input for kentos_domain::contracts::EntitiesSelect {
+    /// The region's `region.a.x` … `region.radius`, `region.tolerance`, `region.points[i].x`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_domain::contracts::SelectRegion as R;
+        let rest = path.strip_prefix("region.")?;
+        let (head, x) = rest.split_once('.').unwrap_or((rest, ""));
+        match (&mut self.region, head) {
+            (R::Window { a, .. } | R::Crossing { a, .. }, "a") => axis(a, x),
+            (R::Window { b, .. } | R::Crossing { b, .. }, "b") => axis(b, x),
+            (R::Circle { center, .. }, "center") => axis(center, x),
+            (R::Containing { at } | R::Point { at, .. }, "at") => axis(at, x),
+            (R::Circle { radius, .. }, "radius") => Some(radius),
+            (R::Fence { tolerance, .. } | R::Point { tolerance, .. }, "tolerance") => Some(tolerance),
+            (R::Fence { points, .. } | R::Polygon { points, .. }, head) => {
+                let i: usize = head.strip_prefix("points[")?.strip_suffix(']')?.parse().ok()?;
+                axis(points.get_mut(i)?, x)
+            }
             _ => None,
         }
     }
@@ -1434,6 +1465,9 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_SNAP_FIND => {
             run!(snap_find, kentos_domain::contracts::SnapFind)
+        }
+        kentos_domain::contracts::CAD_ENTITIES_SELECT => {
+            run!(entities_select, kentos_domain::contracts::EntitiesSelect)
         }
         kentos_domain::contracts::CAD_ENTITIES_TRIM => run!(entities_trim, EntitiesTrim),
         kentos_domain::contracts::CAD_ENTITIES_EXTEND => run!(entities_extend, EntitiesTrim),

@@ -431,6 +431,10 @@ codes! {
     /// An empty list of snap kinds.
     NO_SNAP_KINDS = "no_snap_kinds", Failed, false, "Hiç kenet türü verilmedi; listeyi kaldırın (varsayılan türler) ya da en az bir tür verin.";
 
+    // ── The selection as a query (docs/adr/0275) ────────────────────────
+    /// A selecting polygon crossing itself or without area (`cad.entities.select`).
+    INVALID_RING = "invalid_ring", Failed, false, "Seçim çokgeni kendini kesiyor ya da alanı yok.";
+
     // ── Dimensions from what they measure (docs/adr/0255) ───────────────
     /// An object without an edge of the kind a dimension measures.
     NOT_MEASURABLE = "not_measurable", Failed, false, "Nesnede ölçünün aradığı türde kenar yok (düz kenar, uçları olan yay ya da daire).";

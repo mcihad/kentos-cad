@@ -1657,11 +1657,13 @@
    "kind": "command",
    "title": "Seçimi ters çevir",
    "level": "session",
-   "via": [],
+   "via": [
+    "cad.entities.select"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": null,
+   "python": "kentos.cad.entities.select",
+   "mcp": "cad.entities.select",
+   "note": "Seçim oturumundur; aynı sorgu cad.entities.select (ADR 0275).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -1703,11 +1705,13 @@
    "kind": "command",
    "title": "Önceki seçim",
    "level": "session",
-   "via": [],
+   "via": [
+    "cad.entities.select"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": null,
+   "python": "kentos.cad.entities.select",
+   "mcp": "cad.entities.select",
+   "note": "Seçim oturumundur; aynı sorgu cad.entities.select (ADR 0275).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -1731,11 +1735,13 @@
    "kind": "command",
    "title": "Tümünü seç",
    "level": "session",
-   "via": [],
+   "via": [
+    "cad.entities.select"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": null,
+   "python": "kentos.cad.entities.select",
+   "mcp": "cad.entities.select",
+   "note": "Seçim oturumundur; aynı sorgu cad.entities.select (ADR 0275).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
@@ -8600,11 +8606,13 @@
    "kind": "tool",
    "title": "Seç",
    "level": "session",
-   "via": [],
+   "via": [
+    "cad.entities.select"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": null,
+   "python": "kentos.cad.entities.select",
+   "mcp": "cad.entities.select",
+   "note": "Seçim oturumundur; aynı sorgu cad.entities.select (ADR 0275).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 6
@@ -8614,11 +8622,13 @@
    "kind": "tool",
    "title": "Daireyle seç",
    "level": "session",
-   "via": [],
+   "via": [
+    "cad.entities.select"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": null,
+   "python": "kentos.cad.entities.select",
+   "mcp": "cad.entities.select",
+   "note": "Seçim oturumundur; aynı sorgu cad.entities.select (ADR 0275).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
@@ -8628,11 +8638,13 @@
    "kind": "tool",
    "title": "İçeren alanı seç",
    "level": "session",
-   "via": [],
+   "via": [
+    "cad.entities.select"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": null,
+   "python": "kentos.cad.entities.select",
+   "mcp": "cad.entities.select",
+   "note": "Seçim oturumundur; aynı sorgu cad.entities.select (ADR 0275).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
@@ -8642,11 +8654,13 @@
    "kind": "tool",
    "title": "Çitle seç",
    "level": "session",
-   "via": [],
+   "via": [
+    "cad.entities.select"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": null,
+   "python": "kentos.cad.entities.select",
+   "mcp": "cad.entities.select",
+   "note": "Seçim oturumundur; aynı sorgu cad.entities.select (ADR 0275).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
@@ -8656,11 +8670,13 @@
    "kind": "tool",
    "title": "Çokgenle seç",
    "level": "session",
-   "via": [],
+   "via": [
+    "cad.entities.select"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": null,
+   "python": "kentos.cad.entities.select",
+   "mcp": "cad.entities.select",
+   "note": "Seçim oturumundur; aynı sorgu cad.entities.select (ADR 0275).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
@@ -8670,11 +8686,13 @@
    "kind": "tool",
    "title": "Benzerini seç",
    "level": "session",
-   "via": [],
+   "via": [
+    "cad.entities.select"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": null,
+   "python": "kentos.cad.entities.select",
+   "mcp": "cad.entities.select",
+   "note": "Seçim oturumundur; aynı sorgu cad.entities.select (ADR 0275).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2

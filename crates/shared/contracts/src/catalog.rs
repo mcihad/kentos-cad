@@ -3349,6 +3349,42 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             }],
         },
         CommandDescriptor {
+            id: crate::CAD_ENTITIES_SELECT.into(),
+            version: crate::CAD_ENTITIES_SELECT_VERSION,
+            title: "Nesne seç".into(),
+            summary: "Bir bölgenin, listenin ya da benzerliğin nesnelerini kalıcı kimlikleriyle verir: pencere, kesişen kutu, çit, çokgen (içindekiler, kesişenler, dışındakiler), daire, noktayı içeren alanlar (küçükten büyüğe), bir tıklamanın adayları, hepsi, verilenler (önceki seçim), ters çevir ve benzerleri (tür, katman, renk, sembol). \
+                      Seçim süzgecinin türleri ve katman listesiyle süzülür, dışarıda kalanlar sayılır. Yalnız gösterilen nesneler sayılır (gizli katman, katman süzgeci ve zaman penceresi dışarıda); kilitli katmanınkiler seçilir. Araçlar aynı sorguyla seçer. Çizimi değiştirmez; plan aynı cevabı verir."
+                .into(),
+            aliases: vec!["sec".into(), "select".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesSelect>(),
+            output: schema::<crate::EntitiesSelected>(),
+            plan: Some(schema::<crate::EntitiesSelected>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bir pencerenin içindeki alanlar".into(),
+                    input: json!({ "region": { "kind": "window", "a": { "x": 487000.0, "y": 4420000.0 },
+                                               "b": { "x": 487050.0, "y": 4420030.0 } },
+                                   "kinds": ["polygon"] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bir nesnenin katmanındaki ve türündeki bütün nesneler".into(),
+                    input: json!({ "region": { "kind": "similar", "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"],
+                                               "criteria": { "kind": true, "layer": true, "color": false,
+                                                             "symbol": false } } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::CAD_SNAP_FIND.into(),
             version: crate::CAD_SNAP_FIND_VERSION,
             title: "Kenet bul".into(),
@@ -3872,6 +3908,10 @@ mod tests {
                     }
                     crate::CAD_SNAP_FIND => {
                         serde_json::from_value::<crate::SnapFind>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ENTITIES_SELECT => {
+                        serde_json::from_value::<crate::EntitiesSelect>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_POINTS_CONSTRUCT => {
                         serde_json::from_value::<crate::PointsConstruct>(e.input.clone())

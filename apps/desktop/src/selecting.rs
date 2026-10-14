@@ -3,9 +3,11 @@
 //! çevir, Seçime yakınlaştır). What the Öznitelikler panel shows of it and
 //! edits there is `properties/` (docs/adr/0063).
 
+use kentos_contracts::SelectRegion;
 use kentos_domain::Slot;
 use kentos_interaction::ViewChange;
 use kentos_interaction::selectable;
+use kentos_native_application::entities_select::Selected;
 
 use crate::app::App;
 
@@ -13,31 +15,22 @@ use crate::app::App;
 const SELECTION_PADDING: f64 = 96.0;
 
 impl App {
-    /// `edit.selectAll` (Ctrl+A): every object on a shown layer, and how many.
+    /// The selection query over the drawing (docs/adr/0275) with the filter's kinds, the store first brought up to
+    /// the drawing; none without one.
+    fn query_selection(&mut self, region: SelectRegion) -> Option<Selected> {
+        let doc = self.document.as_ref()?;
+        self.spatial.sync(&doc.model);
+        selectable::query_in(&doc.model, &self.spatial, self.draft.select_kinds, region)
+    }
+
+    /// `edit.selectAll` (Ctrl+A): every object shown, and how many.
     pub(crate) fn select_all(&mut self) {
-        let Some(doc) = &self.document else {
+        let Some(found) = self.query_selection(SelectRegion::All) else {
             return;
         };
-        let mut shown = Shown::default();
-        let filter = self.draft.select_kinds;
-        let mut left_out = 0;
-        let ids: Vec<Slot> = doc
-            .model
-            .entities()
-            .filter(|e| shown.of(&doc.model, &e.base().layer_id))
-            // What a layer's filter leaves out is not on the layer (docs/adr/0211 §1).
-            .filter(|e| self.spatial.filter_shown(Slot(e.base().id)))
-            // The kinds the selection filter holds (docs/adr/0187 §5).
-            .filter(|e| {
-                let kept = selectable::entity_allowed(filter, e);
-                left_out += usize::from(!kept);
-                kept
-            })
-            .map(|e| Slot(e.base().id))
-            .collect();
-        let n = ids.len();
-        self.selection.set(ids);
-        self.say_filtered(left_out);
+        let n = found.slots.len();
+        self.selection.set(found.slots);
+        self.say_filtered(found.left_out.kinds as usize);
         self.output(format!("{n} nesne seçildi."));
     }
 
@@ -48,29 +41,26 @@ impl App {
         }
     }
 
-    /// `edit.invertSelection`: the objects on shown layers not selected now.
-    pub(crate) fn invert_selection(&mut self) {
+    /// The persistent ids of these objects, as the query takes them.
+    fn uids_of(&self, slots: &[Slot]) -> Vec<String> {
         let Some(doc) = &self.document else {
+            return Vec::new();
+        };
+        slots
+            .iter()
+            .filter_map(|s| doc.model.uid(*s))
+            .map(|u| u.to_string())
+            .collect()
+    }
+
+    /// `edit.invertSelection`: the objects shown not selected now.
+    pub(crate) fn invert_selection(&mut self) {
+        let uids = self.uids_of(self.selection.ids());
+        let Some(found) = self.query_selection(SelectRegion::Invert { uids }) else {
             return;
         };
-        let mut shown = Shown::default();
-        let selection = &self.selection;
-        let filter = self.draft.select_kinds;
-        let mut left_out = 0;
-        let ids: Vec<Slot> = doc
-            .model
-            .entities()
-            .filter(|e| shown.of(&doc.model, &e.base().layer_id))
-            .filter(|e| !selection.contains(Slot(e.base().id)))
-            .filter(|e| {
-                let kept = selectable::entity_allowed(filter, e);
-                left_out += usize::from(!kept);
-                kept
-            })
-            .map(|e| Slot(e.base().id))
-            .collect();
-        self.selection.set(ids);
-        self.say_filtered(left_out);
+        self.selection.set(found.slots);
+        self.say_filtered(found.left_out.kinds as usize);
     }
 
     /// `view.zoomSelection` (Ctrl+Shift+F): the selection's box as large as
@@ -118,21 +108,6 @@ impl App {
     }
 }
 
-/// Whether a layer and the groups above it are shown, looked up once per
-/// layer: a large drawing has many objects on few layers (docs/adr/0123).
-#[derive(Default)]
-struct Shown(std::collections::HashMap<String, bool>);
-
-impl Shown {
-    fn of(&mut self, doc: &kentos_domain::Document, layer: &str) -> bool {
-        if let Some(&shown) = self.0.get(layer) {
-            return shown;
-        }
-        let shown = doc.layers().is_visible(layer);
-        self.0.insert(layer.to_owned(), shown);
-        shown
-    }
-}
 
 /// An object kind as the web titles it (`ENTITY_KIND_LABEL`).
 pub fn kind_title(kind: &str) -> &'static str {
