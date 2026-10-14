@@ -4,6 +4,65 @@
  "source": "scripts/fixtures/subref_cases.py (docs/adr/0249, 0263)",
  "points": [
   {
+   "name": "Yazının ekleme noktası",
+   "entity": {
+    "kind": "text",
+    "p": {
+     "x": 5,
+     "y": 6
+    },
+    "text": "Bina",
+    "height": 1.0
+   },
+   "place": {
+    "kind": "node",
+    "part": 0
+   },
+   "point": {
+    "x": 5,
+    "y": 6
+   },
+   "exact": true
+  },
+  {
+   "name": "Yerleştirmenin ekleme noktası",
+   "entity": {
+    "kind": "insert",
+    "block": "vana",
+    "p": {
+     "x": 7,
+     "y": 8
+    }
+   },
+   "place": {
+    "kind": "node",
+    "part": 0
+   },
+   "point": {
+    "x": 7,
+    "y": 8
+   },
+   "exact": true
+  },
+  {
+   "name": "Yazının ikinci düğümü yok",
+   "entity": {
+    "kind": "text",
+    "p": {
+     "x": 5,
+     "y": 6
+    },
+    "text": "Bina",
+    "height": 1.0
+   },
+   "place": {
+    "kind": "node",
+    "part": 1
+   },
+   "point": null,
+   "exact": true
+  },
+  {
    "name": "Çizginin başı",
    "entity": {
     "kind": "line",
@@ -2766,6 +2825,47 @@
   }
  ],
  "snaps": [
+  {
+   "name": "Ekleme noktası: yazının",
+   "entity": {
+    "kind": "text",
+    "p": {
+     "x": 5,
+     "y": 6
+    },
+    "text": "Bina",
+    "height": 1.0
+   },
+   "snap": "insertion",
+   "at": {
+    "x": 5,
+    "y": 6
+   },
+   "place": {
+    "kind": "node",
+    "part": 0
+   }
+  },
+  {
+   "name": "Ekleme noktası: yerleştirmenin",
+   "entity": {
+    "kind": "insert",
+    "block": "vana",
+    "p": {
+     "x": 7,
+     "y": 8
+    }
+   },
+   "snap": "insertion",
+   "at": {
+    "x": 7,
+    "y": 8
+   },
+   "place": {
+    "kind": "node",
+    "part": 0
+   }
+  },
   {
    "name": "Uç nokta: çizginin sonu",
    "entity": {

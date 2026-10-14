@@ -147,6 +147,7 @@ fn a_snap_names_the_place_the_reference_names() {
             "midpoint" => SnapKind::Midpoint,
             "center" => SnapKind::Center,
             "node" => SnapKind::Node,
+            "insertion" => SnapKind::Insertion,
             "nearest" => SnapKind::Nearest,
             "perpendicular" => SnapKind::Perpendicular,
             "tangent" => SnapKind::Tangent,

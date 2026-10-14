@@ -3349,6 +3349,31 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             }],
         },
         CommandDescriptor {
+            id: crate::CAD_SNAP_FIND.into(),
+            version: crate::CAD_SNAP_FIND_VERSION,
+            title: "Kenet bul".into(),
+            summary: "Bir tıklamanın kenetleneceği noktayı verir: türü, noktası, nesnenin kalıcı kimliği, nesnedeki yeri (uç, köşe, kenar ortası, merkez, düğüm, kenar üstü) ve blok içindeyse parçanın yolu; all ile bütün adaylar en iyiden (Tab'ın sırası). \
+                      Cevabın uid, place ve path'i cad.dimensions.create'in place noktasına olduğu gibi verilir: ölçü o yere bağlanır. Araçlar aynı kenet kuralıyla alır; gizli katmanlar kenetlenmez. Çizimi değiştirmez; plan aynı cevabı verir."
+                .into(),
+            aliases: vec!["kenetbul".into(), "snap".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SnapFind>(),
+            output: schema::<crate::SnapFound>(),
+            plan: Some(schema::<crate::SnapFound>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir köşenin yanında, yarım metrelik açıklıkla".into(),
+                input: json!({ "at": { "x": 487012.2, "y": 4420010.1 }, "aperture": 0.5 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::CAD_POINTS_CONSTRUCT.into(),
             version: crate::CAD_POINTS_CONSTRUCT_VERSION,
             title: "Nokta yapımı".into(),
@@ -3844,6 +3869,9 @@ mod tests {
                     }
                     crate::FILE_EXPORT_PDF => {
                         serde_json::from_value::<crate::ExportPdf>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SNAP_FIND => {
+                        serde_json::from_value::<crate::SnapFind>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_POINTS_CONSTRUCT => {
                         serde_json::from_value::<crate::PointsConstruct>(e.input.clone())

@@ -12,8 +12,8 @@ use kentos_contracts::{
     EntitiesStretch, EntitiesTransform, EntitiesTrim, ImportDxf, LabelsPin, LayersCompose,
     LayersEdit, LayersFilter, LayersInfo, LayersLabels, LayersRenderer, LayersService, LayersSet,
     LayersStates, LayersTime, LineCreate, NetworkDefine, NurbsCreate, PointCreate, PointsConstruct,
-    PolygonCreate, PolylineCreate, ScenariosEdit, SettingsSet, SheetsEdit, StylesEdit, UcsSet,
-    UnitsChange, codes,
+    PolygonCreate, PolylineCreate, ScenariosEdit, SettingsSet, SheetsEdit, SnapFind, StylesEdit,
+    UcsSet, UnitsChange, codes,
 };
 use serde_json::Value;
 
@@ -25,7 +25,7 @@ use crate::{
     layers_compose, layers_edit, layers_filter, layers_info, layers_labels, layers_renderer,
     layers_service, layers_set, layers_states, layers_time, line, network_define, nurbs, offset,
     point, points_construct, polygon, polyline, scenarios_edit, set, settings_set, sheets_edit,
-    stretch, styles_edit, transform, ucs_set, units_change,
+    snap_find, stretch, styles_edit, transform, ucs_set, units_change,
 };
 
 /// Why a command was not run: not a refusal of the command (that is its
@@ -89,6 +89,7 @@ macro_rules! by_command {
             kentos_contracts::CAD_NETWORK_DEFINE => $then!(network_define, NetworkDefine),
             kentos_contracts::CAD_ENTITIES_OFFSET => $then!(offset, EntitiesOffset),
             kentos_contracts::CAD_POINTS_CONSTRUCT => $then!(points_construct, PointsConstruct),
+            kentos_contracts::CAD_SNAP_FIND => $then!(snap_find, SnapFind),
             kentos_contracts::CAD_NURBS_CREATE => $then!(nurbs, NurbsCreate),
             kentos_contracts::CAD_ENTITIES_ORDER => $then!(entities_order, EntitiesOrder),
             kentos_contracts::CAD_UCS_SET => $then!(ucs_set, UcsSet),

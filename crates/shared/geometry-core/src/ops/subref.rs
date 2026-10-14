@@ -190,6 +190,11 @@ fn family(shape: &Shape) -> u8 {
 pub fn point(e: &Entity, place: Place) -> Option<Vec2> {
     match (&e.shape, place) {
         (Shape::Point { p, .. }, Place::Node { part: 0 }) => Some(*p),
+        // A text's, an insert's and a table's insertion point (docs/adr/0272 §1).
+        (
+            Shape::Text { p, .. } | Shape::Insert { p, .. } | Shape::Table { p, .. },
+            Place::Node { part: 0 },
+        ) => Some(*p),
         (Shape::Point { parts, .. }, Place::Node { part }) => {
             parts.as_ref()?.get(part - 1).map(|q| q.p)
         }
@@ -458,6 +463,8 @@ pub fn place_at(e: &Entity, kind: SnapKind, at: Vec2) -> Option<Place> {
         SnapKind::Node => {
             candidates.extend(vertex_places(&e.shape).into_iter().map(|(p, _)| p));
         }
+        // Ekleme noktası: the object's own point (docs/adr/0272 §1).
+        SnapKind::Insertion => candidates.push(Place::Node { part: 0 }),
         SnapKind::Nearest | SnapKind::Perpendicular | SnapKind::Tangent | SnapKind::Quadrant => {
             return along_at(e, at);
         }

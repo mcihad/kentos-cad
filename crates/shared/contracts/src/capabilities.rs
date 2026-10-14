@@ -1244,6 +1244,12 @@ const ENTRIES: &[Entry] = &[
         },
     },
     Entry {
+        id: "cad.snap.find",
+        refusals: &[&["not_finite", "invalid_aperture", "no_snap_kinds"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "file.export.dxf",
         refusals: &[&[
             "invalid_file_path",

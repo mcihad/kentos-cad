@@ -38,8 +38,8 @@ use kentos_native_application::{
     entities_fillet, entities_order, entities_trim, labels_pin, layers_compose, layers_edit,
     layers_filter, layers_info, layers_labels, layers_renderer, layers_service, layers_set,
     layers_states, layers_time, line, network_define, nurbs, offset, point, points_construct,
-    polygon, polyline, scenarios_edit, set, settings_set, sheets_edit, styles_edit, transform,
-    ucs_set, units_change,
+    polygon, polyline, scenarios_edit, set, settings_set, sheets_edit, snap_find, styles_edit,
+    transform, ucs_set, units_change,
 };
 use kentos_native_application::{
     changeset, create, dimensions_create, divide, entities_boundary, entities_break,
@@ -503,6 +503,20 @@ fn area_number<'a>(
         "max.x" => Some(&mut max.x),
         "max.y" => Some(&mut max.y),
         _ => None,
+    }
+}
+
+impl Input for kentos_domain::contracts::SnapFind {
+    /// `at.x`, `at.y`, `aperture`, `from.x`, `from.y`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "at.x" => Some(&mut self.at.x),
+            "at.y" => Some(&mut self.at.y),
+            "aperture" => Some(&mut self.aperture),
+            "from.x" => self.from.as_mut().map(|f| &mut f.x),
+            "from.y" => self.from.as_mut().map(|f| &mut f.y),
+            _ => None,
+        }
     }
 }
 
@@ -1417,6 +1431,9 @@ fn run_op(
         kentos_domain::contracts::CAD_ENTITIES_OFFSET => run!(offset, EntitiesOffset),
         kentos_domain::contracts::CAD_POINTS_CONSTRUCT => {
             run!(points_construct, kentos_domain::contracts::PointsConstruct)
+        }
+        kentos_domain::contracts::CAD_SNAP_FIND => {
+            run!(snap_find, kentos_domain::contracts::SnapFind)
         }
         kentos_domain::contracts::CAD_ENTITIES_TRIM => run!(entities_trim, EntitiesTrim),
         kentos_domain::contracts::CAD_ENTITIES_EXTEND => run!(entities_extend, EntitiesTrim),

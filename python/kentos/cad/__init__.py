@@ -30,7 +30,7 @@ from .errors import *  # noqa: F403
 from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 
-from . import addresses, arc, blocks, changeset, circle, dimensions, entities, file, labels, layers, line, network, nurbs, point, points, polygon, polyline, project, scenarios, settings, sheets, styles, ucs, units  # noqa: E402  isort: skip
+from . import addresses, arc, blocks, changeset, circle, dimensions, entities, file, labels, layers, line, network, nurbs, point, points, polygon, polyline, project, scenarios, settings, sheets, snap, styles, ucs, units  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -261,6 +261,7 @@ __all__ = [
     "FileUnitName",
     "FitNurbsBy",
     "Forbidden",
+    "FoundSnap",
     "FrameUcsTo",
     "GeographicCrsSystem",
     "GeographicDefinition",
@@ -603,6 +604,10 @@ __all__ = [
     "SimilarityCrsPlane",
     "SimilarityTransform",
     "SlopeDimensionMeasure",
+    "SnapFind",
+    "SnapFound",
+    "SnapKindName",
+    "SnapKindNameName",
     "SplineEntity",
     "SplineEntityGeometry",
     "StackMode",
@@ -715,6 +720,7 @@ __all__ = [
     "scenarios",
     "settings",
     "sheets",
+    "snap",
     "styles",
     "types",
     "ucs",

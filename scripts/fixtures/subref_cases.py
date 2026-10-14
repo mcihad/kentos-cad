@@ -77,6 +77,9 @@ def point(e, pl):
     k, kind = e["kind"], pl["kind"]
     if kind == "along":
         return along_point(e, pl)
+    # A text's, an insert's and a table's insertion point (docs/adr/0272 §1).
+    if kind == "node" and k in ("text", "insert", "table"):
+        return e["p"] if pl["part"] == 0 else None
     if kind == "node" and k == "point":
         if pl["part"] == 0:
             return e["p"]
@@ -440,6 +443,8 @@ def place_at(e, snap, at):
         cands = [place("center")]
     elif snap == "node":
         cands = [pl for pl, _ in vertices(e)]
+    elif snap == "insertion":
+        cands = [{"kind": "node", "part": 0}]
     elif snap in ("nearest", "perpendicular", "tangent", "quadrant"):
         return along_at(e, at)
     for pl in cands:
@@ -607,7 +612,13 @@ def with_pts(e, *xy, **extra):
     return out
 
 
+TEXT = {"kind": "text", "p": v(5, 6), "text": "Bina", "height": 1.0}
+INSERT = {"kind": "insert", "block": "vana", "p": v(7, 8)}
+
 POINT_CASES = [
+    ("Yazının ekleme noktası", TEXT, {"kind": "node", "part": 0}),
+    ("Yerleştirmenin ekleme noktası", INSERT, {"kind": "node", "part": 0}),
+    ("Yazının ikinci düğümü yok", TEXT, {"kind": "node", "part": 1}),
     ("Çizginin başı", LINE, place("start")), ("Çizginin sonu", LINE, place("end")),
     ("Çizginin ortası", LINE, place("mid", 0, 0, 0)),
     ("Alanın köşesi", ROOM, place("vertex", 0, 0, 2)),
@@ -664,6 +675,8 @@ FOLLOW_CASES = [
 ]
 
 SNAP_CASES = [
+    ("Ekleme noktası: yazının", TEXT, "insertion", v(5, 6)),
+    ("Ekleme noktası: yerleştirmenin", INSERT, "insertion", v(7, 8)),
     ("Uç nokta: çizginin sonu", LINE, "endpoint", v(4, 0)),
     ("Uç nokta: alanın köşesi", ROOM, "endpoint", v(4, 3)),
     ("Uç nokta: deliğin köşesi", HOLED, "endpoint", v(4, 2)),
