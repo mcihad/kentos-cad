@@ -150,7 +150,7 @@ pub const TANGENT_KINDS: &[&str] = &[
 ];
 /// The curves the core offsets (docs/adr/0246).
 pub const OFFSET_KINDS: &[&str] = &[
-    "line", "polyline", "polygon", "circle", "arc", "ellipse", "xline", "ray",
+    "line", "polyline", "polygon", "circle", "arc", "ellipse", "spline", "nurbs", "xline", "ray",
 ];
 /// The curves the core cuts (docs/adr/0250).
 pub const TRIM_KINDS: &[&str] = &[
@@ -620,12 +620,19 @@ const ENTRIES: &[Entry] = &[
                 "invalid_distance",
                 "not_offsettable",
                 "offset_failed",
+                "radius_collapse",
                 "layer_not_found",
                 "not_a_layer",
             ],
             REVISION,
         ],
-        warnings: &["layer_hidden", "offset_failed"],
+        warnings: &[
+            "layer_hidden",
+            "offset_failed",
+            "radius_collapse",
+            "approximate_offset",
+            "self_intersecting",
+        ],
         targets: || {
             vec![target(
                 None,

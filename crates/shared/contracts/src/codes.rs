@@ -459,6 +459,14 @@ codes! {
     /// An empty list of snap kinds.
     NO_SNAP_KINDS = "no_snap_kinds", Failed, false, "Hiç kenet türü verilmedi; listeyi kaldırın (varsayılan türler) ya da en az bir tür verin.";
 
+    // ── Offset's notes (docs/adr/0293) ──────────────────────────────────
+    /// A radius or a width that the offset distance overruns: an arc, a circle, an ellipse's bend, an area inward.
+    RADIUS_COLLAPSE = "radius_collapse", FailedOrWarning, false, "Öteleme mesafesi bir yarıçapı ya da alanın genişliğini aşıyor.";
+    /// A copy that follows a curve's parallel only within a tolerance.
+    APPROXIMATE_OFFSET = "approximate_offset", Warning, false, "Kopya eğrinin paralelini yaklaşık izliyor.";
+    /// A copy whose edges cross each other.
+    SELF_INTERSECTING = "self_intersecting", Warning, false, "Kopyanın kenarları birbirini kesiyor.";
+
     // ── Rectangles and regular polygons (docs/adr/0290) ─────────────────
     /// A shape whose points meet or lie on a line: a side of no length.
     DEGENERATE_SHAPE = "degenerate_shape", Failed, false, "Şeklin kenarlarından biri sıfır uzunlukta: noktalar çakışıyor ya da bir doğru üzerinde.";
