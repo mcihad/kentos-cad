@@ -1039,6 +1039,9 @@ pub struct Catalog {
     modes: Vec<Mode>,
     /// The menu bar's menus by id: their blocks of command ids, in order.
     menus: Vec<(&'static str, Vec<Vec<&'static str>>)>,
+    /// The tools' methods the additions give (docs/adr/0287): in the ribbon's
+    /// splits, and typed by their names wherever the tool's button is.
+    methods: Vec<Entry>,
 }
 
 impl Catalog {
@@ -1067,7 +1070,14 @@ impl Catalog {
                 _ => None,
             })
             .flatten()
+            .chain(self.methods.iter())
             .find(|e| e.option.is_some() && e.aliases.iter().any(|a| crate::app::fold(a) == folded))
+    }
+
+    /// The tools' methods the additions give (docs/adr/0287).
+    #[cfg(test)]
+    pub fn added_methods(&self) -> &[Entry] {
+        &self.methods
     }
 
     pub fn commands(&self) -> &[Command] {
@@ -1192,10 +1202,31 @@ impl Catalog {
             .map(|(i, c)| (c.id, i))
             .collect();
 
+        // The tools' methods the additions give (docs/adr/0287), as split entries.
+        let methods: Vec<Entry> = added
+            .methods
+            .iter()
+            .map(|m| {
+                let title = commands
+                    .iter()
+                    .find(|c| c.id == m.command)
+                    .map_or("", |c| c.title);
+                Entry {
+                    id: leak(m.command.clone()),
+                    title,
+                    label: leak(m.label.clone()),
+                    option: m.option.clone().map(leak),
+                    description: m.description.clone().map(leak),
+                    aliases: leak_list(m.aliases.clone()),
+                    icon: m.icon.clone().map(leak),
+                }
+            })
+            .collect();
         let mut tabs: Vec<Tab> = raw.layout.ribbon.into_iter().map(tab).collect();
         place_desktop_commands(&mut tabs);
         // The ribbon a project not asked its type shows is CBS's.
         place_additions("gis", &mut tabs, &added.ribbon);
+        place_methods(&mut tabs, &methods);
         let mode_tabs = raw
             .layout
             .ribbon_by_mode
@@ -1205,6 +1236,7 @@ impl Catalog {
                 let mut tabs: Vec<Tab> = tabs.into_iter().map(tab).collect();
                 place_desktop_commands(&mut tabs);
                 place_additions(&name, &mut tabs, &added.ribbon);
+                place_methods(&mut tabs, &methods);
                 Some((mode, tabs))
             })
             .collect();
@@ -1273,6 +1305,7 @@ impl Catalog {
                 })
                 .collect(),
             modes,
+            methods,
         })
     }
 }
@@ -1287,6 +1320,57 @@ pub fn catalog() -> &'static Catalog {
             Catalog::default()
         })
     })
+}
+
+/// Puts the tools' methods in a ribbon (docs/adr/0287): after the tool's last
+/// entry in a split that has it, the entries it has already left out; a
+/// tool's plain button becomes a split of its methods, the default first (the
+/// method without an option, else one named by the tool's title).
+fn place_methods(tabs: &mut [Tab], methods: &[Entry]) {
+    for panel in tabs.iter_mut().flat_map(|t| t.panels.iter_mut()) {
+        for item in &mut panel.items {
+            match item {
+                Item::Split { entries, .. } => {
+                    for m in methods.iter().filter(|m| m.option.is_some()) {
+                        let Some(last) = entries.iter().rposition(|e| e.id == m.id) else {
+                            continue;
+                        };
+                        if entries.iter().any(|e| e.id == m.id && e.option == m.option) {
+                            continue;
+                        }
+                        entries.insert(last + 1, m.clone());
+                    }
+                }
+                Item::Command { id, size } => {
+                    let own: Vec<&Entry> = methods.iter().filter(|m| m.id == *id).collect();
+                    if !own.iter().any(|m| m.option.is_some()) {
+                        continue;
+                    }
+                    let mut entries: Vec<Entry> = Vec::new();
+                    if !own.iter().any(|m| m.option.is_none()) {
+                        let title = own[0].title;
+                        entries.push(Entry {
+                            id: own[0].id,
+                            title,
+                            label: title,
+                            option: None,
+                            description: None,
+                            aliases: &[],
+                            icon: None,
+                        });
+                    }
+                    entries.extend(own.iter().map(|m| (*m).clone()));
+                    let key = id.strip_prefix("tool.").unwrap_or(id);
+                    *item = Item::Split {
+                        key,
+                        entries,
+                        size: *size,
+                    };
+                }
+                _ => {}
+            }
+        }
+    }
 }
 
 /// A command of the additions (docs/adr/0228 §4): it runs on the desktop unless it waits.
@@ -1745,6 +1829,8 @@ mod tests {
                 (circle, "3 nokta", Some("3N")),
                 (circle, "Teğet, teğet, yarıçap", Some("TTY")),
                 (circle, "Teğet, teğet, teğet", Some("TTT")),
+                // The additions' (docs/adr/0287).
+                (circle, "Merkez, çap", Some("MÇ")),
             ]
         );
         let arc = "tool.arc";
@@ -1754,16 +1840,71 @@ mod tests {
                 (arc, "3 nokta", None),
                 (arc, "Merkez, başlangıç, bitiş", Some("M")),
                 (arc, "Devam", Some("D")),
+                (arc, "Başlangıç, merkez, bitiş", Some("BMS")),
+                (arc, "Başlangıç, merkez, açı", Some("BMA")),
+                (arc, "Başlangıç, merkez, uzunluk", Some("BMU")),
+                (arc, "Başlangıç, bitiş, açı", Some("BSA")),
+                (arc, "Başlangıç, bitiş, yön", Some("BSY")),
+                (arc, "Başlangıç, bitiş, yarıçap", Some("BSR")),
+                (arc, "Merkez, başlangıç, açı", Some("MBA")),
+                (arc, "Merkez, başlangıç, uzunluk", Some("MBU")),
             ]
         );
         assert_eq!(
             of("tool.rectangle"),
             [
                 ("tool.rectangle", "Dikdörtgen", None),
+                ("tool.rectangle", "Dikdörtgen, boyutlarla", Some("BOYUT")),
+                ("tool.rectangle", "Dikdörtgen, alanla", Some("ALAN")),
                 ("tool.rectangle3", "Döndürülmüş dikdörtgen", None),
                 ("tool.regularPolygon", "Düzgün çokgen", None),
+                ("tool.regularPolygon", "Düzgün çokgen, çember içinde", Some("İÇ")),
+                ("tool.regularPolygon", "Düzgün çokgen, çember dışında", Some("DIŞ")),
+                ("tool.regularPolygon", "Düzgün çokgen, kenardan", Some("K")),
             ]
         );
+        // A tool's plain button becomes a split of its methods (docs/adr/0287).
+        let ellipse = "tool.ellipse";
+        assert_eq!(
+            of(ellipse),
+            [
+                (ellipse, "Eksen, uç", None),
+                (ellipse, "Merkez", Some("M")),
+                (ellipse, "Eliptik yay", Some("Y")),
+            ]
+        );
+        let cloud = "tool.revcloud";
+        assert_eq!(
+            of(cloud),
+            [
+                (cloud, "Revizyon bulutu", None),
+                (cloud, "Dikdörtgen", Some("D")),
+                (cloud, "Çokgen", Some("Ç")),
+                (cloud, "Nesne", Some("N")),
+            ]
+        );
+    }
+
+    /// Every method the additions give (docs/adr/0287) names an option its tool takes before its first
+    /// point: the tool, started as the ribbon starts it, answers it; a method in a ▾ list only (Yardımcı
+    /// çizgi's) is still known.
+    #[test]
+    fn every_added_method_is_an_option_its_tool_takes() {
+        let catalog = Catalog::load(INVENTORY, ADDITIONS).expect("the catalog loads");
+        assert!(catalog.added_methods().len() >= 20);
+        for m in catalog.added_methods() {
+            let Some(option) = m.option else { continue };
+            let mut app = crate::files_testing::app_with_drawing();
+            let _ = app.run_method(m.id, option, m.label);
+            let tool = m.id.strip_prefix("tool.").unwrap_or(m.id);
+            assert_eq!(app.session.tool_id(), tool, "{} › {}", m.id, m.label);
+            assert!(
+                !app.log.lines().any(|l| l.level == kentos_interaction::Level::Warn),
+                "{} › {} ({option}) is taken",
+                m.id,
+                m.label
+            );
+        }
     }
 
     /// The catalog's additions (catalog/v1/additions.json, docs/adr/0228 §4,

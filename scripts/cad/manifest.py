@@ -185,7 +185,11 @@ def build() -> tuple[dict, str, list[str]]:
             "operation": operation, "python": python, "mcp": mcp, "note": entry.get("note"), **base,
         })
         methods = entry.get("methods", {})
-        for m in t.get("methods") or []:
+        # The inventory's methods, then the additions' (docs/adr/0287).
+        listed = list(t.get("methods") or []) + [
+            m["label"] for m in add.get("methods", []) if m["command"] == command
+        ]
+        for m in listed:
             if m not in methods:
                 problems.append(f"araç “{tid}”: “{m}” yönteminin düzeyi yok")
                 continue
@@ -196,7 +200,7 @@ def build() -> tuple[dict, str, list[str]]:
                 "operation": operation, "python": mp, "mcp": mm, "note": None, **base,
             })
         for m in methods:
-            if m not in (t.get("methods") or []):
+            if m not in listed:
                 problems.append(f"araç “{tid}”: “{m}” yöntemi envanterde yok")
 
     # Commands (the tools' commands are their tools' rows).

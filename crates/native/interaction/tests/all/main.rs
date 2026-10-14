@@ -37,6 +37,7 @@ mod line;
 mod line_weight;
 mod locks;
 mod measure;
+mod methods;
 mod modify;
 mod navigate;
 mod nurbs;

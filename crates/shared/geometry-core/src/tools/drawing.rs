@@ -154,6 +154,27 @@ pub fn xline_direction(mode: &str, pts: &[Vec2], p: Vec2, angle: f64) -> Option<
     }
 }
 
+/// AutoCAD XLINE's Offset (Paralel, docs/adr/0287): the construction line
+/// parallel to the straight edge a→b, `distance` from it on the side `side`
+/// lies on, or through `side` when no distance is given. Its point (the foot
+/// of `a` on it, or `side`) and unit direction (a→b's); none for an edge of no
+/// length, a distance below zero, or a side on the edge's line with a distance.
+pub fn xline_offset(a: Vec2, b: Vec2, distance: Option<f64>, side: Vec2) -> Option<(Vec2, Vec2)> {
+    let u = unit_toward(a, b)?;
+    let Some(d) = distance else {
+        return Some((side, u));
+    };
+    if !d.is_finite() || d < 0.0 {
+        return None;
+    }
+    let cross = u.x * (side.y - a.y) - u.y * (side.x - a.x);
+    if cross.abs() < 1e-12 {
+        return None;
+    }
+    let k = if cross > 0.0 { d } else { -d };
+    Some((Vec2::new(a.x - u.y * k, a.y + u.x * k), u))
+}
+
 /// The point on the circle (c, r) in the direction of p; None when p is the centre.
 pub fn radial_point(c: Vec2, r: f64, p: Vec2) -> Option<Vec2> {
     let l = dist(c, p);
@@ -289,3 +310,40 @@ pub(crate) static OPS: &[Op] = &[
         c, inner, outer
     )),
 ];
+
+#[cfg(test)]
+mod method_tests {
+    use super::*;
+
+    /// XLINE's Offset (docs/adr/0287): on the side shown, the distance away; through the point without one.
+    #[test]
+    fn the_offset_construction_line() {
+        let (a, b) = (Vec2::new(0.0, 0.0), Vec2::new(10.0, 0.0));
+        let left = xline_offset(a, b, Some(2.0), Vec2::new(5.0, 3.0));
+        assert_eq!(left, Some((Vec2::new(0.0, 2.0), Vec2::new(1.0, 0.0))));
+        let right = xline_offset(a, b, Some(2.0), Vec2::new(5.0, -1.0));
+        assert_eq!(right, Some((Vec2::new(0.0, -2.0), Vec2::new(1.0, 0.0))));
+        let through = xline_offset(a, b, None, Vec2::new(3.0, 7.0));
+        assert_eq!(through, Some((Vec2::new(3.0, 7.0), Vec2::new(1.0, 0.0))));
+        assert_eq!(
+            xline_offset(a, b, Some(2.0), Vec2::new(4.0, 0.0)),
+            None,
+            "a side on the line"
+        );
+        assert_eq!(
+            xline_offset(a, a, Some(2.0), Vec2::new(4.0, 1.0)),
+            None,
+            "no edge"
+        );
+        assert_eq!(xline_offset(a, b, Some(-1.0), Vec2::new(4.0, 1.0)), None);
+        // A slanted edge at TM coordinates: 3-4-5, 5 m to its left.
+        let (a, b) = (
+            Vec2::new(487_000.0, 4_420_000.0),
+            Vec2::new(487_003.0, 4_420_004.0),
+        );
+        let (p, u) =
+            xline_offset(a, b, Some(5.0), Vec2::new(486_990.0, 4_420_010.0)).expect("a line");
+        assert_eq!((u.x, u.y), (0.6, 0.8));
+        assert_eq!((p.x, p.y), (487_000.0 - 4.0, 4_420_000.0 + 3.0));
+    }
+}

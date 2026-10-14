@@ -967,7 +967,15 @@
       "methods": {
         "3 nokta": "geometry",
         "Merkez, başlangıç, bitiş": "geometry",
-        "Devam": "geometry"
+        "Devam": "geometry",
+        "Başlangıç, merkez, bitiş": "geometry",
+        "Başlangıç, merkez, açı": "geometry",
+        "Başlangıç, merkez, uzunluk": "geometry",
+        "Başlangıç, bitiş, açı": "geometry",
+        "Başlangıç, bitiş, yön": "geometry",
+        "Başlangıç, bitiş, yarıçap": "geometry",
+        "Merkez, başlangıç, açı": "geometry",
+        "Merkez, başlangıç, uzunluk": "geometry"
       }
     },
     "circle": {
@@ -977,18 +985,31 @@
         "2 nokta": "geometry",
         "3 nokta": "geometry",
         "Teğet, teğet, yarıçap": "geometry",
-        "Teğet, teğet, teğet": "geometry"
+        "Teğet, teğet, teğet": "geometry",
+        "Merkez, çap": "semantic"
       }
     },
     "ellipse": {
       "level": "semantic",
-      "operation": null
+      "operation": null,
+      "methods": {
+        "Eksen, uç": "semantic",
+        "Merkez": "semantic",
+        "Eliptik yay": "semantic"
+      }
     },
     "spline": {
       "level": "semantic"
     },
     "xline": {
-      "level": "semantic"
+      "level": "semantic",
+      "methods": {
+        "Yatay": "semantic",
+        "Düşey": "semantic",
+        "Açı": "semantic",
+        "Açıortay": "geometry",
+        "Paralel": "geometry"
+      }
     },
     "ray": {
       "level": "semantic"
@@ -1012,19 +1033,33 @@
     },
     "rectangle": {
       "level": "geometry",
-      "note": "Köşeler iki tıklamadan hesaplanıp cad.polygon.create'e verilir."
+      "note": "Köşeler iki tıklamadan hesaplanıp cad.polygon.create'e verilir.",
+      "methods": {
+        "Dikdörtgen, boyutlarla": "geometry",
+        "Dikdörtgen, alanla": "geometry"
+      }
     },
     "rectangle3": {
       "level": "geometry"
     },
     "regularPolygon": {
-      "level": "geometry"
+      "level": "geometry",
+      "methods": {
+        "Düzgün çokgen, çember içinde": "geometry",
+        "Düzgün çokgen, çember dışında": "geometry",
+        "Düzgün çokgen, kenardan": "geometry"
+      }
     },
     "sector": {
       "level": "geometry"
     },
     "revcloud": {
-      "level": "geometry"
+      "level": "geometry",
+      "methods": {
+        "Dikdörtgen": "geometry",
+        "Çokgen": "geometry",
+        "Nesne": "geometry"
+      }
     },
     "donut": {
       "level": "geometry"
