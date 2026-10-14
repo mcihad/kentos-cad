@@ -502,6 +502,25 @@ impl Input for EntitiesTrim {
                 _ => None,
             };
         }
+        if let Some(rest) = path.strip_prefix("crossing.") {
+            let w = self.crossing.as_mut()?;
+            return match rest {
+                "min.x" => Some(&mut w.min.x),
+                "min.y" => Some(&mut w.min.y),
+                "max.x" => Some(&mut w.max.x),
+                "max.y" => Some(&mut w.max.y),
+                _ => None,
+            };
+        }
+        if let Some(rest) = path.strip_prefix("fence[") {
+            let (i, rest) = rest.split_once(']')?;
+            let p = self.fence.as_mut()?.get_mut(i.parse::<usize>().ok()?)?;
+            return match rest {
+                ".x" => Some(&mut p.x),
+                ".y" => Some(&mut p.y),
+                _ => None,
+            };
+        }
         let rest = path.strip_prefix("picks[")?;
         let (i, rest) = rest.split_once(']')?;
         let p = &mut self.picks.get_mut(i.parse::<usize>().ok()?)?.at;

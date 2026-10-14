@@ -51,6 +51,37 @@ pub enum TrimBoundaries {
     },
 }
 
+/// AutoCAD's EDGEMODE: whether a boundary bounds only where it is, or along
+/// its natural path past its ends too.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum TrimEdgeMode {
+    /// A boundary bounds where it is (EDGEMODE 0).
+    #[default]
+    None,
+    /// A boundary bounds along its natural path past its ends too (EDGEMODE
+    /// 1): a line as the whole infinite line, an arc as its whole circle, an
+    /// open polyline's first and last segments on past its ends the same way.
+    /// Closed objects, elliptic arcs and curves bound where they are.
+    Extend,
+}
+
+/// A crossing window (Kesişen): the shown objects meeting the rectangle.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TrimWindow {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub min: Vec2,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub max: Vec2,
+}
+
 /// Where an object was picked.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -69,36 +100,75 @@ pub struct TrimPick {
 
 /// Input of `cad.entities.trim` v1 and `cad.entities.extend` v1: the picked
 /// objects trimmed (or extended) at their picks, as one undo step “Buda”
-/// (“Uzat”). A trim replaces the object by the pieces that stay, the first
+/// (“Uzat”), AutoCAD's TRIM and EXTEND (docs/adr/0294): the picks are clicks,
+/// a fence (Çit) or a crossing window (Kesişen); the boundaries chosen
+/// (standard mode) or every shown edge (quick mode); `edgeMode` bounds along
+/// the boundaries' extensions; `eraseUncut` is quick mode's erase of what no
+/// boundary cuts. A trim replaces the object by the pieces that stay, the first
 /// in its place keeping its id, its data kept when one piece is left (not
 /// for a closed area); an extend gives the object its new geometry.
 ///
 /// Picks of one object are taken in their order, each on the object as the
-/// earlier ones left it: a trim cuts the piece the pick lies on (Çit: a
-/// fence's crossings); an extend grows each end at most once. Every object
+/// earlier ones left it: a trim cuts the piece the pick lies on, and takes
+/// away whole a piece no boundary cuts between its ends (each of its ends is
+/// then an earlier cut or the object's end); an extend grows each end at
+/// most once.
+///
+/// The fence's crossings are picks after `picks`, each object's in the
+/// fence's order, the objects in the drawing's order. The window's objects
+/// come last: Buda takes away every piece between the boundaries that meets
+/// the rectangle, Uzat grows every end inside it. A fence or a window takes
+/// only shown objects; those on a locked layer are left out with a
+/// `layer_locked` warning counting them, and one that does nothing with a
+/// `trim_failed` (`extend_failed`) warning at `fence` (`crossing`). Every object
 /// is bounded by the drawing as it was before the command. A pick that can
 /// do nothing (no boundary crosses there, the end meets none) is left out
 /// with a `trim_failed` (`extend_failed`) warning at `picks[i]`; when no
 /// pick does anything nothing is written and that is the answer.
 ///
 /// Refusals (`CommandError.code`), checked in this order: `no_entities`
-/// (no pick; `boundaries.uids` empty), `invalid_uid` (the picks' ids, then
-/// the boundaries'), `not_finite` (a pick's or the rectangle's x and y),
+/// (no pick, no fence and no window; `boundaries.uids` empty),
+/// `too_few_points` (a fence of fewer than two points), `invalid_uid` (the
+/// picks' ids, then the boundaries'), `not_finite` (a pick's, the fence's,
+/// the window's, then the rectangle's x and y),
 /// `invalid_revision`, `revision_conflict` (status `conflict`),
 /// `entity_not_found` (the picks' objects, then the boundaries'),
 /// `layer_locked` (a picked object, at `picks[i]`), `not_trimmable` (Buda:
 /// an area with holes, which would lose them), then `trim_failed`
 /// (`extend_failed`, at `picks`, with the first pick's reason: the core's
 /// words for a kind it does not cut or grow, a closed path for Uzat, no
-/// boundary there); on the desktop also `slots_exhausted`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+/// boundary there; at `fence` or `crossing` when it picked nothing); on the
+/// desktop also `slots_exhausted`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesTrim {
-    /// The picks, at least one.
+    /// The picks; none when a fence or a window picks.
+    #[serde(default)]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<TrimPick>>"))]
     pub picks: Vec<TrimPick>,
+    /// Çit: a drawn open path, at least two points; every shown object it
+    /// crosses is picked where it crosses.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub fence: Option<Vec<Vec2>>,
+    /// Kesişen: a crossing window.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub crossing: Option<TrimWindow>,
+    /// AutoCAD's EDGEMODE; absent: `none`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub edge_mode: Option<TrimEdgeMode>,
+    /// Buda: an object no boundary cuts goes whole where it is picked
+    /// (AutoCAD's quick mode) instead of being left with a `trim_failed`
+    /// warning. Uzat ignores it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub erase_uncut: Option<bool>,
     /// The boundaries; absent: every shown object (`all`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

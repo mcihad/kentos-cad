@@ -127,24 +127,34 @@ fn a_base_point_moves_from_where_it_was_given() {
     assert_eq!(pts(&b, 1), [[-23.0, -10.0], [-7.0, -10.0]]);
 }
 
-/// Döndür (D) with Referans (R) typed: the selection turns about the grip to the typed angle from the reference.
+/// Döndür (D) with Referans (R) typed: the selection turns about the grip to the typed angle from the reference,
+/// both in the project's way (docs/adr/0291, 0294): this drawing is a CBS project, so semts in grads.
 #[test]
 fn rotate_mode_takes_a_reference_and_a_typed_angle() {
     let mut b = bench(&[1]);
     place(&mut b, -24.0, -12.0);
     b.type_text("D");
     b.type_text("R");
-    assert!(b.type_text("90"));
-    assert_eq!(b.last_text(), Some("Referans açı 90.0000°."));
-    // To 180° from a reference of 90°: a quarter turn about (−24, −12).
-    assert!(b.type_text("180"));
+    assert!(b.type_text("100"));
+    assert_eq!(b.last_text(), Some("Referans açı 100.0000g."));
+    // To semt 200g (south) from 100g (east): a quarter turn clockwise about (−24, −12).
+    assert!(b.type_text("200"));
     let got = pts(&b, 1);
     assert_eq!(got[0], [-24.0, -12.0]);
     assert!(
-        (got[1][0] + 24.0).abs() < 1e-9 && (got[1][1] - 4.0).abs() < 1e-9,
+        (got[1][0] + 24.0).abs() < 1e-9 && (got[1][1] + 28.0).abs() < 1e-9,
         "{got:?}"
     );
     assert_eq!(b.doc.undo().as_deref(), Some("Döndür"));
+    // Without a reference the typed number is a turn: 100g clockwise, the same quarter turn.
+    place(&mut b, -24.0, -12.0);
+    b.type_text("D");
+    assert!(b.type_text("100"));
+    let got = pts(&b, 1);
+    assert!(
+        (got[1][0] + 24.0).abs() < 1e-9 && (got[1][1] + 28.0).abs() < 1e-9,
+        "{got:?}"
+    );
 }
 
 /// Ölçekle (L) with a typed factor; with a reference the typed number is the new length.

@@ -26,7 +26,7 @@ const COMMAND_CLICK: &str = if cfg!(target_os = "macos") {
 };
 
 /// What each mouse action does (the web's `MOUSE_ACTIONS`): its meaning, then the action.
-pub const MOUSE_ACTIONS: [(&str, &str); 20] = [
+pub const MOUSE_ACTIONS: [(&str, &str); 22] = [
     ("Seç, nokta koy, adımı onayla", "Sol tık"),
     ("Komutu onayla ya da bitir (Enter gibi)", "Sağ tık"),
     (
@@ -73,6 +73,11 @@ pub const MOUSE_ACTIONS: [(&str, &str); 20] = [
         "Öbür görünüme tık",
     ),
     ("Yazıyı ya da ölçüyü yerinde düzenle", "Çift tık"),
+    ("Buda ve Uzat'ta öbür işlem (budarken uzat)", "Shift + tık"),
+    (
+        "Buda ve Uzat'ta kesişen pencerenin ilk köşesi",
+        "Boş yere tık",
+    ),
     (
         "Köşeyi taşı; kenar ortasındaki baklava köşe ekler",
         "Tutamacı sürükle",
@@ -80,7 +85,7 @@ pub const MOUSE_ACTIONS: [(&str, &str); 20] = [
 ];
 
 /// Keys a running tool reads that no command is bound to (docs/adr/0268, 0271): their meaning, then the keys.
-pub const DRAWING_KEYS: [(&str, &str); 6] = [
+pub const DRAWING_KEYS: [(&str, &str); 7] = [
     (
         "Kenet adayları arasında ileri ve geri (imleç dururken)",
         "Tab / Shift+Tab",
@@ -96,6 +101,10 @@ pub const DRAWING_KEYS: [(&str, &str); 6] = [
     (
         "Sıcak tutamakta taban noktası, referans, kopya",
         "B / R / K",
+    ),
+    (
+        "Buda ve Uzat: Kesişen pencere, sınırların uzantıları, Sil (Buda), Çit",
+        "K / U / R / C",
     ),
     (
         "Seçeneği adıyla seç: tam adı ya da başı (kopya, kop)",

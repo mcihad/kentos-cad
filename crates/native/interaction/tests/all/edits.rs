@@ -186,9 +186,9 @@ fn trim_cuts_between_the_visible_edges_and_shift_extends() {
     b.start("trim");
     assert_eq!(
         b.session.prompt().text(),
-        "Buda: silinecek parçaya tıklayın [sınır: görünen tüm kenarlar; Sınır seç (S); Shift+tık: uzat]"
+        "Buda: silinecek parçaya tıklayın [sınır: görünen tüm kenarlar; Sınır seç (S) / Kesişen (K) / Uzantılar (U) / Sil (R); Shift+tık: uzat]"
     );
-    assert_eq!(b.options(), ["S"]);
+    assert_eq!(b.options(), ["S", "K", "U", "R"]);
     // The preview: the whole line dashed red, the part that stays solid over it.
     b.move_to(-26.0, 12.0);
     let preview = b.session.preview(&Default::default()).expect("a preview");
@@ -242,7 +242,7 @@ fn the_trim_and_extend_tools_write_what_the_commands_write_without_a_store() {
                 },
             }],
             boundaries: Some(TrimBoundaries::All),
-            expected_revision: None,
+            ..EntitiesTrim::default()
         };
         let mut cx = ExecutionContext::new(&mut by_command.doc);
         let done = if extend {
@@ -278,9 +278,9 @@ fn extend_grows_to_the_chosen_boundaries() {
     assert_eq!(b.session.tool_id(), "extend");
     assert_eq!(
         b.session.prompt().text(),
-        "Uzat: uzatılacak ucun yakınına tıklayın [sınır: seçilen 1 nesne; Tüm kenarlar (T) / Sınır seç (S); Shift+tık: buda]"
+        "Uzat: uzatılacak ucun yakınına tıklayın [sınır: seçilen 1 nesne; Tüm kenarlar (T) / Sınır seç (S) / Kesişen (K) / Uzantılar (U); Shift+tık: buda]"
     );
-    assert_eq!(b.options(), ["T", "S"]);
+    assert_eq!(b.options(), ["T", "S", "K", "U"]);
     b.click(-9.0, 12.0);
     assert!(near(&line(&b, 1), &[[-28.0, 12.0], [-4.0, 12.0]]));
     // Tüm kenarlar: every visible edge again; the selection goes.

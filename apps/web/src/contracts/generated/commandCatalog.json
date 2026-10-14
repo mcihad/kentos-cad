@@ -110649,7 +110649,7 @@
       "id": "cad.entities.trim",
       "version": 1,
       "title": "Nesneleri buda",
-      "summary": "Kalıcı kimlikleriyle verilen nesneleri tıklandıkları yerde sınırlarına kadar budar; tek geri alma adımı “Buda”. Her seçim (picks) bir nesne ve onun üstünde ya da yakınında bir noktadır: o noktanın iki yanındaki sınırların arasındaki parça kalkar. Aynı nesnenin seçimleri sırayla, önceki seçimlerin bıraktığı parçalar üstünde işlenir (Çit). boundaries sınırları söyler: all (varsayılan; bütün görünen nesneler: görünür katmanda, katman süzgecinden geçen), area (köşeleri verilen dikdörtgene değen görünen nesneler; aracın görünümü) ya da objects (verilen nesneler, Sınır seç). Nesne kendini sınırlamaz; her nesne komuttan önceki çizimle sınırlanır. Nesnenin yerini kalan ilk parça alır, öbür parçalar ondan yeni nesnelerdir; tek parça kalırsa özellikleri korunur (kapalı alan değilse). Adalı alan budanmaz. Bir şey yapamayan seçim trim_failed uyarısıyla atlanır; hiçbiri bir şey yapamazsa hiçbir şey yazılmaz. Parçaları paylaşılan geometri çekirdeği bulur: Buda aracı, Python ve ajan aynı isteğe aynı parçaları alır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Kalıcı kimlikleriyle verilen nesneleri tıklandıkları yerde sınırlarına kadar budar; tek geri alma adımı “Buda”. Her seçim (picks) bir nesne ve onun üstünde ya da yakınında bir noktadır: o noktanın iki yanındaki sınırların arasındaki parça kalkar. Aynı nesnenin seçimleri sırayla, önceki seçimlerin bıraktığı parçalar üstünde işlenir (Çit). boundaries sınırları söyler: all (varsayılan; bütün görünen nesneler: görünür katmanda, katman süzgecinden geçen), area (köşeleri verilen dikdörtgene değen görünen nesneler; aracın görünümü) ya da objects (verilen nesneler, Sınır seç). Nesne kendini sınırlamaz; her nesne komuttan önceki çizimle sınırlanır. Nesnenin yerini kalan ilk parça alır, öbür parçalar ondan yeni nesnelerdir; tek parça kalırsa özellikleri korunur (kapalı alan değilse). Adalı alan budanmaz. Sonraki seçimin durduğu parçayı hiçbir sınır kesmiyorsa parça bütünüyle kalkar: uçları önceki kesimlerdir. AutoCAD'in TRIM seçenekleri (ADR 0294): fence (Çit) açık bir yoldur, geçtiği her görünen nesne geçtiği yerden seçilir; crossing (Kesişen) bir penceredir, ona değen her görünen nesnenin sınırlar arasındaki pencereye değen her parçası kalkar. Çit ve pencerenin kilitli katmandaki nesneleri sayılarak atlanır (layer_locked uyarısı). edgeMode extend (AutoCAD'in EDGEMODE 1'i) sınırları uzantılarıyla da sayar: çizgi bütün doğrusuyla, yay çemberiyle, açık çoklu çizginin ilk ve son kenarı uçlarının ötesine. eraseUncut (hızlı kip) hiçbir sınırın kesmediği nesneyi seçildiği yerden bütünüyle siler. Bir şey yapamayan seçim trim_failed uyarısıyla atlanır; hiçbiri bir şey yapamazsa hiçbir şey yazılmaz. Parçaları paylaşılan geometri çekirdeği bulur: Buda aracı, Python ve ajan aynı isteğe aynı parçaları alır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -110726,6 +110726,21 @@
               }
             ]
           },
+          "TrimEdgeMode": {
+            "description": "AutoCAD's EDGEMODE: whether a boundary bounds only where it is, or along\nits natural path past its ends too.",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "A boundary bounds where it is (EDGEMODE 0).",
+                "type": "string"
+              },
+              {
+                "const": "extend",
+                "description": "A boundary bounds along its natural path past its ends too (EDGEMODE\n1): a line as the whole infinite line, an arc as its whole circle, an\nopen polyline's first and last segments on past its ends the same way.\nClosed objects, elliptic arcs and curves bound where they are.",
+                "type": "string"
+              }
+            ]
+          },
           "TrimPick": {
             "description": "Where an object was picked.",
             "properties": {
@@ -110743,6 +110758,24 @@
             "required": [
               "uid",
               "at"
+            ],
+            "type": "object"
+          },
+          "TrimWindow": {
+            "description": "A crossing window (Kesişen): the shown objects meeting the rectangle.",
+            "properties": {
+              "max": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              },
+              "min": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "min",
+              "max"
             ],
             "type": "object"
           },
@@ -110766,7 +110799,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.trim` v1 and `cad.entities.extend` v1: the picked\nobjects trimmed (or extended) at their picks, as one undo step “Buda”\n(“Uzat”). A trim replaces the object by the pieces that stay, the first\nin its place keeping its id, its data kept when one piece is left (not\nfor a closed area); an extend gives the object its new geometry.\n\nPicks of one object are taken in their order, each on the object as the\nearlier ones left it: a trim cuts the piece the pick lies on (Çit: a\nfence's crossings); an extend grows each end at most once. Every object\nis bounded by the drawing as it was before the command. A pick that can\ndo nothing (no boundary crosses there, the end meets none) is left out\nwith a `trim_failed` (`extend_failed`) warning at `picks[i]`; when no\npick does anything nothing is written and that is the answer.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`\n(no pick; `boundaries.uids` empty), `invalid_uid` (the picks' ids, then\nthe boundaries'), `not_finite` (a pick's or the rectangle's x and y),\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (the picks' objects, then the boundaries'),\n`layer_locked` (a picked object, at `picks[i]`), `not_trimmable` (Buda:\nan area with holes, which would lose them), then `trim_failed`\n(`extend_failed`, at `picks`, with the first pick's reason: the core's\nwords for a kind it does not cut or grow, a closed path for Uzat, no\nboundary there); on the desktop also `slots_exhausted`.",
+        "description": "Input of `cad.entities.trim` v1 and `cad.entities.extend` v1: the picked\nobjects trimmed (or extended) at their picks, as one undo step “Buda”\n(“Uzat”), AutoCAD's TRIM and EXTEND (docs/adr/0294): the picks are clicks,\na fence (Çit) or a crossing window (Kesişen); the boundaries chosen\n(standard mode) or every shown edge (quick mode); `edgeMode` bounds along\nthe boundaries' extensions; `eraseUncut` is quick mode's erase of what no\nboundary cuts. A trim replaces the object by the pieces that stay, the first\nin its place keeping its id, its data kept when one piece is left (not\nfor a closed area); an extend gives the object its new geometry.\n\nPicks of one object are taken in their order, each on the object as the\nearlier ones left it: a trim cuts the piece the pick lies on, and takes\naway whole a piece no boundary cuts between its ends (each of its ends is\nthen an earlier cut or the object's end); an extend grows each end at\nmost once.\n\nThe fence's crossings are picks after `picks`, each object's in the\nfence's order, the objects in the drawing's order. The window's objects\ncome last: Buda takes away every piece between the boundaries that meets\nthe rectangle, Uzat grows every end inside it. A fence or a window takes\nonly shown objects; those on a locked layer are left out with a\n`layer_locked` warning counting them, and one that does nothing with a\n`trim_failed` (`extend_failed`) warning at `fence` (`crossing`). Every object\nis bounded by the drawing as it was before the command. A pick that can\ndo nothing (no boundary crosses there, the end meets none) is left out\nwith a `trim_failed` (`extend_failed`) warning at `picks[i]`; when no\npick does anything nothing is written and that is the answer.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`\n(no pick, no fence and no window; `boundaries.uids` empty),\n`too_few_points` (a fence of fewer than two points), `invalid_uid` (the\npicks' ids, then the boundaries'), `not_finite` (a pick's, the fence's,\nthe window's, then the rectangle's x and y),\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (the picks' objects, then the boundaries'),\n`layer_locked` (a picked object, at `picks[i]`), `not_trimmable` (Buda:\nan area with holes, which would lose them), then `trim_failed`\n(`extend_failed`, at `picks`, with the first pick's reason: the core's\nwords for a kind it does not cut or grow, a closed path for Uzat, no\nboundary there; at `fence` or `crossing` when it picked nothing); on the\ndesktop also `slots_exhausted`.",
         "properties": {
           "boundaries": {
             "anyOf": [
@@ -110779,6 +110812,35 @@
             ],
             "description": "The boundaries; absent: every shown object (`all`)."
           },
+          "crossing": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TrimWindow"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Kesişen: a crossing window."
+          },
+          "edgeMode": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TrimEdgeMode"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "AutoCAD's EDGEMODE; absent: `none`."
+          },
+          "eraseUncut": {
+            "description": "Buda: an object no boundary cuts goes whole where it is picked\n(AutoCAD's quick mode) instead of being left with a `trim_failed`\nwarning. Uzat ignores it.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
           "expectedRevision": {
             "description": "The document revision the input was prepared against, as decimal\ntext. When given and the document is no longer at it, nothing is\nwritten and the answer is `conflict`.",
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -110787,17 +110849,26 @@
               "null"
             ]
           },
+          "fence": {
+            "description": "Çit: a drawn open path, at least two points; every shown object it\ncrosses is picked where it crosses.",
+            "items": {
+              "$ref": "#/$defs/Vec2"
+            },
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "length"
+          },
           "picks": {
-            "description": "The picks, at least one.",
+            "default": [],
+            "description": "The picks; none when a fence or a window picks.",
             "items": {
               "$ref": "#/$defs/TrimPick"
             },
             "type": "array"
           }
         },
-        "required": [
-          "picks"
-        ],
         "title": "EntitiesTrim",
         "type": "object"
       },
@@ -116102,6 +116173,7 @@
           "invalid_uid",
           "entity_not_found",
           "layer_locked",
+          "too_few_points",
           "not_finite",
           "not_trimmable",
           "trim_failed",
@@ -116109,7 +116181,8 @@
           "revision_conflict"
         ],
         "warnings": [
-          "trim_failed"
+          "trim_failed",
+          "layer_locked"
         ]
       },
       "examples": [
@@ -116156,6 +116229,38 @@
               }
             ]
           }
+        },
+        {
+          "title": "Kesişen penceresiyle, sınırların uzantılarıyla; kesilmeyen nesne silinir (hızlı kip)",
+          "input": {
+            "crossing": {
+              "max": {
+                "x": 500006.0,
+                "y": 4400001.0
+              },
+              "min": {
+                "x": 500004.0,
+                "y": 4399999.0
+              }
+            },
+            "edgeMode": "extend",
+            "eraseUncut": true
+          }
+        },
+        {
+          "title": "Çitin geçtiği her nesne geçtiği yerden",
+          "input": {
+            "fence": [
+              {
+                "x": 500003.0,
+                "y": 4399995.0
+              },
+              {
+                "x": 500003.0,
+                "y": 4400005.0
+              }
+            ]
+          }
         }
       ]
     },
@@ -116163,7 +116268,7 @@
       "id": "cad.entities.extend",
       "version": 1,
       "title": "Nesneleri uzat",
-      "summary": "Kalıcı kimlikleriyle verilen açık çizgileri, çoklu çizgileri ve yayları tıklanan yere yakın uçlarından ilk sınıra kadar uzatır; tek geri alma adımı “Uzat”. Seçimler ve sınırlar cad.entities.trim'deki gibidir; aynı nesnenin iki seçimi iki ucunu uzatabilir, bir uç bir kez uzar. Uç hiçbir sınıra ulaşmıyorsa seçim extend_failed uyarısıyla atlanır; hiçbir uç uzamazsa hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Kalıcı kimlikleriyle verilen açık çizgileri, çoklu çizgileri ve yayları tıklanan yere yakın uçlarından ilk sınıra kadar uzatır; tek geri alma adımı “Uzat”. Seçimler, sınırlar, fence (Çit), crossing (Kesişen: penceredeki her uç uzar) ve edgeMode cad.entities.trim'deki gibidir (ADR 0294); eraseUncut yok sayılır. Aynı nesnenin iki seçimi iki ucunu uzatabilir, bir uç bir kez uzar. Uç hiçbir sınıra ulaşmıyorsa seçim extend_failed uyarısıyla atlanır; hiçbir uç uzamazsa hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -116240,6 +116345,21 @@
               }
             ]
           },
+          "TrimEdgeMode": {
+            "description": "AutoCAD's EDGEMODE: whether a boundary bounds only where it is, or along\nits natural path past its ends too.",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "A boundary bounds where it is (EDGEMODE 0).",
+                "type": "string"
+              },
+              {
+                "const": "extend",
+                "description": "A boundary bounds along its natural path past its ends too (EDGEMODE\n1): a line as the whole infinite line, an arc as its whole circle, an\nopen polyline's first and last segments on past its ends the same way.\nClosed objects, elliptic arcs and curves bound where they are.",
+                "type": "string"
+              }
+            ]
+          },
           "TrimPick": {
             "description": "Where an object was picked.",
             "properties": {
@@ -116257,6 +116377,24 @@
             "required": [
               "uid",
               "at"
+            ],
+            "type": "object"
+          },
+          "TrimWindow": {
+            "description": "A crossing window (Kesişen): the shown objects meeting the rectangle.",
+            "properties": {
+              "max": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              },
+              "min": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "min",
+              "max"
             ],
             "type": "object"
           },
@@ -116280,7 +116418,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.trim` v1 and `cad.entities.extend` v1: the picked\nobjects trimmed (or extended) at their picks, as one undo step “Buda”\n(“Uzat”). A trim replaces the object by the pieces that stay, the first\nin its place keeping its id, its data kept when one piece is left (not\nfor a closed area); an extend gives the object its new geometry.\n\nPicks of one object are taken in their order, each on the object as the\nearlier ones left it: a trim cuts the piece the pick lies on (Çit: a\nfence's crossings); an extend grows each end at most once. Every object\nis bounded by the drawing as it was before the command. A pick that can\ndo nothing (no boundary crosses there, the end meets none) is left out\nwith a `trim_failed` (`extend_failed`) warning at `picks[i]`; when no\npick does anything nothing is written and that is the answer.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`\n(no pick; `boundaries.uids` empty), `invalid_uid` (the picks' ids, then\nthe boundaries'), `not_finite` (a pick's or the rectangle's x and y),\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (the picks' objects, then the boundaries'),\n`layer_locked` (a picked object, at `picks[i]`), `not_trimmable` (Buda:\nan area with holes, which would lose them), then `trim_failed`\n(`extend_failed`, at `picks`, with the first pick's reason: the core's\nwords for a kind it does not cut or grow, a closed path for Uzat, no\nboundary there); on the desktop also `slots_exhausted`.",
+        "description": "Input of `cad.entities.trim` v1 and `cad.entities.extend` v1: the picked\nobjects trimmed (or extended) at their picks, as one undo step “Buda”\n(“Uzat”), AutoCAD's TRIM and EXTEND (docs/adr/0294): the picks are clicks,\na fence (Çit) or a crossing window (Kesişen); the boundaries chosen\n(standard mode) or every shown edge (quick mode); `edgeMode` bounds along\nthe boundaries' extensions; `eraseUncut` is quick mode's erase of what no\nboundary cuts. A trim replaces the object by the pieces that stay, the first\nin its place keeping its id, its data kept when one piece is left (not\nfor a closed area); an extend gives the object its new geometry.\n\nPicks of one object are taken in their order, each on the object as the\nearlier ones left it: a trim cuts the piece the pick lies on, and takes\naway whole a piece no boundary cuts between its ends (each of its ends is\nthen an earlier cut or the object's end); an extend grows each end at\nmost once.\n\nThe fence's crossings are picks after `picks`, each object's in the\nfence's order, the objects in the drawing's order. The window's objects\ncome last: Buda takes away every piece between the boundaries that meets\nthe rectangle, Uzat grows every end inside it. A fence or a window takes\nonly shown objects; those on a locked layer are left out with a\n`layer_locked` warning counting them, and one that does nothing with a\n`trim_failed` (`extend_failed`) warning at `fence` (`crossing`). Every object\nis bounded by the drawing as it was before the command. A pick that can\ndo nothing (no boundary crosses there, the end meets none) is left out\nwith a `trim_failed` (`extend_failed`) warning at `picks[i]`; when no\npick does anything nothing is written and that is the answer.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`\n(no pick, no fence and no window; `boundaries.uids` empty),\n`too_few_points` (a fence of fewer than two points), `invalid_uid` (the\npicks' ids, then the boundaries'), `not_finite` (a pick's, the fence's,\nthe window's, then the rectangle's x and y),\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (the picks' objects, then the boundaries'),\n`layer_locked` (a picked object, at `picks[i]`), `not_trimmable` (Buda:\nan area with holes, which would lose them), then `trim_failed`\n(`extend_failed`, at `picks`, with the first pick's reason: the core's\nwords for a kind it does not cut or grow, a closed path for Uzat, no\nboundary there; at `fence` or `crossing` when it picked nothing); on the\ndesktop also `slots_exhausted`.",
         "properties": {
           "boundaries": {
             "anyOf": [
@@ -116293,6 +116431,35 @@
             ],
             "description": "The boundaries; absent: every shown object (`all`)."
           },
+          "crossing": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TrimWindow"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Kesişen: a crossing window."
+          },
+          "edgeMode": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TrimEdgeMode"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "AutoCAD's EDGEMODE; absent: `none`."
+          },
+          "eraseUncut": {
+            "description": "Buda: an object no boundary cuts goes whole where it is picked\n(AutoCAD's quick mode) instead of being left with a `trim_failed`\nwarning. Uzat ignores it.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
           "expectedRevision": {
             "description": "The document revision the input was prepared against, as decimal\ntext. When given and the document is no longer at it, nothing is\nwritten and the answer is `conflict`.",
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -116301,17 +116468,26 @@
               "null"
             ]
           },
+          "fence": {
+            "description": "Çit: a drawn open path, at least two points; every shown object it\ncrosses is picked where it crosses.",
+            "items": {
+              "$ref": "#/$defs/Vec2"
+            },
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "length"
+          },
           "picks": {
-            "description": "The picks, at least one.",
+            "default": [],
+            "description": "The picks; none when a fence or a window picks.",
             "items": {
               "$ref": "#/$defs/TrimPick"
             },
             "type": "array"
           }
         },
-        "required": [
-          "picks"
-        ],
         "title": "EntitiesTrim",
         "type": "object"
       },
@@ -121612,13 +121788,15 @@
           "invalid_uid",
           "entity_not_found",
           "layer_locked",
+          "too_few_points",
           "not_finite",
           "extend_failed",
           "invalid_revision",
           "revision_conflict"
         ],
         "warnings": [
-          "extend_failed"
+          "extend_failed",
+          "layer_locked"
         ]
       },
       "examples": [
@@ -121642,6 +121820,27 @@
             "created": [],
             "removed": [],
             "revision": "53"
+          }
+        },
+        {
+          "title": "Sınırın doğrusuna kadar uzat (Uzantılar)",
+          "input": {
+            "boundaries": {
+              "kind": "objects",
+              "uids": [
+                "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002"
+              ]
+            },
+            "edgeMode": "extend",
+            "picks": [
+              {
+                "at": {
+                  "x": 500009.0,
+                  "y": 4400000.0
+                },
+                "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"
+              }
+            ]
           }
         }
       ]
@@ -235208,7 +235407,7 @@
       "code": "too_few_points",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Çoklu çizginin en az iki noktası olmalı."
+      "meaning": "Çoklu çizginin ve çitin en az iki noktası olmalı."
     },
     {
       "code": "part_holes",
