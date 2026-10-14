@@ -9,6 +9,15 @@ import type { TrimBoundaries } from "./TrimBoundaries";
  * step “Birleştir”. Those on a locked layer are left out with a
  * `locked_skipped` warning at `uids[i]`.
  *
+ * As AutoCAD's JOIN (docs/adr/0296): a chain of lines on one straight line
+ * is that line; a chain of arcs of one circle is one arc, or the circle
+ * when it closes; any other chain a polyline. The joined object keeps all
+ * its first object carried; the others' elevations, measures and widths go
+ * with their vertices, their attributes and label do not: a key whose value
+ * differs is said (`data_conflict`). An object of `uids` that joins nothing
+ * is said with why (`not_joined`). An associative dimension's point on a
+ * joined object follows the joined one.
+ *
  * Zincir (`chain`, docs/adr/0161 §2): `uids` is one object, the seed; the
  * objects joined end to end with it among `chain`'s objects (lines, arcs,
  * open polylines) are joined with it, up to a free end, a junction, a

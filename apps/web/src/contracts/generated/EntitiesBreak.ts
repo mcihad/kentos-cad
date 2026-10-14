@@ -5,10 +5,14 @@ import type { Vec2 } from "./Vec2";
  * Input of `cad.entities.break` v1: the part of the object between `first`
  * and `second` goes; without `second` (or with it on `first`) the object
  * splits at `first`. One undo step “Kır”. The object is replaced by its
- * pieces, the first in its place keeping its id (its data kept when one
- * piece is left, not for a closed area), the others new objects from it.
- * Lines, polylines, areas, arcs, circles, ellipses, construction lines and
- * rays break.
+ * pieces, the first in its place keeping its id, the others new objects
+ * from it. Every piece keeps what the object carried (docs/adr/0296): its
+ * layer, colour, line weight, line type, transparency, symbol, attributes,
+ * label and attachments; its elevations, measures and widths go with the
+ * vertices where they lie. An associative dimension's point on the object
+ * follows the piece it lies on, or breaks (`vertex_gone`) when it lay in
+ * the part taken away. Lines, polylines, areas, arcs, circles, ellipses,
+ * NURBS curves, construction lines and rays break.
  *
  * Refusals (`CommandError.code`), checked in this order: `invalid_uid`,
  * `not_finite` (`first`, then `second`), `invalid_revision`,

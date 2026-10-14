@@ -482,7 +482,7 @@
   },
   "cases": [
     {
-      "name": "Çizginin iki noktası arası gider: iki parça, ilki yerinde, öbürü yeni; öznitelik kalmaz, renk kalır; adım “Kır”",
+      "name": "Çizginin iki noktası arası gider: iki parça, ilki yerinde, öbürü yeni; ikisi de öznitelikleri ve rengi taşır; adım “Kır”",
       "steps": [
         {
           "op": "execute",
@@ -541,7 +541,9 @@
                 "kind": "line",
                 "id": 10,
                 "layerId": "yapi",
-                "attrs": {},
+                "attrs": {
+                  "Tür": "Duvar"
+                },
                 "color": "#E5484D",
                 "a": {
                   "x": 487000,
@@ -556,7 +558,9 @@
                 "kind": "line",
                 "id": 31,
                 "layerId": "yapi",
-                "attrs": {},
+                "attrs": {
+                  "Tür": "Duvar"
+                },
                 "color": "#E5484D",
                 "a": {
                   "x": 487006,
@@ -682,7 +686,9 @@
                 "kind": "line",
                 "id": 10,
                 "layerId": "yapi",
-                "attrs": {},
+                "attrs": {
+                  "Tür": "Duvar"
+                },
                 "color": "#E5484D",
                 "a": {
                   "x": 487000,
@@ -697,7 +703,9 @@
                 "kind": "line",
                 "id": 31,
                 "layerId": "yapi",
-                "attrs": {},
+                "attrs": {
+                  "Tür": "Duvar"
+                },
                 "color": "#E5484D",
                 "a": {
                   "x": 487005,
@@ -797,7 +805,7 @@
       ]
     },
     {
-      "name": "Çoklu çizginin iki kenarı arası: iki uçlu parçalar çizgi olur",
+      "name": "Çoklu çizginin iki kenarı arası: iki uçlu parçalar da çoklu çizgi kalır",
       "steps": [
         {
           "op": "execute",
@@ -853,32 +861,40 @@
             ],
             "entities": {
               "11": {
-                "kind": "line",
+                "kind": "polyline",
                 "id": 11,
                 "layerId": "yapi",
-                "attrs": {},
-                "a": {
-                  "x": 487000,
-                  "y": 4420020
+                "attrs": {
+                  "Tür": "Bordür"
                 },
-                "b": {
-                  "x": 487005,
-                  "y": 4420020
-                }
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487005,
+                    "y": 4420020
+                  }
+                ]
               },
               "31": {
-                "kind": "line",
+                "kind": "polyline",
                 "id": 31,
                 "layerId": "yapi",
-                "attrs": {},
-                "a": {
-                  "x": 487010,
-                  "y": 4420025
+                "attrs": {
+                  "Tür": "Bordür"
                 },
-                "b": {
-                  "x": 487010,
-                  "y": 4420030
-                }
+                "pts": [
+                  {
+                    "x": 487010,
+                    "y": 4420025
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420030
+                  }
+                ]
               }
             },
             "revision": "changed",
@@ -890,7 +906,7 @@
       ]
     },
     {
-      "name": "Kapalı alan: ilk noktadan ikinciye saat tersi giden kısım silinir, kalan açık çoklu çizgi; alanın verisi kalmaz",
+      "name": "Kapalı alan: ilk noktadan ikinciye saat tersi giden kısım silinir, kalan açık çoklu çizgi alanın verisini taşır",
       "steps": [
         {
           "op": "execute",
@@ -946,7 +962,9 @@
                 "kind": "polyline",
                 "id": 12,
                 "layerId": "yapi",
-                "attrs": {},
+                "attrs": {
+                  "Ada": "101"
+                },
                 "pts": [
                   {
                     "x": 487030,
@@ -1032,7 +1050,9 @@
                 "kind": "polyline",
                 "id": 12,
                 "layerId": "yapi",
-                "attrs": {},
+                "attrs": {
+                  "Ada": "101"
+                },
                 "pts": [
                   {
                     "x": 487025,
@@ -1129,7 +1149,9 @@
                 "kind": "line",
                 "id": 10,
                 "layerId": "yapi",
-                "attrs": {},
+                "attrs": {
+                  "Tür": "Duvar"
+                },
                 "color": "#E5484D",
                 "a": {
                   "x": 487000,
@@ -1144,7 +1166,9 @@
                 "kind": "line",
                 "id": 31,
                 "layerId": "yapi",
-                "attrs": {},
+                "attrs": {
+                  "Tür": "Duvar"
+                },
                 "color": "#E5484D",
                 "a": {
                   "x": 487006,
@@ -1188,7 +1212,9 @@
                   "kind": "line",
                   "id": 10,
                   "layerId": "yapi",
-                  "attrs": {},
+                  "attrs": {
+                    "Tür": "Duvar"
+                  },
                   "color": "#E5484D",
                   "a": {
                     "x": 487000,
@@ -1205,7 +1231,9 @@
                   "kind": "line",
                   "id": 0,
                   "layerId": "yapi",
-                  "attrs": {},
+                  "attrs": {
+                    "Tür": "Duvar"
+                  },
                   "color": "#E5484D",
                   "a": {
                     "x": 487006,
@@ -1557,7 +1585,7 @@
             "status": "failed",
             "error": {
               "code": "not_breakable",
-              "message": "Bu türdeki nesne kırılmaz: çizgi, çoklu çizgi, alan, yay, daire, elips, yardımcı çizgi ya da ışın olmalı.",
+              "message": "Bu türdeki nesne kırılmaz: çizgi, çoklu çizgi, alan, yay, daire, elips, NURBS eğrisi, yardımcı çizgi ya da ışın olmalı.",
               "path": "uid"
             }
           },

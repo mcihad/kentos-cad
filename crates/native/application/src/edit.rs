@@ -483,6 +483,11 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
         }
         entity
     };
+    // Kır's pieces and Birleştir's joined object keep their look and symbol too (docs/adr/0296).
+    let whole = matches!(
+        input.operation,
+        EditOperation::Break | EditOperation::Join | EditOperation::Reverse
+    );
     for (change, (slot, entity)) in input.changes.iter().zip(found) {
         let base = entity.base();
         match change {
@@ -517,7 +522,7 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
                 entity: elevate(
                     entity_of(
                         geometry,
-                        inherited(base, slot.0, keep_data.unwrap_or(false)),
+                        inherited(base, slot.0, keep_data.unwrap_or(false), whole),
                     ),
                     entity,
                     geometry,
@@ -534,7 +539,7 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
                 ..
             } => {
                 // What is given is the new object's own; the rest comes from `from` (docs/adr/0144).
-                let mut own = inherited(base, 0, keep_data.unwrap_or(false));
+                let mut own = inherited(base, 0, keep_data.unwrap_or(false), whole);
                 if let Some(layer) = layer_id {
                     own.layer_id = layer.clone();
                 }
@@ -589,10 +594,16 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
 /// docs/adr/0139), the attributes, the label and the attachments
 /// (docs/adr/0225 §1) with `keep_data`; not the symbol (the web's
 /// `EdgePickTool.inherit`) nor the labels' pins (they are the object's
-/// place's). `id` is its slot (0 for a new one).
-fn inherited(base: &EntityBase, id: u32, keep_data: bool) -> EntityBase {
+/// place's). With `whole` (Kır, Birleştir, Yönü çevir: docs/adr/0296) the
+/// symbol and the look (line type, its scale, transparency, drawing order)
+/// too. `id` is its slot (0 for a new one).
+fn inherited(base: &EntityBase, id: u32, keep_data: bool, whole: bool) -> EntityBase {
     EntityBase {
-        look: Default::default(),
+        look: if whole {
+            base.look.clone()
+        } else {
+            Default::default()
+        },
         id,
         layer_id: base.layer_id.clone(),
         color: base.color.clone(),
@@ -602,7 +613,7 @@ fn inherited(base: &EntityBase, id: u32, keep_data: bool) -> EntityBase {
             Default::default()
         },
         label: if keep_data { base.label.clone() } else { None },
-        symbol: None,
+        symbol: if whole { base.symbol.clone() } else { None },
         line_weight: base.line_weight,
         label_pins: Vec::new(),
         attachments: if keep_data {

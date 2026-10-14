@@ -158,12 +158,14 @@ pub const TRIM_KINDS: &[&str] = &[
 ];
 /// The curves the core grows (docs/adr/0250).
 pub const EXTEND_KINDS: &[&str] = &["line", "polyline", "arc", "ellipse"];
-/// The objects Kır breaks (docs/adr/0254 §3).
+/// The objects Kır breaks (docs/adr/0254 §3, 0296).
 pub const BREAK_KINDS: &[&str] = &[
-    "line", "polyline", "polygon", "arc", "circle", "ellipse", "xline", "ray",
+    "line", "polyline", "polygon", "arc", "circle", "ellipse", "nurbs", "xline", "ray",
 ];
 /// The objects a chain is made of (docs/adr/0254 §4).
 pub const JOIN_KINDS: &[&str] = &["line", "arc", "polyline"];
+/// The objects Yönü çevir turns (docs/adr/0296).
+pub const REVERSE_KINDS: &[&str] = &["line", "polyline", "polygon", "spline", "nurbs"];
 /// The objects Böl divides (docs/adr/0254 §5).
 pub const DIVIDE_KINDS: &[&str] = &[
     "line", "polyline", "polygon", "arc", "circle", "ellipse", "spline", "nurbs",
@@ -783,7 +785,12 @@ const ENTRIES: &[Entry] = &[
             ],
             REVISION,
         ],
-        warnings: &["locked_skipped", "chain_stopped"],
+        warnings: &[
+            "locked_skipped",
+            "chain_stopped",
+            "not_joined",
+            "data_conflict",
+        ],
         targets: || {
             vec![
                 target(
@@ -803,6 +810,20 @@ const ENTRIES: &[Entry] = &[
                     Some("Zincirin tohumu çizgi, yay ya da açık çoklu çizgi olmalı."),
                 ),
             ]
+        },
+    },
+    Entry {
+        id: "cad.entities.reverse",
+        refusals: &[OBJECTS, &["not_reversible"], REVISION],
+        warnings: &["not_reversible", "layer_locked"],
+        targets: || {
+            vec![target(
+                None,
+                REVERSE_KINDS,
+                &[],
+                Some("not_reversible"),
+                Some("Yay, daire ve elips hep saat yönünün tersine gider; yönsüz türler gibi atlanır."),
+            )]
         },
     },
     Entry {

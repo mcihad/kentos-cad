@@ -13,20 +13,25 @@
 //! - objects on a locked layer are left out, with the web's warning; what the
 //!   tool cannot reshape (a circle has no corners) is counted and said.
 //!
-//! What is written goes through `cad.entities.edit` (`fillet`, `chamfer`,
-//! `reverse`, `simplify`): each changed object is updated with its whole new
-//! geometry. The corners, the direction and the thinning are the shared
-//! core's (`all_corners`, `reverse`, `simplify`).
+//! What is written goes through the semantic commands where there is one:
+//! `cad.entities.fillet` and `.chamfer` with every corner (docs/adr/0250),
+//! `cad.entities.reverse` with the objects (docs/adr/0296); Sadeleştir
+//! through `cad.entities.edit`'s `simplify`. The corners, the direction and
+//! the thinning are the shared core's (`all_corners`, `reverse`, `simplify`).
 
 use std::collections::HashSet;
 
-use kentos_contracts::{CornerPick, EditOperation, EntitiesChamfer, EntitiesFillet, EntityEdit};
+use kentos_contracts::{
+    CornerPick, EditOperation, EntitiesChamfer, EntitiesFillet, EntitiesReverse, EntityEdit,
+};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::ops::fillet::CornerOp;
 use kentos_geometry_core::ops::reshape::{all_corners, reverse, simplify};
 use kentos_native_application::corner::{Size, line_corners, line_of};
-use kentos_native_application::{ExecutionContext, entities_chamfer, entities_fillet};
+use kentos_native_application::{
+    ExecutionContext, entities_chamfer, entities_fillet, entities_reverse,
+};
 
 use crate::Vec2;
 use crate::edge::{self, Outline};
@@ -674,6 +679,24 @@ impl Stages for Reshape {
                 };
                 entities_chamfer::execute(&mut ecx, input)
             };
+            if points::written(result, cx).is_none() {
+                return Flow::Stay;
+            }
+            let text = self.done_message(&plan, &cx.format());
+            cx.say(Level::Success, text);
+            return Flow::Exit;
+        }
+        // The objects by their meaning (docs/adr/0296): the command turns them, keeping what they carry.
+        if self.kind == Kind::Reverse {
+            let input = EntitiesReverse {
+                uids: plan
+                    .edits
+                    .iter()
+                    .map(|(slot, _)| edge::uid(cx.doc, *slot))
+                    .collect(),
+                expected_revision: None,
+            };
+            let result = entities_reverse::execute(&mut ExecutionContext::new(cx.doc), input);
             if points::written(result, cx).is_none() {
                 return Flow::Stay;
             }

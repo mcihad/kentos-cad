@@ -170,6 +170,7 @@ impl Document {
             layers: LayerTree::new(layers, &active_layer),
             store,
             next_slot: u64::from(largest) + 1,
+            relocated: Default::default(),
             history: History::default(),
             calls: crate::calls::Calls::default(),
             edits: 0,

@@ -784,24 +784,18 @@
             ],
             "entities": {
               "26": {
-                "kind": "polyline",
+                "kind": "line",
                 "id": 26,
                 "layerId": "yapi",
                 "attrs": {},
-                "pts": [
-                  {
-                    "x": 487000,
-                    "y": 4420090
-                  },
-                  {
-                    "x": 487010,
-                    "y": 4420090
-                  },
-                  {
-                    "x": 487020,
-                    "y": 4420090
-                  }
-                ]
+                "a": {
+                  "x": 487000,
+                  "y": 4420090
+                },
+                "b": {
+                  "x": 487020,
+                  "y": 4420090
+                }
               }
             },
             "revision": "changed",
@@ -874,26 +868,20 @@
             ],
             "entities": {
               "17": {
-                "kind": "polyline",
+                "kind": "line",
                 "id": 17,
                 "layerId": "yapi",
                 "attrs": {
                   "Tür": "Yol"
                 },
-                "pts": [
-                  {
-                    "x": 487000,
-                    "y": 4420060
-                  },
-                  {
-                    "x": 487010,
-                    "y": 4420060
-                  },
-                  {
-                    "x": 487020,
-                    "y": 4420060
-                  }
-                ]
+                "a": {
+                  "x": 487000,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487020,
+                  "y": 4420060
+                }
               }
             },
             "revision": "changed",
@@ -940,7 +928,13 @@
               ],
               "revision": "$current"
             },
-            "warnings": []
+            "warnings": [
+              {
+                "code": "data_conflict",
+                "message": "Birleşen nesnelerin öznitelikleri ayrışıyor: Tür (yok / Yol); ilk nesnenin değerleri kaldı.",
+                "path": "uids"
+              }
+            ]
           },
           "expect": {
             "ids": [
@@ -1060,24 +1054,18 @@
             ],
             "entities": {
               "23": {
-                "kind": "polyline",
+                "kind": "line",
                 "id": 23,
                 "layerId": "yapi",
                 "attrs": {},
-                "pts": [
-                  {
-                    "x": 487010,
-                    "y": 4420040
-                  },
-                  {
-                    "x": 487020,
-                    "y": 4420040
-                  },
-                  {
-                    "x": 487030,
-                    "y": 4420040
-                  }
-                ]
+                "a": {
+                  "x": 487010,
+                  "y": 4420040
+                },
+                "b": {
+                  "x": 487030,
+                  "y": 4420040
+                }
               }
             },
             "revision": "changed",

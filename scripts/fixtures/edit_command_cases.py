@@ -120,9 +120,10 @@ def updated(i, geometry):
     return reshaped(E(i), geometry)
 
 
-def inherited(i, geometry, keep, slot):
+def inherited(i, geometry, keep, slot, whole=False):
     """`replace` (in slot i) and `add` (in a new slot): the layer and the colour; the
-    attributes and the label with keepData; never the symbol."""
+    attributes and the label with keepData; the symbol and the look only for Kır, Birleştir
+    and Yönü çevir (`whole`, docs/adr/0296)."""
     e = E(i)
     out = json.loads(json.dumps(geometry))
     out["id"] = slot
@@ -132,6 +133,10 @@ def inherited(i, geometry, keep, slot):
     out["attrs"] = e["attrs"] if keep else {}
     if keep and "label" in e:
         out["label"] = e["label"]
+    if whole:
+        for k in ("symbol", "lineType", "lineTypeScale", "transparency", "order"):
+            if k in e:
+                out[k] = e[k]
     return out
 
 
@@ -501,7 +506,7 @@ cases.append({
          "result": failed("repeated_entity", "“$uid:cizgi” kimlikli nesne birden çok değişiklikte değişiyor. Bir nesneye tek değişiklik verin.", "changes[1].uid"), "expect": NOTHING},
         {"op": "execute", "input": {"operation": "break", "changes": [{"kind": "replace", "uid": uid(1), "geometry": left}, {"kind": "add", "from": uid(1), "geometry": right}, {"kind": "add", "from": uid(1), "geometry": copy}]},
          "result": done(changed=[uid(1)], created=[uid(9), uid(10)]),
-         "expect": {"ids": ids_after(added=[9, 10]), "entities": {"9": inherited(1, right, False, 9), "10": inherited(1, copy, False, 10)}, "revision": "changed"}},
+         "expect": {"ids": ids_after(added=[9, 10]), "entities": {"9": inherited(1, right, False, 9, whole=True), "10": inherited(1, copy, False, 10, whole=True)}, "revision": "changed"}},
     ],
 })
 

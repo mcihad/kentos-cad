@@ -313,6 +313,7 @@ impl Document {
         if frame.opened {
             self.history.pending = None;
             self.history.adopt = false;
+            self.relocated.clear();
         }
         if reverted > 0 || restored {
             self.mark_changed();
