@@ -19,7 +19,6 @@ pub const FIT_PADDING: f64 = 48.0;
 /// One CSS pixel at 96 dpi in metres: the screen scale 1:N the status bar shows.
 const METRES_PER_PX: f64 = 0.000_264_58;
 
-
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Camera {
     /// The world point in the middle of the area.
@@ -83,7 +82,7 @@ impl Camera {
     }
 
     /// A world offset from the middle along the screen's axes (x right, y up), world units.
-    fn to_view(&self, dx: f64, dy: f64) -> (f64, f64) {
+    fn turned_in(&self, dx: f64, dy: f64) -> (f64, f64) {
         if self.twist == 0.0 {
             return (dx, dy);
         }
@@ -92,7 +91,7 @@ impl Camera {
     }
 
     /// The reverse: an offset along the screen's axes (x right, y up) as a world offset.
-    fn from_view(&self, u: f64, v: f64) -> (f64, f64) {
+    fn turned_out(&self, u: f64, v: f64) -> (f64, f64) {
         if self.twist == 0.0 {
             return (u, v);
         }
@@ -102,7 +101,7 @@ impl Camera {
 
     /// Screen position (logical px from the top-left, y down) of a world point.
     pub fn world_to_screen(&self, p: Vec2) -> [f64; 2] {
-        let (u, v) = self.to_view(p.x - self.center.x, p.y - self.center.y);
+        let (u, v) = self.turned_in(p.x - self.center.x, p.y - self.center.y);
         [
             u * self.scale + self.width / 2.0,
             self.height / 2.0 - v * self.scale,
@@ -111,7 +110,7 @@ impl Camera {
 
     /// World point under a screen position.
     pub fn screen_to_world(&self, x: f64, y: f64) -> Vec2 {
-        let (dx, dy) = self.from_view(
+        let (dx, dy) = self.turned_out(
             (x - self.width / 2.0) / self.scale,
             -(y - self.height / 2.0) / self.scale,
         );
@@ -127,7 +126,7 @@ impl Camera {
     /// Moves the view with the pointer: the world under it follows it by (dx, dy) pixels.
     pub fn pan_by(&mut self, dx: f64, dy: f64) {
         if dx.is_finite() && dy.is_finite() {
-            let (wx, wy) = self.from_view(dx / self.scale, -dy / self.scale);
+            let (wx, wy) = self.turned_out(dx / self.scale, -dy / self.scale);
             self.center = Vec2::new(self.center.x - wx, self.center.y - wy);
         }
     }
@@ -139,7 +138,7 @@ impl Camera {
         }
         let anchor = self.screen_to_world(x, y);
         self.scale = (self.scale * factor).clamp(MIN_SCALE, MAX_SCALE);
-        let (dx, dy) = self.from_view(
+        let (dx, dy) = self.turned_out(
             (x - self.width / 2.0) / self.scale,
             -(y - self.height / 2.0) / self.scale,
         );
@@ -330,7 +329,10 @@ mod tests {
         // Twisted by 90°: the world's north points right on the screen.
         let c = turned(std::f64::consts::FRAC_PI_2);
         let [x, y] = c.world_to_screen(Vec2::new(487_000.0, 4_420_010.0));
-        assert!((x - 480.0).abs() < 1e-9 && (y - 300.0).abs() < 1e-9, "{x} {y}");
+        assert!(
+            (x - 480.0).abs() < 1e-9 && (y - 300.0).abs() < 1e-9,
+            "{x} {y}"
+        );
         for (px, py) in [(10.0, 20.0), (400.0, 300.0), (799.0, 1.0)] {
             let w = c.screen_to_world(px, py);
             let [bx, by] = c.world_to_screen(w);

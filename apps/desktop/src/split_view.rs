@@ -60,7 +60,11 @@ impl App {
     /// Another drawing goes back to one view (after every message).
     pub(crate) fn follow_split(&mut self) {
         let session = self.document.as_ref().map(|d| d.session);
-        if self.split.as_ref().is_some_and(|s| Some(s.session) != session) {
+        if self
+            .split
+            .as_ref()
+            .is_some_and(|s| Some(s.session) != session)
+        {
             self.split = None;
         }
     }
@@ -77,9 +81,7 @@ impl App {
             | Event::Panned { .. }
             | Event::Extents
             | Event::Settled => {
-                split
-                    .viewport
-                    .update(event, self.document.as_ref());
+                split.viewport.update(event, self.document.as_ref());
                 Task::none()
             }
             Event::Pressed(_) | Event::RightPressed(_) => {

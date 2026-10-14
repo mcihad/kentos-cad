@@ -22,9 +22,9 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 20 | 0 | 6 | 26 |
 | query | 0 | 21 | 1 | 4 | 26 |
-| session | 0 | 82 | 47 | 5 | 134 |
+| session | 0 | 81 | 48 | 5 | 134 |
 | host | 0 | 15 | 14 | 4 | 33 |
-| **toplam** | 68 | 324 | 102 | 205 | 699 |
+| **toplam** | 68 | 323 | 103 | 205 | 699 |
 
 Kapsam: `cad` yalnız CAD şeridinde, `gis` yalnız CBS şeridinde, `shared` ikisinde, `none` hiçbir şeritte (kısayol, menü,
 komut satırı).

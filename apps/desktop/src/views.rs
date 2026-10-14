@@ -355,7 +355,10 @@ impl App {
             .push(words::field(
                 "Kayıtlı görünümler",
                 list,
-                Some("Bir görünüme iki kez tıklamak onu gösterir; Önceki görünüm geri getirir.".to_owned()),
+                Some(
+                    "Bir görünüme iki kez tıklamak onu gösterir; Önceki görünüm geri getirir."
+                        .to_owned(),
+                ),
             ))
             .push(actions)
             .push(words::field(NAME, focus_ring(name), None))
@@ -387,7 +390,9 @@ impl App {
             Control::Press(words) => match self.named_views().iter().find(|v| v.name == words) {
                 Some(v) => Some(msg(Event::Choose(v.name.clone()))),
                 None => {
-                    return Err(format!("“{VIEWS_TITLE}” penceresinde “{words}” düğmesi yok"));
+                    return Err(format!(
+                        "“{VIEWS_TITLE}” penceresinde “{words}” düğmesi yok"
+                    ));
                 }
             },
             other => return Err(format!("“{VIEWS_TITLE}” penceresinde {other} yok")),
@@ -428,7 +433,11 @@ mod tests {
         let kept = app.viewport.viewpoint();
         let _ = app.update(Message::Views(Event::Name("Giriş".into())));
         let _ = app.update(Message::Views(Event::Save));
-        assert!(last_said(&app).starts_with("“Giriş” görünümü kaydedildi"), "{}", last_said(&app));
+        assert!(
+            last_said(&app).starts_with("“Giriş” görünümü kaydedildi"),
+            "{}",
+            last_said(&app)
+        );
         let views = app.named_views().to_vec();
         assert_eq!(views.len(), 1);
         assert!((views[0].twist - std::f64::consts::FRAC_PI_6).abs() < 1e-12);
@@ -438,7 +447,10 @@ mod tests {
         let before = app.viewport.viewpoint();
         let _ = app.update(Message::Views(Event::Show("Giriş".into())));
         let shown = app.viewport.viewpoint();
-        assert!((shown.center.x - kept.center.x).abs() < 1e-6 && (shown.center.y - kept.center.y).abs() < 1e-6);
+        assert!(
+            (shown.center.x - kept.center.x).abs() < 1e-6
+                && (shown.center.y - kept.center.y).abs() < 1e-6
+        );
         assert!((shown.scale / kept.scale - 1.0).abs() < 1e-9);
         assert!((shown.twist - kept.twist).abs() < 1e-12);
         run(&mut app, "view.previous");
@@ -484,20 +496,31 @@ mod tests {
         app.draft.polar = None;
         app.twist_view(0.6);
         run(&mut app, "tool.polyline");
-        let corners = [Point::new(200.0, 300.0), Point::new(320.0, 300.0), Point::new(320.0, 420.0)];
+        let corners = [
+            Point::new(200.0, 300.0),
+            Point::new(320.0, 300.0),
+            Point::new(320.0, 420.0),
+        ];
         for c in corners {
             click(&mut app, c);
         }
         run(&mut app, "tool.confirm");
         run(&mut app, "tool.cancel");
         let doc = &app.document.as_ref().expect("a drawing").model;
-        let newest = doc.entities().max_by_key(|e| e.base().id).expect("the polyline").clone();
+        let newest = doc
+            .entities()
+            .max_by_key(|e| e.base().id)
+            .expect("the polyline")
+            .clone();
         let kentos_contracts::Entity::Polyline(p) = &newest else {
             panic!("a polyline: {newest:?}");
         };
         for (c, q) in corners.iter().zip(&p.pts) {
             let w = app.viewport.world(*c);
-            assert!((w.x - q.x).abs() < 1e-6 && (w.y - q.y).abs() < 1e-6, "{w:?} {q:?}");
+            assert!(
+                (w.x - q.x).abs() < 1e-6 && (w.y - q.y).abs() < 1e-6,
+                "{w:?} {q:?}"
+            );
         }
         // A click on its middle edge, in the twisted view, picks it.
         app.selection.clear();
@@ -508,12 +531,19 @@ mod tests {
         let drag = |app: &mut App, a: Point, b: Point| {
             let _ = app.update(Message::Viewport(Area::Moved(a)));
             let _ = app.update(Message::Viewport(Area::Pressed(a)));
-            let _ = app.update(Message::Viewport(Area::Moved(Point::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0))));
+            let _ = app.update(Message::Viewport(Area::Moved(Point::new(
+                (a.x + b.x) / 2.0,
+                (a.y + b.y) / 2.0,
+            ))));
             let _ = app.update(Message::Viewport(Area::Moved(b)));
             let _ = app.update(Message::Viewport(Area::Released(b)));
         };
         drag(&mut app, Point::new(180.0, 280.0), Point::new(340.0, 440.0));
-        assert_eq!(app.selection.len(), 1, "wholly inside the box on the screen");
+        assert_eq!(
+            app.selection.len(),
+            1,
+            "wholly inside the box on the screen"
+        );
         app.selection.clear();
         drag(&mut app, Point::new(180.0, 280.0), Point::new(330.0, 380.0));
         assert!(app.selection.is_empty(), "half outside a window");

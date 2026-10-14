@@ -10324,7 +10324,7 @@
    "python": null,
    "mcp": null,
    "note": "Görünüm; cad.session.* yok (plan §5.1).",
-   "scope": "shared",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },

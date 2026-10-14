@@ -229,6 +229,7 @@ mod snap_menu;
 mod snap_tests;
 mod snapshot;
 mod sources;
+mod split_view;
 mod start;
 #[cfg(test)]
 mod stationing_scenes;
@@ -267,11 +268,7 @@ mod topology_scenes;
 #[cfg(test)]
 mod topology_tests;
 mod traces;
-mod split_view;
 mod tracking;
-#[cfg(test)]
-mod view_scenes;
-mod views;
 #[cfg(test)]
 mod transparent_tests;
 #[cfg(test)]
@@ -280,7 +277,10 @@ mod usage;
 mod vertices;
 mod view;
 mod view_commands;
+#[cfg(test)]
+mod view_scenes;
 mod viewport;
+mod views;
 #[cfg(test)]
 mod window_layers_tests;
 

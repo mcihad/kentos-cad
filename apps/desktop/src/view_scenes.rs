@@ -36,7 +36,9 @@ fn block(app: &mut App) {
     o.text("cizim", [8.0, -10.0], "Atatürk Caddesi", 2.0, 0.0);
     open(app, o);
     make_cad(app);
-    let _ = app.settings.choose(&[("drafting.snap", serde_json::Value::Bool(false))]);
+    let _ = app
+        .settings
+        .choose(&[("drafting.snap", serde_json::Value::Bool(false))]);
     app.apply_settings();
     app.viewport.camera.fit(
         &kentos_render_wgpu::Bounds {

@@ -75,7 +75,12 @@ fn view_box(center: [f64; 2], hw: f64, hh: f64, twist: f64) -> [f64; 4] {
         let (s, c) = (s.abs(), c.abs());
         (hw * c + hh * s, hw * s + hh * c)
     };
-    [center[0] - ex, center[1] - ey, center[0] + ex, center[1] + ey]
+    [
+        center[0] - ex,
+        center[1] - ey,
+        center[0] + ex,
+        center[1] + ey,
+    ]
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

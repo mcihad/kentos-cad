@@ -637,10 +637,6 @@
           "size": "small"
         },
         {
-          "command": "view.twistUcs",
-          "size": "small"
-        },
-        {
           "command": "view.northUp",
           "size": "small"
         },
@@ -665,10 +661,6 @@
         },
         {
           "command": "tool.viewTwist",
-          "size": "small"
-        },
-        {
-          "command": "view.twistUcs",
           "size": "small"
         },
         {
