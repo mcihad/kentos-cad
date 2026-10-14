@@ -139,7 +139,7 @@ fn two_and_three_points() {
     assert_eq!(b.doc.len(), before);
     assert_eq!(
         b.last_text(),
-        Some("Üç nokta aynı doğru üzerinde; daire çizilemez.")
+        Some("Üç nokta aynı doğru üzerinde; daire geçmez. Doğrunun dışında bir nokta verin.")
     );
     assert_eq!(b.points(), 0);
 }
@@ -329,7 +329,7 @@ fn an_arc_that_cannot_be_made_warns_and_keeps_its_points() {
     assert_eq!(b.doc.len(), 0);
     assert_eq!(
         b.last_text(),
-        Some("Bu değerlerle yay oluşmuyor (noktalar aynı doğruda ya da yarıçap kiriş için küçük).")
+        Some("Üç nokta aynı doğru üzerinde; yay geçmez. Doğrunun dışında bir nokta verin.")
     );
     assert_eq!(b.points(), 2, "the points stay");
 }

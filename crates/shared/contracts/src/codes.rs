@@ -437,6 +437,22 @@ codes! {
     /// Paralel's object without a straight edge.
     NO_STRAIGHT_EDGE = "no_straight_edge", Failed, false, "Nesnede düz kenar yok; paralel doğrultusu düz kenardan alınır.";
 
+    // ── Curve constructions (docs/adr/0289) ─────────────────────────────
+    /// Three points on one line, or an end on the start's tangent (`cad.curves.construct`).
+    COLLINEAR_POINTS = "collinear_points", Failed, false, "Noktalar aynı doğru üzerinde (ya da bitiş başlangıcın teğetinde); daire ya da yay geçmez.";
+    /// An arc's angle of zero or a whole turn or more, an end on the start's ray, a rotation out of range.
+    INVALID_ANGLE = "invalid_angle", Failed, false, "Açı yay vermiyor: sıfır, tam tur ya da daha büyük, bitiş başlangıçla aynı doğrultuda ya da döndürme 0–89,4° dışında.";
+    /// A radius less than half the chord between the arc's ends.
+    RADIUS_TOO_SMALL = "radius_too_small", Failed, false, "Yarıçap iki uç arasındaki kirişin yarısından küçük; yay iki uca ulaşmaz.";
+    /// A chord longer than the circle's diameter.
+    CHORD_TOO_LONG = "chord_too_long", Failed, false, "Kiriş dairenin çapından uzun.";
+    /// An ellipse's other half-axis not above zero, or both or neither of it and the rotation.
+    INVALID_HALF_AXIS = "invalid_half_axis", Failed, false, "Elipsin diğer yarı ekseni sıfırdan büyük olmalı ve ya uzunluğuyla ya döndürme açısıyla (biri) verilir.";
+    /// An object a tangent circle cannot touch.
+    NOT_TANGENT_KIND = "not_tangent_kind", Failed, false, "Teğet daire çizgiye, çoklu çizgiye, alana, yaya, daireye, yardımcı çizgiye ya da ışına değer; bu nesneye değmez.";
+    /// No circle touches the objects as asked.
+    NO_TANGENT_CIRCLE = "no_tangent_circle", Failed, false, "Nesnelere bu biçimde teğet bir daire yok (paralel doğrular, ulaşmayan yarıçap, birbirini içeren daireler).";
+
     // ── The object snap as a command (docs/adr/0272) ────────────────────
     /// A snap aperture not above zero (`cad.snap.find`).
     INVALID_APERTURE = "invalid_aperture", Failed, false, "Kenet açıklığı sıfırdan büyük olmalı (metre).";

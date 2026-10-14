@@ -568,8 +568,9 @@ fn command_tool(c: &Value) -> Value {
         "title": c["title"],
         "description": description,
         "inputSchema": schema,
-        // They write nothing: the points, the snaps and the selections are their answers (docs/adr/0270, 0272, 0275).
-        "annotations": annotations(matches!(id, "cad.points.construct" | "cad.snap.find" | "cad.entities.select" | "cad.entities.pick"), destructive),
+        // They write nothing: the points, the curves, the snaps and the selections are their answers (docs/adr/0270,
+        // 0289, 0272, 0275).
+        "annotations": annotations(matches!(id, "cad.points.construct" | "cad.curves.construct" | "cad.snap.find" | "cad.entities.select" | "cad.entities.pick"), destructive),
     })
 }
 

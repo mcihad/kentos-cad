@@ -144,6 +144,10 @@ fn target(
     }
 }
 
+/// The objects a tangent circle touches (docs/adr/0289).
+pub const TANGENT_KINDS: &[&str] = &[
+    "line", "polyline", "polygon", "arc", "circle", "xline", "ray",
+];
 /// The curves the core offsets (docs/adr/0246).
 pub const OFFSET_KINDS: &[&str] = &[
     "line", "polyline", "polygon", "circle", "arc", "ellipse", "xline", "ray",
@@ -1254,6 +1258,54 @@ const ENTRIES: &[Entry] = &[
                     Some(
                         "Paralelin doğrultusu nesnenin near'a en yakın düz kenarından: çizgiler, yolların düz kenarları, taramanın, tablonun ve resmin çerçevesi; eğrinin ve elipsin kirişleri kenar sayılmaz.",
                     ),
+                ),
+            ]
+        },
+    },
+    Entry {
+        id: "cad.curves.construct",
+        refusals: &[&[
+            "no_constructions",
+            "not_finite",
+            "invalid_uid",
+            "entity_not_found",
+            "no_such_place",
+            "piece_gone",
+            "same_points",
+            "collinear_points",
+            "invalid_angle",
+            "invalid_radius",
+            "radius_too_small",
+            "invalid_distance",
+            "chord_too_long",
+            "invalid_half_axis",
+            "not_tangent_kind",
+            "no_tangent_circle",
+            "not_an_end",
+        ]],
+        warnings: &[],
+        targets: || {
+            vec![
+                target(
+                    Some("circleTangentTangentRadius"),
+                    TANGENT_KINDS,
+                    &[],
+                    Some("not_tangent_kind"),
+                    Some("Doğru ve çoklu çizginin düz kenarı bütün doğrusuyla, yay ve yaylı kenar bütün çemberiyle sayılır."),
+                ),
+                target(
+                    Some("circleTangents"),
+                    TANGENT_KINDS,
+                    &[],
+                    Some("not_tangent_kind"),
+                    Some("Doğru ve çoklu çizginin düz kenarı bütün doğrusuyla, yay ve yaylı kenar bütün çemberiyle sayılır."),
+                ),
+                target(
+                    Some("arcContinue"),
+                    &["line", "polyline", "arc"],
+                    &[],
+                    Some("not_an_end"),
+                    Some("Devam çizginin, çoklu çizginin ya da yayın bitişinden yönüyle, başlangıcından tersine sürer; kapalı çoklu çizginin başlangıcı yoktur."),
                 ),
             ]
         },

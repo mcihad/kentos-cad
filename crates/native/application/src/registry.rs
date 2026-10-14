@@ -11,7 +11,7 @@ use kentos_contracts::{
     EntitiesHatch, EntitiesJoin, EntitiesOffset, EntitiesOrder, EntitiesSetProperties,
     EntitiesPick, EntitiesSelect, EntitiesStretch, EntitiesVertex, EntitiesTransform, EntitiesTrim, ImportDxf, LabelsPin, LayersCompose,
     LayersEdit, LayersFilter, LayersInfo, LayersLabels, LayersRenderer, LayersService, LayersSet,
-    LayersStates, LayersTime, LineCreate, NetworkDefine, NurbsCreate, PointCreate, PointsConstruct,
+    LayersStates, LayersTime, LineCreate, NetworkDefine, NurbsCreate, PointCreate, PointsConstruct, CurvesConstruct,
     PolygonCreate, PolylineCreate, ScenariosEdit, SettingsSet, SheetsEdit, SnapFind, StylesEdit,
     UcsSet, UnitsChange, ViewsEdit, codes,
 };
@@ -24,7 +24,7 @@ use crate::{
     entities_hatch, entities_join, entities_order, entities_pick, entities_select, entities_vertex, entities_trim, file_import, labels_pin,
     layers_compose, layers_edit, layers_filter, layers_info, layers_labels, layers_renderer,
     layers_service, layers_set, layers_states, layers_time, line, network_define, nurbs, offset,
-    point, points_construct, polygon, polyline, scenarios_edit, set, settings_set, sheets_edit,
+    curves_construct, point, points_construct, polygon, polyline, scenarios_edit, set, settings_set, sheets_edit,
     snap_find, stretch, styles_edit, transform, ucs_set, units_change, views_edit,
 };
 
@@ -89,6 +89,7 @@ macro_rules! by_command {
             kentos_contracts::CAD_NETWORK_DEFINE => $then!(network_define, NetworkDefine),
             kentos_contracts::CAD_ENTITIES_OFFSET => $then!(offset, EntitiesOffset),
             kentos_contracts::CAD_POINTS_CONSTRUCT => $then!(points_construct, PointsConstruct),
+            kentos_contracts::CAD_CURVES_CONSTRUCT => $then!(curves_construct, CurvesConstruct),
             kentos_contracts::CAD_SNAP_FIND => $then!(snap_find, SnapFind),
             kentos_contracts::CAD_ENTITIES_SELECT => $then!(entities_select, EntitiesSelect),
             kentos_contracts::CAD_ENTITIES_PICK => $then!(entities_pick, EntitiesPick),

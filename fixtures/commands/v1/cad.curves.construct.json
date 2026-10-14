@@ -1,0 +1,5683 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.curves.construct",
+ "commandVersion": 1,
+ "title": "Eğri yapımı: Daire, Yay ve Elips araçlarının yöntemleri",
+ "note": "ADR 0289. Yapım yapım sırayla: sayılar sonlu, nesnelerin kimlikleri, nesneler ve yerleri, sonra türün istedikleri. Çizim değişmez. within taşıyan adımda sayılar 10⁻⁹ m ya da radyan içinde karşılaştırılır (başvuru 70 basamaktan bir kez yuvarlar). Bağımsız başvuru: scripts/fixtures/curve_method_cases.py.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Eğri yapımı",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 487000,
+   "y": 4420000
+  },
+  "layers": [
+   {
+    "id": "yapi",
+    "name": "Yapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "yapi",
+  "entities": [
+   {
+    "kind": "line",
+    "id": 1,
+    "layerId": "yapi",
+    "attrs": {},
+    "a": {
+     "x": 486980,
+     "y": 4420000
+    },
+    "b": {
+     "x": 487020,
+     "y": 4420000
+    }
+   },
+   {
+    "kind": "line",
+    "id": 2,
+    "layerId": "yapi",
+    "attrs": {},
+    "a": {
+     "x": 487000,
+     "y": 4419980
+    },
+    "b": {
+     "x": 487000,
+     "y": 4420020
+    }
+   },
+   {
+    "kind": "line",
+    "id": 3,
+    "layerId": "yapi",
+    "attrs": {},
+    "a": {
+     "x": 486980,
+     "y": 4420010
+    },
+    "b": {
+     "x": 487020,
+     "y": 4420010
+    }
+   },
+   {
+    "kind": "circle",
+    "id": 4,
+    "layerId": "yapi",
+    "attrs": {},
+    "c": {
+     "x": 487030,
+     "y": 4420000
+    },
+    "r": 5
+   },
+   {
+    "kind": "arc",
+    "id": 5,
+    "layerId": "yapi",
+    "attrs": {},
+    "c": {
+     "x": 487060,
+     "y": 4420000
+    },
+    "r": 10,
+    "a0": 0,
+    "a1": 1.5707963267948966
+   },
+   {
+    "kind": "polyline",
+    "id": 6,
+    "layerId": "yapi",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420030
+     },
+     {
+      "x": 487010,
+      "y": 4420030
+     },
+     {
+      "x": 487010,
+      "y": 4420040
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 7,
+    "layerId": "yapi",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487020,
+      "y": 4420020
+     },
+     {
+      "x": 487030,
+      "y": 4420020
+     },
+     {
+      "x": 487030,
+      "y": 4420030
+     },
+     {
+      "x": 487020,
+      "y": 4420030
+     }
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 8,
+    "layerId": "yapi",
+    "attrs": {},
+    "p": {
+     "x": 487080,
+     "y": 4420010
+    }
+   },
+   {
+    "kind": "polyline",
+    "id": 9,
+    "layerId": "yapi",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487040,
+      "y": 4420020
+     },
+     {
+      "x": 487050,
+      "y": 4420020
+     },
+     {
+      "x": 487050,
+      "y": 4420030
+     }
+    ],
+    "closed": true
+   },
+   {
+    "kind": "line",
+    "id": 10,
+    "layerId": "yapi",
+    "attrs": {},
+    "a": {
+     "x": 487016,
+     "y": 4419997
+    },
+    "b": {
+     "x": 486996,
+     "y": 4420012
+    }
+   },
+   {
+    "kind": "ellipse",
+    "id": 11,
+    "layerId": "yapi",
+    "attrs": {},
+    "c": {
+     "x": 487100,
+     "y": 4420000
+    },
+    "major": {
+     "x": 8,
+     "y": 0
+    },
+    "ratio": 0.5,
+    "t0": 0,
+    "t1": 6.283185307179586
+   },
+   {
+    "kind": "line",
+    "id": 12,
+    "layerId": "yapi",
+    "attrs": {},
+    "a": {
+     "x": 486980,
+     "y": 4420020
+    },
+    "b": {
+     "x": 487020,
+     "y": 4420020
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "2 nokta: 6–8–10 çapının dairesi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTwoPoints",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487006,
+          "y": 4420008
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "circle",
+         "c": {
+          "x": 487003,
+          "y": 4420004
+         },
+         "r": 5
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "2 nokta, yerleriyle: çizginin iki ucu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTwoPoints",
+        "a": {
+         "kind": "place",
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "start"
+         }
+        },
+        "b": {
+         "kind": "place",
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "end"
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "circle",
+         "c": {
+          "x": 487000,
+          "y": 4420000
+         },
+         "r": 20
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "2 nokta aynı yerde: same_points",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTwoPoints",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "same_points",
+       "message": "Çapın iki ucu aynı yerde; daire oluşmaz. Ayrı iki nokta verin.",
+       "path": "constructions[0].b"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "3 nokta: dik üçgenin çevrel dairesi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleThreePoints",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487006,
+          "y": 4420000
+         }
+        },
+        "c": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420008
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "circle",
+         "c": {
+          "x": 487003,
+          "y": 4420004
+         },
+         "r": 5
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "3 nokta: genel üçgen, merkez ve yarıçap 70 basamakta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleThreePoints",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487001,
+          "y": 4420002
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487007,
+          "y": 4420003
+         }
+        },
+        "c": {
+         "kind": "at",
+         "at": {
+          "x": 487004,
+          "y": 4420009
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "circle",
+         "c": {
+          "x": 487003.57692307694,
+          "y": 4420005.038461538
+         },
+         "r": 3.9840658961780187
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "3 noktadan ikisi aynı: same_points",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleThreePoints",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487005,
+          "y": 4420005
+         }
+        },
+        "c": {
+         "kind": "at",
+         "at": {
+          "x": 487005,
+          "y": 4420005
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "same_points",
+       "message": "Üç noktadan ikisi aynı yerde; aralarından daire geçmez. Ayrı üç nokta verin.",
+       "path": "constructions[0].c"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "3 nokta aynı doğruda: collinear_points",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleThreePoints",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487001,
+          "y": 4420001
+         }
+        },
+        "c": {
+         "kind": "at",
+         "at": {
+          "x": 487005,
+          "y": 4420005
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "collinear_points",
+       "message": "Üç nokta aynı doğru üzerinde; daire geçmez. Doğrunun dışında bir nokta verin.",
+       "path": "constructions[0].c"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "3 nokta neredeyse aynı doğruda (açının sinüsü 10⁻⁹'dan küçük): collinear_points",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleThreePoints",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 488000,
+          "y": 4420000
+         }
+        },
+        "c": {
+         "kind": "at",
+         "at": {
+          "x": 489000,
+          "y": 4420000.000001
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "collinear_points",
+       "message": "Üç nokta aynı doğru üzerinde; daire geçmez. Doğrunun dışında bir nokta verin.",
+       "path": "constructions[0].c"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "teğet-teğet-yarıçap: iki dik doğru, 3 m, yakın noktaların çeyreğinde",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTangentTangentRadius",
+        "first": {
+         "uid": "$uidOf:1",
+         "near": {
+          "x": 487004,
+          "y": 4420000.5
+         }
+        },
+        "second": {
+         "uid": "$uidOf:2",
+         "near": {
+          "x": 487000.5,
+          "y": 4420004
+         }
+        },
+        "r": 3
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "circle",
+         "c": {
+          "x": 487003,
+          "y": 4420003
+         },
+         "r": 3
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "teğet-teğet-yarıçap: aynı doğrular, öbür çeyrek",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTangentTangentRadius",
+        "first": {
+         "uid": "$uidOf:1",
+         "near": {
+          "x": 486996,
+          "y": 4419999.5
+         }
+        },
+        "second": {
+         "uid": "$uidOf:2",
+         "near": {
+          "x": 486999.5,
+          "y": 4419996
+         }
+        },
+        "r": 3
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "circle",
+         "c": {
+          "x": 486997,
+          "y": 4419997
+         },
+         "r": 3
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "teğet-teğet-yarıçap: doğru ve daire, dışından",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTangentTangentRadius",
+        "first": {
+         "uid": "$uidOf:1",
+         "near": {
+          "x": 487022,
+          "y": 4420000.5
+         }
+        },
+        "second": {
+         "uid": "$uidOf:4",
+         "near": {
+          "x": 487026,
+          "y": 4420002
+         }
+        },
+        "r": 2.4
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "circle",
+         "c": {
+          "x": 487023,
+          "y": 4420002.4
+         },
+         "r": 2.4
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "teğet-teğet-yarıçap: daireyi içine alan büyük daire ve doğru",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTangentTangentRadius",
+        "first": {
+         "uid": "$uidOf:4",
+         "near": {
+          "x": 487030,
+          "y": 4420004
+         }
+        },
+        "second": {
+         "uid": "$uidOf:2",
+         "near": {
+          "x": 487000.5,
+          "y": 4420008
+         }
+        },
+        "r": 20
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "circle",
+         "c": {
+          "x": 487020,
+          "y": 4420011.180339888
+         },
+         "r": 20
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "teğet-teğet-yarıçap: 10 m arayla iki paralel doğru ve 5 m; merkez yakın noktaların ortasının karşısında",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTangentTangentRadius",
+        "first": {
+         "uid": "$uidOf:1",
+         "near": {
+          "x": 486994,
+          "y": 4420000.2
+         }
+        },
+        "second": {
+         "uid": "$uidOf:3",
+         "near": {
+          "x": 487002,
+          "y": 4420009.5
+         }
+        },
+        "r": 5
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "circle",
+         "c": {
+          "x": 486998,
+          "y": 4420005
+         },
+         "r": 5
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "teğet-teğet-yarıçap: paralel doğrular ve başka yarıçap: no_tangent_circle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTangentTangentRadius",
+        "first": {
+         "uid": "$uidOf:1",
+         "near": {
+          "x": 486994,
+          "y": 4420000.2
+         }
+        },
+        "second": {
+         "uid": "$uidOf:3",
+         "near": {
+          "x": 487002,
+          "y": 4420009.5
+         }
+        },
+        "r": 3
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_tangent_circle",
+       "message": "İki doğru paralel; yalnız aralarındaki uzaklığın yarısı olan yarıçapla ikisine birden teğet daire olur.",
+       "path": "constructions[0].r"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "teğet-teğet-yarıçap: daireye ve uzaktaki doğruya küçük yarıçap ulaşmaz: no_tangent_circle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTangentTangentRadius",
+        "first": {
+         "uid": "$uidOf:4",
+         "near": {
+          "x": 487030,
+          "y": 4420004
+         }
+        },
+        "second": {
+         "uid": "$uidOf:2",
+         "near": {
+          "x": 487000.5,
+          "y": 4420008
+         }
+        },
+        "r": 1
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_tangent_circle",
+       "message": "Bu yarıçapla iki nesneye birden teğet bir daire yok; yarıçapı değiştirin.",
+       "path": "constructions[0].r"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "teğet-teğet-yarıçap: sıfır yarıçap: invalid_radius",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTangentTangentRadius",
+        "first": {
+         "uid": "$uidOf:1",
+         "near": {
+          "x": 487004,
+          "y": 4420000.5
+         }
+        },
+        "second": {
+         "uid": "$uidOf:2",
+         "near": {
+          "x": 487000.5,
+          "y": 4420004
+         }
+        },
+        "r": 0
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_radius",
+       "message": "Yarıçap sıfırdan büyük olmalı. Pozitif bir yarıçap verin.",
+       "path": "constructions[0].r"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "teğet-teğet-yarıçap: noktaya teğet olunmaz: not_tangent_kind",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTangentTangentRadius",
+        "first": {
+         "uid": "$uidOf:8",
+         "near": {
+          "x": 487080,
+          "y": 4420010
+         }
+        },
+        "second": {
+         "uid": "$uidOf:2",
+         "near": {
+          "x": 487000.5,
+          "y": 4420004
+         }
+        },
+        "r": 3
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_tangent_kind",
+       "message": "Teğet daire yalnız çizgiye, çoklu çizgiye, alana, yaya, daireye, yardımcı çizgiye ya da ışına değer; bu nesneye değmez.",
+       "path": "constructions[0].first"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "teğet-teğet-teğet: 9–12–15 üçgeninin iç teğet dairesi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTangents",
+        "first": {
+         "uid": "$uidOf:1",
+         "near": {
+          "x": 487003.5,
+          "y": 4420000.2
+         }
+        },
+        "second": {
+         "uid": "$uidOf:2",
+         "near": {
+          "x": 487000.2,
+          "y": 4420002.5
+         }
+        },
+        "third": {
+         "uid": "$uidOf:10",
+         "near": {
+          "x": 487005,
+          "y": 4420005.3
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "circle",
+         "c": {
+          "x": 487003,
+          "y": 4420003
+         },
+         "r": 3
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "teğet-teğet-teğet: aynı üçgenin hipotenüse dıştan teğet dairesi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTangents",
+        "first": {
+         "uid": "$uidOf:1",
+         "near": {
+          "x": 487017,
+          "y": 4420000.3
+         }
+        },
+        "second": {
+         "uid": "$uidOf:2",
+         "near": {
+          "x": 487000.3,
+          "y": 4420017
+         }
+        },
+        "third": {
+         "uid": "$uidOf:10",
+         "near": {
+          "x": 487007,
+          "y": 4420003.8
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "circle",
+         "c": {
+          "x": 487018,
+          "y": 4420018
+         },
+         "r": 18
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "teğet-teğet-teğet: iki paralel doğru ve onları kesen doğru",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTangents",
+        "first": {
+         "uid": "$uidOf:1",
+         "near": {
+          "x": 487005,
+          "y": 4420000.3
+         }
+        },
+        "second": {
+         "uid": "$uidOf:3",
+         "near": {
+          "x": 487005,
+          "y": 4420009.7
+         }
+        },
+        "third": {
+         "uid": "$uidOf:2",
+         "near": {
+          "x": 487000.2,
+          "y": 4420005
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "circle",
+         "c": {
+          "x": 487005,
+          "y": 4420005
+         },
+         "r": 5
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "teğet-teğet-teğet: iki doğru ve bir daire",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTangents",
+        "first": {
+         "uid": "$uidOf:1",
+         "near": {
+          "x": 487016,
+          "y": 4420000.5
+         }
+        },
+        "second": {
+         "uid": "$uidOf:2",
+         "near": {
+          "x": 487000.5,
+          "y": 4420016
+         }
+        },
+        "third": {
+         "uid": "$uidOf:4",
+         "near": {
+          "x": 487026.8,
+          "y": 4420003.8
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "circle",
+         "c": {
+          "x": 487016.2917130661,
+          "y": 4420016.291713066
+         },
+         "r": 16.291713066130292
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "teğet-teğet-teğet: üç paralel doğru: no_tangent_circle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTangents",
+        "first": {
+         "uid": "$uidOf:1",
+         "near": {
+          "x": 487000,
+          "y": 4420000.2
+         }
+        },
+        "second": {
+         "uid": "$uidOf:3",
+         "near": {
+          "x": 487000,
+          "y": 4420009.8
+         }
+        },
+        "third": {
+         "uid": "$uidOf:12",
+         "near": {
+          "x": 487000,
+          "y": 4420019.8
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_tangent_circle",
+       "message": "Üç doğru paralel; üçüne birden teğet daire yok.",
+       "path": "constructions[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "teğet-teğet-teğet: elipse teğet olunmaz: not_tangent_kind",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTangents",
+        "first": {
+         "uid": "$uidOf:1",
+         "near": {
+          "x": 487003.5,
+          "y": 4420000.2
+         }
+        },
+        "second": {
+         "uid": "$uidOf:2",
+         "near": {
+          "x": 487000.2,
+          "y": 4420002.5
+         }
+        },
+        "third": {
+         "uid": "$uidOf:11",
+         "near": {
+          "x": 487108,
+          "y": 4420000
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_tangent_kind",
+       "message": "Teğet daire yalnız çizgiye, çoklu çizgiye, alana, yaya, daireye, yardımcı çizgiye ya da ışına değer; bu nesneye değmez.",
+       "path": "constructions[0].third"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "3 nokta: doğudan kuzeyden batıya, saat yönünün tersine",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcThreePoints",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "mid": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420010
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 486990,
+          "y": 4420000
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "arc",
+         "c": {
+          "x": 487000,
+          "y": 4420000
+         },
+         "r": 10,
+         "a0": 0,
+         "a1": 3.141592653589793
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "3 nokta saat yönünde verilince aynı yay saklanır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcThreePoints",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 486990,
+          "y": 4420000
+         }
+        },
+        "mid": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420010
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "arc",
+         "c": {
+          "x": 487000,
+          "y": 4420000
+         },
+         "r": 10,
+         "a0": 0,
+         "a1": 3.141592653589793
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "3 nokta: ortadaki nokta güneyde, alttaki yarım daire",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcThreePoints",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "mid": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4419990
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 486990,
+          "y": 4420000
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "arc",
+         "c": {
+          "x": 487000,
+          "y": 4420000
+         },
+         "r": 10,
+         "a0": 3.141592653589793,
+         "a1": 0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "3 nokta: genel üç nokta, merkez 70 basamakta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcThreePoints",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487001,
+          "y": 4420002
+         }
+        },
+        "mid": {
+         "kind": "at",
+         "at": {
+          "x": 487004,
+          "y": 4420009
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487007,
+          "y": 4420003
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "arc",
+         "c": {
+          "x": 487003.57692307694,
+          "y": 4420005.038461538
+         },
+         "r": 3.9840658961780187,
+         "a0": 5.746077053085206,
+         "a1": 4.008998262513427
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "3 nokta aynı doğruda: collinear_points",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcThreePoints",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "mid": {
+         "kind": "at",
+         "at": {
+          "x": 487002,
+          "y": 4420001
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487006,
+          "y": 4420003
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "collinear_points",
+       "message": "Üç nokta aynı doğru üzerinde; yay geçmez. Doğrunun dışında bir nokta verin.",
+       "path": "constructions[0].end"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–merkez–bitiş: çeyrek, bitiş yalnız doğrultuyu verir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartCentreEnd",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "centre": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420005
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "arc",
+         "c": {
+          "x": 487000,
+          "y": 4420000
+         },
+         "r": 10,
+         "a0": 0,
+         "a1": 1.5707963267948966
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–merkez–bitiş: yaya devam, yerleriyle (yayın bitişi ve merkezi)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartCentreEnd",
+        "start": {
+         "kind": "place",
+         "uid": "$uidOf:5",
+         "place": {
+          "kind": "end"
+         }
+        },
+        "centre": {
+         "kind": "place",
+         "uid": "$uidOf:5",
+         "place": {
+          "kind": "center"
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487050,
+          "y": 4419999
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "arc",
+         "c": {
+          "x": 487060,
+          "y": 4420000
+         },
+         "r": 10,
+         "a0": 1.5707963267948966,
+         "a1": 3.2412613060809554
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–merkez–bitiş: bitiş başlangıcın doğrultusunda: invalid_angle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartCentreEnd",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "centre": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487020,
+          "y": 4420000
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_angle",
+       "message": "Bitiş başlangıçla aynı doğrultuda; yay oluşmaz (tam daire Daire'yle çizilir).",
+       "path": "constructions[0].end"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–merkez–bitiş: başlangıç merkezde: same_points",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartCentreEnd",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "centre": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487005,
+          "y": 4420005
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "same_points",
+       "message": "Başlangıç merkezle aynı yerde; yarıçap sıfır olur. Ayrı noktalar verin.",
+       "path": "constructions[0].centre"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–merkez–bitiş: bitiş merkezde: same_points",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartCentreEnd",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "centre": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "same_points",
+       "message": "Bitiş merkezle aynı yerde; bitişin doğrultusu yok. Merkezden ayrı bir bitiş verin.",
+       "path": "constructions[0].end"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–merkez–açı: π/2 saat yönünün tersine",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartCentreAngle",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "centre": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "angle": 1.5707963267948966
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "arc",
+         "c": {
+          "x": 487000,
+          "y": 4420000
+         },
+         "r": 10,
+         "a0": 0,
+         "a1": 1.5707963267948966
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–merkez–açı: eksi π/2 saat yönünde, saklanan bitişten başlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartCentreAngle",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "centre": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "angle": -1.5707963267948966
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "arc",
+         "c": {
+          "x": 487000,
+          "y": 4420000
+         },
+         "r": 10,
+         "a0": 4.71238898038469,
+         "a1": 0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–merkez–açı: tam tur: invalid_angle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartCentreAngle",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "centre": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "angle": 6.283185307179586
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_angle",
+       "message": "Yay açısı sıfır ya da tam tur ve daha büyük olamaz; ikisinin arasında bir açı verin (eksi: saat yönünde).",
+       "path": "constructions[0].angle"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–merkez–açı: sıfır: invalid_angle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartCentreAngle",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "centre": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "angle": 0
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_angle",
+       "message": "Yay açısı sıfır ya da tam tur ve daha büyük olamaz; ikisinin arasında bir açı verin (eksi: saat yönünde).",
+       "path": "constructions[0].angle"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–merkez–kiriş: 10 m kiriş yarıçap 10'da 60°",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartCentreChord",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "centre": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "chord": 10
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "arc",
+         "c": {
+          "x": 487000,
+          "y": 4420000
+         },
+         "r": 10,
+         "a0": 0,
+         "a1": 1.0471975511965979
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–merkez–kiriş: eksi kiriş büyük yayı verir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartCentreChord",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "centre": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "chord": -10
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "arc",
+         "c": {
+          "x": 487000,
+          "y": 4420000
+         },
+         "r": 10,
+         "a0": 0,
+         "a1": 5.235987755982989
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–merkez–kiriş: çaptan uzun: chord_too_long",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartCentreChord",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "centre": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "chord": 25
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "chord_too_long",
+       "message": "Kiriş dairenin çapından uzun; en çok çap kadar bir kiriş verin.",
+       "path": "constructions[0].chord"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–merkez–kiriş: sıfır: invalid_distance",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartCentreChord",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "centre": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "chord": 0
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_distance",
+       "message": "Kiriş sıfır olamaz; sıfırdan farklı bir kiriş verin (eksi: büyük yay).",
+       "path": "constructions[0].chord"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–bitiş–açı: π/2, merkez kirişin solunda",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartEndAngle",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420010
+         }
+        },
+        "angle": 1.5707963267948966
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "arc",
+         "c": {
+          "x": 487000,
+          "y": 4420000
+         },
+         "r": 10,
+         "a0": 3.061616997868383e-17,
+         "a1": 1.5707963267948966
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–bitiş–açı: eksi 3π/2, saat yönünde büyük yay",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartEndAngle",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420010
+         }
+        },
+        "angle": -4.71238898038469
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "arc",
+         "c": {
+          "x": 487000,
+          "y": 4420000
+         },
+         "r": 9.999999999999998,
+         "a0": 1.5707963267948968,
+         "a1": 0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–bitiş–açı: başlangıç ve bitiş aynı: same_points",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartEndAngle",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "angle": 1.5707963267948966
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "same_points",
+       "message": "Başlangıç ve bitiş aynı yerde; aralarında yay yok. Ayrı iki nokta verin.",
+       "path": "constructions[0].end"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–bitiş–yön: kuzeye çıkan yarım daire",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartEndDirection",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 486990,
+          "y": 4420000
+         }
+        },
+        "direction": 1.5707963267948966
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "arc",
+         "c": {
+          "x": 487000,
+          "y": 4420000
+         },
+         "r": 10,
+         "a0": 0,
+         "a1": 3.141592653589793
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–bitiş–yön: kuzeydoğuya çıkan yay",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartEndDirection",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "direction": 0.7853981633974483
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "arc",
+         "c": {
+          "x": 487005,
+          "y": 4419995
+         },
+         "r": 7.0710678118654755,
+         "a0": 0.7853981633974484,
+         "a1": 2.356194490192345
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–bitiş–yön: bitiş teğetin doğrusunda: collinear_points",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartEndDirection",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 486990,
+          "y": 4420000
+         }
+        },
+        "direction": 3.141592653589793
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "collinear_points",
+       "message": "Bitiş noktası başlangıçtaki teğetin doğrusunda; yay değil doğru olur. Doğrunun dışında bir bitiş verin.",
+       "path": "constructions[0].end"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–bitiş–yarıçap: 20 m kiriş, 12,5 m küçük yay",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartEndRadius",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 486990,
+          "y": 4420000
+         }
+        },
+        "r": 12.5
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "arc",
+         "c": {
+          "x": 487000,
+          "y": 4419992.5
+         },
+         "r": 12.5,
+         "a0": 0.6435011087932844,
+         "a1": 2.498091544796509
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–bitiş–yarıçap: eksi yarıçap büyük yay",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartEndRadius",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 486990,
+          "y": 4420000
+         }
+        },
+        "r": -12.5
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "arc",
+         "c": {
+          "x": 487000,
+          "y": 4420007.5
+         },
+         "r": 12.5,
+         "a0": 5.639684198386302,
+         "a1": 3.785093762383078
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–bitiş–yarıçap: kirişin yarısından küçük: radius_too_small",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartEndRadius",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 486990,
+          "y": 4420000
+         }
+        },
+        "r": 5
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "radius_too_small",
+       "message": "Yarıçap iki uç arasındaki kirişin yarısından küçük; en az kirişin yarısı kadar bir yarıçap verin.",
+       "path": "constructions[0].r"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başlangıç–bitiş–yarıçap: sıfır: invalid_radius",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartEndRadius",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 486990,
+          "y": 4420000
+         }
+        },
+        "r": 0
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_radius",
+       "message": "Yarıçap sıfır olamaz; sıfırdan farklı bir yarıçap verin (eksi: büyük yay).",
+       "path": "constructions[0].r"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Devam: çizginin bitişinden doğuya, sola dönen yay",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcContinue",
+        "from": {
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "end"
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487030,
+          "y": 4420010
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "arc",
+         "c": {
+          "x": 487020,
+          "y": 4420010
+         },
+         "r": 10,
+         "a0": 4.71238898038469,
+         "a1": 5e-70
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Devam: çizginin başlangıcından geriye, batıya, saat yönünde",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcContinue",
+        "from": {
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "start"
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 486970,
+          "y": 4420010
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "arc",
+         "c": {
+          "x": 486980,
+          "y": 4420010
+         },
+         "r": 10,
+         "a0": 3.141592653589793,
+         "a1": 4.71238898038469
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Devam: yayın bitişinden aynı çember üzerinde",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcContinue",
+        "from": {
+         "uid": "$uidOf:5",
+         "place": {
+          "kind": "end"
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487050,
+          "y": 4420000
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "arc",
+         "c": {
+          "x": 487060,
+          "y": 4420000
+         },
+         "r": 10,
+         "a0": 1.5707963267948966,
+         "a1": 3.141592653589793
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Devam: açık çoklu çizginin son köşesinden kuzeye",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcContinue",
+        "from": {
+         "uid": "$uidOf:6",
+         "place": {
+          "kind": "vertex",
+          "part": 0,
+          "ring": 0,
+          "index": 2
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420050
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "arc",
+         "c": {
+          "x": 487000,
+          "y": 4420040
+         },
+         "r": 10,
+         "a0": 0,
+         "a1": 1.5707963267948966
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Devam: kapalı çoklu çizginin bitişi kapanan kenarın ucu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcContinue",
+        "from": {
+         "uid": "$uidOf:9",
+         "place": {
+          "kind": "end"
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487030,
+          "y": 4420020
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "arc",
+         "c": {
+          "x": 487035,
+          "y": 4420025
+         },
+         "r": 7.0710678118654755,
+         "a0": 3.9269908169872414,
+         "a1": 5.497787143782138
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Devam: kapalı çoklu çizginin başlangıcı yok: not_an_end",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcContinue",
+        "from": {
+         "uid": "$uidOf:9",
+         "place": {
+          "kind": "start"
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487030,
+          "y": 4420020
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_an_end",
+       "message": "Devam çizginin, çoklu çizginin ya da yayın bir ucundan sürer: başlangıcı (start) ya da bitişi (end); kapalı çoklu çizginin yalnız bitişi.",
+       "path": "constructions[0].from.place"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Devam: çoklu çizginin içteki köşesi uç değil: not_an_end",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcContinue",
+        "from": {
+         "uid": "$uidOf:6",
+         "place": {
+          "kind": "vertex",
+          "part": 0,
+          "ring": 0,
+          "index": 1
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420050
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_an_end",
+       "message": "Devam çizginin, çoklu çizginin ya da yayın bir ucundan sürer: başlangıcı (start) ya da bitişi (end); kapalı çoklu çizginin yalnız bitişi.",
+       "path": "constructions[0].from.place"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Devam: daireden sürülmez: not_an_end",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcContinue",
+        "from": {
+         "uid": "$uidOf:4",
+         "place": {
+          "kind": "end"
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420050
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_an_end",
+       "message": "Devam çizginin, çoklu çizginin ya da yayın bir ucundan sürer: başlangıcı (start) ya da bitişi (end); kapalı çoklu çizginin yalnız bitişi.",
+       "path": "constructions[0].from"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Devam: bitiş teğetin doğrusunda: collinear_points",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcContinue",
+        "from": {
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "end"
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487040,
+          "y": 4420000
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "collinear_points",
+       "message": "Bitiş noktası başlangıçtaki teğetin doğrusunda; yay değil doğru olur. Doğrunun dışında bir bitiş verin.",
+       "path": "constructions[0].end"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Devam: bitiş sürülen uçta: same_points",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcContinue",
+        "from": {
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "end"
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487020,
+          "y": 4420000
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "same_points",
+       "message": "Başlangıç ve bitiş aynı yerde; aralarında yay yok. Ayrı iki nokta verin.",
+       "path": "constructions[0].end"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Devam: yerleştirme olmayan nesnede blok yolu: piece_gone",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcContinue",
+        "from": {
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "end"
+         },
+         "path": [
+          0
+         ]
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487030,
+          "y": 4420010
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "piece_gone",
+       "message": "Blok yolunda böyle bir parça yok: yolun bir sırası tanımın dışında, yol bir yerleştirmede bitiyor ya da yerleştirme olmayan bir nesneden geçiyor.",
+       "path": "constructions[0].from.path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "eksen–uç: 20 m eksen ve 4 m diğer yarı eksen",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "ellipseAxis",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487020,
+          "y": 4420000
+         }
+        },
+        "other": 4
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "ellipse",
+         "c": {
+          "x": 487010,
+          "y": 4420000
+         },
+         "major": {
+          "x": 10,
+          "y": 0
+         },
+         "ratio": 0.4,
+         "t0": 0,
+         "t1": 0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "eksen–uç: diğer yarı eksen daha uzun: büyük eksen ona döner",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "ellipseAxis",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487020,
+          "y": 4420000
+         }
+        },
+        "other": 15
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "ellipse",
+         "c": {
+          "x": 487010,
+          "y": 4420000
+         },
+         "major": {
+          "x": 0,
+          "y": 15
+         },
+         "ratio": 0.6666666666666666,
+         "t0": 0,
+         "t1": 0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "merkez: döndürme π/3 ile diğer yarı eksen a·cos",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "ellipseCentre",
+        "centre": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "axisEnd": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420010
+         }
+        },
+        "rotation": 1.0471975511965976
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "ellipse",
+         "c": {
+          "x": 487000,
+          "y": 4420000
+         },
+         "major": {
+          "x": 0,
+          "y": 10
+         },
+         "ratio": 0.5000000000000001,
+         "t0": 0,
+         "t1": 0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "eliptik yay: büyük eksenden 0 ile π/2 arası",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "ellipseAxis",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487020,
+          "y": 4420000
+         }
+        },
+        "other": 4,
+        "startAngle": 0,
+        "endAngle": 1.5707963267948966
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "ellipse",
+         "c": {
+          "x": 487010,
+          "y": 4420000
+         },
+         "major": {
+          "x": 10,
+          "y": 0
+         },
+         "ratio": 0.4,
+         "t0": 0,
+         "t1": 1.5707963267948966
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "eliptik yay: dönük eksen, kutupsal açılar parametreye çevrilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "ellipseCentre",
+        "centre": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "axisEnd": {
+         "kind": "at",
+         "at": {
+          "x": 487006,
+          "y": 4420008
+         }
+        },
+        "other": 5,
+        "startAngle": 0.5235987755982988,
+        "endAngle": 2.5
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "ellipse",
+         "c": {
+          "x": 487000,
+          "y": 4420000
+         },
+         "major": {
+          "x": 6,
+          "y": 8
+         },
+         "ratio": 0.5,
+         "t0": 0.857071947850131,
+         "t1": 2.1606364113384338
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "eliptik yay: başlangıç ve bitiş aynı: invalid_angle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "ellipseAxis",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487020,
+          "y": 4420000
+         }
+        },
+        "other": 4,
+        "startAngle": 1,
+        "endAngle": 1
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_angle",
+       "message": "Eliptik yayın bitiş açısı başlangıcıyla aynı yerde olamaz; başka bir bitiş açısı verin.",
+       "path": "constructions[0].endAngle"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "eliptik yay: yalnız başlangıç: invalid_angle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "ellipseAxis",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487020,
+          "y": 4420000
+         }
+        },
+        "other": 4,
+        "startAngle": 1
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_angle",
+       "message": "Eliptik yayın başlangıç ve bitiş açısı birlikte verilir; ikisini de verin ya da ikisini de kaldırın.",
+       "path": "constructions[0].endAngle"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "diğer yarı eksen ve döndürme birlikte: invalid_half_axis",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "ellipseAxis",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487020,
+          "y": 4420000
+         }
+        },
+        "other": 4,
+        "rotation": 0.5
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_half_axis",
+       "message": "Diğer yarı eksen ya uzunluğuyla (other) ya döndürme açısıyla (rotation) verilir; ikisi birlikte verilmez.",
+       "path": "constructions[0].rotation"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "diğer yarı eksen de döndürme de yok: invalid_half_axis",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "ellipseCentre",
+        "centre": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "axisEnd": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420010
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_half_axis",
+       "message": "Diğer yarı ekseni uzunluğuyla (other) ya da döndürme açısıyla (rotation) verin.",
+       "path": "constructions[0].other"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "diğer yarı eksen eksi: invalid_half_axis",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "ellipseAxis",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487020,
+          "y": 4420000
+         }
+        },
+        "other": -4
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_half_axis",
+       "message": "Diğer yarı eksen sıfırdan büyük olmalı.",
+       "path": "constructions[0].other"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "döndürme 89,4°'den büyük: invalid_angle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "ellipseAxis",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487020,
+          "y": 4420000
+         }
+        },
+        "rotation": 1.6
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_angle",
+       "message": "Döndürme açısı 0 ile 89,4° (1,5603 radyan) arasında olmalı.",
+       "path": "constructions[0].rotation"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "eksenin iki ucu aynı: same_points",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "ellipseAxis",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "other": 4
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "same_points",
+       "message": "Eksenin iki ucu aynı yerde; eksen sıfır uzunlukta. Ayrı iki nokta verin.",
+       "path": "constructions[0].b"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "birkaç yapım sırasıyla; plan aynı cevabı verir, validate yalnız denetler",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTwoPoints",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487006,
+          "y": 4420008
+         }
+        }
+       },
+       {
+        "kind": "arcStartCentreEnd",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "centre": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420005
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "curves": [
+        {
+         "kind": "circle",
+         "c": {
+          "x": 487003,
+          "y": 4420004
+         },
+         "r": 5
+        },
+        {
+         "kind": "arc",
+         "c": {
+          "x": 487000,
+          "y": 4420000
+         },
+         "r": 10,
+         "a0": 0,
+         "a1": 1.5707963267948966
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    },
+    {
+     "op": "validate",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTwoPoints",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487006,
+          "y": 4420008
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ikinci yapım reddedilince hiçbir eğri verilmez; yer ikinci yapımındır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTwoPoints",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487006,
+          "y": 4420008
+         }
+        }
+       },
+       {
+        "kind": "arcContinue",
+        "from": {
+         "uid": "$uidOf:4",
+         "place": {
+          "kind": "end"
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420050
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_an_end",
+       "message": "Devam çizginin, çoklu çizginin ya da yayın bir ucundan sürer: başlangıcı (start) ya da bitişi (end); kapalı çoklu çizginin yalnız bitişi.",
+       "path": "constructions[1].from"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "hiç yapım yok: no_constructions",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": []
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_constructions",
+       "message": "0 yapım verildi: bir ile 10 000 arasında yapım verin.",
+       "path": "constructions"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kimliğin yazımı: invalid_uid",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTangents",
+        "first": {
+         "uid": "ABC",
+         "near": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "second": {
+         "uid": "$uidOf:2",
+         "near": {
+          "x": 487000,
+          "y": 4420001
+         }
+        },
+        "third": {
+         "uid": "$uidOf:10",
+         "near": {
+          "x": 487005,
+          "y": 4420005
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“ABC” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+       "path": "constructions[0].first.uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizimde olmayan nesne: entity_not_found",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTwoPoints",
+        "a": {
+         "kind": "place",
+         "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+         "place": {
+          "kind": "end"
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+       "path": "constructions[0].a.uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "nesnede olmayan yer: no_such_place",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcThreePoints",
+        "start": {
+         "kind": "place",
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "center"
+         }
+        },
+        "mid": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420010
+         }
+        },
+        "end": {
+         "kind": "at",
+         "at": {
+          "x": 486990,
+          "y": 4420000
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_such_place",
+       "message": "Nesnede böyle bir yer yok: köşe sırası halkanın dışında ya da yer bu nesne türünde bulunmuyor.",
+       "path": "constructions[0].start.place"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sayılar sonlu olmalı: önce noktalar, sonra açı ve yarıçap",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartCentreAngle",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "centre": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "angle": 1
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Noktanın kuzey (X) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+       "path": "constructions[0].centre.at.y"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "nonFinite": {
+      "constructions[0].centre.at.y": "NaN",
+      "constructions[0].angle": "Infinity"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "arcStartCentreAngle",
+        "start": {
+         "kind": "at",
+         "at": {
+          "x": 487010,
+          "y": 4420000
+         }
+        },
+        "centre": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "angle": 1
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Açı sonlu bir sayı değil (NaN ya da sonsuz). Radyan olarak bir sayı verin.",
+       "path": "constructions[0].angle"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "nonFinite": {
+      "constructions[0].angle": "Infinity"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "circleTangentTangentRadius",
+        "first": {
+         "uid": "$uidOf:1",
+         "near": {
+          "x": 487004,
+          "y": 4420000.5
+         }
+        },
+        "second": {
+         "uid": "$uidOf:2",
+         "near": {
+          "x": 487000.5,
+          "y": 4420004
+         }
+        },
+        "r": 3
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Yarıçap sonlu bir sayı değil (NaN ya da sonsuz). Metre olarak bir sayı verin.",
+       "path": "constructions[0].r"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "nonFinite": {
+      "constructions[0].r": "NaN"
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -222485,6 +222485,1204 @@
       ]
     },
     {
+      "id": "cad.curves.construct",
+      "version": 1,
+      "title": "Eğri yapımı",
+      "summary": "Daire, Yay ve Elips araçlarının yöntemleriyle daireyi, yayı ve elipsi neyle yapıldıklarıyla hesaplar: iki ya da üç noktadan daire, iki nesneye teğet ve yarıçaplı, üç nesneye teğet daire; üç noktadan, başlangıç–merkez–bitiş, –açı, –kiriş, başlangıç–bitiş–açı, –yön, –yarıçap yay ve bir nesnenin ucundan teğet Devam; eksen uçlarından ya da merkezden elips ve eliptik yay (diğer yarı eksen ya da döndürme). Açılar doğudan saat yönünün tersine radyan. Cevap cad.circle.create, cad.arc.create ve cad.entities.create'in elipsinin aldığıdır; araçlar aynı hesabı kullanır. Çizimi değiştirmez; plan aynı cevabı verir.",
+      "aliases": [
+        "egriyap",
+        "egri-yapimi"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "CurveConstruction": {
+            "description": "One curve to construct: Daire's, Yay's and Elips's methods (AutoCAD's CIRCLE, ARC and ELLIPSE). A circle by\nits centre and radius or diameter needs no construction: `cad.circle.create` takes it (r = diameter / 2).",
+            "oneOf": [
+              {
+                "description": "Daire, 2 nokta: the circle on the diameter from `a` to `b`.",
+                "properties": {
+                  "a": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "b": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "kind": {
+                    "const": "circleTwoPoints",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "a",
+                  "b"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Daire, 3 nokta: the circle through three points.",
+                "properties": {
+                  "a": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "b": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "c": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "kind": {
+                    "const": "circleThreePoints",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "a",
+                  "b",
+                  "c"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Daire, teğet-teğet-yarıçap: the circle of radius `r` touching two objects' edges nearest their near\npoints (a straight edge as its whole line, an arc as its whole circle), the one whose touching points are\nnearest the near points. Two parallel lines `2r` apart give the one across from the near points' middle.",
+                "properties": {
+                  "first": {
+                    "$ref": "#/$defs/EdgeNear"
+                  },
+                  "kind": {
+                    "const": "circleTangentTangentRadius",
+                    "type": "string"
+                  },
+                  "r": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "second": {
+                    "$ref": "#/$defs/EdgeNear"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "first",
+                  "second",
+                  "r"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Daire, teğet-teğet-teğet: the circle touching three objects' edges (Apollonius), the one whose touching\npoints are nearest the near points.",
+                "properties": {
+                  "first": {
+                    "$ref": "#/$defs/EdgeNear"
+                  },
+                  "kind": {
+                    "const": "circleTangents",
+                    "type": "string"
+                  },
+                  "second": {
+                    "$ref": "#/$defs/EdgeNear"
+                  },
+                  "third": {
+                    "$ref": "#/$defs/EdgeNear"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "first",
+                  "second",
+                  "third"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Yay, 3 nokta: from `start` through `mid` to `end`.",
+                "properties": {
+                  "end": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "kind": {
+                    "const": "arcThreePoints",
+                    "type": "string"
+                  },
+                  "mid": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "start": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "start",
+                  "mid",
+                  "end"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Yay, başlangıç–merkez–bitiş (and merkez–başlangıç–bitiş, başlangıç–bitiş–merkez): counter-clockwise\nfrom `start` round `centre` to the ray through `end`; the radius is the start's.",
+                "properties": {
+                  "centre": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "end": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "kind": {
+                    "const": "arcStartCentreEnd",
+                    "type": "string"
+                  },
+                  "start": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "start",
+                  "centre",
+                  "end"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Yay, başlangıç–merkez–açı (and merkez–başlangıç–açı): `angle` radians round `centre` from `start`,\ncounter-clockwise when positive; less than a whole turn.",
+                "properties": {
+                  "angle": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "centre": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "kind": {
+                    "const": "arcStartCentreAngle",
+                    "type": "string"
+                  },
+                  "start": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "start",
+                  "centre",
+                  "angle"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Yay, başlangıç–merkez–uzunluk (and merkez–başlangıç–uzunluk): counter-clockwise from `start` round\n`centre` until the chord is `chord` metres; a negative chord gives the major arc.",
+                "properties": {
+                  "centre": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "chord": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "arcStartCentreChord",
+                    "type": "string"
+                  },
+                  "start": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "start",
+                  "centre",
+                  "chord"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Yay, başlangıç–bitiş–açı: from `start` to `end` turning `angle` radians, counter-clockwise when positive.",
+                "properties": {
+                  "angle": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "end": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "kind": {
+                    "const": "arcStartEndAngle",
+                    "type": "string"
+                  },
+                  "start": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "start",
+                  "end",
+                  "angle"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Yay, başlangıç–bitiş–yön: from `start`, leaving it at `direction` radians, to `end`.",
+                "properties": {
+                  "direction": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "end": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "kind": {
+                    "const": "arcStartEndDirection",
+                    "type": "string"
+                  },
+                  "start": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "start",
+                  "end",
+                  "direction"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Yay, başlangıç–bitiş–yarıçap: from `start` to `end` with radius `|r|`, counter-clockwise; a positive\nradius gives the minor arc, a negative one the major.",
+                "properties": {
+                  "end": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "kind": {
+                    "const": "arcStartEndRadius",
+                    "type": "string"
+                  },
+                  "r": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "start": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "start",
+                  "end",
+                  "r"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Yay, Devam: tangent to a line, an arc or a polyline at its end (`place` end: on the way it runs; start:\non backwards from its start), to `end`.",
+                "properties": {
+                  "end": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "from": {
+                    "$ref": "#/$defs/ObjectEnd"
+                  },
+                  "kind": {
+                    "const": "arcContinue",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "from",
+                  "end"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Elips, eksen–uç: one axis from `a` to `b`, the other half-axis `other` metres long or the first axis seen\ntilted by `rotation` radians (0 to 89.4°): exactly one of the two. With `startAngle` and `endAngle`\n(both or neither; radians counter-clockwise from the major axis, as seen from the centre), an elliptical\narc.",
+                "properties": {
+                  "a": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "b": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "endAngle": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "rad"
+                  },
+                  "kind": {
+                    "const": "ellipseAxis",
+                    "type": "string"
+                  },
+                  "other": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "length"
+                  },
+                  "rotation": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "rad"
+                  },
+                  "startAngle": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "rad"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "a",
+                  "b"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Elips, merkez: the centre, one axis's end, then as [`CurveConstruction::EllipseAxis`].",
+                "properties": {
+                  "axisEnd": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "centre": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "endAngle": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "rad"
+                  },
+                  "kind": {
+                    "const": "ellipseCentre",
+                    "type": "string"
+                  },
+                  "other": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "length"
+                  },
+                  "rotation": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "rad"
+                  },
+                  "startAngle": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "rad"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "centre",
+                  "axisEnd"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "EdgeNear": {
+            "description": "An object's edge as a click picks it: of the object's edges of the kind\nthe measure takes (straight, an arc, a circle), the one nearest `near`.",
+            "properties": {
+              "near": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where it was clicked: its nearest edge is the one measured. An angle's\narms reach as far as their edges were clicked.",
+                "x-unit": "length"
+              },
+              "uid": {
+                "description": "The object's persistent id (lowercase UUID text with hyphens).",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "near"
+            ],
+            "type": "object"
+          },
+          "MeasuredPoint": {
+            "description": "A measured point: coordinates, or a place on an object.",
+            "oneOf": [
+              {
+                "description": "Coordinates: the point follows nothing.",
+                "properties": {
+                  "at": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "at",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "at"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A place on an object: the point is the place's now. Hizalı's,\nDoğrusal's, Koordinat's, Semt's and Eğim's points follow their places\nfrom then on (docs/adr/0249 §3); the others' are read from them.",
+                "properties": {
+                  "kind": {
+                    "const": "place",
+                    "type": "string"
+                  },
+                  "path": {
+                    "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3).",
+                    "items": {
+                      "format": "uint32",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "type": "array",
+                    "x-unit": "index"
+                  },
+                  "place": {
+                    "$ref": "#/$defs/SubPlace"
+                  },
+                  "uid": {
+                    "description": "The object's persistent id (lowercase UUID text with hyphens).",
+                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "uid",
+                  "place"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "ObjectEnd": {
+            "description": "An object's end an extension starts from: a line's or an arc's start or end, an open path's first or last\nvertex (as a place, docs/adr/0249); inside an insert, the piece's (docs/adr/0263 §3).",
+            "properties": {
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the end is on.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
+              },
+              "place": {
+                "$ref": "#/$defs/SubPlace"
+              },
+              "uid": {
+                "description": "The object's persistent id (lowercase UUID text with hyphens).",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "place"
+            ],
+            "type": "object"
+          },
+          "SubPlace": {
+            "description": "A place on an object.",
+            "oneOf": [
+              {
+                "description": "A point object's position: part 0 its own, `k` its `k`th extra point (docs/adr/0174).",
+                "properties": {
+                  "kind": {
+                    "const": "node",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A line's, arc's or elliptical arc's start.",
+                "properties": {
+                  "kind": {
+                    "const": "start",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Its end.",
+                "properties": {
+                  "kind": {
+                    "const": "end",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A circle's, arc's or ellipse's centre.",
+                "properties": {
+                  "kind": {
+                    "const": "center",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A path's vertex: part 0 the object's own path, `k` its `k`th extra part; ring 0 the outer ring, `h` its\n`h`th hole; the vertex's index in the ring.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "vertex",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The middle of a line (all zero) or of a path's edge from vertex `index` to the next.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "mid",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.curves.construct` v1: the curves the constructions give, in their order. It reads no\nselection, view or snap setting (TODOS.md CMD-07) and writes nothing.\n\nRefusals (`CommandError.code`, at `constructions[i]…`), checked construction by construction in order:\n`no_constructions` (none, or more than 10 000), `not_finite` (a coordinate, a near point, an angle, a\nlength), `invalid_uid`, `entity_not_found`, `no_such_place`, `piece_gone`; then by kind:\n`same_points` (two points of it in one place), `collinear_points` (three points on a line, an end on the\nstart's tangent), `invalid_angle` (an angle of zero or a whole turn or more, an end on the start's ray, an\nelliptical arc's start and end at one place, a rotation outside 0 to 89.4°, one of the arc's angles\nalone), `invalid_radius` (not above zero), `radius_too_small` (less than half the chord), `invalid_distance`\n(a chord of zero), `chord_too_long` (more than the diameter), `invalid_half_axis` (the other half-axis not\nabove zero, or both or neither of it and the rotation), `not_tangent_kind` (an object a circle cannot touch),\n`no_tangent_circle` (no circle touches them so), `not_an_end` (an object Devam cannot continue).",
+        "properties": {
+          "constructions": {
+            "description": "One to 10 000 constructions.",
+            "items": {
+              "$ref": "#/$defs/CurveConstruction"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "constructions"
+        ],
+        "title": "CurvesConstruct",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "ConstructedCurve": {
+            "description": "A constructed curve, as the create commands take it.",
+            "oneOf": [
+              {
+                "description": "`cad.circle.create`'s `c` and `r`.",
+                "properties": {
+                  "c": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "circle",
+                    "type": "string"
+                  },
+                  "r": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "c",
+                  "r"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "`cad.arc.create`'s `c`, `r`, `a0` and `a1`: counter-clockwise from `a0` to `a1`, both in [0, 2π).",
+                "properties": {
+                  "a0": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "a1": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "c": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "arc",
+                    "type": "string"
+                  },
+                  "r": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "c",
+                  "r",
+                  "a0",
+                  "a1"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "`cad.entities.create`'s ellipse geometry: the centre, the major half-axis as a vector, the minor to major\nratio (above zero, at most 1) and the parameters it runs between (equal: a whole ellipse).",
+                "properties": {
+                  "c": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "ellipse",
+                    "type": "string"
+                  },
+                  "major": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "ratio": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  },
+                  "t0": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "t1": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "c",
+                  "major",
+                  "ratio",
+                  "t0",
+                  "t1"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.curves.construct` v1, and its plan: the curves, one per construction, in their order.",
+        "properties": {
+          "curves": {
+            "items": {
+              "$ref": "#/$defs/ConstructedCurve"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "curves"
+        ],
+        "title": "CurvesConstructed",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "ConstructedCurve": {
+            "description": "A constructed curve, as the create commands take it.",
+            "oneOf": [
+              {
+                "description": "`cad.circle.create`'s `c` and `r`.",
+                "properties": {
+                  "c": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "circle",
+                    "type": "string"
+                  },
+                  "r": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "c",
+                  "r"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "`cad.arc.create`'s `c`, `r`, `a0` and `a1`: counter-clockwise from `a0` to `a1`, both in [0, 2π).",
+                "properties": {
+                  "a0": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "a1": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "c": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "arc",
+                    "type": "string"
+                  },
+                  "r": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "c",
+                  "r",
+                  "a0",
+                  "a1"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "`cad.entities.create`'s ellipse geometry: the centre, the major half-axis as a vector, the minor to major\nratio (above zero, at most 1) and the parameters it runs between (equal: a whole ellipse).",
+                "properties": {
+                  "c": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "ellipse",
+                    "type": "string"
+                  },
+                  "major": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "ratio": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  },
+                  "t0": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "t1": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "c",
+                  "major",
+                  "ratio",
+                  "t0",
+                  "t1"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.curves.construct` v1, and its plan: the curves, one per construction, in their order.",
+        "properties": {
+          "curves": {
+            "items": {
+              "$ref": "#/$defs/ConstructedCurve"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "curves"
+        ],
+        "title": "CurvesConstructed",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "operation": "circleTangentTangentRadius",
+            "kinds": [
+              "line",
+              "polyline",
+              "polygon",
+              "arc",
+              "circle",
+              "xline",
+              "ray"
+            ],
+            "refusedWith": "not_tangent_kind",
+            "note": "Doğru ve çoklu çizginin düz kenarı bütün doğrusuyla, yay ve yaylı kenar bütün çemberiyle sayılır."
+          },
+          {
+            "operation": "circleTangents",
+            "kinds": [
+              "line",
+              "polyline",
+              "polygon",
+              "arc",
+              "circle",
+              "xline",
+              "ray"
+            ],
+            "refusedWith": "not_tangent_kind",
+            "note": "Doğru ve çoklu çizginin düz kenarı bütün doğrusuyla, yay ve yaylı kenar bütün çemberiyle sayılır."
+          },
+          {
+            "operation": "arcContinue",
+            "kinds": [
+              "line",
+              "polyline",
+              "arc"
+            ],
+            "refusedWith": "not_an_end",
+            "note": "Devam çizginin, çoklu çizginin ya da yayın bitişinden yönüyle, başlangıcından tersine sürer; kapalı çoklu çizginin başlangıcı yoktur."
+          }
+        ],
+        "refusals": [
+          "no_constructions",
+          "not_finite",
+          "invalid_uid",
+          "entity_not_found",
+          "no_such_place",
+          "piece_gone",
+          "same_points",
+          "collinear_points",
+          "invalid_angle",
+          "invalid_radius",
+          "radius_too_small",
+          "invalid_distance",
+          "chord_too_long",
+          "invalid_half_axis",
+          "not_tangent_kind",
+          "no_tangent_circle",
+          "not_an_end"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Üç noktadan yay ve bir çizginin ucundan teğet devam",
+          "input": {
+            "constructions": [
+              {
+                "end": {
+                  "at": {
+                    "x": -10.0,
+                    "y": 0.0
+                  },
+                  "kind": "at"
+                },
+                "kind": "arcThreePoints",
+                "mid": {
+                  "at": {
+                    "x": 0.0,
+                    "y": 10.0
+                  },
+                  "kind": "at"
+                },
+                "start": {
+                  "at": {
+                    "x": 10.0,
+                    "y": 0.0
+                  },
+                  "kind": "at"
+                }
+              },
+              {
+                "end": {
+                  "at": {
+                    "x": 20.0,
+                    "y": 10.0
+                  },
+                  "kind": "at"
+                },
+                "from": {
+                  "place": {
+                    "kind": "end"
+                  },
+                  "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+                },
+                "kind": "arcContinue"
+              }
+            ]
+          }
+        },
+        {
+          "title": "İki nesneye teğet, 5 m yarıçaplı daire",
+          "input": {
+            "constructions": [
+              {
+                "first": {
+                  "near": {
+                    "x": 0.0,
+                    "y": 3.0
+                  },
+                  "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+                },
+                "kind": "circleTangentTangentRadius",
+                "r": 5.0,
+                "second": {
+                  "near": {
+                    "x": 3.0,
+                    "y": 0.0
+                  },
+                  "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "title": "Eksen uçlarından eliptik yay",
+          "input": {
+            "constructions": [
+              {
+                "a": {
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "kind": "at"
+                },
+                "b": {
+                  "at": {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  "kind": "at"
+                },
+                "endAngle": 1.5707963267948966,
+                "kind": "ellipseAxis",
+                "other": 4.0,
+                "startAngle": 0.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.dxf",
       "version": 1,
       "title": "DXF dışa aktar",
@@ -223784,6 +224982,48 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Nesnede düz kenar yok; paralel doğrultusu düz kenardan alınır."
+    },
+    {
+      "code": "collinear_points",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Noktalar aynı doğru üzerinde (ya da bitiş başlangıcın teğetinde); daire ya da yay geçmez."
+    },
+    {
+      "code": "invalid_angle",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Açı yay vermiyor: sıfır, tam tur ya da daha büyük, bitiş başlangıçla aynı doğrultuda ya da döndürme 0–89,4° dışında."
+    },
+    {
+      "code": "radius_too_small",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Yarıçap iki uç arasındaki kirişin yarısından küçük; yay iki uca ulaşmaz."
+    },
+    {
+      "code": "chord_too_long",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kiriş dairenin çapından uzun."
+    },
+    {
+      "code": "invalid_half_axis",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Elipsin diğer yarı ekseni sıfırdan büyük olmalı ve ya uzunluğuyla ya döndürme açısıyla (biri) verilir."
+    },
+    {
+      "code": "not_tangent_kind",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Teğet daire çizgiye, çoklu çizgiye, alana, yaya, daireye, yardımcı çizgiye ya da ışına değer; bu nesneye değmez."
+    },
+    {
+      "code": "no_tangent_circle",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesnelere bu biçimde teğet bir daire yok (paralel doğrular, ulaşmayan yarıçap, birbirini içeren daireler)."
     },
     {
       "code": "invalid_aperture",

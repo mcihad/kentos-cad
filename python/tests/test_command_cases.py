@@ -172,7 +172,7 @@ class Case:
             slot = got["output"]["id"]
             assert self.slots()[slot].uid == uid, f"{at}: output.uid {uid} is not slot {slot}'s"
             want["output"]["uid"] = uid
-        same(got, self.fill(want, at), f"{at}: result")
+        same(got, self.fill(want, at), f"{at}: result", step.get("within"))
 
     def check(self, expect: dict[str, Any] | None, before: str, at: str) -> None:
         if not expect:
@@ -322,21 +322,26 @@ def wire(outcome: cad.Outcome[Any]) -> dict[str, Any]:
     return {"status": outcome.status, "output": output, "warnings": notes}
 
 
-def same(got: Any, want: Any, at: str) -> None:
+def same(got: Any, want: Any, at: str, within: float | None = None) -> None:
     """Equal as JSON, numbers as numbers (the file's 1 is 1.0); an expected "$any" takes whatever is there (a reader's
-    report, docs/adr/0257 §3)."""
+    report, docs/adr/0257 §3). With `within`, numbers within it of each other (a transcendental value the reference
+    rounds once, docs/adr/0289 §4)."""
     if want == "$any":
         return
     if isinstance(want, dict):
         assert isinstance(got, dict) and set(got) == set(want), f"{at}: {json.dumps(got)} != {json.dumps(want)}"
         for k in want:
-            same(got[k], want[k], f"{at}.{k}")
+            same(got[k], want[k], f"{at}.{k}", within)
     elif isinstance(want, list):
         assert isinstance(got, list) and len(got) == len(want), f"{at}: {json.dumps(got)} != {json.dumps(want)}"
         for i, (a, b) in enumerate(zip(got, want)):
-            same(a, b, f"{at}[{i}]")
+            same(a, b, f"{at}[{i}]", within)
     elif isinstance(want, (int, float)) and not isinstance(want, bool):
-        assert isinstance(got, (int, float)) and not isinstance(got, bool) and got == want, f"{at}: {got!r} != {want!r}"
+        assert isinstance(got, (int, float)) and not isinstance(got, bool), f"{at}: {got!r} != {want!r}"
+        if within is None:
+            assert got == want, f"{at}: {got!r} != {want!r}"
+        else:
+            assert abs(got - want) <= within, f"{at}: {got!r} != {want!r} (±{within})"
     else:
         assert got == want, f"{at}: {got!r} != {want!r}"
 

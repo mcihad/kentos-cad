@@ -13,6 +13,7 @@ mod colour;
 mod common;
 mod constructing;
 mod coordinate_z;
+mod curve_methods;
 mod data_search;
 mod dimension;
 mod dimension_chains;
