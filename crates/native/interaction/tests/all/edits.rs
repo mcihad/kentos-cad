@@ -382,7 +382,7 @@ fn a_chamfer_cuts_where_two_lines_meet() {
     // Slots are not given twice: the undone cut had 14.
     assert!(near(&line(&b, 15), &[[15.0, 4.0], [14.0, 6.0]]));
     assert!(b.type_text("K"));
-    // Two lines picked one after the other: a line and a polyline do not make a corner.
+    // Two sides picked one after the other: a line and a polyline's last edge in line with it make no corner.
     b.click(20.0, 4.0);
     assert_eq!(
         b.session.prompt().text(),
@@ -391,9 +391,7 @@ fn a_chamfer_cuts_where_two_lines_meet() {
     b.click(5.0, 4.0);
     assert_eq!(
         b.last_text(),
-        Some(
-            "Çoklu çizgide köşe için köşenin kendisine ya da aynı nesnenin iki komşu kenarına tıklayın."
-        )
+        Some("Çizgiler paralel ya da seçilen tarafta çizgi yok.")
     );
     // Esc steps back to finding a corner.
     assert!(b.run(|s, cx| s.cancel(cx)));
@@ -403,6 +401,22 @@ fn a_chamfer_cuts_where_two_lines_meet() {
             .text()
             .starts_with("Pah: kesilecek köşeye tıklayın")
     );
+}
+
+/// A line and an open polyline's end edge make a corner (docs/adr/0295): the polyline's free end moves to the cut.
+#[test]
+fn a_chamfer_joins_a_line_and_a_polyline_end() {
+    let mut b = bench(&[]);
+    b.start("chamfer");
+    assert!(b.type_text("K"));
+    assert!(b.type_text("K"));
+    b.click(14.0, 10.0);
+    b.click(5.0, 4.0);
+    assert!(b.type_text("2"));
+    assert_eq!(b.last_text(), Some("Pah kırıldı: 2.000 m."));
+    assert!(near(&line(&b, 6), &[[14.0, 16.0], [14.0, 6.0]]));
+    assert!(near(&path(&b, 4), &[[0.0, 14.0], [0.0, 4.0], [12.0, 4.0]]));
+    assert_eq!(b.doc.undo().as_deref(), Some("Pah"));
 }
 
 // ── Kır ─────────────────────────────────────────────────────────────────────

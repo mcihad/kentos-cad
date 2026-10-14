@@ -400,6 +400,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   Buda ve Uzat'ta AutoCAD'in seçenekleri: Çit (`fence`) ve Kesişen (`crossing`) komutun girdisi, Uzantılar (`edgeMode`: çizgi doğrusuyla,
   yay çemberiyle, açık çoklu çizginin uç kenarları), hızlı kipte kesilmeyen nesnenin silinmesi (`eraseUncut`), kalan parçanın bütünüyle
   gitmesi; araçta K, boş yere tıklama, U ve Sil (R); tutamaç kipinin Döndür'ü projenin açı düzeniyle (ADR 0294);
+  Köşe yuvarla ve Pah'ta iki nesne: çizgi ya da açık çoklu çizginin uç kenarı (`corner::side_of`, `lines_corner`), aynı yolun iki ucu
+  yolu kapatır; Tüm köşeler uçları buluşan çizgilerde de (`corner::line_corners`), araçlar aynı işlevlerle (ADR 0295);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);

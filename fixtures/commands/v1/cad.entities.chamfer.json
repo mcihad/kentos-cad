@@ -1633,7 +1633,7 @@
       ]
     },
     {
-      "name": "Tüm köşeler yalnız yolda",
+      "name": "Tüm köşeler: tek başına çizgi köşe değildir",
       "steps": [
         {
           "op": "execute",
@@ -1650,7 +1650,7 @@
             "status": "failed",
             "error": {
               "code": "not_a_corner",
-              "message": "Tüm köşeler yalnız çoklu çizgide ve alanda işlenir.",
+              "message": "Tüm köşeler çoklu çizgide, alanda ve uçları birbirine değen çizgilerde işlenir.",
               "path": "corner.uids[0]"
             }
           },

@@ -13,13 +13,15 @@
 //! make a curve, objects a circle can touch, a circle that touches them.
 
 use kentos_contracts::{
-    CommandResult, ConstructedCurve, CurveConstruction, CurvesConstruct, CurvesConstructed, EdgeNear,
-    MeasuredPoint, ObjectEnd, SubPlace,
+    CommandResult, ConstructedCurve, CurveConstruction, CurvesConstruct, CurvesConstructed,
+    EdgeNear, MeasuredPoint, ObjectEnd, SubPlace,
 };
 use kentos_domain::Document;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::arc::{ArcGeom, arc_through, circle_through};
-use kentos_geometry_core::geom::ellipse::{EllipseGeom, ellipse_from_axis, ellipse_from_center, param_at_polar};
+use kentos_geometry_core::geom::ellipse::{
+    EllipseGeom, ellipse_from_axis, ellipse_from_center, param_at_polar,
+};
 use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geom::shapes::{
     arc_start_center_chord, arc_start_center_sweep, arc_start_center_to, arc_start_end_direction,
@@ -56,12 +58,18 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &CurvesConstruct) -> CommandRe
 }
 
 /// The curves; the same answer as [`execute`].
-pub fn plan(cx: &ExecutionContext<'_>, input: &CurvesConstruct) -> CommandResult<CurvesConstructed> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &CurvesConstruct,
+) -> CommandResult<CurvesConstructed> {
     answer(cx.doc, input)
 }
 
 /// The curves. Writes nothing.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: CurvesConstruct) -> CommandResult<CurvesConstructed> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: CurvesConstruct,
+) -> CommandResult<CurvesConstructed> {
     answer(cx.doc, &input)
 }
 
@@ -109,12 +117,7 @@ fn point_in(doc: Option<&Document>, p: &MeasuredPoint, path: &str) -> Result<Vec
 /// An arc as the core keeps it.
 pub fn arc_geom(c: &ConstructedCurve) -> Option<ArcGeom> {
     match *c {
-        ConstructedCurve::Arc { c, r, a0, a1 } => Some(ArcGeom {
-            c: v(c),
-            r,
-            a0,
-            a1,
-        }),
+        ConstructedCurve::Arc { c, r, a0, a1 } => Some(ArcGeom { c: v(c), r, a0, a1 }),
         _ => None,
     }
 }
@@ -236,9 +239,11 @@ fn apart(a: Vec2, b: Vec2, message: &str, path: &str) -> Result<(), Stop> {
     Ok(())
 }
 
-const THREE_APART: &str = "Üç noktadan ikisi aynı yerde; aralarından daire geçmez. Ayrı üç nokta verin.";
+const THREE_APART: &str =
+    "Üç noktadan ikisi aynı yerde; aralarından daire geçmez. Ayrı üç nokta verin.";
 const ENDS_APART: &str = "Başlangıç ve bitiş aynı yerde; aralarında yay yok. Ayrı iki nokta verin.";
-const START_CENTRE: &str = "Başlangıç merkezle aynı yerde; yarıçap sıfır olur. Ayrı noktalar verin.";
+const START_CENTRE: &str =
+    "Başlangıç merkezle aynı yerde; yarıçap sıfır olur. Ayrı noktalar verin.";
 const ON_TANGENT: &str = "Bitiş noktası başlangıçtaki teğetin doğrusunda; yay değil doğru olur. Doğrunun dışında bir bitiş verin.";
 const ARC_ANGLE: &str = "Yay açısı sıfır ya da tam tur ve daha büyük olamaz; ikisinin arasında bir açı verin (eksi: saat yönünde).";
 
@@ -255,7 +260,11 @@ fn circle(c: Vec2, r: f64) -> ConstructedCurve {
     ConstructedCurve::Circle { c: w(c), r }
 }
 
-fn one(doc: Option<&Document>, c: &CurveConstruction, path: &str) -> Result<ConstructedCurve, Stop> {
+fn one(
+    doc: Option<&Document>,
+    c: &CurveConstruction,
+    path: &str,
+) -> Result<ConstructedCurve, Stop> {
     match c {
         CurveConstruction::CircleTwoPoints { a, b } => {
             let [a, b] = points(doc, path, [("a", a), ("b", b)], || Ok(()))?;
@@ -431,8 +440,9 @@ fn one(doc: Option<&Document>, c: &CurveConstruction, path: &str) -> Result<Cons
             })?;
             apart(s, e, ENDS_APART, &format!("{path}.end"))?;
             let dir = Vec2::new(cos(*direction), sin(*direction));
-            let g = arc_start_end_direction(s, e, dir)
-                .ok_or_else(|| refuse(codes::COLLINEAR_POINTS, ON_TANGENT, &format!("{path}.end")))?;
+            let g = arc_start_end_direction(s, e, dir).ok_or_else(|| {
+                refuse(codes::COLLINEAR_POINTS, ON_TANGENT, &format!("{path}.end"))
+            })?;
             Ok(arc(g))
         }
         CurveConstruction::ArcStartEndRadius { start, end, r } => {
@@ -463,8 +473,9 @@ fn one(doc: Option<&Document>, c: &CurveConstruction, path: &str) -> Result<Cons
             let tangent = continued(doc, from, &format!("{path}.from"))?;
             let e = point_in(doc, end, &format!("{path}.end"))?;
             apart(tangent.p, e, ENDS_APART, &format!("{path}.end"))?;
-            let g = arc_start_end_direction(tangent.p, e, tangent.dir)
-                .ok_or_else(|| refuse(codes::COLLINEAR_POINTS, ON_TANGENT, &format!("{path}.end")))?;
+            let g = arc_start_end_direction(tangent.p, e, tangent.dir).ok_or_else(|| {
+                refuse(codes::COLLINEAR_POINTS, ON_TANGENT, &format!("{path}.end"))
+            })?;
             Ok(arc(g))
         }
         CurveConstruction::EllipseAxis {
@@ -496,9 +507,12 @@ fn one(doc: Option<&Document>, c: &CurveConstruction, path: &str) -> Result<Cons
             start_angle,
             end_angle,
         } => {
-            let [c, e] = points(doc, path, [("centre", centre), ("axisEnd", axis_end)], || {
-                ellipse_numbers(*other, *rotation, *start_angle, *end_angle, path)
-            })?;
+            let [c, e] = points(
+                doc,
+                path,
+                [("centre", centre), ("axisEnd", axis_end)],
+                || ellipse_numbers(*other, *rotation, *start_angle, *end_angle, path),
+            )?;
             apart(
                 c,
                 e,
@@ -520,7 +534,11 @@ fn three_apart(a: Vec2, b: Vec2, c: Vec2, path: &str, later: [&str; 2]) -> Resul
 }
 
 fn near_numbers(e: &EdgeNear, path: &str) -> Result<(), Stop> {
-    checks::point(e.near, "Teğet noktasının yakınındaki noktanın", &format!("{path}.near"))
+    checks::point(
+        e.near,
+        "Teğet noktasının yakınındaki noktanın",
+        &format!("{path}.near"),
+    )
 }
 
 /// The edge of `e`'s object nearest its near point, when a circle can touch the object.
@@ -548,7 +566,11 @@ fn continued(
     let doc = drawing(doc, path)?;
     let e = object(doc, &from.uid, path)?;
     let shape = crate::blocks::place_shape(doc.blocks(), e, &from.path).ok_or_else(|| {
-        refuse(codes::PIECE_GONE, crate::blocks::NO_PIECE, &format!("{path}.path"))
+        refuse(
+            codes::PIECE_GONE,
+            crate::blocks::NO_PIECE,
+            &format!("{path}.path"),
+        )
     })?;
     let not_an_end = |at: &str| {
         refuse(
@@ -557,7 +579,10 @@ fn continued(
             at,
         )
     };
-    if !matches!(shape, Shape::Line { .. } | Shape::Polyline { .. } | Shape::Arc { .. }) {
+    if !matches!(
+        shape,
+        Shape::Line { .. } | Shape::Polyline { .. } | Shape::Arc { .. }
+    ) {
         return Err(not_an_end(path));
     }
     let count = match &shape {
@@ -610,7 +635,12 @@ fn ellipse_numbers(
 }
 
 /// The other half-axis: given, or the first one (`first`, its half) seen tilted by the rotation.
-fn half_axis(first: f64, other: Option<f64>, rotation: Option<f64>, path: &str) -> Result<f64, Stop> {
+fn half_axis(
+    first: f64,
+    other: Option<f64>,
+    rotation: Option<f64>,
+    path: &str,
+) -> Result<f64, Stop> {
     match (other, rotation) {
         (Some(_), Some(_)) => Err(refuse(
             codes::INVALID_HALF_AXIS,
@@ -667,7 +697,11 @@ fn elliptical(
             (t0, t1)
         }
         (Some(_), None) | (None, Some(_)) => {
-            let missing = if start.is_none() { "startAngle" } else { "endAngle" };
+            let missing = if start.is_none() {
+                "startAngle"
+            } else {
+                "endAngle"
+            };
             return Err(refuse(
                 codes::INVALID_ANGLE,
                 "Eliptik yayın başlangıç ve bitiş açısı birlikte verilir; ikisini de verin ya da ikisini de kaldırın.",

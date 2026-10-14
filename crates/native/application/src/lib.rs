@@ -89,6 +89,7 @@ pub mod polygon_regular {
         execute_regular as execute, plan_regular as plan, validate_regular as validate,
     };
 }
+pub mod curves_construct;
 pub mod file_import;
 pub mod geometry_store;
 pub mod import_apply;
@@ -109,7 +110,6 @@ pub mod nurbs;
 pub mod offset;
 pub mod point;
 pub mod points_construct;
-pub mod curves_construct;
 pub mod polygon;
 pub mod polyline;
 pub mod python_call;

@@ -147,12 +147,16 @@ impl Stages for Rotate {
                 .option("Noktalar", "N")
                 .option_with("Kopya", "K", copy);
         }
-        let words = self
-            .format
-            .map_or_else(|| "derece, saat yönü tersine".to_owned(), |f| f.turn_words());
-        Prompt::new(LABEL, format!("açıyı yazın ({words}) ya da bir nokta gösterin"))
-            .option("Referans", "R")
-            .option_with("Kopya", "K", copy)
+        let words = self.format.map_or_else(
+            || "derece, saat yönü tersine".to_owned(),
+            |f| f.turn_words(),
+        );
+        Prompt::new(
+            LABEL,
+            format!("açıyı yazın ({words}) ya da bir nokta gösterin"),
+        )
+        .option("Referans", "R")
+        .option_with("Kopya", "K", copy)
     }
 
     fn point(&mut self, p: Vec2, cx: &mut Context<'_>) -> Flow {

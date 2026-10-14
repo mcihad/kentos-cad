@@ -630,8 +630,8 @@ def corner_refusals(kind):
         refused("Paralel çizgiler", {"corner": {"kind": "lines", "first": {"uid": UID(21), "at": P(X + 55, Y + 80)},
                                                  "second": {"uid": UID(14), "at": P(X + 33, Y + 20)}}, **size},
                 "not_a_corner", "Çizgiler paralel ya da seçilen tarafta çizgi yok.", "corner"),
-        refused("Tüm köşeler yalnız yolda", {"corner": {"kind": "all", "uids": [UID(21)]}, **size}, "not_a_corner",
-                "Tüm köşeler yalnız çoklu çizgide ve alanda işlenir.", "corner.uids[0]"),
+        refused("Tüm köşeler: tek başına çizgi köşe değildir", {"corner": {"kind": "all", "uids": [UID(21)]}, **size}, "not_a_corner",
+                "Tüm köşeler çoklu çizgide, alanda ve uçları birbirine değen çizgilerde işlenir.", "corner.uids[0]"),
     ]
     out.append(refused("Beklenen sürüm sayı değil", {"corner": LINES_CORNER, **size, "expectedRevision": "on iki"}, "invalid_revision", INVALID_REVISION, "expectedRevision"))
     out.append(refused("Hiçbir köşeye sığmıyor", {"corner": {"kind": "all", "uids": [UID(23)]}, field: 6}, failed_code,

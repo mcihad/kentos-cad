@@ -347,7 +347,9 @@ impl GripModes {
             Transform::Scale { center, factor } => {
                 Some(scaling(factor, Vec2::new(center.x, center.y)))
             }
-            Transform::Mirror { a, b, .. } => Some(mirror(Vec2::new(a.x, a.y), Vec2::new(b.x, b.y))),
+            Transform::Mirror { a, b, .. } => {
+                Some(mirror(Vec2::new(a.x, a.y), Vec2::new(b.x, b.y)))
+            }
             _ => None,
         }
     }

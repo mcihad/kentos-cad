@@ -23,9 +23,9 @@ use kentos_geometry_core::geom::ellipse::{
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::jsmath::{PI, atan2};
 use kentos_geometry_core::tools::drawing::ellipse_param_toward;
-use kentos_native_application::curves_construct::{curve, curve_at, ellipse_geom};
 use kentos_geometry_core::tools::point_input::midpoint;
 use kentos_geometry_core::tools::point_text::js_trim;
+use kentos_native_application::curves_construct::{curve, curve_at, ellipse_geom};
 
 use crate::Vec2;
 use crate::format::Format;
