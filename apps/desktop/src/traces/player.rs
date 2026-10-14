@@ -436,6 +436,8 @@ pub struct Observation {
     pub time: Option<(String, i64, i64)>,
     /// The digitizing locks' words (docs/adr/0166 §6).
     pub locks: Vec<String>,
+    /// What rules the next point's place now (docs/adr/0268 §1); read only when a step expects it.
+    pub aid: Option<&'static str>,
     /// The active layer's groups and name (docs/adr/0176 §3).
     pub active_layer: Vec<String>,
     /// The layers and groups hidden or locked of their own, by their paths (docs/adr/0177 §1).
@@ -631,6 +633,9 @@ impl<'a> Player<'a> {
             }
             if let Some(expect) = &step.expect {
                 let mut seen = self.observe();
+                if expect.aid.is_some() {
+                    seen.aid = self.app.aid_now().map(kentos_interaction::Aid::key);
+                }
                 seen.messages = self
                     .app
                     .log
@@ -684,6 +689,15 @@ impl<'a> Player<'a> {
         // Şablonu uygula, as the panel's Seçili nesnelere uygula does (§6).
         if let Some(id) = &step.apply_template {
             return self.apply(Message::ApplyTemplate(id.clone()));
+        }
+        // Shift pressed or let go with the pointer still (docs/adr/0268 §2).
+        if let Some(held) = step.hold {
+            let modifiers = if held {
+                Modifiers::SHIFT
+            } else {
+                Modifiers::empty()
+            };
+            return self.apply(Message::Modifiers(modifiers));
         }
         if let Some(id) = &step.run {
             let command = crate::catalog::catalog()
@@ -1237,6 +1251,7 @@ impl<'a> Player<'a> {
             options: app.prompt().keys().into_iter().map(str::to_owned).collect(),
             dynamic_input: app.field.as_ref().map(|f| f.text.clone()),
             locks: app.locks.words(&app.format()),
+            aid: None,
             command_line: app.command_input.clone(),
             entities: doc.map_or(0, Document::entity_count),
             newest,
@@ -1420,6 +1435,8 @@ fn describe(step: &Step) -> String {
         format!("template {id}")
     } else if let Some(id) = &step.apply_template {
         format!("applyTemplate {id}")
+    } else if let Some(held) = step.hold {
+        format!("{} Shift", if held { "hold" } else { "release" })
     } else if let Some(id) = &step.run {
         format!("run {id}")
     } else if let Some(key) = &step.key {

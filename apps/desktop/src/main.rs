@@ -9,6 +9,7 @@ mod acceptance_tests;
 mod address;
 #[cfg(test)]
 mod address_scenes;
+mod aids;
 mod annotation_scale;
 mod annotation_styles;
 mod app;

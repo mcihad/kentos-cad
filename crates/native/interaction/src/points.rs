@@ -18,6 +18,44 @@ const CAPTURE_PX: f64 = 10.0;
 /// Two points closer than this are the same point.
 pub(crate) const SAME: f64 = 1e-9;
 
+/// What rules the next point's place (docs/adr/0268 §1), first to last: a locked coordinate, a locked direction
+/// (Açı, Sapma, Paralel, Dik), Dik açı, an object snap's or object tracking's point (exact), ortho (Shift
+/// turning it over while held), polar tracking (onto its ray), else the pointer itself. A locked length holds
+/// with each of them; ortho and polar tracking are never both: ortho comes first.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Aid {
+    /// No point yet to measure from, or nothing holds the pointer.
+    Free,
+    Coordinates,
+    Direction,
+    RightAngle,
+    Snap,
+    Tracking,
+    Ortho,
+    Polar,
+}
+
+impl Aid {
+    /// Its name in the traces (`aid`).
+    pub fn key(self) -> &'static str {
+        match self {
+            Aid::Free => "free",
+            Aid::Coordinates => "coordinates",
+            Aid::Direction => "direction",
+            Aid::RightAngle => "rightAngle",
+            Aid::Snap => "snap",
+            Aid::Tracking => "tracking",
+            Aid::Ortho => "ortho",
+            Aid::Polar => "polar",
+        }
+    }
+}
+
+/// Whether ortho rules the pointer now: the setting, turned over while Shift is held (docs/adr/0268 §2).
+pub fn ortho_now(ortho: bool, shift: bool) -> bool {
+    ortho != shift
+}
+
 /// The effective cursor for the next point after `from`: ortho (Shift turns
 /// it over) and polar tracking, by the shared core; with the tracking ray it
 /// locked onto. The pointer's own point when there is no point yet, and an
@@ -30,12 +68,36 @@ pub(crate) fn constrain(
     p: &Pointer,
     cx: &Context<'_>,
 ) -> (Vec2, Option<Tracking>) {
+    let (point, tracking, _) = constrain_ruled(from, p, cx);
+    (point, tracking)
+}
+
+/// [`constrain`] and what ruled the point (docs/adr/0268 §1): the one rule both the tools and the status bar read.
+pub(crate) fn constrain_ruled(
+    from: Option<Vec2>,
+    p: &Pointer,
+    cx: &Context<'_>,
+) -> (Vec2, Option<Tracking>, Aid) {
     // A reference point stands in for the last corner (docs/adr/0166 §5).
     let Some(from) = cx.locks.reference.or(from) else {
-        return (p.world, None);
+        return (p.world, None, Aid::Free);
     };
     let exact = p.snap.is_some() || p.tracked;
-    let ortho = cx.draft.ortho != p.shift;
+    let ortho = ortho_now(cx.draft.ortho, p.shift);
+    // An exact point, ortho or polar tracking: what rules a point no lock holds.
+    let unlocked = |tracking: Option<Tracking>| {
+        if p.snap.is_some() {
+            Aid::Snap
+        } else if p.tracked {
+            Aid::Tracking
+        } else if ortho {
+            Aid::Ortho
+        } else if tracking.is_some() {
+            Aid::Polar
+        } else {
+            Aid::Free
+        }
+    };
     let tol = cx.view.world_length(CAPTURE_PX);
     // Dik açı (docs/adr/0166 §4): from the second edge on, square to the one
     // before, either way; a direction locked by hand comes first, a length
@@ -55,8 +117,8 @@ pub(crate) fn constrain(
         let mut held = cx.locks.clone();
         held.frame = frame;
         return match held.point(from, p.world, cx.format().angles()) {
-            Some(q) => (q, None),
-            None => (from, None),
+            Some(q) => (q, None, Aid::Coordinates),
+            None => (from, None, Aid::Coordinates),
         };
     }
     if cx.locks.any() || square.is_some() {
@@ -65,6 +127,11 @@ pub(crate) fn constrain(
         // the world.
         held.frame = frame;
         let mut locks = held.locks(cx.format().angles());
+        let aid = if locks.direction.is_some() {
+            Aid::Direction
+        } else {
+            Aid::RightAngle
+        };
         locks.direction = locks.direction.or(square);
         if locks.direction.is_none() {
             // A length alone: the cursor ruled in the UCS first, then held at the length.
@@ -77,9 +144,10 @@ pub(crate) fn constrain(
                 cx.draft.polar,
                 tol,
             );
+            let aid = unlocked(free.tracking);
             return match constrain_locked(Some(from), free.point, true, false, None, tol, locks) {
-                Some(c) => (c.point, free.tracking),
-                None => (from, None),
+                Some(c) => (c.point, free.tracking, aid),
+                None => (from, None, aid),
             };
         }
         return match constrain_locked(
@@ -91,8 +159,8 @@ pub(crate) fn constrain(
             tol,
             locks,
         ) {
-            Some(c) => (c.point, c.tracking),
-            None => (from, None),
+            Some(c) => (c.point, c.tracking, aid),
+            None => (from, None, aid),
         };
     }
     let c = constrain_cursor_in(
@@ -104,7 +172,7 @@ pub(crate) fn constrain(
         cx.draft.polar,
         tol,
     );
-    (c.point, c.tracking)
+    (c.point, c.tracking, unlocked(c.tracking))
 }
 
 /// A taken point, said as the web says it: `  Y 487012.000  X 4420000.000`.
