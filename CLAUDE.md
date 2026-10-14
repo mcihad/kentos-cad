@@ -361,6 +361,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   taslağı altta çizilir, Esc ya da Enter ile kaldığı yerden sürer; askıdakiler yığın (nokta hesaplayıcı şeffaf ölçmenin üstünde de);
   görünüm değişince ya da komut dönünce imleç yeniden verilir, önizleme yeni görünümde imlecin altında (`follow_view`); çizen araç
   şeffaf değildir (ADR 0283);
+  komut geçmişinde çağrılar: Komut geçmişi çizimin kaydını (`kentos.calls/1`) okur ve her ürün komutunu Türkçe başlığı, düz Türkçe
+  girdisi, yazdığı, uyarı ve hata kodlarıyla gösterir (aynı geri alma adımı birlikte, geri alınan soluk); yazmadan dönen çağrılar
+  `call::recorded`'dan belgeye not edilir (`Document::note_refusal`, `refused_calls`; oturumun); her çağrının Python kodu
+  (`kentos_native_application::python_call`) gösterilir ve kopyalanır, tekrar oynatma girdisi (`kentos.replay/1`) kopyalanır ya da
+  kaydedilir; ortak komut durumlarının çağrıları `scripts/python/history_calls.py` ile SDK'ya karşı denetlenir (`history/`, ADR 0284);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);
