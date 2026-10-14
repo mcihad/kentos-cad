@@ -5,7 +5,8 @@
 //! a vertex of a line, a polyline or an area (docs/adr/0142): `, Z=12.500`.
 //! With a second coordinate system the point is said in it too, with how
 //! sure the values are (docs/adr/0167 §2, §5): `ED50 TM30: Y=…, X=… (±2.1
-//! m, …)`. Beside the cursor the same numbers follow it. Nothing is
+//! m, …)`. A snapped click says what it snapped to, its object and its place on it (docs/adr/0272 §3):
+//! `Kenet: Uç nokta · Çizgi 0192f3e7 · başlangıç`. Beside the cursor the same numbers follow it. Nothing is
 //! written; Esc, Enter or a quick right click ends.
 
 use kentos_domain::Slot;
@@ -48,6 +49,31 @@ impl CrsQuery {
             return None;
         }
         elevation::elevation_at(cx.doc.get(Slot(hit.id as u32))?, hit.point)
+    }
+
+    /// What a snapped click snapped to, as the log says it: the kind, the object's kind and the start of its
+    /// persistent id, its place on the object (docs/adr/0272 §3); none without a snap.
+    fn snap_line(p: &Pointer, cx: &Context<'_>) -> Option<String> {
+        let hit = p.snap?;
+        let mut line = format!("Kenet: {}", snap_kind_name(hit.kind));
+        if (0.0..=f64::from(u32::MAX)).contains(&hit.id) {
+            let slot = Slot(hit.id as u32);
+            if let (Some(e), Some(uid)) = (cx.doc.get(slot), cx.doc.uid(slot)) {
+                let id = uid.to_string();
+                line.push_str(&format!(
+                    " · {} {}",
+                    crate::data_search::kind_name(e),
+                    id.get(..8).unwrap_or(&id)
+                ));
+            }
+        }
+        if let Some(r) = crate::dimension::snapped_place(Some(hit), p.world, cx) {
+            line.push_str(&format!(
+                " · {}",
+                crate::dimension_reassociate::ref_words(&r)
+            ));
+        }
+        Some(line)
     }
 
     /// The tag's lines of `p` in the second coordinate system: its name,
@@ -113,6 +139,10 @@ impl Tool for CrsQuery {
         );
         if let Some(z) = z {
             text.push_str(&format!(", Z={}", f.length_bare(z)));
+        }
+        // What it snapped to first, the coordinates after it as before (docs/adr/0272 §3).
+        if let Some(line) = Self::snap_line(p, cx) {
+            cx.say(Level::Info, line);
         }
         cx.say(Level::Info, text);
         // In the drawing's UCS too, when it is not the world's (docs/adr/0261 §4).
@@ -189,5 +219,26 @@ impl Tool for CrsQuery {
             }),
             ..Preview::default()
         }
+    }
+}
+
+/// A snap kind's name as the interface says it (the desktop's marker, `marks.rs`).
+pub fn snap_kind_name(kind: kentos_geometry_core::store::snap::SnapKind) -> &'static str {
+    use kentos_geometry_core::store::snap::SnapKind as K;
+    match kind {
+        K::Endpoint => "Uç nokta",
+        K::Midpoint => "Orta nokta",
+        K::Center => "Merkez",
+        K::Node => "Nokta",
+        K::Quadrant => "Çeyrek",
+        K::Intersection => "Kesişim",
+        K::Perpendicular => "Dik",
+        K::Tangent => "Teğet",
+        K::Nearest => "En yakın",
+        K::Centroid => "Ağırlık merkezi",
+        K::Extension => "Uzantı",
+        K::Parallel => "Paralel",
+        K::Grid => "Karelaj",
+        K::Insertion => "Ekleme noktası",
     }
 }

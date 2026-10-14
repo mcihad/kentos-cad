@@ -1489,6 +1489,27 @@ ServiceKindName = Literal["wms", "wmts", "xyz", "ogcTiles", "arcgis", "google", 
 """The names of :class:`ServiceKind`, for a plain string."""
 
 
+class SnapKindName(_StrEnum):
+    """A snap kind a command can ask for: the drawing's own points (Uzantı, Paralel and Karelaj belong to a running
+    command's session and are not asked here).
+    """
+    ENDPOINT = "endpoint"
+    MIDPOINT = "midpoint"
+    CENTER = "center"
+    NODE = "node"
+    QUADRANT = "quadrant"
+    INTERSECTION = "intersection"
+    PERPENDICULAR = "perpendicular"
+    TANGENT = "tangent"
+    NEAREST = "nearest"
+    CENTROID = "centroid"
+    INSERTION = "insertion"
+
+
+SnapKindNameName = Literal["endpoint", "midpoint", "center", "node", "quadrant", "intersection", "perpendicular", "tangent", "nearest", "centroid", "insertion"]
+"""The names of :class:`SnapKindName`, for a plain string."""
+
+
 class StackMode(_StrEnum):
     """When a label is cut into lines.
 
@@ -7261,6 +7282,44 @@ class FileCommitted(_Model):
             sha256=data["sha256"],
             replayed=data["replayed"],
             objects=data.get("objects", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FoundSnap(_Model):
+    """A snap point as a command reads it.
+    Attributes:
+        point: Unit: length.
+        path: When the object is an insert, the piece inside it the place is on. Unit: index.
+        place: Its place on the object (docs/adr/0249, 0263): absent for a crossing (on two objects) and a centroid.
+        uid: The object's persistent id (a crossing's: the first of its two objects in the drawing's order).
+    """
+    kind: SnapKindName | SnapKindNameName
+    point: Vec2
+    path: list[int] | Unset = UNSET
+    place: SubPlace | None | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["point"] = _vec2_out(self.point)
+        if self.path is not UNSET:
+            out["path"] = list(self.path)
+        if self.place is not UNSET:
+            out["place"] = None if self.place is None else self.place.to_json()
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FoundSnap:
+        return cls(
+            kind=_enum_in(SnapKindName, data["kind"]),
+            point=Vec2.from_json(data["point"]),
+            path=list(data["path"]) if "path" in data else UNSET,
+            place=UNSET if "place" not in data else None if data["place"] is None else SubPlace.from_json(data["place"]),
+            uid=data.get("uid", UNSET),
         )
 
 
@@ -14718,6 +14777,72 @@ class SheetsEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SnapFind(_Model):
+    """Input of `cad.snap.find` v1.
+
+    Refusals (`CommandError.code`), in this order: `not_finite` (`at`, the aperture, `from`), `invalid_aperture`
+    (the aperture not above zero), `no_snap_kinds` (an empty `kinds`).
+    Attributes:
+        at: Where the click is. Unit: length.
+        aperture: How far from `at` a snap point may be, metres (a tool's aperture is its pixels at the view's scale). Unit: length.
+        all: Every candidate best first (Tab's order, docs/adr/0271), not only the snap.
+        from_: The running command's last point: Dik's foot and Teğet's point are measured from it. Unit: length.
+        kinds: The kinds that apply; absent: the settings' kinds on at first (all but Yakın and Ağırlık merkezi).
+    """
+    at: Vec2
+    aperture: float
+    all: bool | Unset = UNSET
+    from_: Vec2 | None | Unset = UNSET
+    kinds: list[SnapKindName | SnapKindNameName] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = _vec2_out(self.at)
+        out["aperture"] = float(self.aperture)
+        if self.all is not UNSET:
+            out["all"] = self.all
+        if self.from_ is not UNSET:
+            out["from"] = None if self.from_ is None else _vec2_out(self.from_)
+        if self.kinds is not UNSET:
+            out["kinds"] = None if self.kinds is None else [_enum_out(e0) for e0 in self.kinds]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SnapFind:
+        return cls(
+            at=Vec2.from_json(data["at"]),
+            aperture=float(data["aperture"]),
+            all=data.get("all", UNSET),
+            from_=UNSET if "from" not in data else None if data["from"] is None else Vec2.from_json(data["from"]),
+            kinds=UNSET if "kinds" not in data else None if data["kinds"] is None else [_enum_in(SnapKindName, e0) for e0 in data["kinds"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SnapFound(_Model):
+    """Output of `cad.snap.find` v1, and its plan: the snap (or with `all` every candidate, best first), none when
+    nothing is within the aperture; and the revision it was read at.
+    Attributes:
+        revision: The document's revision the snaps were read at, as decimal text.
+    """
+    snaps: list[FoundSnap]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["snaps"] = [e0.to_json() for e0 in self.snaps]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SnapFound:
+        return cls(
+            snaps=[FoundSnap.from_json(e0) for e0 in data["snaps"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SplineEntity(Entity):
     """Fields every object has. `id` is the object's local id inside a v1 file.
     v1 keeps no persistent id: it is derived from the file's content when the
@@ -19562,6 +19687,7 @@ __all__ = [
     "FileUnit",
     "FileUnitName",
     "FitNurbsBy",
+    "FoundSnap",
     "FrameUcsTo",
     "GeographicCrsSystem",
     "GeographicDefinition",
@@ -19876,6 +20002,10 @@ __all__ = [
     "SimilarityCrsPlane",
     "SimilarityTransform",
     "SlopeDimensionMeasure",
+    "SnapFind",
+    "SnapFound",
+    "SnapKindName",
+    "SnapKindNameName",
     "SplineEntity",
     "SplineEntityGeometry",
     "StackMode",

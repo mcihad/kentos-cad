@@ -165,6 +165,9 @@ Liste:
 - [ ] `CAD-INPUT-01` (ADR 0266, 14 Ekim): web'de gerekenler: `coordinateInput.ts`'in metrik birimli uzunluğu (`2.5m`, `250cm`) ve
   parantezli toplamı (`fixtures/point-input/v1`'in 22 yeni satırı), `looksLikeCoordinate`'in `(`'u ve araçların uzunluk alanlarının
   birimli ve toplamlı okunması; web'in iz oynatıcısı `value-entry.json`'u geçmeli (`(`, `)`, `*` tuşları, Tab'ın birimli kilidi).
+- [ ] `CAD-INPUT-08` (ADR 0272, 14 Ekim): web'de gerekenler: `cad.snap.find`'ın web işleyicisi (ortak durumlar
+  `fixtures/commands/v1/cad.snap.find.json`), çekirdeğin `node` yerinin yazı, blok ve tablo için WASM'la gelmesi, ölçü aracının Ekleme
+  noktasına bağlaması, Koordinat oku'nun kenet satırı.
 - [ ] `CAD-INPUT-07` (ADR 0271, 14 Ekim): web'de gerekenler: çekirdeğin `snap_candidates`'i WASM'a, Tab ve Shift+Tab ile kenet adayları
   arasında dolaşma (`ViewportController`), işaretin yazısında nesnenin türü ve sıra; web'in iz oynatıcısı `snap-cycle.json`'u geçmeli.
 - [ ] `CAD-INPUT-06` (ADR 0270, 14 Ekim): web'de gerekenler: `cad.points.construct`'ın web işleyicisi (ortak durumlar

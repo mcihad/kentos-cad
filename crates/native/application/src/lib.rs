@@ -102,6 +102,7 @@ pub mod scenarios_edit;
 pub mod set;
 pub mod settings_set;
 pub mod sheets_edit;
+pub mod snap_find;
 pub mod stretch;
 pub mod style_tables;
 pub mod styles_edit;
@@ -168,6 +169,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_NURBS_CREATE,
         kentos_contracts::CAD_NURBS_CREATE_VERSION,
+    ),
+    // The object snap at a point, with its object's place ([`snap_find`], docs/adr/0272).
+    (
+        kentos_contracts::CAD_SNAP_FIND,
+        kentos_contracts::CAD_SNAP_FIND_VERSION,
     ),
     // The drafting aids' points by what they are made of ([`points_construct`], docs/adr/0270).
     (

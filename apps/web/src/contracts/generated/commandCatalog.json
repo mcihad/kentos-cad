@@ -213681,6 +213681,688 @@
       ]
     },
     {
+      "id": "cad.snap.find",
+      "version": 1,
+      "title": "Kenet bul",
+      "summary": "Bir tıklamanın kenetleneceği noktayı verir: türü, noktası, nesnenin kalıcı kimliği, nesnedeki yeri (uç, köşe, kenar ortası, merkez, düğüm, kenar üstü) ve blok içindeyse parçanın yolu; all ile bütün adaylar en iyiden (Tab'ın sırası). Cevabın uid, place ve path'i cad.dimensions.create'in place noktasına olduğu gibi verilir: ölçü o yere bağlanır. Araçlar aynı kenet kuralıyla alır; gizli katmanlar kenetlenmez. Çizimi değiştirmez; plan aynı cevabı verir.",
+      "aliases": [
+        "kenetbul",
+        "snap"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "SnapKindName": {
+            "description": "A snap kind a command can ask for: the drawing's own points (Uzantı, Paralel and Karelaj belong to a running\ncommand's session and are not asked here).",
+            "enum": [
+              "endpoint",
+              "midpoint",
+              "center",
+              "node",
+              "quadrant",
+              "intersection",
+              "perpendicular",
+              "tangent",
+              "nearest",
+              "centroid",
+              "insertion"
+            ],
+            "type": "string"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.snap.find` v1.\n\nRefusals (`CommandError.code`), in this order: `not_finite` (`at`, the aperture, `from`), `invalid_aperture`\n(the aperture not above zero), `no_snap_kinds` (an empty `kinds`).",
+        "properties": {
+          "all": {
+            "description": "Every candidate best first (Tab's order, docs/adr/0271), not only the snap.",
+            "type": "boolean"
+          },
+          "aperture": {
+            "description": "How far from `at` a snap point may be, metres (a tool's aperture is its pixels at the view's scale).",
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "at": {
+            "$ref": "#/$defs/Vec2",
+            "description": "Where the click is.",
+            "x-unit": "length"
+          },
+          "from": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Vec2"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The running command's last point: Dik's foot and Teğet's point are measured from it.",
+            "x-unit": "length"
+          },
+          "kinds": {
+            "description": "The kinds that apply; absent: the settings' kinds on at first (all but Yakın and Ağırlık merkezi).",
+            "items": {
+              "$ref": "#/$defs/SnapKindName"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "at",
+          "aperture"
+        ],
+        "title": "SnapFind",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "FoundSnap": {
+            "description": "A snap point as a command reads it.",
+            "properties": {
+              "kind": {
+                "$ref": "#/$defs/SnapKindName"
+              },
+              "path": {
+                "description": "When the object is an insert, the piece inside it the place is on.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
+              },
+              "place": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SubPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its place on the object (docs/adr/0249, 0263): absent for a crossing (on two objects) and a centroid."
+              },
+              "point": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              },
+              "uid": {
+                "description": "The object's persistent id (a crossing's: the first of its two objects in the drawing's order).",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "point"
+            ],
+            "type": "object"
+          },
+          "SnapKindName": {
+            "description": "A snap kind a command can ask for: the drawing's own points (Uzantı, Paralel and Karelaj belong to a running\ncommand's session and are not asked here).",
+            "enum": [
+              "endpoint",
+              "midpoint",
+              "center",
+              "node",
+              "quadrant",
+              "intersection",
+              "perpendicular",
+              "tangent",
+              "nearest",
+              "centroid",
+              "insertion"
+            ],
+            "type": "string"
+          },
+          "SubPlace": {
+            "description": "A place on an object.",
+            "oneOf": [
+              {
+                "description": "A point object's position: part 0 its own, `k` its `k`th extra point (docs/adr/0174).",
+                "properties": {
+                  "kind": {
+                    "const": "node",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A line's, arc's or elliptical arc's start.",
+                "properties": {
+                  "kind": {
+                    "const": "start",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Its end.",
+                "properties": {
+                  "kind": {
+                    "const": "end",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A circle's, arc's or ellipse's centre.",
+                "properties": {
+                  "kind": {
+                    "const": "center",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A path's vertex: part 0 the object's own path, `k` its `k`th extra part; ring 0 the outer ring, `h` its\n`h`th hole; the vertex's index in the ring.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "vertex",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The middle of a line (all zero) or of a path's edge from vertex `index` to the next.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "mid",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.snap.find` v1, and its plan: the snap (or with `all` every candidate, best first), none when\nnothing is within the aperture; and the revision it was read at.",
+        "properties": {
+          "revision": {
+            "description": "The document's revision the snaps were read at, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "snaps": {
+            "items": {
+              "$ref": "#/$defs/FoundSnap"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "snaps",
+          "revision"
+        ],
+        "title": "SnapFound",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "FoundSnap": {
+            "description": "A snap point as a command reads it.",
+            "properties": {
+              "kind": {
+                "$ref": "#/$defs/SnapKindName"
+              },
+              "path": {
+                "description": "When the object is an insert, the piece inside it the place is on.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
+              },
+              "place": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SubPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its place on the object (docs/adr/0249, 0263): absent for a crossing (on two objects) and a centroid."
+              },
+              "point": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              },
+              "uid": {
+                "description": "The object's persistent id (a crossing's: the first of its two objects in the drawing's order).",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "point"
+            ],
+            "type": "object"
+          },
+          "SnapKindName": {
+            "description": "A snap kind a command can ask for: the drawing's own points (Uzantı, Paralel and Karelaj belong to a running\ncommand's session and are not asked here).",
+            "enum": [
+              "endpoint",
+              "midpoint",
+              "center",
+              "node",
+              "quadrant",
+              "intersection",
+              "perpendicular",
+              "tangent",
+              "nearest",
+              "centroid",
+              "insertion"
+            ],
+            "type": "string"
+          },
+          "SubPlace": {
+            "description": "A place on an object.",
+            "oneOf": [
+              {
+                "description": "A point object's position: part 0 its own, `k` its `k`th extra point (docs/adr/0174).",
+                "properties": {
+                  "kind": {
+                    "const": "node",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A line's, arc's or elliptical arc's start.",
+                "properties": {
+                  "kind": {
+                    "const": "start",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Its end.",
+                "properties": {
+                  "kind": {
+                    "const": "end",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A circle's, arc's or ellipse's centre.",
+                "properties": {
+                  "kind": {
+                    "const": "center",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A path's vertex: part 0 the object's own path, `k` its `k`th extra part; ring 0 the outer ring, `h` its\n`h`th hole; the vertex's index in the ring.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "vertex",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The middle of a line (all zero) or of a path's edge from vertex `index` to the next.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "mid",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.snap.find` v1, and its plan: the snap (or with `all` every candidate, best first), none when\nnothing is within the aperture; and the revision it was read at.",
+        "properties": {
+          "revision": {
+            "description": "The document's revision the snaps were read at, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "snaps": {
+            "items": {
+              "$ref": "#/$defs/FoundSnap"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "snaps",
+          "revision"
+        ],
+        "title": "SnapFound",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_finite",
+          "invalid_aperture",
+          "no_snap_kinds"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bir köşenin yanında, yarım metrelik açıklıkla",
+          "input": {
+            "aperture": 0.5,
+            "at": {
+              "x": 487012.2,
+              "y": 4420010.1
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.points.construct",
       "version": 1,
       "title": "Nokta yapımı",
@@ -215589,6 +216271,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Nesnede düz kenar yok; paralel doğrultusu düz kenardan alınır."
+    },
+    {
+      "code": "invalid_aperture",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kenet açıklığı sıfırdan büyük olmalı (metre)."
+    },
+    {
+      "code": "no_snap_kinds",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Hiç kenet türü verilmedi; listeyi kaldırın (varsayılan türler) ya da en az bir tür verin."
     },
     {
       "code": "not_measurable",

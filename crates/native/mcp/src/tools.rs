@@ -564,8 +564,8 @@ fn command_tool(c: &Value) -> Value {
         "title": c["title"],
         "description": description,
         "inputSchema": schema,
-        // It writes nothing: the points are its answer (docs/adr/0270).
-        "annotations": annotations(id == "cad.points.construct", destructive),
+        // They write nothing: the points and the snaps are their answers (docs/adr/0270, 0272).
+        "annotations": annotations(matches!(id, "cad.points.construct" | "cad.snap.find"), destructive),
     })
 }
 

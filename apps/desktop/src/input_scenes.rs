@@ -2,10 +2,11 @@
 //! with `@2.5m<0`, `@(1.2+0.3)m<90` and `@-50cm,(100*2)` typed, the cursor's value field holding `(1000/4)` while
 //! the next segment waits; and docs/adr/0268's: Shift held over a polyline, ortho ruling for the moment and polar
 //! tracking (on) shown out of use in the status bar; docs/adr/0269's: the one-shot Merkez through an arc's curve,
-//! and Ekleme noktası on a text; docs/adr/0271's: Tab on the second candidate where two lines meet a parcel. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
+//! and Ekleme noktası on a text; docs/adr/0271's: Tab on the second candidate where two lines meet a parcel;
+//! docs/adr/0272's: Koordinat oku on a parcel's corner, the log saying the snap's object and place. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma,kenet-oku cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -136,8 +137,33 @@ fn cycling(app: &mut App) {
     app.cycle_snap(false);
 }
 
+/// Koordinat oku clicked on the parcel's third corner: the log says “Kenet: Uç nokta · Kapalı alan … · 3. köşe”.
+fn reading(app: &mut App) {
+    let mut o = Objects::new();
+    o.path(
+        "cizim",
+        &[[0.0, 0.0], [12.0, 0.0], [12.0, 9.0], [0.0, 9.0]],
+        true,
+    );
+    open(app, o);
+    make_cad(app);
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 6.0,
+            min_y: N - 4.0,
+            max_x: E + 18.0,
+            max_y: N + 12.0,
+        },
+        24.0,
+    );
+    run(app, "crs.query");
+    click(app, [12.1, 9.05]);
+    hover(app, [12.1, 9.05]);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
+        ("kenet-oku", reading),
         ("kenet-dolasma", cycling),
         ("giris-birim", units),
         ("giris-oncelik", priority),

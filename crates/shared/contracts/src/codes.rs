@@ -425,6 +425,12 @@ codes! {
     /// Paralel's object without a straight edge.
     NO_STRAIGHT_EDGE = "no_straight_edge", Failed, false, "Nesnede düz kenar yok; paralel doğrultusu düz kenardan alınır.";
 
+    // ── The object snap as a command (docs/adr/0272) ────────────────────
+    /// A snap aperture not above zero (`cad.snap.find`).
+    INVALID_APERTURE = "invalid_aperture", Failed, false, "Kenet açıklığı sıfırdan büyük olmalı (metre).";
+    /// An empty list of snap kinds.
+    NO_SNAP_KINDS = "no_snap_kinds", Failed, false, "Hiç kenet türü verilmedi; listeyi kaldırın (varsayılan türler) ya da en az bir tür verin.";
+
     // ── Dimensions from what they measure (docs/adr/0255) ───────────────
     /// An object without an edge of the kind a dimension measures.
     NOT_MEASURABLE = "not_measurable", Failed, false, "Nesnede ölçünün aradığı türde kenar yok (düz kenar, uçları olan yay ya da daire).";
