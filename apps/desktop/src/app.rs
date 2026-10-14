@@ -1555,7 +1555,12 @@ impl App {
             Message::PointCalc(kind) => return self.start_point_calc(kind),
             Message::Key(press) => return self.key(press),
             Message::Modifiers(modifiers) => {
+                let shift = self.modifiers.shift() != modifiers.shift();
                 self.modifiers = modifiers;
+                // Shift turns ortho over while held (docs/adr/0268 §2): the preview follows at once, the pointer still.
+                if shift && self.session.takes_points() {
+                    self.repoint();
+                }
                 // Alt let go after a tap alone: the ribbon's key tips (ribbon_keys.rs).
                 return self.alt_released(modifiers);
             }
@@ -1950,6 +1955,11 @@ impl App {
         let _ = self.settings.choose(&[(key, Value::Bool(on))]);
         self.apply_settings();
         self.output(format!("{name} {}", if on { "açık" } else { "kapalı" }));
+        // The running command keeps its points, options and locks; its preview takes the aid at once
+        // (docs/adr/0268 §3).
+        if self.session.takes_points() {
+            self.repoint();
+        }
     }
 
     /// The theme chosen from a command: a preference, kept.

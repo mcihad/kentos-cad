@@ -816,6 +816,16 @@ impl Session {
         cx.locks.frame = cx.frame();
     }
 
+    /// What rules the next point's place with the pointer at `p` (docs/adr/0268 §1): the tools' own rule, from
+    /// the point the running command measures from; [`Aid::Free`] when no command takes points.
+    pub fn ruling_aid(&self, p: &Pointer, cx: &mut Context<'_>) -> crate::points::Aid {
+        if !self.takes_points() {
+            return crate::points::Aid::Free;
+        }
+        self.prime(cx);
+        crate::points::constrain_ruled(self.snap_from(), p, cx).2
+    }
+
     /// Nesneye paralel or dik waiting for its edge, if one is.
     pub fn lock_pick(&self) -> Option<LockPick> {
         self.lock_pick

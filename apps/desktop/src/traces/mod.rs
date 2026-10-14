@@ -196,6 +196,7 @@ mod tests {
             focus: None,
             save_and_reopen: None,
             shift: None,
+            hold: None,
             shot: None,
             dialog: None,
             fill: None,

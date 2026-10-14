@@ -1,0 +1,191 @@
+{
+ "format": "kentos.interaction-trace",
+ "version": 1,
+ "id": "aid-priority",
+ "title": "Yardımların önceliği: Çoklu çizgi'de Shift basılıyken Orto geçici açılır (imleç kımıldamadan), bırakınca kalkar; F8 Orto'yu açar, aracın noktaları durur, Shift onu geçici kapatır; Kutupsal açıkken Orto önce gelir, Orto kapanınca kutupsal ışına iner; yazılan semt kutupsalın önüne geçer, Esc kilidi kaldırır; Enter yazar",
+ "source": "Masaüstünün kentos_interaction::points'u (Aid, constrain_ruled), app.rs'in Shift ve yardım geçişleri, aids.rs; ADR 0268",
+ "covers": [
+  "CAD-INPUT-04"
+ ],
+ "document": "empty.kcad",
+ "view": {
+  "center": [
+   487000,
+   4420000
+  ],
+  "metresPerPixel": 0.125
+ },
+ "draft": {
+  "snap": false,
+  "grid": false,
+  "ortho": false,
+  "polar": false,
+  "tracking": false
+ },
+ "prefs": {
+  "cursorInput": true
+ },
+ "clickTolerance": 0.125,
+ "steps": [
+  {
+   "run": "tool.polyline"
+  },
+  {
+   "click": [
+    0,
+    0
+   ],
+   "expect": {
+    "points": 1
+   }
+  },
+  {
+   "move": [
+    20,
+    3
+   ],
+   "expect": {
+    "aid": "free"
+   }
+  },
+  {
+   "hold": true,
+   "note": "Shift basılı: Orto geçici açık; önizleme imleç kımıldamadan yatay olur.",
+   "expect": {
+    "aid": "ortho"
+   }
+  },
+  {
+   "click": [
+    20,
+    3
+   ],
+   "note": "Shift basılıyken tık: (20; 0).",
+   "expect": {
+    "points": 2,
+    "aid": "ortho"
+   }
+  },
+  {
+   "hold": false,
+   "expect": {
+    "aid": "free"
+   }
+  },
+  {
+   "run": "draft.ortho",
+   "note": "Orto açılır; aracın noktaları ve seçenekleri durur.",
+   "expect": {
+    "tool": "polyline",
+    "points": 2,
+    "aid": "ortho",
+    "logged": [
+     "Orto açık"
+    ]
+   }
+  },
+  {
+   "hold": true,
+   "note": "Orto açıkken Shift onu geçici kapatır.",
+   "expect": {
+    "aid": "free"
+   }
+  },
+  {
+   "hold": false,
+   "expect": {
+    "aid": "ortho"
+   }
+  },
+  {
+   "run": "draft.polar",
+   "note": "Kutupsal izleme açılır; Orto önce gelir, ikisi birlikte uygulanmaz.",
+   "expect": {
+    "aid": "ortho",
+    "logged": [
+     "Kutupsal izleme açık"
+    ]
+   }
+  },
+  {
+   "run": "draft.ortho",
+   "note": "Orto kapanınca kutupsal izleme kendiliğinden sürer: imleç 90°'lik ışında.",
+   "expect": {
+    "aid": "polar",
+    "points": 2
+   }
+  },
+  {
+   "move": [
+    30,
+    10.4
+   ],
+   "expect": {
+    "aid": "polar"
+   }
+  },
+  {
+   "click": [
+    30,
+    10.4
+   ],
+   "note": "45°'lik ışına iner: (30,2; 10,2).",
+   "expect": {
+    "points": 3
+   }
+  },
+  {
+   "text": "<100"
+  },
+  {
+   "key": "Enter",
+   "note": "Yazılan semt (CBS, grad: doğu) kutupsal izlemenin önüne geçer.",
+   "expect": {
+    "locks": [
+     "Semt 100.0000 g"
+    ]
+   }
+  },
+  {
+   "move": [
+    40,
+    14
+   ],
+   "expect": {
+    "aid": "direction"
+   }
+  },
+  {
+   "key": "Esc",
+   "note": "Esc önce kilidi kaldırır; imleç hiçbir ışında değil.",
+   "expect": {
+    "locks": [],
+    "aid": "free",
+    "tool": "polyline"
+   }
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "entities": 1,
+    "newest": {
+     "kind": "polyline",
+     "points": [
+      [
+       0,
+       0
+      ],
+      [
+       20,
+       0
+      ],
+      [
+       30.2,
+       10.2
+      ]
+     ]
+    }
+   }
+  }
+ ]
+}

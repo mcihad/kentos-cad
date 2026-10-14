@@ -1453,17 +1453,26 @@ impl App {
     ) -> Element<'_, Message> {
         let command = catalog().get(id);
         let runs = command.is_some_and(|c| c.standing == Standing::Ported);
-        let mut toggle = kentos_ui::widget::status_bar::Toggle::new(
-            name,
-            runs && self.checked(id).unwrap_or(false),
-        )
-        .compact(compact);
+        // Orto shows what rules the pointer now, Shift turning it over (docs/adr/0268 §2).
+        let on = if id == "draft.ortho" {
+            self.ortho_shown()
+        } else {
+            self.checked(id).unwrap_or(false)
+        };
+        let mut toggle =
+            kentos_ui::widget::status_bar::Toggle::new(name, runs && on).compact(compact);
         if let Some(command) = command {
             if let Some(keys) = command.shortcuts.first() {
                 toggle = toggle.shortcut(*keys);
             }
-            let note = (id == "draft.snap").then(|| self.snap_note()).flatten();
-            let idle = note.is_some();
+            let note = match id {
+                "draft.snap" => self.snap_note(),
+                "draft.ortho" => self.ortho_note(),
+                "draft.polar" => self.polar_note(),
+                _ => None,
+            };
+            // Orto's note says Shift's turn, not that it is out of use.
+            let idle = note.is_some() && id != "draft.ortho";
             toggle = toggle
                 .description(match note {
                     Some(first) => format!("{first} {}", command.note()),

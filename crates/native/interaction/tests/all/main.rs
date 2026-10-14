@@ -3,6 +3,7 @@
 //! One binary links once where each file was linked on its own.
 
 mod adjoin;
+mod aids;
 mod area;
 mod arrange;
 mod array_path;

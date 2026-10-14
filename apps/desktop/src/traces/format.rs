@@ -104,6 +104,8 @@ pub struct Step {
     pub(super) save_and_reopen: Option<bool>,
     /// Shift held during the step's click or drag.
     pub(super) shift: Option<bool>,
+    /// Shift pressed (true) or let go (false) with the pointer still (docs/adr/0268 §2).
+    pub(super) hold: Option<bool>,
     /// A named picture of the app as it is now (usage scenarios, `kentos-cad
     /// kullan`); a test run passes over it.
     pub(super) shot: Option<String>,
@@ -243,6 +245,9 @@ pub struct Expect {
     /// The digitizing locks holding the next point, as their chips and
     /// the command line say them, in order (docs/adr/0166 §6); `[]` for none.
     pub(super) locks: Option<Vec<String>>,
+    /// What rules the next point's place with the pointer where it is (docs/adr/0268 §1): `free`,
+    /// `coordinates`, `direction`, `rightAngle`, `snap`, `tracking`, `ortho` or `polar`.
+    pub(super) aid: Option<String>,
     /// The active layer: the names of the groups above it and its own
     /// (docs/adr/0176 §3).
     pub(super) active_layer: Option<Vec<String>>,
