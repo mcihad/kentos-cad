@@ -25,11 +25,11 @@
 //! goes on from where the newest line, arc or polyline's way ends: an arc
 //! given clockwise ends at its stored start (`Memory::arc_drawn_back`).
 
-use kentos_contracts::{
-    ArcCreate, CurveConstruction, Entity, MeasuredPoint, ObjectEnd, SubPlace,
-};
+use kentos_contracts::{ArcCreate, CurveConstruction, Entity, MeasuredPoint, ObjectEnd, SubPlace};
 use kentos_geometry_core::entity::tessellate_circle;
-use kentos_geometry_core::geom::arc::{ArcGeom, DEFAULT_STEP, norm_angle, point_on_circle, tessellate_arc};
+use kentos_geometry_core::geom::arc::{
+    ArcGeom, DEFAULT_STEP, norm_angle, point_on_circle, tessellate_arc,
+};
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::jsmath::{PI, atan2};
 use kentos_geometry_core::tools::drawing::{end_tangent, start_tangent};
@@ -300,7 +300,11 @@ impl Arc {
                     end.dir,
                     ObjectEnd {
                         uid: uid.to_string(),
-                        place: if at_start { SubPlace::Start } else { SubPlace::End },
+                        place: if at_start {
+                            SubPlace::Start
+                        } else {
+                            SubPlace::End
+                        },
                         path: Vec::new(),
                     },
                 ))

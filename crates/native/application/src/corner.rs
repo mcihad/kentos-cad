@@ -14,6 +14,11 @@
 //! always took them; they are written through `cad.entities.edit`'s
 //! `fillet` and `chamfer` operations ([`crate::edit`]).
 //!
+//! Two objects (docs/adr/0295): each side is a line or an open polyline's
+//! first or last straight edge, whose free end moves to the arc or the cut;
+//! the first and last edges of one open polyline close it, the arc or the
+//! cut its closing edge.
+//!
 //! The checks, in order: `all` names objects; the ids; the size and the
 //! picks finite; the size (not negative; above zero where something is
 //! added); the expected revision; the objects; their layers unlocked; the
@@ -25,7 +30,10 @@ use kentos_contracts::{
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::{Entity as CoreEntity, Shape};
+use kentos_geometry_core::geom::intersect::closest_on_edge;
+use kentos_geometry_core::jsmath::{PI, acos, cos, js_hypot, js_max, js_min, sin, tan};
 use kentos_geometry_core::ops::curve_cuts::Geometry;
+use kentos_geometry_core::ops::edges::entity_edges;
 use kentos_geometry_core::ops::fillet::{
     Chamfer, Corner as Joined, CornerOp, Fillet, Seg, chamfer_lines, corner_in_path, fillet_lines,
 };
@@ -165,16 +173,126 @@ pub fn path_corner(slot: Slot, e: &Entity, i: usize) -> Option<Corner> {
     })
 }
 
-/// The corner of two lines, each keeping the side of its pick; none when they
-/// are one or parallel, or another kind.
-pub fn lines_corner(doc: &Document, a: (Slot, Vec2), b: (Slot, Vec2)) -> Option<Corner> {
-    if a.0 == b.0 {
-        return None;
+/// A straight side of a two-object corner (docs/adr/0295): a line, or an open polyline's edge `edge` (from vertex
+/// `edge` to `edge + 1`), as a segment in its own direction.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Side {
+    pub seg: Seg,
+    pub edge: Option<usize>,
+}
+
+/// Why a pick is not a side.
+pub const NOT_STRAIGHT: &str = "İki düz kenar verin: çizgi ya da açık çoklu çizginin ilk ya da son kenarı; çoklu çizginin ve alanın iç köşesi kendi köşesiyle (vertex) verilir.";
+const INNER_EDGE: &str = "Çoklu çizgide yalnız ilk ya da son kenar başka bir kenarla köşe yapar; iç köşe için köşenin kendisini (vertex) verin.";
+const ARC_EDGE: &str = "Seçilen kenar yay; yalnız düz kenar köşe yapar.";
+const INNER_END: &str = "Köşe çoklu çizginin serbest ucunda değil, iç köşesinde kalıyor; kenarın öbür yanına tıklayın ya da köşeyi kendi köşesiyle (vertex) verin.";
+const SAME_END: &str = "Aynı uç iki kez seçildi; yolu kapatmak için ilk ve son kenarını seçin.";
+const SAME_LINE: &str = "İkinci çizgi ilkinden farklı olmalı.";
+/// Tüm köşeler's kinds.
+const ALL_KINDS: &str =
+    "Tüm köşeler çoklu çizgide, alanda ve uçları birbirine değen çizgilerde işlenir.";
+const LINES_NO_CORNER: &str = "Çizgilerin buluştuğu yerde köşe yok: ya aynı doğrultudalar ya da bir noktada ikiden çok uç buluşuyor.";
+const FITS_NONE: &str = "Hiçbir köşeye sığmadı; daha küçük bir değer verin ya da kenarları uzatın.";
+const NO_CORNER: &str = "Çizgiler paralel ya da seçilen tarafta çizgi yok.";
+
+/// The side `pick` names on `e`: a line, or an open polyline's edge nearest the pick, which must be its first or
+/// last and straight.
+pub fn side_of(e: &Entity, pick: Vec2) -> Result<Side, &'static str> {
+    if let Some(seg) = line_of(e) {
+        return Ok(Side { seg, edge: None });
     }
-    let l1 = doc.get(a.0).and_then(line_of)?;
-    let l2 = doc.get(b.0).and_then(line_of)?;
-    let geom = lines_corner_at(l1.a, l1.b, a.1, l2.a, l2.b, b.1)?;
-    Some(Corner {
+    let Entity::Polyline(path) = e else {
+        return Err(NOT_STRAIGHT);
+    };
+    if path.closed || path.parts.is_some() || path.pts.len() < 2 {
+        return Err(NOT_STRAIGHT);
+    }
+    let edges = entity_edges(&shape(e));
+    let nearest = edges
+        .iter()
+        .enumerate()
+        .map(|(i, edge)| (i, closest_on_edge(edge, pick).d))
+        .min_by(|a, b| a.1.total_cmp(&b.1))
+        .map(|(i, _)| i)
+        .ok_or(NOT_STRAIGHT)?;
+    let last = path.pts.len() - 2;
+    if nearest != 0 && nearest != last {
+        return Err(INNER_EDGE);
+    }
+    let bulge = path
+        .bulges
+        .as_ref()
+        .and_then(|b| b.get(nearest))
+        .copied()
+        .unwrap_or(0.0);
+    if bulge != 0.0 {
+        return Err(ARC_EDGE);
+    }
+    let (a, b) = (path.pts[nearest], path.pts[nearest + 1]);
+    Ok(Side {
+        seg: Seg {
+            a: Vec2::new(a.x, a.y),
+            b: Vec2::new(b.x, b.y),
+        },
+        edge: Some(nearest),
+    })
+}
+
+/// The vertex of a polyline side that the corner moves: the end the core does not keep (the kept end is the one
+/// farthest along the side's direction away from the corner). Its free end, or why not.
+fn moved_vertex(
+    e: &Entity,
+    side: Side,
+    geom: &CornerGeom,
+    u: Vec2,
+) -> Result<Option<usize>, &'static str> {
+    let Some(i) = side.edge else { return Ok(None) };
+    let along = |p: Vec2| (p.x - geom.at.x) * u.x + (p.y - geom.at.y) * u.y;
+    // As the core's `kept_side`: the kept end is `a` when it reaches at least as far.
+    let moved = if along(side.seg.a) >= along(side.seg.b) {
+        i + 1
+    } else {
+        i
+    };
+    let n = match e {
+        Entity::Polyline(path) => path.pts.len(),
+        _ => 0,
+    };
+    if moved == 0 || moved + 1 == n {
+        Ok(Some(moved))
+    } else {
+        Err(INNER_END)
+    }
+}
+
+/// The corner of two straight sides, each keeping the side of its pick (docs/adr/0295); why not when they are one
+/// line, the same end of one path, parallel, or not straight sides.
+pub fn lines_corner(
+    doc: &Document,
+    a: (Slot, Vec2),
+    b: (Slot, Vec2),
+) -> Result<Corner, &'static str> {
+    let (ea, eb) = (
+        doc.get(a.0).ok_or(NOT_STRAIGHT)?,
+        doc.get(b.0).ok_or(NOT_STRAIGHT)?,
+    );
+    let s1 = side_of(ea, a.1)?;
+    let s2 = side_of(eb, b.1)?;
+    if a.0 == b.0 && (s1.edge.is_none() || s1.edge == s2.edge && ea_edges(ea) > 1) {
+        return Err(if s1.edge.is_none() {
+            SAME_LINE
+        } else {
+            SAME_END
+        });
+    }
+    let geom =
+        lines_corner_at(s1.seg.a, s1.seg.b, a.1, s2.seg.a, s2.seg.b, b.1).ok_or(NO_CORNER)?;
+    let m1 = moved_vertex(ea, s1, &geom, geom.u1)?;
+    let m2 = moved_vertex(eb, s2, &geom, geom.u2)?;
+    if a.0 == b.0 && m1 == m2 {
+        return Err(SAME_END);
+    }
+    Ok(Corner {
         site: Site::Lines {
             first: a.0,
             pick1: a.1,
@@ -183,6 +301,14 @@ pub fn lines_corner(doc: &Document, a: (Slot, Vec2), b: (Slot, Vec2)) -> Option<
         },
         geom,
     })
+}
+
+/// How many edges an open polyline has.
+fn ea_edges(e: &Entity) -> usize {
+    match e {
+        Entity::Polyline(path) => path.pts.len().saturating_sub(1),
+        _ => 0,
+    }
 }
 
 /// What a size does to a corner: the sides' new geometry and the piece
@@ -213,12 +339,15 @@ pub fn done(c: &Corner, size: Size, doc: &Document) -> Result<Done, String> {
             second,
             pick2,
         } => {
-            let l1 = doc.get(first).and_then(line_of).ok_or_else(String::new)?;
-            let l2 = doc.get(second).and_then(line_of).ok_or_else(String::new)?;
-            let line = |s: Seg| Shape::Line { a: s.a, b: s.b };
+            let (e1, e2) = (
+                doc.get(first).ok_or_else(String::new)?,
+                doc.get(second).ok_or_else(String::new)?,
+            );
+            let s1 = side_of(e1, pick1).map_err(String::from)?;
+            let s2 = side_of(e2, pick2).map_err(String::from)?;
             let (joined, piece) = match size {
                 Size::Radius(r) => {
-                    let Fillet(j) = fillet_lines(l1, pick1, l2, pick2, r);
+                    let Fillet(j) = fillet_lines(s1.seg, pick1, s2.seg, pick2, r);
                     match j {
                         Joined::Error(e) => return Err(e),
                         Joined::Ok { line1, line2, join } => (
@@ -233,26 +362,28 @@ pub fn done(c: &Corner, size: Size, doc: &Document) -> Result<Done, String> {
                     }
                 }
                 Size::Cut(d1, d2) => {
-                    let Chamfer(j) = chamfer_lines(l1, pick1, l2, pick2, d1, d2);
+                    let Chamfer(j) = chamfer_lines(s1.seg, pick1, s2.seg, pick2, d1, d2);
                     match j {
                         Joined::Error(e) => return Err(e),
-                        Joined::Ok { line1, line2, join } => ((line1, line2), join.map(line)),
+                        Joined::Ok { line1, line2, join } => {
+                            ((line1, line2), join.map(|s| Shape::Line { a: s.a, b: s.b }))
+                        }
                     }
                 }
             };
-            // A side keeps its direction: the core gives the kept end first,
-            // which is the line's end when the corner was at its start.
-            let along = |was: Seg, s: Seg| {
-                if s.a == was.b && s.a != was.a {
-                    Seg { a: s.b, b: s.a }
-                } else {
-                    s
-                }
-            };
+            if first == second {
+                return Ok(Done {
+                    updates: vec![(
+                        first,
+                        closed_path(e1, (s1, joined.0), (s2, joined.1), piece)?,
+                    )],
+                    add: None,
+                });
+            }
             Ok(Done {
                 updates: vec![
-                    (first, line(along(l1, joined.0))),
-                    (second, line(along(l2, joined.1))),
+                    (first, side_after(e1, s1, joined.0)?),
+                    (second, side_after(e2, s2, joined.1)?),
                 ],
                 add: piece.map(|s| (first, s)),
             })
@@ -260,14 +391,257 @@ pub fn done(c: &Corner, size: Size, doc: &Document) -> Result<Done, String> {
     }
 }
 
+/// A side's new geometry from the core's kept segment (the kept end first, then the arc's or the cut's end): a line
+/// keeps its direction, a polyline's free end moves.
+fn side_after(e: &Entity, side: Side, kept: Seg) -> Result<Shape, String> {
+    let Some(_) = side.edge else {
+        // A side keeps its direction: the core gives the kept end first, which is the line's end when the corner
+        // was at its start.
+        let was = side.seg;
+        let s = if kept.a == was.b && kept.a != was.a {
+            Seg {
+                a: kept.b,
+                b: kept.a,
+            }
+        } else {
+            kept
+        };
+        return Ok(Shape::Line { a: s.a, b: s.b });
+    };
+    let mut path = shape(e);
+    let Shape::Polyline { pts, .. } = &mut path else {
+        return Err(NOT_STRAIGHT.into());
+    };
+    let i = moved_index(side, kept, pts.len()).ok_or_else(|| String::from(INNER_END))?;
+    pts[i] = kept.b;
+    Ok(path)
+}
+
+/// Which vertex of a polyline side the kept segment moved: the one that is not its kept end.
+fn moved_index(side: Side, kept: Seg, n: usize) -> Option<usize> {
+    let i = side.edge?;
+    let moved = if kept.a == side.seg.a { i + 1 } else { i };
+    (moved == 0 || moved + 1 == n).then_some(moved)
+}
+
+/// One open polyline's first and last edges joined (docs/adr/0295): both free ends move, and the path closes over
+/// the arc (its closing edge's bulge) or the cut; with no piece the ends meet and the last vertex goes.
+fn closed_path(
+    e: &Entity,
+    one: (Side, Seg),
+    two: (Side, Seg),
+    piece: Option<Shape>,
+) -> Result<Shape, String> {
+    let mut path = shape(e);
+    let Shape::Polyline {
+        pts,
+        bulges,
+        closed,
+        widths,
+        ..
+    } = &mut path
+    else {
+        return Err(NOT_STRAIGHT.into());
+    };
+    let n = pts.len();
+    for (side, kept) in [one, two] {
+        let i = moved_index(side, kept, n).ok_or_else(|| String::from(INNER_END))?;
+        pts[i] = kept.b;
+    }
+    let mut bs = bulges.clone().unwrap_or_else(|| vec![0.0; n]);
+    bs.resize(n, 0.0);
+    match piece {
+        Some(Shape::Arc { c, r, a0, a1 }) => {
+            // The closing edge runs from the last vertex to the first: counter-clockwise when the arc starts there.
+            let start = Vec2::new(c.x + r * cos(a0), c.y + r * sin(a0));
+            let last = pts[n - 1];
+            let first = pts[0];
+            let near = |p: Vec2, q: Vec2| js_hypot(p.x - q.x, p.y - q.y);
+            let ccw = near(start, last) <= near(start, first);
+            let sweep = norm_angle(a1 - a0);
+            let b = tan(sweep / 4.0);
+            bs[n - 1] = if ccw { b } else { -b };
+        }
+        Some(_) => bs[n - 1] = 0.0,
+        None => {
+            // The ends met: the last vertex is the first.
+            pts.pop();
+            bs.truncate(n - 1);
+            if let Some(w) = widths {
+                w.truncate(n - 1);
+            }
+        }
+    }
+    *bulges = bs.iter().any(|b| *b != 0.0).then_some(bs);
+    *closed = true;
+    Ok(path)
+}
+
+/// What Tüm köşeleri yuvarla and Tüm köşelere pah do to lines whose ends meet (docs/adr/0295): every point where
+/// exactly two of the lines' ends meet bit for bit, and they are not in line, is a corner; each line's end there moves
+/// back by the corner's size, and the arc or the cut is a new object from the line given first. A corner that does
+/// not fit its lines, or that with the corner at the line's other end needs more than the line, is left (both are
+/// then); the counts are of corners.
+#[derive(Clone, Debug, Default)]
+pub struct LineCorners {
+    /// Each line that changes, its new geometry.
+    pub updates: Vec<(Slot, Shape)>,
+    /// Each arc or cut, with the line it is made from.
+    pub pieces: Vec<(Slot, Shape)>,
+    pub done: usize,
+    pub skipped: usize,
+    /// The lines with no end meeting another's: no corner at all.
+    pub alone: Vec<Slot>,
+}
+
+/// [`LineCorners`] of `lines` (in the order given, lines only) with `size`, every value above zero.
+pub fn line_corners(doc: &Document, lines: &[Slot], size: Size) -> LineCorners {
+    let segs: Vec<Seg> = lines
+        .iter()
+        .filter_map(|s| doc.get(*s).and_then(line_of))
+        .collect();
+    let ends = |k: usize| [segs[k].a, segs[k].b];
+    // Every end, and the others that meet it bit for bit.
+    let mut corners: Vec<((usize, usize), (usize, usize))> = Vec::new();
+    let mut met = vec![[false; 2]; segs.len()];
+    for (k, met_k) in met.iter_mut().enumerate() {
+        for (e, met_ke) in met_k.iter_mut().enumerate() {
+            let p = ends(k)[e];
+            let mut at = Vec::new();
+            for (j, _) in segs.iter().enumerate() {
+                for f in 0..2 {
+                    if (j, f) != (k, e) && ends(j)[f] == p {
+                        at.push((j, f));
+                    }
+                }
+            }
+            *met_ke = !at.is_empty();
+            // Two ends: one corner, named once from the earlier line.
+            if let [(j, f)] = at[..]
+                && (k, e) < (j, f)
+                && j != k
+            {
+                corners.push(((k, e), (j, f)));
+            }
+        }
+    }
+    let mut out = LineCorners::default();
+    for (k, m) in met.iter().enumerate() {
+        if !m[0] && !m[1] {
+            out.alone.push(lines[k]);
+        }
+    }
+    // Each corner's geometry and sizes along its lines, or none when the lines are in line.
+    let away = |k: usize, e: usize| {
+        let (p, q) = (ends(k)[e], ends(k)[1 - e]);
+        let l = js_hypot(q.x - p.x, q.y - p.y);
+        (Vec2::new((q.x - p.x) / l, (q.y - p.y) / l), l)
+    };
+    let planned: Vec<Option<(CornerGeom, f64, f64)>> = corners
+        .iter()
+        .map(|&((k, e), (j, f))| {
+            let ((u1, l1), (u2, l2)) = (away(k, e), away(j, f));
+            let phi = acos(js_max(-1.0, js_min(1.0, u1.x * u2.x + u1.y * u2.y)));
+            if !(1e-6..=PI - 1e-6).contains(&phi) {
+                return None;
+            }
+            let (d1, d2) = match size {
+                Size::Radius(r) => {
+                    let d = r / tan(phi / 2.0);
+                    (d, d)
+                }
+                Size::Cut(a, b) => (a, b),
+            };
+            let geom = CornerGeom {
+                at: ends(k)[e],
+                u1,
+                u2,
+                reach: js_min(l1, l2),
+                phi,
+            };
+            Some((geom, d1, d2))
+        })
+        .collect();
+    // What each line's end gives to its corner; a line whose two corners together need more than it leaves both.
+    let mut take: Vec<bool> = planned
+        .iter()
+        .zip(&corners)
+        .map(|(p, &((k, e), (j, f)))| {
+            p.is_some_and(|(_, d1, d2)| {
+                let (l1, l2) = (away(k, e).1, away(j, f).1);
+                d1 > 0.0 && d2 > 0.0 && d1 <= l1 + 1e-9 && d2 <= l2 + 1e-9
+            })
+        })
+        .collect();
+    let mut need = vec![[0.0f64; 2]; segs.len()];
+    let mut by = vec![[None::<usize>; 2]; segs.len()];
+    for (c, &((k, e), (j, f))) in corners.iter().enumerate() {
+        if let (true, Some((_, d1, d2))) = (take[c], planned[c]) {
+            need[k][e] = d1;
+            need[j][f] = d2;
+            by[k][e] = Some(c);
+            by[j][f] = Some(c);
+        }
+    }
+    for k in 0..segs.len() {
+        let l = js_hypot(segs[k].b.x - segs[k].a.x, segs[k].b.y - segs[k].a.y);
+        if let [Some(c0), Some(c1)] = by[k]
+            && need[k][0] + need[k][1] > l + 1e-9
+        {
+            take[c0] = false;
+            take[c1] = false;
+        }
+    }
+    let mut moved: Vec<[Option<Vec2>; 2]> = vec![[None; 2]; segs.len()];
+    for (c, &((k, e), (j, f))) in corners.iter().enumerate() {
+        let Some((geom, d1, d2)) = planned[c] else {
+            continue;
+        };
+        if !take[c] {
+            out.skipped += 1;
+            continue;
+        }
+        let at = geom.at;
+        moved[k][e] = Some(Vec2::new(at.x + geom.u1.x * d1, at.y + geom.u1.y * d1));
+        moved[j][f] = Some(Vec2::new(at.x + geom.u2.x * d2, at.y + geom.u2.y * d2));
+        let piece = match size {
+            Size::Radius(r) => fillet_arc(&geom, r).map(|a| Shape::Arc {
+                c: a.c,
+                r: a.r,
+                a0: norm_angle(a.a0),
+                a1: norm_angle(a.a1),
+            }),
+            Size::Cut(..) => chamfer_line(&geom, d1, d2).map(|p| Shape::Line { a: p.a, b: p.b }),
+        };
+        if let Some(piece) = piece {
+            out.pieces.push((lines[k], piece));
+        }
+        out.done += 1;
+    }
+    for (k, m) in moved.iter().enumerate() {
+        if m[0].is_none() && m[1].is_none() {
+            continue;
+        }
+        out.updates.push((
+            lines[k],
+            Shape::Line {
+                a: m[0].unwrap_or(segs[k].a),
+                b: m[1].unwrap_or(segs[k].b),
+            },
+        ));
+    }
+    out
+}
+
 /// The arc or the cut alone, without Kırp.
 pub fn piece(c: &Corner, size: Size) -> Option<Shape> {
     match size {
+        // Its angles in [0, 2π), as the trimmed corner's arc (`fillet_lines`).
         Size::Radius(r) => fillet_arc(&c.geom, r).map(|a| Shape::Arc {
             c: a.c,
             r: a.r,
-            a0: a.a0,
-            a1: a.a1,
+            a0: norm_angle(a.a0),
+            a1: norm_angle(a.a1),
         }),
         Size::Cut(d1, d2) => chamfer_line(&c.geom, d1, d2).map(|p| Shape::Line { a: p.a, b: p.b }),
     }
@@ -477,7 +851,56 @@ fn check(doc: &Document, r: &Request<'_>) -> Result<Checked, Stop> {
     match r.corner {
         CornerPick::All { .. } => {
             let mut first_why: Option<String> = None;
+            // Lines among them: the corners where their ends meet (docs/adr/0295).
+            let lines: Vec<Slot> = slots
+                .iter()
+                .copied()
+                .filter(|s| doc.get(*s).and_then(line_of).is_some())
+                .collect();
+            let found = line_corners(doc, &lines, size);
+            if let Some(alone) = found.alone.first() {
+                let at = slots.iter().position(|s| s == alone).unwrap_or(0);
+                return Err(refuse(codes::NOT_A_CORNER, ALL_KINDS.into(), &named[at].1));
+            }
+            if !lines.is_empty() && found.done == 0 && found.skipped == 0 {
+                let at = slots.iter().position(|s| *s == lines[0]).unwrap_or(0);
+                return Err(refuse(
+                    codes::NOT_A_CORNER,
+                    LINES_NO_CORNER.into(),
+                    &named[at].1,
+                ));
+            }
+            if !lines.is_empty() {
+                skipped += found.skipped as u32;
+                done_n += found.done as u32;
+                if found.done == 0 {
+                    let why = FITS_NONE.to_owned();
+                    first_why.get_or_insert_with(|| why.clone());
+                    let at = slots.iter().position(|s| *s == lines[0]).unwrap_or(0);
+                    warnings.push(CommandWarning {
+                        code: failed.into(),
+                        message: why,
+                        path: Some(named[at].1.clone()),
+                    });
+                }
+                for (slot, s) in &found.updates {
+                    if let Some(geometry) = edit_geometry(s.clone()) {
+                        changes.push(EntityEdit::Update {
+                            uid: uid_of(doc, *slot),
+                            geometry,
+                        });
+                    }
+                }
+                for (slot, s) in &found.pieces {
+                    if let Some(geometry) = edit_geometry(s.clone()) {
+                        changes.push(EntityEdit::add(uid_of(doc, *slot), geometry, None));
+                    }
+                }
+            }
             for (slot, (_, path)) in slots.iter().zip(&named) {
+                if lines.contains(slot) {
+                    continue;
+                }
                 let e = doc
                     .get(*slot)
                     .ok_or_else(|| refuse(codes::NOT_A_CORNER, String::new(), path))?;
@@ -485,17 +908,11 @@ fn check(doc: &Document, r: &Request<'_>) -> Result<Checked, Stop> {
                     .then(|| all_corners(&CoreEntity::new(shape(e)), &size.core()))
                     .flatten();
                 let Some(rs) = reshaped else {
-                    return Err(refuse(
-                        codes::NOT_A_CORNER,
-                        "Tüm köşeler yalnız çoklu çizgide ve alanda işlenir.".into(),
-                        path,
-                    ));
+                    return Err(refuse(codes::NOT_A_CORNER, ALL_KINDS.into(), path));
                 };
                 skipped += rs.skipped as u32;
                 if rs.done == 0 {
-                    let why =
-                        "Hiçbir köşeye sığmadı; daha küçük bir değer verin ya da kenarları uzatın."
-                            .to_owned();
+                    let why = FITS_NONE.to_owned();
                     first_why.get_or_insert_with(|| why.clone());
                     warnings.push(CommandWarning {
                         code: failed.into(),
@@ -536,16 +953,8 @@ fn check(doc: &Document, r: &Request<'_>) -> Result<Checked, Stop> {
         CornerPick::Lines { first, second } => {
             let a = (slots[0], Vec2::new(first.at.x, first.at.y));
             let b = (slots[1], Vec2::new(second.at.x, second.at.y));
-            let corner = lines_corner(doc, a, b).ok_or_else(|| {
-                let why = if a.0 == b.0 {
-                    "İkinci çizgi ilkinden farklı olmalı."
-                } else if doc.get(a.0).and_then(line_of).is_none() || doc.get(b.0).and_then(line_of).is_none() {
-                    "İki çizgi verin; çoklu çizginin ve alanın köşesi kendi köşesiyle (vertex) verilir."
-                } else {
-                    "Çizgiler paralel ya da seçilen tarafta çizgi yok."
-                };
-                refuse(codes::NOT_A_CORNER, why.into(), "corner")
-            })?;
+            let corner = lines_corner(doc, a, b)
+                .map_err(|why| refuse(codes::NOT_A_CORNER, why.into(), "corner"))?;
             add_corner(doc, &corner, size, r.trim, &mut changes)
                 .map_err(|why| refuse(failed, why, "corner"))?;
             done_n = 1;
@@ -596,4 +1005,13 @@ fn add_corner(
         changes.push(EntityEdit::add(uid_of(doc, *like), geometry, None));
     }
     Ok(())
+}
+
+fn norm_angle(a: f64) -> f64 {
+    let r = a % core::f64::consts::TAU;
+    if r < 0.0 {
+        r + core::f64::consts::TAU
+    } else {
+        r
+    }
 }

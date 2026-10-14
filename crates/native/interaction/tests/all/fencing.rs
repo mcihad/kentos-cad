@@ -175,7 +175,9 @@ fn a_fence_that_crosses_nothing_or_only_a_locked_line_says_so() {
     assert_eq!(b.last_level(), Some(Level::Warn));
     assert_eq!(
         b.last_text(),
-        Some("Çit hiçbir nesneyi kesmiyor; çiti budanacak nesnelerin üstünden geçirin.")
+        Some(
+            "Çit hiçbir nesneyi budayamadı; nesne değişmedi. 1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın."
+        )
     );
     assert_eq!(b.doc.revision(), rev);
     // The fence stays as it was, to amend; Esc drops it. With one point, Enter asks for the second.
@@ -191,11 +193,18 @@ fn a_fence_that_crosses_nothing_or_only_a_locked_line_says_so() {
     );
 }
 
+/// Quick mode (every visible edge) erases what no boundary cuts, as AutoCAD's quick TRIM (docs/adr/0294); with
+/// chosen boundaries the fence leaves it and says why.
 #[test]
-fn a_fence_leaves_a_boundaryless_crossing_and_says_why() {
+fn a_fence_erases_a_boundaryless_line_in_quick_mode_and_leaves_it_with_chosen_boundaries() {
     let mut b = Bench::new("trim");
-    // One long line and nothing else: there is no boundary to trim at.
-    b.add_line("cizim", [0.0, 0.0], [10.0, 0.0]);
+    // One long line and another far off: no boundary cuts the first.
+    let line = b.add_line("cizim", [0.0, 0.0], [10.0, 0.0]);
+    let far = b.add_line("cizim", [0.0, 20.0], [10.0, 20.0]);
+    // Sınır seç: the far line alone bounds.
+    assert!(b.type_text("S"));
+    b.click(5.0, 20.0);
+    b.confirm();
     assert!(b.type_text("C"));
     b.click(5.0, -2.0);
     b.click(5.0, 2.0);
@@ -208,6 +217,16 @@ fn a_fence_leaves_a_boundaryless_crossing_and_says_why() {
             .starts_with("Çit hiçbir nesneyi budayamadı")
     );
     assert_eq!(b.doc.revision(), rev);
+    // Tüm kenarlar: quick mode; the same fence takes the line away whole.
+    assert!(b.type_text("K"));
+    assert!(b.type_text("T"));
+    assert!(b.type_text("C"));
+    b.click(5.0, -2.0);
+    b.click(5.0, 2.0);
+    b.confirm();
+    assert_eq!(b.last_level(), Some(Level::Success));
+    assert!(b.doc.get(line).is_none());
+    assert!(b.doc.get(far).is_some());
 }
 
 #[test]

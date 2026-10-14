@@ -1358,7 +1358,7 @@
         "cad.entities.trim"
       ],
       "was": "cad.entities.edit",
-      "note": "Seçimler (nesne ve tıklanan yer) ve sınırlar (görünümün dikdörtgeni ya da Sınır seç) komuta verilir (ADR 0250).",
+      "note": "Seçimler (nesne ve tıklanan yer), Çit, Kesişen penceresi, sınırlar (görünümün dikdörtgeni ya da Sınır seç), Uzantılar (edgeMode) ve hızlı kipin silmesi (eraseUncut) komuta verilir; Sil (R) cad.entities.delete ile (ADR 0250, 0294).",
       "methods": {
         "Tıklayarak": "semantic",
         "Çit": "semantic"
@@ -1370,7 +1370,7 @@
         "cad.entities.extend"
       ],
       "was": "cad.entities.edit",
-      "note": "Seçimler ve sınırlar komuta verilir; her uç bir kez (ADR 0250).",
+      "note": "Seçimler, Çit, Kesişen penceresi, sınırlar ve Uzantılar (edgeMode) komuta verilir; her uç bir kez (ADR 0250, 0294).",
       "methods": {
         "Tıklayarak": "semantic",
         "Çit": "semantic"

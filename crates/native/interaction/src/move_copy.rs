@@ -166,7 +166,9 @@ impl Stages for Move {
         let label = self.label();
         if self.displacement {
             let last = match (self.last, self.format) {
-                (Some([x, y]), Some(f)) => format!(" (Enter: {},{})", f.length_bare(x), f.length_bare(y)),
+                (Some([x, y]), Some(f)) => {
+                    format!(" (Enter: {},{})", f.length_bare(x), f.length_bare(y))
+                }
                 _ => String::new(),
             };
             return Prompt::new(label, format!("yer değiştirmeyi yazın: dY,dX{last}"));
@@ -174,8 +176,11 @@ impl Stages for Move {
         if let Some(a) = self.array {
             return match a.count {
                 None => Prompt::new(label, "dizideki öğe sayısını yazın (asıllar dahil)"),
-                Some(c) => Prompt::new(label, format!("dizinin ikinci noktasını belirtin ({c} yer)"))
-                    .option_with("Sığdır", "S", if a.fit { "açık" } else { "kapalı" }),
+                Some(c) => Prompt::new(
+                    label,
+                    format!("dizinin ikinci noktasını belirtin ({c} yer)"),
+                )
+                .option_with("Sığdır", "S", if a.fit { "açık" } else { "kapalı" }),
             };
         }
         match self.base {

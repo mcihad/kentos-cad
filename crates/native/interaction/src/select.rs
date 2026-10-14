@@ -399,7 +399,7 @@ impl Select {
         let Some(g) = self.grip.as_mut() else {
             return false;
         };
-        let typed = g.modes.typed(text);
+        let typed = g.modes.typed(text, &cx.format());
         cx.memory.mirror_text_mirrored = g.modes.text_mirrored;
         match typed {
             Some(Typed::Said(line)) => {

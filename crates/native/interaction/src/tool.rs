@@ -741,6 +741,9 @@ pub struct Memory {
     /// Aynala's Yazılar (docs/adr/0292; AutoCAD's MIRRTEXT): the texts turn with the mirror instead of staying
     /// readable; the tool and the grip mode share it for the session.
     pub mirror_text_mirrored: bool,
+    /// Buda's and Uzat's Uzantılar (docs/adr/0294; AutoCAD's EDGEMODE): the boundaries bound along their
+    /// extensions too; the two tools share it for the session.
+    pub trim_edge_mode: bool,
     /// NURBS eğrisi's method (control points, else fit points) and degree
     /// (docs/adr/0259 §6), kept for the session as AutoCAD's SPLINE keeps them.
     pub nurbs_control: bool,
@@ -1057,6 +1060,7 @@ impl Default for Memory {
             copy_single: false,
             last_displacement: None,
             mirror_text_mirrored: false,
+            trim_edge_mode: false,
             nurbs_control: false,
             nurbs_degree: 3,
             block_insert: None,

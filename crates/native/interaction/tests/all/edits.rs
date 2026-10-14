@@ -186,9 +186,9 @@ fn trim_cuts_between_the_visible_edges_and_shift_extends() {
     b.start("trim");
     assert_eq!(
         b.session.prompt().text(),
-        "Buda: silinecek parçaya tıklayın [sınır: görünen tüm kenarlar; Sınır seç (S); Shift+tık: uzat]"
+        "Buda: silinecek parçaya tıklayın [sınır: görünen tüm kenarlar; Sınır seç (S) / Kesişen (K) / Uzantılar (U) / Sil (R); Shift+tık: uzat]"
     );
-    assert_eq!(b.options(), ["S"]);
+    assert_eq!(b.options(), ["S", "K", "U", "R"]);
     // The preview: the whole line dashed red, the part that stays solid over it.
     b.move_to(-26.0, 12.0);
     let preview = b.session.preview(&Default::default()).expect("a preview");
@@ -242,7 +242,7 @@ fn the_trim_and_extend_tools_write_what_the_commands_write_without_a_store() {
                 },
             }],
             boundaries: Some(TrimBoundaries::All),
-            expected_revision: None,
+            ..EntitiesTrim::default()
         };
         let mut cx = ExecutionContext::new(&mut by_command.doc);
         let done = if extend {
@@ -278,9 +278,9 @@ fn extend_grows_to_the_chosen_boundaries() {
     assert_eq!(b.session.tool_id(), "extend");
     assert_eq!(
         b.session.prompt().text(),
-        "Uzat: uzatılacak ucun yakınına tıklayın [sınır: seçilen 1 nesne; Tüm kenarlar (T) / Sınır seç (S); Shift+tık: buda]"
+        "Uzat: uzatılacak ucun yakınına tıklayın [sınır: seçilen 1 nesne; Tüm kenarlar (T) / Sınır seç (S) / Kesişen (K) / Uzantılar (U); Shift+tık: buda]"
     );
-    assert_eq!(b.options(), ["T", "S"]);
+    assert_eq!(b.options(), ["T", "S", "K", "U"]);
     b.click(-9.0, 12.0);
     assert!(near(&line(&b, 1), &[[-28.0, 12.0], [-4.0, 12.0]]));
     // Tüm kenarlar: every visible edge again; the selection goes.
@@ -382,7 +382,7 @@ fn a_chamfer_cuts_where_two_lines_meet() {
     // Slots are not given twice: the undone cut had 14.
     assert!(near(&line(&b, 15), &[[15.0, 4.0], [14.0, 6.0]]));
     assert!(b.type_text("K"));
-    // Two lines picked one after the other: a line and a polyline do not make a corner.
+    // Two sides picked one after the other: a line and a polyline's last edge in line with it make no corner.
     b.click(20.0, 4.0);
     assert_eq!(
         b.session.prompt().text(),
@@ -391,9 +391,7 @@ fn a_chamfer_cuts_where_two_lines_meet() {
     b.click(5.0, 4.0);
     assert_eq!(
         b.last_text(),
-        Some(
-            "Çoklu çizgide köşe için köşenin kendisine ya da aynı nesnenin iki komşu kenarına tıklayın."
-        )
+        Some("Çizgiler paralel ya da seçilen tarafta çizgi yok.")
     );
     // Esc steps back to finding a corner.
     assert!(b.run(|s, cx| s.cancel(cx)));
@@ -403,6 +401,22 @@ fn a_chamfer_cuts_where_two_lines_meet() {
             .text()
             .starts_with("Pah: kesilecek köşeye tıklayın")
     );
+}
+
+/// A line and an open polyline's end edge make a corner (docs/adr/0295): the polyline's free end moves to the cut.
+#[test]
+fn a_chamfer_joins_a_line_and_a_polyline_end() {
+    let mut b = bench(&[]);
+    b.start("chamfer");
+    assert!(b.type_text("K"));
+    assert!(b.type_text("K"));
+    b.click(14.0, 10.0);
+    b.click(5.0, 4.0);
+    assert!(b.type_text("2"));
+    assert_eq!(b.last_text(), Some("Pah kırıldı: 2.000 m."));
+    assert!(near(&line(&b, 6), &[[14.0, 16.0], [14.0, 6.0]]));
+    assert!(near(&path(&b, 4), &[[0.0, 14.0], [0.0, 4.0], [12.0, 4.0]]));
+    assert_eq!(b.doc.undo().as_deref(), Some("Pah"));
 }
 
 // ── Kır ─────────────────────────────────────────────────────────────────────

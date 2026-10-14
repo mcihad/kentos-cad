@@ -1706,6 +1706,21 @@ TopologyRuleKindName = Literal["mustNotOverlap", "mustNotHaveGaps", "mustNotHave
 """The names of :class:`TopologyRuleKind`, for a plain string."""
 
 
+class TrimEdgeMode(_StrEnum):
+    """AutoCAD's EDGEMODE: whether a boundary bounds only where it is, or along
+    its natural path past its ends too.
+
+    - ``none``: A boundary bounds where it is (EDGEMODE 0).
+    - ``extend``: A boundary bounds along its natural path past its ends too (EDGEMODE
+    """
+    NONE = "none"
+    EXTEND = "extend"
+
+
+TrimEdgeModeName = Literal["none", "extend"]
+"""The names of :class:`TrimEdgeMode`, for a plain string."""
+
+
 class UnitGeometry(_StrEnum):
     """What becomes of the drawing when its unit changes.
 
@@ -6358,8 +6373,9 @@ class EntitiesFillet(_Model):
     y), `invalid_distance` (a negative radius; zero without Kırp or with
     `all`), `invalid_revision`, `revision_conflict` (status `conflict`),
     `entity_not_found`, `layer_locked` (an object of the corner), `not_a_corner`
-    (a vertex out of its path or not between straight edges, two lines that are
-    one or parallel, an object of another kind), `fillet_failed` (the
+    (a vertex out of its path or not between straight edges, two sides that are
+    one line, the same end of a path or parallel, a polyline's inner or arc edge,
+    a corner at a polyline's inner vertex, an object of another kind), `fillet_failed` (the
     radius does not fit; with `all`, none fits).
     Attributes:
         radius: The arc's radius, metres. Unit: length.
@@ -7379,54 +7395,94 @@ class EntitiesTransformed(_Model):
 class EntitiesTrim(_Model):
     """Input of `cad.entities.trim` v1 and `cad.entities.extend` v1: the picked
     objects trimmed (or extended) at their picks, as one undo step “Buda”
-    (“Uzat”). A trim replaces the object by the pieces that stay, the first
+    (“Uzat”), AutoCAD's TRIM and EXTEND (docs/adr/0294): the picks are clicks,
+    a fence (Çit) or a crossing window (Kesişen); the boundaries chosen
+    (standard mode) or every shown edge (quick mode); `edgeMode` bounds along
+    the boundaries' extensions; `eraseUncut` is quick mode's erase of what no
+    boundary cuts. A trim replaces the object by the pieces that stay, the first
     in its place keeping its id, its data kept when one piece is left (not
     for a closed area); an extend gives the object its new geometry.
 
     Picks of one object are taken in their order, each on the object as the
-    earlier ones left it: a trim cuts the piece the pick lies on (Çit: a
-    fence's crossings); an extend grows each end at most once. Every object
+    earlier ones left it: a trim cuts the piece the pick lies on, and takes
+    away whole a piece no boundary cuts between its ends (each of its ends is
+    then an earlier cut or the object's end); an extend grows each end at
+    most once.
+
+    The fence's crossings are picks after `picks`, each object's in the
+    fence's order, the objects in the drawing's order. The window's objects
+    come last: Buda takes away every piece between the boundaries that meets
+    the rectangle, Uzat grows every end inside it. A fence or a window takes
+    only shown objects; those on a locked layer are left out with a
+    `layer_locked` warning counting them, and one that does nothing with a
+    `trim_failed` (`extend_failed`) warning at `fence` (`crossing`). Every object
     is bounded by the drawing as it was before the command. A pick that can
     do nothing (no boundary crosses there, the end meets none) is left out
     with a `trim_failed` (`extend_failed`) warning at `picks[i]`; when no
     pick does anything nothing is written and that is the answer.
 
     Refusals (`CommandError.code`), checked in this order: `no_entities`
-    (no pick; `boundaries.uids` empty), `invalid_uid` (the picks' ids, then
-    the boundaries'), `not_finite` (a pick's or the rectangle's x and y),
+    (no pick, no fence and no window; `boundaries.uids` empty),
+    `too_few_points` (a fence of fewer than two points), `invalid_uid` (the
+    picks' ids, then the boundaries'), `not_finite` (a pick's, the fence's,
+    the window's, then the rectangle's x and y),
     `invalid_revision`, `revision_conflict` (status `conflict`),
     `entity_not_found` (the picks' objects, then the boundaries'),
     `layer_locked` (a picked object, at `picks[i]`), `not_trimmable` (Buda:
     an area with holes, which would lose them), then `trim_failed`
     (`extend_failed`, at `picks`, with the first pick's reason: the core's
     words for a kind it does not cut or grow, a closed path for Uzat, no
-    boundary there); on the desktop also `slots_exhausted`.
+    boundary there; at `fence` or `crossing` when it picked nothing); on the
+    desktop also `slots_exhausted`.
     Attributes:
-        picks: The picks, at least one.
         boundaries: The boundaries; absent: every shown object (`all`).
+        crossing: Kesişen: a crossing window.
+        edge_mode: AutoCAD's EDGEMODE; absent: `none`.
+        erase_uncut: Buda: an object no boundary cuts goes whole where it is picked
+            (AutoCAD's quick mode) instead of being left with a `trim_failed`
+            warning. Uzat ignores it.
         expected_revision: The document revision the input was prepared against, as decimal
             text. When given and the document is no longer at it, nothing is
             written and the answer is `conflict`.
+        fence: Çit: a drawn open path, at least two points; every shown object it
+            crosses is picked where it crosses. Unit: length.
+        picks: The picks; none when a fence or a window picks.
     """
-    picks: list[TrimPick]
     boundaries: TrimBoundaries | None | Unset = UNSET
+    crossing: TrimWindow | None | Unset = UNSET
+    edge_mode: TrimEdgeMode | TrimEdgeModeName | None | Unset = UNSET
+    erase_uncut: bool | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    fence: list[Vec2] | None | Unset = UNSET
+    picks: list[TrimPick] = field(default_factory=list)
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
-        out["picks"] = [e0.to_json() for e0 in self.picks]
         if self.boundaries is not UNSET:
             out["boundaries"] = None if self.boundaries is None else self.boundaries.to_json()
+        if self.crossing is not UNSET:
+            out["crossing"] = None if self.crossing is None else self.crossing.to_json()
+        if self.edge_mode is not UNSET:
+            out["edgeMode"] = None if self.edge_mode is None else _enum_out(self.edge_mode)
+        if self.erase_uncut is not UNSET:
+            out["eraseUncut"] = self.erase_uncut
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.fence is not UNSET:
+            out["fence"] = None if self.fence is None else [_vec2_out(e0) for e0 in self.fence]
+        out["picks"] = [e0.to_json() for e0 in self.picks]
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> EntitiesTrim:
         return cls(
-            picks=[TrimPick.from_json(e0) for e0 in data["picks"]],
             boundaries=UNSET if "boundaries" not in data else None if data["boundaries"] is None else TrimBoundaries.from_json(data["boundaries"]),
+            crossing=UNSET if "crossing" not in data else None if data["crossing"] is None else TrimWindow.from_json(data["crossing"]),
+            edge_mode=UNSET if "edgeMode" not in data else None if data["edgeMode"] is None else _enum_in(TrimEdgeMode, data["edgeMode"]),
+            erase_uncut=data.get("eraseUncut", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
+            fence=UNSET if "fence" not in data else None if data["fence"] is None else [Vec2.from_json(e0) for e0 in data["fence"]],
+            picks=[TrimPick.from_json(e0) for e0 in data["picks"]] if "picks" in data else list(),
         )
 
 
@@ -16859,6 +16915,30 @@ class TrimPick(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TrimWindow(_Model):
+    """A crossing window (Kesişen): the shown objects meeting the rectangle.
+    Attributes:
+        min: Unit: length.
+        max: Unit: length.
+    """
+    min: Vec2
+    max: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["min"] = _vec2_out(self.min)
+        out["max"] = _vec2_out(self.max)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TrimWindow:
+        return cls(
+            min=Vec2.from_json(data["min"]),
+            max=Vec2.from_json(data["max"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class Ucs(_Model):
     """A user coordinate system: its origin in the world and the angle of its x
     axis from the world's x (east), counter-clockwise, in radians, in
@@ -17534,7 +17614,10 @@ class VertexCornerPick(CornerPick):
 
 @dataclass(kw_only=True, slots=True)
 class LinesCornerPick(CornerPick):
-    """Two lines; each keeps the side of its pick."""
+    """Two straight sides, each keeping the side of its pick (docs/adr/0295): a line, or an open polyline's first or
+    last straight edge (the edge nearest the pick), whose free end moves to the arc or the cut. The first and last
+    edges of one open polyline close it, the arc or the cut its closing edge.
+    """
     TAG_VALUE: ClassVar[str] = "lines"
     first: TrimPick
     second: TrimPick
@@ -22146,7 +22229,10 @@ __all__ = [
     "TrackPointConstruction",
     "Transform",
     "TrimBoundaries",
+    "TrimEdgeMode",
+    "TrimEdgeModeName",
     "TrimPick",
+    "TrimWindow",
     "TwoPointsUcsTo",
     "Ucs",
     "UcsChanged",

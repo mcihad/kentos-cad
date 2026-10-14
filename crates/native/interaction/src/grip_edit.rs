@@ -14,7 +14,6 @@ use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::{Entity as CoreEntity, area_parts};
 use kentos_geometry_core::geom::affine::{Affine, mirror, rotation, scaling, translation};
 use kentos_geometry_core::geometry::dist;
-use kentos_geometry_core::jsmath::PI;
 use kentos_geometry_core::ops::grips::{entity_grips, grip_part, mid_grip_segment, move_grip};
 use kentos_geometry_core::tools::drawing::direction_angle;
 use kentos_geometry_core::tools::editing::{rotation_angle, scale_factor};
@@ -203,8 +202,10 @@ impl GripModes {
     }
 
     /// A letter: a mode, Taban noktası, Referans or Kopya; a typed value at a reference's or a turn's or a scale's
-    /// step. `None` when the text is none of these (a typed point, then).
-    pub fn typed(&mut self, text: &str) -> Option<Typed> {
+    /// step. `None` when the text is none of these (a typed point, then). Döndür's typed angles are the project's
+    /// (docs/adr/0291, as the Döndür tool's): a turn in degrees counter-clockwise in a CAD project, in grads
+    /// clockwise in a CBS one; with Referans both the reference and the new angle are directions.
+    pub fn typed(&mut self, text: &str, format: &Format) -> Option<Typed> {
         let t = upper_tr(js_trim(text));
         if self.stage == Stage::Point {
             if let Some(mode) = GripMode::ALL.into_iter().find(|m| m.key() == t) {
@@ -239,9 +240,13 @@ impl GripModes {
         let n = plain_number(text)?;
         match (self.stage, self.mode) {
             (Stage::RefFrom, GripMode::Rotate) => {
-                self.reference = Some(n * PI / 180.0);
+                self.reference = Some(format.direction_from_typed(n));
                 self.stage = Stage::Point;
-                Some(Typed::Said(format!("Referans açı {}°.", fixed(n, 4))))
+                Some(Typed::Said(format!(
+                    "Referans açı {}{}.",
+                    fixed(n, 4),
+                    format.angle_unit_label()
+                )))
             }
             (Stage::RefFrom, GripMode::Scale) if n > 0.0 => {
                 self.reference = Some(n);
@@ -250,7 +255,10 @@ impl GripModes {
             }
             (Stage::Point, GripMode::Rotate) => Some(Typed::Write(Transform::Rotate {
                 center: wire(self.base),
-                angle: n * PI / 180.0 - self.reference.unwrap_or(0.0),
+                angle: match self.reference {
+                    Some(r) => format.direction_from_typed(n) - r,
+                    None => format.turn_from_typed(n),
+                },
             })),
             (Stage::Point, GripMode::Scale) if n > 0.0 && n.is_finite() => {
                 // With a reference, the typed number is the new length.
@@ -339,7 +347,9 @@ impl GripModes {
             Transform::Scale { center, factor } => {
                 Some(scaling(factor, Vec2::new(center.x, center.y)))
             }
-            Transform::Mirror { a, b, .. } => Some(mirror(Vec2::new(a.x, a.y), Vec2::new(b.x, b.y))),
+            Transform::Mirror { a, b, .. } => {
+                Some(mirror(Vec2::new(a.x, a.y), Vec2::new(b.x, b.y)))
+            }
             _ => None,
         }
     }

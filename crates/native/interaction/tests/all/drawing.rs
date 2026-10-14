@@ -72,9 +72,15 @@ fn an_elliptic_arc_asks_for_its_angles_and_zero_axes_warn() {
     b.click(10.0, 0.0);
     // A typed zero and the centre shown are refused with cad.curves.construct's words (docs/adr/0289).
     assert!(b.type_text("0"));
-    assert_eq!(b.last_text(), Some("Diğer yarı eksen sıfırdan büyük olmalı."));
+    assert_eq!(
+        b.last_text(),
+        Some("Diğer yarı eksen sıfırdan büyük olmalı.")
+    );
     b.click(5.0, 0.0);
-    assert_eq!(b.last_text(), Some("Diğer yarı eksen sıfırdan büyük olmalı."));
+    assert_eq!(
+        b.last_text(),
+        Some("Diğer yarı eksen sıfırdan büyük olmalı.")
+    );
     assert!(b.type_text("2.5"));
     assert_eq!(
         b.session.prompt().text(),
@@ -84,7 +90,9 @@ fn an_elliptic_arc_asks_for_its_angles_and_zero_axes_warn() {
     assert!(b.type_text("30"));
     assert_eq!(
         b.last_text(),
-        Some("Eliptik yayın bitiş açısı başlangıcıyla aynı yerde olamaz; başka bir bitiş açısı verin.")
+        Some(
+            "Eliptik yayın bitiş açısı başlangıcıyla aynı yerde olamaz; başka bir bitiş açısı verin."
+        )
     );
     assert!(b.type_text("180"));
     assert_eq!(

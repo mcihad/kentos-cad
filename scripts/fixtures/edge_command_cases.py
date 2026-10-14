@@ -9,7 +9,8 @@ definitions (docs/adr/0047, 0250), without KentOS code:
 
 - Buda: the target is walked from its start; the boundaries cross it at distances s along it; the pick's distance is
   where it projects; the part between the nearest crossing before it and the nearest after it (or the target's ends)
-  goes. Nothing goes when neither is a crossing. A later pick of the same object cuts the piece it lies on.
+  goes. Nothing goes when neither is a crossing. A later pick of the same object cuts the piece it lies on; a piece
+  no boundary cuts between its ends goes whole, its ends being earlier cuts or the object's (docs/adr/0294).
 - Uzat: the end nearer the pick goes on along its edge to the nearest boundary it meets; each end at most once.
 - Boundaries: every shown object but the target (a hidden layer's are not), those meeting a rectangle, or those given.
 - Köşe yuvarla: the tangent points lie r / tan(φ/2) from the corner along each side, the centre r / sin(φ/2) along
@@ -204,15 +205,20 @@ def trimmed(target_id, picks, bounds):
     """The pieces of a line after its picks in order, and each pick's failure."""
     pieces = [seg(BY_ID[target_id])]
     fails = []
+    cut = False
     for n, pick in enumerate(picks):
-        k = 0 if n == 0 else next((i for i, p in enumerate(pieces) if on(p, pick)), None)
+        k = 0 if not cut else next((i for i, p in enumerate(pieces) if on(p, pick)), None)
         if k is None:
             continue
         r = trim_piece(pieces[k], pick, bounds)
         if isinstance(r, str):
+            if cut:  # a piece an earlier cut left: its ends are cuts, it goes whole
+                del pieces[k]
+                continue
             fails.append((n, r))
             continue
         pieces[k:k + 1] = r
+        cut = True
     return pieces, fails
 
 
@@ -282,7 +288,15 @@ def trim_cases():
 
     def trim_case(name, picks, kind="all", uids=None, rect=None, extra_steps=()):
         bounds = boundaries(kind, 10, uids, rect)
-        pieces, fails = trimmed(10, [p for _, p in picks], bounds)
+        own = [n for n, (i, _) in enumerate(picks) if i == 10]
+        pieces, fails = trimmed(10, [picks[n][1] for n in own], bounds)
+        fails = [(own[n], why) for n, why in fails]
+        for n, (i, p) in enumerate(picks):
+            if i != 10:  # another object's pick: these cases' cut nothing
+                why = trim_piece(seg(BY_ID[i]), p, boundaries(kind, i, uids, rect))
+                assert isinstance(why, str), (i, p)
+                fails.append((n, why))
+        fails.sort()
         keep = len(pieces) == 1
         first = line_entity(H, pieces[0], keep, 10)
         created = [line_entity(H, p, keep, NEXT + i) for i, p in enumerate(pieces[1:])]
@@ -309,7 +323,9 @@ def trim_cases():
     trim_case("Dikdörtgene değen görünen nesneler sınırdır (aracın görünümü)", [(10, (X + 18, Y + 10))], kind="area",
               rect=((X + 12, Y + 4), (X + 16, Y + 16)))
     trim_case("Aynı nesnenin ikinci seçimi kalan parçayı budar (Çit)", [(10, (X + 18, Y + 10)), (10, (X + 24, Y + 10))])
-    trim_case("Yapamayan seçim trim_failed uyarısıyla atlanır, öbürü yazılır", [(10, (X + 18, Y + 10)), (10, (X + 12, Y + 10))])
+    trim_case("Yapamayan seçim trim_failed uyarısıyla atlanır, öbürü yazılır", [(14, (X + 32, Y + 20)), (10, (X + 18, Y + 10))])
+    trim_case("Kalan parçayı kesen sınır yoksa parça bütünüyle gider: ucu önceki kesimdir (AutoCAD'in Çit'i)",
+              [(10, (X + 18, Y + 10)), (10, (X + 12, Y + 10))])
     # The plan: what execute would write, nothing written.
     bounds = boundaries("all", 10)
     pieces, _ = trimmed(10, [(X + 18, Y + 10)], bounds)
@@ -614,8 +630,8 @@ def corner_refusals(kind):
         refused("Paralel çizgiler", {"corner": {"kind": "lines", "first": {"uid": UID(21), "at": P(X + 55, Y + 80)},
                                                  "second": {"uid": UID(14), "at": P(X + 33, Y + 20)}}, **size},
                 "not_a_corner", "Çizgiler paralel ya da seçilen tarafta çizgi yok.", "corner"),
-        refused("Tüm köşeler yalnız yolda", {"corner": {"kind": "all", "uids": [UID(21)]}, **size}, "not_a_corner",
-                "Tüm köşeler yalnız çoklu çizgide ve alanda işlenir.", "corner.uids[0]"),
+        refused("Tüm köşeler: tek başına çizgi köşe değildir", {"corner": {"kind": "all", "uids": [UID(21)]}, **size}, "not_a_corner",
+                "Tüm köşeler çoklu çizgide, alanda ve uçları birbirine değen çizgilerde işlenir.", "corner.uids[0]"),
     ]
     out.append(refused("Beklenen sürüm sayı değil", {"corner": LINES_CORNER, **size, "expectedRevision": "on iki"}, "invalid_revision", INVALID_REVISION, "expectedRevision"))
     out.append(refused("Hiçbir köşeye sığmıyor", {"corner": {"kind": "all", "uids": [UID(23)]}, field: 6}, failed_code,

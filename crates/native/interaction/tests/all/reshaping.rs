@@ -162,7 +162,7 @@ fn a_bad_value_is_said_and_the_old_one_stays() {
 #[test]
 fn a_selection_with_no_corners_to_round_is_said_and_left() {
     let mut b = bench();
-    // A line has no corner.
+    // A line alone has no corner.
     let rev = b.doc.revision();
     b.selection.set([Slot(1)]);
     b.start("filletAll");
@@ -170,7 +170,7 @@ fn a_selection_with_no_corners_to_round_is_said_and_left() {
     assert_eq!(
         b.last_text(),
         Some(
-            "Seçimde çoklu çizgi ya da kapalı alan yok; Tüm köşeleri yuvarla yalnız onların köşelerini yuvarlar."
+            "Seçimde çoklu çizgi, kapalı alan ya da uçları birbirine değen çizgi yok; Tüm köşeleri yuvarla yalnız onların köşelerini yuvarlar."
         )
     );
     assert_eq!(b.doc.revision(), rev);
@@ -366,4 +366,35 @@ fn simplify_drops_the_vertices_within_the_tolerance_and_says_how_far() {
     assert_eq!(b.path_pts(slot).len(), 3);
     assert_eq!(b.doc.undo().as_deref(), Some("Sadeleştir"));
     assert_eq!(b.path_pts(slot).len(), 4);
+}
+
+#[test]
+fn every_corner_of_lines_meeting_end_to_end_is_rounded_in_one_step() {
+    // Four lines drawn as a 10 × 6 rectangle (docs/adr/0295): four corners, four arcs, the lines shortened.
+    let mut b = bench();
+    let sq = [[40.0, 0.0], [50.0, 0.0], [50.0, 6.0], [40.0, 6.0]];
+    let lines: Vec<_> = (0..4)
+        .map(|i| b.add_line("cizim", sq[i], sq[(i + 1) % 4]))
+        .collect();
+    b.selection.set(lines.clone());
+    b.start("filletAll");
+    assert!(b.type_text("1"));
+    b.confirm();
+    assert_eq!(b.last_text(), Some("4 köşe yuvarlandı."));
+    let arcs = b
+        .doc
+        .entities()
+        .filter(|e| matches!(e, Entity::Arc(_)))
+        .count();
+    assert_eq!(arcs, 4);
+    let Some(Entity::Line(first)) = b.doc.get(lines[0]) else {
+        panic!("a line")
+    };
+    assert_eq!(common::rel(first.a), [41.0, 0.0]);
+    assert_eq!(common::rel(first.b), [49.0, 0.0]);
+    assert_eq!(b.doc.undo().as_deref(), Some("Köşe yuvarla"), "one step");
+    let Some(Entity::Line(first)) = b.doc.get(lines[0]) else {
+        panic!("a line")
+    };
+    assert_eq!(common::rel(first.a), [40.0, 0.0]);
 }

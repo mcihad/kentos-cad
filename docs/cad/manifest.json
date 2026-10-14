@@ -7624,7 +7624,7 @@
    "operation": null,
    "python": "kentos.cad.entities.extend",
    "mcp": "cad.entities.extend",
-   "note": "Seçimler ve sınırlar komuta verilir; her uç bir kez (ADR 0250).",
+   "note": "Seçimler, Çit, Kesişen penceresi, sınırlar ve Uzantılar (edgeMode) komuta verilir; her uç bir kez (ADR 0250, 0294).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -9495,7 +9495,7 @@
    "operation": null,
    "python": "kentos.cad.entities.trim",
    "mcp": "cad.entities.trim",
-   "note": "Seçimler (nesne ve tıklanan yer) ve sınırlar (görünümün dikdörtgeni ya da Sınır seç) komuta verilir (ADR 0250).",
+   "note": "Seçimler (nesne ve tıklanan yer), Çit, Kesişen penceresi, sınırlar (görünümün dikdörtgeni ya da Sınır seç), Uzantılar (edgeMode) ve hızlı kipin silmesi (eraseUncut) komuta verilir; Sil (R) cad.entities.delete ile (ADR 0250, 0294).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1

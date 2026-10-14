@@ -862,16 +862,16 @@
           "input": {
             "picks": [
               {
-                "uid": "$uidOf:10",
+                "uid": "$uidOf:14",
                 "at": {
-                  "x": 487018,
-                  "y": 4420010
+                  "x": 487032,
+                  "y": 4420020
                 }
               },
               {
                 "uid": "$uidOf:10",
                 "at": {
-                  "x": 487012,
+                  "x": 487018,
                   "y": 4420010
                 }
               }
@@ -893,7 +893,7 @@
               {
                 "code": "trim_failed",
                 "message": "Tıklanan kısmı kesen bir kenar yok.",
-                "path": "picks[1]"
+                "path": "picks[0]"
               }
             ]
           },
@@ -936,6 +936,85 @@
                 "id": 24,
                 "layerId": "yapi",
                 "attrs": {},
+                "color": "#E5484D",
+                "lineWeight": 0.7,
+                "a": {
+                  "x": 487022,
+                  "y": 4420010
+                },
+                "b": {
+                  "x": 487026,
+                  "y": 4420010
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kalan parçayı kesen sınır yoksa parça bütünüyle gider: ucu önceki kesimdir (AutoCAD'in Çit'i)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "picks": [
+              {
+                "uid": "$uidOf:10",
+                "at": {
+                  "x": 487018,
+                  "y": 4420010
+                }
+              },
+              {
+                "uid": "$uidOf:10",
+                "at": {
+                  "x": 487012,
+                  "y": 4420010
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:10"
+              ],
+              "created": [],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              20,
+              21,
+              22,
+              23
+            ],
+            "entities": {
+              "10": {
+                "kind": "line",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Duvar"
+                },
                 "color": "#E5484D",
                 "lineWeight": 0.7,
                 "a": {

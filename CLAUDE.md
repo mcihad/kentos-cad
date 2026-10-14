@@ -383,6 +383,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   dikdörtgen ve düzgün çokgen komutları: `cad.rectangle.create` (iki köşe, boyut, alan ya da kenar ve en; dönüş; keskin, yuvarlak, pah)
   ve `cad.polygon.regular` (çember içinde, dışında, kenardan) halkayı çekirdekle hesaplar ve `cad.polygon.create`'in yolundan yazar;
   araçlar önizlemeyi komutun hesabından (`shapes::rectangle_ring`, `regular_ring`) alır, Çakışma ve Topoloji alanı değiştirince alanın
+  yolundan yazar (`points::write_area_by`) (ADR 0290);
   eğri yapımı ve yöntemlerin doğrulanması: salt okunur `cad.curves.construct` (iki ve üç noktadan, TTY ve TTT daire; yayın on bir yöntemi ve
   Devam; eksen uçlarından ya da merkezden elips ve eliptik yay), Yay, Daire ve Elips eğriyi onun hesabından alır ve reddini söyler;
   bağımsız başvuru `curve_method_cases.py`, ortak durumlarda `within` (ADR 0289);
@@ -390,13 +391,17 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   (`Memory::copy_single`) ve Dizi (adet, Sığdır; `cad.entities.array`'in `line`'ı), Döndür'de projenin açı düzeni
   (`Format::turn_from_typed`, `direction_from_typed`: CAD derece saat yönü tersine, CBS grad saat yönünde) ve Noktalar, Ölçekle'de
   Noktalar; her türün dönüşümü bağımsız başvurudan (`transform_kinds_cases.py`), dolu tarama deseniyle kalır (ADR 0291);
-  Ötele'nin kesinliği ve raporları: delikli ve çok parçalı alanın delikleri öbür yana, fit-point eğrisi ve NURBS kirişleriyle (yaklaşık,
-  `approximate_offset`), yarıçap ve alan genişliğinin çökmesi `radius_collapse` (tersine dönen halka yazılmaz), kendini kesen kopya
   aynada yazılar: `cad.entities.transform`'un aynasının `text`'i (readable varsayılan, mirrored; MIRRTEXT), çekirdeğin `TextPolicy`'si ve
   `text_frame`'i: okunur yazı aynadaki yerinde, baş aşağı olmadan, hizası değişerek; bloğun yazıları ve öznitelikleri her zaman okunur,
   değerleri değişmez; Aynala ve tutamaç kipinde Yazılar (Y, `Memory::mirror_text_mirrored`); web'in çağrısı eski kuralda (ADR 0292);
+  Ötele'nin kesinliği ve raporları: delikli ve çok parçalı alanın delikleri öbür yana, fit-point eğrisi ve NURBS kirişleriyle (yaklaşık,
+  `approximate_offset`), yarıçap ve alan genişliğinin çökmesi `radius_collapse` (tersine dönen halka yazılmaz), kendini kesen kopya
   `self_intersecting`; çekirdeğin `offset_noted`'ı, `offset_entity` web'in kayıtlarıyla aynı (ADR 0293);
-  yolundan yazar (`points::write_area_by`) (ADR 0290);
+  Buda ve Uzat'ta AutoCAD'in seçenekleri: Çit (`fence`) ve Kesişen (`crossing`) komutun girdisi, Uzantılar (`edgeMode`: çizgi doğrusuyla,
+  yay çemberiyle, açık çoklu çizginin uç kenarları), hızlı kipte kesilmeyen nesnenin silinmesi (`eraseUncut`), kalan parçanın bütünüyle
+  gitmesi; araçta K, boş yere tıklama, U ve Sil (R); tutamaç kipinin Döndür'ü projenin açı düzeniyle (ADR 0294);
+  Köşe yuvarla ve Pah'ta iki nesne: çizgi ya da açık çoklu çizginin uç kenarı (`corner::side_of`, `lines_corner`), aynı yolun iki ucu
+  yolu kapatır; Tüm köşeler uçları buluşan çizgilerde de (`corner::line_corners`), araçlar aynı işlevlerle (ADR 0295);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);
