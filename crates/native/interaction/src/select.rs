@@ -70,6 +70,9 @@ struct At {
 pub struct SelectBox {
     pub from: [f64; 2],
     pub to: [f64; 2],
+    /// The corners' world points, first and last (docs/adr/0277): the host draws them where the camera now shows them,
+    /// so a pan or a zoom while the button is down keeps the box on the drawing.
+    pub worlds: Option<(Vec2, Vec2)>,
 }
 
 impl SelectBox {
@@ -85,6 +88,7 @@ impl SelectBox {
         Self {
             from: [a[0].max(b[0]), a[1]],
             to: [a[0].min(b[0]), b[1]],
+            worlds: None,
         }
     }
 }
@@ -206,6 +210,12 @@ impl Select {
             return;
         };
         self.hover_grip = None;
+        // The box's first corner stays on the drawing through a pan or a zoom (docs/adr/0277).
+        let start = At {
+            screen: cx.view.to_screen(start.world),
+            ..start
+        };
+        self.start = Some(start);
         self.current = Some(At {
             screen: p.screen,
             world: p.raw,
@@ -232,14 +242,19 @@ impl Select {
         let Some(start) = self.start.take() else {
             return;
         };
-        let current = self.current.take();
+        // The release is the last corner, where the view now shows it (docs/adr/0277).
+        let current = self.current.take().map(|_| At {
+            screen: p.screen,
+            world: p.raw,
+        });
         let dragging = std::mem::take(&mut self.dragging);
         match current {
             Some(current) if dragging => {
                 // The box as it was drawn decides: one rule for the look and the query.
                 let crossing = SelectBox {
-                    from: start.screen,
+                    from: cx.view.to_screen(start.world),
                     to: current.screen,
+                    worlds: None,
                 }
                 .crossing();
                 let (a, b) = (
@@ -291,6 +306,7 @@ impl Select {
             (true, Some(start), Some(current)) => Some(SelectBox {
                 from: start.screen,
                 to: current.screen,
+                worlds: Some((start.world, current.world)),
             }),
             _ => None,
         }

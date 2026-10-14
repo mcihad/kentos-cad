@@ -833,6 +833,9 @@ impl<'a> Player<'a> {
         if let Some([from, to]) = step.drag {
             return self.holding(step, |player| player.drag(from, to));
         }
+        if let Some(events) = &step.mouse {
+            return self.holding(step, |player| player.hand(events));
+        }
         if let Some(at) = step.double_click {
             self.click(at, mouse::Button::Left)?;
             return self.click(at, mouse::Button::Left);
@@ -988,13 +991,22 @@ impl<'a> Player<'a> {
     }
 
     /// Plays step `index` (from 0) halfway, for an image: a drag stops with
-    /// the button still down at its end, the box showing. Other steps play whole.
+    /// the button still down at its end, the box showing, and a `mouse` step before its last left release. Other steps
+    /// play whole.
     pub fn halfway(&mut self, index: usize) -> Result<(), String> {
         let step = self
             .trace
             .steps
             .get(index)
             .ok_or(format!("{}. adım yok", index + 1))?;
+        // A hand's events but its last left release: the box shows as it is held (docs/adr/0277).
+        if let Some(events) = &step.mouse {
+            let held = match events.last() {
+                Some(last) if last.release.as_deref() == Some("left") => &events[..events.len() - 1],
+                _ => &events[..],
+            };
+            return self.hand(held);
+        }
         let Some([from, to]) = step.drag else {
             return self.act(step);
         };
@@ -1010,6 +1022,55 @@ impl<'a> Player<'a> {
             mouse::Cursor::Available(a),
         )?;
         self.cursor_to(b)
+    }
+
+    /// A `mouse` step (docs/adr/0277): every point to the window first, with the view as the step began, then the
+    /// events in order through the drawing area's own gesture, as a hand on the mouse makes them.
+    fn hand(&mut self, events: &[super::format::MouseEvent]) -> Result<(), String> {
+        let mut placed = Vec::with_capacity(events.len());
+        for e in events {
+            let at = match e.to.or(e.at) {
+                Some(p) => Some(self.window_point(p)?),
+                None => None,
+            };
+            placed.push(at);
+        }
+        let button = |name: &str| match name {
+            "left" => Ok(mouse::Button::Left),
+            "middle" => Ok(mouse::Button::Middle),
+            "right" => Ok(mouse::Button::Right),
+            other => Err(format!("bilinmeyen fare tuşu “{other}”")),
+        };
+        let mut hand: Option<Point> = None;
+        for (e, at) in events.iter().zip(placed) {
+            if let Some(at) = at {
+                self.cursor_to(at)?;
+                hand = Some(at);
+            }
+            let cursor = hand.map_or(mouse::Cursor::Unavailable, mouse::Cursor::Available);
+            if let Some(name) = &e.press {
+                self.mouse(mouse::Event::ButtonPressed(button(name)?), cursor)?;
+                if name == "left"
+                    && let Some(report) = self.line.click_elsewhere()
+                {
+                    self.apply(report)?;
+                }
+            }
+            if let Some(name) = &e.release {
+                self.mouse(mouse::Event::ButtonReleased(button(name)?), cursor)?;
+                // Past the middle button's double click: the next press is a press of its own.
+                self.clock += Duration::from_millis(600);
+            }
+            if let Some(lines) = e.wheel {
+                self.mouse(
+                    mouse::Event::WheelScrolled {
+                        delta: mouse::ScrollDelta::Lines { x: 0.0, y: lines },
+                    },
+                    cursor,
+                )?;
+            }
+        }
+        Ok(())
     }
 
     /// The left button down at `from`, moved through the middle to `to`,
@@ -1463,6 +1524,8 @@ fn describe(step: &Step) -> String {
             ""
         };
         format!("{held}drag {} → {}", pair(from), pair(to))
+    } else if let Some(events) = &step.mouse {
+        format!("mouse ({} olay)", events.len())
     } else if let Some(at) = step.double_click {
         format!("doubleClick {}", pair(at))
     } else if let Some(at) = step.right_click {

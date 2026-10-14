@@ -260,6 +260,8 @@ impl Tool for MatchProperties {
         match &mut self.press {
             Some(press) => {
                 press.to = p.screen;
+                // The first corner stays on the drawing through a pan or a zoom (docs/adr/0277).
+                press.from = cx.view.to_screen(press.from_world);
                 press.to_world = p.raw;
                 let moved = dist(
                     Vec2::new(press.from[0], press.from[1]),
@@ -306,13 +308,14 @@ impl Tool for MatchProperties {
         }
         if press.dragging {
             let crossing = SelectBox {
-                from: press.from,
-                to: press.to,
+                from: cx.view.to_screen(press.from_world),
+                to: p.screen,
+                worlds: None,
             }
             .crossing();
             let slots = cx
                 .spatial
-                .in_rect(press.from_world, press.to_world, crossing);
+                .in_rect(press.from_world, p.raw, crossing);
             self.give(slots, cx);
         } else if let Some(slot) = hit {
             self.give(vec![slot], cx);
@@ -356,6 +359,7 @@ impl Tool for MatchProperties {
         Some(SelectBox {
             from: press.from,
             to: press.to,
+            worlds: Some((press.from_world, press.to_world)),
         })
     }
 

@@ -357,6 +357,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   alt nesne seçimi: tıklamanın alt nesnesi (en yakın nokta kenarından önce, kenarın `along` yeri, blokta parçanın yolu;
   `ops::subref::place_near`), salt okunur `cad.entities.pick` (adaylar en belirliden, kimlik, yer, yol), seçim aracında Ctrl/⌘ + tık
   (halka, günlük, çipte her adayın alt nesnesi), kısayol penceresinde Ctrl + tık ve Çizerken grubu (ADR 0276);
+  fareyle çakışmalar: seçim kutusunun köşeleri çizimin noktaları (`SelectBox::worlds`; kaydırma ve yakınlaştırma kutuyu koparmaz,
+  yönünü değiştirmez), izlerin ham fare adımı `mouse` ve `pointer-conflicts` izi (ADR 0277);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş

@@ -1,0 +1,96 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "pointer-conflicts",
+  "title": "Fareyle çakışmalar: tutamaç sürüklerken orta tuşla kaydırma, sıcak tutamaçla kaydırma, kutu çizerken kaydırma ve yakınlaştırma (ilk köşe çizimde kalır, pencere kesişene dönmez), titreyen tık, nesnenin üstünden başlayan kutu",
+  "source": "ADR 0277 (plan/cad.md CAD-INPUT-13): olaylar çizim alanının kendi işleyicisinden (viewport::gesture) geçer; `mouse` adımının noktaları adım başladığındaki görünümde, el ekranda durur.",
+  "covers": ["CAD-INPUT-13"],
+  "document": "objects.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.125,
+  "steps": [
+    { "click": [-16, -12], "note": "Çizgi 1 seçilir.", "expect": { "tool": "select", "selected": [1] } },
+    {
+      "mouse": [
+        { "press": "left", "at": [-8, -12] },
+        { "to": [-8, -10] },
+        { "press": "middle" },
+        { "to": [-10, -10] },
+        { "release": "middle" },
+        { "to": [-9, -8] },
+        { "release": "left" }
+      ],
+      "note": "Ucun tutamacı sürüklenirken orta tuşla 2 m sola kaydırılır: sürükleme sürer, uç bırakılan yerin altındaki noktaya (-7, -8) gider, görünüm 2 m doğuya kaymıştır; tek adım.",
+      "expect": {
+        "tool": "select",
+        "selected": [1],
+        "canUndo": true,
+        "viewCenter": [2, 0],
+        "objects": [{ "id": 1, "kind": "line", "points": [[-24, -12], [-7, -8]] }]
+      }
+    },
+    { "click": [-24, -12], "note": "Öbür ucun tutamacı tıklanır: sıcak kalır.", "expect": { "selected": [1], "objects": [{ "id": 1, "kind": "line", "points": [[-24, -12], [-7, -8]] }] } },
+    {
+      "mouse": [
+        { "press": "middle", "at": [-20, -4] },
+        { "to": [-20, -2] },
+        { "release": "middle" }
+      ],
+      "note": "Sıcak tutamaçla orta tuşla 2 m yukarı kaydırılır: tutamaç yerleşmez, çizgi değişmez.",
+      "expect": { "selected": [1], "viewCenter": [2, -2], "objects": [{ "id": 1, "kind": "line", "points": [[-24, -12], [-7, -8]] }] }
+    },
+    { "click": [-24, -2], "note": "Sonraki tık onu kaydırılmış görünümde tıklanan yere koyar.", "expect": { "selected": [1], "objects": [{ "id": 1, "kind": "line", "points": [[-24, -2], [-7, -8]] }] } },
+    {
+      "mouse": [
+        { "press": "left", "at": [0, -10] },
+        { "to": [0.25, -10] },
+        { "release": "left" }
+      ],
+      "note": "Boş yerde 2 piksellik titreme tıktır, kutu değil: seçim kalkar.",
+      "expect": { "tool": "select", "selected": [] }
+    },
+    {
+      "mouse": [
+        { "press": "left", "at": [10, 2] },
+        { "to": [13, 6] },
+        { "press": "middle" },
+        { "to": [5, 6] },
+        { "release": "middle" },
+        { "to": [6, 6] },
+        { "release": "left" }
+      ],
+      "note": "Soldan sağa kutu (10, 2) köşesinden başlar; orta tuşla 8 m sola kaydırılır, el biraz sağa gider ve bırakır. Kutu çizimde (10, 2)'den (14, 6)'ya, soldan sağa: pencere. İçinde nesne yok; çizgi 3 onu kesse de seçilmez (kesişen sayılsaydı seçilirdi).",
+      "expect": { "tool": "select", "selected": [], "viewCenter": [10, -2] }
+    },
+    {
+      "mouse": [
+        { "press": "left", "at": [12, 7] },
+        { "to": [10, 3] },
+        { "wheel": 1 },
+        { "to": [9, 3] },
+        { "release": "left" }
+      ],
+      "note": "Sağdan sola kutu sürerken imleçte tekerlekle yakınlaşılır: ilk köşe çizimde kalır, kutu kesişen kalır, çizgi 3'ü keser.",
+      "expect": { "tool": "select", "selected": [3] }
+    },
+    { "key": "Esc", "note": "Seçim kalkar.", "expect": { "selected": [] } },
+    {
+      "mouse": [
+        { "press": "left", "at": [8, 8] },
+        { "to": [4, 2] },
+        { "release": "left" }
+      ],
+      "note": "Seçili olmayan çizgi 2'nin üstünden başlayan sürükleme nesneyi taşımaz, kutudur: sağdan sola, kestiği çizgi 2 seçilir; çizgiler yerinde.",
+      "expect": {
+        "tool": "select",
+        "selected": [2],
+        "objects": [
+          { "id": 2, "kind": "line", "points": [[0, 4], [24, 16]] },
+          { "id": 3, "kind": "line", "points": [[0, 16], [16, 4]] }
+        ]
+      }
+    }
+  ]
+}

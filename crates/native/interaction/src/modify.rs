@@ -345,6 +345,8 @@ impl<S: Stages> Tool for Modify<S> {
             match &mut self.press {
                 Some(press) => {
                     press.to = p.screen;
+                // The first corner stays on the drawing through a pan or a zoom (docs/adr/0277).
+                press.from = cx.view.to_screen(press.from_world);
                     press.to_world = p.raw;
                     let moved = js_hypot(p.screen[0] - press.from[0], p.screen[1] - press.from[1]);
                     if !press.dragging && moved > DRAG_THRESHOLD {
@@ -394,13 +396,14 @@ impl<S: Stages> Tool for Modify<S> {
         if press.dragging {
             // The box as it was drawn decides: one rule for the look and the query.
             let crossing = SelectBox {
-                from: press.from,
-                to: press.to,
+                from: cx.view.to_screen(press.from_world),
+                to: p.screen,
+                worlds: None,
             }
             .crossing();
             let ids = cx
                 .spatial
-                .in_rect(press.from_world, press.to_world, crossing);
+                .in_rect(press.from_world, p.raw, crossing);
             let ids = crate::selectable::ids(cx, ids);
             cx.selection.add(ids);
         } else if let Some(hit) = crate::selectable::pick(cx, p.raw) {
@@ -505,6 +508,7 @@ impl<S: Stages> Tool for Modify<S> {
         Some(SelectBox {
             from: press.from,
             to: press.to,
+            worlds: Some((press.from_world, press.to_world)),
         })
     }
 

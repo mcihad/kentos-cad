@@ -78,6 +78,18 @@ pub struct Prefs {
     pub(super) highlight_width: Option<u32>,
 }
 
+/// One event of a `mouse` step: one of `press`, `release` (`left`, `middle`, `right`), `to` (a move) and `wheel`
+/// (lines, up positive), at `at` when given (else where the hand is).
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct MouseEvent {
+    pub(super) press: Option<String>,
+    pub(super) release: Option<String>,
+    pub(super) to: Option<[f64; 2]>,
+    pub(super) wheel: Option<f32>,
+    pub(super) at: Option<[f64; 2]>,
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct Step {
@@ -98,6 +110,10 @@ pub struct Step {
     pub(super) click: Option<[f64; 2]>,
     /// The left button down at the first point, moved to the second, released there.
     pub(super) drag: Option<[[f64; 2]; 2]>,
+    /// A hand on the mouse (docs/adr/0277): buttons pressed and released, moves and wheel turns, in order; the points
+    /// are `[east, north]` where the view showed them when the step began, so the hand stays put on the screen while a
+    /// pan or a zoom moves the drawing under it.
+    pub(super) mouse: Option<Vec<MouseEvent>>,
     pub(super) double_click: Option<[f64; 2]>,
     pub(super) right_click: Option<[f64; 2]>,
     pub(super) focus: Option<String>,
