@@ -352,6 +352,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   K kopya (ADR 0280);
   yazılan adlar: seçenek adıyla ya da adının başıyla, komut satırında bağlama göre tam ad ve tekil kısaltma, belirsiz olan adaylarıyla
   söylenir; takma ad ve seçenek harfi çakışmaları testte (ADR 0281);
+  AutoCAD takma adları: Uygulama ayarları › Görünüm › Komut satırı'nda kapalı başlayan tercih (`drafting.autocadAliases`); komut satırı
+  AutoCAD'in acad.pgp adlarını da alır (RECTANG, LA, DT, U, UNDO, QSAVE; yöntemiyle JOG), profil veridir
+  (`catalog/v1/aliases-autocad.json`), KentOS'un adları, yöntem adları ve tek tuş kısayolları önce gelir (B, CP, D, I, P, POLYGON, S, T
+  eklenmez); öneri listesinde ve F1'de görünür, tuşlar ve seçenek harfleri değişmez (`alias_profile.rs`, ADR 0282);
+  şeffaf komutlar: Kaydır, Pencere yakınlaştır, Mesafe ölç, Açı ölç ve Koordinat oku çalışan komutun ya da sıcak tutamacın üstünde
+  çalışır (`Session::start_over`, `TRANSPARENT`), komut noktaları, seçenekleri, istemi, kilitleri, referansı ve Yapım kipiyle bekler,
+  taslağı altta çizilir, Esc ya da Enter ile kaldığı yerden sürer; askıdakiler yığın (nokta hesaplayıcı şeffaf ölçmenin üstünde de);
+  görünüm değişince ya da komut dönünce imleç yeniden verilir, önizleme yeni görünümde imlecin altında (`follow_view`); çizen araç
+  şeffaf değildir (ADR 0283);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);
