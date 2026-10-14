@@ -144,6 +144,9 @@ class Case:
         outcome = wrapper.run(self.doc, typed, op=step["op"])
         got = wire(outcome)
         want = json.loads(json.dumps(step["result"]))
+        if want == "$any":
+            # A step that only prepares the case (a dimension tied before the command, docs/adr/0296): any answer.
+            return
         # `$layer:K`: the layers the command added (execute) or would add (plan), ids the tree did not have, by their
         # number (docs/adr/0210 §11); a command that adds none leaves the last ones.
         fresh = sorted({s for s in strings(got) if re.fullmatch(r"layer-\d+", s) and s not in layers_before}, key=lambda s: int(s[6:]))

@@ -8,7 +8,7 @@ use crate::api::json::{Json, ToJson, field};
 use crate::entity::{Entity, Shape};
 use crate::geom::arc::{ArcGeom, arc_end, arc_start, bulge_from_arc, norm_angle};
 use crate::geom::bulge::{bulge_at, clean_bulge_path, reverse_bulge_path};
-use crate::jsmath::{atan2, js_hypot};
+use crate::jsmath::{atan2, js_hypot, js_max};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -259,7 +259,7 @@ pub fn simplest(joined: &Shape, members: &[Shape], tol: f64) -> Shape {
                 let off = (px * uy - py * ux).abs();
                 // On the line and never turning back.
                 let ok = off <= tol && s >= along - tol;
-                along = along.max(s);
+                along = js_max(along, s);
                 ok
             });
             if straight {
