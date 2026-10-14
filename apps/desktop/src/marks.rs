@@ -243,7 +243,7 @@ impl<Message> canvas::Program<Message> for Marks {
             );
         }
         if let Some(b) = self.select {
-            select_box(&mut frame, b, &self.colors);
+            select_box(&mut frame, b, &self.camera, &self.colors);
         }
         if let Some(l) = &self.locks {
             locks(&mut frame, l, &self.camera, &self.colors);
@@ -576,8 +576,17 @@ fn crosshair(frame: &mut canvas::Frame, c: Crosshair, at: Point, area: Size, col
     );
 }
 
-/// The web's `drawSelectionBox`.
-fn select_box(frame: &mut canvas::Frame, b: SelectBox, colors: &MarkColors) {
+/// The web's `drawSelectionBox`. The corners are where the camera now shows their world points (docs/adr/0277): a
+/// pan or a zoom while the button is down keeps the box on the drawing.
+fn select_box(frame: &mut canvas::Frame, b: SelectBox, camera: &Camera, colors: &MarkColors) {
+    let b = match b.worlds {
+        Some((from, to)) => SelectBox {
+            from: camera.world_to_screen(from),
+            to: camera.world_to_screen(to),
+            ..b
+        },
+        None => b,
+    };
     let crossing = b.crossing();
     let color = if crossing { colors.snap } else { colors.window };
     let (x0, y0) = (b.from[0].min(b.to[0]) as f32, b.from[1].min(b.to[1]) as f32);

@@ -191,6 +191,7 @@ mod tests {
             rest: None,
             click: Some([500.0, 0.0]),
             drag: None,
+            mouse: None,
             double_click: None,
             right_click: None,
             focus: None,

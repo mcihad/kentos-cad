@@ -329,6 +329,8 @@ impl Tool for LabelTool {
         self.pointer = Some((p.raw, p.shift));
         if let Some(press) = &mut self.press {
             press.to = p.screen;
+                // The first corner stays on the drawing through a pan or a zoom (docs/adr/0277).
+                press.from = cx.view.to_screen(press.from_world);
             press.to_world = p.raw;
             let moved = (press.to[0] - press.from[0]).hypot(press.to[1] - press.from[1]);
             if !press.dragging && moved > DRAG_THRESHOLD {
@@ -418,7 +420,7 @@ impl Tool for LabelTool {
         };
         let hits: Vec<LabelHit> = if press.dragging && self.action == Action::Pin {
             cx.spatial
-                .labels_in(press.from_world, press.to_world, cx.draft.unplaced_labels)
+                .labels_in(press.from_world, p.raw, cx.draft.unplaced_labels)
                 .into_iter()
                 .filter(|h| h.state & HIDDEN == 0)
                 .collect()
@@ -498,6 +500,7 @@ impl Tool for LabelTool {
         Some(SelectBox {
             from: press.from,
             to: press.to,
+            worlds: Some((press.from_world, press.to_world)),
         })
     }
 
