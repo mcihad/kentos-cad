@@ -18,7 +18,7 @@ from pathlib import Path
 
 sys.dont_write_bytecode = True  # no __pycache__ in the tree
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from subref_cases import place_at  # noqa: E402  (the independent reference of places)
+from subref_cases import place_at, place_in  # noqa: E402  (the independent reference of places)
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures" / "commands" / "v1" / "cad.snap.find.json"
@@ -44,7 +44,18 @@ TEXT = {"kind": "text", "id": 4, "layerId": "yapi", "attrs": {}, "p": P(E0 + 40,
         "height": 1.0, "rotation": 0}
 POINT = {"kind": "point", "id": 5, "layerId": "yapi", "attrs": {}, "p": P(E0 + 50, N0)}
 HIDDEN = {"kind": "line", "id": 6, "layerId": "gizli", "attrs": {}, "a": P(E0 + 60, N0), "b": P(E0 + 70, N0)}
-ENTITIES = [SQUARE, WALL, CIRCLE, TEXT, POINT, HIDDEN]
+# A room block holding a door block, put turned a quarter, twice as large and mirrored (docs/adr/0274).
+DOOR_ID, ROOM_ID = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4101", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4102"
+DOOR = {"id": DOOR_ID, "name": "Kapı", "base": P(0, 0), "entities": [
+    {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {}, "a": P(0, 0), "b": P(0, 1)}]}
+ROOM = {"id": ROOM_ID, "name": "Oda", "base": P(0, 0), "entities": [
+    {"kind": "polygon", "id": 1, "layerId": "yapi", "attrs": {}, "pts": [P(0, 0), P(4, 0), P(4, 3), P(0, 3)]},
+    {"kind": "insert", "id": 2, "layerId": "yapi", "attrs": {}, "block": DOOR_ID, "p": P(2, 0), "scale": 1,
+     "rotation": 0}]}
+DEFS = {DOOR_ID: DOOR, ROOM_ID: ROOM}
+INSERT = {"kind": "insert", "id": 7, "layerId": "yapi", "attrs": {}, "block": ROOM_ID, "p": P(E0 + 80, N0),
+          "scale": 2, "rotation": math.pi / 2, "mirror": True}
+ENTITIES = [SQUARE, WALL, CIRCLE, TEXT, POINT, HIDDEN, INSERT]
 IDS = [e["id"] for e in ENTITIES]
 SLOT = {e["id"]: e for e in ENTITIES}
 
@@ -54,6 +65,7 @@ SETUP = {
                  "plotScale": 1000, "workspace": "gis", "drawingFont": "barlow"},
     "origin": P(E0, N0), "layers": [layer("yapi", "Yapı"), layer("gizli", "Gizli", visible=False)],
     "activeLayer": "yapi", "entities": ENTITIES, "styles": {"items": [], "categories": []},
+    "blocks": [DOOR, ROOM],
 }
 SAME = {"ids": IDS, "canUndo": False, "canRedo": False, "dirty": False, "revision": "same"}
 
@@ -68,6 +80,14 @@ def snap(kind, x, y, slot=None, placed=True):
             assert pl is not None, (kind, x, y, slot)
             out["place"] = pl
     return out
+
+
+def snap_in(kind, x, y, slot):
+    """A snap on a piece inside an insert: the insert's id, the piece's place and its block path."""
+    found = place_in(DEFS, SLOT[slot], kind, P(x, y))
+    assert found is not None, (kind, x, y, slot)
+    return {"kind": kind, "point": P(float(x), float(y)), "uid": f"$uidOf:{slot}", "place": found["place"],
+            "path": found["path"]}
 
 
 def done(*snaps):
@@ -131,6 +151,16 @@ def cases():
     out.append(case("bütün adaylar en iyiden: kesişim, sonra köşe",
                     step({"at": at(E0 + 0.1, N0 + 0.9), "aperture": 1.5, "all": True},
                          done(snap("intersection", E0, N0 + 1, 1, placed=False), snap("endpoint", E0, N0, 1)))))
+    # The room put at (E0 + 80, N0): x' = p + 2·R(90°)·(x, −y), so (x, y) goes to (E0 + 80 + 2y, N0 + 2x).
+    out.append(case("iç içe bloktaki kapının ucu: bloğun kimliği, parçanın yolu ve yeri",
+                    step({"at": at(E0 + 82.1, N0 + 4.1), "aperture": 0.5, "kinds": ["endpoint"]},
+                         done(snap_in("endpoint", E0 + 82, N0 + 4, 7)))))
+    out.append(case("dönük ve aynalı bloğun odasının köşesi: yol 0, köşe 2",
+                    step({"at": at(E0 + 86.1, N0 + 8.1), "aperture": 0.5},
+                         done(snap_in("endpoint", E0 + 86, N0 + 8, 7)))))
+    out.append(case("bloğun ekleme noktası: yolsuz düğüm 0",
+                    step({"at": at(E0 + 80.1, N0 - 0.1), "aperture": 0.5, "kinds": ["insertion"]},
+                         done(snap("insertion", E0 + 80, N0, 7)))))
     out.append(case("yalnız uç nokta istenince kenarın ortası kenetlenmez",
                     step({"at": at(E0 + 5.1, N0 + 0.1), "aperture": 0.5, "kinds": ["endpoint"]}, done())))
     out.append(case("açıklıkta aday yok: boş",

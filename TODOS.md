@@ -165,6 +165,9 @@ Liste:
 - [ ] `CAD-INPUT-01` (ADR 0266, 14 Ekim): web'de gerekenler: `coordinateInput.ts`'in metrik birimli uzunluğu (`2.5m`, `250cm`) ve
   parantezli toplamı (`fixtures/point-input/v1`'in 22 yeni satırı), `looksLikeCoordinate`'in `(`'u ve araçların uzunluk alanlarının
   birimli ve toplamlı okunması; web'in iz oynatıcısı `value-entry.json`'u geçmeli (`(`, `)`, `*` tuşları, Tab'ın birimli kilidi).
+- [ ] `CAD-INPUT-10` (ADR 0274, 14 Ekim): web'de gerekenler: deponun kapalı parçanın ağırlık merkezi WASM'la zaten gelir; web'in
+  `cad.snap.find` işleyicisi (CAD-INPUT-08) iç içe bloğun parçasında yolu ve yeri vermeli (ortak durumlar `cad.snap.find.json`'un
+  blok durumları) ve `fixtures/snap/v1/blocks.json` web'in depo testlerinde de koşmalı.
 - [ ] `CAD-INPUT-09` (ADR 0273, 14 Ekim): web'de gerekenler: Tab dolaşmasının (ADR 0271) aday listesini çizimin sürümüne bağlamak; web'in
   `ViewportController`'ının basmada kenedi yeniden alması zaten var (CLAUDE.md §4.7), sınamaları masaüstününkiler gibi.
 - [ ] `CAD-INPUT-08` (ADR 0272, 14 Ekim): web'de gerekenler: `cad.snap.find`'ın web işleyicisi (ortak durumlar

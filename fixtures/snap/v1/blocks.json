@@ -1,0 +1,4464 @@
+{
+ "format": "kentos.snap",
+ "version": 1,
+ "source": "scripts/fixtures/snap_block_cases.py (ADR 0274); no KentOS code",
+ "kinds": [
+  "endpoint",
+  "midpoint",
+  "center",
+  "node",
+  "quadrant",
+  "intersection",
+  "perpendicular",
+  "tangent",
+  "nearest",
+  "centroid",
+  "extension",
+  "parallel",
+  "grid",
+  "insertion"
+ ],
+ "blocks": [
+  {
+   "id": "kapi",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 0.0,
+      "y": 1.0
+     }
+    },
+    {
+     "kind": "arc",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "r": 1.0,
+     "a0": 0.0,
+     "a1": 1.5707963267948966
+    }
+   ]
+  },
+  {
+   "id": "oda",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 6.0,
+       "y": 0.0
+      },
+      {
+       "x": 6.0,
+       "y": 4.0
+      },
+      {
+       "x": 0.0,
+       "y": 4.0
+      }
+     ]
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 2.0
+     },
+     "b": {
+      "x": 6.0,
+      "y": 2.0
+     }
+    },
+    {
+     "kind": "circle",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 4.5,
+      "y": 2.0
+     },
+     "r": 0.5
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 1.5,
+      "y": 0.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 6.0,
+      "y": 1.0
+     },
+     "scale": 1.0,
+     "rotation": 1.5707963267948966,
+     "mirror": true
+    },
+    {
+     "kind": "text",
+     "id": 6,
+     "layerId": "gizli",
+     "attrs": {},
+     "p": {
+      "x": 1.0,
+      "y": 3.0
+     },
+     "text": "Oda",
+     "height": 0.5,
+     "rotation": 0.0
+    }
+   ]
+  }
+ ],
+ "snap": [
+  {
+   "name": "dönük ve büyük odanın köşesi",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    106.59230484541327,
+    113.02820323027551
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "endpoint"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "endpoint",
+    "point": [
+     106.39230484541326,
+     112.92820323027551
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "dönük odanın duvarının ortası",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    105.39615242270663,
+    103.1
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "midpoint"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "midpoint",
+    "point": [
+     105.19615242270663,
+     103.0
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "odadaki sütunun merkezi",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    105.94422863405995,
+    108.03910161513775
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "center"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "center",
+    "point": [
+     105.79422863405995,
+     107.96410161513775
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "sütunun çeyreği çizimin doğusunda",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    106.94422863405995,
+    108.03910161513775
+   ],
+   "tol": 0.6,
+   "kinds": [
+    "quadrant"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "quadrant",
+    "point": [
+     106.79422863405995,
+     107.96410161513775
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "iç içe kapının menteşesi: yayın merkezi",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    102.74807621135332,
+    101.575
+   ],
+   "tol": 0.6,
+   "kinds": [
+    "center"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "center",
+    "point": [
+     102.59807621135332,
+     101.5
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "iç içe kapının kanadının ucu",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    101.69807621135331,
+    103.28205080756888
+   ],
+   "tol": 0.5,
+   "kinds": [
+    "endpoint"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "endpoint",
+    "point": [
+     101.59807621135332,
+     103.23205080756888
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "iç içe kapının yayının kuzey çeyreği",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    102.69807621135331,
+    103.55
+   ],
+   "tol": 0.5,
+   "kinds": [
+    "quadrant"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "quadrant",
+    "point": [
+     102.59807621135332,
+     103.5
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "aynalı iç içe kapının yayının ortası",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    110.0099429356183,
+    109.71390246014701
+   ],
+   "tol": 0.5,
+   "kinds": [
+    "midpoint"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "midpoint",
+    "point": [
+     109.9099429356183,
+     109.66390246014701
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "aynalı iç içe kapının menteşesi",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    109.49230484541326,
+    107.78205080756888
+   ],
+   "tol": 0.4,
+   "kinds": [
+    "center"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "center",
+    "point": [
+     109.39230484541326,
+     107.73205080756888
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "kendi gizli katmanındaki yazı çizildiği için kenetlenir",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    98.88205080756889,
+    106.27115242270663
+   ],
+   "tol": 0.8,
+   "kinds": [
+    "insertion"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "insertion",
+    "point": [
+     98.73205080756888,
+     106.19615242270663
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "iç içe kapının ekleme noktası kenetlenmez",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    102.69807621135331,
+    101.55
+   ],
+   "tol": 0.8,
+   "kinds": [
+    "insertion"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": null
+  },
+  {
+   "name": "en dıştaki bloğun ekleme noktası",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    100.1,
+    100.05
+   ],
+   "tol": 0.8,
+   "kinds": [
+    "insertion"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "insertion",
+    "point": [
+     100.0,
+     100.0
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "kapalı parçanın ağırlık merkezi",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    103.39615242270663,
+    106.56410161513774
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "centroid"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "centroid",
+    "point": [
+     103.19615242270663,
+     106.46410161513775
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "aynı bloğun iki parçasının kesişimi",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    106.76025403784438,
+    108.51410161513775
+   ],
+   "tol": 0.5,
+   "kinds": [
+    "intersection"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "intersection",
+    "point": [
+     106.66025403784438,
+     108.46410161513775
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "çizimdeki çizgiyle bloğun duvarının kesişimi",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    96.85,
+    105.67916512459885
+   ],
+   "tol": 0.5,
+   "kinds": [
+    "intersection"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "intersection",
+    "point": [
+     96.75,
+     105.62916512459886
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "son noktadan dönük duvara dik",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    107.49230484541326,
+    111.24615242270663
+   ],
+   "tol": 0.5,
+   "kinds": [
+    "perpendicular"
+   ],
+   "from": [
+    112.5884572681199,
+    114.19615242270663
+   ],
+   "extras": {},
+   "expect": {
+    "kind": "perpendicular",
+    "point": [
+     107.39230484541326,
+     111.19615242270663
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "son noktadan sütuna teğet",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    106.65591303104065,
+    108.5731978740695
+   ],
+   "tol": 0.3,
+   "kinds": [
+    "tangent"
+   ],
+   "from": [
+    100.79422863405995,
+    116.62435565298215
+   ],
+   "extras": {},
+   "expect": {
+    "kind": "tangent",
+    "point": [
+     106.60591303104066,
+     108.5481978740695
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "duvarın üstünde en yakın nokta",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    99.91051177665153,
+    109.17820323027551
+   ],
+   "tol": 0.5,
+   "kinds": [
+    "nearest"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "nearest",
+    "point": [
+     99.90716241174614,
+     109.18400450046474
+    ],
+    "id": 1
+   }
+  },
+  {
+   "name": "aynalı küçük odanın köşesi",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    203.05,
+    98.025
+   ],
+   "tol": 0.3,
+   "kinds": [
+    "endpoint"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "endpoint",
+    "point": [
+     203.0,
+     98.0
+    ],
+    "id": 2
+   }
+  },
+  {
+   "name": "aynalı odadaki kapının yayının ortası",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    201.13355339059328,
+    99.66144660940672
+   ],
+   "tol": 0.2,
+   "kinds": [
+    "midpoint"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "midpoint",
+    "point": [
+     201.10355339059328,
+     99.64644660940672
+    ],
+    "id": 2
+   }
+  },
+  {
+   "name": "aynalı odadaki aynalı kapının yayının ucu",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    203.53,
+    99.515
+   ],
+   "tol": 0.2,
+   "kinds": [
+    "endpoint"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "endpoint",
+    "point": [
+     203.5,
+     99.5
+    ],
+    "id": 2
+   }
+  },
+  {
+   "name": "aynalı kapının yayının merkezi",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    300.1,
+    100.05
+   ],
+   "tol": 0.5,
+   "kinds": [
+    "center"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "center",
+    "point": [
+     300.0,
+     100.0
+    ],
+    "id": 3
+   }
+  },
+  {
+   "name": "aynalı kapının yayının ilk ucu",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    301.11066017177984,
+    98.96433982822019
+   ],
+   "tol": 0.3,
+   "kinds": [
+    "endpoint"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "endpoint",
+    "point": [
+     301.06066017177983,
+     98.93933982822018
+    ],
+    "id": 3
+   }
+  },
+  {
+   "name": "aynalı kapının yayının öbür ucu",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    298.9893398282202,
+    98.96433982822019
+   ],
+   "tol": 0.3,
+   "kinds": [
+    "endpoint"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "endpoint",
+    "point": [
+     298.93933982822017,
+     98.93933982822018
+    ],
+    "id": 3
+   }
+  },
+  {
+   "name": "aynalı kapının yayının ortası",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    300.05,
+    98.525
+   ],
+   "tol": 0.3,
+   "kinds": [
+    "midpoint"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "midpoint",
+    "point": [
+     300.0,
+     98.5
+    ],
+    "id": 3
+   }
+  },
+  {
+   "name": "aynalı kapının yayının çeyreği",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    300.05,
+    98.525
+   ],
+   "tol": 0.3,
+   "kinds": [
+    "quadrant"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "quadrant",
+    "point": [
+     300.0,
+     98.5
+    ],
+    "id": 3
+   }
+  },
+  {
+   "name": "gizli katmandaki blok kenetlenmez",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    406.1,
+    104.05
+   ],
+   "tol": 0.5,
+   "kinds": [
+    "endpoint"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": null
+  },
+  {
+   "name": "kilitli katmandaki blok kenetlenir",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    506.1,
+    104.05
+   ],
+   "tol": 0.5,
+   "kinds": [
+    "endpoint"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "endpoint",
+    "point": [
+     506.0,
+     104.0
+    ],
+    "id": 5
+   }
+  },
+  {
+   "name": "katmanın kendi türleri parçalara da: uç nokta var",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    606.1,
+    104.05
+   ],
+   "tol": 0.5,
+   "kinds": [
+    "endpoint"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": {
+    "kind": "endpoint",
+    "point": [
+     606.0,
+     104.0
+    ],
+    "id": 6
+   }
+  },
+  {
+   "name": "katmanın kendi türleri parçalara da: orta nokta yok",
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 100.0,
+      "y": 100.0
+     },
+     "scale": 2.0,
+     "rotation": 0.5235987755982988
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 200.0,
+      "y": 100.0
+     },
+     "scale": 0.5,
+     "rotation": 0.0,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "block": "kapi",
+     "p": {
+      "x": 300.0,
+      "y": 100.0
+     },
+     "scale": 1.5,
+     "rotation": -0.7853981633974483,
+     "mirror": true
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "gizli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 400.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "kilitli",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 500.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 6,
+     "layerId": "kenet",
+     "attrs": {},
+     "block": "oda",
+     "p": {
+      "x": 600.0,
+      "y": 100.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "line",
+     "id": 7,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 93.53589838486225,
+      "y": 103.19615242270663
+     },
+     "b": {
+      "x": 99.96410161513775,
+      "y": 108.06217782649107
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "gizli",
+     "visible": false,
+     "locked": false,
+     "pickInterior": true
+    },
+    {
+     "id": "kilitli",
+     "visible": true,
+     "locked": true,
+     "pickInterior": true
+    },
+    {
+     "id": "kenet",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true,
+     "snapKinds": 1
+    }
+   ],
+   "p": [
+    603.1,
+    100.05
+   ],
+   "tol": 0.5,
+   "kinds": [
+    "midpoint"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": null
+  }
+ ]
+}

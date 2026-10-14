@@ -348,6 +348,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);
+  blokların içine kenet: parçalar iç içe, dönük, ölçekli ve aynalı yerleştirmede kendi nesneleri gibi, kapalı parçanın ağırlık merkezi,
+  ekleme noktası en dıştakinin, karar yerleştirmenin katmanının (gizli değil, kilitli olur, kendi türleri), dış başvuru ve mimari
+  nesneler gelince aynı kuralla (ADR 0274);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
@@ -576,7 +579,8 @@ python3 scripts/fixtures/array_command_cases.py --check   # cad.entities.array d
 python3 scripts/fixtures/offset_command_cases.py --check   # cad.entities.offset durumlarını (çizgi, çoklu çizgi, alan, yay, daire, Noktadan geç, iki yana, Kaynağı sil, hedef katman, retler) ötelemenin tanımından kesirlerle denetle (ADR 0246)
 KENTOS_SHOTS_ONLY=otele-onizleme,otele-iki-yana,otele-sonuc cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # Ötele'nin anlamsal komutla önizlemesi, iki yanası ve sonucu, .run/shots/arac-otele-* (ADR 0246)
 python3 scripts/fixtures/point_construct_cases.py --check   # cad.points.construct durumlarını (iki nokta ortası, uzantı, paralel, izleme, kutupsal, hat üzerinde, retler) yapımların tanımından, KentOS kodu olmadan denetle (ADR 0270)
-python3 scripts/fixtures/snap_find_cases.py --check   # cad.snap.find durumlarını (türler, kimlik, yer, adaylar, gizli katman, retler) kenetin kurallarından ve alt nesne başvurusunun bağımsız betiğinden denetle (ADR 0272)
+python3 scripts/fixtures/snap_find_cases.py --check   # cad.snap.find durumlarını (türler, kimlik, yer, adaylar, gizli katman, iç içe bloğun parçası, retler) kenetin kurallarından ve alt nesne başvurusunun bağımsız betiğinden denetle (ADR 0272, 0274)
+python3 scripts/fixtures/snap_block_cases.py --check   # blokların içine kenetin durumlarını (iç içe, dönük, ölçekli ve aynalı yerleştirme, kesişimler, ağırlık merkezi, ekleme noktası, gizli, kilitli ve türleri sınırlı katman) tanımlardan elle yerleştirilen parçalarla, KentOS kodu olmadan denetle; durumlar fixtures/snap/v1/blocks.json (ADR 0274)
 python3 scripts/fixtures/snap_coverage_cases.py --check   # kenet türlerinin kapsam matrisini (her tür her nesne türünde, Ekleme noktası, yayın çeyreği, tek seferlik Merkez) bağımsız başvurudan denetle; durumlar fixtures/snap/v1/coverage.json (ADR 0269)
 python3 scripts/fixtures/create_command_cases.py --check   # cad.entities.create durumlarını sözleşmenin kuralından denetle (ADR 0057)
 python3 scripts/fixtures/set_command_cases.py --check   # cad.entities.set durumlarını (Öznitelikler: katman, renk, sembol, öznitelik, etiket) sözleşmenin kuralından denetle (ADR 0066)

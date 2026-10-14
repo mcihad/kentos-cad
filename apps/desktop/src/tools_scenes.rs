@@ -50,6 +50,23 @@ impl Objects {
         self.push(layer, json!({ "kind": "line", "a": xy(a), "b": xy(b) }))
     }
 
+    /// A block's insert: its point, scale, turn (radians) and mirror (docs/adr/0144).
+    pub(crate) fn insert(
+        &mut self,
+        layer: &str,
+        block: &str,
+        p: [f64; 2],
+        scale: f64,
+        rotation: f64,
+        mirror: bool,
+    ) -> u32 {
+        self.push(
+            layer,
+            json!({ "kind": "insert", "block": block, "p": xy(p), "scale": scale, "rotation": rotation,
+                    "mirror": mirror }),
+        )
+    }
+
     /// A line with the elevations of its two ends (docs/adr/0142).
     pub(crate) fn line_z(
         &mut self,
@@ -282,6 +299,11 @@ fn layer(id: &str, name: &str, color: &str, weight: f64) -> Value {
 /// Opens a new drawing of `objects` on the layers Çizim, Yol and Parsel, as
 /// the app would open a file: the view fits it.
 pub(crate) fn open(app: &mut App, objects: Objects) {
+    open_with_blocks(app, objects, json!([]));
+}
+
+/// `open` with the drawing's block definitions (the contract's `[{ id, name, base, entities }]`).
+pub(crate) fn open_with_blocks(app: &mut App, objects: Objects, blocks: Value) {
     let mut d: Value = serde_json::from_str(EMPTY).expect("the empty drawing reads");
     d["layers"] = json!([
         layer("cizim", "Çizim", "fg", 0.25),
@@ -289,6 +311,9 @@ pub(crate) fn open(app: &mut App, objects: Objects) {
         layer("parsel", "Parsel", "#3E63DD", 0.35),
     ]);
     d["entities"] = Value::Array(objects.0);
+    if blocks.as_array().is_some_and(|b| !b.is_empty()) {
+        d["blocks"] = blocks;
+    }
     let snapshot =
         kentos_contracts::DocumentSnapshotV1::from_json(&d.to_string()).expect("the drawing reads");
     let doc = Document::new(snapshot, None).expect("opens");

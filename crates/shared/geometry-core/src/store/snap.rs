@@ -411,12 +411,16 @@ impl Store {
             for e in it.shapes() {
                 shape_snaps(&mut ch, &mut nearby, e, id, from, &reach);
             }
-            // Ağırlık merkezi (docs/adr/0163 §1): a closed area's, holes and parts weighed.
-            if kinds & SnapKind::Centroid.bit() != 0
-                && matches!(it.shape, Shape::Polygon { .. } | Shape::Polyline { .. })
-                && let Some(c) = areas_centroid(&areas_of_entity(&it.shape))
-            {
-                ch.consider(SnapKind::Centroid, c, id);
+            // Ağırlık merkezi (docs/adr/0163 §1): a closed area's, holes and parts weighed; inside a block each
+            // closed piece's (docs/adr/0274).
+            if kinds & SnapKind::Centroid.bit() != 0 {
+                for e in it.shapes() {
+                    if matches!(e, Shape::Polygon { .. } | Shape::Polyline { .. })
+                        && let Some(c) = areas_centroid(&areas_of_entity(e))
+                    {
+                        ch.consider(SnapKind::Centroid, c, id);
+                    }
+                }
             }
         }
         // The object being drawn, as one more object (docs/adr/0163 §3).

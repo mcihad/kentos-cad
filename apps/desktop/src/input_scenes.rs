@@ -3,10 +3,11 @@
 //! the next segment waits; and docs/adr/0268's: Shift held over a polyline, ortho ruling for the moment and polar
 //! tracking (on) shown out of use in the status bar; docs/adr/0269's: the one-shot Merkez through an arc's curve,
 //! and Ekleme noktası on a text; docs/adr/0271's: Tab on the second candidate where two lines meet a parcel;
-//! docs/adr/0272's: Koordinat oku on a parcel's corner, the log saying the snap's object and place. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
+//! docs/adr/0272's: Koordinat oku on a parcel's corner, the log saying the snap's object and place; docs/adr/0274's:
+//! inside a room block turned 30°, the midpoint of a nested, mirrored door's swing. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma,kenet-oku cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma,kenet-oku,kenet-blok-ici cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -15,7 +16,7 @@ use kentos_contracts::DrawingUnit;
 
 use crate::app::App;
 use crate::files_testing::make_cad;
-use crate::tools_scenes::{E, N, Objects, click, hover, open, run, typed};
+use crate::tools_scenes::{E, N, Objects, click, hover, open, open_with_blocks, run, typed};
 use crate::tools_screens::Scene;
 
 /// A millimetre drawing; Çizgi from the origin with three typed segments; the cursor up to the north-west.
@@ -161,8 +162,68 @@ fn reading(app: &mut App) {
     hover(app, [12.1, 9.05]);
 }
 
+/// A door (a leaf and its swing) inside a room (walls, a column), the door twice: as it is and turned a quarter,
+/// mirrored. The room put turned 30° and one and a half times as large, and once more mirrored.
+fn room_blocks() -> serde_json::Value {
+    let piece = |id: u32, more: serde_json::Value| {
+        let mut v = serde_json::json!({ "id": id, "layerId": "cizim", "attrs": {} });
+        v.as_object_mut()
+            .expect("an object")
+            .extend(more.as_object().expect("an object").clone());
+        v
+    };
+    let p = |x: f64, y: f64| serde_json::json!({ "x": x, "y": y });
+    serde_json::json!([
+        { "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4201", "name": "Kapı", "base": p(0.0, 0.0), "entities": [
+            piece(1, serde_json::json!({ "kind": "line", "a": p(0.0, 0.0), "b": p(0.0, 1.0) })),
+            piece(2, serde_json::json!({ "kind": "arc", "c": p(0.0, 0.0), "r": 1.0, "a0": 0.0,
+                                         "a1": std::f64::consts::FRAC_PI_2 })),
+        ]},
+        { "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4202", "name": "Oda", "base": p(0.0, 0.0), "entities": [
+            piece(1, serde_json::json!({ "kind": "polygon",
+                                         "pts": [p(0.0, 0.0), p(6.0, 0.0), p(6.0, 4.0), p(0.0, 4.0)] })),
+            piece(2, serde_json::json!({ "kind": "circle", "c": p(4.5, 2.0), "r": 0.5 })),
+            piece(3, serde_json::json!({ "kind": "insert", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4201",
+                                         "p": p(1.5, 0.0), "scale": 1.0, "rotation": 0.0 })),
+            piece(4, serde_json::json!({ "kind": "insert", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4201",
+                                         "p": p(6.0, 1.0), "scale": 1.0,
+                                         "rotation": std::f64::consts::FRAC_PI_2, "mirror": true })),
+        ]},
+    ])
+}
+
+/// Where a room point is in the first room (turned 30°, 1.5 times as large, at the origin).
+fn in_room(q: [f64; 2]) -> [f64; 2] {
+    let (s, c) = 30f64.to_radians().sin_cos();
+    [1.5 * (c * q[0] - s * q[1]), 1.5 * (s * q[0] + c * q[1])]
+}
+
+/// Çizgi from outside the rooms, the pointer near the midpoint of the turned room's mirrored door's swing.
+fn in_blocks(app: &mut App) {
+    let mut o = Objects::new();
+    o.insert("cizim", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4202", [0.0, 0.0], 1.5, 30f64.to_radians(), false);
+    o.insert("cizim", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4202", [16.0, 0.0], 1.5, 0.0, true);
+    open_with_blocks(app, o, room_blocks());
+    make_cad(app);
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 6.0,
+            min_y: N - 8.0,
+            max_x: E + 26.0,
+            max_y: N + 10.0,
+        },
+        24.0,
+    );
+    run(app, "tool.line");
+    click(app, [12.0, 8.0]);
+    let h = std::f64::consts::FRAC_1_SQRT_2;
+    let m = in_room([6.0 + h, 1.0 + h]);
+    hover(app, [m[0] + 0.08, m[1] + 0.05]);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
+        ("kenet-blok-ici", in_blocks),
         ("kenet-oku", reading),
         ("kenet-dolasma", cycling),
         ("giris-birim", units),
@@ -176,7 +237,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
 mod tests {
     use kentos_interaction::SnapKind;
 
-    use super::{centre_through, insertion};
+    use super::{centre_through, in_blocks, in_room, insertion};
     use crate::tools_scenes::{E, N};
 
     /// docs/adr/0269 §1–§2 on the desktop: the one-shot Merkez on an arc's curve snaps to its centre; a text's
@@ -193,5 +254,21 @@ mod tests {
         let hit = app.snap.expect("a snap");
         assert_eq!(hit.kind, SnapKind::Insertion);
         assert!((hit.point.x - (E + 24.0)).abs() < 1e-9 && (hit.point.y - (N + 8.0)).abs() < 1e-9);
+    }
+
+    /// docs/adr/0274 on the desktop: inside the turned room the nested, mirrored door's swing gives its midpoint,
+    /// the room's insert its object.
+    #[test]
+    fn a_nested_mirrored_door_s_swing_snaps_inside_the_turned_room() {
+        let mut app = crate::files_testing::app_with_drawing();
+        in_blocks(&mut app);
+        let hit = app.snap.expect("a snap");
+        assert_eq!(hit.kind, SnapKind::Midpoint);
+        let h = std::f64::consts::FRAC_1_SQRT_2;
+        let m = in_room([6.0 + h, 1.0 + h]);
+        assert!(
+            (hit.point.x - (E + m[0])).abs() < 1e-9 && (hit.point.y - (N + m[1])).abs() < 1e-9,
+            "{hit:?}"
+        );
     }
 }
