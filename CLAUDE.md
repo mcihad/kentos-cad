@@ -343,6 +343,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kenarın çeyrekleri, tek seferlik Merkez'de eğrinin üstünden merkez (ADR 0269);
   nokta yapımları: salt okunur `cad.points.construct` (iki nokta ortası, uzantı, paralel, izleme, kutupsal, hat üzerinde), Python ve MCP'de;
   Geçici izleme noktası (`draft.trackPoint`), tek seferlik menüde Referans noktası ve İki nokta ortası (ADR 0270);
+  kenet adayları arasında Tab ve Shift+Tab (çekirdeğin `snap_candidates`'i: ağırlıklı uzaklık, eşitlikte çizimin sırası), işarette
+  nesnenin türü ve sıra (ADR 0271);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş

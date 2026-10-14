@@ -813,6 +813,18 @@ impl Spatial {
         self.store.snap_ex(at, tol, kinds, from, extras)
     }
 
+    /// Every snap point near `at`, best first (docs/adr/0271): the first is [`Spatial::snap_ex`]'s.
+    pub fn snap_candidates(
+        &self,
+        at: Vec2,
+        tol: f64,
+        kinds: u32,
+        from: Option<Vec2>,
+        extras: &SnapExtras,
+    ) -> Vec<SnapHit> {
+        self.store.snap_candidates(at, tol, kinds, from, extras)
+    }
+
     /// The extensions of object `id`'s edges that end at `at` (Uzantı's
     /// acquisition, docs/adr/0163 §2; the web's `PickIndex.extensionsAt`).
     pub fn extensions_at(&self, id: f64, at: Vec2) -> Vec<Extension> {

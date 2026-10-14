@@ -1,0 +1,184 @@
+{
+ "format": "kentos.interaction-trace",
+ "version": 1,
+ "id": "snap-cycle",
+ "title": "Kenet adayları arasında Tab: iki çizginin yakınında imleç kımıldamadan Tab sıradaki adaya (kesişim), yine Tab başa (uç nokta), Shift+Tab geriye geçer; tık seçili adaya köşe koyar; aynı nokta bir kez sayılır; imleç kımıldayınca dolaşma biter, tık en iyi adaya",
+ "source": "Çekirdeğin Store::snap_candidates'i, masaüstünün snap_cycle.rs'i; ADR 0271",
+ "covers": [
+  "CAD-INPUT-07"
+ ],
+ "document": "empty.kcad",
+ "view": {
+  "center": [
+   487000,
+   4420000
+  ],
+  "metresPerPixel": 0.125
+ },
+ "prefs": {
+  "cursorInput": true
+ },
+ "clickTolerance": 0.125,
+ "draft": {
+  "snap": true,
+  "grid": false,
+  "ortho": false,
+  "polar": false,
+  "tracking": false
+ },
+ "steps": [
+  {
+   "run": "tool.line"
+  },
+  {
+   "click": [
+    0,
+    0
+   ]
+  },
+  {
+   "click": [
+    20,
+    0
+   ]
+  },
+  {
+   "run": "tool.line"
+  },
+  {
+   "click": [
+    2,
+    -5
+   ]
+  },
+  {
+   "click": [
+    2,
+    5
+   ]
+  },
+  {
+   "run": "tool.line"
+  },
+  {
+   "click": [
+    5,
+    10
+   ]
+  },
+  {
+   "move": [
+    0.8,
+    0.2
+   ],
+   "note": "En iyi aday uç nokta (0; 0).",
+   "expect": {
+    "snap": "endpoint"
+   }
+  },
+  {
+   "key": "Tab",
+   "note": "İmleç kımıldamadan Tab sıradakine: kesişim (2; 0).",
+   "expect": {
+    "snap": "intersection"
+   }
+  },
+  {
+   "key": "Tab",
+   "note": "İki aday var: başa döner.",
+   "expect": {
+    "snap": "endpoint"
+   }
+  },
+  {
+   "key": "Shift+Tab",
+   "note": "Shift+Tab geriye.",
+   "expect": {
+    "snap": "intersection"
+   }
+  },
+  {
+   "click": [
+    0.8,
+    0.2
+   ],
+   "note": "Tık seçili adaya köşe koyar.",
+   "expect": {
+    "entities": 3,
+    "newest": {
+     "kind": "line",
+     "points": [
+      [
+       5,
+       10
+      ],
+      [
+       2,
+       0
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "run": "tool.line"
+  },
+  {
+   "run": "tool.line"
+  },
+  {
+   "click": [
+    5,
+    10
+   ]
+  },
+  {
+   "move": [
+    0.8,
+    0.2
+   ],
+   "expect": {
+    "snap": "endpoint"
+   }
+  },
+  {
+   "key": "Tab",
+   "note": "Sıradaki aday (2; 0): artık üçüncü çizginin de ucu, aynı nokta bir kez ve uç nokta olarak.",
+   "expect": {
+    "snap": "endpoint"
+   }
+  },
+  {
+   "move": [
+    1.0,
+    0.25
+   ],
+   "note": "İmleç kımıldayınca dolaşma biter: en iyi aday yine (0; 0)."
+  },
+  {
+   "click": [
+    1.0,
+    0.25
+   ],
+   "expect": {
+    "entities": 4,
+    "newest": {
+     "kind": "line",
+     "points": [
+      [
+       5,
+       10
+      ],
+      [
+       0,
+       0
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "key": "Esc"
+  }
+ ]
+}

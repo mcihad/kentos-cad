@@ -922,6 +922,36 @@ impl Session {
         draft: &Draft,
         tracking: &ObjectTracking,
     ) -> Option<SnapHit> {
+        let (from, tol, extras) = self.snap_question(view, draft, tracking)?;
+        spatial.snap_ex(at, tol, draft.snap_kinds, from, &extras)
+    }
+
+    /// Every snap point the cursor at `at` has, best first, as [`Session::snap`] asks (docs/adr/0271): Tab
+    /// steps through them; the first is the snap.
+    pub fn snap_candidates(
+        &self,
+        spatial: &Spatial,
+        at: Vec2,
+        view: &dyn View,
+        draft: &Draft,
+        tracking: &ObjectTracking,
+    ) -> Vec<SnapHit> {
+        match self.snap_question(view, draft, tracking) {
+            Some((from, tol, extras)) => {
+                spatial.snap_candidates(at, tol, draft.snap_kinds, from, &extras)
+            }
+            None => Vec::new(),
+        }
+    }
+
+    /// What the snap is asked with: the command's last point, the aperture in world length, the extras; none
+    /// when nothing snaps now.
+    fn snap_question(
+        &self,
+        view: &dyn View,
+        draft: &Draft,
+        tracking: &ObjectTracking,
+    ) -> Option<(Option<Vec2>, f64, SnapExtras)> {
         let (from, path) = match &self.tool {
             Some(tool) if tool.snaps() => (tool.snap_from(), tool.draft_path()),
             None if self.select.grip_active() => (self.select.snap_from(), None),
@@ -945,7 +975,7 @@ impl Session {
                 .then_some(draft.snap_grid),
             grid_frame: draft.ucs,
         };
-        spatial.snap_ex(at, tol, draft.snap_kinds, from, &extras)
+        Some((from, tol, extras))
     }
 
     /// After the snap for the cursor at `at`: object tracking and the snap

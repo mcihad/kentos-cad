@@ -1,7 +1,7 @@
 {
  "format": "kentos.snap",
  "version": 1,
- "source": "scripts/fixtures/snap_coverage_cases.py (ADR 0269); no KentOS code",
+ "source": "scripts/fixtures/snap_coverage_cases.py (ADR 0269, 0271); no KentOS code",
  "kinds": [
   "endpoint",
   "midpoint",
@@ -2044,6 +2044,259 @@
     ],
     "id": 16
    }
+  }
+ ],
+ "candidates": [
+  {
+   "name": "köşe, kesişim ve en yakın: kesişim önde, sonra köşe, en sonda en yakın",
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 10.0,
+       "y": 0.0
+      },
+      {
+       "x": 10.0,
+       "y": 10.0
+      },
+      {
+       "x": 0.0,
+       "y": 10.0
+      }
+     ]
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": -2.0,
+      "y": 1.0
+     },
+     "b": {
+      "x": 12.0,
+      "y": 1.0
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    0.3,
+    0.6
+   ],
+   "tol": 1.5,
+   "kinds": [
+    "endpoint",
+    "intersection",
+    "nearest"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": [
+    {
+     "kind": "intersection",
+     "point": [
+      0.0,
+      1.0
+     ],
+     "id": 1
+    },
+    {
+     "kind": "endpoint",
+     "point": [
+      0.0,
+      0.0
+     ],
+     "id": 1
+    },
+    {
+     "kind": "nearest",
+     "point": [
+      0.0,
+      0.6
+     ],
+     "id": 1
+    }
+   ]
+  },
+  {
+   "name": "kenar ortası ile kesişimin yakını: ağırlıklar sırayı verir",
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 10.0,
+       "y": 0.0
+      },
+      {
+       "x": 10.0,
+       "y": 10.0
+      },
+      {
+       "x": 0.0,
+       "y": 10.0
+      }
+     ]
+    },
+    {
+     "kind": "line",
+     "id": 3,
+     "layerId": "a",
+     "attrs": {},
+     "a": {
+      "x": 4.0,
+      "y": -3.0
+     },
+     "b": {
+      "x": 4.0,
+      "y": 3.0
+     }
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    4.6,
+    0.4
+   ],
+   "tol": 2.0,
+   "kinds": [
+    "endpoint",
+    "midpoint",
+    "intersection"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": [
+    {
+     "kind": "midpoint",
+     "point": [
+      5.0,
+      0.0
+     ],
+     "id": 1
+    },
+    {
+     "kind": "intersection",
+     "point": [
+      4.0,
+      0.0
+     ],
+     "id": 1
+    }
+   ]
+  },
+  {
+   "name": "iki nesnenin aynı köşesi: aynı nokta bir kez, çizimdeki ilk nesneninki",
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "a",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 10.0,
+       "y": 0.0
+      },
+      {
+       "x": 10.0,
+       "y": 10.0
+      },
+      {
+       "x": 0.0,
+       "y": 10.0
+      }
+     ]
+    },
+    {
+     "kind": "polygon",
+     "id": 4,
+     "layerId": "a",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 10.0,
+       "y": 10.0
+      },
+      {
+       "x": 20.0,
+       "y": 10.0
+      },
+      {
+       "x": 20.0,
+       "y": 20.0
+      },
+      {
+       "x": 10.0,
+       "y": 20.0
+      }
+     ]
+    }
+   ],
+   "layers": [
+    {
+     "id": "a",
+     "visible": true,
+     "locked": false,
+     "pickInterior": true
+    }
+   ],
+   "p": [
+    10.2,
+    10.1
+   ],
+   "tol": 1.0,
+   "kinds": [
+    "endpoint"
+   ],
+   "from": null,
+   "extras": {},
+   "expect": [
+    {
+     "kind": "endpoint",
+     "point": [
+      10.0,
+      10.0
+     ],
+     "id": 1
+    }
+   ]
   }
  ]
 }

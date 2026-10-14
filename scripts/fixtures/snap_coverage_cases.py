@@ -263,10 +263,52 @@ def cases():
     return out
 
 
+WEIGHT = {"endpoint": F(1), "node": F(1), "insertion": F(1), "intersection": F(102, 100), "center": F(108, 100),
+          "centroid": F(108, 100), "quadrant": F(110, 100), "midpoint": F(115, 100), "tangent": F(120, 100),
+          "perpendicular": F(125, 100)}
+
+
+def ranked(p, found, nearest):
+    """The candidates best first (docs/adr/0271): weighted distance, then the order met; the nearest point last;
+    a point met again once."""
+    def d(q):
+        return math.hypot(q[0] - p[0], q[1] - p[1])
+    order = sorted(enumerate(found), key=lambda iq: (float(WEIGHT[iq[1][0]]) * d(iq[1][1]), iq[0]))
+    out = []
+    for _, (kind, q, i) in order + ([(None, nearest)] if nearest else []):
+        if all(o["point"] != [float(q[0]), float(q[1])] for o in out):
+            out.append({"kind": kind, "point": [float(q[0]), float(q[1])], "id": i})
+    return out
+
+
+def candidates():
+    """Crowded corners: what the cursor has near it, best first."""
+    out = []
+    sq = polygon(1, [(0, 0), (10, 0), (10, 10), (0, 10)])
+    ln = line(2, (-2, 1), (12, 1))
+    p = (0.3, 0.6)
+    out.append({"name": "köşe, kesişim ve en yakın: kesişim önde, sonra köşe, en sonda en yakın",
+                "entities": [sq, ln], "layers": LAYERS, "p": list(p), "tol": 1.5,
+                "kinds": ["endpoint", "intersection", "nearest"], "from": None, "extras": {},
+                "expect": ranked(p, [("endpoint", (0, 0), 1), ("intersection", (0, 1), 1)],
+                                 ("nearest", (0, 0.6), 1))})
+    p = (4.6, 0.4)
+    out.append({"name": "kenar ortası ile kesişimin yakını: ağırlıklar sırayı verir",
+                "entities": [sq, line(3, (4, -3), (4, 3))], "layers": LAYERS, "p": list(p), "tol": 2.0,
+                "kinds": ["endpoint", "midpoint", "intersection"], "from": None, "extras": {},
+                "expect": ranked(p, [("midpoint", (5, 0), 1), ("intersection", (4, 0), 1)], None)})
+    p = (10.2, 10.1)
+    out.append({"name": "iki nesnenin aynı köşesi: aynı nokta bir kez, çizimdeki ilk nesneninki",
+                "entities": [sq, polygon(4, [(10, 10), (20, 10), (20, 20), (10, 20)])], "layers": LAYERS,
+                "p": list(p), "tol": 1.0, "kinds": ["endpoint"], "from": None, "extras": {},
+                "expect": ranked(p, [("endpoint", (10, 10), 1), ("endpoint", (10, 10), 4)], None)})
+    return out
+
+
 def build():
     return {"format": "kentos.snap", "version": 1,
-            "source": "scripts/fixtures/snap_coverage_cases.py (ADR 0269); no KentOS code",
-            "kinds": KINDS, "snap": cases()}
+            "source": "scripts/fixtures/snap_coverage_cases.py (ADR 0269, 0271); no KentOS code",
+            "kinds": KINDS, "snap": cases(), "candidates": candidates()}
 
 
 def main():

@@ -268,3 +268,83 @@ fn along_an_extension_as_the_reference_says() {
         }
     }
 }
+
+/// The candidates best first (docs/adr/0271), against `snap_coverage_cases.py`'s crowded corners; and on every
+/// case of both files the first candidate is the snap.
+#[test]
+fn candidates_come_best_first_and_the_first_is_the_snap() {
+    let file = fixture_named("coverage");
+    let names: Vec<&str> = file["kinds"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|k| k.as_str().unwrap())
+        .collect();
+    let mask = |c: &Value| {
+        c["kinds"].as_array().unwrap().iter().fold(0u32, |m, k| {
+            m | 1
+                << names
+                    .iter()
+                    .position(|n| *n == k.as_str().unwrap())
+                    .unwrap()
+        })
+    };
+    let from = |c: &Value| (!c["from"].is_null()).then(|| pt(&c["from"]));
+    for c in file["candidates"].as_array().unwrap() {
+        let got = store(c).snap_candidates(
+            pt(&c["p"]),
+            num(&c["tol"]),
+            mask(c),
+            from(c),
+            &extras(&c["extras"]),
+        );
+        let got: Vec<(String, f64, f64, f64)> = got
+            .iter()
+            .map(|h| {
+                (
+                    names[h.kind as usize].to_owned(),
+                    h.point.x,
+                    h.point.y,
+                    h.id,
+                )
+            })
+            .collect();
+        let want: Vec<(String, f64, f64, f64)> = c["expect"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|w| {
+                (
+                    w["kind"].as_str().unwrap().to_owned(),
+                    num(&w["point"][0]),
+                    num(&w["point"][1]),
+                    num(&w["id"]),
+                )
+            })
+            .collect();
+        // The kinds and objects exactly, the points within 1e-9 m (a nearest point is a projection).
+        let same = got.len() == want.len()
+            && got.iter().zip(&want).all(|(g, w)| {
+                g.0 == w.0 && g.3 == w.3 && (g.1 - w.1).abs() <= 1e-9 && (g.2 - w.2).abs() <= 1e-9
+            });
+        assert!(same, "{}: {got:?}, beklenen {want:?}", c["name"]);
+    }
+    for other in [fixture(), file.clone()] {
+        for c in other["snap"].as_array().unwrap() {
+            let (p, tol, kinds, f, x) = (
+                pt(&c["p"]),
+                num(&c["tol"]),
+                mask(c),
+                from(c),
+                extras(&c["extras"]),
+            );
+            let s = store(c);
+            assert_eq!(
+                s.snap_candidates(p, tol, kinds, f, &x).first().copied(),
+                s.snap_ex(p, tol, kinds, f, &x),
+                "{}",
+                c["name"]
+            );
+        }
+    }
+}

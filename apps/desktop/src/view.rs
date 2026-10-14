@@ -705,6 +705,7 @@ impl App {
                 let marks = Marks {
                     camera: self.viewport.camera,
                     snap: self.snap,
+                    snap_note: self.snap_marker_note(),
                     select: self.session.select_box(),
                     grips,
                     hot: self.session.active_grip(),
@@ -855,6 +856,7 @@ impl App {
         let marks = Marks {
             camera,
             snap: self.snap,
+            snap_note: None,
             select: None,
             grips,
             hot: self.session.active_grip(),

@@ -727,6 +727,8 @@ pub struct App {
     pub clipboard: Clipboard,
     /// The object snap under the pointer while a tool snaps: its marker.
     pub snap: Option<SnapHit>,
+    /// Tab's steps through the snap candidates where the pointer stands (docs/adr/0271).
+    pub(crate) snap_cycle: Option<crate::snap_cycle::SnapCycle>,
     /// The point the tools got for the cursor, beside the world point under
     /// it then: the snap's or the tracking lock's when there is one. The
     /// status bar shows it while the cursor is still there (the web's
@@ -1059,6 +1061,7 @@ impl App {
             selection: Selection::new(),
             clipboard: Clipboard::new(),
             snap: None,
+            snap_cycle: None,
             cursor_point: None,
             followed: None,
             field: None,

@@ -237,6 +237,9 @@ struct Choice {
     /// (the one-shot Merkez, docs/adr/0269 §2); the curve's distance decides between curves.
     through: Option<(SnapHit, f64)>,
     nearest: Option<(SnapHit, f64)>,
+    /// Every candidate with its weighted distance, in the order considered, when they are asked for
+    /// ([`Store::snap_candidates`], docs/adr/0271): no pair of crossings is skipped then.
+    all: Option<Vec<(SnapHit, f64)>>,
 }
 
 impl Choice {
@@ -283,6 +286,9 @@ impl Choice {
             return;
         }
         let w = d * weight;
+        if let Some(all) = self.all.as_mut() {
+            all.push((hit, w));
+        }
         if self.best.is_none_or(|(_, b)| w < b) {
             self.best = Some((hit, w));
         }
@@ -293,7 +299,7 @@ impl Choice {
     /// distance its own weighted distance (×1.02, rounded, which never goes
     /// below `g`) cannot be smaller. NaN never counts as out of reach.
     fn out_of_reach(&self, g: f64) -> bool {
-        g > self.tol || self.best.is_some_and(|(_, b)| g >= b)
+        g > self.tol || (self.all.is_none() && self.best.is_some_and(|(_, b)| g >= b))
     }
 }
 
@@ -317,6 +323,36 @@ impl Store {
         self.snap_with(p, tol, kinds, from, extras, crossings)
     }
 
+    /// Every snap point near `p`, best first (docs/adr/0271): the kinds' points by their weighted distance
+    /// (at equal weight in the order the objects are met, as the snap takes them), then a centre through its
+    /// curve (the one-shot Merkez), then the nearest point, then Karelaj's node; a point met again (a corner
+    /// that is also a crossing) once, as its best kind. The first is [`Store::snap_ex`]'s.
+    pub fn snap_candidates(
+        &self,
+        p: Vec2,
+        tol: f64,
+        kinds: u32,
+        from: Option<Vec2>,
+        extras: &SnapExtras,
+    ) -> Vec<SnapHit> {
+        let ch = self.choose(p, tol, kinds, from, extras, crossings, true);
+        let mut ranked = ch.all.unwrap_or_default();
+        // Stable: at equal weight the first considered stays first, as `best` keeps it.
+        ranked.sort_by(|a, b| a.1.total_cmp(&b.1));
+        let mut out: Vec<SnapHit> = Vec::new();
+        let tail = [ch.through, ch.nearest]
+            .into_iter()
+            .flatten()
+            .map(|(h, _)| h)
+            .chain(grid_node(p, kinds, extras));
+        for h in ranked.into_iter().map(|(h, _)| h).chain(tail) {
+            if !out.iter().any(|o| o.point == h.point) {
+                out.push(h);
+            }
+        }
+        out
+    }
+
     /// `snap_ex` with the pairwise crossings given (the tests compare every pair).
     fn snap_with(
         &self,
@@ -327,6 +363,24 @@ impl Store {
         extras: &SnapExtras,
         crossings: impl Fn(&mut Choice, &[Nearby], Vec2),
     ) -> Option<SnapHit> {
+        let ch = self.choose(p, tol, kinds, from, extras, crossings, false);
+        let found = ch.best.or(ch.through).or(ch.nearest).map(|(h, _)| h);
+        // Karelaj: the nearest grid node when nothing else is (§1).
+        found.or_else(|| grid_node(p, kinds, extras))
+    }
+
+    /// The candidates near `p`: the best, and with `collect` every one.
+    #[allow(clippy::too_many_arguments)]
+    fn choose(
+        &self,
+        p: Vec2,
+        tol: f64,
+        kinds: u32,
+        from: Option<Vec2>,
+        extras: &SnapExtras,
+        crossings: impl Fn(&mut Choice, &[Nearby], Vec2),
+        collect: bool,
+    ) -> Choice {
         // Where an edge can matter: a curve is split only near it (docs/adr/0149 §5.3).
         let reach = crate::geometry::Bounds {
             min_x: p.x - tol,
@@ -342,6 +396,7 @@ impl Store {
             best: None,
             through: None,
             nearest: None,
+            all: collect.then(Vec::new),
         };
         let mut nearby: Vec<Nearby> = Vec::new();
         for it in self.near(p, tol) {
@@ -385,28 +440,7 @@ impl Store {
         if kinds & SnapKind::Intersection.bit() != 0 {
             crossings(&mut ch, &nearby, p);
         }
-        let found = ch.best.or(ch.through).or(ch.nearest).map(|(h, _)| h);
-        // Karelaj: the nearest grid node when nothing else is (§1).
-        found.or_else(|| {
-            let [gx, gy] = extras.grid?;
-            (kinds & SnapKind::Grid.bit() != 0).then(|| SnapHit {
-                kind: SnapKind::Grid,
-                point: match extras.grid_frame {
-                    // In a UCS the node is its axes' (docs/adr/0261 §4): into the frame, rounded, back.
-                    Some((o, a)) if a != 0.0 || o.x != 0.0 || o.y != 0.0 => {
-                        let (c, s) = (cos(a), sin(a));
-                        let (dx, dy) = (p.x - o.x, p.y - o.y);
-                        let (u, v) = (
-                            grid_coord(dx * c + dy * s, gx),
-                            grid_coord(-dx * s + dy * c, gy),
-                        );
-                        Vec2::new(o.x + u * c - v * s, o.y + u * s + v * c)
-                    }
-                    _ => Vec2::new(grid_coord(p.x, gx), grid_coord(p.y, gy)),
-                },
-                id: NO_OBJECT,
-            })
-        })
+        ch
     }
 
     /// The extensions of object `id`'s edges that end at `at`, within 1 µm
@@ -513,6 +547,28 @@ fn quadrants_on(c: Vec2, r: f64, a0: f64, sweep: f64) -> Vec<Vec2> {
     .collect()
 }
 
+/// Karelaj's node nearest `p` (docs/adr/0163 §1), when the kind is asked for and the grid is given; in a UCS
+/// the node is its axes' (docs/adr/0261 §4): into the frame, rounded, back.
+fn grid_node(p: Vec2, kinds: u32, extras: &SnapExtras) -> Option<SnapHit> {
+    let [gx, gy] = extras.grid?;
+    (kinds & SnapKind::Grid.bit() != 0).then(|| SnapHit {
+        kind: SnapKind::Grid,
+        point: match extras.grid_frame {
+            Some((o, a)) if a != 0.0 || o.x != 0.0 || o.y != 0.0 => {
+                let (c, s) = (cos(a), sin(a));
+                let (dx, dy) = (p.x - o.x, p.y - o.y);
+                let (u, v) = (
+                    grid_coord(dx * c + dy * s, gx),
+                    grid_coord(-dx * s + dy * c, gy),
+                );
+                Vec2::new(o.x + u * c - v * s, o.y + u * s + v * c)
+            }
+            _ => Vec2::new(grid_coord(p.x, gx), grid_coord(p.y, gy)),
+        },
+        id: NO_OBJECT,
+    })
+}
+
 fn point_on(c: Vec2, r: f64, a: f64) -> Vec2 {
     Vec2::new(
         c.x + r * crate::jsmath::cos(a),
@@ -611,7 +667,7 @@ fn crossings(ch: &mut Choice, nearby: &[Nearby], p: Vec2) {
     // as well; the arc was tried regardless only for a NaN crossing, which can win only while there
     // is no best yet. With one (the usual case: an end or a node in the aperture) far segments skip
     // arcs too: a parcel map's curved street fronts were otherwise met by every far edge.
-    let arcs_count = ch.best.is_none();
+    let arcs_count = ch.best.is_none() || ch.all.is_some();
     // The partners a far segment still has to meet, in order.
     let mut curved = Vec::new();
     for (k, e) in nearby.iter().enumerate() {
