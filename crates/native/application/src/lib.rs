@@ -76,6 +76,19 @@ pub mod entities_order;
 pub mod entities_pick;
 pub mod entities_select;
 pub mod entities_vertex;
+pub mod shapes;
+/// `cad.rectangle.create` as the registry runs it ([`shapes`]).
+pub mod rectangle_create {
+    pub use crate::shapes::{
+        execute_rectangle as execute, plan_rectangle as plan, validate_rectangle as validate,
+    };
+}
+/// `cad.polygon.regular` as the registry runs it ([`shapes`]).
+pub mod polygon_regular {
+    pub use crate::shapes::{
+        execute_regular as execute, plan_regular as plan, validate_regular as validate,
+    };
+}
 pub mod file_import;
 pub mod geometry_store;
 pub mod import_apply;
@@ -180,6 +193,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_NURBS_CREATE,
         kentos_contracts::CAD_NURBS_CREATE_VERSION,
+    ),
+    // Rectangles and regular polygons ([`shapes`], docs/adr/0290).
+    (
+        kentos_contracts::CAD_RECTANGLE_CREATE,
+        kentos_contracts::CAD_RECTANGLE_CREATE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_POLYGON_REGULAR,
+        kentos_contracts::CAD_POLYGON_REGULAR_VERSION,
     ),
     // A path's vertices and edges ([`entities_vertex`], docs/adr/0279).
     (

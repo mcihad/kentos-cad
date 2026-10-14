@@ -9,7 +9,7 @@
 //! chip for the wall), and the shortcuts window with Ctrl + tık and the drawing keys; docs/adr/0279's: the grip menu of a parcel's corner; docs/adr/0280's: two hot corners turning the parcel; docs/adr/0281's: an ambiguous start and a start of one command typed; docs/adr/0283's: Pencere yakınlaştır run over a polyline being drawn, and the polyline back after it with its preview in the new view; docs/adr/0286's: Öznitelikler of a mixed selection with a locked wall and shared attributes. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma,kenet-oku,kenet-blok-ici,secim-alt-nesne,kisayollar,tutamac-menusu,tutamac-kipleri,komut-adlari,seffaf-pencere,seffaf-donus,oznitelik-coklu,oznitelik-ortak cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma,kenet-oku,kenet-blok-ici,secim-alt-nesne,kisayollar,tutamac-menusu,tutamac-kipleri,komut-adlari,seffaf-pencere,seffaf-donus,oznitelik-coklu,oznitelik-ortak,dikdortgen-komut cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -366,6 +366,35 @@ fn many_attributes(app: &mut App) {
     app.props_closed.insert("general");
 }
 
+/// docs/adr/0290: Dikdörtgen with 1.5 m rounded corners drawn through `cad.rectangle.create`; Komut geçmişi shows
+/// the call with its Python open.
+fn rectangle_command(app: &mut App) {
+    open(app, Objects::new());
+    make_cad(app);
+    app.command_expanded = true;
+    app.bottom_log = Some(300.0);
+    app.history = Default::default();
+    run(app, "tool.rectangle");
+    typed(app, "Y");
+    typed(app, "1.5");
+    click(app, [0.0, 0.0]);
+    click(app, [20.0, 12.5]);
+    let _ = app.update(crate::app::Message::Run("tool.select"));
+    if let Some(entry) = app.history.entries.last() {
+        let id = entry.id;
+        let _ = app.update(crate::app::Message::History(crate::history::Event::Toggle(id)));
+    }
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 6.0,
+            min_y: N - 4.0,
+            max_x: E + 26.0,
+            max_y: N + 16.0,
+        },
+        24.0,
+    );
+}
+
 /// The shortcuts window, opened from Yardım.
 fn shortcut_list(app: &mut App) {
     open(app, Objects::new());
@@ -430,6 +459,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("komut-adlari", typed_names),
         ("oznitelik-coklu", many_selected),
         ("oznitelik-ortak", many_attributes),
+        ("dikdortgen-komut", rectangle_command),
         ("kenet-blok-ici", in_blocks),
         ("kenet-oku", reading),
         ("kenet-dolasma", cycling),

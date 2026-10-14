@@ -459,6 +459,12 @@ codes! {
     /// An empty list of snap kinds.
     NO_SNAP_KINDS = "no_snap_kinds", Failed, false, "Hiç kenet türü verilmedi; listeyi kaldırın (varsayılan türler) ya da en az bir tür verin.";
 
+    // ── Rectangles and regular polygons (docs/adr/0290) ─────────────────
+    /// A shape whose points meet or lie on a line: a side of no length.
+    DEGENERATE_SHAPE = "degenerate_shape", Failed, false, "Şeklin kenarlarından biri sıfır uzunlukta: noktalar çakışıyor ya da bir doğru üzerinde.";
+    /// A corner radius or chamfer that does not fit the sides.
+    INVALID_CORNERS = "invalid_corners", Failed, false, "Köşe yarıçapı ya da pahı kenarlara sığmıyor.";
+
     // ── A path's vertices and edges (docs/adr/0279) ─────────────────────
     /// An object that is not a polyline or an area where a path's vertex or edge is edited.
     NOT_A_PATH = "not_a_path", Failed, false, "Köşe ve kenar işlemleri çoklu çizgide ve kapalı alanda yapılır.";

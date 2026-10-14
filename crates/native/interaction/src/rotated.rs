@@ -3,12 +3,16 @@
 //! for step (docs/adr/0032): one edge (its length and direction with snaps,
 //! ortho, polar tracking or a typed distance), then the width, pulled sideways
 //! with the mouse or typed (the side the mouse is on decides where it goes).
-//! It is written through `cad.polygon.create` and says “Dikdörtgen eklendi:
-//! 20.000 × 10.000 m”; Ctrl+Z takes back one point at a time. The rectangle is
-//! the shared core's (`rectFromEdge`, `sideDistance`).
+//! It is written through `cad.rectangle.create`'s `edge` frame (docs/adr/0290)
+//! and says “Dikdörtgen eklendi: 20.000 × 10.000 m”; Ctrl+Z takes back one
+//! point at a time. The rectangle, for the preview too, is the command's
+//! (`shapes::rectangle_ring`); the side the pointer is on is the core's
+//! `sideDistance`.
 
-use kentos_geometry_core::geom::shapes::{rect_from_edge, side_distance};
+use kentos_contracts::{RectangleCreate, RectangleFrame};
+use kentos_geometry_core::geom::shapes::side_distance;
 use kentos_geometry_core::geometry::{dist, signed_area};
+use kentos_native_application::{ExecutionContext, shapes};
 
 use crate::Vec2;
 use crate::format::Format;
@@ -45,14 +49,32 @@ impl RotatedRectangle {
     }
 
     fn commit(&mut self, width: f64, cx: &mut Context<'_>) {
-        let Some(ring) = rect_from_edge(self.d.pts[0], self.d.pts[1], width) else {
+        let input = RectangleCreate {
+            layer_id: cx.doc.layers().active().to_owned(),
+            frame: edge(self.d.pts[0], self.d.pts[1], width),
+            rotation: None,
+            corners: None,
+            color: cx.draft.color_text(),
+            line_weight: cx.draft.line_weight,
+            line_type: cx.draft.line_type,
+            attrs: cx.template_attrs(None),
+            label: cx.template_label(),
+            symbol: cx.template_symbol(),
+            expected_revision: None,
+        };
+        let Some(ring) = shapes::rectangle_ring(&input).ok().map(|(pts, _)| pts) else {
             cx.say(
                 Level::Warn,
                 "Genişlik sıfır olamaz; kenardan uzaklaşarak tıklayın.",
             );
             return;
         };
-        if points::write_area(&mut self.d, &ring, None, cx).is_some() {
+        let mut write = |cx: &mut Context<'_>| {
+            let result =
+                shapes::execute_rectangle(&mut ExecutionContext::new(cx.doc), input.clone());
+            points::written(result, cx).map(|out| out.id)
+        };
+        if points::write_area_by(&mut self.d, &ring, None, cx, Some(&mut write)).is_some() {
             let format = cx.format();
             let line = format!(
                 "Dikdörtgen eklendi: {} × {}",
@@ -165,7 +187,7 @@ impl Tool for RotatedRectangle {
             strokes: vec![Stroke::solid(vec![a, b], false).width(2.0)],
             ..Preview::default()
         };
-        let Some(ring) = rect_from_edge(a, b, w) else {
+        let Some(ring) = preview_ring(a, b, w) else {
             return preview;
         };
         preview.tag = Some(Tag {
@@ -182,4 +204,31 @@ impl Tool for RotatedRectangle {
         preview.strokes.push(Stroke::solid(ring, true));
         preview
     }
+}
+
+/// The `edge` frame from `a` to `b`, `width` to its left.
+fn edge(a: Vec2, b: Vec2, width: f64) -> RectangleFrame {
+    RectangleFrame::Edge {
+        a: points::wire(a),
+        b: points::wire(b),
+        width,
+    }
+}
+
+/// The ring `cad.rectangle.create` makes on the edge: the preview.
+fn preview_ring(a: Vec2, b: Vec2, width: f64) -> Option<Vec<Vec2>> {
+    let input = RectangleCreate {
+        layer_id: String::new(),
+        frame: edge(a, b, width),
+        rotation: None,
+        corners: None,
+        color: None,
+        line_weight: None,
+        line_type: None,
+        attrs: None,
+        label: None,
+        symbol: None,
+        expected_revision: None,
+    };
+    shapes::rectangle_ring(&input).ok().map(|(pts, _)| pts)
 }

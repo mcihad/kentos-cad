@@ -80,7 +80,15 @@ pub fn execute(
 }
 
 /// [`execute`]'s write; `call::recorded` runs it as one step of the
-/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3). The
+/// shape commands write their ring through it (`shapes.rs`).
+pub(crate) fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: PolygonCreate,
+) -> CommandResult<PolygonCreated> {
+    write_execute(cx, input)
+}
+
 fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: PolygonCreate,

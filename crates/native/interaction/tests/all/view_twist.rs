@@ -26,13 +26,19 @@ fn two_points_lay_their_direction_horizontal() {
     b.click(0.0, 0.0);
     assert_eq!(b.points(), 1);
     b.move_to(10.0, 10.0);
-    let preview = b.session.preview(&kentos_interaction::Format::default()).expect("a preview");
+    let preview = b
+        .session
+        .preview(&kentos_interaction::Format::default())
+        .expect("a preview");
     assert_eq!(preview.guides.len(), 1, "the direction to come");
     b.click(10.0, 10.0);
     assert!((twist(&b) - FRAC_PI_4).abs() < 1e-12);
     assert!(!b.session.is_running(), "it ends");
     assert!(b.doc.entities().next().is_none(), "nothing is written");
-    assert!(b.last_text().is_some_and(|t| t.starts_with("Görünüm döndürüldü")));
+    assert!(
+        b.last_text()
+            .is_some_and(|t| t.starts_with("Görünüm döndürüldü"))
+    );
 }
 
 #[test]

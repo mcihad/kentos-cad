@@ -255,7 +255,7 @@ class Assist(unittest.TestCase):
         self.assertNotIn("``", sig["doc"], "help without its markup")
         _, items = self.complete("cad.poly")
         polygon = self.assist.complete(self.names.names, "cad.poly", 8)["items"][0]
-        self.assertEqual(polygon["detail"], "kentos.cad.polygon: cad.polygon.create.")
+        self.assertEqual(polygon["detail"], "kentos.cad.polygon: cad.polygon.create, cad.polygon.regular.")
         code = "cad.polygon.create(doc, layer_id="
         sig = self.assist.signature(self.names.names, code, len(code))
         assert sig is not None

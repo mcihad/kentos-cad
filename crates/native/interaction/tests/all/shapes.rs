@@ -464,3 +464,29 @@ fn a_regular_polygon_by_its_side_count_centre_and_corner() {
     );
     assert_eq!(b.memory.polygon_sides, 4, "stays for the next polygons");
 }
+
+/// The rectangle, rotated rectangle and regular polygon tools write through their own commands (docs/adr/0290):
+/// the journal names `cad.rectangle.create` and `cad.polygon.regular`, not `cad.polygon.create`.
+#[test]
+fn the_shape_tools_write_through_their_commands() {
+    let last = |b: &Bench| {
+        b.doc
+            .journal()
+            .last()
+            .and_then(|r| r.command.clone())
+            .unwrap_or_default()
+    };
+    let mut b = Bench::new("rectangle");
+    b.click(0.0, 0.0);
+    b.click(20.0, 10.0);
+    assert_eq!(last(&b), "cad.rectangle.create");
+    let mut b = Bench::new("rectangle3");
+    b.click(0.0, 0.0);
+    b.click(20.0, 0.0);
+    b.click(5.0, 10.0);
+    assert_eq!(last(&b), "cad.rectangle.create");
+    let mut b = Bench::new("regularPolygon");
+    b.click(0.0, 0.0);
+    b.click(5.0, 0.0);
+    assert_eq!(last(&b), "cad.polygon.regular");
+}

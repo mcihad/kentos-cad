@@ -3397,6 +3397,62 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             }],
         },
         CommandDescriptor {
+            id: crate::CAD_RECTANGLE_CREATE.into(),
+            version: crate::CAD_RECTANGLE_CREATE_VERSION,
+            title: "Dikdörtgen oluştur".into(),
+            summary: "Verilen katmana bir dikdörtgen alan ekler; köşeleri komut hesaplar. Çerçeve iki köşe (corners), köşe ile boy ve en (size), köşe ile alan ve bir kenar (area) ya da kenar ve en (edge); rotation kenarların doğrultusu (radyan), corners keskin, yuvarlak (fillet, yarıçap) ya da pah (chamfer, uzaklık). \
+                      Halka paylaşılan çekirdekle hesaplanır ve cad.polygon.create gibi yazılır: tek geri alma adımı, kilitli katmana yazılmaz, gizli katmana uyarıyla. \
+                      Dikdörtgen ve Döndürülmüş dikdörtgen araçları, Python ve ajan aynı girdiye aynı dikdörtgeni alır."
+                .into(),
+            aliases: vec!["dikdortgen".into(), "rectang".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RectangleCreate>(),
+            output: schema::<crate::PolygonCreated>(),
+            plan: Some(schema::<crate::PolygonPlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "20 × 12.5 m'lik, köşeleri 1 m yuvarlak bir oda".into(),
+                input: json!({ "layerId": "yapi",
+                               "frame": { "kind": "size", "corner": { "x": 423500.0, "y": 4512300.0 },
+                                          "length": 20.0, "width": 12.5, "toward": { "x": 423510.0, "y": 4512305.0 } },
+                               "corners": { "kind": "fillet", "radius": 1.0 } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_POLYGON_REGULAR.into(),
+            version: crate::CAD_POLYGON_REGULAR_VERSION,
+            title: "Düzgün çokgen oluştur".into(),
+            summary: "Verilen katmana kenar sayısıyla bir düzgün çokgen alan ekler; köşeleri komut hesaplar. Çerçeve merkez ve ilk köşe (inscribed), merkez ve ilk kenarın ortası (circumscribed) ya da bir kenar (edge, çokgen solunda). \
+                      Halka paylaşılan çekirdekle hesaplanır ve cad.polygon.create gibi yazılır; Düzgün çokgen aracı, Python ve ajan aynı girdiye aynı çokgeni alır."
+                .into(),
+            aliases: vec!["cokgen".into(), "polygon".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RegularPolygonCreate>(),
+            output: schema::<crate::PolygonCreated>(),
+            plan: Some(schema::<crate::PolygonPlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Merkezi ve ilk köşesiyle altıgen".into(),
+                input: json!({ "layerId": "yapi", "sides": 6,
+                               "frame": { "kind": "inscribed", "center": { "x": 423500.0, "y": 4512300.0 },
+                                          "corner": { "x": 423505.0, "y": 4512300.0 } } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::CAD_ENTITIES_VERTEX.into(),
             version: crate::CAD_ENTITIES_VERTEX_VERSION,
             title: "Köşe ve kenar".into(),
@@ -4064,6 +4120,14 @@ mod tests {
                     }
                     crate::CAD_SNAP_FIND => {
                         serde_json::from_value::<crate::SnapFind>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_RECTANGLE_CREATE => {
+                        serde_json::from_value::<crate::RectangleCreate>(e.input.clone())
+                            .map(|_| ())
+                    }
+                    crate::CAD_POLYGON_REGULAR => {
+                        serde_json::from_value::<crate::RegularPolygonCreate>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_ENTITIES_VERTEX => {
                         serde_json::from_value::<crate::EntitiesVertex>(e.input.clone())
