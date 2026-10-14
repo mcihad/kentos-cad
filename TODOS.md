@@ -170,6 +170,9 @@ Liste:
   uyarıları komutun sözleri; paralel iki doğruya TTY, saat yönünde verilen yaydan Devam; araç durumları
   `fixtures/curve-methods/v1/tools.json`. Web'in donmuş çağrı kayıtları eski `arcStartCenterEnd` ve `arcStartCenterAngle`'ı (tam tur)
   tutar; geri dönüşte komutun kuralına getirilir.
+- [ ] `CAD-EDIT-07` (ADR 0293, 14 Ekim): web'de gerekenler: `cad.entities.offset`'in web işleyicisine delikli ve çok parçalı alanın
+  delikleri, fit-point eğrisi ve NURBS (kirişleriyle), `radius_collapse`, `approximate_offset` ve `self_intersecting`; tersine dönen halkanın
+  reddi; web'in `offsetEntity`'si geri dönüşte `offset_noted`'ın kuralına getirilir (donmuş çağrı kayıtları güncellenir).
 - [ ] `CAD-EDIT-05` (ADR 0291, 14 Ekim): web'de gerekenler: Taşı ve Kopyala'ya Yer değiştirme (Y, temel noktada Enter, son yer
   değiştirme), Kopyala'ya Kip (P) ve Dizi (A, Sığdır S); `cad.entities.array` işleyicisine `line` yerleşimi; Döndür'ün yazılan açısı
   projenin düzeniyle (CBS'de grad, saat yönünde; Referans'ta semt) ve Noktalar (N), Ölçekle'ye Noktalar (N); dolu taramanın deseni

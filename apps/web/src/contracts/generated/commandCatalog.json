@@ -87872,6 +87872,8 @@
               "circle",
               "arc",
               "ellipse",
+              "spline",
+              "nurbs",
               "xline",
               "ray"
             ],
@@ -87887,6 +87889,7 @@
           "invalid_distance",
           "not_offsettable",
           "offset_failed",
+          "radius_collapse",
           "layer_not_found",
           "not_a_layer",
           "invalid_revision",
@@ -87894,7 +87897,10 @@
         ],
         "warnings": [
           "layer_hidden",
-          "offset_failed"
+          "offset_failed",
+          "radius_collapse",
+          "approximate_offset",
+          "self_intersecting"
         ]
       },
       "examples": [
@@ -236180,6 +236186,24 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Hiç kenet türü verilmedi; listeyi kaldırın (varsayılan türler) ya da en az bir tür verin."
+    },
+    {
+      "code": "radius_collapse",
+      "kind": "failedOrWarning",
+      "retryable": false,
+      "meaning": "Öteleme mesafesi bir yarıçapı ya da alanın genişliğini aşıyor."
+    },
+    {
+      "code": "approximate_offset",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kopya eğrinin paralelini yaklaşık izliyor."
+    },
+    {
+      "code": "self_intersecting",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kopyanın kenarları birbirini kesiyor."
     },
     {
       "code": "degenerate_shape",

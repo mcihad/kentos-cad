@@ -18,7 +18,11 @@ use crate::tools_screens::Scene;
 /// A building and a tree by a road, the view on them; the building selected.
 fn ground(app: &mut App, cad: bool) {
     let mut o = Objects::new();
-    o.path("parsel", &[[0.0, 0.0], [8.0, 0.0], [8.0, 6.0], [0.0, 6.0]], true);
+    o.path(
+        "parsel",
+        &[[0.0, 0.0], [8.0, 0.0], [8.0, 6.0], [0.0, 6.0]],
+        true,
+    );
     o.circle("cizim", [12.0, 3.0], 1.0);
     o.line("yol", [-4.0, -4.0], [40.0, -4.0]);
     open(app, o);

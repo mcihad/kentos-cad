@@ -9,7 +9,7 @@
 //! chip for the wall), and the shortcuts window with Ctrl + tık and the drawing keys; docs/adr/0279's: the grip menu of a parcel's corner; docs/adr/0280's: two hot corners turning the parcel; docs/adr/0281's: an ambiguous start and a start of one command typed; docs/adr/0283's: Pencere yakınlaştır run over a polyline being drawn, and the polyline back after it with its preview in the new view; docs/adr/0286's: Öznitelikler of a mixed selection with a locked wall and shared attributes. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma,kenet-oku,kenet-blok-ici,secim-alt-nesne,kisayollar,tutamac-menusu,tutamac-kipleri,komut-adlari,seffaf-pencere,seffaf-donus,oznitelik-coklu,oznitelik-ortak,dikdortgen-komut cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma,kenet-oku,kenet-blok-ici,secim-alt-nesne,kisayollar,tutamac-menusu,tutamac-kipleri,komut-adlari,seffaf-pencere,seffaf-donus,oznitelik-coklu,oznitelik-ortak,dikdortgen-komut,otele-delikli cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -382,7 +382,9 @@ fn rectangle_command(app: &mut App) {
     let _ = app.update(crate::app::Message::Run("tool.select"));
     if let Some(entry) = app.history.entries.last() {
         let id = entry.id;
-        let _ = app.update(crate::app::Message::History(crate::history::Event::Toggle(id)));
+        let _ = app.update(crate::app::Message::History(crate::history::Event::Toggle(
+            id,
+        )));
     }
     app.viewport.camera.fit(
         &kentos_render_wgpu::Bounds {
@@ -390,6 +392,53 @@ fn rectangle_command(app: &mut App) {
             min_y: N - 4.0,
             max_x: E + 26.0,
             max_y: N + 16.0,
+        },
+        24.0,
+    );
+}
+
+/// docs/adr/0293: Ötele 2 m on an area with a hole: the copy's ring inward and its hole outward, previewed; and a
+/// path whose copy crosses itself, written with the warning in the log.
+fn offset_region(app: &mut App) {
+    let mut o = Objects::new();
+    o.parts(
+        "parsel",
+        &[(
+            &[[0.0, 0.0], [20.0, 0.0], [20.0, 20.0], [0.0, 20.0]],
+            &[&[[6.0, 6.0], [6.0, 14.0], [14.0, 14.0], [14.0, 6.0]]],
+        )],
+    );
+    o.path(
+        "cizim",
+        &[
+            [30.0, 0.0],
+            [40.0, 0.0],
+            [40.0, 4.0],
+            [36.0, 4.0],
+            [36.0, 1.0],
+            [33.0, 1.0],
+            [33.0, 6.0],
+        ],
+        false,
+    );
+    open(app, o);
+    make_cad(app);
+    app.command_expanded = true;
+    run(app, "tool.offset");
+    typed(app, "1");
+    click(app, [35.0, 0.0]);
+    click(app, [31.0, 0.5]);
+    let _ = app.update(crate::app::Message::Run("tool.select"));
+    run(app, "tool.offset");
+    typed(app, "2");
+    click(app, [10.0, 0.0]);
+    hover(app, [3.0, 3.0]);
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 4.0,
+            min_y: N - 4.0,
+            max_x: E + 44.0,
+            max_y: N + 24.0,
         },
         24.0,
     );
@@ -460,6 +509,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("oznitelik-coklu", many_selected),
         ("oznitelik-ortak", many_attributes),
         ("dikdortgen-komut", rectangle_command),
+        ("otele-delikli", offset_region),
         ("kenet-blok-ici", in_blocks),
         ("kenet-oku", reading),
         ("kenet-dolasma", cycling),

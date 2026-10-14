@@ -390,6 +390,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   (`Memory::copy_single`) ve Dizi (adet, Sığdır; `cad.entities.array`'in `line`'ı), Döndür'de projenin açı düzeni
   (`Format::turn_from_typed`, `direction_from_typed`: CAD derece saat yönü tersine, CBS grad saat yönünde) ve Noktalar, Ölçekle'de
   Noktalar; her türün dönüşümü bağımsız başvurudan (`transform_kinds_cases.py`), dolu tarama deseniyle kalır (ADR 0291);
+  Ötele'nin kesinliği ve raporları: delikli ve çok parçalı alanın delikleri öbür yana, fit-point eğrisi ve NURBS kirişleriyle (yaklaşık,
+  `approximate_offset`), yarıçap ve alan genişliğinin çökmesi `radius_collapse` (tersine dönen halka yazılmaz), kendini kesen kopya
+  `self_intersecting`; çekirdeğin `offset_noted`'ı, `offset_entity` web'in kayıtlarıyla aynı (ADR 0293);
   yolundan yazar (`points::write_area_by`) (ADR 0290);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);

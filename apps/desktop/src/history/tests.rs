@@ -172,9 +172,7 @@ fn an_edit_without_a_command_has_no_buttons() {
         .history
         .entries
         .iter()
-        .find(|e| {
-            matches!(&e.call, Call::Row(r) if r.kind == kentos_contracts::CallKind::Edit)
-        })
+        .find(|e| matches!(&e.call, Call::Row(r) if r.kind == kentos_contracts::CallKind::Edit))
         .expect("the settings' edit")
         .clone();
     let Call::Row(row) = &edit.call else {

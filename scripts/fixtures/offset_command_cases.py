@@ -69,10 +69,16 @@ ENTITIES = [
     {"kind": "polygon", "id": 17, "layerId": "sinir", "attrs": {"Ada": "101"}, "symbol": "parsel", "pts": [P(487040, 4420040), P(487048, 4420040), P(487048, 4420048), P(487040, 4420048)]},
     {"kind": "polyline", "id": 18, "layerId": "yapi", "attrs": {}, "pts": [P(487000, 4420080), P(487008, 4420080), P(487008, 4420088)], "bulges": [0, 1, 0]},
     {"kind": "line", "id": 20, "layerId": "gizli", "attrs": {}, "a": P(487005, 4420015), "b": P(487015, 4420015)},
+    # An area with a hole (ADR 0293): its ring counter-clockwise, its hole clockwise.
+    {"kind": "polygon", "id": 21, "layerId": "yapi", "attrs": {}, "pts": [P(487060, 4420040), P(487080, 4420040), P(487080, 4420060), P(487060, 4420060)],
+     "holes": [{"pts": [P(487066, 4420046), P(487066, 4420054), P(487074, 4420054), P(487074, 4420046)]}]},
+    # A path whose copy 1 m to its left crosses itself twice (ADR 0293).
+    {"kind": "polyline", "id": 22, "layerId": "yapi", "attrs": {}, "pts": [P(487100, 4420000), P(487110, 4420000), P(487110, 4420004), P(487106, 4420004),
+                                                                       P(487106, 4420001), P(487103, 4420001), P(487103, 4420006)]},
 ]
 BY_ID = {e["id"]: e for e in ENTITIES}
 IDS = [e["id"] for e in ENTITIES]
-NEXT = 21
+NEXT = 23
 
 SETUP = {
     "format": "kentos.document",
@@ -199,12 +205,85 @@ def offset(i, d, at, layer=None):
     pts = [pt(q) for q in e["pts"]]
     if "bulges" in e:
         return offset_bulged(e, base, pts, d, p)
+    if "holes" in e:
+        return offset_region(e, base, pts, d, p)
     s = side(pts, closed, p)
-    out = {**base, "pts": [J(q) for q in offset_path(pts, s * d, closed)]}
+    moved = offset_path(pts, s * d, closed)
+    if closed and turned_over(pts, moved):
+        return None
+    out = {**base, "pts": [J(q) for q in moved]}
     if "zs" in e:
         # Ötele's copy has a vertex for each of its source's: each takes the elevation in its place (ADR 0142).
         out["zs"] = e["zs"]
     return out
+
+
+def area2(pts):
+    return sum(a[0] * b[1] - b[0] * a[1] for a, b in zip(pts, pts[1:] + pts[:1]))
+
+
+def inside(pts, p):
+    """Whether p is inside an axis-parallel ring (never on its edge in these cases)."""
+    n, c = len(pts), False
+    for i in range(n):
+        a, b = pts[i], pts[(i + 1) % n]
+        if (a[1] > p[1]) != (b[1] > p[1]) and p[0] < a[0] + (p[1] - a[1]) * (b[0] - a[0]) / (b[1] - a[1]):
+            c = not c
+    return c
+
+
+def turned_over(before, after):
+    """A ring's offset closed up: an edge runs against its source's, or the area turned over or went."""
+    n = len(before)
+    if len(after) == n:
+        for i in range(n):
+            a, b, c, dd = before[i], before[(i + 1) % n], after[i], after[(i + 1) % n]
+            if (b[0] - a[0]) * (dd[0] - c[0]) + (b[1] - a[1]) * (dd[1] - c[1]) < 0:
+                return True
+    x, y = area2(before), area2(after)
+    return y == 0 or (x > 0) != (y > 0)
+
+
+def offset_region(e, base, pts, d, p):
+    """An area with holes: inside it, its ring inward and its holes outward; else the other way. A ring that turns
+    over is gone: the area's ring refuses (None), a hole's is left out. The cases keep the rings apart."""
+    holes = [[pt(q) for q in h["pts"]] for h in e["holes"]]
+    inward = inside(pts, p) and not any(inside(h, p) for h in holes)
+    ccw = area2(pts) > 0
+    outer = offset_path(pts, d if inward == ccw else -d, True)
+    if turned_over(pts, outer):
+        return None
+    grown = []
+    for h in holes:
+        hccw = area2(h) > 0
+        out = offset_path(h, -d if inward == hccw else d, True)
+        if not turned_over(h, out):
+            grown.append(out)
+    for h in grown:
+        # Apart: every hole within the ring, none touching it (the cases' rings are concentric squares).
+        xs, ys = [q[0] for q in h], [q[1] for q in h]
+        oxs, oys = [q[0] for q in outer], [q[1] for q in outer]
+        if not (min(oxs) < min(xs) and max(xs) < max(oxs) and min(oys) < min(ys) and max(ys) < max(oys)):
+            return None
+    out = {**base, "pts": [J(q) for q in outer]}
+    if grown:
+        out["holes"] = [{"pts": [J(q) for q in h]} for h in grown]
+    return out
+
+
+def crossings(pts):
+    """How many times a path's segments cross, but for neighbours (proper crossings only in these cases)."""
+    def cr(a, b, c):
+        return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+    segs = list(zip(pts, pts[1:]))
+    count = 0
+    for i in range(len(segs)):
+        for j in range(i + 2, len(segs)):
+            (a, b), (c, dd) = segs[i], segs[j]
+            d1, d2, d3, d4 = cr(c, dd, a), cr(c, dd, b), cr(a, b, c), cr(a, b, dd)
+            if 0 not in (d1, d2, d3, d4) and (d1 > 0) != (d2 > 0) and (d3 > 0) != (d4 > 0):
+                count += 1
+    return count
 
 
 def offset_bulged(e, base, pts, d, p):
@@ -270,7 +349,8 @@ def NFV(what, fix):
 CONFLICT = "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın."
 NOTHING = "Ötelenecek nesne verilmedi. En az bir nesnenin kalıcı kimliğini verin."
 DISTANCE = "Öteleme mesafesi sıfırdan büyük olmalı. Pozitif bir mesafe (metre) verin."
-NOT_OFFSETTABLE = "Yalnızca çizgi, çoklu çizgi, kapalı alan, daire, yay, elips ve yardımcı çizgiler ötelenebilir."
+NOT_OFFSETTABLE = "Yalnızca çizgi, çoklu çizgi, kapalı alan, daire, yay, elips, eğri ve yardımcı çizgiler ötelenebilir."
+CLOSES = "Mesafe alanın genişliğinden büyük; içe öteleme alanı kapatıyor."
 SHRINKS = "Yarıçap sıfırın altına düşüyor; daha küçük bir mesafe girin."
 ON_OBJECT = "Nokta nesnenin üzerinde; iki yana ötelemek için bir yanına tıklayın."
 ZERO = "Öteleme mesafesi sıfırdan büyük olmalı."
@@ -373,7 +453,7 @@ cases.append({
         {"op": "execute", "input": inp([U(10)], D(0.5, 487018, 4420013)), "result": done(made, [0.5]),
          "expect": written(made, extra={"uids": {"10": "cizgi", "21": "new"}, "canUndo": True, "canRedo": False, "dirty": True})},
         {"op": "undo", "returns": "Ötele", "note": "Ötele aracının adımı.", "expect": {"ids": IDS, "entities": {"10": BY_ID[10]}, "canUndo": False, "canRedo": True}},
-        {"op": "redo", "returns": "Ötele", "expect": {"ids": IDS + [21], "canUndo": True, "canRedo": False}},
+        {"op": "redo", "returns": "Ötele", "expect": {"ids": IDS + [NEXT], "canUndo": True, "canRedo": False}},
     ],
 })
 
@@ -455,15 +535,15 @@ cases.append({
 made = slotted([offset(13, 3, (487034, 4420010))])
 assert offset(13, 3, (487032, 4420010)) is None
 cases.append({
-    "name": "daire iki yana 3 m: dışa kopya yapılır, içe kopya yarıçapı sıfırın altına düşürdüğü için offset_failed uyarısıyla atlanır",
+    "name": "daire iki yana 3 m: dışa kopya yapılır, içe kopya yarıçapı sıfırın altına düşürdüğü için radius_collapse uyarısıyla atlanır",
     "steps": [{"op": "execute", "input": inp([U(13)], D(3, 487034, 4420010), both=True),
-               "result": done(made, [3], warnings=[warn("offset_failed", SHRINKS, "uids[0]")]), "expect": written(made)}],
+               "result": done(made, [3], warnings=[warn("radius_collapse", SHRINKS, "uids[0]")]), "expect": written(made)}],
 })
 
 cases.append({
-    "name": "hiçbir kopya yapılamazsa hiçbir şey yazılmaz: offset_failed, çekirdeğin sözüyle",
+    "name": "hiçbir kopya yapılamazsa hiçbir şey yazılmaz: yarıçap çökmesinde radius_collapse, öbüründe offset_failed, çekirdeğin sözüyle",
     "steps": [
-        {"op": "execute", "input": inp([U(13)], D(3, 487030, 4420011)), "result": failed("offset_failed", SHRINKS, "uids"), "expect": untouched},
+        {"op": "execute", "input": inp([U(13)], D(3, 487030, 4420011)), "result": failed("radius_collapse", SHRINKS, "uids"), "expect": untouched},
         {"op": "execute", "input": inp([U(10)], T(487020, 4420010)), "note": "Nokta çizginin üzerinde: mesafe 0.",
          "result": failed("offset_failed", ZERO, "uids"), "expect": untouched},
     ],
@@ -631,12 +711,53 @@ cases.append({
         {"op": "execute", "input": inp([U(13)], D(0.5, 487030, 4420011)), "result": done(slotted([offset(13, F(1, 2), (487030, 4420011))]), [0.5])},
         {"op": "undo", "returns": "Ötele"},
         {"op": "plan", "input": inp([U(13)], D(3, 487034, 4420010), both=True),
-         "result": planned([U(13)], [offset(13, 3, (487034, 4420010))], [3], warnings=[warn("offset_failed", SHRINKS, "uids[0]")]),
+         "result": planned([U(13)], [offset(13, 3, (487034, 4420010))], [3], warnings=[warn("radius_collapse", SHRINKS, "uids[0]")]),
          "expect": {"canRedo": True, "revision": "same"}},
-        {"op": "validate", "input": inp([U(13)], D(3, 487034, 4420010), both=True), "result": valid([warn("offset_failed", SHRINKS, "uids[0]")]),
+        {"op": "validate", "input": inp([U(13)], D(3, 487034, 4420010), both=True), "result": valid([warn("radius_collapse", SHRINKS, "uids[0]")]),
          "expect": {"canRedo": True, "revision": "same"}},
         {"op": "redo", "returns": "Ötele"},
     ],
+})
+
+# ── Areas with holes, crossings and collapses (ADR 0293) ─────────────────
+
+made = slotted([offset(21, 2, (487062, 4420042))])
+cases.append({
+    "name": "delikli alan içe 2 m: halka içe, delik dışa kayar; delik kopyada kalır",
+    "steps": [{"op": "execute", "input": inp([U(21)], D(2, 487062, 4420042)), "result": done(made, [2]), "expect": written(made)}],
+})
+made = slotted([offset(21, 2, (487058, 4420040))])
+cases.append({
+    "name": "delikli alan dışa 2 m: halka dışa, delik içe kayar",
+    "steps": [{"op": "execute", "input": inp([U(21)], D(2, 487058, 4420040)), "result": done(made, [2]), "expect": written(made)}],
+})
+made = slotted([offset(21, 5, (487058, 4420040))])
+assert "holes" not in made[0][1]
+cases.append({
+    "name": "delikli alan dışa 5 m: kapanan delik düşer",
+    "steps": [{"op": "execute", "input": inp([U(21)], D(5, 487058, 4420040)), "result": done(made, [5]), "expect": written(made)}],
+})
+cases.append({
+    "name": "delikli alan içe 5 m: büyüyen delik halkayı yutar, radius_collapse",
+    "steps": [{"op": "execute", "input": inp([U(21)], D(5, 487062, 4420042)), "result": failed("radius_collapse", CLOSES, "uids"),
+               "expect": untouched}],
+})
+assert offset(17, 5, (487044, F(4420044) + F(1, 2))) is None
+cases.append({
+    "name": "kapalı alan içe genişliğinden çok (8 m'lik kareye 5 m): halka tersine döner, radius_collapse",
+    "steps": [{"op": "execute", "input": inp([U(17)], D(5, 487044, 4420044.5)), "result": failed("radius_collapse", CLOSES, "uids"),
+               "expect": untouched}],
+})
+made = slotted([offset(22, 1, (487101, F(4420000) + F(1, 2)))])
+n = crossings([pt(q) for q in made[0][1]["pts"]])
+assert n == 2, n
+cases.append({
+    "name": "kopyası kendini iki yerde kesen yol: self_intersecting uyarısıyla yazılır",
+    "steps": [{"op": "execute", "input": inp([U(22)], D(1, 487101, 4420000.5)),
+               "result": done(made, [1], warnings=[warn("self_intersecting",
+                                                         f"Kopya kendini {n} yerde kesiyor; fazlasını budayın ya da daha küçük bir mesafe verin.",
+                                                         "uids[0]")]),
+               "expect": written(made)}],
 })
 
 assert len(cases) >= 20, len(cases)
@@ -694,7 +815,7 @@ def write(command, title, note, cases):
 write(
     "cad.entities.offset",
     "Nesneleri ötele: doğrulama, plan, yazma, geri alma",
-    "ADR 0246, 0047, 0140. Denetim sırası: en az bir nesne; her kimliğin yazımı; mesafenin, sonra noktanın doğusu ve kuzeyinin sonlu olması; mesafenin sıfırdan büyük olması; beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması (tekrarlanan bir kez); nesne nesne, kilitli katmanda olmaması, sonra ötelenen bir tür olması; kopyaların katmanı (çizimde, katman, kilitsiz; gizliyse uyarı); en az bir kopya. Kopya, kenarların noktanın yanına mesafe kadar kaydırılması ve ardışık kaydırılmış kenarların doğrularının kesişimidir; yay aynı merkezle solunda r − d, sağında r + d; daire ve yay nokta dışarıdaysa büyür, içerideyse küçülür. Noktadan geç'te mesafe noktanın en yakın kenara uzaklığıdır. Kopya kaynağının katmanını (ya da layerId'yi), rengini ve çizgi kalınlığını alır; köşeler kaynağın köşelerinin kotlarını taşır. Kopyalar girdinin sırasıyla, her kaynağın önce noktanın yanındaki, iki yanada sonra öbür yanındaki kopyası; Kaynağı sil'de kopyası yapılan kaynaklar aynı adımda silinir. Adım Ötele'dir. Kurulumdaki en büyük kimlik 20; kopyalar 21'den başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "ADR 0246, 0047, 0140. Denetim sırası: en az bir nesne; her kimliğin yazımı; mesafenin, sonra noktanın doğusu ve kuzeyinin sonlu olması; mesafenin sıfırdan büyük olması; beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması (tekrarlanan bir kez); nesne nesne, kilitli katmanda olmaması, sonra ötelenen bir tür olması; kopyaların katmanı (çizimde, katman, kilitsiz; gizliyse uyarı); en az bir kopya. Kopya, kenarların noktanın yanına mesafe kadar kaydırılması ve ardışık kaydırılmış kenarların doğrularının kesişimidir; yay aynı merkezle solunda r − d, sağında r + d; daire ve yay nokta dışarıdaysa büyür, içerideyse küçülür. Noktadan geç'te mesafe noktanın en yakın kenara uzaklığıdır. Kopya kaynağının katmanını (ya da layerId'yi), rengini ve çizgi kalınlığını alır; köşeler kaynağın köşelerinin kotlarını taşır. Kopyalar girdinin sırasıyla, her kaynağın önce noktanın yanındaki, iki yanada sonra öbür yanındaki kopyası; Kaynağı sil'de kopyası yapılan kaynaklar aynı adımda silinir. Adım Ötele'dir. Delikli alanın halkası noktanın yanına, delikleri öbür yana kayar; içe öteleme halkayı tersine çevirirse ya da delik halkayı yutarsa ret radius_collapse, dışa ötelemede kapanan delik düşer (ADR 0293). Kendini kesen kopya self_intersecting uyarısıyla yazılır. Kurulumdaki en büyük kimlik 22; kopyalar 23'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))
