@@ -559,6 +559,104 @@ def place_in(defs, ins, snap, at):
     return None
 
 
+# ---- the sub-object a click falls on (docs/adr/0276) ---------------------------------------------------------
+
+def closest_seg(a, b, at):
+    dx, dy = b["x"] - a["x"], b["y"] - a["y"]
+    ll = dx * dx + dy * dy
+    t = 0.0 if ll == 0 else clamp01(((at["x"] - a["x"]) * dx + (at["y"] - a["y"]) * dy) / ll)
+    q = lerp(a, b, t)
+    return q, math.hypot(q["x"] - at["x"], q["y"] - at["y"])
+
+
+def closest_arc(c, r, a0, sw, at):
+    """The nearest point of an arc from a0 sweeping `sw` (signed): the foot on the circle when it lies on the arc,
+    else the nearer end."""
+    th = math.atan2(at["y"] - c["y"], at["x"] - c["x"])
+    d = (th - a0) % (2 * math.pi) if sw > 0 else (a0 - th) % (2 * math.pi)
+    if d <= abs(sw):
+        q = on_circle(c, r, th)
+        return q, abs(math.hypot(at["x"] - c["x"], at["y"] - c["y"]) - r)
+    ends = [on_circle(c, r, a0), on_circle(c, r, a0 + sw)]
+    return min(((q, math.hypot(q["x"] - at["x"], q["y"] - at["y"])) for q in ends), key=lambda x: x[1])
+
+
+def edges_near(e, at):
+    """Every edge's and curve's nearest point to `at`, with the distance."""
+    k = e["kind"]
+    if k == "line":
+        return [closest_seg(e["a"], e["b"], at)]
+    if k == "arc":
+        return [closest_arc(e["c"], e["r"], e["a0"], ccw(e["a0"], e["a1"]), at)]
+    if k == "circle":
+        return [closest_arc(e["c"], e["r"], 0.0, 2 * math.pi, at)]
+    out = []
+    for pl, _ in vertices(e):
+        if pl["kind"] != "vertex":
+            continue
+        edge = edge_of(e, pl["part"], pl["ring"], pl["index"])
+        if not edge:
+            continue
+        a, b, kb = edge
+        arc = bulge_circle(a, b, kb)
+        out.append(closest_seg(a, b, at) if not arc else closest_arc(*arc, at))
+    return out
+
+
+def point_places(e):
+    """An object's points a click takes before its edges: its ends, its own point, its vertices."""
+    out = []
+    for pl in (place("start"), place("end"), {"kind": "node", "part": 0}):
+        q = point(e, pl)
+        if q is not None:
+            out.append((pl, q))
+    return out + vertices(e)
+
+
+def near_on(e, at, tl):
+    best = None
+    for pl, q in point_places(e):
+        d = math.hypot(q["x"] - at["x"], q["y"] - at["y"])
+        if d <= tl and (best is None or d < best[1]):
+            best = (pl, d)
+    edge = None
+    for q, d in edges_near(e, at):
+        if d <= tl and (edge is None or d < edge[1]):
+            edge = (q, d)
+    return best, edge
+
+
+def place_near(e, at, tl):
+    """The sub-object a click at `at` falls on within `tl`: the nearest of its points, else the nearest point of its
+    edges as an along place; None when nothing is within `tl`."""
+    best, edge = near_on(e, at, tl)
+    if best:
+        return best[0]
+    return along_at(e, edge[0]) if edge else None
+
+
+def place_near_in(defs, ins, at, tl):
+    """`place_near` inside an insert: its own point and the pieces' points, then the pieces' edges; the piece's path."""
+    own, _ = near_on(ins, at, tl)
+    pbest = ([], own[0], own[1]) if own and own[0] == {"kind": "node", "part": 0} else None
+    ebest = None
+    for path in paths(defs, ins["block"]):
+        e = piece(defs, ins, path)
+        if e is None:
+            continue
+        b, ed = near_on(e, at, tl)
+        if b and (pbest is None or b[1] < pbest[2]):
+            pbest = (path, b[0], b[1])
+        if ed and (ebest is None or ed[1] < ebest[3]):
+            ebest = (path, e, ed[0], ed[1])
+    if pbest:
+        return {"path": pbest[0], "place": pbest[1]}
+    if ebest:
+        pl = along_at(ebest[1], ebest[2])
+        return None if pl is None else {"path": ebest[0], "place": pl}
+    return None
+
+
 # ---- the cases -------------------------------------------------------------------------------------------------
 
 def place(kind, part=None, ring_=None, index=None):
@@ -822,6 +920,38 @@ PIECE_SNAP_CASES = [
     ("Uç ama orada parça yok", ROOM_IN, "endpoint", v(30, 30), None, None),
 ]
 
+NEAR_TOL = 0.3
+NEAR_CASES = [
+    ("Çizginin sonunun yanı: uç", LINE, v(3.9, 0.1)),
+    ("Kenarın yanı ama uç da yakın: uç önce", LINE, v(3.95, 0.0)),
+    ("Çizginin üstü: kenar boyunca", LINE, v(2.2, 0.2)),
+    ("Çizgiden uzak: yok", LINE, v(2.0, 1.0)),
+    ("Alanın köşesinin yanı", ROOM, v(4.1, 2.9)),
+    ("Alanın üst kenarı", ROOM, v(2.0, 3.1)),
+    ("Alanın kapanan kenarı", ROOM, v(-0.1, 1.2)),
+    ("Alanın içi: yok", ROOM, v(2.0, 1.5)),
+    ("Deliğin kenarı", HOLED, v(3, 4.1)),
+    ("Yaylı kenarın üstü", ARCED, v(1, -0.6)),
+    ("Yolun dirseği", WALL, v(2.1, 2.1)),
+    ("Yolun ikinci kenarı", WALL, v(2.15, 1.0)),
+    ("Yayın başı", ARC, v(2.05, 0.1)),
+    ("Yayın üstü", ARC, v(2.1 * math.cos(1.0), 2.1 * math.sin(1.0))),
+    ("Dairenin üstü", CIRCLE, v(1 + 1.9 * math.cos(2.0), 1 + 1.9 * math.sin(2.0))),
+    ("Dairenin merkezi tıklanmaz: yok", CIRCLE, v(1.0, 1.0)),
+    ("Çok noktalının ikincisi", POINTS, v(2.1, 2.05)),
+    ("Yazının ekleme noktası", TEXT, v(5.1, 6.1)),
+    ("Yazının gövdesi: yok", TEXT, v(6.0, 6.4)),
+]
+
+PIECE_NEAR_CASES = [
+    ("Odadaki kapının ucu", ROOM_IN, v(22.05, 10.05)),
+    ("Odanın üst duvarı", ROOM_IN, v(22.0, 13.1)),
+    ("Yerleştirmenin noktası, odanın köşesiyle aynı yerde: yerleştirmeninki", ROOM_IN, v(20.05, 10.05)),
+    ("Çerçevede aynalı odanın köşesi", FRAME_IN, None),
+    ("Bloğun hiçbir yerinin yakını değil: yok", ROOM_IN, v(40.0, 40.0)),
+]
+
+
 TRIG = {"Yayın başı", "Yayın sonu", "Elipsin başı", "Elipsin sonu", "Budanan yayın başı yeni başında", "Elipsin sonu",
         "Yaylı kenarın yarısı", "Yaylı kenarın çeyreği", "Yayın üçte biri", "Dairenin çeyreği", "Elipsin yarısı",
         "Budanan yayda oran kalır", "Büyüyen dairede oran kalır"}
@@ -866,6 +996,16 @@ def build():
                               "insert": ib}, "after": {"definitions": list(da.values()), "insert": ia},
                               "expect": follow_in(pl, path, db, ib, da, ia)})
     piece_snaps = [piece_snap(*c) for c in PIECE_SNAP_CASES]
+    nears = [{"name": n, "entity": e, "at": at, "tolerance": NEAR_TOL, "place": place_near(e, at, NEAR_TOL)}
+             for n, e, at in NEAR_CASES]
+    piece_nears = []
+    for n, ins, at in PIECE_NEAR_CASES:
+        if at is None:
+            # The framed room's corner (its vertex 2), a little off.
+            q = point(piece(DEFS, ins, [1, 0]), place("vertex", 0, 0, 2))
+            at = v(q["x"] + 0.05, q["y"] - 0.05)
+        piece_nears.append({"name": n, "definitions": list(DEFS.values()), "insert": ins, "at": at,
+                            "tolerance": NEAR_TOL, "expect": place_near_in(DEFS, ins, at, NEAR_TOL)})
     return {
         "format": "kentos.subref-cases",
         "version": 1,
@@ -878,6 +1018,8 @@ def build():
         "pieces": pieces,
         "pieceFollows": piece_follows,
         "pieceSnaps": piece_snaps,
+        "nears": nears,
+        "pieceNears": piece_nears,
     }
 
 
@@ -892,7 +1034,8 @@ def main():
             return 1
         b = build()
         print(f"alt nesne başvuruları tutarlı: {len(b['points'])} nokta, {len(b['follows'])} izleme, {len(b['snaps'])} kenet, "
-              f"{len(b['ranges']) + len(b['rangeFollows'])} aralık, {len(b['pieces']) + len(b['pieceFollows']) + len(b['pieceSnaps'])} blok durumu")
+              f"{len(b['ranges']) + len(b['rangeFollows'])} aralık, {len(b['pieces']) + len(b['pieceFollows']) + len(b['pieceSnaps'])} blok durumu, "
+              f"{len(b['nears']) + len(b['pieceNears'])} alt nesne seçimi")
         return 0
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(text, encoding="utf-8")

@@ -6,9 +6,18 @@
 
 use std::collections::HashSet;
 
+use kentos_contracts::SubPlace;
 use kentos_domain::Slot;
 
 use crate::Vec2;
+
+/// The sub-object a Ctrl click fell on (docs/adr/0276): its place on the object and, inside an insert, the piece's
+/// block path; with the object's persistent id it is a reference (`uid`, `place`, `path`) the commands take.
+#[derive(Clone, Debug, PartialEq)]
+pub struct SubObject {
+    pub path: Vec<u32>,
+    pub place: SubPlace,
+}
 
 /// Sıradakini seç's chip (docs/adr/0187 §1): the objects a click could mean,
 /// the most specific first, which of them is chosen, and where the click was
@@ -35,6 +44,8 @@ pub struct Selection {
     previous: Vec<Slot>,
     /// Sıradakini seç's chip; none while the selection is not a click's among several objects.
     cycle: Option<Cycle>,
+    /// A Ctrl click's objects and the sub-object each falls on (docs/adr/0276): the one selected is the chosen one's.
+    subs: Vec<(Slot, Option<SubObject>)>,
 }
 
 impl Selection {
@@ -63,6 +74,7 @@ impl Selection {
     /// becomes the previous one.
     pub fn set(&mut self, ids: impl IntoIterator<Item = Slot>) {
         self.cycle = None;
+        self.subs.clear();
         let mut next = Selection::default();
         next.extend(ids);
         if next.ids != self.ids {
@@ -79,6 +91,7 @@ impl Selection {
     /// Adds these after the ones selected (the web's `add`: Shift with a window).
     pub fn add(&mut self, ids: impl IntoIterator<Item = Slot>) {
         self.cycle = None;
+        self.subs.clear();
         let before = self.ids.len();
         self.extend(ids);
         if self.ids.len() != before {
@@ -99,6 +112,7 @@ impl Selection {
     /// Selects or deselects one (the web's `toggle`: Shift with a click).
     pub fn toggle(&mut self, id: Slot) {
         self.cycle = None;
+        self.subs.clear();
         if self.set.remove(&id) {
             self.ids.retain(|s| *s != id);
         } else {
@@ -111,6 +125,7 @@ impl Selection {
     /// Selects nothing; the selection it clears becomes the previous one.
     pub fn clear(&mut self) {
         self.cycle = None;
+        self.subs.clear();
         if !self.ids.is_empty() {
             self.previous = std::mem::take(&mut self.ids);
             self.set.clear();
@@ -137,6 +152,31 @@ impl Selection {
             candidates,
             index: 0,
         });
+    }
+
+    /// A Ctrl click (docs/adr/0276): the first of the objects it could mean is selected with the sub-object it falls
+    /// on; among several, the chip opens and cycling keeps each one's sub-object.
+    pub fn pick_sub(&mut self, at: Vec2, picks: Vec<(Slot, Option<SubObject>)>) {
+        let Some(first) = picks.first().map(|(s, _)| *s) else {
+            self.clear();
+            return;
+        };
+        self.set([first]);
+        self.start_cycle(at, picks.iter().map(|(s, _)| *s).collect());
+        self.subs = picks;
+        self.version += 1;
+    }
+
+    /// The sub-object of the one object selected by a Ctrl click (docs/adr/0276); none otherwise or when the click
+    /// was in its area.
+    pub fn sub(&self) -> Option<(Slot, &SubObject)> {
+        let [one] = self.ids.as_slice() else {
+            return None;
+        };
+        self.subs
+            .iter()
+            .find(|(s, _)| s == one)
+            .and_then(|(s, sub)| sub.as_ref().map(|sub| (*s, sub)))
     }
 
     /// Closes the chip (a command started, Esc).
@@ -176,6 +216,7 @@ impl Selection {
         self.ids.retain(|s| exists(*s));
         if self.ids.len() != before {
             self.cycle = None;
+            self.subs.clear();
             self.set = self.ids.iter().copied().collect();
             self.version += 1;
         }

@@ -6532,6 +6532,67 @@ class EntitiesOrdered(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class EntitiesPick(_Model):
+    """Input of `cad.entities.pick` v1 (docs/adr/0276): what a click at `at` within `tolerance` metres can mean, the
+    most specific first (Sıradakini seç's candidates: points and edges by their distance, then the areas around it by
+    their size), each with the sub-object it falls on. Only objects shown count; `kinds` is the selection filter.
+
+    Refusals (`CommandError.code`), in this order: `not_finite` (`at`, the tolerance), `invalid_distance` (a
+    tolerance below zero).
+    Attributes:
+        at: Where the click is. Unit: length.
+        tolerance: How far from `at` an object may be, metres (a tool's is its pixels at the view's scale). Unit: length.
+        kinds: Seçim süzgeci: only these kinds; absent: every kind.
+    """
+    at: Vec2
+    tolerance: float
+    kinds: list[SelectKind | SelectKindName] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = _vec2_out(self.at)
+        out["tolerance"] = float(self.tolerance)
+        if self.kinds is not UNSET:
+            out["kinds"] = None if self.kinds is None else [_enum_out(e0) for e0 in self.kinds]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesPick:
+        return cls(
+            at=Vec2.from_json(data["at"]),
+            tolerance=float(data["tolerance"]),
+            kinds=UNSET if "kinds" not in data else None if data["kinds"] is None else [_enum_in(SelectKind, e0) for e0 in data["kinds"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesPicked(_Model):
+    """Output of `cad.entities.pick` v1, and its plan: the objects the most specific first, what the kinds left out, the
+    revision.
+    Attributes:
+        revision: The document's revision the objects were read at, as decimal text.
+    """
+    picks: list[PickedEntity]
+    left_out: SelectLeftOut
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["picks"] = [e0.to_json() for e0 in self.picks]
+        out["leftOut"] = self.left_out.to_json()
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesPicked:
+        return cls(
+            picks=[PickedEntity.from_json(e0) for e0 in data["picks"]],
+            left_out=SelectLeftOut.from_json(data["leftOut"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class EntitiesPropertiesSet(_Model):
     """Output of `cad.entities.set` v1: the objects that changed.
     Attributes:
@@ -11789,6 +11850,37 @@ class PdfExported(_Model):
             replaced=data["replaced"],
             findings=data["findings"],
             notes=list(data["notes"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PickedEntity(_Model):
+    """An object a click falls on and its sub-object.
+    Attributes:
+        path: When the object is an insert, the piece inside it the place is on. Unit: index.
+        place: The sub-object (docs/adr/0249, 0263): the object's nearest point within the tolerance (an end, a vertex, a
+            point, an insertion point), else the nearest point of an edge or a curve (`along`); absent when the click is
+            in the object's area or on a text's body.
+    """
+    uid: str
+    path: list[int] | Unset = UNSET
+    place: SubPlace | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        if self.path is not UNSET:
+            out["path"] = list(self.path)
+        if self.place is not UNSET:
+            out["place"] = None if self.place is None else self.place.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PickedEntity:
+        return cls(
+            uid=data["uid"],
+            path=list(data["path"]) if "path" in data else UNSET,
+            place=UNSET if "place" not in data else None if data["place"] is None else SubPlace.from_json(data["place"]),
         )
 
 
@@ -20112,6 +20204,8 @@ __all__ = [
     "EntitiesOrder",
     "EntitiesOrderPlan",
     "EntitiesOrdered",
+    "EntitiesPick",
+    "EntitiesPicked",
     "EntitiesPropertiesSet",
     "EntitiesSelect",
     "EntitiesSelected",
@@ -20333,6 +20427,7 @@ __all__ = [
     "PathEntity",
     "PatternLine",
     "PdfExported",
+    "PickedEntity",
     "PinnedObject",
     "PlaceMeasuredPoint",
     "PlaceOn",

@@ -37,6 +37,8 @@ use crate::geom::ellipse::{EllipseGeom, ellipse_length, ellipse_point, param_of_
 use crate::jsmath::{TAU, atan2, js_hypot, js_max, js_min};
 use crate::store::snap::SnapKind;
 use crate::vec2::Vec2;
+use crate::geom::intersect::closest_on_edge;
+use crate::ops::edges::entity_edges;
 
 /// A place on an object.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -796,6 +798,85 @@ pub fn follow_in(
         return Followed::Broken(Reason::PieceGone);
     };
     follow(place, &was, Some(&now))
+}
+
+/// The sub-object a click at `at` falls on within `tol` (docs/adr/0276): its points (an end, a vertex, a point
+/// object's or an insertion point; the nearest), and apart from them the nearest point of its edges and curves.
+struct Near {
+    point: Option<(Place, f64)>,
+    edge: Option<(Vec2, f64)>,
+}
+
+fn near_on(e: &Entity, at: Vec2, tol: f64) -> Near {
+    let mut point_best: Option<(Place, f64)> = None;
+    let candidates = [Place::Start, Place::End, Place::Node { part: 0 }]
+        .into_iter()
+        .filter_map(|p| point(e, p).map(|q| (p, q)))
+        .chain(vertex_places(&e.shape));
+    for (p, q) in candidates {
+        let d = js_hypot(q.x - at.x, q.y - at.y);
+        if d <= tol && point_best.is_none_or(|(_, b)| d < b) {
+            point_best = Some((p, d));
+        }
+    }
+    let mut edge: Option<(Vec2, f64)> = None;
+    for ed in entity_edges(&e.shape) {
+        let c = closest_on_edge(&ed, at);
+        if c.d <= tol && edge.is_none_or(|(_, b)| c.d < b) {
+            edge = Some((c.p, c.d));
+        }
+    }
+    Near {
+        point: point_best,
+        edge,
+    }
+}
+
+/// The sub-object a click at `at` within `tol` falls on (docs/adr/0276): a point of the object (an end, a vertex, a
+/// point object's or an insertion point), the nearest, before anything else; else the nearest point of an edge or a
+/// curve as an `along` place; none when nothing of the object is within `tol` (an area's inside, a text's body) or
+/// the curve has no `along` place (a spline). With the distance.
+pub fn place_near(e: &Entity, at: Vec2, tol: f64) -> Option<(Place, f64)> {
+    let n = near_on(e, at, tol);
+    if n.point.is_some() {
+        return n.point;
+    }
+    let (q, d) = n.edge?;
+    along_at(e, q).map(|p| (p, d))
+}
+
+/// [`place_near`] inside an insert: its own insertion point and its pieces' points first, then the pieces' edges;
+/// the piece's block path with it (empty for the insert's own point). Equal distances keep the flattening's order.
+pub fn place_near_in(
+    blocks: &Blocks,
+    insert: &Entity,
+    at: Vec2,
+    tol: f64,
+) -> Option<(Vec<u32>, Place, f64)> {
+    let own = near_on(insert, at, tol).point.filter(|(p, _)| *p == Place::Node { part: 0 });
+    let mut point_best: Option<(Vec<u32>, Place, f64)> = own.map(|(p, d)| (Vec::new(), p, d));
+    let mut edge_best: Option<(Vec<u32>, Entity, Vec2, f64)> = None;
+    for path in blocks.piece_paths(&insert.shape) {
+        let Some(e) = piece(blocks, insert, &path) else {
+            continue;
+        };
+        let n = near_on(&e, at, tol);
+        if let Some((p, d)) = n.point
+            && point_best.as_ref().is_none_or(|b| d < b.2)
+        {
+            point_best = Some((path.clone(), p, d));
+        }
+        if let Some((q, d)) = n.edge
+            && edge_best.as_ref().is_none_or(|b| d < b.3)
+        {
+            edge_best = Some((path, e, q, d));
+        }
+    }
+    if point_best.is_some() {
+        return point_best;
+    }
+    let (path, e, q, d) = edge_best?;
+    along_at(&e, q).map(|p| (path, p, d))
 }
 
 /// The piece and place a snap of `kind` stood on at `at` inside an insert: the first piece (in the flattening's

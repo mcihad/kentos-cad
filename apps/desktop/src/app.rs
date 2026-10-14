@@ -1760,7 +1760,10 @@ impl App {
             Message::Recovery(event) => return self.recovery_event(event),
             Message::ServerChecked(answer) => self.server_checked(answer),
             Message::OverlapLayer(id) => self.toggle_overlap_layer(id),
-            Message::CycleTo(index) => self.selection.cycle_to(index),
+            Message::CycleTo(index) => {
+                self.selection.cycle_to(index);
+                self.say_sub_object();
+            }
             Message::CycleHover(slot) => self.selection.set_hover(slot),
             Message::Snap(event) => self.snap_event(event),
             Message::ScreenScale(event) => return self.screen_scale_event(event),

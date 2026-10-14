@@ -65,5 +65,34 @@ class SelectTests(unittest.TestCase):
         self.assertEqual(caught.exception.code, "invalid_ring")
 
 
+class PickTests(unittest.TestCase):
+    """``kentos.cad.entities.pick`` (docs/adr/0276): what a click can mean, each object with its sub-object."""
+
+    def test_a_click_on_a_line_s_end_gives_its_id_and_place(self) -> None:
+        doc = drawing()
+        got = cad.entities.pick(doc, at=cad.Vec2(486980.1, 4420006.1), tolerance=0.5)
+        first = got.picks[0]
+        self.assertEqual(first.uid, uid_of(doc, 2))
+        self.assertEqual(first.place.to_json(), {"kind": "start"})
+        self.assertEqual(got.revision, doc.revision)
+
+    def test_the_sub_object_binds_a_dimension(self) -> None:
+        doc = drawing()
+        ends = [
+            cad.entities.pick(doc, at=cad.Vec2(486980.1, y), tolerance=0.5).picks[0]
+            for y in (4420006.1, 4420017.9)
+        ]
+        points = [cad.PlaceMeasuredPoint(uid=p.uid, place=p.place) for p in ends]
+        layer = next(r.entity.layer_id for r in doc.entities(page_size=1000) if r.entity.id == 2)
+        made = cad.dimensions.create(
+            doc,
+            measure=cad.AlignedDimensionMeasure(a=points[0], b=points[1]),
+            at=cad.Vec2(486982.0, 4420012.0),
+            layer_id=layer,
+        )
+        dim = next(r.entity for r in doc.entities(page_size=1000) if r.uid == made.created[0]).to_json()
+        self.assertEqual(dim["refs"]["b"]["place"], {"kind": "end"})
+
+
 if __name__ == "__main__":
     unittest.main()

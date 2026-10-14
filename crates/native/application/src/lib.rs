@@ -73,6 +73,7 @@ pub use dimension_create::dimensions_create;
 pub use edge_commands::{entities_chamfer, entities_extend, entities_fillet, entities_trim};
 pub use region::{entities_boundary, entities_hatch};
 pub mod entities_order;
+pub mod entities_pick;
 pub mod entities_select;
 pub mod file_import;
 pub mod geometry_store;
@@ -170,6 +171,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_NURBS_CREATE,
         kentos_contracts::CAD_NURBS_CREATE_VERSION,
+    ),
+    // What a click can mean and the sub-object it falls on ([`entities_pick`], docs/adr/0276).
+    (
+        kentos_contracts::CAD_ENTITIES_PICK,
+        kentos_contracts::CAD_ENTITIES_PICK_VERSION,
     ),
     // The selection as one explicit query ([`entities_select`], docs/adr/0275).
     (

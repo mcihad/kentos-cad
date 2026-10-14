@@ -709,7 +709,7 @@ impl App {
                     select: self.session.select_box(),
                     grips,
                     hot: self.session.active_grip(),
-                    marked: self.vertex_marks(),
+                    marked: self.marked_points(),
                     found: self.address_mark_label().or_else(|| self.data_mark_label()),
                     problem: self.topology_problem().or_else(|| self.networks.mark.clone()),
                     broken: self.broken_marks(),
@@ -860,7 +860,7 @@ impl App {
             select: None,
             grips,
             hot: self.session.active_grip(),
-            marked: self.vertex_marks(),
+            marked: self.marked_points(),
             found: self.address_mark_label().or_else(|| self.data_mark_label()),
             problem: self
                 .topology_problem()

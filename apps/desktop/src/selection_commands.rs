@@ -112,6 +112,7 @@ impl App {
     pub(crate) fn cycle_selection(&mut self) {
         if let Some(index) = self.selection.cycle().map(|c| c.index) {
             self.selection.cycle_to(index + 1);
+            self.say_sub_object();
         }
     }
 

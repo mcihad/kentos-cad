@@ -461,6 +461,7 @@ impl App {
             self.modifiers.shift(),
             self.snap,
         )
+        .with_ctrl(self.modifiers.command())
         .tracked(self.tracking.track().map(|t| t.point));
         self.cursor_point = Some((raw, pointer.world));
         pointer

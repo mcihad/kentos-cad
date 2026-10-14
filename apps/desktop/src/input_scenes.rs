@@ -4,10 +4,12 @@
 //! tracking (on) shown out of use in the status bar; docs/adr/0269's: the one-shot Merkez through an arc's curve,
 //! and Ekleme noktası on a text; docs/adr/0271's: Tab on the second candidate where two lines meet a parcel;
 //! docs/adr/0272's: Koordinat oku on a parcel's corner, the log saying the snap's object and place; docs/adr/0274's:
-//! inside a room block turned 30°, the midpoint of a nested, mirrored door's swing. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
+//! inside a room block turned 30°, the midpoint of a nested, mirrored door's swing; docs/adr/0276's: a Ctrl click
+//! on a parcel's corner where a wall crosses it (the corner ringed, the log saying the parcel's id and corner, the
+//! chip for the wall), and the shortcuts window with Ctrl + tık and the drawing keys. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma,kenet-oku,kenet-blok-ici cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma,kenet-oku,kenet-blok-ici,secim-alt-nesne,kisayollar cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -221,8 +223,57 @@ fn in_blocks(app: &mut App) {
     hover(app, [m[0] + 0.08, m[1] + 0.05]);
 }
 
+/// A parcel and a wall line through its corner's neighbourhood; the select tool, Ctrl held, a click near the
+/// corner: the parcel's corner is the sub-object.
+fn sub_object(app: &mut App) {
+    sub_ground(app);
+    ctrl_click(app);
+}
+
+/// The parcel and the wall, in view.
+fn sub_ground(app: &mut App) {
+    let mut o = Objects::new();
+    o.path(
+        "cizim",
+        &[[0.0, 0.0], [12.0, 0.0], [12.0, 9.0], [0.0, 9.0]],
+        true,
+    );
+    o.line("cizim", [8.0, 9.1], [16.0, 9.1]);
+    open(app, o);
+    make_cad(app);
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 6.0,
+            min_y: N - 4.0,
+            max_x: E + 22.0,
+            max_y: N + 14.0,
+        },
+        24.0,
+    );
+}
+
+/// Ctrl held, a click near the parcel's corner.
+fn ctrl_click(app: &mut App) {
+    let _ = app.update(crate::app::Message::Modifiers(
+        iced::keyboard::Modifiers::COMMAND,
+    ));
+    click(app, [11.95, 9.04]);
+    let _ = app.update(crate::app::Message::Modifiers(
+        iced::keyboard::Modifiers::empty(),
+    ));
+}
+
+/// The shortcuts window, opened from Yardım.
+fn shortcut_list(app: &mut App) {
+    open(app, Objects::new());
+    make_cad(app);
+    let _ = app.run("help.shortcuts");
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
+        ("secim-alt-nesne", sub_object),
+        ("kisayollar", shortcut_list),
         ("kenet-blok-ici", in_blocks),
         ("kenet-oku", reading),
         ("kenet-dolasma", cycling),
@@ -237,7 +288,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
 mod tests {
     use kentos_interaction::SnapKind;
 
-    use super::{centre_through, in_blocks, in_room, insertion};
+    use super::{centre_through, ctrl_click, in_blocks, in_room, insertion, sub_ground};
     use crate::tools_scenes::{E, N};
 
     /// docs/adr/0269 §1–§2 on the desktop: the one-shot Merkez on an arc's curve snaps to its centre; a text's
@@ -270,5 +321,42 @@ mod tests {
             (hit.point.x - (E + m[0])).abs() < 1e-9 && (hit.point.y - (N + m[1])).abs() < 1e-9,
             "{hit:?}"
         );
+    }
+
+    /// docs/adr/0276 on the desktop: a Ctrl click near the parcel's corner selects the parcel with its corner as the
+    /// sub-object, the wall line the chip's second candidate; Sıradakini seç moves to the wall with its own place.
+    #[test]
+    fn a_ctrl_click_selects_the_corner_and_cycling_keeps_each_sub_object() {
+        let mut app = crate::files_testing::app_with_drawing();
+        sub_ground(&mut app);
+        // A view 1100 × 600 px at 40 px a metre: the pick tolerance is a fraction of a metre (no window here).
+        let c = &mut app.viewport.camera;
+        (c.width, c.height, c.scale) = (1100.0, 600.0, 40.0);
+        c.center = kentos_interaction::Vec2::new(E + 8.0, N + 5.0);
+        ctrl_click(&mut app);
+        let (slot, sub) = app.selection.sub().expect("a sub-object");
+        assert_eq!(app.selection.ids(), [slot]);
+        assert_eq!(
+            sub.place,
+            kentos_contracts::SubPlace::Vertex {
+                part: 0,
+                ring: 0,
+                index: 2
+            }
+        );
+        let p = app.sub_object_point().expect("its point");
+        assert!((p.x - (E + 12.0)).abs() < 1e-9 && (p.y - (N + 9.0)).abs() < 1e-9);
+        assert!(
+            app.log
+                .lines()
+                .any(|l| l.text.starts_with("Alt nesne: Kapalı alan")),
+            "{:?}",
+            app.log.lines().map(|l| &l.text).collect::<Vec<_>>()
+        );
+        assert_eq!(app.selection.cycle().map(|c| c.candidates.len()), Some(2));
+        app.cycle_selection();
+        let (wall, sub) = app.selection.sub().expect("the wall's sub-object");
+        assert_ne!(wall, slot);
+        assert!(matches!(sub.place, kentos_contracts::SubPlace::Along { .. }));
     }
 }

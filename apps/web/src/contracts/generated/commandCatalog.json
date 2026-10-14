@@ -213681,6 +213681,655 @@
       ]
     },
     {
+      "id": "cad.entities.pick",
+      "version": 1,
+      "title": "Tıklanan nesneler",
+      "summary": "Bir tıklamanın seçebileceği nesneleri en belirliden verir (Sıradakini seç'in adayları: noktalar ve kenarlar uzaklıklarıyla, sonra içinde kalınan alanlar boylarıyla); her birinin kalıcı kimliği ve tıklamanın düştüğü alt nesne: toleranstaki en yakın noktası (uç, köşe, nokta, ekleme noktası), yoksa kenarının ya da eğrisinin en yakın noktası (along); blokta parçanın yolu. Cevabın uid, place ve path'i cad.dimensions.create'in place noktasına ve öbür komutlara olduğu gibi verilir. Yalnız gösterilen nesneler; kinds seçim süzgecidir. Çizimi değiştirmez; plan aynı cevabı verir.",
+      "aliases": [
+        "tikla",
+        "pick"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "SelectKind": {
+            "description": "A kind the selection filter holds (docs/adr/0187 §5): a NURBS curve is an Eğri (`spline`).",
+            "enum": [
+              "point",
+              "line",
+              "polyline",
+              "polygon",
+              "circle",
+              "arc",
+              "ellipse",
+              "spline",
+              "xline",
+              "ray",
+              "text",
+              "dimension",
+              "hatch",
+              "insert",
+              "leader",
+              "table",
+              "image"
+            ],
+            "type": "string"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.entities.pick` v1 (docs/adr/0276): what a click at `at` within `tolerance` metres can mean, the\nmost specific first (Sıradakini seç's candidates: points and edges by their distance, then the areas around it by\ntheir size), each with the sub-object it falls on. Only objects shown count; `kinds` is the selection filter.\n\nRefusals (`CommandError.code`), in this order: `not_finite` (`at`, the tolerance), `invalid_distance` (a\ntolerance below zero).",
+        "properties": {
+          "at": {
+            "$ref": "#/$defs/Vec2",
+            "description": "Where the click is.",
+            "x-unit": "length"
+          },
+          "kinds": {
+            "description": "Seçim süzgeci: only these kinds; absent: every kind.",
+            "items": {
+              "$ref": "#/$defs/SelectKind"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "tolerance": {
+            "description": "How far from `at` an object may be, metres (a tool's is its pixels at the view's scale).",
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "at",
+          "tolerance"
+        ],
+        "title": "EntitiesPick",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "PickedEntity": {
+            "description": "An object a click falls on and its sub-object.",
+            "properties": {
+              "path": {
+                "description": "When the object is an insert, the piece inside it the place is on.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
+              },
+              "place": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SubPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The sub-object (docs/adr/0249, 0263): the object's nearest point within the tolerance (an end, a vertex, a\npoint, an insertion point), else the nearest point of an edge or a curve (`along`); absent when the click is\nin the object's area or on a text's body."
+              },
+              "uid": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid"
+            ],
+            "type": "object"
+          },
+          "SelectLeftOut": {
+            "description": "What the kinds and the layers left out of the region's objects, and the objects given that are not shown.",
+            "properties": {
+              "hidden": {
+                "description": "Objects given (`objects`) that are not shown.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "kinds": {
+                "description": "By the kinds (the selection filter).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layers": {
+                "description": "By the layers.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "kinds",
+              "layers",
+              "hidden"
+            ],
+            "type": "object"
+          },
+          "SubPlace": {
+            "description": "A place on an object.",
+            "oneOf": [
+              {
+                "description": "A point object's position: part 0 its own, `k` its `k`th extra point (docs/adr/0174).",
+                "properties": {
+                  "kind": {
+                    "const": "node",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A line's, arc's or elliptical arc's start.",
+                "properties": {
+                  "kind": {
+                    "const": "start",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Its end.",
+                "properties": {
+                  "kind": {
+                    "const": "end",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A circle's, arc's or ellipse's centre.",
+                "properties": {
+                  "kind": {
+                    "const": "center",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A path's vertex: part 0 the object's own path, `k` its `k`th extra part; ring 0 the outer ring, `h` its\n`h`th hole; the vertex's index in the ring.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "vertex",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The middle of a line (all zero) or of a path's edge from vertex `index` to the next.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "mid",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.entities.pick` v1, and its plan: the objects the most specific first, what the kinds left out, the\nrevision.",
+        "properties": {
+          "leftOut": {
+            "$ref": "#/$defs/SelectLeftOut"
+          },
+          "picks": {
+            "items": {
+              "$ref": "#/$defs/PickedEntity"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision the objects were read at, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "picks",
+          "leftOut",
+          "revision"
+        ],
+        "title": "EntitiesPicked",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "PickedEntity": {
+            "description": "An object a click falls on and its sub-object.",
+            "properties": {
+              "path": {
+                "description": "When the object is an insert, the piece inside it the place is on.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
+              },
+              "place": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SubPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The sub-object (docs/adr/0249, 0263): the object's nearest point within the tolerance (an end, a vertex, a\npoint, an insertion point), else the nearest point of an edge or a curve (`along`); absent when the click is\nin the object's area or on a text's body."
+              },
+              "uid": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid"
+            ],
+            "type": "object"
+          },
+          "SelectLeftOut": {
+            "description": "What the kinds and the layers left out of the region's objects, and the objects given that are not shown.",
+            "properties": {
+              "hidden": {
+                "description": "Objects given (`objects`) that are not shown.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "kinds": {
+                "description": "By the kinds (the selection filter).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layers": {
+                "description": "By the layers.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "kinds",
+              "layers",
+              "hidden"
+            ],
+            "type": "object"
+          },
+          "SubPlace": {
+            "description": "A place on an object.",
+            "oneOf": [
+              {
+                "description": "A point object's position: part 0 its own, `k` its `k`th extra point (docs/adr/0174).",
+                "properties": {
+                  "kind": {
+                    "const": "node",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A line's, arc's or elliptical arc's start.",
+                "properties": {
+                  "kind": {
+                    "const": "start",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Its end.",
+                "properties": {
+                  "kind": {
+                    "const": "end",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A circle's, arc's or ellipse's centre.",
+                "properties": {
+                  "kind": {
+                    "const": "center",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A path's vertex: part 0 the object's own path, `k` its `k`th extra part; ring 0 the outer ring, `h` its\n`h`th hole; the vertex's index in the ring.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "vertex",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The middle of a line (all zero) or of a path's edge from vertex `index` to the next.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "mid",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.entities.pick` v1, and its plan: the objects the most specific first, what the kinds left out, the\nrevision.",
+        "properties": {
+          "leftOut": {
+            "$ref": "#/$defs/SelectLeftOut"
+          },
+          "picks": {
+            "items": {
+              "$ref": "#/$defs/PickedEntity"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision the objects were read at, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "picks",
+          "leftOut",
+          "revision"
+        ],
+        "title": "EntitiesPicked",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_finite",
+          "invalid_distance"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bir köşenin yanına, yarım metrelik toleransla",
+          "input": {
+            "at": {
+              "x": 487010.1,
+              "y": 4420009.9
+            },
+            "tolerance": 0.5
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.entities.select",
       "version": 1,
       "title": "Nesne seç",

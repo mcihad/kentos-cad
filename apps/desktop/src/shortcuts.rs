@@ -18,8 +18,15 @@ use crate::exchange::apply::fold_turkish;
 /// The search field, focused when the window opens.
 pub const SEARCH: &str = "shortcuts-search";
 
+/// The platform's command key with a click: Ctrl, ⌘ on macOS.
+const COMMAND_CLICK: &str = if cfg!(target_os = "macos") {
+    "⌘ + tık"
+} else {
+    "Ctrl + tık"
+};
+
 /// What each mouse action does (the web's `MOUSE_ACTIONS`): its meaning, then the action.
-pub const MOUSE_ACTIONS: [(&str, &str); 17] = [
+pub const MOUSE_ACTIONS: [(&str, &str); 18] = [
     ("Seç, nokta koy, adımı onayla", "Sol tık"),
     ("Komutu onayla ya da bitir (Enter gibi)", "Sağ tık"),
     (
@@ -50,6 +57,10 @@ pub const MOUSE_ACTIONS: [(&str, &str); 17] = [
     ),
     ("Kesişim seçimi: dokunan her şey", "Sağdan sola sürükle"),
     ("Seçime ekle ya da çıkar", "Shift + tık"),
+    (
+        "Alt nesneyi seç: köşe, kenar ya da blok parçası; kimliği ve yeri günlükte",
+        COMMAND_CLICK,
+    ),
     ("Görünümü kaydır", "Orta tuşla sürükle"),
     ("Yakınlaştır, uzaklaştır", "Tekerlek"),
     ("Tümünü göster", "Orta tuşa çift tık"),
@@ -57,6 +68,18 @@ pub const MOUSE_ACTIONS: [(&str, &str); 17] = [
     (
         "Köşeyi taşı; kenar ortasındaki baklava köşe ekler",
         "Tutamacı sürükle",
+    ),
+];
+
+/// Keys a running tool reads that no command is bound to (docs/adr/0268, 0271): their meaning, then the keys.
+pub const DRAWING_KEYS: [(&str, &str); 2] = [
+    (
+        "Kenet adayları arasında ileri ve geri (imleç dururken)",
+        "Tab / Shift+Tab",
+    ),
+    (
+        "Orto'yu o an çevir (nokta isteyen araçta)",
+        "Shift'i basılı tut",
     ),
 ];
 
@@ -170,6 +193,23 @@ impl App {
             .collect();
         if !mouse.is_empty() {
             blocks.push((mouse.len(), group("Fare", mouse)));
+        }
+        let drawing: Vec<Element<'_, Message>> = DRAWING_KEYS
+            .iter()
+            .filter(|(what, how)| {
+                query.is_empty()
+                    || fold_turkish(what).contains(&query)
+                    || fold_turkish(how).contains(&query)
+            })
+            .map(|(what, how)| {
+                row![label::body(*what).width(Fill), kbd((*how).to_owned())]
+                    .spacing(12)
+                    .align_y(Center)
+                    .into()
+            })
+            .collect();
+        if !drawing.is_empty() {
+            blocks.push((drawing.len(), group("Çizerken", drawing)));
         }
         for (category, lines) in groups(&query) {
             let count = lines.len();
