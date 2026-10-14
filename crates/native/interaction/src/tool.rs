@@ -81,8 +81,17 @@ pub trait View {
     /// How much world `px` logical pixels span at the current zoom.
     fn world_length(&self, px: f64) -> f64;
     /// The world box the area shows: the edges a trim or an extend meets by
-    /// default (the web's `camera.visibleBounds()`).
+    /// default (the web's `camera.visibleBounds()`); with a twist, the box round the turned area.
     fn visible(&self) -> Bounds;
+    /// The view's twist (docs/adr/0285 §2): the angle of the screen's x axis from the world's, radians; 0 with the
+    /// north up.
+    fn twist(&self) -> f64 {
+        0.0
+    }
+    /// The world point under a place of the area, in logical pixels; none where the view cannot say.
+    fn to_world(&self, _p: [f64; 2]) -> Option<Vec2> {
+        None
+    }
 }
 
 /// A change of the view a tool asks for (docs/adr/0056): Kaydır drags it,
@@ -148,6 +157,10 @@ pub enum ViewChange {
     /// Konumdan adres's place (docs/adr/0229 §13): the host looks for its
     /// address in the Adres tab's source and shows it there.
     AddressAt(Vec2),
+    /// The view's twist (Görünümü döndür, docs/adr/0285 §2): the angle of the
+    /// screen's x axis from the world's x, counter-clockwise, radians; the
+    /// view turns about its middle.
+    Twist(f64),
 }
 
 /// Where a text field opens and how its text will look: its start, height in
@@ -715,6 +728,9 @@ pub struct Memory {
     /// Çoklu çizgi's Genişlik, metres: every edge's start and end width; 0 none
     /// (docs/adr/0258 §2). Kept for the session, as AutoCAD's PLINE keeps it.
     pub polyline_width: f64,
+    /// Genişlik's end width, metres (docs/adr/0288): the next edge tapers from `polyline_width` to it, the ones
+    /// after keep it.
+    pub polyline_width_end: f64,
     /// NURBS eğrisi's method (control points, else fit points) and degree
     /// (docs/adr/0259 §6), kept for the session as AutoCAD's SPLINE keeps them.
     pub nurbs_control: bool,
@@ -1026,6 +1042,7 @@ impl Default for Memory {
             stream: false,
             stream_step: 1.0,
             polyline_width: 0.0,
+            polyline_width_end: 0.0,
             nurbs_control: false,
             nurbs_degree: 3,
             block_insert: None,

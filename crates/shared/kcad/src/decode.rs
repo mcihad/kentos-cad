@@ -22,6 +22,7 @@ mod styles;
 mod temporal;
 mod ucs;
 mod variables;
+mod views;
 
 use kentos_contracts::{
     AngleUnit, AnnotationHeights, AnnotationKind, AreaUnit, Bounds, DOCUMENT_FORMAT,
@@ -432,6 +433,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut variables = Vec::new();
     let mut address_locators = Vec::new();
     let (mut ucs, mut named_ucs) = (None, Vec::new());
+    let mut named_views = Vec::new();
     let mut length_style = None;
     let (mut text_styles, mut dimension_styles) = (Vec::new(), Vec::new());
     let (mut workspace, mut drawing_font, mut area_decimals, mut length_decimals) =
@@ -528,6 +530,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             }
             "ucs" if has.ucs => ucs = Some(ucs::ucs(r)?),
             "namedUcs" if has.ucs => named_ucs = ucs::named_ucs(r)?,
+            "namedViews" if has.views => named_views = views::named_views(r)?,
             "textStyles" if has.styles => text_styles = styles::text_styles(r)?,
             "dimensionStyles" if has.styles => {
                 dimension_styles = styles::dimension_styles(r, has.annotation)?
@@ -611,6 +614,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         address_locators,
         ucs,
         named_ucs,
+        named_views,
         length_style,
     })
 }

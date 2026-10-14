@@ -207,6 +207,7 @@ pub mod rotated;
 pub mod scale;
 pub mod second;
 pub mod sector;
+pub mod segment_edit;
 pub mod select;
 pub mod select_circle;
 pub mod select_containing;
@@ -243,6 +244,7 @@ pub mod trim;
 pub mod vertex;
 pub mod vertex_points;
 pub mod view_history;
+pub mod view_twist;
 
 pub use clipboard::Clipboard;
 pub use format::{Axes, Format, fixed};

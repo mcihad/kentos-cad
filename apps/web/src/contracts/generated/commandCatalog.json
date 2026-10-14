@@ -5468,6 +5468,47 @@
             ],
             "type": "object"
           },
+          "NamedView": {
+            "additionalProperties": false,
+            "description": "A named view of the project: its middle, the world size it shows (width\nalong the screen's x, height along its y) and its twist: the angle of the\nscreen's x axis from the world's x (east), counter-clockwise, in radians,\nin [0, 2π). A view with twist 0 shows the north up.",
+            "properties": {
+              "center": {
+                "$ref": "#/$defs/Vec2",
+                "description": "The world point in the middle of the area.",
+                "x-unit": "length"
+              },
+              "height": {
+                "description": "The world height the area shows, along the screen's y.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "name": {
+                "description": "Trimmed, 1–64 characters, no control characters; unique.",
+                "type": "string"
+              },
+              "twist": {
+                "description": "The screen's x axis from east, counter-clockwise; 0 shows the north up.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "rad"
+              },
+              "width": {
+                "description": "The world width the area shows, along the screen's x.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "name",
+              "center",
+              "width",
+              "height",
+              "twist"
+            ],
+            "type": "object"
+          },
           "NetworkConnect": {
             "description": "Where edges connect (docs/adr/0209 §3).",
             "oneOf": [
@@ -6801,6 +6842,13 @@
                 "description": "The project's named UCSs, in the order they were kept.",
                 "items": {
                   "$ref": "#/$defs/NamedUcs"
+                },
+                "type": "array"
+              },
+              "namedViews": {
+                "description": "The project's named views, in the order they were kept (docs/adr/0285 §1).",
+                "items": {
+                  "$ref": "#/$defs/NamedView"
                 },
                 "type": "array"
               },
@@ -12453,6 +12501,47 @@
             ],
             "type": "object"
           },
+          "NamedView": {
+            "additionalProperties": false,
+            "description": "A named view of the project: its middle, the world size it shows (width\nalong the screen's x, height along its y) and its twist: the angle of the\nscreen's x axis from the world's x (east), counter-clockwise, in radians,\nin [0, 2π). A view with twist 0 shows the north up.",
+            "properties": {
+              "center": {
+                "$ref": "#/$defs/Vec2",
+                "description": "The world point in the middle of the area.",
+                "x-unit": "length"
+              },
+              "height": {
+                "description": "The world height the area shows, along the screen's y.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "name": {
+                "description": "Trimmed, 1–64 characters, no control characters; unique.",
+                "type": "string"
+              },
+              "twist": {
+                "description": "The screen's x axis from east, counter-clockwise; 0 shows the north up.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "rad"
+              },
+              "width": {
+                "description": "The world width the area shows, along the screen's x.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "name",
+              "center",
+              "width",
+              "height",
+              "twist"
+            ],
+            "type": "object"
+          },
           "NetworkConnect": {
             "description": "Where edges connect (docs/adr/0209 §3).",
             "oneOf": [
@@ -12850,6 +12939,13 @@
                 "description": "The project's named UCSs, in the order they were kept.",
                 "items": {
                   "$ref": "#/$defs/NamedUcs"
+                },
+                "type": "array"
+              },
+              "namedViews": {
+                "description": "The project's named views, in the order they were kept (docs/adr/0285 §1).",
+                "items": {
+                  "$ref": "#/$defs/NamedView"
                 },
                 "type": "array"
               },
@@ -19525,6 +19621,47 @@
             ],
             "type": "object"
           },
+          "NamedView": {
+            "additionalProperties": false,
+            "description": "A named view of the project: its middle, the world size it shows (width\nalong the screen's x, height along its y) and its twist: the angle of the\nscreen's x axis from the world's x (east), counter-clockwise, in radians,\nin [0, 2π). A view with twist 0 shows the north up.",
+            "properties": {
+              "center": {
+                "$ref": "#/$defs/Vec2",
+                "description": "The world point in the middle of the area.",
+                "x-unit": "length"
+              },
+              "height": {
+                "description": "The world height the area shows, along the screen's y.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "name": {
+                "description": "Trimmed, 1–64 characters, no control characters; unique.",
+                "type": "string"
+              },
+              "twist": {
+                "description": "The screen's x axis from east, counter-clockwise; 0 shows the north up.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "rad"
+              },
+              "width": {
+                "description": "The world width the area shows, along the screen's x.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "name",
+              "center",
+              "width",
+              "height",
+              "twist"
+            ],
+            "type": "object"
+          },
           "NetworkConnect": {
             "description": "Where edges connect (docs/adr/0209 §3).",
             "oneOf": [
@@ -20897,6 +21034,13 @@
                 "description": "The project's named UCSs, in the order they were kept.",
                 "items": {
                   "$ref": "#/$defs/NamedUcs"
+                },
+                "type": "array"
+              },
+              "namedViews": {
+                "description": "The project's named views, in the order they were kept (docs/adr/0285 §1).",
+                "items": {
+                  "$ref": "#/$defs/NamedView"
                 },
                 "type": "array"
               },
@@ -68525,6 +68669,11 @@
               {
                 "const": "annotationScale",
                 "description": "Yazı yüksekliklerini uydur (docs/adr/0205 §3): after the plot scale or\nan annotation height changed, the texts, leaders, dimensions and\ntables still at the old height given the new one\n(`follow_annotation_scale`).",
+                "type": "string"
+              },
+              {
+                "const": "edgeWidth",
+                "description": "Kenar genişliği (docs/adr/0288): a polyline edge's start and end widths\nset, from `cad.entities.vertex`'s `width`.",
                 "type": "string"
               }
             ]
@@ -211960,6 +212109,434 @@
       ]
     },
     {
+      "id": "cad.views.edit",
+      "version": 1,
+      "title": "Adlı görünümler",
+      "summary": "Projenin adlı görünümlerini düzenler. Görünüm, kameranın baktığı yerdir: alanın ortasındaki dünya noktası (center), gösterilen dünya eni ve boyu (width, height; ekranın x ve y'si boyunca) ve dönüşü (twist: ekranın x ekseninin doğudan saat yönünün tersine açısı, radyan, [0, 2π)'ye getirilir; 0 kuzeyi yukarıda gösterir). edit.kind: save (görünümü adla saklar; aynı adlı varsa yerine geçer, view_replaced uyarısı), rename (adlı görünümün adını to yapar, listedeki yeri kalır; to başka bir görünümün adıysa view_exists), delete (adlı görünümü siler). Adlar baştaki ve sondaki boşluklar atılarak karşılaştırılır; 1–64 karakter, denetim karakteri yok; projede en çok 100 görünüm. Proje ayarıdır, geri alma adımı değildir; bir görünüme gitmek arayüzün kamerasıdır, komut değildir; nesneler değişmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          },
+          "ViewsOp": {
+            "description": "What `cad.views.edit` does (docs/adr/0285 §1).",
+            "oneOf": [
+              {
+                "description": "Kaydet: a view kept under a name; one of that name is replaced.",
+                "properties": {
+                  "center": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "height": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "save",
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "twist": {
+                    "description": "Radians, any turn; kept in [0, 2π). None: 0, the north up.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "rad"
+                  },
+                  "width": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "name",
+                  "center",
+                  "width",
+                  "height"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Yeniden adlandır: a named view gets another name, keeping its place in the list.",
+                "properties": {
+                  "kind": {
+                    "const": "rename",
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "to": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "name",
+                  "to"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Sil: a named view removed.",
+                "properties": {
+                  "kind": {
+                    "const": "delete",
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "name"
+                ],
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.views.edit` v1.\n\nRefusals (`CommandError.code`), checked in this order: `not_finite`,\n`far_point`, `invalid_view_size`, `invalid_view_name`;\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`unknown_view`, `view_exists`, `too_many_views`. Warning: `view_replaced`.",
+        "properties": {
+          "edit": {
+            "$ref": "#/$defs/ViewsOp"
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "edit"
+        ],
+        "title": "ViewsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "NamedView": {
+            "additionalProperties": false,
+            "description": "A named view of the project: its middle, the world size it shows (width\nalong the screen's x, height along its y) and its twist: the angle of the\nscreen's x axis from the world's x (east), counter-clockwise, in radians,\nin [0, 2π). A view with twist 0 shows the north up.",
+            "properties": {
+              "center": {
+                "$ref": "#/$defs/Vec2",
+                "description": "The world point in the middle of the area.",
+                "x-unit": "length"
+              },
+              "height": {
+                "description": "The world height the area shows, along the screen's y.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "name": {
+                "description": "Trimmed, 1–64 characters, no control characters; unique.",
+                "type": "string"
+              },
+              "twist": {
+                "description": "The screen's x axis from east, counter-clockwise; 0 shows the north up.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "rad"
+              },
+              "width": {
+                "description": "The world width the area shows, along the screen's x.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "name",
+              "center",
+              "width",
+              "height",
+              "twist"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.views.edit` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "description": "Whether the settings changed.",
+            "type": "boolean"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made against).",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "view": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/NamedView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The view saved or renamed, as kept; none for a delete."
+          },
+          "views": {
+            "description": "The project's named views afterwards, in order.",
+            "items": {
+              "$ref": "#/$defs/NamedView"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "views",
+          "changed",
+          "revision"
+        ],
+        "title": "ViewsEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "NamedView": {
+            "additionalProperties": false,
+            "description": "A named view of the project: its middle, the world size it shows (width\nalong the screen's x, height along its y) and its twist: the angle of the\nscreen's x axis from the world's x (east), counter-clockwise, in radians,\nin [0, 2π). A view with twist 0 shows the north up.",
+            "properties": {
+              "center": {
+                "$ref": "#/$defs/Vec2",
+                "description": "The world point in the middle of the area.",
+                "x-unit": "length"
+              },
+              "height": {
+                "description": "The world height the area shows, along the screen's y.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "name": {
+                "description": "Trimmed, 1–64 characters, no control characters; unique.",
+                "type": "string"
+              },
+              "twist": {
+                "description": "The screen's x axis from east, counter-clockwise; 0 shows the north up.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "rad"
+              },
+              "width": {
+                "description": "The world width the area shows, along the screen's x.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "name",
+              "center",
+              "width",
+              "height",
+              "twist"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.views.edit` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "description": "Whether the settings changed.",
+            "type": "boolean"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made against).",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "view": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/NamedView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The view saved or renamed, as kept; none for a delete."
+          },
+          "views": {
+            "description": "The project's named views afterwards, in order.",
+            "items": {
+              "$ref": "#/$defs/NamedView"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "views",
+          "changed",
+          "revision"
+        ],
+        "title": "ViewsEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_finite",
+          "far_point",
+          "invalid_view_size",
+          "invalid_view_name",
+          "invalid_revision",
+          "revision_conflict",
+          "unknown_view",
+          "view_exists",
+          "too_many_views"
+        ],
+        "warnings": [
+          "view_replaced"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parselin çevresini “Ada 112” adıyla sakla, 30° döndürülmüş",
+          "input": {
+            "edit": {
+              "center": {
+                "x": 487020.0,
+                "y": 4420015.0
+              },
+              "height": 40.0,
+              "kind": "save",
+              "name": "Ada 112",
+              "twist": 0.5235987755982989,
+              "width": 60.0
+            }
+          },
+          "output": {
+            "changed": true,
+            "revision": "7",
+            "view": {
+              "center": {
+                "x": 487020.0,
+                "y": 4420015.0
+              },
+              "height": 40.0,
+              "name": "Ada 112",
+              "twist": 0.5235987755982989,
+              "width": 60.0
+            },
+            "views": [
+              {
+                "center": {
+                  "x": 487020.0,
+                  "y": 4420015.0
+                },
+                "height": 40.0,
+                "name": "Ada 112",
+                "twist": 0.5235987755982989,
+                "width": 60.0
+              }
+            ]
+          }
+        },
+        {
+          "title": "Yeniden adlandır",
+          "input": {
+            "edit": {
+              "kind": "rename",
+              "name": "Ada 112",
+              "to": "Ada 112 kuzey"
+            }
+          }
+        },
+        {
+          "title": "Sil",
+          "input": {
+            "edit": {
+              "kind": "delete",
+              "name": "Ada 112 kuzey"
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.units.change",
       "version": 1,
       "title": "Birimi değiştir",
@@ -213688,7 +214265,7 @@
       "id": "cad.entities.vertex",
       "version": 1,
       "title": "Köşe ve kenar",
-      "summary": "Bir yolun köşesini ya da kenarını düzenler: Köşeyi sil (köşe yeri), Ortasına köşe ekle, Düz kenar yap ve Yaya dönüştür (kenarın ortasının yeri); nesne kalıcı kimliğiyle, yer cad.snap.find ya da cad.entities.pick'in verdiği gibi. Yay kenara eklenen köşe yayı çemberinde ikiye böler; Yaya dönüştür kenarı kirişin dörtte biri sehimle halkanın dışına ya da açık yolun sağına büker; çizgiye köşe eklenince çoklu çizgi olur. Alanın delikleri ve öbür parçaları kalır; topology ile ortak köşe ve kenarları olan komşular aynı adımda izler. Tek geri alma adımı.",
+      "summary": "Bir yolun köşesini ya da kenarını düzenler: Köşeyi sil (köşe yeri), Ortasına köşe ekle, Düz kenar yap ve Yaya dönüştür (kenarın ortasının yeri); nesne kalıcı kimliğiyle, yer cad.snap.find ya da cad.entities.pick'in verdiği gibi. Yay kenara eklenen köşe yayı çemberinde ikiye böler; Yaya dönüştür kenarı kirişin dörtte biri sehimle halkanın dışına ya da açık yolun sağına büker, through ile verilen noktadan, radius ile verilen yarıçapla (artı: kenarın sağına) geçen yay yapar, yay kenarı da yeniden biçimler; Kenar genişliği (width) çoklu çizginin kenarına başlangıç ve bitiş genişliği verir; çizgiye köşe eklenince çoklu çizgi olur. Alanın delikleri ve öbür parçaları kalır; topology ile ortak köşe ve kenarları olan komşular aynı adımda izler. Tek geri alma adımı.",
       "aliases": [
         "kose",
         "vertex"
@@ -213888,6 +214465,24 @@
               }
             ]
           },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          },
           "VertexAction": {
             "description": "What is done at the place.",
             "oneOf": [
@@ -213908,14 +214503,19 @@
               },
               {
                 "const": "arc",
-                "description": "Yaya dönüştür (a `mid` place): a straight edge a gentle arc, its sagitta a quarter of the chord (bulge 0.5),\nbowing out of a ring or to the right of an open path. “Yaya dönüştür”.",
+                "description": "Yaya dönüştür (a `mid` place): a straight edge a gentle arc, its sagitta a quarter of the chord (bulge 0.5),\nbowing out of a ring or to the right of an open path. With `through` or `radius` (docs/adr/0288) the edge, straight\nor an arc, becomes the arc through that point or of that radius. “Yaya dönüştür”.",
+                "type": "string"
+              },
+              {
+                "const": "width",
+                "description": "Kenar genişliği (a `mid` place, docs/adr/0288): a polyline edge's start and end widths (`widths`), as\nPEDIT's vertex Width. “Kenar genişliği”.",
                 "type": "string"
               }
             ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.vertex` v1. The place is on the object's own outer rings (a hole's vertices and edges are\nnot edited here); a multi-part area's other parts and an area's holes stay. An edge already as the action would\nmake it (straight, or an arc) does not change: nothing is written.\n\nRefusals (`CommandError.code`), checked in this order: `invalid_uid`, `invalid_revision`, `revision_conflict`\n(status `conflict`), `entity_not_found`, `layer_locked`, `not_a_path` (not a polyline or an area; a line takes\nOrtasına köşe ekle only), `wrong_place` (Köşeyi sil's place not a vertex, Köşe ekle's not an edge's middle or a place along it, the others'\nnot an edge's middle),\n`hole_edit` (a hole's place), `no_such_place` (no such part, vertex or edge, or a place along an edge at its vertex), `too_few_corners` (a ring left\nwith fewer than three vertices), `too_few_points` (an open path left with fewer than two).",
+        "description": "Input of `cad.entities.vertex` v1. The place is on the object's own outer rings (a hole's vertices and edges are\nnot edited here); a multi-part area's other parts and an area's holes stay. An edge already as the action would\nmake it (straight, or an arc) does not change: nothing is written.\n\nRefusals (`CommandError.code`), checked in this order: `invalid_uid`, `invalid_revision`, `revision_conflict`\n(status `conflict`), `entity_not_found`, `layer_locked`, `not_a_path` (not a polyline or an area; a line takes\nOrtasına köşe ekle only), `wrong_place` (Köşeyi sil's place not a vertex, Köşe ekle's not an edge's middle or a place along it, the others'\nnot an edge's middle),\n`hole_edit` (a hole's place), `no_such_place` (no such part, vertex or edge, or a place along an edge at its vertex), `too_few_corners` (a ring left\nwith fewer than three vertices), `too_few_points` (an open path left with fewer than two); docs/adr/0288's, before the\nobject is looked up: `invalid_arc_edge` (`through` or `radius` with another action, both together, a radius not\nfinite or of zero, a point not finite), `invalid_polyline` (`widths` with another action, Kenar genişliği without\nthem, a width below zero or not finite); after the place: `not_a_polyline` (Kenar genişliği on an area or a line),\n`invalid_arc_edge` (the point on the edge's line or at an end, a radius below half the chord).",
         "properties": {
           "action": {
             "$ref": "#/$defs/VertexAction"
@@ -213932,6 +214532,27 @@
             "$ref": "#/$defs/SubPlace",
             "description": "A `vertex` place for Köşeyi sil, a `mid` place (the edge from that vertex) for the others; Köşe ekle takes an\n`along` place too (a point inside the edge, docs/adr/0263 §1)."
           },
+          "radius": {
+            "description": "Yaya dönüştür with this radius (docs/adr/0288), the drawing's length: the shorter arc on the chord, bowing to\nthe right of the edge's travel when positive (a positive bulge), to its left when negative. At least half the\nchord; not with `through`.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "through": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Vec2"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Yaya dönüştür through this point (docs/adr/0288): the arc from the edge's start through it to its end. Not on\nthe edge's line nor at its ends; not with `radius`.",
+            "x-unit": "length"
+          },
           "topology": {
             "anyOf": [
               {
@@ -213947,6 +214568,20 @@
             "description": "The object's persistent id.",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
+          },
+          "widths": {
+            "description": "Kenar genişliği's start and end widths (docs/adr/0288), the drawing's length, zero or more; widths all zero\nleave the polyline without widths.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "length"
           }
         },
         "required": [
@@ -219226,8 +219861,11 @@
           "invalid_uid",
           "invalid_revision",
           "revision_conflict",
+          "invalid_arc_edge",
+          "invalid_polyline",
           "entity_not_found",
           "layer_locked",
+          "not_a_polyline",
           "not_a_path",
           "wrong_place",
           "hole_edit",
@@ -219252,6 +219890,37 @@
               "ring": 0
             },
             "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"
+          }
+        },
+        {
+          "title": "Çoklu çizginin ikinci kenarını 25 m yarıçaplı yaya dönüştür",
+          "input": {
+            "action": "arc",
+            "place": {
+              "index": 1,
+              "kind": "mid",
+              "part": 0,
+              "ring": 0
+            },
+            "radius": 25.0,
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002"
+          }
+        },
+        {
+          "title": "Çoklu çizginin ilk kenarını 0,5 m'den 0'a incelt",
+          "input": {
+            "action": "width",
+            "place": {
+              "index": 0,
+              "kind": "mid",
+              "part": 0,
+              "ring": 0
+            },
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002",
+            "widths": [
+              0.5,
+              0.0
+            ]
           }
         }
       ]
@@ -222478,7 +223147,7 @@
       "code": "far_point",
       "kind": "failed",
       "retryable": false,
-      "meaning": "UCS'in noktası dünyanın başlangıcından 10 000 km'den uzak."
+      "meaning": "Nokta dünyanın başlangıcından 10 000 km'den uzak."
     },
     {
       "code": "invalid_ucs_name",
@@ -222515,6 +223184,42 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Aynı adlı UCS'in yerine geçerli UCS kaydedildi."
+    },
+    {
+      "code": "invalid_view_size",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Görünümün eni ve boyu 0'dan büyük ve en çok 20 000 km olmalı."
+    },
+    {
+      "code": "invalid_view_name",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Görünüm adı boş, 64 karakterden uzun ya da denetim karakterli."
+    },
+    {
+      "code": "unknown_view",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu adla bir görünüm yok."
+    },
+    {
+      "code": "view_exists",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu adla başka bir görünüm var."
+    },
+    {
+      "code": "too_many_views",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede en çok 100 adlı görünüm olur."
+    },
+    {
+      "code": "view_replaced",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Aynı adlı görünümün yerine yenisi kaydedildi."
     },
     {
       "code": "empty_text",
@@ -223103,6 +223808,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Yer işlemin istediği türden değil: köşe ya da kenarın ortası."
+    },
+    {
+      "code": "invalid_arc_edge",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Yayın noktası ya da yarıçapı yay vermiyor: nokta kenarın doğrusunda ya da ucunda, yarıçap kirişin yarısından küçük, ya da ikisi birlikte verilmiş."
+    },
+    {
+      "code": "not_a_polyline",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kenar genişliği yalnız çoklu çizgide olur; alanın ve çizginin genişliği yoktur."
     },
     {
       "code": "hole_edit",

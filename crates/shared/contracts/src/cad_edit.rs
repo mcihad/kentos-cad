@@ -185,6 +185,9 @@ pub enum EditOperation {
     /// tables still at the old height given the new one
     /// (`follow_annotation_scale`).
     AnnotationScale,
+    /// Kenar genişliği (docs/adr/0288): a polyline edge's start and end widths
+    /// set, from `cad.entities.vertex`'s `width`.
+    EdgeWidth,
 }
 
 /// A drawing object's geometry alone: its kind and the fields that place and

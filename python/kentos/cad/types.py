@@ -598,6 +598,7 @@ class EditOperation(_StrEnum):
     - ``rasterGeoref``: Raster oturt (docs/adr/0204 §6): a raster's affine set from control points, or the raster
     - ``pointCloudStyle``: Nokta bulutu stili (docs/adr/0207 §5): clouds' looks and opacities written in place.
     - ``annotationScale``: Yazı yüksekliklerini uydur (docs/adr/0205 §3): after the plot scale or
+    - ``edgeWidth``: Kenar genişliği (docs/adr/0288): a polyline edge's start and end widths
     """
     OFFSET = "offset"
     TRIM = "trim"
@@ -655,9 +656,10 @@ class EditOperation(_StrEnum):
     RASTER_GEOREF = "rasterGeoref"
     POINT_CLOUD_STYLE = "pointCloudStyle"
     ANNOTATION_SCALE = "annotationScale"
+    EDGE_WIDTH = "edgeWidth"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose", "topologyFix", "networkAdjust", "levelAdjust", "rasterStyle", "rasterGeoref", "pointCloudStyle", "annotationScale"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose", "topologyFix", "networkAdjust", "levelAdjust", "rasterStyle", "rasterGeoref", "pointCloudStyle", "annotationScale", "edgeWidth"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 
@@ -1746,14 +1748,16 @@ class VertexAction(_StrEnum):
     - ``insert``: Ortasına köşe ekle (a `mid` place): a vertex at the edge's middle; or Köşe ekle at an `along` place: a vertex
     - ``straighten``: Düz kenar yap (a `mid` place): the edge straight. “Düz kenar yap”.
     - ``arc``: Yaya dönüştür (a `mid` place): a straight edge a gentle arc, its sagitta a quarter of the chord (bulge 0.5),
+    - ``width``: Kenar genişliği (a `mid` place, docs/adr/0288): a polyline edge's start and end widths (`widths`), as
     """
     REMOVE = "remove"
     INSERT = "insert"
     STRAIGHTEN = "straighten"
     ARC = "arc"
+    WIDTH = "width"
 
 
-VertexActionName = Literal["remove", "insert", "straighten", "arc"]
+VertexActionName = Literal["remove", "insert", "straighten", "arc", "width"]
 """The names of :class:`VertexAction`, for a plain string."""
 
 
@@ -2386,6 +2390,32 @@ class UcsTo(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> UcsTo:
         return _variant(_UCS_TO, "UcsTo", "kind", data).from_json(data)
+
+
+class ViewsOp(_Union):
+    """What `cad.views.edit` does (docs/adr/0285 §1).
+
+    One of:
+
+    - :class:`SaveViewsOp` (``kind: save``)
+    - :class:`RenameViewsOp` (``kind: rename``)
+    - :class:`DeleteViewsOp` (``kind: delete``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    if TYPE_CHECKING:
+        # Every variant has these.
+        name: str
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ViewsOp:
+        return _variant(_VIEWS_OP, "ViewsOp", "kind", data).from_json(data)
 
 
 _ConstructionEntityT = TypeVar("_ConstructionEntityT", bound="ConstructionEntity")
@@ -7283,19 +7313,33 @@ class EntitiesVertex(_Model):
     Ortasına köşe ekle only), `wrong_place` (Köşeyi sil's place not a vertex, Köşe ekle's not an edge's middle or a place along it, the others'
     not an edge's middle),
     `hole_edit` (a hole's place), `no_such_place` (no such part, vertex or edge, or a place along an edge at its vertex), `too_few_corners` (a ring left
-    with fewer than three vertices), `too_few_points` (an open path left with fewer than two).
+    with fewer than three vertices), `too_few_points` (an open path left with fewer than two); docs/adr/0288's, before the
+    object is looked up: `invalid_arc_edge` (`through` or `radius` with another action, both together, a radius not
+    finite or of zero, a point not finite), `invalid_polyline` (`widths` with another action, Kenar genişliği without
+    them, a width below zero or not finite); after the place: `not_a_polyline` (Kenar genişliği on an area or a line),
+    `invalid_arc_edge` (the point on the edge's line or at an end, a radius below half the chord).
     Attributes:
         uid: The object's persistent id.
         place: A `vertex` place for Köşeyi sil, a `mid` place (the edge from that vertex) for the others; Köşe ekle takes an
             `along` place too (a point inside the edge, docs/adr/0263 §1).
         expected_revision: The document revision the input was prepared against, as decimal text.
+        radius: Yaya dönüştür with this radius (docs/adr/0288), the drawing's length: the shorter arc on the chord, bowing to
+            the right of the edge's travel when positive (a positive bulge), to its left when negative. At least half the
+            chord; not with `through`. Unit: length.
+        through: Yaya dönüştür through this point (docs/adr/0288): the arc from the edge's start through it to its end. Not on
+            the edge's line nor at its ends; not with `radius`. Unit: length.
         topology: Topolojik düzenleme: the visible, unlocked neighbours sharing the changed vertices and edges follow.
+        widths: Kenar genişliği's start and end widths (docs/adr/0288), the drawing's length, zero or more; widths all zero
+            leave the polyline without widths. Unit: length.
     """
     uid: str
     action: VertexAction | VertexActionName
     place: SubPlace
     expected_revision: str | None | Unset = UNSET
+    radius: float | None | Unset = UNSET
+    through: Vec2 | None | Unset = UNSET
     topology: StretchTopology | None | Unset = UNSET
+    widths: list[float] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -7304,8 +7348,14 @@ class EntitiesVertex(_Model):
         out["place"] = self.place.to_json()
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.radius is not UNSET:
+            out["radius"] = None if self.radius is None else float(self.radius)
+        if self.through is not UNSET:
+            out["through"] = None if self.through is None else _vec2_out(self.through)
         if self.topology is not UNSET:
             out["topology"] = None if self.topology is None else self.topology.to_json()
+        if self.widths is not UNSET:
+            out["widths"] = None if self.widths is None else [float(e0) for e0 in self.widths]
         return out
 
     @classmethod
@@ -7315,7 +7365,10 @@ class EntitiesVertex(_Model):
             action=_enum_in(VertexAction, data["action"]),
             place=SubPlace.from_json(data["place"]),
             expected_revision=data.get("expectedRevision", UNSET),
+            radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
+            through=UNSET if "through" not in data else None if data["through"] is None else Vec2.from_json(data["through"]),
             topology=UNSET if "topology" not in data else None if data["topology"] is None else StretchTopology.from_json(data["topology"]),
+            widths=UNSET if "widths" not in data else None if data["widths"] is None else [float(e0) for e0 in data["widths"]],
         )
 
 
@@ -11193,6 +11246,45 @@ class NamedUcs(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class NamedView(_Model):
+    """A named view of the project: its middle, the world size it shows (width
+    along the screen's x, height along its y) and its twist: the angle of the
+    screen's x axis from the world's x (east), counter-clockwise, in radians,
+    in [0, 2π). A view with twist 0 shows the north up.
+    Attributes:
+        name: Trimmed, 1–64 characters, no control characters; unique.
+        center: The world point in the middle of the area. Unit: length.
+        width: The world width the area shows, along the screen's x. Unit: length.
+        height: The world height the area shows, along the screen's y. Unit: length.
+        twist: The screen's x axis from east, counter-clockwise; 0 shows the north up. Unit: rad.
+    """
+    name: str
+    center: Vec2
+    width: float
+    height: float
+    twist: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["center"] = _vec2_out(self.center)
+        out["width"] = float(self.width)
+        out["height"] = float(self.height)
+        out["twist"] = float(self.twist)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NamedView:
+        return cls(
+            name=data["name"],
+            center=Vec2.from_json(data["center"]),
+            width=float(data["width"]),
+            height=float(data["height"]),
+            twist=float(data["twist"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NetworkCost(_Model):
     """A cost besides the length (docs/adr/0209 §2).
     Attributes:
@@ -13669,6 +13761,7 @@ class ProjectSettings(_Model):
         length_style: How lengths are written (docs/adr/0262 §2): none, decimal; the others
             only in an inch or foot drawing.
         named_ucs: The project's named UCSs, in the order they were kept.
+        named_views: The project's named views, in the order they were kept (docs/adr/0285 §1).
         networks: The project's networks (docs/adr/0209 §2).
         second_custom_crs: The second system when it is a definition (instead of `second_srid`).
         second_srid: The project's second coordinate system (docs/adr/0167 §1): its
@@ -13702,6 +13795,7 @@ class ProjectSettings(_Model):
     layer_states: list[LayerState] | Unset = UNSET
     length_style: LengthStyle | LengthStyleName | None | Unset = UNSET
     named_ucs: list[NamedUcs] | Unset = UNSET
+    named_views: list[NamedView] | Unset = UNSET
     networks: list[NetworkDef] | Unset = UNSET
     second_custom_crs: CrsDefinition | None | Unset = UNSET
     second_srid: int | None | Unset = UNSET
@@ -13742,6 +13836,8 @@ class ProjectSettings(_Model):
             out["lengthStyle"] = None if self.length_style is None else _enum_out(self.length_style)
         if self.named_ucs is not UNSET:
             out["namedUcs"] = [e0.to_json() for e0 in self.named_ucs]
+        if self.named_views is not UNSET:
+            out["namedViews"] = [e0.to_json() for e0 in self.named_views]
         if self.networks is not UNSET:
             out["networks"] = [e0.to_json() for e0 in self.networks]
         if self.second_custom_crs is not UNSET:
@@ -13782,6 +13878,7 @@ class ProjectSettings(_Model):
             layer_states=[LayerState.from_json(e0) for e0 in data["layerStates"]] if "layerStates" in data else UNSET,
             length_style=UNSET if "lengthStyle" not in data else None if data["lengthStyle"] is None else _enum_in(LengthStyle, data["lengthStyle"]),
             named_ucs=[NamedUcs.from_json(e0) for e0 in data["namedUcs"]] if "namedUcs" in data else UNSET,
+            named_views=[NamedView.from_json(e0) for e0 in data["namedViews"]] if "namedViews" in data else UNSET,
             networks=[NetworkDef.from_json(e0) for e0 in data["networks"]] if "networks" in data else UNSET,
             second_custom_crs=UNSET if "secondCustomCrs" not in data else None if data["secondCustomCrs"] is None else CrsDefinition.from_json(data["secondCustomCrs"]),
             second_srid=data.get("secondSrid", UNSET),
@@ -16724,6 +16821,68 @@ class Vec2(NamedTuple):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> Vec2:
         return cls(float(data["x"]), float(data["y"]))
+
+
+@dataclass(kw_only=True, slots=True)
+class ViewsEdit(_Model):
+    """Input of `cad.views.edit` v1.
+
+    Refusals (`CommandError.code`), checked in this order: `not_finite`,
+    `far_point`, `invalid_view_size`, `invalid_view_name`;
+    `invalid_revision`, `revision_conflict` (status `conflict`);
+    `unknown_view`, `view_exists`, `too_many_views`. Warning: `view_replaced`.
+    Attributes:
+        expected_revision: The document revision the input was prepared against, as decimal text.
+    """
+    edit: ViewsOp
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["edit"] = self.edit.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ViewsEdit:
+        return cls(
+            edit=ViewsOp.from_json(data["edit"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ViewsEdited(_Model):
+    """Output of `cad.views.edit` v1, and what plan says it would do.
+    Attributes:
+        views: The project's named views afterwards, in order.
+        changed: Whether the settings changed.
+        revision: The document's revision afterwards (plan: the one it was made against).
+        view: The view saved or renamed, as kept; none for a delete.
+    """
+    views: list[NamedView]
+    changed: bool
+    revision: str
+    view: NamedView | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["views"] = [e0.to_json() for e0 in self.views]
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        if self.view is not UNSET:
+            out["view"] = None if self.view is None else self.view.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ViewsEdited:
+        return cls(
+            views=[NamedView.from_json(e0) for e0 in data["views"]],
+            changed=data["changed"],
+            revision=data["revision"],
+            view=UNSET if "view" not in data else None if data["view"] is None else NamedView.from_json(data["view"]),
+        )
 
 
 @dataclass(kw_only=True, slots=True)
@@ -20066,6 +20225,82 @@ class DeleteUcsTo(UcsTo):
         )
 
 
+@dataclass(kw_only=True, slots=True)
+class SaveViewsOp(ViewsOp):
+    """Kaydet: a view kept under a name; one of that name is replaced.
+    Attributes:
+        center: Unit: length.
+        width: Unit: length.
+        height: Unit: length.
+        twist: Radians, any turn; kept in [0, 2π). None: 0, the north up. Unit: rad.
+    """
+    TAG_VALUE: ClassVar[str] = "save"
+    name: str
+    center: Vec2
+    width: float
+    height: float
+    twist: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "save"}
+        out["name"] = self.name
+        out["center"] = _vec2_out(self.center)
+        out["width"] = float(self.width)
+        out["height"] = float(self.height)
+        if self.twist is not UNSET:
+            out["twist"] = None if self.twist is None else float(self.twist)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SaveViewsOp:
+        return cls(
+            name=data["name"],
+            center=Vec2.from_json(data["center"]),
+            width=float(data["width"]),
+            height=float(data["height"]),
+            twist=UNSET if "twist" not in data else None if data["twist"] is None else float(data["twist"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RenameViewsOp(ViewsOp):
+    """Yeniden adlandır: a named view gets another name, keeping its place in the list."""
+    TAG_VALUE: ClassVar[str] = "rename"
+    name: str
+    to: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "rename"}
+        out["name"] = self.name
+        out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RenameViewsOp:
+        return cls(
+            name=data["name"],
+            to=data["to"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeleteViewsOp(ViewsOp):
+    """Sil: a named view removed."""
+    TAG_VALUE: ClassVar[str] = "delete"
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "delete"}
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeleteViewsOp:
+        return cls(
+            name=data["name"],
+        )
+
+
 _ARRAY_LAYOUT: dict[str, type[ArrayLayout]] = {"grid": GridArrayLayout, "polar": PolarArrayLayout, "path": PathArrayLayout}
 
 
@@ -20133,6 +20368,9 @@ _TRIM_BOUNDARIES: dict[str, type[TrimBoundaries]] = {"all": AllTrimBoundaries, "
 
 
 _UCS_TO: dict[str, type[UcsTo]] = {"world": WorldUcsTo, "frame": FrameUcsTo, "origin": OriginUcsTo, "rotate": RotateUcsTo, "twoPoints": TwoPointsUcsTo, "object": ObjectUcsTo, "named": NamedUcsTo, "save": SaveUcsTo, "delete": DeleteUcsTo}
+
+
+_VIEWS_OP: dict[str, type[ViewsOp]] = {"save": SaveViewsOp, "rename": RenameViewsOp, "delete": DeleteViewsOp}
 
 
 __all__ = [
@@ -20255,6 +20493,7 @@ __all__ = [
     "DeleteBlockChange",
     "DeleteFeatureChange",
     "DeleteUcsTo",
+    "DeleteViewsOp",
     "DiameterDimensionMeasure",
     "DigitizedNetworkDirection",
     "DimensionArrow",
@@ -20504,6 +20743,7 @@ __all__ = [
     "MoveTransform",
     "NamedUcs",
     "NamedUcsTo",
+    "NamedView",
     "NetworkConnect",
     "NetworkConnectName",
     "NetworkCost",
@@ -20648,6 +20888,7 @@ __all__ = [
     "RegistryDatum",
     "RegistryDatumName",
     "RemoveEntityEdit",
+    "RenameViewsOp",
     "RenamedBlock",
     "ReplaceEntityEdit",
     "RingGeometry",
@@ -20656,6 +20897,7 @@ __all__ = [
     "RubberLink",
     "RubbersheetTransform",
     "SaveUcsTo",
+    "SaveViewsOp",
     "ScaleTransform",
     "ScenarioInfo",
     "ScenarioOperation",
@@ -20763,6 +21005,9 @@ __all__ = [
     "VertexActionName",
     "VertexCornerPick",
     "VertexSubPlace",
+    "ViewsEdit",
+    "ViewsEdited",
+    "ViewsOp",
     "WindowSelectRegion",
     "Workspace",
     "WorkspaceName",

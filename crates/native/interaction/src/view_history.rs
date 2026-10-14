@@ -29,12 +29,14 @@ pub const LIMIT: usize = 30;
 /// How long the wheel must have rested for its next step to start a new pass.
 pub const WHEEL_PAUSE: Duration = Duration::from_millis(500);
 
-/// Where the camera stands: the world point in the middle of the area, and
-/// logical pixels per world unit. The area's size is not part of it.
+/// Where the camera stands: the world point in the middle of the area,
+/// logical pixels per world unit and the view's twist (radians, docs/adr/0285
+/// §2). The area's size is not part of it.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Viewpoint {
     pub center: Vec2,
     pub scale: f64,
+    pub twist: f64,
 }
 
 /// The views left behind and the ones gone back from.
@@ -154,6 +156,7 @@ mod tests {
         Viewpoint {
             center: Vec2::new(f64::from(n) * 10.0, f64::from(n) * -3.0),
             scale: 1.0 + f64::from(n) / 8.0,
+            twist: 0.0,
         }
     }
 

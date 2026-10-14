@@ -192,6 +192,8 @@ pub enum Dialog {
     Scenario,
     /// Katman durumları (layer_states.rs, docs/adr/0177 §4); the window is `App::layer_states_window`.
     LayerStates,
+    /// Görünümler (views.rs, docs/adr/0285 §1); the window is `App::views_window`.
+    Views,
     /// Yazı stilleri and Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5); the window is
     /// `App::annotation_styles`.
     AnnotationStyles,
@@ -419,6 +421,8 @@ pub enum Message {
     Labelling(crate::labelling::Event),
     /// Katman durumları's window and Katman durumları ▾ (layer_states.rs).
     LayerStates(crate::layer_states::Event),
+    /// Görünümler's window (views.rs, docs/adr/0285 §1).
+    Views(crate::views::Event),
     AnnotationStyles(crate::annotation_styles::Event),
     LayerPurge(crate::layer_purge::Event),
     LayerList(crate::layer_list::Event),
@@ -511,6 +515,8 @@ pub enum Message {
     DialogClosed,
     /// The drawing area: its size, the pointer, pan, zoom and clicks.
     Viewport(viewport::Event),
+    /// The other view of a split drawing area (split_view.rs, docs/adr/0285 §3).
+    OtherViewport(viewport::Event),
     /// The settings window: a value in its draft, a preset, Kaydet, the file actions.
     Settings(Edit),
     /// A drawing being opened in stages (opening.rs, docs/adr/0030).
@@ -667,6 +673,8 @@ pub struct App {
     pub(crate) vertices: crate::vertices::VertexPanel,
     /// The labels the view shows, as last asked of the geometry store (labels.rs).
     pub(crate) label_spots: crate::labels::Spots,
+    /// Görünümü böl's other view (split_view.rs, docs/adr/0285 §3); none with one view.
+    pub(crate) split: Option<crate::split_view::Split>,
     /// The map services' labels and credits for the view, as last worked out (services/overlay.rs).
     pub(crate) service_marks: crate::services::overlay::Kept,
     /// Whether the services' credits card is open (services/app.rs).
@@ -818,6 +826,8 @@ pub struct App {
     pub(crate) labelling: Option<crate::labelling::Window>,
     /// Katman durumları's window (layer_states.rs, docs/adr/0177 §4).
     pub(crate) layer_states_window: Option<crate::layer_states::Window>,
+    /// Görünümler's window (views.rs, docs/adr/0285 §1).
+    pub(crate) views_window: Option<crate::views::Window>,
     /// Yazı stilleri or Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5).
     pub(crate) annotation_styles: Option<crate::annotation_styles::Window>,
     /// Kullanılmayanları temizle's window (layer_purge.rs, docs/adr/0177 §5).
@@ -1018,6 +1028,7 @@ impl App {
             topology_rules: None,
             vertices: Default::default(),
             label_spots: Default::default(),
+            split: None,
             service_marks: Default::default(),
             service_credits: false,
             connections: None,
@@ -1101,6 +1112,7 @@ impl App {
             layer_info: None,
             labelling: None,
             layer_states_window: None,
+            views_window: None,
             annotation_styles: None,
             layer_purge: None,
             take_from: None,
@@ -1320,6 +1332,8 @@ impl App {
         self.follow_template();
         // The running command's preview follows a view change and a tool run over it (navigation.rs, docs/adr/0283).
         self.follow_view(view);
+        // Another drawing goes back to one view (split_view.rs).
+        self.follow_split();
         if locks.is_some_and(|l| l != (self.locks.length, self.locks.toward)) {
             self.repoint();
         }
@@ -1613,6 +1627,7 @@ impl App {
             Message::LayerInfo(event) => return self.layer_info_event(event),
             Message::Labelling(event) => return self.labelling_event(event),
             Message::LayerStates(event) => return self.layer_states_event(event),
+            Message::Views(event) => return self.views_event(event),
             Message::AnnotationStyles(event) => return self.annotation_styles_event(event),
             Message::LayerPurge(event) => return self.layer_purge_event(event),
             Message::DrawingExchange(event) => return self.drawing_exchange_event(event),
@@ -1767,6 +1782,7 @@ impl App {
             Message::Start(event) => return self.start_event(event),
             Message::Appearance(event) => return self.appearance_event(event),
             Message::Viewport(event) => return self.pointer(event),
+            Message::OtherViewport(event) => return self.other_viewport(event),
             Message::Settings(edit) => return self.settings_edit(edit),
             Message::Opening(event) => return self.opening_event(event),
             Message::Saving(event) => return self.saving_event(event),
@@ -2090,6 +2106,10 @@ impl App {
         if crate::navigation::COMMANDS.contains(&id) {
             return self.navigation_command(id);
         }
+        // Görünümler and the view's twist (views.rs, docs/adr/0285).
+        if crate::views::COMMANDS.contains(&id) {
+            return self.views_command(id);
+        }
         // Çizimler arası alışveriş (drawing_exchange.rs, docs/adr/0193).
         if crate::drawing_exchange::COMMANDS.contains(&id) {
             return self.drawing_exchange_command(id);
@@ -2315,6 +2335,8 @@ impl App {
             "view.zoomIn" => self.navigating(Self::zoom_in),
             "view.zoomOut" => self.navigating(Self::zoom_out),
             "view.zoomExtents" => self.navigating(Self::zoom_extents),
+            // Görünümü böl (split_view.rs, docs/adr/0285 §3).
+            "view.split" => self.toggle_split(),
             "view.zoomSelection" => self.navigating(Self::zoom_selection),
             "commandline.focus" => return operation::focus(COMMAND_INPUT),
             "help.about" => self.dialog = Some(Dialog::About),
@@ -2435,6 +2457,7 @@ impl App {
     pub fn checked(&self, id: &str) -> Option<bool> {
         Some(match id {
             "draft.ortho" => self.draft.ortho,
+            "view.split" => self.split.is_some(),
             "draft.rightAngle" => self.draft.right_angle,
             "draft.polar" => self.draft.polar.is_some(),
             "draft.snap" => self.draft.snap,

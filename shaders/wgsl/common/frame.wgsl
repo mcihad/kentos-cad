@@ -12,7 +12,7 @@
 // data lies from the origin. Absolute world coordinates never reach the GPU
 // (CLAUDE.md §4.9).
 
-const LAYOUT_VERSION: u32 = 1u;
+const LAYOUT_VERSION: u32 = 2u;
 
 struct Frame {
     // Camera centre relative to the scene origin (world units), high and low parts.
@@ -30,14 +30,21 @@ struct Frame {
     line_width: f32,
     // 1 when the target is an sRGB format: it encodes on write, so the shaders hand it linear values.
     srgb_target: u32,
+    // The view's twist (version 2, docs/adr/0285 §2): cos − 1 and sin of the angle of the screen's x axis from the
+    // world's, counter-clockwise; both zero for a view with the north up.
+    twist_c: f32,
+    twist_s: f32,
 };
 
 @group(0) @binding(0) var<uniform> frame: Frame;
 
 // Device pixels from the camera centre (y up) of a point given as hi/lo parts.
 fn world_px(hi: vec2<f32>, lo: vec2<f32>) -> vec2<f32> {
-    let d = (hi - frame.center_hi) + (lo - frame.center_lo);
-    return d * frame.px_per_unit;
+    let d = ((hi - frame.center_hi) + (lo - frame.center_lo)) * frame.px_per_unit;
+    // The view's twist turns the world by minus its angle about the camera's middle.
+    let c = 1.0 + frame.twist_c;
+    let s = frame.twist_s;
+    return vec2<f32>(d.x * c + d.y * s, d.y * c - d.x * s);
 }
 
 // Clip position of a point given in device pixels from the area's centre (y up).

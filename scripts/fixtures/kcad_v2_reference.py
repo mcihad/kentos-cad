@@ -318,6 +318,8 @@ def settings(s):
                 # Schema 49 (docs/adr/0261 §1): the current UCS (none: the world) and the named ones.
                 "ucs": (ucs, False),
                 "namedUcs": (named_ucs, False),
+                # Schema 52 (docs/adr/0285 §1): the project's named views.
+                "namedViews": (named_views, False),
                 # Schema 50 (docs/adr/0262 §2): how lengths are written; decimal is no setting.
                 "lengthStyle": (enum(("architectural", "engineering", "fractional")), False),
             },
@@ -990,6 +992,28 @@ def named_ucs(list_):
 
     def one(n):
         return cmap(fields(n, {"name": (text, True), **ucs_frame(n)}, "namedUcs"))
+
+    return nonempty(one)(list_)
+
+
+# Schema 52 (docs/adr/0285 §1): a named view is a middle within 10 000 km, a width and a height above 0 and at most
+# 20 000 km, a twist in [0, 2π); names trimmed, 1 to 64 characters without control characters, unique, at most 100.
+VIEW_SIZE = 2.0e7
+
+
+def named_views(list_):
+    names = [v["name"] for v in list_]
+    assert len(names) <= 100 and len(set(names)) == len(names), names
+    for v in list_:
+        n = v["name"]
+        assert n == n.strip() and 0 < len(n) <= 64 and not any(unicodedata.category(c) == "Cc" for c in n), n
+        c = v["center"]
+        assert all(math.isfinite(x) and abs(x) <= UCS_REACH for x in (c["x"], c["y"])), v
+        assert all(math.isfinite(v[k]) and 0.0 < v[k] <= VIEW_SIZE for k in ("width", "height")), v
+        assert math.isfinite(v["twist"]) and 0.0 <= v["twist"] < TAU, v
+
+    def one(v):
+        return cmap(fields(v, {"name": (text, True), "center": (point, True), "width": (f64, True), "height": (f64, True), "twist": (f64, True)}, "namedViews"))
 
     return nonempty(one)(list_)
 
@@ -1781,6 +1805,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def composed(nodes):
         return any("compose" in n or composed(n["children"]) for n in nodes)
 
+    # Schema 52 (docs/adr/0285): a named view.
+    if settings and "namedViews" in settings:
+        return 52
     # Schema 51 (docs/adr/0263): a dimension's reference along an edge or inside a block.
     def extended(r):
         return r["place"]["kind"] == "along" or "path" in r
@@ -2097,7 +2124,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-52.kcad"] = container(root(cmap(parts), version=uint(52)))
+    files["schema-version-53.kcad"] = container(root(cmap(parts), version=uint(53)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2448,6 +2475,22 @@ def broken(minimal_content, minimal_file):
     files["named-ucs-twice.kcad"] = with_ucs({"namedUcs": array([frame_of(name=text("A")), frame_of(name=text("A"))])})
     files["named-ucs-blank.kcad"] = with_ucs({"namedUcs": array([frame_of(name=text(" "))])})
     files["named-ucs-unknown-field.kcad"] = with_ucs({"namedUcs": array([frame_of(name=text("A"), note=text("x"))])})
+    # The named views are schema 52's (docs/adr/0285 §1): in schema 51 an unknown field; a middle within 10 000 km, a
+    # width and a height above 0 and at most 20 000 km, a twist in [0, 2π), names that hold and are unique, an empty
+    # list refused, every field required.
+    def view_of(name="A", x=10.0, y=20.0, w=30.0, h=20.0, t=0.5, drop=(), **more):
+        f = {"name": text(name), "center": point({"x": x, "y": y}), "width": f64(w), "height": f64(h), "twist": f64(t), **more}
+        return cmap({k: v for k, v in f.items() if k not in drop})
+
+    files["views-in-schema-51.kcad"] = with_ucs({"namedViews": array([view_of()])}, schema=51)
+    files["named-views-empty.kcad"] = with_ucs({"namedViews": array([])}, schema=52)
+    files["named-views-twice.kcad"] = with_ucs({"namedViews": array([view_of(), view_of(x=0.0)])}, schema=52)
+    files["named-views-blank.kcad"] = with_ucs({"namedViews": array([view_of(name=" ")])}, schema=52)
+    files["named-views-width-zero.kcad"] = with_ucs({"namedViews": array([view_of(w=0.0)])}, schema=52)
+    files["named-views-twist-tau.kcad"] = with_ucs({"namedViews": array([view_of(t=TAU)])}, schema=52)
+    files["named-views-far.kcad"] = with_ucs({"namedViews": array([view_of(x=2.0e7)])}, schema=52)
+    files["named-views-unknown-field.kcad"] = with_ucs({"namedViews": array([view_of(note=text("x"))])}, schema=52)
+    files["named-views-no-twist.kcad"] = with_ucs({"namedViews": array([view_of(drop=("twist",))])}, schema=52)
     files["nurbs-in-schema-46.kcad"] = in_schema(46, nurbs_of())
     files["nurbs-closed-false.kcad"] = in_schema(47, nurbs_of(closed=boolean(False)))
     files["nurbs-degree-12.kcad"] = in_schema(47, nurbs_of(degree=uint(12)))
@@ -3320,6 +3363,7 @@ def build():
     out["ucs.kcad"] = container(document(load("ucs.json")))
     out["imperial.kcad"] = container(document(load("imperial.json")))
     out["subref-extras.kcad"] = container(document(load("subref-extras.json")))
+    out["views.kcad"] = container(document(load("views.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

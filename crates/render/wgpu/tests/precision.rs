@@ -22,6 +22,7 @@ fn camera(center: Vec2, scale: f64) -> Camera {
         scale,
         width: 1600.0,
         height: 1000.0,
+        twist: 0.0,
     }
 }
 

@@ -294,7 +294,11 @@ fn the_grip_menu_edits_a_vertex_or_an_edge_through_the_command() {
     assert_eq!(edge.header(), "Kenar 1");
     assert_eq!(
         edge.actions()[..edge.own_count()],
-        [GripAction::AddVertex, GripAction::ArcEdge]
+        [
+            GripAction::AddVertex,
+            GripAction::ArcEdge,
+            GripAction::ArcBy
+        ]
     );
     b.run(|_, cx| grip_menu::apply(edge, GripAction::ArcEdge, cx));
     assert_eq!(b.last_text(), Some("Yaya dönüştür: tamam."));
@@ -304,7 +308,11 @@ fn the_grip_menu_edits_a_vertex_or_an_edge_through_the_command() {
         .expect("the arc's middle");
     assert_eq!(
         arc.actions()[..arc.own_count()],
-        [GripAction::AddVertex, GripAction::StraightEdge]
+        [
+            GripAction::AddVertex,
+            GripAction::StraightEdge,
+            GripAction::ArcBy
+        ]
     );
     b.run(|_, cx| grip_menu::apply(arc, GripAction::StraightEdge, cx));
     assert_eq!(b.last_text(), Some("Düz kenar yap: tamam."));

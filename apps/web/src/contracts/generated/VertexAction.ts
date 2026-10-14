@@ -3,4 +3,4 @@
 /**
  * What is done at the place.
  */
-export type VertexAction = "remove" | "insert" | "straighten" | "arc";
+export type VertexAction = "remove" | "insert" | "straighten" | "arc" | "width";

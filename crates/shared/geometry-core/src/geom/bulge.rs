@@ -71,6 +71,46 @@ pub fn segment_mid(a: Vec2, b: Vec2, bulge: f64) -> Vec2 {
     )
 }
 
+/// Bulge of the arc from `a` through `m` to `b` by the points alone, without
+/// angles (docs/adr/0288): with u = a − m and v = b − m, the cotangent of half
+/// the angle at `m`, (|u||v| + u·v) / −(u × v), or −(u × v) / (|u||v| − u·v)
+/// when u·v is negative (the same number, without cancelling); positive bows
+/// to the right of travel a → b. None when the three are on one line or `m`
+/// is an end.
+pub fn bulge_via(a: Vec2, m: Vec2, b: Vec2) -> Option<f64> {
+    let (ux, uy, vx, vy) = (a.x - m.x, a.y - m.y, b.x - m.x, b.y - m.y);
+    let cross = ux * vy - uy * vx;
+    if !cross.is_finite() || cross == 0.0 {
+        return None;
+    }
+    let l = ((ux * ux + uy * uy) * (vx * vx + vy * vy)).sqrt();
+    let dot = ux * vx + uy * vy;
+    let bulge = if dot >= 0.0 {
+        (l + dot) / -cross
+    } else {
+        -cross / (l - dot)
+    };
+    bulge.is_finite().then_some(bulge)
+}
+
+/// Bulge of the shorter arc of radius |`r`| on the chord a → b (docs/adr/0288),
+/// by the chord alone: c / (2|r| + √(4r² − c²)), its sign `r`'s (positive bows
+/// to the right of travel). None for a radius of zero, not finite, or below
+/// half the chord, or a chord of no length.
+pub fn bulge_of_radius(a: Vec2, b: Vec2, r: f64) -> Option<f64> {
+    let (dx, dy) = (b.x - a.x, b.y - a.y);
+    let c = (dx * dx + dy * dy).sqrt();
+    if !r.is_finite() || r == 0.0 || c == 0.0 {
+        return None;
+    }
+    let rest = 4.0 * r * r - c * c;
+    if rest < 0.0 {
+        return None;
+    }
+    let bulge = c / (2.0 * r.abs() + rest.sqrt());
+    Some(if r < 0.0 { -bulge } else { bulge })
+}
+
 /// Bulge of the arc from `a` through `m` to `b`; 0 when collinear.
 pub fn bulge_through(a: Vec2, m: Vec2, b: Vec2) -> f64 {
     let Some(circle) = circle_through(a, m, b) else {
@@ -340,3 +380,34 @@ pub(crate) static OPS: &[Op] = &[
         )
     ),
 ];
+
+#[cfg(test)]
+mod adr_0288_tests {
+    use super::*;
+
+    /// The arc through a point and of a radius by the chord alone (docs/adr/0288): exact where the square roots are.
+    #[test]
+    fn bulges_by_a_point_and_a_radius() {
+        let (a, b) = (Vec2::new(0.0, 0.0), Vec2::new(10.0, 0.0));
+        assert_eq!(bulge_via(a, Vec2::new(5.0, -5.0), b), Some(1.0));
+        assert_eq!(bulge_via(a, Vec2::new(5.0, -2.5), b), Some(0.5));
+        assert_eq!(bulge_via(a, Vec2::new(5.0, -10.0), b), Some(2.0));
+        assert_eq!(bulge_via(a, Vec2::new(5.0, 2.5), b), Some(-0.5));
+        assert_eq!(bulge_via(a, Vec2::new(5.0, 0.0), b), None);
+        assert_eq!(bulge_via(a, a, b), None);
+        assert_eq!(bulge_of_radius(a, b, 5.0), Some(1.0));
+        assert_eq!(bulge_of_radius(a, b, 6.25), Some(0.5));
+        assert_eq!(bulge_of_radius(a, b, -10.625), Some(-0.25));
+        assert_eq!(bulge_of_radius(a, b, 4.0), None);
+        assert_eq!(bulge_of_radius(a, b, 0.0), None);
+        assert_eq!(bulge_of_radius(a, a, 1.0), None);
+        // The trigonometric construction agrees.
+        let m = Vec2::new(3.0, -4.0);
+        let by_angles = bulge_through(a, m, b);
+        let by_points = bulge_via(a, m, b).expect("an arc");
+        assert!(
+            (by_angles - by_points).abs() < 1e-12,
+            "{by_angles} {by_points}"
+        );
+    }
+}

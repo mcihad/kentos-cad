@@ -44,7 +44,7 @@ fn prompts_are_the_web_s_text_and_options() {
     assert!(b.type_text("Y"));
     assert_eq!(
         b.session.prompt().text(),
-        "Çoklu çizgi: yayın bitiş noktasını belirtin [Düz (D) / Açı (A) / Merkez (M) / Yarıçap (R) / İkinci nokta (İ) / Doğrultu (T) / Geri (G) / Bitir (Enter)]"
+        "Çoklu çizgi: yayın bitiş noktasını belirtin [Düz (D) / Açı (A) / Merkez (M) / Yarıçap (R) / İkinci nokta (İ) / Doğrultu (T) / Genişlik (E): 0.000 m / Kapat (K) / Geri (G) / Bitir (Enter)]"
     );
 }
 

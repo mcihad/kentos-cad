@@ -7,6 +7,10 @@
 //!   keeping its circle), then Düz kenar yap on an arc edge or Yaya dönüştür
 //!   on a straight one: a gentle arc, its sagitta a quarter of the chord,
 //!   bowing out of a ring or to the right of an open path;
+//! - a path's edge middle, also (docs/adr/0288): Yay… (the edge, straight or
+//!   an arc, becomes the arc through a point clicked or of a radius typed) and,
+//!   on a polyline, Kenar genişliği… (its start and end widths typed): both
+//!   start Kenar düzenle (`segment_edit`) on the edge;
 //! - every grip: Esnet (the grip turns hot, the next click places it), then
 //!   Taşı, Döndür, Ölçekle and Aynala with the grip as their base point, on
 //!   the whole selection.
@@ -53,8 +57,12 @@ pub struct GripMenu {
 pub enum Target {
     /// The vertex's index (from 0).
     Vertex(usize),
-    /// The edge's index (from 0) and whether it is an arc.
-    Edge { segment: usize, arc: bool },
+    /// The edge's index (from 0), whether it is an arc and whether its object is a polyline (it takes widths).
+    Edge {
+        segment: usize,
+        arc: bool,
+        polyline: bool,
+    },
     /// A grip with no vertex action: a hole's vertex, a line's end, a circle's centre, a text's point.
     Grip,
 }
@@ -66,6 +74,10 @@ pub enum GripAction {
     AddVertex,
     StraightEdge,
     ArcEdge,
+    /// Yay… (docs/adr/0288): Kenar düzenle asks the point or the radius.
+    ArcBy,
+    /// Kenar genişliği… (docs/adr/0288): Kenar düzenle asks the widths.
+    EdgeWidth,
     Stretch,
     Move,
     Rotate,
@@ -90,6 +102,8 @@ impl GripAction {
             GripAction::AddVertex => "Ortasına köşe ekle",
             GripAction::StraightEdge => "Düz kenar yap",
             GripAction::ArcEdge => "Yaya dönüştür",
+            GripAction::ArcBy => "Noktadan ya da yarıçapla yay…",
+            GripAction::EdgeWidth => "Kenar genişliği…",
             GripAction::Stretch => "Esnet",
             GripAction::Move => "Taşı",
             GripAction::Rotate => "Döndür",
@@ -105,6 +119,8 @@ impl GripAction {
             GripAction::AddVertex => "vertex",
             GripAction::StraightEdge => "line",
             GripAction::ArcEdge => "arc",
+            GripAction::ArcBy => "arcCenter",
+            GripAction::EdgeWidth => "lineWeight",
             GripAction::Stretch => "stretch",
             GripAction::Move => "move",
             GripAction::Rotate => "rotate",
@@ -134,6 +150,15 @@ impl GripAction {
             _ => None,
         }
     }
+
+    /// What Kenar düzenle asks for an edge item that takes a value (docs/adr/0288); none for the others.
+    pub fn segment_edit(self) -> Option<crate::segment_edit::Ask> {
+        match self {
+            GripAction::ArcBy => Some(crate::segment_edit::Ask::Arc),
+            GripAction::EdgeWidth => Some(crate::segment_edit::Ask::Width),
+            _ => None,
+        }
+    }
 }
 
 impl GripMenu {
@@ -150,8 +175,36 @@ impl GripMenu {
     pub fn actions(&self) -> Vec<GripAction> {
         let own: &[GripAction] = match self.target {
             Target::Vertex(_) => &[GripAction::RemoveVertex],
-            Target::Edge { arc: true, .. } => &[GripAction::AddVertex, GripAction::StraightEdge],
-            Target::Edge { arc: false, .. } => &[GripAction::AddVertex, GripAction::ArcEdge],
+            Target::Edge {
+                arc: true,
+                polyline: true,
+                ..
+            } => &[
+                GripAction::AddVertex,
+                GripAction::StraightEdge,
+                GripAction::ArcBy,
+                GripAction::EdgeWidth,
+            ],
+            Target::Edge {
+                arc: false,
+                polyline: true,
+                ..
+            } => &[
+                GripAction::AddVertex,
+                GripAction::ArcEdge,
+                GripAction::ArcBy,
+                GripAction::EdgeWidth,
+            ],
+            Target::Edge { arc: true, .. } => &[
+                GripAction::AddVertex,
+                GripAction::StraightEdge,
+                GripAction::ArcBy,
+            ],
+            Target::Edge { arc: false, .. } => &[
+                GripAction::AddVertex,
+                GripAction::ArcEdge,
+                GripAction::ArcBy,
+            ],
             Target::Grip => &[],
         };
         own.iter().chain(&TRANSFORMS).copied().collect()
@@ -183,6 +236,7 @@ pub fn at(screen: [f64; 2], cx: &Context<'_>) -> Option<GripMenu> {
             Some(segment) => Target::Edge {
                 segment,
                 arc: is_arc_bulge(bulge_at(bulges, segment)),
+                polyline: matches!(s, Shape::Polyline { .. }) && parts.len() == 1,
             },
         },
         None => Target::Grip,
@@ -197,8 +251,14 @@ pub fn at(screen: [f64; 2], cx: &Context<'_>) -> Option<GripMenu> {
 }
 
 /// The command's input for `action` on the menu's grip; none for a transform or a grip with no vertex action.
+/// Yay… and Kenar genişliği… give `cad.entities.vertex`'s `arc` and `width` on the edge, their values to come
+/// (docs/adr/0288).
 pub fn request(menu: GripMenu, action: GripAction, cx: &Context<'_>) -> Option<EntitiesVertex> {
-    let action = action.vertex_action()?;
+    let action = match action {
+        GripAction::ArcBy => VertexAction::Arc,
+        GripAction::EdgeWidth => VertexAction::Width,
+        other => other.vertex_action()?,
+    };
     let uid = cx.doc.uid(menu.slot)?;
     let part = menu.part as u32;
     let place = match menu.target {
@@ -218,11 +278,35 @@ pub fn request(menu: GripMenu, action: GripAction, cx: &Context<'_>) -> Option<E
         uid: uid.to_string(),
         action,
         place,
+        through: None,
+        radius: None,
+        widths: None,
         topology: cx.draft.topology.then_some(StretchTopology {
             points: cx.draft.topology_points,
         }),
         expected_revision: None,
     })
+}
+
+/// Kenar düzenle on the menu's edge for Yay… and Kenar genişliği… (docs/adr/0288); none for the other items.
+pub fn segment_tool(
+    menu: GripMenu,
+    action: GripAction,
+    cx: &Context<'_>,
+) -> Option<crate::segment_edit::SegmentEdit> {
+    let ask = action.segment_edit()?;
+    let Target::Edge { segment, .. } = menu.target else {
+        return None;
+    };
+    let input = request(menu, action, cx)?;
+    let whole = shape(cx.doc.get(menu.slot)?);
+    let parts = area_parts(&whole);
+    let pts = match parts.get(menu.part)? {
+        Shape::Polyline { pts, .. } | Shape::Polygon { pts, .. } => pts.clone(),
+        _ => return None,
+    };
+    let (a, b) = (*pts.get(segment)?, *pts.get((segment + 1) % pts.len())?);
+    Some(crate::segment_edit::SegmentEdit::new(input, ask, a, b))
 }
 
 /// Does a vertex or edge action on the menu's object through

@@ -34,6 +34,7 @@ from .types import (
     Entity,
     LayerNode,
     LayerNodeType,
+    NamedView,
     ProjectSettings,
     SheetInfo,
     Workspace,
@@ -667,6 +668,14 @@ class Document:
         """The project's named UCSs, in the order they were kept."""
         raw = json.loads(self._session.summary())["settings"].get("namedUcs") or []
         return [_frame(n, n["name"]) for n in raw]
+
+    @property
+    def named_views(self) -> list[NamedView]:
+        """The project's named views, in the order they were kept (docs/adr/0285): each its middle, the world width
+        and height it shows and its twist. Keep, rename and remove them with ``kentos.cad.views.edit``; going to one is
+        the desktop's camera, not the drawing's."""
+        raw = json.loads(self._session.summary())["settings"].get("namedViews") or []
+        return [NamedView.from_json(v) for v in raw]
 
     def _ucs_of(self, ucs: UcsFrame | str | None) -> UcsFrame:
         if ucs is None:

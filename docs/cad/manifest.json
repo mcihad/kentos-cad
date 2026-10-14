@@ -9621,6 +9621,20 @@
    "tests": 1
   },
   {
+   "id": "tool.viewTwist",
+   "kind": "command",
+   "title": "Görünümü döndür",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Görünümün dönüşü oturumun kamerasıdır; çizim değişmez. Adlı görünümün dönüşü cad.views.edit ile saklanır (ADR 0285 §2).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.xline",
    "kind": "tool",
    "title": "Yardımcı çizgi",
@@ -10061,6 +10075,22 @@
    "tests": 1
   },
   {
+   "id": "view.namedViews",
+   "kind": "command",
+   "title": "Görünümler…",
+   "level": "semantic",
+   "via": [
+    "cad.views.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.views.edit",
+   "mcp": "cad.views.edit",
+   "note": "Kaydet, Güncelle, Yeniden adlandır ve Sil komuta verilir; Göster oturumun kamerasıdır (ADR 0285 §1).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "view.next",
    "kind": "command",
    "title": "Sonraki görünüm",
@@ -10073,6 +10103,20 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "view.northUp",
+   "kind": "command",
+   "title": "Kuzey yukarı",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Görünüm; cad.session.* yok (plan §5.1).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "view.overview",
@@ -10173,6 +10217,20 @@
    "tests": 1
   },
   {
+   "id": "view.split",
+   "kind": "command",
+   "title": "Görünümü böl",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Görünüm; cad.session.* yok (plan §5.1).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "view.symbols.plot",
    "kind": "command",
    "title": "Çizim ölçeğinde",
@@ -10255,6 +10313,20 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "view.twistUcs",
+   "kind": "command",
+   "title": "Görünümü UCS'e döndür",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Görünüm; cad.session.* yok (plan §5.1).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "view.unplacedLabels",

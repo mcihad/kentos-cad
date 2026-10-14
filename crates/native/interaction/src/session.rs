@@ -9,7 +9,7 @@
 //! | Onay (confirm) | [`Session::confirm`]: the tool commits one undo step and stays for the next object |
 //! | İptal (cancel) | [`Session::exit`]: the draft is dropped, nothing reaches the drawing or its history |
 //! | Askıda (suspended) | [`Session::nest`]: the point calculator runs over a command waiting for a point (or a grip being moved); its point goes to the command as if clicked, Esc brings the command back as it was (docs/adr/0083) |
-//! | Şeffaf (transparent) | [`Session::start_over`]: Kaydır, Pencere yakınlaştır, Mesafe ölç, Açı ölç and Koordinat oku run over a command (or a grip being moved) and give it back as it was, its locks and references with it (docs/adr/0283) |
+//! | Şeffaf (transparent) | [`Session::start_over`]: Kaydır, Pencere yakınlaştır, Görünümü döndür (docs/adr/0285), Mesafe ölç, Açı ölç and Koordinat oku run over a command (or a grip being moved) and give it back as it was, its locks and references with it (docs/adr/0283) |
 //!
 //! “Repeat the last command” and what a key means are the host's: it asks
 //! [`Session::last`] and routes keys by ADR 0018's order. So is the object
@@ -122,6 +122,8 @@ pub const TOOLS: &[&str] = &[
     crate::ucs_tool::ORIGIN_ID,
     crate::ucs_tool::ROTATE_ID,
     crate::ucs_tool::NAMED_ID,
+    // docs/adr/0285 §2: Görünümü döndür.
+    crate::view_twist::ID,
     construction::XLINE_ID,
     construction::RAY_ID,
     // Çizim ekleri (docs/adr/0197).
@@ -256,6 +258,7 @@ pub const TRANSPARENT: &[&str] = &[
     path::MEASURE_ID,
     angle::ID,
     coordinate::ID,
+    crate::view_twist::ID,
 ];
 
 /// What a tool running over another one suspended (docs/adr/0083).
@@ -434,6 +437,7 @@ impl Session {
             crate::ucs_tool::ORIGIN_ID => Box::new(crate::ucs_tool::UcsTool::origin()),
             crate::ucs_tool::ROTATE_ID => Box::new(crate::ucs_tool::UcsTool::rotate()),
             crate::ucs_tool::NAMED_ID => Box::new(crate::ucs_tool::UcsTool::named()),
+            crate::view_twist::ID => Box::new(crate::view_twist::ViewTwist::new()),
             construction::XLINE_ID => Box::new(crate::construction::Xline::new()),
             construction::RAY_ID => Box::new(crate::construction::Ray::new()),
             crate::drawing_extras::TANGENT_ID => {

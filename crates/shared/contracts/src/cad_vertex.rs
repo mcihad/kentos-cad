@@ -10,6 +10,7 @@ use ts_rs::TS;
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
 use crate::cad_stretch::StretchTopology;
+use crate::entity::Vec2;
 use crate::subref::SubPlace;
 
 /// Edits a path's vertex or edge.
@@ -32,8 +33,12 @@ pub enum VertexAction {
     /// Düz kenar yap (a `mid` place): the edge straight. “Düz kenar yap”.
     Straighten,
     /// Yaya dönüştür (a `mid` place): a straight edge a gentle arc, its sagitta a quarter of the chord (bulge 0.5),
-    /// bowing out of a ring or to the right of an open path. “Yaya dönüştür”.
+    /// bowing out of a ring or to the right of an open path. With `through` or `radius` (docs/adr/0288) the edge, straight
+    /// or an arc, becomes the arc through that point or of that radius. “Yaya dönüştür”.
     Arc,
+    /// Kenar genişliği (a `mid` place, docs/adr/0288): a polyline edge's start and end widths (`widths`), as
+    /// PEDIT's vertex Width. “Kenar genişliği”.
+    Width,
 }
 
 /// Input of `cad.entities.vertex` v1. The place is on the object's own outer rings (a hole's vertices and edges are
@@ -45,7 +50,11 @@ pub enum VertexAction {
 /// Ortasına köşe ekle only), `wrong_place` (Köşeyi sil's place not a vertex, Köşe ekle's not an edge's middle or a place along it, the others'
 /// not an edge's middle),
 /// `hole_edit` (a hole's place), `no_such_place` (no such part, vertex or edge, or a place along an edge at its vertex), `too_few_corners` (a ring left
-/// with fewer than three vertices), `too_few_points` (an open path left with fewer than two).
+/// with fewer than three vertices), `too_few_points` (an open path left with fewer than two); docs/adr/0288's, before the
+/// object is looked up: `invalid_arc_edge` (`through` or `radius` with another action, both together, a radius not
+/// finite or of zero, a point not finite), `invalid_polyline` (`widths` with another action, Kenar genişliği without
+/// them, a width below zero or not finite); after the place: `not_a_polyline` (Kenar genişliği on an area or a line),
+/// `invalid_arc_edge` (the point on the edge's line or at an end, a radius below half the chord).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -59,6 +68,25 @@ pub struct EntitiesVertex {
     /// A `vertex` place for Köşeyi sil, a `mid` place (the edge from that vertex) for the others; Köşe ekle takes an
     /// `along` place too (a point inside the edge, docs/adr/0263 §1).
     pub place: SubPlace,
+    /// Yaya dönüştür through this point (docs/adr/0288): the arc from the edge's start through it to its end. Not on
+    /// the edge's line nor at its ends; not with `radius`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub through: Option<Vec2>,
+    /// Yaya dönüştür with this radius (docs/adr/0288), the drawing's length: the shorter arc on the chord, bowing to
+    /// the right of the edge's travel when positive (a positive bulge), to its left when negative. At least half the
+    /// chord; not with `through`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub radius: Option<f64>,
+    /// Kenar genişliği's start and end widths (docs/adr/0288), the drawing's length, zero or more; widths all zero
+    /// leave the polyline without widths.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub widths: Option<[f64; 2]>,
     /// Topolojik düzenleme: the visible, unlocked neighbours sharing the changed vertices and edges follow.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

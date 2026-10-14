@@ -179,6 +179,8 @@ mod screen_scale;
 mod screens;
 mod search;
 mod second_crs;
+#[cfg(test)]
+mod segment_scenes;
 mod selecting;
 mod selection_chip;
 mod selection_commands;
@@ -229,6 +231,7 @@ mod snap_menu;
 mod snap_tests;
 mod snapshot;
 mod sources;
+mod split_view;
 mod start;
 #[cfg(test)]
 mod stationing_scenes;
@@ -276,7 +279,10 @@ mod usage;
 mod vertices;
 mod view;
 mod view_commands;
+#[cfg(test)]
+mod view_scenes;
 mod viewport;
+mod views;
 #[cfg(test)]
 mod window_layers_tests;
 

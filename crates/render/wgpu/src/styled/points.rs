@@ -308,6 +308,7 @@ impl PointsGpu {
         px_per_m: f64,
         dpr: f64,
         size: [f32; 2],
+        twist: f64,
         images: &dyn ImageSource,
     ) -> bool {
         let size = [size[0].max(1.0) as u32, size[1].max(1.0) as u32];
@@ -319,12 +320,24 @@ impl PointsGpu {
             f64::from(size[0]) / 2.0 / px_per_m,
             f64::from(size[1]) / 2.0 / px_per_m,
         );
+        // A twisted view shows the box round its turned area (docs/adr/0285 §2).
+        let (ts, tc) = twist.sin_cos();
+        let (ex, ey) = if twist == 0.0 {
+            (hw, hh)
+        } else {
+            (hw * tc.abs() + hh * ts.abs(), hw * ts.abs() + hh * tc.abs())
+        };
         let view_box = [
-            center[0] - hw,
-            center[1] - hh,
-            center[0] + hw,
-            center[1] + hh,
+            center[0] - ex,
+            center[1] - ey,
+            center[0] + ex,
+            center[1] + ey,
         ];
+        let turn = if twist == 0.0 {
+            [0.0, 0.0]
+        } else {
+            [(tc - 1.0) as f32, ts as f32]
+        };
         let mut waiting = false;
         let mut budget = FRAME_BUDGET;
         let mut uploads = UPLOADS_PER_FRAME;
@@ -435,8 +448,8 @@ impl PointsGpu {
                 (point_px / f64::from(size[1].max(1))) as f32,
                 inv as f32,
                 if paint.round { 1.0 } else { 0.0 },
-                0.0,
-                0.0,
+                turn[0],
+                turn[1],
             ];
             let at = self.blocks.len();
             self.blocks.extend_from_slice(bytemuck::cast_slice(&block));

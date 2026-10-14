@@ -30,6 +30,7 @@ mod styles;
 mod temporal;
 mod ucs;
 mod variables;
+mod views;
 
 use kentos_contracts::{
     AnnotationHeights, AnnotationKind, DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2,
@@ -57,6 +58,7 @@ use crate::{
     SCHEMA_WITH_STYLES, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS,
     SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS,
     SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_UCS, SCHEMA_WITH_VARIABLES,
+    SCHEMA_WITH_VIEWS,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, length_style, line_type, point_symbol,
@@ -358,7 +360,8 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.variables.is_empty())
             + usize::from(!s.address_locators.is_empty())
             + usize::from(s.ucs.is_some())
-            + usize::from(!s.named_ucs.is_empty());
+            + usize::from(!s.named_ucs.is_empty())
+            + usize::from(!s.named_views.is_empty());
         self.open(n, true)?;
         if let Some(u) = &s.ucs {
             self.key("ucs");
@@ -411,6 +414,10 @@ impl<'d> Encoder<'d> {
         if let Some(a) = s.annotation.as_ref().filter(|_| has_heights(s)) {
             self.key("annotation");
             self.at(Seg::Name("annotation"), |e| e.annotation(a))?;
+        }
+        if !s.named_views.is_empty() {
+            self.key("namedViews");
+            self.at(Seg::Name("namedViews"), |e| e.named_views(&s.named_views))?;
         }
         if let Some(second) = s.second_srid {
             self.key("secondSrid");
@@ -1148,6 +1155,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
+    }
+    // Schema 52 (docs/adr/0285): a named view.
+    if !doc.settings.named_views.is_empty() {
+        return SCHEMA_WITH_VIEWS;
     }
     // Schema 51 (docs/adr/0263): a dimension's reference along an edge or inside a block.
     let extended = |r: &kentos_contracts::SubRef| {

@@ -200,6 +200,8 @@ fn frame_offset(name: &str) -> Option<usize> {
         "background" => offset_of!(FrameUniform, background),
         "line_width" => offset_of!(FrameUniform, line_width),
         "srgb_target" => offset_of!(FrameUniform, srgb_target),
+        "twist_c" => offset_of!(FrameUniform, twist_c),
+        "twist_s" => offset_of!(FrameUniform, twist_s),
         _ => return None,
     })
 }

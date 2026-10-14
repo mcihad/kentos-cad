@@ -47,7 +47,7 @@ pub mod stats;
 pub mod styled;
 pub mod targets;
 
-pub use camera::Camera;
+pub use camera::{Camera, normal_twist};
 pub use color::{Palette, Rgba8};
 pub use renderer::{FrameInput, LensInput, RenderError, Renderer, SampleFailure, ViewId};
 pub use scene::{Drawing, LayerRanges, ScenePart};
