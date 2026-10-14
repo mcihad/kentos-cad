@@ -22,16 +22,16 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 20 | 0 | 6 | 26 |
 | query | 0 | 21 | 1 | 4 | 26 |
-| session | 0 | 78 | 46 | 5 | 129 |
+| session | 0 | 78 | 47 | 5 | 130 |
 | host | 0 | 15 | 14 | 4 | 33 |
-| **toplam** | 52 | 310 | 101 | 205 | 668 |
+| **toplam** | 52 | 310 | 102 | 205 | 669 |
 
 Kapsam: `cad` yalnız CAD şeridinde, `gis` yalnız CBS şeridinde, `shared` ikisinde, `none` hiçbir şeritte (kısayol, menü,
 komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 463 satırdan 144'i: geometry 93, none 20, processing 13, query 18.
+CBS'ye özgü olmayan 464 satırdan 144'i: geometry 93, none 20, processing 13, query 18.
 
 ### Sonucu çağıran hesaplar (geometry) — 93
 

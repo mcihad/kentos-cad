@@ -277,6 +277,10 @@ pub struct Session {
     reference_wait: bool,
     /// Yapım kipi: every press and typed point renews the reference.
     construction: bool,
+    /// Geçici izleme noktası asked (docs/adr/0270 §3): the next press or typed point is a tracking point.
+    track_wait: bool,
+    /// The tracking point given, for the host to acquire ([`Session::take_track_point`]).
+    track_taken: Option<Vec2>,
     /// The pointer's last place, for a distance typed as a reference.
     cursor: Option<Vec2>,
     /// How many tools have started ([`Session::runs`]).
@@ -301,6 +305,10 @@ pub const LOCKS_GONE: &str = "Kilitler kaldırıldı.";
 /// Referans noktası or Yapım kipi asked where no command takes points.
 pub const NO_REFERENCE_TOOL: &str =
     "Referans noktası, nokta bekleyen bir komut çalışırken verilir.";
+
+/// Geçici izleme noktası asked with no command taking points (docs/adr/0270 §3).
+pub const NO_TRACK_TOOL: &str =
+    "Geçici izleme noktası, nokta bekleyen bir komut çalışırken verilir.";
 
 impl Session {
     pub fn new() -> Self {
@@ -594,6 +602,8 @@ impl Session {
         self.reference_from = None;
         self.reference_wait = false;
         self.construction = false;
+        self.track_wait = false;
+        self.track_taken = None;
     }
 
     /// Esc: the running tool steps back when it can (the web's `cancel`: an
@@ -602,6 +612,10 @@ impl Session {
         // Esc leaves an edge being picked for a lock, then lets the locks go
         // (docs/adr/0166 §1, §3): one step back each.
         if self.lock_pick.take().is_some() {
+            return true;
+        }
+        // A temporary tracking point asked for (docs/adr/0270 §3).
+        if std::mem::take(&mut self.track_wait) {
             return true;
         }
         // Then a reference asked for, Yapım kipi, and the reference with the locks (§5).
@@ -727,6 +741,7 @@ impl Session {
         let step = match self.lock_pick {
             Some(pick) => pick.step(),
             None if self.reference_wait => "referans noktasını belirtin",
+            None if self.track_wait => "geçici izleme noktasını belirtin",
             None if self.construction && self.tool.is_some() => {
                 "yapım noktasını belirtin; köşe olmaz"
             }
@@ -760,6 +775,30 @@ impl Session {
     /// Referans noktası (docs/adr/0166 §5): the next press or typed point
     /// is the reference the locks and relative input are measured from,
     /// not a corner; false (and why) when no command takes points.
+    /// Geçici izleme noktası (docs/adr/0270 §3): the next press or typed point is acquired as an object tracking
+    /// point, not placed; false (and why) when no command takes points.
+    pub fn ask_track_point(&mut self, cx: &mut Context<'_>) -> bool {
+        if !self.takes_points() {
+            cx.say(Level::Warn, NO_TRACK_TOOL.to_owned());
+            return false;
+        }
+        self.track_wait = true;
+        true
+    }
+
+    /// The tracking point given since the host last asked: the host acquires it ([`ObjectTracking::acquire_point`]).
+    pub fn take_track_point(&mut self) -> Option<Vec2> {
+        self.track_taken.take()
+    }
+
+    /// `p` is the temporary tracking point, said in the log.
+    fn set_track_point(&mut self, p: Vec2, cx: &mut Context<'_>) {
+        self.track_wait = false;
+        self.track_taken = Some(p);
+        let line = format!("Geçici izleme noktası: {}", cx.format().point(p));
+        cx.say(Level::Info, line);
+    }
+
     pub fn ask_reference(&mut self, cx: &mut Context<'_>) -> bool {
         if !self.takes_points() {
             cx.say(Level::Warn, NO_REFERENCE_TOOL.to_owned());
@@ -959,6 +998,12 @@ impl Session {
         if let Some(pick) = self.lock_pick {
             self.pick_pressed = true;
             self.pick_edge_now(pick, p, cx);
+            return;
+        }
+        // Geçici izleme noktası: the press is a tracking point, not a corner (docs/adr/0270 §3).
+        if self.track_wait {
+            self.pick_pressed = true;
+            self.set_track_point(p.world, cx);
             return;
         }
         // Referans noktası and Yapım kipi: the press is the reference, not a corner (§5).
@@ -1168,6 +1213,13 @@ impl Session {
             return true;
         }
         self.prime(cx);
+        // Geçici izleme noktası: a typed point is the tracking point (docs/adr/0270 §3).
+        if self.track_wait
+            && let Some(p) = cx.typed_point(text, self.lock_reference(), self.cursor)
+        {
+            self.set_track_point(p, cx);
+            return true;
+        }
         // Referans noktası and Yapım kipi: a typed point is the reference (§5).
         if self.takes_reference()
             && let Some(p) = cx.typed_point(text, self.lock_reference(), self.cursor)

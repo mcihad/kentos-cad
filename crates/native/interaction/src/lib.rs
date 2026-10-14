@@ -261,7 +261,9 @@ pub use points::{Aid, ortho_now};
 pub use prompt::{Prompt, PromptOption, lower_tr, upper_tr};
 pub use select::SelectBox;
 pub use selection::{Cycle, Selection};
-pub use session::{LOCKS_GONE, NO_LOCK_REFERENCE, NO_REFERENCE_TOOL, NO_TRAVEL, Session};
+pub use session::{
+    LOCKS_GONE, NO_LOCK_REFERENCE, NO_REFERENCE_TOOL, NO_TRACK_TOOL, NO_TRAVEL, Session,
+};
 pub use spatial::{
     GripSet, LabelSpot, Spatial, arc_sweep, dimension_layout, enclosed, full_ellipse, measures,
     vertices,

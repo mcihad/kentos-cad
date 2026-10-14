@@ -30,7 +30,7 @@ from .errors import *  # noqa: F403
 from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 
-from . import addresses, arc, blocks, changeset, circle, dimensions, entities, file, labels, layers, line, network, nurbs, point, polygon, polyline, project, scenarios, settings, sheets, styles, ucs, units  # noqa: E402  isort: skip
+from . import addresses, arc, blocks, changeset, circle, dimensions, entities, file, labels, layers, line, network, nurbs, point, points, polygon, polyline, project, scenarios, settings, sheets, styles, ucs, units  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -47,6 +47,7 @@ __all__ = [
     "AlignedDimensionMeasure",
     "AllCornerPick",
     "AllTrimBoundaries",
+    "AlongPointConstruction",
     "AlongSubPlace",
     "AngleArcDimensionMeasure",
     "AngleDimensionMeasure",
@@ -244,6 +245,7 @@ __all__ = [
     "ExportDxf",
     "ExportPdf",
     "Exported",
+    "ExtensionPointConstruction",
     "FeatureChange",
     "FeatureFeed",
     "FeedKind",
@@ -408,6 +410,7 @@ __all__ = [
     "MeasureItem",
     "MeasuredPoint",
     "Measures",
+    "MidPointConstruction",
     "MidSubPlace",
     "MirrorTransform",
     "MoveTransform",
@@ -440,6 +443,7 @@ __all__ = [
     "NurbsEntity",
     "NurbsEntityGeometry",
     "NurbsPlan",
+    "ObjectEnd",
     "ObjectUcsTo",
     "ObjectsHatchRegion",
     "ObjectsTrimBoundaries",
@@ -452,6 +456,7 @@ __all__ = [
     "OriginUcsTo",
     "Outcome",
     "Page",
+    "ParallelPointConstruction",
     "PartsDivision",
     "PathArrayLayout",
     "PathEntity",
@@ -464,6 +469,7 @@ __all__ = [
     "PointCloudEntity",
     "PointCloudFields",
     "PointCloudStyle",
+    "PointConstruction",
     "PointCreate",
     "PointCreated",
     "PointEntity",
@@ -482,7 +488,10 @@ __all__ = [
     "PointSymbolName",
     "PointcloudEntity",
     "PointcloudEntityGeometry",
+    "PointsConstruct",
+    "PointsConstructed",
     "PolarArrayLayout",
+    "PolarPointConstruction",
     "PolygonCreate",
     "PolygonCreated",
     "PolygonEntity",
@@ -642,6 +651,7 @@ __all__ = [
     "TopologyRuleKind",
     "TopologyRuleKindName",
     "TopologySettings",
+    "TrackPointConstruction",
     "Transform",
     "TrimBoundaries",
     "TrimPick",
@@ -698,6 +708,7 @@ __all__ = [
     "network",
     "nurbs",
     "point",
+    "points",
     "polygon",
     "polyline",
     "project",

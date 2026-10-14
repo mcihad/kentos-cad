@@ -1193,6 +1193,57 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.points.construct",
+        refusals: &[&[
+            "no_constructions",
+            "not_finite",
+            "invalid_distance",
+            "invalid_uid",
+            "entity_not_found",
+            "no_such_place",
+            "piece_gone",
+            "not_an_end",
+            "no_straight_edge",
+            "same_points",
+        ]],
+        warnings: &[],
+        targets: || {
+            vec![
+                target(
+                    Some("extension"),
+                    &["line", "polyline", "arc"],
+                    &[],
+                    Some("not_an_end"),
+                    Some(
+                        "Uzantı çizginin, açık çoklu çizginin ve yayın ucundan başlar; çoklu çizginin yaylı son kenarı da.",
+                    ),
+                ),
+                target(
+                    Some("parallel"),
+                    &[
+                        "line",
+                        "polyline",
+                        "polygon",
+                        "xline",
+                        "ray",
+                        "leader",
+                        "dimension",
+                        "hatch",
+                        "table",
+                        "image",
+                        "raster",
+                        "pointcloud",
+                    ],
+                    &[],
+                    Some("no_straight_edge"),
+                    Some(
+                        "Paralelin doğrultusu nesnenin near'a en yakın düz kenarından: çizgiler, yolların düz kenarları, taramanın, tablonun ve resmin çerçevesi; eğrinin ve elipsin kirişleri kenar sayılmaz.",
+                    ),
+                ),
+            ]
+        },
+    },
+    Entry {
         id: "file.export.dxf",
         refusals: &[&[
             "invalid_file_path",

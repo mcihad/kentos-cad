@@ -564,7 +564,8 @@ fn command_tool(c: &Value) -> Value {
         "title": c["title"],
         "description": description,
         "inputSchema": schema,
-        "annotations": annotations(false, destructive),
+        // It writes nothing: the points are its answer (docs/adr/0270).
+        "annotations": annotations(id == "cad.points.construct", destructive),
     })
 }
 

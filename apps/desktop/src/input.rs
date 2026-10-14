@@ -129,6 +129,10 @@ impl App {
                 isolated_layers: &mut self.isolated_layers,
             },
         );
+        // Geçici izleme noktası (docs/adr/0270 §3): the point given is a tracking point now.
+        if let Some(p) = self.session.take_track_point() {
+            self.tracking.acquire_point(p);
+        }
         if let Some(group) = group {
             // The objects the tool wrote: the slots given out meanwhile.
             let made: Vec<Slot> = (from..doc.model.next_slot())

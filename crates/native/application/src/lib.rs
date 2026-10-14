@@ -92,6 +92,7 @@ pub mod network_define;
 pub mod nurbs;
 pub mod offset;
 pub mod point;
+pub mod points_construct;
 pub mod polygon;
 pub mod polyline;
 pub mod region;
@@ -167,6 +168,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_NURBS_CREATE,
         kentos_contracts::CAD_NURBS_CREATE_VERSION,
+    ),
+    // The drafting aids' points by what they are made of ([`points_construct`], docs/adr/0270).
+    (
+        kentos_contracts::CAD_POINTS_CONSTRUCT,
+        kentos_contracts::CAD_POINTS_CONSTRUCT_VERSION,
     ),
     // Ötele's semantic command ([`offset`], docs/adr/0246).
     (

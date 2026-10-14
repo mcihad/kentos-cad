@@ -213681,6 +213681,651 @@
       ]
     },
     {
+      "id": "cad.points.construct",
+      "version": 1,
+      "title": "Nokta yapımı",
+      "summary": "Çizim yardımlarının verdiği noktaları neyle yapıldıklarıyla hesaplar: iki nokta ortası (mid), bir ucun uzantısında uzaklık (extension), bir noktadan nesnenin düz kenarına paralel uzaklık (parallel), birinin X'i ve öbürünün Y'si (track, UCS'te), kutupsal (polar, açı UCS'in x ekseninden saat yönünün tersine radyan) ve hat üzerinde uzaklık (along). Noktalar koordinat ya da nesnenin yeri (uç, köşe, kenar ortası, merkez, düğüm) olarak verilir; araçlar aynı kuralla alır. Çizimi değiştirmez; plan aynı cevabı verir.",
+      "aliases": [
+        "noktayap",
+        "nokta-yapimi"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "EdgeNear": {
+            "description": "An object's edge as a click picks it: of the object's edges of the kind\nthe measure takes (straight, an arc, a circle), the one nearest `near`.",
+            "properties": {
+              "near": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Where it was clicked: its nearest edge is the one measured. An angle's\narms reach as far as their edges were clicked.",
+                "x-unit": "length"
+              },
+              "uid": {
+                "description": "The object's persistent id (lowercase UUID text with hyphens).",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "near"
+            ],
+            "type": "object"
+          },
+          "MeasuredPoint": {
+            "description": "A measured point: coordinates, or a place on an object.",
+            "oneOf": [
+              {
+                "description": "Coordinates: the point follows nothing.",
+                "properties": {
+                  "at": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "at",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "at"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A place on an object: the point is the place's now. Hizalı's,\nDoğrusal's, Koordinat's, Semt's and Eğim's points follow their places\nfrom then on (docs/adr/0249 §3); the others' are read from them.",
+                "properties": {
+                  "kind": {
+                    "const": "place",
+                    "type": "string"
+                  },
+                  "path": {
+                    "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3).",
+                    "items": {
+                      "format": "uint32",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "type": "array",
+                    "x-unit": "index"
+                  },
+                  "place": {
+                    "$ref": "#/$defs/SubPlace"
+                  },
+                  "uid": {
+                    "description": "The object's persistent id (lowercase UUID text with hyphens).",
+                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "uid",
+                  "place"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "ObjectEnd": {
+            "description": "An object's end an extension starts from: a line's or an arc's start or end, an open path's first or last\nvertex (as a place, docs/adr/0249); inside an insert, the piece's (docs/adr/0263 §3).",
+            "properties": {
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the end is on.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
+              },
+              "place": {
+                "$ref": "#/$defs/SubPlace"
+              },
+              "uid": {
+                "description": "The object's persistent id (lowercase UUID text with hyphens).",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "place"
+            ],
+            "type": "object"
+          },
+          "PointConstruction": {
+            "description": "One point to construct.",
+            "oneOf": [
+              {
+                "description": "İki nokta ortası: halfway from `a` to `b`.",
+                "properties": {
+                  "a": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "b": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "kind": {
+                    "const": "mid",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "a",
+                  "b"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Uzantı: `distance` metres (zero or more) past an object's end along its edge: a straight edge's line,\nan arc's circle (the distance along the circle).",
+                "properties": {
+                  "distance": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "end": {
+                    "$ref": "#/$defs/ObjectEnd"
+                  },
+                  "kind": {
+                    "const": "extension",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "end",
+                  "distance"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Paralel: from `through`, `distance` metres (signed) along the object's straight edge nearest\n`edge.near`, the way the edge runs from its first point to its second.",
+                "properties": {
+                  "distance": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "edge": {
+                    "$ref": "#/$defs/EdgeNear"
+                  },
+                  "kind": {
+                    "const": "parallel",
+                    "type": "string"
+                  },
+                  "through": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "through",
+                  "edge",
+                  "distance"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Nesne izleme: the UCS x of `x`'s point and the UCS y of `y`'s, where the alignments through the two\ncross (AutoCAD's .X and .Y point filters).",
+                "properties": {
+                  "kind": {
+                    "const": "track",
+                    "type": "string"
+                  },
+                  "x": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "y": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "x",
+                  "y"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "From `from`, `distance` metres at `angle`.",
+                "properties": {
+                  "angle": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "distance": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "from": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "kind": {
+                    "const": "polar",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "from",
+                  "angle",
+                  "distance"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Hat üzerinde: `distance` metres (signed) from `a` towards `b`.",
+                "properties": {
+                  "a": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "b": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "distance": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "a",
+                  "b",
+                  "distance"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "SubPlace": {
+            "description": "A place on an object.",
+            "oneOf": [
+              {
+                "description": "A point object's position: part 0 its own, `k` its `k`th extra point (docs/adr/0174).",
+                "properties": {
+                  "kind": {
+                    "const": "node",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A line's, arc's or elliptical arc's start.",
+                "properties": {
+                  "kind": {
+                    "const": "start",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Its end.",
+                "properties": {
+                  "kind": {
+                    "const": "end",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A circle's, arc's or ellipse's centre.",
+                "properties": {
+                  "kind": {
+                    "const": "center",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A path's vertex: part 0 the object's own path, `k` its `k`th extra part; ring 0 the outer ring, `h` its\n`h`th hole; the vertex's index in the ring.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "vertex",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The middle of a line (all zero) or of a path's edge from vertex `index` to the next.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "mid",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.points.construct` v1: the points the constructions give, in their order. It reads no\nselection, view or snap setting (TODOS.md CMD-07) and writes nothing.\n\nRefusals (`CommandError.code`, at `constructions[i]…`), checked construction by construction in order:\n`no_constructions` (none, or more than 10 000), `not_finite` (a coordinate, the near point, an angle or a\ndistance), `invalid_distance` (an extension's below zero), `invalid_uid`, `entity_not_found`,\n`no_such_place`, `piece_gone`, `not_an_end` (an extension's place is not an open end: a closed path's vertex,\nan inner vertex, a circle), `no_straight_edge` (Paralel's object has none), `same_points` (Hat üzerinde's two\npoints in one place).",
+        "properties": {
+          "constructions": {
+            "description": "One to 10 000 constructions.",
+            "items": {
+              "$ref": "#/$defs/PointConstruction"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "constructions"
+        ],
+        "title": "PointsConstruct",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.points.construct` v1, and its plan: the points, one per construction, in their order.",
+        "properties": {
+          "points": {
+            "items": {
+              "$ref": "#/$defs/Vec2"
+            },
+            "type": "array",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "points"
+        ],
+        "title": "PointsConstructed",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.points.construct` v1, and its plan: the points, one per construction, in their order.",
+        "properties": {
+          "points": {
+            "items": {
+              "$ref": "#/$defs/Vec2"
+            },
+            "type": "array",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "points"
+        ],
+        "title": "PointsConstructed",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "operation": "extension",
+            "kinds": [
+              "line",
+              "polyline",
+              "arc"
+            ],
+            "refusedWith": "not_an_end",
+            "note": "Uzantı çizginin, açık çoklu çizginin ve yayın ucundan başlar; çoklu çizginin yaylı son kenarı da."
+          },
+          {
+            "operation": "parallel",
+            "kinds": [
+              "line",
+              "polyline",
+              "polygon",
+              "xline",
+              "ray",
+              "leader",
+              "dimension",
+              "hatch",
+              "table",
+              "image",
+              "raster",
+              "pointcloud"
+            ],
+            "refusedWith": "no_straight_edge",
+            "note": "Paralelin doğrultusu nesnenin near'a en yakın düz kenarından: çizgiler, yolların düz kenarları, taramanın, tablonun ve resmin çerçevesi; eğrinin ve elipsin kirişleri kenar sayılmaz."
+          }
+        ],
+        "refusals": [
+          "no_constructions",
+          "not_finite",
+          "invalid_distance",
+          "invalid_uid",
+          "entity_not_found",
+          "no_such_place",
+          "piece_gone",
+          "not_an_end",
+          "no_straight_edge",
+          "same_points"
+        ]
+      },
+      "examples": [
+        {
+          "title": "İki noktanın ortası ve bir doğrunun ucundan 5 m",
+          "input": {
+            "constructions": [
+              {
+                "a": {
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "kind": "at"
+                },
+                "b": {
+                  "at": {
+                    "x": 10.0,
+                    "y": 4.0
+                  },
+                  "kind": "at"
+                },
+                "kind": "mid"
+              },
+              {
+                "distance": 5.0,
+                "end": {
+                  "place": {
+                    "kind": "end"
+                  },
+                  "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+                },
+                "kind": "extension"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.dxf",
       "version": 1,
       "title": "DXF dışa aktar",
@@ -214926,6 +215571,24 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Blok yolunda böyle bir parça yok (tanımın dışında bir sıra, yerleştirmede biten ya da yerleştirme olmayandan geçen yol)."
+    },
+    {
+      "code": "no_constructions",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Hiç yapım verilmedi ya da 10 000'den çok."
+    },
+    {
+      "code": "not_an_end",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Yer nesnenin açık bir ucu değil (kapalı yolun ya da yolun içindeki köşe, daire); uzantı yalnız uçtan başlar."
+    },
+    {
+      "code": "no_straight_edge",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesnede düz kenar yok; paralel doğrultusu düz kenardan alınır."
     },
     {
       "code": "not_measurable",

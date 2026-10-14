@@ -463,7 +463,7 @@ impl App {
     /// The one-shot snaps (the web's `snapItems`), after `menu`'s header.
     fn snap_menu(&self, menu: Menu<Message>) -> Menu<Message> {
         let current = self.snap_once();
-        SNAP_ORDER
+        let menu = SNAP_ORDER
             .into_iter()
             .fold(menu, |menu, kind| {
                 menu.check(
@@ -473,9 +473,30 @@ impl App {
                 )
                 .icon(snap_icon(kind))
             })
-            .separator()
+            .separator();
+        self.snap_menu_points(menu)
             .item("Kenet ayarları…", Message::Run("tools.options"))
             .icon(crate::icons::from_web(Some("settings")))
+    }
+
+    /// The one-shot menu's points that are not snaps (docs/adr/0270 §3, AutoCAD's Shift+right menu): Geçici
+    /// izleme noktası, Referans noktası (AutoCAD's From) and İki nokta ortası (the point calculator's), while a
+    /// command takes points.
+    fn snap_menu_points(&self, menu: Menu<Message>) -> Menu<Message> {
+        if !self.session.takes_points() {
+            return menu;
+        }
+        let menu = self.command_item(menu, "draft.trackPoint");
+        let menu = self.command_item(menu, "draft.lock.reference");
+        if !self.session.can_calc_point() {
+            return menu.separator();
+        }
+        menu.item(
+            "İki nokta ortası",
+            Message::PointCalc(kentos_interaction::point_calc::CalcKind::Mid),
+        )
+        .icon(crate::icons::from_web(Some("calcMid")))
+        .separator()
     }
 }
 

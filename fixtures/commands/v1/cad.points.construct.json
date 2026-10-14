@@ -1,0 +1,1854 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.points.construct",
+ "commandVersion": 1,
+ "title": "Nokta yapımı: iki nokta ortası, uzantı, paralel, izleme, kutupsal, hat üzerinde",
+ "note": "ADR 0270. Yapım yapım sırayla: sayılar sonlu, uzantının uzaklığı sıfır ya da daha büyük, noktaların ve kenarın nesneleri, uzantının yeri açık uç, paralelin nesnesinde düz kenar, hattın noktaları ayrı. Çizim değişmez. Bağımsız başvuru: scripts/fixtures/point_construct_cases.py.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Nokta yapımı",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 487000,
+   "y": 4420000
+  },
+  "layers": [
+   {
+    "id": "yapi",
+    "name": "Yapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "yapi",
+  "entities": [
+   {
+    "kind": "line",
+    "id": 1,
+    "layerId": "yapi",
+    "attrs": {},
+    "a": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "b": {
+     "x": 487010,
+     "y": 4420000
+    }
+   },
+   {
+    "kind": "polyline",
+    "id": 2,
+    "layerId": "yapi",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420020
+     },
+     {
+      "x": 487010,
+      "y": 4420020
+     },
+     {
+      "x": 487010,
+      "y": 4420030
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "yapi",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487020,
+      "y": 4420000
+     },
+     {
+      "x": 487030,
+      "y": 4420000
+     },
+     {
+      "x": 487030,
+      "y": 4420010
+     },
+     {
+      "x": 487020,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "arc",
+    "id": 4,
+    "layerId": "yapi",
+    "attrs": {},
+    "c": {
+     "x": 487050,
+     "y": 4420000
+    },
+    "r": 5,
+    "a0": 0,
+    "a1": 1.5707963267948966
+   },
+   {
+    "kind": "circle",
+    "id": 5,
+    "layerId": "yapi",
+    "attrs": {},
+    "c": {
+     "x": 487070,
+     "y": 4420000
+    },
+    "r": 3
+   },
+   {
+    "kind": "point",
+    "id": 6,
+    "layerId": "yapi",
+    "attrs": {},
+    "p": {
+     "x": 487080,
+     "y": 4420010
+    }
+   },
+   {
+    "kind": "ellipse",
+    "id": 7,
+    "layerId": "yapi",
+    "attrs": {},
+    "c": {
+     "x": 487100,
+     "y": 4420000
+    },
+    "major": {
+     "x": 8,
+     "y": 0
+    },
+    "ratio": 0.5,
+    "t0": 0,
+    "t1": 6.283185307179586
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "iki koordinatın ortası",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "mid",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487007,
+          "y": 4420003
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 487003.5,
+         "y": 4420001.5
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizginin başlangıcı ile alanın köşesinin ortası, yerleriyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "mid",
+        "a": {
+         "kind": "place",
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "start"
+         }
+        },
+        "b": {
+         "kind": "place",
+         "uid": "$uidOf:3",
+         "place": {
+          "kind": "vertex",
+          "part": 0,
+          "ring": 0,
+          "index": 2
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 487015.0,
+         "y": 4420005.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "noktanın düğümü ile çoklu çizginin köşesinin ortası",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "mid",
+        "a": {
+         "kind": "place",
+         "uid": "$uidOf:6",
+         "place": {
+          "kind": "node",
+          "part": 0
+         }
+        },
+        "b": {
+         "kind": "place",
+         "uid": "$uidOf:2",
+         "place": {
+          "kind": "vertex",
+          "part": 0,
+          "ring": 0,
+          "index": 1
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 487045.0,
+         "y": 4420015.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizginin ucundan 2,5 m uzantı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "extension",
+        "end": {
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "end"
+         }
+        },
+        "distance": 2.5
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 487012.5,
+         "y": 4420000.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizginin başlangıcından 4 m geriye uzantı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "extension",
+        "end": {
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "start"
+         }
+        },
+        "distance": 4
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 486996.0,
+         "y": 4420000.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "açık çoklu çizginin son köşesinden 1,25 m kuzeye",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "extension",
+        "end": {
+         "uid": "$uidOf:2",
+         "place": {
+          "kind": "vertex",
+          "part": 0,
+          "ring": 0,
+          "index": 2
+         }
+        },
+        "distance": 1.25
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 487010.0,
+         "y": 4420031.25
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "açık çoklu çizginin ilk köşesinden sıfır uzantı köşenin kendisidir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "extension",
+        "end": {
+         "uid": "$uidOf:2",
+         "place": {
+          "kind": "vertex",
+          "part": 0,
+          "ring": 0,
+          "index": 0
+         }
+        },
+        "distance": 0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 487000.0,
+         "y": 4420020.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yayın ucundan çember boyunca çeyrek tur: batıdaki nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "extension",
+        "end": {
+         "uid": "$uidOf:4",
+         "place": {
+          "kind": "end"
+         }
+        },
+        "distance": 7.853981633974483
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 487045.0,
+         "y": 4420000.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yayın başlangıcından çember boyunca geriye çeyrek tur: güneydeki nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "extension",
+        "end": {
+         "uid": "$uidOf:4",
+         "place": {
+          "kind": "start"
+         }
+        },
+        "distance": 7.853981633974483
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 487050.0,
+         "y": 4419995.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kapalı alanın köşesi uç değildir: not_an_end",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "extension",
+        "end": {
+         "uid": "$uidOf:3",
+         "place": {
+          "kind": "vertex",
+          "part": 0,
+          "ring": 0,
+          "index": 1
+         }
+        },
+        "distance": 1
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_an_end",
+       "message": "Yer nesnenin açık bir ucu değil: uzantı çizginin, açık çoklu çizginin ya da yayın ucundan başlar (kapalı yolun ya da yolun içindeki köşe olmaz).",
+       "path": "constructions[0].end.place"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çoklu çizginin içteki köşesi uç değildir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "extension",
+        "end": {
+         "uid": "$uidOf:2",
+         "place": {
+          "kind": "vertex",
+          "part": 0,
+          "ring": 0,
+          "index": 1
+         }
+        },
+        "distance": 1
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_an_end",
+       "message": "Yer nesnenin açık bir ucu değil: uzantı çizginin, açık çoklu çizginin ya da yayın ucundan başlar (kapalı yolun ya da yolun içindeki köşe olmaz).",
+       "path": "constructions[0].end.place"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "dairenin merkezi uç değildir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "extension",
+        "end": {
+         "uid": "$uidOf:5",
+         "place": {
+          "kind": "center"
+         }
+        },
+        "distance": 1
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_an_end",
+       "message": "Yer nesnenin açık bir ucu değil: uzantı çizginin, açık çoklu çizginin ya da yayın ucundan başlar (kapalı yolun ya da yolun içindeki köşe olmaz).",
+       "path": "constructions[0].end.place"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "uzantının uzaklığı eksi olamaz: invalid_distance",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "extension",
+        "end": {
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "end"
+         }
+        },
+        "distance": -1
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_distance",
+       "message": "Uzantının uzaklığı sıfır ya da daha büyük olmalı: uç geride kalmaz.",
+       "path": "constructions[0].distance"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "noktadan çizgiye paralel 3 m: çizginin doğrultusunda doğuya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "parallel",
+        "through": {
+         "kind": "at",
+         "at": {
+          "x": 487005,
+          "y": 4420050
+         }
+        },
+        "edge": {
+         "uid": "$uidOf:1",
+         "near": {
+          "x": 487004,
+          "y": 4420001
+         }
+        },
+        "distance": 3
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 487008.0,
+         "y": 4420050.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çoklu çizginin ikinci kenarına paralel eksi 2 m: kenarın tersine, güneye",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "parallel",
+        "through": {
+         "kind": "place",
+         "uid": "$uidOf:6",
+         "place": {
+          "kind": "node",
+          "part": 0
+         }
+        },
+        "edge": {
+         "uid": "$uidOf:2",
+         "near": {
+          "x": 487011,
+          "y": 4420026
+         }
+        },
+        "distance": -2
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 487080.0,
+         "y": 4420008.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "dairenin düz kenarı yok: no_straight_edge",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "parallel",
+        "through": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "edge": {
+         "uid": "$uidOf:5",
+         "near": {
+          "x": 487073,
+          "y": 4420000
+         }
+        },
+        "distance": 1
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_straight_edge",
+       "message": "Nesnenin düz kenarı yok: paralelin doğrultusu düz bir kenardan alınır; çizgi, çoklu çizgi ya da alan verin.",
+       "path": "constructions[0].edge"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "elipsin kirişleri düz kenar sayılmaz: no_straight_edge",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "parallel",
+        "through": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "edge": {
+         "uid": "$uidOf:7",
+         "near": {
+          "x": 487108,
+          "y": 4420000
+         }
+        },
+        "distance": 1
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_straight_edge",
+       "message": "Nesnenin düz kenarı yok: paralelin doğrultusu düz bir kenardan alınır; çizgi, çoklu çizgi ya da alan verin.",
+       "path": "constructions[0].edge"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "izleme: çizginin ucunun X'i, noktanın Y'si",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "track",
+        "x": {
+         "kind": "place",
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "end"
+         }
+        },
+        "y": {
+         "kind": "place",
+         "uid": "$uidOf:6",
+         "place": {
+          "kind": "node",
+          "part": 0
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 487010.0,
+         "y": 4420010.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kutupsal: doğuya 10 m ve kuzeye 6 m",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "polar",
+        "from": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "angle": 0,
+        "distance": 10
+       },
+       {
+        "kind": "polar",
+        "from": {
+         "kind": "place",
+         "uid": "$uidOf:3",
+         "place": {
+          "kind": "vertex",
+          "part": 0,
+          "ring": 0,
+          "index": 0
+         }
+        },
+        "angle": 1.5707963267948966,
+        "distance": 6
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 487010.0,
+         "y": 4420000.0
+        },
+        {
+         "x": 487020.0,
+         "y": 4420006.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "hat üzerinde: 6–8–10 üçgeninin hipotenüsünde 5 m",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "along",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487006,
+          "y": 4420008
+         }
+        },
+        "distance": 5
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 487003.0,
+         "y": 4420004.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "hat üzerinde eksi uzaklık geriye gider",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "along",
+        "a": {
+         "kind": "place",
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "start"
+         }
+        },
+        "b": {
+         "kind": "place",
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "end"
+         }
+        },
+        "distance": -2.5
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 486997.5,
+         "y": 4420000.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "hattın iki noktası aynı: same_points",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "along",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "place",
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "start"
+         }
+        },
+        "distance": 1
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "same_points",
+       "message": "Hattın iki noktası aynı yerde; aralarında bir doğrultu yok. Ayrı iki nokta verin.",
+       "path": "constructions[0].b"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "birkaç yapım sırasıyla; plan aynı cevabı verir, validate yalnız denetler",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "constructions": [
+       {
+        "kind": "mid",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487002,
+          "y": 4420000
+         }
+        }
+       },
+       {
+        "kind": "extension",
+        "end": {
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "end"
+         }
+        },
+        "distance": 1
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 487001.0,
+         "y": 4420000.0
+        },
+        {
+         "x": 487011.0,
+         "y": 4420000.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "validate",
+     "input": {
+      "constructions": [
+       {
+        "kind": "mid",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487002,
+          "y": 4420000
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ikinci yapım reddedilince hiçbir nokta verilmez; yer ikinci yapımındır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "mid",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487002,
+          "y": 4420000
+         }
+        }
+       },
+       {
+        "kind": "extension",
+        "end": {
+         "uid": "$uidOf:3",
+         "place": {
+          "kind": "vertex",
+          "part": 0,
+          "ring": 0,
+          "index": 0
+         }
+        },
+        "distance": 1
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_an_end",
+       "message": "Yer nesnenin açık bir ucu değil: uzantı çizginin, açık çoklu çizginin ya da yayın ucundan başlar (kapalı yolun ya da yolun içindeki köşe olmaz).",
+       "path": "constructions[1].end.place"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "hiç yapım yok: no_constructions",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": []
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_constructions",
+       "message": "0 yapım verildi: bir ile 10 000 arasında yapım verin.",
+       "path": "constructions"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kimliğin yazımı: invalid_uid",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "track",
+        "x": {
+         "kind": "place",
+         "uid": "ABC",
+         "place": {
+          "kind": "end"
+         }
+        },
+        "y": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“ABC” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+       "path": "constructions[0].x.uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizimde olmayan nesne: entity_not_found",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "mid",
+        "a": {
+         "kind": "place",
+         "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+         "place": {
+          "kind": "end"
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+       "path": "constructions[0].a.uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "nesnede olmayan yer: no_such_place",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "mid",
+        "a": {
+         "kind": "place",
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "center"
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_such_place",
+       "message": "Nesnede böyle bir yer yok: köşe sırası halkanın dışında ya da yer bu nesne türünde bulunmuyor.",
+       "path": "constructions[0].a.place"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yerleştirme olmayan nesnede blok yolu: piece_gone",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "extension",
+        "end": {
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "end"
+         },
+         "path": [
+          0
+         ]
+        },
+        "distance": 1
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "piece_gone",
+       "message": "Blok yolunda böyle bir parça yok: yolun bir sırası tanımın dışında, yol bir yerleştirmede bitiyor ya da yerleştirme olmayan bir nesneden geçiyor.",
+       "path": "constructions[0].end.path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sayılar sonlu olmalı: önce noktanın doğusu, sonra kutupsalın açısı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "mid",
+        "a": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "b": {
+         "kind": "at",
+         "at": {
+          "x": 487001,
+          "y": 4420000
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Noktanın doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+       "path": "constructions[0].a.at.x"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "nonFinite": {
+      "constructions[0].a.at.x": "Infinity"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "constructions": [
+       {
+        "kind": "polar",
+        "from": {
+         "kind": "at",
+         "at": {
+          "x": 487000,
+          "y": 4420000
+         }
+        },
+        "angle": 0,
+        "distance": 1
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Açı sonlu bir sayı değil (NaN ya da sonsuz). Radyan olarak bir sayı verin.",
+       "path": "constructions[0].angle"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "nonFinite": {
+      "constructions[0].angle": "NaN"
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -323,6 +323,11 @@ fn a_listed_kind_is_taken_and_another_is_refused_with_the_listed_code() {
             Some("object"),
             |u| json!({ "to": { "kind": "object", "uid": u, "at": { "x": 0.0, "y": 0.0 } } }),
         ),
+        // Paralel: a kind with a straight edge gives the point, another is refused for its kind (docs/adr/0270).
+        ("cad.points.construct", Some("parallel"), |u| {
+            json!({ "constructions": [{ "kind": "parallel", "through": { "kind": "at", "at": { "x": 0.0, "y": 0.0 } },
+                    "edge": { "uid": u, "near": { "x": 0.0, "y": 0.0 } }, "distance": 1.0 }] })
+        }),
         ("cad.dimensions.create", Some("arcLength"), |u| {
             json!({ "measure": { "kind": "arcLength", "of": { "uid": u, "near": { "x": 0.0, "y": 0.0 } } },
                     "at": { "x": 1.0e9, "y": 1.0e9 }, "layerId": "yok" })

@@ -37,8 +37,9 @@ use kentos_native_application::{
     circle, delete, dimensions_reassociate, edit, entities_chamfer, entities_extend,
     entities_fillet, entities_order, entities_trim, labels_pin, layers_compose, layers_edit,
     layers_filter, layers_info, layers_labels, layers_renderer, layers_service, layers_set,
-    layers_states, layers_time, line, network_define, nurbs, offset, point, polygon, polyline,
-    scenarios_edit, set, settings_set, sheets_edit, styles_edit, transform, ucs_set, units_change,
+    layers_states, layers_time, line, network_define, nurbs, offset, point, points_construct,
+    polygon, polyline, scenarios_edit, set, settings_set, sheets_edit, styles_edit, transform,
+    ucs_set, units_change,
 };
 use kentos_native_application::{
     changeset, create, dimensions_create, divide, entities_boundary, entities_break,
@@ -502,6 +503,48 @@ fn area_number<'a>(
         "max.x" => Some(&mut max.x),
         "max.y" => Some(&mut max.y),
         _ => None,
+    }
+}
+
+/// A coordinate of a point given by its coordinates.
+fn measured_number<'a>(
+    p: &'a mut kentos_domain::contracts::MeasuredPoint,
+    axis: &str,
+) -> Option<&'a mut f64> {
+    match (p, axis) {
+        (kentos_domain::contracts::MeasuredPoint::At { at }, "x") => Some(&mut at.x),
+        (kentos_domain::contracts::MeasuredPoint::At { at }, "y") => Some(&mut at.y),
+        _ => None,
+    }
+}
+
+impl Input for kentos_domain::contracts::PointsConstruct {
+    /// `constructions[i].distance`, `.angle`, `.a.at.x` … `.edge.near.y`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_domain::contracts::PointConstruction as C;
+        let rest = path.strip_prefix("constructions[")?;
+        let (i, rest) = rest.split_once("].")?;
+        let c = self.constructions.get_mut(i.parse::<usize>().ok()?)?;
+        let (head, axis) = rest.rsplit_once(".at.").unwrap_or((rest, ""));
+        match (c, head) {
+            (C::Mid { a, .. } | C::Along { a, .. }, "a") => measured_number(a, axis),
+            (C::Mid { b, .. } | C::Along { b, .. }, "b") => measured_number(b, axis),
+            (C::Track { x, .. }, "x") => measured_number(x, axis),
+            (C::Track { y, .. }, "y") => measured_number(y, axis),
+            (C::Polar { from, .. }, "from") => measured_number(from, axis),
+            (C::Parallel { through, .. }, "through") => measured_number(through, axis),
+            (C::Parallel { edge, .. }, "edge.near.x") => Some(&mut edge.near.x),
+            (C::Parallel { edge, .. }, "edge.near.y") => Some(&mut edge.near.y),
+            (
+                C::Extension { distance, .. }
+                | C::Parallel { distance, .. }
+                | C::Polar { distance, .. }
+                | C::Along { distance, .. },
+                "distance",
+            ) => Some(distance),
+            (C::Polar { angle, .. }, "angle") => Some(angle),
+            _ => None,
+        }
     }
 }
 
@@ -1372,6 +1415,9 @@ fn run_op(
         CAD_ENTITIES_EDIT => run!(edit, EntitiesEdit),
         CAD_ENTITIES_ARRAY => run!(array, EntitiesArray),
         kentos_domain::contracts::CAD_ENTITIES_OFFSET => run!(offset, EntitiesOffset),
+        kentos_domain::contracts::CAD_POINTS_CONSTRUCT => {
+            run!(points_construct, kentos_domain::contracts::PointsConstruct)
+        }
         kentos_domain::contracts::CAD_ENTITIES_TRIM => run!(entities_trim, EntitiesTrim),
         kentos_domain::contracts::CAD_ENTITIES_EXTEND => run!(entities_extend, EntitiesTrim),
         kentos_domain::contracts::CAD_ENTITIES_FILLET => run!(entities_fillet, EntitiesFillet),

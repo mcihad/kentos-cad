@@ -341,6 +341,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   çubuğunda Orto'nun geçici hâli ve kutupsalın askısı; izlerin `hold` adımı ve `aid` beklentisi (ADR 0268);
   kenet türlerinin kapsam matrisi (`snap_coverage_cases.py`), Ekleme noktası türü (yazı, blok, tablo; `snap.insertion`), yayın ve yaylı
   kenarın çeyrekleri, tek seferlik Merkez'de eğrinin üstünden merkez (ADR 0269);
+  nokta yapımları: salt okunur `cad.points.construct` (iki nokta ortası, uzantı, paralel, izleme, kutupsal, hat üzerinde), Python ve MCP'de;
+  Geçici izleme noktası (`draft.trackPoint`), tek seferlik menüde Referans noktası ve İki nokta ortası (ADR 0270);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
@@ -568,6 +570,8 @@ python3 scripts/fixtures/edit_command_cases.py --check   # cad.entities.edit dur
 python3 scripts/fixtures/array_command_cases.py --check   # cad.entities.array durumlarını dizilerin tanımından denetle (ADR 0047)
 python3 scripts/fixtures/offset_command_cases.py --check   # cad.entities.offset durumlarını (çizgi, çoklu çizgi, alan, yay, daire, Noktadan geç, iki yana, Kaynağı sil, hedef katman, retler) ötelemenin tanımından kesirlerle denetle (ADR 0246)
 KENTOS_SHOTS_ONLY=otele-onizleme,otele-iki-yana,otele-sonuc cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # Ötele'nin anlamsal komutla önizlemesi, iki yanası ve sonucu, .run/shots/arac-otele-* (ADR 0246)
+python3 scripts/fixtures/point_construct_cases.py --check   # cad.points.construct durumlarını (iki nokta ortası, uzantı, paralel, izleme, kutupsal, hat üzerinde, retler) yapımların tanımından, KentOS kodu olmadan denetle (ADR 0270)
+python3 scripts/fixtures/snap_coverage_cases.py --check   # kenet türlerinin kapsam matrisini (her tür her nesne türünde, Ekleme noktası, yayın çeyreği, tek seferlik Merkez) bağımsız başvurudan denetle; durumlar fixtures/snap/v1/coverage.json (ADR 0269)
 python3 scripts/fixtures/create_command_cases.py --check   # cad.entities.create durumlarını sözleşmenin kuralından denetle (ADR 0057)
 python3 scripts/fixtures/set_command_cases.py --check   # cad.entities.set durumlarını (Öznitelikler: katman, renk, sembol, öznitelik, etiket) sözleşmenin kuralından denetle (ADR 0066)
 cargo test --release -p kentos-interaction --test perf -- --ignored --nocapture   # masaüstü deposu: eşitleme, kenet ve seçme süreleri (ADR 0029)
