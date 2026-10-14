@@ -1122,6 +1122,26 @@ impl Session {
         true
     }
 
+    /// Grip `index` of `slot` turns hot (the grip menu's Esnet, docs/adr/0279); false while a
+    /// command runs.
+    pub fn heat_grip(
+        &mut self,
+        slot: kentos_domain::Slot,
+        index: usize,
+        origin: Vec2,
+        cx: &mut Context<'_>,
+    ) -> bool {
+        if self.tool.is_some() {
+            return false;
+        }
+        self.select.heat(slot, index, origin, cx);
+        cx.say(
+            Level::Info,
+            "Esnet: tutamacın yeni yerini tıklayın ya da yazın (Esc vazgeçer).".to_owned(),
+        );
+        true
+    }
+
     /// A point computed elsewhere (the locks' Enter in the value field,
     /// docs/adr/0166 §6), given to the running tool as if clicked, or to a
     /// grip being moved; false when the step takes none.

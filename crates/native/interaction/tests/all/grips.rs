@@ -284,12 +284,18 @@ fn the_grip_menu_edits_a_vertex_or_an_edge_through_the_command() {
         .run(|_, cx| grip_menu::at(on_screen(-24.0, 4.0), cx))
         .expect("a corner's grip");
     assert_eq!(corner.header(), "Köşe 1");
-    assert_eq!(corner.actions(), [GripAction::RemoveVertex]);
+    assert_eq!(
+        corner.actions()[..corner.own_count()],
+        [GripAction::RemoveVertex]
+    );
     let edge = b
         .run(|_, cx| grip_menu::at(on_screen(-18.0, 4.0), cx))
         .expect("the bottom edge's middle");
     assert_eq!(edge.header(), "Kenar 1");
-    assert_eq!(edge.actions(), [GripAction::AddVertex, GripAction::ArcEdge]);
+    assert_eq!(
+        edge.actions()[..edge.own_count()],
+        [GripAction::AddVertex, GripAction::ArcEdge]
+    );
     b.run(|_, cx| grip_menu::apply(edge, GripAction::ArcEdge, cx));
     assert_eq!(b.last_text(), Some("Yaya dönüştür: tamam."));
     assert_eq!(corners(&b).1, Some(vec![0.5, 0.0, 0.0, 0.0]));
@@ -297,7 +303,7 @@ fn the_grip_menu_edits_a_vertex_or_an_edge_through_the_command() {
         .run(|_, cx| grip_menu::at(on_screen(-18.0, 1.0), cx))
         .expect("the arc's middle");
     assert_eq!(
-        arc.actions(),
+        arc.actions()[..arc.own_count()],
         [GripAction::AddVertex, GripAction::StraightEdge]
     );
     b.run(|_, cx| grip_menu::apply(arc, GripAction::StraightEdge, cx));
@@ -331,10 +337,24 @@ fn the_grip_menu_edits_a_vertex_or_an_edge_through_the_command() {
     b.run(|_, cx| grip_menu::apply(triangle, GripAction::RemoveVertex, cx));
     assert_eq!(b.last_text(), Some("Kapalı alanda en az üç köşe kalmalı."));
     assert_eq!(b.doc.revision(), revision);
-    // A line's grips have no menu.
+    // A line's end has no vertex action, but the transforms (docs/adr/0279).
     let mut line = bench(&[1]);
+    let end = line
+        .run(|_, cx| grip_menu::at(on_screen(-8.0, -12.0), cx))
+        .expect("a line's end");
+    assert_eq!(end.header(), "Tutamaç");
     assert_eq!(
-        line.run(|_, cx| grip_menu::at(on_screen(-8.0, -12.0), cx)),
+        end.actions(),
+        [
+            GripAction::Stretch,
+            GripAction::Move,
+            GripAction::Rotate,
+            GripAction::Scale,
+            GripAction::Mirror
+        ]
+    );
+    assert_eq!(
+        line.run(|_, cx| grip_menu::request(end, GripAction::Move, cx)),
         None
     );
 }

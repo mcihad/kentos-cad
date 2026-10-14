@@ -3349,6 +3349,32 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             }],
         },
         CommandDescriptor {
+            id: crate::CAD_ENTITIES_VERTEX.into(),
+            version: crate::CAD_ENTITIES_VERTEX_VERSION,
+            title: "Köşe ve kenar".into(),
+            summary: "Bir yolun köşesini ya da kenarını düzenler: Köşeyi sil (köşe yeri), Ortasına köşe ekle, Düz kenar yap ve Yaya dönüştür (kenarın ortasının yeri); nesne kalıcı kimliğiyle, yer cad.snap.find ya da cad.entities.pick'in verdiği gibi. \
+                      Yay kenara eklenen köşe yayı çemberinde ikiye böler; Yaya dönüştür kenarı kirişin dörtte biri sehimle halkanın dışına ya da açık yolun sağına büker; çizgiye köşe eklenince çoklu çizgi olur. Alanın delikleri ve öbür parçaları kalır; topology ile ortak köşe ve kenarları olan komşular aynı adımda izler. Tek geri alma adımı."
+                .into(),
+            aliases: vec!["kose".into(), "vertex".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesVertex>(),
+            output: schema::<crate::EntitiesVertexed>(),
+            plan: Some(schema::<crate::EntitiesVertexPlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir alanın üçüncü köşesini sil".into(),
+                input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "action": "remove",
+                               "place": { "kind": "vertex", "part": 0, "ring": 0, "index": 2 } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::CAD_ENTITIES_PICK.into(),
             version: crate::CAD_ENTITIES_PICK_VERSION,
             title: "Tıklanan nesneler".into(),
@@ -3933,6 +3959,10 @@ mod tests {
                     }
                     crate::CAD_SNAP_FIND => {
                         serde_json::from_value::<crate::SnapFind>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ENTITIES_VERTEX => {
+                        serde_json::from_value::<crate::EntitiesVertex>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_ENTITIES_PICK => {
                         serde_json::from_value::<crate::EntitiesPick>(e.input.clone()).map(|_| ())

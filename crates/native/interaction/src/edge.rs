@@ -51,9 +51,8 @@ pub(crate) fn pick(
     let kinds = cx.draft.select_kinds;
     // The selection filter's kinds, as every selecting step (docs/adr/0278).
     cx.spatial.pick_edge(p.raw, cx.pick_tolerance(), |slot| {
-        doc.get(slot).is_some_and(|e| {
-            crate::selectable::entity_allowed(kinds, e) && editable(e, doc)
-        })
+        doc.get(slot)
+            .is_some_and(|e| crate::selectable::entity_allowed(kinds, e) && editable(e, doc))
     })
 }
 
@@ -85,7 +84,9 @@ pub(crate) fn pick_said(
             .map_or(layer.clone(), |n| n.name.clone());
         cx.say(
             Level::Warn,
-            format!("“{name}” katmanı kilitli; {kind} düzenlenemez. Kilidi Katmanlar panelinden açın."),
+            format!(
+                "“{name}” katmanı kilitli; {kind} düzenlenemez. Kilidi Katmanlar panelinden açın."
+            ),
         );
     }
     None
@@ -133,46 +134,6 @@ pub(crate) fn write(
 /// dimension style or a hatch pattern the contract does not know.
 pub(crate) fn geometry(shape: &Shape) -> Option<kentos_contracts::EntityGeometry> {
     edit_geometry(shape.clone())
-}
-
-/// The changes that replace the object at `slot` by `pieces`: the first
-/// piece is the object itself, the others new objects from it; attributes
-/// and the label survive a single piece of anything but a closed area. No
-/// piece deletes it.
-pub(crate) fn replace_changes(doc: &Document, slot: Slot, pieces: &[Shape]) -> Vec<EntityEdit> {
-    let polygon = matches!(doc.get(slot), Some(Entity::Polygon(_)));
-    let keep = (pieces.len() == 1 && !polygon).then_some(true);
-    let id = uid(doc, slot);
-    let mut changes = Vec::with_capacity(pieces.len().max(1));
-    let mut geometries = pieces.iter().filter_map(geometry);
-    match geometries.next() {
-        Some(first) => changes.push(EntityEdit::Replace {
-            uid: id.clone(),
-            geometry: first,
-            keep_data: keep,
-        }),
-        None => changes.push(EntityEdit::Remove { uid: id.clone() }),
-    }
-    for piece in geometries {
-        changes.push(EntityEdit::add(id.clone(), piece, keep));
-    }
-    changes
-}
-
-/// Replaces the object at `slot` by `pieces` in one undo step (the web's
-/// `EdgePickTool.replace`), by [`replace_changes`]. Whether it was written.
-pub(crate) fn replace(
-    operation: EditOperation,
-    slot: Slot,
-    pieces: &[Shape],
-    cx: &mut Context<'_>,
-) -> bool {
-    let changes = replace_changes(cx.doc, slot, pieces);
-    let written = write(operation, changes, cx).is_some();
-    let doc = &*cx.doc;
-    cx.selection.retain(|s| doc.get(s).is_some());
-    cx.selection.set_hover(None);
-    written
 }
 
 /// Cutting open a closed area with holes would lose them: such a tool says

@@ -173,7 +173,6 @@ mod search;
 mod second_crs;
 mod selecting;
 mod selection_chip;
-mod sub_object;
 mod selection_commands;
 #[cfg(test)]
 mod selection_scenes;
@@ -183,6 +182,7 @@ mod settings_look;
 mod settings_look_tests;
 mod settings_sections;
 mod settings_view;
+mod sub_object;
 #[cfg(test)]
 mod subref_scenes;
 mod ucs;

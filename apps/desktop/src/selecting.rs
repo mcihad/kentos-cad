@@ -108,7 +108,6 @@ impl App {
     }
 }
 
-
 /// An object kind as the web titles it (`ENTITY_KIND_LABEL`).
 pub fn kind_title(kind: &str) -> &'static str {
     match kind {

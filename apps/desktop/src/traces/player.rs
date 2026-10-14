@@ -1002,7 +1002,9 @@ impl<'a> Player<'a> {
         // A hand's events but its last left release: the box shows as it is held (docs/adr/0277).
         if let Some(events) = &step.mouse {
             let held = match events.last() {
-                Some(last) if last.release.as_deref() == Some("left") => &events[..events.len() - 1],
+                Some(last) if last.release.as_deref() == Some("left") => {
+                    &events[..events.len() - 1]
+                }
                 _ => &events[..],
             };
             return self.hand(held);

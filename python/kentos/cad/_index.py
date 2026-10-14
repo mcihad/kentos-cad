@@ -38,6 +38,7 @@ COMMANDS: dict[str, Any] = {
     "cad.entities.stretch": entities.stretch,
     "cad.entities.transform": entities.transform,
     "cad.entities.trim": entities.trim,
+    "cad.entities.vertex": entities.vertex,
     "cad.labels.pin": labels.pin,
     "cad.layers.compose": layers.compose,
     "cad.layers.edit": layers.edit,

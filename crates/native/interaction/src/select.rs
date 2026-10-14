@@ -147,6 +147,26 @@ impl Select {
         Self::default()
     }
 
+    /// Grip `index` of `slot`, standing at `origin`, turns hot as if clicked: the next
+    /// click places it (the grip menu's Esnet, docs/adr/0279).
+    pub fn heat(&mut self, slot: Slot, index: usize, origin: Vec2, cx: &mut Context<'_>) {
+        self.start = None;
+        self.current = None;
+        self.dragging = false;
+        self.grip = Some(GripEdit {
+            slot,
+            uid: cx.doc.uid(slot),
+            index,
+            origin,
+            down: cx.view.to_screen(origin),
+            hot: true,
+            z: grip_z(slot, index, cx),
+        });
+        self.grip_point = Some(origin);
+        self.moved = None;
+        cx.selection.set_hover(None);
+    }
+
     /// The left button went down: a hot grip is placed, a grip is taken, or
     /// a click or a box starts here.
     pub fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -592,7 +612,11 @@ pub fn sub_line(doc: &kentos_domain::Document, selection: &crate::Selection) -> 
     let place = match selection.sub() {
         Some((_, sub)) => {
             let words = crate::dimension_reassociate::place_words(&sub.place);
-            if sub.path.is_empty() { words } else { format!("{words} (blokta)") }
+            if sub.path.is_empty() {
+                words
+            } else {
+                format!("{words} (blokta)")
+            }
         }
         None => "bütün nesne".to_owned(),
     };

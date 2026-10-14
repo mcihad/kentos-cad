@@ -345,6 +345,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   Geçici izleme noktası (`draft.trackPoint`), tek seferlik menüde Referans noktası ve İki nokta ortası (ADR 0270);
   kenet adayları arasında Tab ve Shift+Tab (çekirdeğin `snap_candidates`'i: ağırlıklı uzaklık, eşitlikte çizimin sırası), işarette
   nesnenin türü ve sıra (ADR 0271);
+  tutamaç menüsü her tutamakta (Esnet, Taşı, Döndür, Ölçekle, Aynala; tutamacın noktası ilk nokta) ve köşe komutu
+  `cad.entities.vertex` (köşe sil, köşe ekle, düz kenar, yaya dönüştür; topoloji komşularıyla); tutamaç menüsünün köşe işleri ve
+  Köşe ekle/sil aracı onunla yazar (ADR 0279);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);
@@ -594,6 +597,7 @@ python3 scripts/fixtures/snap_find_cases.py --check   # cad.snap.find durumları
 python3 scripts/fixtures/snap_block_cases.py --check   # blokların içine kenetin durumlarını (iç içe, dönük, ölçekli ve aynalı yerleştirme, kesişimler, ağırlık merkezi, ekleme noktası, gizli, kilitli ve türleri sınırlı katman) tanımlardan elle yerleştirilen parçalarla, KentOS kodu olmadan denetle; durumlar fixtures/snap/v1/blocks.json (ADR 0274)
 python3 scripts/fixtures/entities_select_cases.py --check   # cad.entities.select durumlarını (pencere, kesişen, çit, çokgenin üç kipi, daire, içeren alan, tıklama, hepsi, verilenler, ters çevir, benzerleri, türler ve katmanlar, kilitli ve gizli katman, retler) seçimin kurallarından kesirlerle, KentOS kodu olmadan denetle (ADR 0275)
 python3 scripts/fixtures/entities_pick_cases.py --check   # cad.entities.pick durumlarını (adayların sırası, köşe kenardan önce, kenar boyunca, blok içi yol ve yer, nokta nesnesi, süzgeç, gizli ve kilitli katman, retler) seçimin kuralından ve subref_cases.py'nin place_near'ından, KentOS kodu olmadan denetle (ADR 0276)
+python3 scripts/fixtures/vertex_command_cases.py --check   # cad.entities.vertex durumlarını (köşe sil, köşe ekle: ortası ya da kenar üzerindeki yer, düz kenar, yaya dönüştür, delik ve parçalar, topoloji komşuları, retler) KentOS kodu olmadan, kesirlerle ve 60 basamaklı tan(π/8) ile denetle (ADR 0279)
 python3 scripts/fixtures/snap_coverage_cases.py --check   # kenet türlerinin kapsam matrisini (her tür her nesne türünde, Ekleme noktası, yayın çeyreği, tek seferlik Merkez) bağımsız başvurudan denetle; durumlar fixtures/snap/v1/coverage.json (ADR 0269)
 python3 scripts/fixtures/create_command_cases.py --check   # cad.entities.create durumlarını sözleşmenin kuralından denetle (ADR 0057)
 python3 scripts/fixtures/set_command_cases.py --check   # cad.entities.set durumlarını (Öznitelikler: katman, renk, sembol, öznitelik, etiket) sözleşmenin kuralından denetle (ADR 0066)

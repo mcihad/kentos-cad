@@ -431,6 +431,14 @@ codes! {
     /// An empty list of snap kinds.
     NO_SNAP_KINDS = "no_snap_kinds", Failed, false, "Hiç kenet türü verilmedi; listeyi kaldırın (varsayılan türler) ya da en az bir tür verin.";
 
+    // ── A path's vertices and edges (docs/adr/0279) ─────────────────────
+    /// An object that is not a polyline or an area where a path's vertex or edge is edited.
+    NOT_A_PATH = "not_a_path", Failed, false, "Köşe ve kenar işlemleri çoklu çizgide ve kapalı alanda yapılır.";
+    /// A place of the wrong kind for the action (a vertex for Köşeyi sil, an edge's middle for the others).
+    WRONG_PLACE = "wrong_place", Failed, false, "Yer işlemin istediği türden değil: köşe ya da kenarın ortası.";
+    /// A hole's vertex or edge, which only moves by dragging.
+    HOLE_EDIT = "hole_edit", Failed, false, "Deliğin köşe ve kenarları bu işlemle değişmez.";
+
     // ── The selection as a query (docs/adr/0275) ────────────────────────
     /// A selecting polygon crossing itself or without area (`cad.entities.select`).
     INVALID_RING = "invalid_ring", Failed, false, "Seçim çokgeni kendini kesiyor ya da alanı yok.";

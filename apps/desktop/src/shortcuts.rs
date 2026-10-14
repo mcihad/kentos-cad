@@ -39,7 +39,7 @@ pub const MOUSE_ACTIONS: [(&str, &str); 18] = [
     ),
     ("Boştayken bağlam menüsü", "Sağ tık"),
     (
-        "Köşeyi sil, kenara köşe ekle, yaya dönüştür",
+        "Tutamaç menüsü: köşe sil, köşe ekle, yaya dönüştür; esnet, taşı, döndür, ölçekle, aynala",
         "Tutamaca sağ tık",
     ),
     ("Nesnenin türü, katmanı, alanı", "Üzerinde bekle"),

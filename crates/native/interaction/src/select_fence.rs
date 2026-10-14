@@ -75,7 +75,11 @@ impl SelectFence {
         }
         let fence = std::mem::take(&mut self.pts);
         let region = kentos_contracts::SelectRegion::Fence {
-            points: fence.iter().copied().map(crate::selectable::point).collect(),
+            points: fence
+                .iter()
+                .copied()
+                .map(crate::selectable::point)
+                .collect(),
             tolerance: cx.pick_tolerance(),
         };
         let hits = crate::selectable::query(cx, region);

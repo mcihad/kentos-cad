@@ -1349,8 +1349,12 @@
       "operation": "lengthen"
     },
     "vertex": {
-      "level": "geometry",
-      "operation": "vertexAdd"
+      "level": "semantic",
+      "via": [
+        "cad.entities.vertex"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Tıklanan köşe ya da kenarın üzerindeki yer komuta verilir; tutamaç menüsünün köşe ve kenar işleri de aynı komutla (ADR 0279)."
     },
     "stretch": {
       "level": "semantic",

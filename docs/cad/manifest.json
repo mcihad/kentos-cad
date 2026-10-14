@@ -9272,14 +9272,14 @@
    "id": "tool.vertex",
    "kind": "tool",
    "title": "Köşe ekle/sil",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.entities.vertex"
    ],
-   "operation": "vertexAdd",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.entities.vertex",
+   "mcp": "cad.entities.vertex",
+   "note": "Tıklanan köşe ya da kenarın üzerindeki yer komuta verilir; tutamaç menüsünün köşe ve kenar işleri de aynı komutla (ADR 0279).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 1
