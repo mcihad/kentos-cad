@@ -260,6 +260,8 @@ mod topology_tests;
 mod traces;
 mod tracking;
 #[cfg(test)]
+mod transparent_tests;
+#[cfg(test)]
 mod ui_screens;
 mod usage;
 mod vertices;

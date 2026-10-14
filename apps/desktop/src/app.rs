@@ -1309,9 +1309,12 @@ impl App {
         let locks = (!matches!(message, Message::Viewport(_)))
             .then_some((self.locks.length, self.locks.toward));
         let held = self.window_over();
+        let view = self.viewpoint();
         let task = self.handle(message);
         // A template's run ends with its tool (templates.rs).
         self.follow_template();
+        // The running command's preview follows a view change and a tool run over it (navigation.rs, docs/adr/0283).
+        self.follow_view(view);
         if locks.is_some_and(|l| l != (self.locks.length, self.locks.toward)) {
             self.repoint();
         }

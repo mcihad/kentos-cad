@@ -6,10 +6,10 @@
 //! docs/adr/0272's: Koordinat oku on a parcel's corner, the log saying the snap's object and place; docs/adr/0274's:
 //! inside a room block turned 30°, the midpoint of a nested, mirrored door's swing; docs/adr/0276's: a Ctrl click
 //! on a parcel's corner where a wall crosses it (the corner ringed, the log saying the parcel's id and corner, the
-//! chip for the wall), and the shortcuts window with Ctrl + tık and the drawing keys; docs/adr/0279's: the grip menu of a parcel's corner; docs/adr/0280's: two hot corners turning the parcel. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
+//! chip for the wall), and the shortcuts window with Ctrl + tık and the drawing keys; docs/adr/0279's: the grip menu of a parcel's corner; docs/adr/0280's: two hot corners turning the parcel; docs/adr/0283's: Pencere yakınlaştır run over a polyline being drawn, and the polyline back after it with its preview in the new view. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma,kenet-oku,kenet-blok-ici,secim-alt-nesne,kisayollar,tutamac-menusu,tutamac-kipleri cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma,kenet-oku,kenet-blok-ici,secim-alt-nesne,kisayollar,tutamac-menusu,tutamac-kipleri,seffaf-pencere,seffaf-donus cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -330,8 +330,56 @@ fn shortcut_list(app: &mut App) {
     let _ = app.run("help.shortcuts");
 }
 
+/// Two parcels; Çoklu çizgi along their south with three corners; Pencere yakınlaştır run over it (docs/adr/0283),
+/// its first corner given and the box dragged to the east parcel.
+fn transparent_window(app: &mut App) {
+    let mut o = Objects::new();
+    o.path(
+        "parsel",
+        &[[0.0, 0.0], [20.0, 0.0], [20.0, 14.0], [0.0, 14.0]],
+        true,
+    );
+    o.path(
+        "parsel",
+        &[[20.0, 0.0], [38.0, 0.0], [38.0, 14.0], [20.0, 14.0]],
+        true,
+    );
+    open(app, o);
+    make_cad(app);
+    let _ = app
+        .settings
+        .choose(&[("drafting.snap", serde_json::Value::Bool(false))]);
+    app.apply_settings();
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 6.0,
+            min_y: N - 10.0,
+            max_x: E + 44.0,
+            max_y: N + 20.0,
+        },
+        24.0,
+    );
+    run(app, "tool.polyline");
+    click(app, [0.0, -4.0]);
+    click(app, [20.0, -4.0]);
+    click(app, [24.0, -2.0]);
+    run(app, "tool.zoomWindow");
+    click(app, [16.0, -7.0]);
+    hover(app, [40.0, 16.0]);
+}
+
+/// The window's second corner: the view shows the box, Çoklu çizgi is back with its three corners, its preview to
+/// the pointer where the corner was clicked.
+fn transparent_back(app: &mut App) {
+    transparent_window(app);
+    click(app, [40.0, 16.0]);
+    hover(app, [32.0, 6.0]);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
+        ("seffaf-pencere", transparent_window),
+        ("seffaf-donus", transparent_back),
         ("secim-alt-nesne", sub_object),
         ("kisayollar", shortcut_list),
         ("tutamac-menusu", grip_menu),

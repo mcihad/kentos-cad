@@ -65,5 +65,6 @@ mod time_version;
 mod topology;
 mod topology_edit;
 mod trace_draw;
+mod transparent;
 mod typed_units;
 mod vertex_points;
