@@ -1314,9 +1314,12 @@ impl App {
         let locks = (!matches!(message, Message::Viewport(_)))
             .then_some((self.locks.length, self.locks.toward));
         let held = self.window_over();
+        let view = self.viewpoint();
         let task = self.handle(message);
         // A template's run ends with its tool (templates.rs).
         self.follow_template();
+        // The running command's preview follows a view change and a tool run over it (navigation.rs, docs/adr/0283).
+        self.follow_view(view);
         if locks.is_some_and(|l| l != (self.locks.length, self.locks.toward)) {
             self.repoint();
         }
@@ -2608,9 +2611,12 @@ impl App {
             return task;
         }
         let folded = fold(text);
-        let found = catalog().commands().iter().find(|c| {
-            c.aliases.iter().any(|a| fold(a) == folded) || fold(c.title) == folded || c.id == text
-        });
+        // A full name first: an alias, a title (docs/adr/0281).
+        let named = crate::typed_names::named(text, self.sheet_tab);
+        let found = match &named {
+            crate::typed_names::Named::One(command, false) => Some(*command),
+            _ => None,
+        };
         // A model of the user's, by its name (“Parsel ölçüleri”, “Parsel ölçüleri…”).
         let model = found.is_none().then(|| {
             self.user_models()
@@ -2625,6 +2631,21 @@ impl App {
             self.remember(text);
             return self.processing_command(&format!("processing.model.{id}"));
         }
+        // The start of one command's name runs it, said; a name or start several share is said with them.
+        let found = match named {
+            crate::typed_names::Named::One(command, true) => {
+                self.output(format!("“{text}”: {}.", command.title));
+                Some(command)
+            }
+            crate::typed_names::Named::Several(commands) => {
+                self.error(format!(
+                    "“{text}” birden çok komutu anlatıyor: {}. Komutun adını tam yazın.",
+                    crate::typed_names::candidates(&commands)
+                ));
+                return Task::none();
+            }
+            _ => found,
+        };
         match found {
             Some(command) => {
                 // As on the web (`CommandLine.run`): the line's ↑ brings it back; the

@@ -191,6 +191,7 @@ mod settings_view;
 mod sub_object;
 #[cfg(test)]
 mod subref_scenes;
+mod typed_names;
 mod ucs;
 #[cfg(test)]
 mod ucs_scenes;
@@ -265,6 +266,8 @@ mod topology_scenes;
 mod topology_tests;
 mod traces;
 mod tracking;
+#[cfg(test)]
+mod transparent_tests;
 #[cfg(test)]
 mod ui_screens;
 mod usage;

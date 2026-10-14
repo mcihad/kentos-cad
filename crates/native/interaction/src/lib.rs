@@ -263,7 +263,7 @@ pub use prompt::{Prompt, PromptOption, lower_tr, upper_tr};
 pub use select::SelectBox;
 pub use selection::{Cycle, Selection, SubObject};
 pub use session::{
-    LOCKS_GONE, NO_LOCK_REFERENCE, NO_REFERENCE_TOOL, NO_TRACK_TOOL, NO_TRAVEL, Session,
+    LOCKS_GONE, NO_LOCK_REFERENCE, NO_REFERENCE_TOOL, NO_TRACK_TOOL, NO_TRAVEL, Session, TOOLS,
 };
 pub use spatial::{
     GripSet, LabelSpot, Spatial, arc_sweep, dimension_layout, enclosed, full_ellipse, measures,

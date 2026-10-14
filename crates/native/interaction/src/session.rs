@@ -9,6 +9,7 @@
 //! | Onay (confirm) | [`Session::confirm`]: the tool commits one undo step and stays for the next object |
 //! | İptal (cancel) | [`Session::exit`]: the draft is dropped, nothing reaches the drawing or its history |
 //! | Askıda (suspended) | [`Session::nest`]: the point calculator runs over a command waiting for a point (or a grip being moved); its point goes to the command as if clicked, Esc brings the command back as it was (docs/adr/0083) |
+//! | Şeffaf (transparent) | [`Session::start_over`]: Kaydır, Pencere yakınlaştır, Mesafe ölç, Açı ölç and Koordinat oku run over a command (or a grip being moved) and give it back as it was, its locks and references with it (docs/adr/0283) |
 //!
 //! “Repeat the last command” and what a key means are the host's: it asks
 //! [`Session::last`] and routes keys by ADR 0018's order. So is the object
@@ -45,7 +46,7 @@ use crate::path::{self, Path};
 use crate::perpendicular::{self, Perpendicular};
 use crate::point::{self, Point};
 use crate::polar::{self, Polar};
-use crate::prompt::Prompt;
+use crate::prompt::{Prompt, fold_tr};
 use crate::rectangle::{self, Rectangle};
 use crate::regular::{self, RegularPolygon};
 use crate::reshape::{self, Reshape};
@@ -246,6 +247,17 @@ pub const TOOLS: &[&str] = &[
     crate::network::trace::ID,
 ];
 
+/// The tools that run over a command without ending it, as AutoCAD's
+/// `'pan`, `'zoom` and `'dist` (docs/adr/0283): they change the view or
+/// only read the drawing. A tool that writes is never one of them.
+pub const TRANSPARENT: &[&str] = &[
+    navigate::PAN_ID,
+    navigate::ZOOM_WINDOW_ID,
+    path::MEASURE_ID,
+    angle::ID,
+    coordinate::ID,
+];
+
 /// What a tool running over another one suspended (docs/adr/0083).
 enum Suspended {
     /// A command waiting for a point.
@@ -254,13 +266,47 @@ enum Suspended {
     Grip,
 }
 
+/// What runs over a suspended command.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Over {
+    /// The point calculator: its point goes to the command (docs/adr/0083).
+    Calc,
+    /// A transparent tool: it gives the command nothing (docs/adr/0283).
+    Transparent,
+}
+
+/// What the session holds for a command besides the tool itself: its locks,
+/// an edge awaited for one, its reference and Yapım kipi. A transparent tool
+/// starts with none and gives them back when it ends (docs/adr/0283).
+struct Kept {
+    locks: crate::locks::LockState,
+    lock_pick: Option<LockPick>,
+    reference: Option<Vec2>,
+    reference_from: Option<Vec2>,
+    reference_wait: bool,
+    construction: bool,
+    track_wait: bool,
+}
+
+/// A command suspended under the tool run over it.
+struct Nest {
+    below: Suspended,
+    over: Over,
+    /// The command's own state, a transparent tool's only.
+    kept: Option<Kept>,
+}
+
 /// The running tool, if any, the last one started, and the select tool that
 /// has the pointer while none runs.
 #[derive(Default)]
 pub struct Session {
     tool: Option<Box<dyn Tool>>,
-    /// The command suspended under the running tool (the point calculator's).
-    parent: Option<Suspended>,
+    /// The commands suspended under the running tool, the first the oldest:
+    /// the point calculator's, a transparent tool's (docs/adr/0083, 0283).
+    parents: Vec<Nest>,
+    /// A suspended command came back: the host gives it the pointer again,
+    /// so its preview follows the view ([`Session::take_resumed`]).
+    resumed: bool,
     last: Option<&'static str>,
     select: Select,
     /// Nesneye paralel or dik waiting for its edge (docs/adr/0166 §3).
@@ -324,6 +370,20 @@ impl Session {
     /// id the session does not know; nothing changes then. The host calls
     /// [`Session::activate`] right after.
     pub fn start(&mut self, id: &str) -> bool {
+        let Some(tool) = Self::make(id) else {
+            return false;
+        };
+        // Kaydır is not repeated: Enter while panning repeats the command
+        // before it (the web's `lastRepeatable`).
+        if tool.id() != navigate::PAN_ID {
+            self.last = Some(tool.id());
+        }
+        self.run(tool);
+        true
+    }
+
+    /// The tool with this id, new; none for an id the session does not know.
+    fn make(id: &str) -> Option<Box<dyn Tool>> {
         let tool: Box<dyn Tool> = match id {
             path::POLYGON_ID => Box::new(Path::polygon()),
             path::POLYLINE_ID => Box::new(Path::polyline()),
@@ -482,15 +542,9 @@ impl Session {
             }
             crate::image_insert::ID => Box::new(crate::image_insert::ImageInsert::new()),
             crate::image_clip::ID => Box::new(crate::image_clip::ImageClip::new()),
-            _ => return false,
+            _ => return None,
         };
-        // Kaydır is not repeated: Enter while panning repeats the command
-        // before it (the web's `lastRepeatable`).
-        if tool.id() != navigate::PAN_ID {
-            self.last = Some(tool.id());
-        }
-        self.run(tool);
-        true
+        Some(tool)
     }
 
     /// Runs a tool that is not in the catalog (Yapıştır with the clipboard's
@@ -499,8 +553,96 @@ impl Session {
     pub fn run(&mut self, tool: Box<dyn Tool>) {
         self.runs += 1;
         self.tool = Some(tool);
-        self.parent = None;
+        self.parents.clear();
         self.select.reset();
+    }
+
+    /// Whether the tool with this id runs over a command without ending it
+    /// (docs/adr/0283): Kaydır, Pencere yakınlaştır, Mesafe ölç, Açı ölç, Koordinat oku.
+    pub fn is_transparent(id: &str) -> bool {
+        TRANSPARENT.contains(&id)
+    }
+
+    /// Whether [`Session::start_over`] would run the tool `id` over what
+    /// runs now: a transparent tool over a command (or a grip being moved),
+    /// or in the place of the transparent tool run over it. Over no command,
+    /// or over itself when it runs on its own, it starts as any tool.
+    pub fn can_start_over(&self, id: &str) -> bool {
+        if !Self::is_transparent(id) {
+            return false;
+        }
+        if self.over_transparent() {
+            return true;
+        }
+        match &self.tool {
+            Some(tool) => !Self::is_transparent(tool.id()) || !self.parents.is_empty(),
+            None => self.select.grip_active(),
+        }
+    }
+
+    /// Runs the transparent tool `id` over the running command (or a grip
+    /// being moved) without ending it, as AutoCAD's `'pan` and `'dist`
+    /// (docs/adr/0283): the command keeps its points, options and memory,
+    /// and its locks, reference and Yapım kipi wait with it. When the tool
+    /// ends (Esc, Enter with nothing, Pencere yakınlaştır's box), the
+    /// command comes back as it was. A transparent tool run over it already
+    /// gives its place to this one. It is not remembered for repeat, nor
+    /// counted as a run. False (nothing changes) when [`Session::can_start_over`] is not.
+    pub fn start_over(&mut self, id: &str, cx: &mut Context<'_>) -> bool {
+        if !self.can_start_over(id) {
+            return false;
+        }
+        let Some(child) = Self::make(id) else {
+            return false;
+        };
+        if self.over_transparent() {
+            self.unnest(None, cx);
+        }
+        let below = match self.tool.take() {
+            Some(tool) => Suspended::Tool(tool),
+            None => Suspended::Grip,
+        };
+        let kept = Kept {
+            locks: std::mem::take(cx.locks),
+            lock_pick: self.lock_pick.take(),
+            reference: self.reference,
+            reference_from: self.reference_from,
+            reference_wait: self.reference_wait,
+            construction: self.construction,
+            track_wait: self.track_wait,
+        };
+        self.reference = None;
+        self.reference_from = None;
+        self.reference_wait = false;
+        self.construction = false;
+        self.track_wait = false;
+        self.parents.push(Nest {
+            below,
+            over: Over::Transparent,
+            kept: Some(kept),
+        });
+        self.tool = Some(child);
+        if self
+            .tool
+            .as_mut()
+            .is_some_and(|t| t.activate(cx) == Flow::Exit)
+        {
+            self.unnest(None, cx);
+        }
+        true
+    }
+
+    /// The tool that has the pointer now: a transparent tool or the point
+    /// calculator over a command, else the command; none while none runs.
+    pub fn top_id(&self) -> Option<&'static str> {
+        self.tool.as_ref().map(|t| t.id())
+    }
+
+    /// Whether a suspended command came back since the host last asked: it
+    /// gives it the pointer again, so its preview is where the pointer is
+    /// in the view it came back to (docs/adr/0283).
+    pub fn take_resumed(&mut self) -> bool {
+        std::mem::take(&mut self.resumed)
     }
 
     /// Runs `child` over the running command without ending it (the point
@@ -510,15 +652,19 @@ impl Session {
     /// With no command, it runs over a grip being moved. `label` is what the
     /// command line says (“Nokta hesabı: Kenar kesişimi”).
     pub fn nest(&mut self, child: Box<dyn Tool>, label: String, cx: &mut Context<'_>) {
-        if self.parent.is_some() {
+        if self.calculating() {
             return;
         }
-        let parent = match self.tool.take() {
+        let below = match self.tool.take() {
             Some(tool) => Suspended::Tool(tool),
             None if self.select.grip_active() => Suspended::Grip,
             None => return,
         };
-        self.parent = Some(parent);
+        self.parents.push(Nest {
+            below,
+            over: Over::Calc,
+            kept: None,
+        });
         cx.say(Level::Command, label);
         self.tool = Some(child);
         if self
@@ -532,14 +678,20 @@ impl Session {
 
     /// Whether a tool runs over a suspended command.
     pub fn nested(&self) -> bool {
-        self.parent.is_some()
+        !self.parents.is_empty()
+    }
+
+    /// Whether the point calculator runs, over a command or under a transparent tool.
+    fn calculating(&self) -> bool {
+        self.parents.iter().any(|n| n.over == Over::Calc)
     }
 
     /// Whether the point calculator may run now (the web's `canCalcPoint`):
     /// a command that takes points and snaps, or a grip being moved; not
-    /// over another calculator.
+    /// over another calculator. Over a transparent Mesafe ölç it may: its
+    /// point goes to the measure (docs/adr/0283).
     pub fn can_calc_point(&self) -> bool {
-        if self.parent.is_some() {
+        if self.calculating() {
             return false;
         }
         match &self.tool {
@@ -551,14 +703,26 @@ impl Session {
     /// Ends the tool run over the suspended command, which goes on; `point`
     /// reaches it as if clicked (the web's `unnest`).
     fn unnest(&mut self, point: Option<Vec2>, cx: &mut Context<'_>) {
-        let Some(parent) = self.parent.take() else {
+        let Some(nest) = self.parents.pop() else {
             self.tool = None;
             return;
         };
-        self.tool = match parent {
+        self.tool = match nest.below {
             Suspended::Tool(tool) => Some(tool),
             Suspended::Grip => None,
         };
+        self.resumed = true;
+        // A transparent tool gives the command its own state back, and nothing else.
+        if let Some(kept) = nest.kept {
+            *cx.locks = kept.locks;
+            self.lock_pick = kept.lock_pick;
+            self.reference = kept.reference;
+            self.reference_from = kept.reference_from;
+            self.reference_wait = kept.reference_wait;
+            self.construction = kept.construction;
+            self.track_wait = kept.track_wait;
+            return;
+        }
         let Some(p) = point else {
             return;
         };
@@ -591,7 +755,7 @@ impl Session {
     /// and so is a command suspended under it.
     pub fn exit(&mut self) {
         self.tool = None;
-        self.parent = None;
+        self.parents.clear();
         self.lock_pick = None;
         self.drop_reference();
     }
@@ -642,7 +806,7 @@ impl Session {
             return true;
         }
         // Over a suspended command: it comes back as it was.
-        if self.parent.is_some() {
+        if !self.parents.is_empty() {
             self.unnest(None, cx);
             return true;
         }
@@ -657,7 +821,7 @@ impl Session {
     /// The running command's id; `select` when none runs, as the traces
     /// read it. Under the point calculator it is the suspended command's.
     pub fn tool_id(&self) -> &'static str {
-        match &self.parent {
+        match self.parents.first().map(|n| &n.below) {
             Some(Suspended::Tool(tool)) => tool.id(),
             Some(Suspended::Grip) => "select",
             None => self.tool.as_ref().map_or("select", |t| t.id()),
@@ -694,11 +858,22 @@ impl Session {
     /// Whether a running tool takes Enter, Space and a quick right click as
     /// its confirm. Kaydır and Pencere yakınlaştır do not: Enter repeats the
     /// last command instead (the web's `tool.confirm`, docs/adr/0056). With no
-    /// command, a grip being moved takes them (docs/adr/0068).
+    /// command, a grip being moved takes them (docs/adr/0068). Run over a
+    /// command, Kaydır and Pencere yakınlaştır take them too: they end and
+    /// the command comes back (docs/adr/0283).
     pub fn confirms(&self) -> bool {
-        self.tool
-            .as_ref()
-            .map_or(self.select.grip_active(), |t| t.confirms())
+        self.over_transparent()
+            || self
+                .tool
+                .as_ref()
+                .map_or(self.select.grip_active(), |t| t.confirms())
+    }
+
+    /// Whether a transparent tool runs over a command.
+    fn over_transparent(&self) -> bool {
+        self.parents
+            .last()
+            .is_some_and(|n| n.over == Over::Transparent)
     }
 
     /// Whether the running command's step asks for words: Space is a letter
@@ -1051,11 +1226,17 @@ impl Session {
             self.set_reference(p.world, cx);
             return;
         }
+        let depth = self.parents.len();
         match &mut self.tool {
             Some(tool) => tool.pointer_down(p, cx),
             None => self.select.pointer_down(p, cx),
         }
         self.settle(cx);
+        // The press that ended a tool run over a command (Pencere yakınlaştır's
+        // second corner): its release is that tool's, not the command's (docs/adr/0283).
+        if self.parents.len() < depth {
+            self.pick_pressed = true;
+        }
     }
 
     /// The left button came up (on the drawing, or wherever a press on it ended).
@@ -1286,13 +1467,66 @@ impl Session {
             self.set_reference(p, cx);
             return true;
         }
+        // An option by its name in full (docs/adr/0281): “kopya” is K. A tool taking words (a style's
+        // name) reads the text first.
+        let words = self.takes_words();
+        if !words && let Some(taken) = self.option_word(text, false, cx) {
+            return taken;
+        }
         let taken = match self.tool.as_mut() {
             Some(tool) => tool.input(text, cx),
             // A typed point places a grip being moved.
             None => self.select.input(text, cx),
         };
         self.settle(cx);
-        taken
+        if taken {
+            return true;
+        }
+        // Then the start of one option's name (“kop”); a start several fit is said with them.
+        self.option_word(text, true, cx).unwrap_or(false)
+    }
+
+    /// The running command's (or a hot grip's) option a typed word names, sent as its key: Enter's
+    /// confirms, Esc's cancels. `None` when the word names none.
+    fn option_word(&mut self, text: &str, starts: bool, cx: &mut Context<'_>) -> Option<bool> {
+        if self.tool.is_none() && !self.select.grip_active() {
+            return None;
+        }
+        let prompt = self.prompt();
+        let key = match prompt.option_for_word(text, starts) {
+            Ok(Some(o)) => o.key,
+            Ok(None) => return None,
+            Err(labels) => {
+                cx.say(
+                    Level::Warn,
+                    format!(
+                        "“{}” birden çok seçeneğin başı: {}. Seçeneğin adını tam yazın ya da harfine basın.",
+                        text.trim(),
+                        labels.join(", ")
+                    ),
+                );
+                return Some(true);
+            }
+        };
+        // The word is the key itself (a one-letter key typed as a word is the tool's).
+        if fold_tr(text.trim()) == fold_tr(key) {
+            return None;
+        }
+        Some(match key {
+            "Enter" => {
+                self.confirm(cx);
+                true
+            }
+            "Esc" => self.cancel(cx),
+            key => {
+                let taken = match self.tool.as_mut() {
+                    Some(tool) => tool.input(key, cx),
+                    None => self.select.input(key, cx),
+                };
+                self.settle(cx);
+                taken
+            }
+        })
     }
 
     /// `#ad` typed where a point is asked (docs/adr/0152 §4; the web's
@@ -1377,7 +1611,7 @@ impl Session {
     /// with that point in turn.
     fn settle(&mut self, cx: &mut Context<'_>) {
         while self.tool.as_ref().is_some_and(|t| t.finished()) {
-            if self.parent.is_some() {
+            if !self.parents.is_empty() {
                 let point = self.tool.as_ref().and_then(|t| t.computed());
                 self.unnest(point, cx);
             } else {
@@ -1390,10 +1624,16 @@ impl Session {
     /// Enter, Space or a quick right click while a tool runs: it commits what
     /// it has, or leaves when it has nothing (the web's `PointInputTool.confirm`).
     pub fn confirm(&mut self, cx: &mut Context<'_>) {
+        // A transparent tool that takes no confirm ends with it (docs/adr/0283).
+        if self.over_transparent() && self.tool.as_ref().is_some_and(|t| !t.confirms()) {
+            self.unnest(None, cx);
+            self.follow_locks(cx);
+            return;
+        }
         match &mut self.tool {
             Some(tool) => {
                 if tool.confirm(cx) == Flow::Exit {
-                    if self.parent.is_some() {
+                    if !self.parents.is_empty() {
                         let point = self.tool.as_ref().and_then(|t| t.computed());
                         self.unnest(point, cx);
                         self.settle(cx);
@@ -1417,11 +1657,55 @@ impl Session {
 
     /// What to draw over the drawing while a tool runs, or a grip moves.
     pub fn preview(&self, format: &Format) -> Option<Preview> {
-        match &self.tool {
+        let top = match &self.tool {
             Some(tool) => Some(tool.preview(format)),
             None => self.select.preview(format),
+        };
+        // Under a transparent tool the command's draft waits, drawn as it was (docs/adr/0283).
+        match self.parents.last() {
+            Some(Nest {
+                below: Suspended::Tool(tool),
+                over: Over::Transparent,
+                ..
+            }) => Some(with_waiting(top.unwrap_or_default(), tool.preview(format))),
+            _ => top,
         }
     }
+}
+
+/// The transparent tool's preview over the suspended command's draft: the
+/// draft's lines, areas and ghosts as they were, without its tag, markers
+/// and tracking ray, which speak for the pointer the transparent tool has now.
+fn with_waiting(mut top: Preview, below: Preview) -> Preview {
+    let mut strokes = Vec::new();
+    if below.path.len() > 1 {
+        strokes.push(crate::tool::Stroke::solid(below.path, false));
+    }
+    if let Some(ring) = below.ring {
+        strokes.push(crate::tool::Stroke::solid(ring, true));
+    }
+    strokes.extend(below.strokes);
+    strokes.append(&mut top.strokes);
+    top.strokes = strokes;
+    let mut guides = below.guides;
+    guides.append(&mut top.guides);
+    top.guides = guides;
+    let mut areas = below.areas;
+    areas.append(&mut top.areas);
+    top.areas = areas;
+    let mut marks = below.marks;
+    marks.append(&mut top.marks);
+    top.marks = marks;
+    let mut hatch = below.hatch;
+    hatch.append(&mut top.hatch);
+    top.hatch = hatch;
+    let mut texts = below.texts;
+    texts.append(&mut top.texts);
+    top.texts = texts;
+    let mut cells = below.cells;
+    cells.append(&mut top.cells);
+    top.cells = cells;
+    top
 }
 
 /// The place of the one point named `name` (docs/adr/0152 §4; the web's

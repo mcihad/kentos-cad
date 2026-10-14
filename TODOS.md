@@ -165,6 +165,16 @@ Liste:
 - [ ] `CAD-INPUT-01` (ADR 0266, 14 Ekim): web'de gerekenler: `coordinateInput.ts`'in metrik birimli uzunluğu (`2.5m`, `250cm`) ve
   parantezli toplamı (`fixtures/point-input/v1`'in 22 yeni satırı), `looksLikeCoordinate`'in `(`'u ve araçların uzunluk alanlarının
   birimli ve toplamlı okunması; web'in iz oynatıcısı `value-entry.json`'u geçmeli (`(`, `)`, `*` tuşları, Tab'ın birimli kilidi).
+- [ ] `CAD-INPUT-19` (ADR 0283, 14 Ekim): web'de gerekenler: ToolManager'da şeffaf araçlar (Kaydır, Pencere yakınlaştır, Mesafe ölç,
+  Açı ölç, Koordinat oku) komutun üstünde `nest` ile, komutun kilitleri ve referansıyla askıda; askıdakiler yığını (hesaplayıcı şeffaf
+  ölçmenin üstünde); Enter'ın şeffaf aracı bitirmesi; şeffaf aracın altında komutun taslağı; görünüm değişince ve komut dönünce
+  `repoint`; Tümünü göster'de imlecin yeri; `fixtures/interaction/v1/transparent.json` web oynatıcısında.
+- [ ] `CAD-INPUT-18` (ADR 0282, 14 Ekim): web'de gerekenler: `drafting.autocadAliases`'ın web'de de gösterilmesi (şemada `hosts`'a Web),
+  `CommandLine`'ın `catalog/v1/aliases-autocad.json`'u okuması (KentOS'un adları ve tek tuş kısayolları önce gelir, aynı dışarıda kalma
+  kuralı), öneri listesinde profil adları ve yöntem adlarının kendi satırı, kısayollar penceresinde AutoCAD adları grubu, Uygulama
+  ayarları › Görünüm'de Komut satırı bölümü.
+- [ ] `CAD-INPUT-17` (ADR 0281, 14 Ekim): web'de gerekenler: `CommandLine`'ın seçeneği adıyla ve adının başıyla seçmesi, bağlama göre
+  tam ad, tekil kısaltma ve belirsiz adların adaylarıyla söylenmesi; takma ad çakışma testi web'in kataloğunda da.
 - [ ] `CAD-INPUT-16` (ADR 0280, 14 Ekim): web'de gerekenler: `SelectTool`'da Shift ile birden çok sıcak tutamaç, tutamaç kipleri
   (E, T, D, L, A), taban noktası (B), referans (R), kopya (K), kiplerin önizlemesi ve harflerin kısayoldan önce gelmesi.
 - [ ] `CAD-INPUT-15` (ADR 0279, 14 Ekim): web'de gerekenler: `cad.entities.vertex`'in web işleyicisi (ortak durumlar
