@@ -36,6 +36,7 @@ mod navigation;
 mod network;
 mod network_adjust;
 mod numeric;
+mod offset_notes;
 mod plan_road;
 mod point_calc;
 mod point_editor;

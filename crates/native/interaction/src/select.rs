@@ -174,7 +174,7 @@ impl Select {
             hot: true,
             z: grip_z(slot, index, cx),
             others: Vec::new(),
-            modes: GripModes::new(origin),
+            modes: GripModes::with_texts(origin, cx.memory.mirror_text_mirrored),
         });
         self.grip_point = Some(origin);
         self.moved = None;
@@ -222,7 +222,7 @@ impl Select {
                 hot: false,
                 z: grip_z(slot, index, cx),
                 others,
-                modes: GripModes::new(origin),
+                modes: GripModes::with_texts(origin, cx.memory.mirror_text_mirrored),
             });
             self.grip_point = Some(origin);
             self.moved = None;
@@ -399,7 +399,9 @@ impl Select {
         let Some(g) = self.grip.as_mut() else {
             return false;
         };
-        match g.modes.typed(text) {
+        let typed = g.modes.typed(text);
+        cx.memory.mirror_text_mirrored = g.modes.text_mirrored;
+        match typed {
             Some(Typed::Said(line)) => {
                 g.hot = true;
                 cx.say(Level::Info, line);

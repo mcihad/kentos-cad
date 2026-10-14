@@ -51,6 +51,7 @@ fn negative_zero_stays_negative_zero() {
             x: 487025.0,
             y: 4420010.0,
         },
+        text: None,
     };
     let area = uid(&doc, 9);
     let negative_zeros = |doc: &Document| {
@@ -174,6 +175,7 @@ fn the_undo_step_is_the_tools_name() {
     let a = Transform::Mirror {
         a: c,
         b: Vec2 { x: 1.0, y: 0.0 },
+        text: None,
     };
     assert_eq!(transform::label(&a, true), "Aynala");
 }

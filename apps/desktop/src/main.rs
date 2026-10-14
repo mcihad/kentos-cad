@@ -47,6 +47,8 @@ mod command_bar;
 #[cfg(test)]
 mod coordinate_scenes;
 mod crs;
+#[cfg(test)]
+mod curve_scenes;
 mod data_compare;
 #[cfg(test)]
 mod dimension_scenes;
@@ -123,6 +125,8 @@ mod message_log;
 mod message_log_tests;
 #[cfg(test)]
 mod method_scenes;
+#[cfg(test)]
+mod mirror_scenes;
 mod modes;
 mod navigation;
 mod navigation_cards;
@@ -181,10 +185,6 @@ mod search;
 mod second_crs;
 #[cfg(test)]
 mod segment_scenes;
-#[cfg(test)]
-mod curve_scenes;
-#[cfg(test)]
-mod transform_scenes;
 mod selecting;
 mod selection_chip;
 mod selection_commands;
@@ -199,6 +199,8 @@ mod settings_view;
 mod sub_object;
 #[cfg(test)]
 mod subref_scenes;
+#[cfg(test)]
+mod transform_scenes;
 mod typed_names;
 mod ucs;
 #[cfg(test)]

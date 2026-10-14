@@ -4108,7 +4108,7 @@
    ]
   },
   {
-   "name": "her tür: çok satırlı yazı: kutusu ölçeklenir, satır aralığı ve genişlik çarpanı kalır; taşı, döndür, ölçekle",
+   "name": "her tür: çok satırlı yazı: kutusu ölçeklenir, satır aralığı ve genişlik çarpanı kalır; taşı, döndür, ölçekle, aynala; aynada okunur ve aynalı (ADR 0292)",
    "steps": [
     {
      "op": "plan",
@@ -4351,6 +4351,89 @@
        "$uidOf:10"
       ],
       "transform": {
+       "kind": "mirror",
+       "a": {
+        "x": 2.0,
+        "y": -1.0
+       },
+       "b": {
+        "x": 5.0,
+        "y": 3.0
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        "$uidOf:10"
+       ],
+       "entities": [
+        {
+         "kind": "text",
+         "id": 10,
+         "layerId": "yazi",
+         "attrs": {},
+         "p": {
+          "x": 9.0,
+          "y": 4.440892098500626e-16
+         },
+         "text": "Salon",
+         "height": 0.25,
+         "rotation": 76.26020470831196,
+         "widthFactor": 0.8,
+         "boxWidth": 2.5,
+         "lineSpacing": 1.2,
+         "align": "topLeft"
+        }
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:10"
+      ],
+      "transform": {
        "kind": "rotate",
        "center": {
         "x": 1.0,
@@ -4422,11 +4505,262 @@
       "dirty": false,
       "revision": "same"
      }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:10"
+      ],
+      "transform": {
+       "kind": "mirror",
+       "a": {
+        "x": 0.0,
+        "y": 4.0
+       },
+       "b": {
+        "x": 10.0,
+        "y": 4.0
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        "$uidOf:10"
+       ],
+       "entities": [
+        {
+         "kind": "text",
+         "id": 10,
+         "layerId": "yazi",
+         "attrs": {},
+         "p": {
+          "x": 1.0,
+          "y": 2.0
+         },
+         "text": "Salon",
+         "height": 0.25,
+         "rotation": 330.0,
+         "widthFactor": 0.8,
+         "boxWidth": 2.5,
+         "lineSpacing": 1.2,
+         "align": "topLeft"
+        }
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:10"
+      ],
+      "transform": {
+       "kind": "mirror",
+       "a": {
+        "x": 2.0,
+        "y": -1.0
+       },
+       "b": {
+        "x": 5.0,
+        "y": 3.0
+       },
+       "text": "mirrored"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        "$uidOf:10"
+       ],
+       "entities": [
+        {
+         "kind": "text",
+         "id": 10,
+         "layerId": "yazi",
+         "attrs": {},
+         "p": {
+          "x": 9.0,
+          "y": 4.440892098500626e-16
+         },
+         "text": "Salon",
+         "height": 0.25,
+         "rotation": 256.26020470831196,
+         "widthFactor": 0.8,
+         "boxWidth": 2.5,
+         "lineSpacing": 1.2,
+         "align": "baselineRight"
+        }
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:10"
+      ],
+      "transform": {
+       "kind": "mirror",
+       "a": {
+        "x": 0.0,
+        "y": 4.0
+       },
+       "b": {
+        "x": 10.0,
+        "y": 4.0
+       },
+       "text": "mirrored"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        "$uidOf:10"
+       ],
+       "entities": [
+        {
+         "kind": "text",
+         "id": 10,
+         "layerId": "yazi",
+         "attrs": {},
+         "p": {
+          "x": 1.0,
+          "y": 2.0
+         },
+         "text": "Salon",
+         "height": 0.25,
+         "rotation": 150.0,
+         "widthFactor": 0.8,
+         "boxWidth": 2.5,
+         "lineSpacing": 1.2,
+         "align": "baselineRight"
+        }
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
     }
    ]
   },
   {
-   "name": "her tür: eğri boyunca yazı: çerçevesi döner (saat yönünde de 0'dan 360'a), eğrisi ölçeklenir; taşı, döndür, ölçekle",
+   "name": "her tür: eğri boyunca yazı: çerçevesi döner (saat yönünde de 0'dan 360'a), eğrisi ölçeklenir; taşı, döndür, ölçekle, aynala; aynada okunur ve aynalı (ADR 0292)",
    "steps": [
     {
      "op": "plan",
@@ -4515,7 +4849,8 @@
       "canRedo": false,
       "dirty": false,
       "revision": "same"
-     }
+     },
+     "within": 1e-12
     },
     {
      "op": "plan",
@@ -4607,7 +4942,8 @@
       "canRedo": false,
       "dirty": false,
       "revision": "same"
-     }
+     },
+     "within": 1e-12
     },
     {
      "op": "plan",
@@ -4699,7 +5035,105 @@
       "canRedo": false,
       "dirty": false,
       "revision": "same"
-     }
+     },
+     "within": 1e-12
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:11"
+      ],
+      "transform": {
+       "kind": "mirror",
+       "a": {
+        "x": 2.0,
+        "y": -1.0
+       },
+       "b": {
+        "x": 5.0,
+        "y": 3.0
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        "$uidOf:11"
+       ],
+       "entities": [
+        {
+         "kind": "text",
+         "id": 11,
+         "layerId": "yazi",
+         "attrs": {},
+         "p": {
+          "x": 9.26,
+          "y": 2.68
+         },
+         "text": "Bahçe",
+         "height": 0.2,
+         "rotation": 286.26020470831196,
+         "path": {
+          "pts": [
+           {
+            "x": 1.4999999999999998,
+            "y": 0.2500000000000002
+           },
+           {
+            "x": 2.4999999999999996,
+            "y": -7.771561172376096e-16
+           }
+          ],
+          "bulges": [
+           0.0,
+           0.25
+          ]
+         },
+         "align": "baselineRight"
+        }
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-12
     },
     {
      "op": "plan",
@@ -4792,6 +5226,299 @@
       "dirty": false,
       "revision": "same"
      }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:11"
+      ],
+      "transform": {
+       "kind": "mirror",
+       "a": {
+        "x": 0.0,
+        "y": 4.0
+       },
+       "b": {
+        "x": 10.0,
+        "y": 4.0
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        "$uidOf:11"
+       ],
+       "entities": [
+        {
+         "kind": "text",
+         "id": 11,
+         "layerId": "yazi",
+         "attrs": {},
+         "p": {
+          "x": 1.0,
+          "y": 1.0
+         },
+         "text": "Bahçe",
+         "height": 0.2,
+         "rotation": 0.0,
+         "path": {
+          "pts": [
+           {
+            "x": 1.0,
+            "y": -0.24999999999999975
+           },
+           {
+            "x": 2.5,
+            "y": 6.123233995736766e-16
+           }
+          ],
+          "bulges": [
+           -0.25,
+           0.0
+          ]
+         },
+         "align": "topLeft"
+        }
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:11"
+      ],
+      "transform": {
+       "kind": "mirror",
+       "a": {
+        "x": 2.0,
+        "y": -1.0
+       },
+       "b": {
+        "x": 5.0,
+        "y": 3.0
+       },
+       "text": "mirrored"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        "$uidOf:11"
+       ],
+       "entities": [
+        {
+         "kind": "text",
+         "id": 11,
+         "layerId": "yazi",
+         "attrs": {},
+         "p": {
+          "x": 9.26,
+          "y": 2.68
+         },
+         "text": "Bahçe",
+         "height": 0.2,
+         "rotation": 286.26020470831196,
+         "path": {
+          "pts": [
+           {
+            "x": 1.4999999999999998,
+            "y": 0.2500000000000002
+           },
+           {
+            "x": 2.4999999999999996,
+            "y": -7.771561172376096e-16
+           }
+          ],
+          "bulges": [
+           0.0,
+           0.25
+          ]
+         },
+         "align": "baselineRight"
+        }
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:11"
+      ],
+      "transform": {
+       "kind": "mirror",
+       "a": {
+        "x": 0.0,
+        "y": 4.0
+       },
+       "b": {
+        "x": 10.0,
+        "y": 4.0
+       },
+       "text": "mirrored"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        "$uidOf:11"
+       ],
+       "entities": [
+        {
+         "kind": "text",
+         "id": 11,
+         "layerId": "yazi",
+         "attrs": {},
+         "p": {
+          "x": 3.5,
+          "y": 1.0
+         },
+         "text": "Bahçe",
+         "height": 0.2,
+         "rotation": 180.0,
+         "path": {
+          "pts": [
+           {
+            "x": 1.5,
+            "y": 0.25000000000000017
+           },
+           {
+            "x": 2.5,
+            "y": 3.061616997868383e-16
+           }
+          ],
+          "bulges": [
+           0.0,
+           0.25
+          ]
+         },
+         "align": "baselineRight"
+        }
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
     }
    ]
   },
@@ -6987,7 +7714,7 @@
    ]
   },
   {
-   "name": "her tür: kılavuz: notu yazı gibi döner, ok boyu kalır; taşı, döndür, ölçekle, aynala",
+   "name": "her tür: kılavuz: notu yazı gibi döner, ok boyu kalır; taşı, döndür, ölçekle, aynala; aynada okunur ve aynalı (ADR 0292)",
    "steps": [
     {
      "op": "plan",
@@ -7277,7 +8004,267 @@
          ],
          "text": "Not",
          "height": 0.2,
-         "rotation": 286.2602047083119,
+         "rotation": 286.26020470831196,
+         "arrowSize": 1.5
+        }
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:18"
+      ],
+      "transform": {
+       "kind": "mirror",
+       "a": {
+        "x": 0.0,
+        "y": 4.0
+       },
+       "b": {
+        "x": 10.0,
+        "y": 4.0
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        "$uidOf:18"
+       ],
+       "entities": [
+        {
+         "kind": "leader",
+         "id": 18,
+         "layerId": "yazi",
+         "attrs": {},
+         "pts": [
+          {
+           "x": 9.0,
+           "y": 3.0
+          },
+          {
+           "x": 10.0,
+           "y": 2.0
+          }
+         ],
+         "text": "Not",
+         "height": 0.2,
+         "rotation": 0.0,
+         "arrowSize": 1.5
+        }
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:18"
+      ],
+      "transform": {
+       "kind": "mirror",
+       "a": {
+        "x": 2.0,
+        "y": -1.0
+       },
+       "b": {
+        "x": 5.0,
+        "y": 3.0
+       },
+       "text": "mirrored"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        "$uidOf:18"
+       ],
+       "entities": [
+        {
+         "kind": "leader",
+         "id": 18,
+         "layerId": "yazi",
+         "attrs": {},
+         "pts": [
+          {
+           "x": 5.799999999999999,
+           "y": 7.400000000000001
+          },
+          {
+           "x": 6.4799999999999995,
+           "y": 8.64
+          }
+         ],
+         "text": "Not",
+         "height": 0.2,
+         "rotation": 286.26020470831196,
+         "arrowSize": 1.5
+        }
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:18"
+      ],
+      "transform": {
+       "kind": "mirror",
+       "a": {
+        "x": 0.0,
+        "y": 4.0
+       },
+       "b": {
+        "x": 10.0,
+        "y": 4.0
+       },
+       "text": "mirrored"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        "$uidOf:18"
+       ],
+       "entities": [
+        {
+         "kind": "leader",
+         "id": 18,
+         "layerId": "yazi",
+         "attrs": {},
+         "pts": [
+          {
+           "x": 9.0,
+           "y": 3.0
+          },
+          {
+           "x": 10.0,
+           "y": 2.0
+          }
+         ],
+         "text": "Not",
+         "height": 0.2,
+         "rotation": 180.0,
          "arrowSize": 1.5
         }
        ],
@@ -7324,7 +8311,7 @@
    ]
   },
   {
-   "name": "her tür: tablo: köşesi, satır ve sütunları, çerçevesi; taşı, döndür, ölçekle, aynala",
+   "name": "her tür: tablo: köşesi, satır ve sütunları, çerçevesi; taşı, döndür, ölçekle, aynala; aynada okunur ve aynalı (ADR 0292)",
    "steps": [
     {
      "op": "plan",
@@ -7639,7 +8626,300 @@
           "x": 8.17,
           "y": 13.559999999999999
          },
-         "rotation": 286.2602047083119,
+         "rotation": 286.26020470831196,
+         "height": 0.2,
+         "rows": [
+          0.5,
+          0.5
+         ],
+         "columns": [
+          1.0,
+          2.25
+         ],
+         "cells": [
+          [
+           "A",
+           "B"
+          ],
+          [
+           "1",
+           "2"
+          ]
+         ],
+         "frame": 0.05
+        }
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:19"
+      ],
+      "transform": {
+       "kind": "mirror",
+       "a": {
+        "x": 0.0,
+        "y": 4.0
+       },
+       "b": {
+        "x": 10.0,
+        "y": 4.0
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        "$uidOf:19"
+       ],
+       "entities": [
+        {
+         "kind": "table",
+         "id": 19,
+         "layerId": "yazi",
+         "attrs": {},
+         "p": {
+          "x": 11.0,
+          "y": 0.0
+         },
+         "rotation": 0.0,
+         "height": 0.2,
+         "rows": [
+          0.5,
+          0.5
+         ],
+         "columns": [
+          1.0,
+          2.25
+         ],
+         "cells": [
+          [
+           "A",
+           "B"
+          ],
+          [
+           "1",
+           "2"
+          ]
+         ],
+         "frame": 0.05
+        }
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:19"
+      ],
+      "transform": {
+       "kind": "mirror",
+       "a": {
+        "x": 2.0,
+        "y": -1.0
+       },
+       "b": {
+        "x": 5.0,
+        "y": 3.0
+       },
+       "text": "mirrored"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        "$uidOf:19"
+       ],
+       "entities": [
+        {
+         "kind": "table",
+         "id": 19,
+         "layerId": "yazi",
+         "attrs": {},
+         "p": {
+          "x": 8.17,
+          "y": 13.559999999999999
+         },
+         "rotation": 286.26020470831196,
+         "height": 0.2,
+         "rows": [
+          0.5,
+          0.5
+         ],
+         "columns": [
+          1.0,
+          2.25
+         ],
+         "cells": [
+          [
+           "A",
+           "B"
+          ],
+          [
+           "1",
+           "2"
+          ]
+         ],
+         "frame": 0.05
+        }
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:19"
+      ],
+      "transform": {
+       "kind": "mirror",
+       "a": {
+        "x": 0.0,
+        "y": 4.0
+       },
+       "b": {
+        "x": 10.0,
+        "y": 4.0
+       },
+       "text": "mirrored"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        "$uidOf:19"
+       ],
+       "entities": [
+        {
+         "kind": "table",
+         "id": 19,
+         "layerId": "yazi",
+         "attrs": {},
+         "p": {
+          "x": 14.25,
+          "y": -1.0
+         },
+         "rotation": 180.0,
          "height": 0.2,
          "rows": [
           0.5,

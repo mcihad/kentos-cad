@@ -39,6 +39,7 @@ mod line_weight;
 mod locks;
 mod measure;
 mod methods;
+mod mirror_texts;
 mod modify;
 mod navigate;
 mod nurbs;

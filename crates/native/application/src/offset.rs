@@ -20,7 +20,14 @@
 //! 4. every id names an object of the document (in order; a repeated id once);
 //! 5. no object on a locked layer; every object of a kind that is offset;
 //! 6. the target layer, when one is given;
-//! 7. at least one copy made (each that is not, a warning).
+//! 7. at least one copy made (each that is not, a warning: `radius_collapse`
+//!    when the distance overruns a radius or the area's width, else
+//!    `offset_failed`).
+//!
+//! What a copy says besides (docs/adr/0293): `approximate_offset` for an
+//! ellipse's, a fit-point or NURBS curve's (a polyline within the core's
+//! tolerance of the curve's parallel), `self_intersecting` when its edges
+//! cross; the copy is written all the same.
 
 use kentos_contracts::{
     CommandResult, CommandWarning, EditOperation, EntitiesEdit, EntitiesOffset, EntitiesOffsetMade,
@@ -31,7 +38,7 @@ use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::intersect::closest_on_edge;
 use kentos_geometry_core::ops::curve_cuts::Geometry;
 use kentos_geometry_core::ops::edges::entity_edges;
-use kentos_geometry_core::ops::offset::{offset_entity, through_distance};
+use kentos_geometry_core::ops::offset::{OffsetNote, collapses, offset_noted, through_distance};
 use kentos_geometry_core::vec2::Vec2;
 
 use crate::ExecutionContext;
@@ -50,7 +57,7 @@ pub const LABEL: &str = "Ötele";
 const OTHER_SIDE: f64 = 1e-3;
 
 /// What a kind that is not offset is told: the core's own words.
-const NOT_OFFSETTABLE: &str = "Yalnızca çizgi, çoklu çizgi, kapalı alan, daire, yay, elips ve yardımcı çizgiler ötelenebilir.";
+const NOT_OFFSETTABLE: &str = "Yalnızca çizgi, çoklu çizgi, kapalı alan, daire, yay, elips, eğri ve yardımcı çizgiler ötelenebilir.";
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &EntitiesOffset) -> CommandResult<()> {
@@ -167,6 +174,8 @@ pub fn offsettable(entity: &Entity) -> bool {
             | Entity::Circle(_)
             | Entity::Arc(_)
             | Entity::Ellipse(_)
+            | Entity::Spline(_)
+            | Entity::Nurbs(_)
             | Entity::Xline(_)
             | Entity::Ray(_)
     )
@@ -193,18 +202,30 @@ pub fn across(target: &Shape, side: Vec2) -> Option<Vec2> {
 }
 
 /// The copies of `target` asked for: on the side of `side` and, with
-/// `both`, on the other; each the copy or why it is not made.
-pub fn copies(target: &Shape, d: f64, side: Vec2, both: bool) -> Vec<Geometry> {
-    let mut out = vec![offset_entity(target, d, side)];
+/// `both`, on the other; each the copy or why it is not made, and what it says.
+pub fn copies(target: &Shape, d: f64, side: Vec2, both: bool) -> Vec<(Geometry, OffsetNote)> {
+    let mut out = vec![offset_noted(target, d, side)];
     if both {
         match across(target, side) {
-            Some(other) => out.push(offset_entity(target, d, other)),
-            None => out.push(Geometry::Error(
-                "Nokta nesnenin üzerinde; iki yana ötelemek için bir yanına tıklayın.".into(),
+            Some(other) => out.push(offset_noted(target, d, other)),
+            None => out.push((
+                Geometry::Error(
+                    "Nokta nesnenin üzerinde; iki yana ötelemek için bir yanına tıklayın.".into(),
+                ),
+                OffsetNote::default(),
             )),
         }
     }
     out
+}
+
+/// The code an offset's refusal is said with.
+fn failed_code(message: &str) -> &'static str {
+    if collapses(message) {
+        codes::RADIUS_COLLAPSE
+    } else {
+        codes::OFFSET_FAILED
+    }
 }
 
 /// The input's own checks, in its fields' order.
@@ -284,12 +305,34 @@ fn check(doc: &Document, input: &EntitiesOffset) -> Result<Checked, Stop> {
         sources.push((*uid).clone());
         distances.push(d);
         let mut made = 0;
-        for copy in copies(&target, d, point, input.both_sides) {
+        for (copy, note) in copies(&target, d, point, input.both_sides) {
             let made_one = match copy {
-                Geometry::Ok(copy) => edit_geometry(copy.shape),
+                Geometry::Ok(copy) => {
+                    if let Some(tol) = note.approximate {
+                        warnings.push(CommandWarning {
+                            code: codes::APPROXIMATE_OFFSET.into(),
+                            message: format!(
+                                "Eğrinin ötelenmişi yaklaşık: kopya, eğrinin paralelinden en çok {} mm uzaklaşan bir çoklu çizgi.",
+                                approximate_mm(tol)
+                            ),
+                            path: Some(format!("uids[{i}]")),
+                        });
+                    }
+                    if note.crossings > 0 {
+                        warnings.push(CommandWarning {
+                            code: codes::SELF_INTERSECTING.into(),
+                            message: format!(
+                                "Kopya kendini {} yerde kesiyor; fazlasını budayın ya da daha küçük bir mesafe verin.",
+                                note.crossings
+                            ),
+                            path: Some(format!("uids[{i}]")),
+                        });
+                    }
+                    edit_geometry(copy.shape)
+                }
                 Geometry::Error(e) => {
                     warnings.push(CommandWarning {
-                        code: codes::OFFSET_FAILED.into(),
+                        code: failed_code(&e).into(),
                         message: e.clone(),
                         path: Some(format!("uids[{i}]")),
                     });
@@ -318,11 +361,9 @@ fn check(doc: &Document, input: &EntitiesOffset) -> Result<Checked, Stop> {
         }
     }
     if adds.is_empty() {
-        return Err(refuse(
-            codes::OFFSET_FAILED,
-            first_error.unwrap_or_else(|| "Öteleme sonucu geçerli bir şekil oluşmadı.".into()),
-            "uids",
-        ));
+        let message =
+            first_error.unwrap_or_else(|| "Öteleme sonucu geçerli bir şekil oluşmadı.".into());
+        return Err(refuse(failed_code(&message), message, "uids"));
     }
     adds.extend(removes);
     Ok(Checked {
@@ -335,4 +376,11 @@ fn check(doc: &Document, input: &EntitiesOffset) -> Result<Checked, Stop> {
         },
         warnings,
     })
+}
+
+/// A tolerance in millimetres as the warning writes it: “0.1”, “0.0054”.
+fn approximate_mm(metres: f64) -> String {
+    let mm = metres * 1000.0;
+    let text = format!("{mm:.4}");
+    text.trim_end_matches('0').trim_end_matches('.').to_owned()
 }

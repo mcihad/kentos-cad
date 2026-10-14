@@ -62153,7 +62153,7 @@
       "id": "cad.entities.transform",
       "version": 1,
       "title": "Nesneleri dönüştür",
-      "summary": "Kalıcı kimlikleriyle verilen nesneleri taşır, bir merkez etrafında döndürür, bir merkeze göre ölçekler, iki noktalı bir eksene göre aynalar ya da kaynak noktalarını hedef noktalarına hizalar; yerinde ya da kopya olarak, tek geri alma adımında. Hizalamada birinci kaynak noktası birinci hedefe gider; ikinci çift verilirse nesneler kaynak doğrultusu hedef doğrultusuna oturacak kadar döner, scale ile boyları da eşitlenir. Taşı, Kopyala, Döndür, Ölçekle, Aynala ve Hizala araçları seçimi kimlik listesi olarak verip bu komutla yazar; adım aracın adını taşır. Dönüşüm geometri çekirdeğindedir: her nesne türü (yay, daire, elips, eğri, yazı, ölçü, tarama) aynı kuralla döner; yaylar saat yönünün tersine kalır, aynalanan yazı okunur kalır. Yerinde değişen nesne yuvasını, kalıcı kimliğini ve öbür alanlarını korur; kopya bütün alanları alır, yeni bir kalıcı kimlik alır. Kilitli katmandaki nesne ne değişir ne kopyalanır: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "summary": "Kalıcı kimlikleriyle verilen nesneleri taşır, bir merkez etrafında döndürür, bir merkeze göre ölçekler, iki noktalı bir eksene göre aynalar ya da kaynak noktalarını hedef noktalarına hizalar; yerinde ya da kopya olarak, tek geri alma adımında. Hizalamada birinci kaynak noktası birinci hedefe gider; ikinci çift verilirse nesneler kaynak doğrultusu hedef doğrultusuna oturacak kadar döner, scale ile boyları da eşitlenir. Taşı, Kopyala, Döndür, Ölçekle, Aynala ve Hizala araçları seçimi kimlik listesi olarak verip bu komutla yazar; adım aracın adını taşır. Dönüşüm geometri çekirdeğindedir: her nesne türü (yay, daire, elips, eğri, yazı, ölçü, tarama) aynı kuralla döner; yaylar saat yönünün tersine kalır. Aynanın text alanı yazıların ne olacağıdır (AutoCAD'in MIRRTEXT'i): readable (varsayılan) yazıyı aynadaki yerinde okunur, baş aşağı olmadan, hizası o yeri dolduracak biçimde yazar; mirrored yazıyı çizimle döndürür; yazıların metni ve bloğun öznitelik değerleri hiç değişmez, bloğun kendi yazıları her zaman okunurdur. Yerinde değişen nesne yuvasını, kalıcı kimliğini ve öbür alanlarını korur; kopya bütün alanları alır, yeni bir kalıcı kimlik alır. Kilitli katmandaki nesne ne değişir ne kopyalanır: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -62182,6 +62182,21 @@
               "vertical"
             ],
             "type": "string"
+          },
+          "MirrorText": {
+            "description": "What a mirror does to the texts (docs/adr/0292; AutoCAD's MIRRTEXT): texts, multi-line texts, texts along a\ncurve, leaders' notes and tables.",
+            "oneOf": [
+              {
+                "const": "readable",
+                "description": "Okunur (MIRRTEXT = 0): in its mirrored place, reading upright; its alignment turned so that it fills that\nplace.",
+                "type": "string"
+              },
+              {
+                "const": "mirrored",
+                "description": "Aynalı (MIRRTEXT = 1 without reversed letters): it turns with the drawing, its baseline's image read\nbackwards; upside down when that points west.",
+                "type": "string"
+              }
+            ]
           },
           "RubberLink": {
             "description": "A link of Kauçuk levha: a point of the drawing and where it is to go.",
@@ -62278,7 +62293,7 @@
                 "type": "object"
               },
               {
-                "description": "Mirror (aynala) across the line through `a` and `b`, two different points.",
+                "description": "Mirror (aynala) across the line through `a` and `b`, two different points. `text` is what becomes of the\ntexts (docs/adr/0292, AutoCAD's MIRRTEXT): readable (the default) or mirrored. A text's words and a block's\nattribute values never change; a block's own texts and attributes always read upright.",
                 "properties": {
                   "a": {
                     "$ref": "#/$defs/Vec2",
@@ -62291,6 +62306,16 @@
                   "kind": {
                     "const": "mirror",
                     "type": "string"
+                  },
+                  "text": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/MirrorText"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 },
                 "required": [
@@ -87872,6 +87897,8 @@
               "circle",
               "arc",
               "ellipse",
+              "spline",
+              "nurbs",
               "xline",
               "ray"
             ],
@@ -87887,6 +87914,7 @@
           "invalid_distance",
           "not_offsettable",
           "offset_failed",
+          "radius_collapse",
           "layer_not_found",
           "not_a_layer",
           "invalid_revision",
@@ -87894,7 +87922,10 @@
         ],
         "warnings": [
           "layer_hidden",
-          "offset_failed"
+          "offset_failed",
+          "radius_collapse",
+          "approximate_offset",
+          "self_intersecting"
         ]
       },
       "examples": [
@@ -236180,6 +236211,24 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Hiç kenet türü verilmedi; listeyi kaldırın (varsayılan türler) ya da en az bir tür verin."
+    },
+    {
+      "code": "radius_collapse",
+      "kind": "failedOrWarning",
+      "retryable": false,
+      "meaning": "Öteleme mesafesi bir yarıçapı ya da alanın genişliğini aşıyor."
+    },
+    {
+      "code": "approximate_offset",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kopya eğrinin paralelini yaklaşık izliyor."
+    },
+    {
+      "code": "self_intersecting",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kopyanın kenarları birbirini kesiyor."
     },
     {
       "code": "degenerate_shape",

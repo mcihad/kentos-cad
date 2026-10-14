@@ -15,8 +15,8 @@ are the document's, before the record).
 The geometry is computed independently from the transforms' definitions (affine_reference.py, beside this file, and the
 rules below, written from the ADRs: 0037, 0139, 0142, 0143, 0144 §3, 0145, 0146 §4, 0147 §4, 0174, 0182, 0184 §2,
 0186 §8, 0192 §4, 0196 §3, 0204 §7, 0207 §3, 0224, 0258 §2, 0259 §2), in IEEE double arithmetic in the same order of
-operations, with Python's own math; the handlers must meet them bit for bit. A text's mirror is CAD-EDIT-06's (its
-MIRRTEXT policy): the texts are moved, turned and scaled here, not mirrored.
+operations, with Python's own math; the handlers must meet them bit for bit. A mirror's texts follow its policy
+(docs/adr/0292, AutoCAD's MIRRTEXT): readable (the default) and mirrored, across a slanting axis and a level one.
 """
 import copy
 import json
@@ -27,8 +27,9 @@ from pathlib import Path
 sys.dont_write_bytecode = True  # no __pycache__ in the tree
 from affine_reference import (  # noqa: E402  (beside this file)
     apply, assert_no_negative_zero, js_hypot, linear, mirror, moved, norm_angle, reflects, rotation, scale_of, scaling,
-    text_turn, translation,
+    set_align, text_frame, translation,
 )
+import text_along_cases as along  # noqa: E402  (ADR 0196's rules, beside this file)
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures" / "commands" / "v1" / "cad.entities.transform.kinds.json"
@@ -100,10 +101,11 @@ ENTITIES = [
 ]
 IDS = [e["id"] for e in ENTITIES]
 BY_ID = {e["id"]: e for e in ENTITIES}
-TEXTS = {10, 11}
+TEXTS = {10, 11, 18, 19}
 # Angles read back with atan2 from points the reference places with the platform's cos and sin: an arc's ends, an image's
-# frame. The core's libm (fdlibm) and the platform's may round them an ulp apart; their steps carry `within` (10⁻¹²).
-LIBM = {6, 20}
+# frame, a text along a curve mirrored (its corners read back into its frame). The core's libm (fdlibm) and the
+# platform's may round them an ulp apart; their steps carry `within` (10⁻¹²).
+LIBM = {6, 11, 20}
 CLOUD = 22
 
 BLOCKS = [{
@@ -147,14 +149,32 @@ def pt(t):
     return {"x": t[0], "y": t[1]}
 
 
-def transformed(e, m, new_id=None):
-    """`e` under the similarity `m`, by the rules of its kind (the ADRs in this file's notes)."""
+def along_mirrored(e, m, policy):
+    """A text along a curve under a reflection (docs/adr/0196 §3, 0292): its corners mirrored and its bulges turned,
+    then read the other way round; readable, once more with its up swapped when the curve then reads upside down."""
+    a, b, c, d = m[:4]
+    vs, bulges = along.world(e)
+    vs = [along.apply(m, v) for v in vs]
+    r = math.radians(e["rotation"])
+    u = (a * math.cos(r) + c * math.sin(r), b * math.cos(r) + d * math.sin(r))
+    turn = along.deg(math.atan2(u[1], u[0]))
+    out = dict(e)
+    out = along.with_place(out, along.framed(vs, [-x for x in bulges], turn), e.get("align"))
+    out = along.reversed_text(out, False)
+    if policy == "readable" and along.upside_down(along.chord(out)):
+        out = along.reversed_text(out, True)
+    return out
+
+
+def transformed(e, m, new_id=None, policy="readable"):
+    """`e` under the similarity `m`, by the rules of its kind (the ADRs in this file's notes); a mirror's texts by
+    `policy` (docs/adr/0292)."""
     k = e["kind"]
     s = scale_of(m)
     flip = reflects(m)
     if k in ("line", "circle", "arc", "ellipse", "spline", "dimension", "leader", "image", "raster") or (
             k in ("polygon",)) or (k == "hatch" and e["pattern"]["type"] in ("lines", "cross")):
-        return moved(e, m, new_id)
+        return moved(e, m, new_id, policy)
     out = json.loads(json.dumps(e))
     if new_id is not None:
         out["id"] = new_id
@@ -197,14 +217,17 @@ def transformed(e, m, new_id=None):
                 return pt((d[0] / length, d[1] / length)) if length > 0.0 else pt(d)
             out["tangents"] = [unit(t) for t in e["tangents"]]
     elif k == "text":
-        assert not flip, "a text's mirror is CAD-EDIT-06's"
+        if "path" in e and flip:
+            return {**along_mirrored(out, m, policy), "height": e["height"] * s}
         out["p"] = pt(apply(m, xy(e["p"])))
         out["height"] = e["height"] * s
         if "boxWidth" in e:
             out["boxWidth"] = e["boxWidth"] * s
-        # Along a curve (docs/adr/0196 §3): its frame turns as a text's turns (from 0 up to 360), its curve scales,
-        # its bulges stay.
-        out["rotation"] = text_turn(e["rotation"], m)
+        # Its frame (docs/adr/0292): turned as its baseline's image; mirrored, readable or turning with the drawing,
+        # its alignment swapped so that it fills its mirrored place. Along a curve (docs/adr/0196 §3) its curve
+        # scales, its bulges stay.
+        out["rotation"], align, _ = text_frame(e["rotation"], e.get("align"), m, policy)
+        set_align(out, align)
         if "path" in e:
             out["path"]["pts"] = [pt((q["x"] * s, q["y"] * s)) for q in e["path"]["pts"]]
     elif k == "hatch":
@@ -238,13 +261,19 @@ def transformed(e, m, new_id=None):
     elif k == "table":
         # docs/adr/0184 §2: its corner moves (mirrored, its top right's image is its new top left), it turns as a text
         # does, its sizes scale.
+        # Mirrored (docs/adr/0292): its new top left the image of its top right when its baseline turns back, of
+        # its bottom left when its up does.
+        turn, _, up_back = text_frame(e["rotation"], None, m, policy)
         corner = xy(e["p"])
-        if flip:
+        r = (e["rotation"] * math.pi) / 180.0
+        if flip and up_back:
+            height = sum(e["rows"])
+            corner = (corner[0] + math.sin(r) * height, corner[1] - math.cos(r) * height)
+        elif flip:
             width = sum(e["columns"])
-            r = (e["rotation"] * math.pi) / 180.0
             corner = (corner[0] + math.cos(r) * width, corner[1] + math.sin(r) * width)
         out["p"] = pt(apply(m, corner))
-        out["rotation"] = text_turn(e["rotation"], m)
+        out["rotation"] = turn
         out["height"] = e["height"] * s
         out["rows"] = [h * s for h in e["rows"]]
         out["columns"] = [w * s for w in e["columns"]]
@@ -276,6 +305,7 @@ MOVE = {"kind": "move", "dx": 12.5, "dy": -7.25}
 ROTATE = {"kind": "rotate", "center": p(1.0, 1.0), "angle": 0.5}
 SCALE = {"kind": "scale", "center": p(1.0, 1.0), "factor": 2.5}
 MIRROR = {"kind": "mirror", "a": p(2.0, -1.0), "b": p(5.0, 3.0)}
+LEVEL = {"kind": "mirror", "a": p(0.0, 4.0), "b": p(10.0, 4.0)}
 MAPS = [
     ("taşı", MOVE, translation(12.5, -7.25)),
     ("döndür", ROTATE, rotation(0.5, (1.0, 1.0))),
@@ -318,19 +348,27 @@ def kind_cases():
         e = BY_ID[i]
         steps = []
         for name, t, m in MAPS:
-            if name == "aynala" and i in TEXTS:
-                continue
             got = clean(transformed(e, m))
             assert_no_negative_zero(got, f"{i}/{name}")
             step = plan_step(t, [(i, got)])
             if i in LIBM:
                 step["within"] = 1e-12
             steps.append(step)
-        if i in TEXTS:
+        if i in {10, 11}:
             # Clockwise: the frame's turn is written from 0 up to 360, as a text's (docs/adr/0196 §3).
             back = {"kind": "rotate", "center": p(1.0, 1.0), "angle": -1.0}
             steps.append(plan_step(back, [(i, clean(transformed(e, rotation(-1.0, (1.0, 1.0)))))]))
-        out.append({"name": f"her tür: {NAMES[i]}; taşı, döndür, ölçekle" + ("" if i in TEXTS else ", aynala"), "steps": steps})
+        if i in TEXTS:
+            # docs/adr/0292: across a level axis readable turns its up back; mirrored turns its baseline back both ways.
+            level = mirror((0.0, 4.0), (10.0, 4.0))
+            for t, m, policy in ((LEVEL, level, "readable"), ({**MIRROR, "text": "mirrored"}, MAPS[3][2], "mirrored"),
+                                 ({**LEVEL, "text": "mirrored"}, level, "mirrored")):
+                step = plan_step(t, [(i, clean(transformed(e, m, policy=policy)))])
+                if i == 11:
+                    step["within"] = 1e-9
+                steps.append(step)
+        more = "; aynada okunur ve aynalı (ADR 0292)" if i in TEXTS else ""
+        out.append({"name": f"her tür: {NAMES[i]}; taşı, döndür, ölçekle, aynala{more}", "steps": steps})
     return out
 
 
