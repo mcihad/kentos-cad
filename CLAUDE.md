@@ -366,6 +366,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   `call::recorded`'dan belgeye not edilir (`Document::note_refusal`, `refused_calls`; oturumun); her çağrının Python kodu
   (`kentos_native_application::python_call`) gösterilir ve kopyalanır, tekrar oynatma girdisi (`kentos.replay/1`) kopyalanır ya da
   kaydedilir; ortak komut durumlarının çağrıları `scripts/python/history_calls.py` ile SDK'ya karşı denetlenir (`history/`, ADR 0284);
+  büyük seçimde Öznitelikler: karışık seçimde kilitsizler düzenlenir, kilitliler atlanır ve ilk satırda sayılır; Katman ortak ya da Çeşitli;
+  Ortak öznitelikler (değer ya da “Çeşitli (k/n nesnede)”, bütün seçime tek adımda); 100 000 nesnede panel 48 ms (ADR 0286);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);

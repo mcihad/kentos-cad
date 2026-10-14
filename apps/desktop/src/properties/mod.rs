@@ -10,7 +10,10 @@
 //!   panel does not take (an empty text, not a number, a height not above
 //!   zero) leaves the drawing as it was, and the cell shows its value again.
 //! - Katman ▾, Renk ▾ and Sembol ▾ are drop-downs; an object on a locked
-//!   layer, or a selection holding one, is not edited, its values still named.
+//!   layer is not edited, its values still named. Several objects holding
+//!   locked ones: the others are edited, the locked skipped and counted, a
+//!   note first says how many (docs/adr/0278, 0286); Ortak öznitelikler
+//!   shows every key, shared or Çeşitli, and writes one value to them all.
 //! - Every edit goes through a product command, as the web's panel writes
 //!   (docs/adr/0066): the layer, colour and attributes through
 //!   `cad.entities.set`, a geometry value through `cad.entities.edit`'s
@@ -135,6 +138,8 @@ pub enum Field {
     TextAngle(Slot),
     /// An attribute, by its key.
     Attribute(Slot, String),
+    /// An attribute of several objects, by its key (Ortak öznitelikler, docs/adr/0286).
+    Attributes(Vec<Slot>, String),
     /// A line's start or end elevation, or every vertex's of a polyline or an
     /// area: a number sets it, an empty text clears it (docs/adr/0142).
     Elevation(Slot, Spot),
@@ -847,6 +852,11 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         }
         _ => {}
     }
+    if let Field::Attributes(slots, key) = field {
+        let mut input = set_input(model, slots, PropertiesOperation::Attributes);
+        input.attrs = Some(BTreeMap::from([(key.clone(), Some(text.to_owned()))]));
+        return properties::set_properties(model, input);
+    }
     if let Field::Attribute(slot, key) = field {
         let Some(base) = model.get(*slot).map(Entity::base) else {
             return Vec::new();
@@ -898,6 +908,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::LeaderHeight(_)
         | Field::LeaderTurn(_)
         | Field::LeaderArrowSize(_)
+        | Field::Attributes(..)
         | Field::DimensionZa(_)
         | Field::DimensionZb(_) => return Vec::new(),
     };

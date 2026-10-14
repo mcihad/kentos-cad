@@ -6,10 +6,10 @@
 //! docs/adr/0272's: Koordinat oku on a parcel's corner, the log saying the snap's object and place; docs/adr/0274's:
 //! inside a room block turned 30°, the midpoint of a nested, mirrored door's swing; docs/adr/0276's: a Ctrl click
 //! on a parcel's corner where a wall crosses it (the corner ringed, the log saying the parcel's id and corner, the
-//! chip for the wall), and the shortcuts window with Ctrl + tık and the drawing keys; docs/adr/0279's: the grip menu of a parcel's corner; docs/adr/0280's: two hot corners turning the parcel; docs/adr/0281's: an ambiguous start and a start of one command typed; docs/adr/0283's: Pencere yakınlaştır run over a polyline being drawn, and the polyline back after it with its preview in the new view. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
+//! chip for the wall), and the shortcuts window with Ctrl + tık and the drawing keys; docs/adr/0279's: the grip menu of a parcel's corner; docs/adr/0280's: two hot corners turning the parcel; docs/adr/0281's: an ambiguous start and a start of one command typed; docs/adr/0283's: Pencere yakınlaştır run over a polyline being drawn, and the polyline back after it with its preview in the new view; docs/adr/0286's: Öznitelikler of a mixed selection with a locked wall and shared attributes. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma,kenet-oku,kenet-blok-ici,secim-alt-nesne,kisayollar,tutamac-menusu,tutamac-kipleri,komut-adlari,seffaf-pencere,seffaf-donus cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma,kenet-oku,kenet-blok-ici,secim-alt-nesne,kisayollar,tutamac-menusu,tutamac-kipleri,komut-adlari,seffaf-pencere,seffaf-donus,oznitelik-coklu,oznitelik-ortak cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -331,6 +331,41 @@ fn typed_names(app: &mut App) {
     let _ = app.run_typed("orta ha");
 }
 
+/// docs/adr/0286: three walls and a parcel selected, one wall on the locked Yol layer: Öznitelikler says the
+/// locked one is skipped, Ortak öznitelikler shows Tür shared and Kat Çeşitli.
+fn many_selected(app: &mut App) {
+    let mut o = Objects::new();
+    let a = o.line("cizim", [0.0, 0.0], [12.0, 0.0]);
+    let b = o.line("cizim", [0.0, 3.0], [12.0, 3.0]);
+    let c = o.line("yol", [0.0, 6.0], [12.0, 6.0]);
+    let d = o.path(
+        "parsel",
+        &[[0.0, 9.0], [12.0, 9.0], [12.0, 18.0], [0.0, 18.0]],
+        true,
+    );
+    o.data(a, &[("Tür", "Duvar"), ("Kat", "1")], None);
+    o.data(b, &[("Tür", "Duvar"), ("Kat", "2")], None);
+    o.data(c, &[("Tür", "Duvar")], None);
+    o.data(d, &[("Tür", "Duvar"), ("Kat", "1")], None);
+    open(app, o);
+    make_cad(app);
+    if let Some(doc) = app.document.as_mut() {
+        doc.model.toggle_layer_locked("yol");
+    }
+    app.selection.set(
+        [a, b, c, d]
+            .into_iter()
+            .map(kentos_domain::Slot)
+            .collect::<Vec<_>>(),
+    );
+}
+
+/// The same with Ortak özellikler closed: Ortak öznitelikler in view.
+fn many_attributes(app: &mut App) {
+    many_selected(app);
+    app.props_closed.insert("general");
+}
+
 /// The shortcuts window, opened from Yardım.
 fn shortcut_list(app: &mut App) {
     open(app, Objects::new());
@@ -393,6 +428,8 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("tutamac-menusu", grip_menu),
         ("tutamac-kipleri", grip_modes),
         ("komut-adlari", typed_names),
+        ("oznitelik-coklu", many_selected),
+        ("oznitelik-ortak", many_attributes),
         ("kenet-blok-ici", in_blocks),
         ("kenet-oku", reading),
         ("kenet-dolasma", cycling),
