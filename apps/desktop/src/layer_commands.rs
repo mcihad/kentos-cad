@@ -14,7 +14,7 @@ use crate::app::App;
 
 impl App {
     /// The answer's output, its warnings said; its refusal said and none.
-    fn answered<T>(&mut self, result: CommandResult<T>) -> Option<T> {
+    pub(crate) fn answered<T>(&mut self, result: CommandResult<T>) -> Option<T> {
         match result {
             CommandResult::Completed { output, warnings } => {
                 for w in warnings {

@@ -26,7 +26,7 @@ const COMMAND_CLICK: &str = if cfg!(target_os = "macos") {
 };
 
 /// What each mouse action does (the web's `MOUSE_ACTIONS`): its meaning, then the action.
-pub const MOUSE_ACTIONS: [(&str, &str); 19] = [
+pub const MOUSE_ACTIONS: [(&str, &str); 20] = [
     ("Seç, nokta koy, adımı onayla", "Sol tık"),
     ("Komutu onayla ya da bitir (Enter gibi)", "Sağ tık"),
     (
@@ -68,6 +68,10 @@ pub const MOUSE_ACTIONS: [(&str, &str); 19] = [
     ("Görünümü kaydır", "Orta tuşla sürükle"),
     ("Yakınlaştır, uzaklaştır", "Tekerlek"),
     ("Tümünü göster", "Orta tuşa çift tık"),
+    (
+        "Bölünmüş alanda öbür görünümü etkin yap; tekerlek ve orta tuş onu etkin yapmadan taşır",
+        "Öbür görünüme tık",
+    ),
     ("Yazıyı ya da ölçüyü yerinde düzenle", "Çift tık"),
     (
         "Köşeyi taşı; kenar ortasındaki baklava köşe ekler",

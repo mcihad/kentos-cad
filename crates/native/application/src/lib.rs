@@ -115,6 +115,7 @@ pub mod transform;
 pub mod trim;
 pub mod ucs_set;
 pub mod units_change;
+pub mod views_edit;
 pub mod widths;
 
 pub use context::ExecutionContext;
@@ -163,6 +164,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_UCS_SET,
         kentos_contracts::CAD_UCS_SET_VERSION,
+    ),
+    // The project's named views ([`views_edit`], docs/adr/0285).
+    (
+        kentos_contracts::CAD_VIEWS_EDIT,
+        kentos_contracts::CAD_VIEWS_EDIT_VERSION,
     ),
     // Öne getir and Arkaya gönder ([`entities_order`], docs/adr/0260 §5).
     (

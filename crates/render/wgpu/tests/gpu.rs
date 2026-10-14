@@ -469,6 +469,7 @@ fn a_kept_picture_is_composed_again_with_the_hover_over_it(gpu: &mut Gpu) {
         scale: 2.0,
         width: f64::from(width),
         height: f64::from(height),
+        twist: 0.0,
     };
     for samples in [1, 4] {
         let mut settings = RenderSettings::new(Rgba8::rgb(0, 0, 0));
@@ -540,6 +541,7 @@ fn turned_square() -> (DocumentSnapshotV1, Camera) {
         scale: 2.0,
         width: 64.0,
         height: 64.0,
+        twist: 0.0,
     };
     (doc, camera)
 }
@@ -672,6 +674,7 @@ fn sub_pixel_pans_at_tm_coordinates_move_the_line_by_exactly_the_pan(gpu: &mut G
             scale: MAX_SCALE,
             width: f64::from(width),
             height: f64::from(height),
+            twist: 0.0,
         };
         let rgba = gpu.draw(&[&part], &camera, &settings, width, height);
         let centre = line_centre(&rgba, width, 2);

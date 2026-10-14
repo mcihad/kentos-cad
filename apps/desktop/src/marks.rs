@@ -577,6 +577,13 @@ fn crosshair(frame: &mut canvas::Frame, c: Crosshair, at: Point, area: Size, col
     );
 }
 
+/// A world direction (x east, y north) as the screen shows it, `k` pixels long per unit: right and down, the
+/// view's twist taken in (docs/adr/0285 §2).
+pub(crate) fn screen_dir(camera: &Camera, x: f64, y: f64, k: f64) -> (f32, f32) {
+    let (c, s) = camera.twist_cos_sin();
+    ((k * (x * c + y * s)) as f32, (-k * (y * c - x * s)) as f32)
+}
+
 /// The web's `drawSelectionBox`. The corners are where the camera now shows their world points (docs/adr/0277): a
 /// pan or a zoom while the button is down keeps the box on the drawing.
 fn select_box(frame: &mut canvas::Frame, b: SelectBox, camera: &Camera, colors: &MarkColors) {
@@ -676,7 +683,7 @@ fn locks(frame: &mut canvas::Frame, l: &LockMarks, camera: &Camera, colors: &Mar
         );
     }
     if let Some((u, both)) = l.direction {
-        let (dx, dy) = (u.x as f32 * 1e4, -u.y as f32 * 1e4);
+        let (dx, dy) = screen_dir(camera, u.x, u.y, 1e4);
         let back = if both { 1.0 } else { 0.0 };
         frame.stroke(
             &Path::line(
@@ -689,7 +696,7 @@ fn locks(frame: &mut canvas::Frame, l: &LockMarks, camera: &Camera, colors: &Mar
     for &(through, u) in l.lines.iter().flatten() {
         let [x, y] = camera.world_to_screen(through);
         let p = Point::new(x as f32, y as f32);
-        let (dx, dy) = (u.x as f32 * 1e4, -u.y as f32 * 1e4);
+        let (dx, dy) = screen_dir(camera, u.x, u.y, 1e4);
         frame.stroke(
             &Path::line(p - Vector::new(dx, dy), p + Vector::new(dx, dy)),
             dashed,
@@ -744,7 +751,7 @@ fn tracking(frame: &mut canvas::Frame, t: &TrackingMarks, camera: &Camera, color
             }
             Guide::Line { through, dir } => {
                 let o = screen(*through);
-                let (dx, dy) = (dir.x as f32 * 1e4, -dir.y as f32 * 1e4);
+                let (dx, dy) = screen_dir(camera, dir.x, dir.y, 1e4);
                 frame.stroke(
                     &Path::line(o - Vector::new(dx, dy), o + Vector::new(dx, dy)),
                     dashed,
@@ -755,7 +762,7 @@ fn tracking(frame: &mut canvas::Frame, t: &TrackingMarks, camera: &Camera, color
     // An acquired edge: two short strokes along it where it was rested on.
     for &(at, dir) in &t.edges {
         let c = screen(at);
-        let (ux, uy) = (dir.x as f32, -dir.y as f32);
+        let (ux, uy) = screen_dir(camera, dir.x, dir.y, 1.0);
         let (nx, ny) = (-uy * 2.5, ux * 2.5);
         frame.stroke(
             &Path::new(|b| {
@@ -787,10 +794,11 @@ fn tracking(frame: &mut canvas::Frame, t: &TrackingMarks, camera: &Camera, color
     for line in &track.lines {
         let [ox, oy] = camera.world_to_screen(line.origin);
         let r = line.angle.to_radians();
+        let (dx, dy) = screen_dir(camera, r.cos(), r.sin(), 1e4);
         frame.stroke(
             &Path::line(
                 Point::new(ox as f32, oy as f32),
-                Point::new((ox + r.cos() * 1e4) as f32, (oy - r.sin() * 1e4) as f32),
+                Point::new(ox as f32 + dx, oy as f32 + dy),
             ),
             dashed,
         );

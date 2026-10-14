@@ -203,6 +203,10 @@ fn build<'a>(
     format!("{size:?}{engine:?}").hash(&mut key);
     // The time slider's window: its temporal layers' labels come and go (docs/adr/0210 §6).
     format!("{:?}", spatial.store().time_window()).hash(&mut key);
+    // A twisted view lays its text out upright and turns it as a picture (docs/adr/0285 §2).
+    camera.twist.to_bits().hash(&mut key);
+    let turned = (camera.twist != 0.0).then_some(*camera);
+    let camera = &camera.upright();
     let spots = kept.get(key.finish(), || {
         let view = camera.visible_bounds();
         let mut spots = spatial.labels_shown(
@@ -253,6 +257,7 @@ fn build<'a>(
         map_marks,
         preview: preview.map(Rc::new),
         pinned: engine.pinned,
+        turned,
     })
     .width(Fill)
     .height(Fill)
@@ -409,6 +414,10 @@ struct Labels<'a> {
     preview: Option<Rc<Preview>>,
     /// Sabit etiketleri vurgula (docs/adr/0212 §4): pinned labels outlined.
     pinned: bool,
+    /// A twisted view (docs/adr/0285 §2): the text is laid out on `view`, the same view with the
+    /// north up over the box round the turned area, and drawn turned by the twist as a picture;
+    /// the area's own camera draws the marks. None with the north up.
+    turned: Option<Camera>,
 }
 
 /// A sheet's map frame as the labels see it: the camera's picture turned by
@@ -474,6 +483,7 @@ pub fn paint_in_map(
         map_marks: None,
         preview: None,
         pinned: false,
+        turned: None,
     }
     .paint(frame);
 }
@@ -512,6 +522,7 @@ pub fn texts_in_map(
         map_marks: None,
         preview: None,
         pinned: false,
+        turned: None,
     }
     .paint(&mut list);
     list.labels
@@ -841,11 +852,29 @@ impl canvas::Program<Message> for Labels<'_> {
             state.cache.clear();
             state.key.set(self.key);
         }
-        vec![
-            state
-                .cache
-                .draw(renderer, bounds.size(), |frame| self.paint(frame)),
-        ]
+        vec![state.cache.draw(renderer, bounds.size(), |frame| {
+            let Some(area) = self.turned else {
+                self.paint(frame);
+                return;
+            };
+            // The upright picture's middle on the area's, turned by the twist (docs/adr/0285 §2).
+            frame.with_save(|f| {
+                f.translate(Vector::new(
+                    (area.width / 2.0) as f32,
+                    (area.height / 2.0) as f32,
+                ));
+                f.rotate(area.twist as f32);
+                f.translate(Vector::new(
+                    -(self.view.width / 2.0) as f32,
+                    -(self.view.height / 2.0) as f32,
+                ));
+                self.paint(f);
+            });
+            if let Some(lift) = self.map_marks {
+                let ucs = self.format.ucs.map(|u| u[2]);
+                frame.marks(&area, &self.colors, self.format.axes, ucs, lift);
+            }
+        })]
     }
 }
 
@@ -1571,6 +1600,7 @@ impl Labels<'_> {
         // Grid north and the scale bar over the text, or a CAD project's coordinate axes,
         // as the web's overlay (map_marks.rs); a sheet's map has its own.
         if self.fence.is_none()
+            && self.turned.is_none()
             && let Some(lift) = self.map_marks
         {
             let ucs = self.format.ucs.map(|u| u[2]);
@@ -2312,6 +2342,7 @@ mod tests {
             scale: 1.0 / crate::sheet_pdf::PX_MM,
             width: 1400.0,
             height: 900.0,
+            twist: 0.0,
         };
         let view = camera.visible_bounds();
         let spots = spatial.labels(
@@ -2883,6 +2914,7 @@ fn perf() {
         map_marks: Some(0.0),
         preview: None,
         pinned: false,
+        turned: None,
     };
     let started = Instant::now();
     for _ in 0..frames {

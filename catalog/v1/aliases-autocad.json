@@ -17,6 +17,8 @@
     { "name": "DRE", "autocad": "DIMREASSOCIATE", "command": "tool.dimensionReassociate" },
     { "name": "DT", "autocad": "TEXT", "command": "tool.text" },
     { "name": "DTEXT", "autocad": "TEXT", "command": "tool.text" },
+    { "name": "DV", "autocad": "DVIEW", "command": "tool.viewTwist" },
+    { "name": "DVIEW", "autocad": "DVIEW", "command": "tool.viewTwist" },
     { "name": "FI", "autocad": "FILTER", "command": "edit.selectFilter" },
     { "name": "GD", "autocad": "GRADIENT", "command": "tool.hatch" },
     { "name": "GRADIENT", "autocad": "GRADIENT", "command": "tool.hatch" },
@@ -44,6 +46,7 @@
     { "name": "P", "autocad": "PAN", "command": "tool.pan" },
     { "name": "PASTECLIP", "autocad": "PASTECLIP", "command": "edit.paste" },
     { "name": "PCATTACH", "autocad": "POINTCLOUDATTACH", "command": "pointcloud.add" },
+    { "name": "PLAN", "autocad": "PLAN", "command": "view.twistUcs" },
     { "name": "POINTCLOUDATTACH", "autocad": "POINTCLOUDATTACH", "command": "pointcloud.add" },
     { "name": "POLYGON", "autocad": "POLYGON", "command": "tool.regularPolygon" },
     { "name": "PR", "autocad": "PROPERTIES", "command": "view.rightPanel" },
@@ -60,6 +63,8 @@
     { "name": "UN", "autocad": "UNITS", "command": "file.settings" },
     { "name": "UNDO", "autocad": "UNDO", "command": "edit.undo" },
     { "name": "UNITS", "autocad": "UNITS", "command": "file.settings" },
+    { "name": "VIEW", "autocad": "VIEW", "command": "view.namedViews" },
+    { "name": "VPORTS", "autocad": "VPORTS", "command": "view.split" },
     { "name": "W", "autocad": "WBLOCK", "command": "file.saveSelection" }
   ]
 }

@@ -11,7 +11,7 @@ use bytemuck::{Pod, Zeroable};
 
 /// Version of the binding, vertex and uniform layout (the JSON's `version`,
 /// the WGSL's `LAYOUT_VERSION`).
-pub const LAYOUT_VERSION: u32 = 1;
+pub const LAYOUT_VERSION: u32 = 2;
 
 /// The frame uniform (group 0, binding 0; WGSL `Frame`).
 #[repr(C)]
@@ -32,8 +32,10 @@ pub struct FrameUniform {
     pub line_width: f32,
     /// 1 when the target format is sRGB (the shaders then hand it linear values).
     pub srgb_target: u32,
-    /// Up to the struct's 16-byte alignment (WGSL pads the same way).
-    pub _pad: [u32; 2],
+    /// The view's twist (docs/adr/0285 §2) as cos − 1 and sin: zero for a
+    /// view with the north up, so a writer that leaves them zero draws as before.
+    pub twist_c: f32,
+    pub twist_s: f32,
 }
 
 /// A vertex of a fill triangle (pipeline `fill`, step mode vertex).

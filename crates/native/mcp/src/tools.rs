@@ -542,6 +542,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.settings.set"
             // Its delete takes a named UCS away (docs/adr/0261 §2).
             | "cad.ucs.set"
+            // Its delete takes a named view away, its save writes over one (docs/adr/0285 §1).
+            | "cad.views.edit"
             // It removes sheets and their items as the designer does (docs/adr/0252 §2).
             | "cad.sheets.edit"
             // A change set runs any of these (docs/adr/0253 §8).

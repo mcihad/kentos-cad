@@ -11,6 +11,7 @@ import type { DrawingUnit } from "./DrawingUnit";
 import type { LayerState } from "./LayerState";
 import type { LengthStyle } from "./LengthStyle";
 import type { NamedUcs } from "./NamedUcs";
+import type { NamedView } from "./NamedView";
 import type { NetworkDef } from "./NetworkDef";
 import type { ProjectVariable } from "./ProjectVariable";
 import type { ServiceConnection } from "./ServiceConnection";
@@ -113,6 +114,10 @@ ucs?: Ucs,
  * The project's named UCSs, in the order they were kept.
  */
 namedUcs?: Array<NamedUcs>, 
+/**
+ * The project's named views, in the order they were kept (docs/adr/0285 §1).
+ */
+namedViews?: Array<NamedView>, 
 /**
  * How lengths are written (docs/adr/0262 §2): none, decimal; the others
  * only in an inch or foot drawing.

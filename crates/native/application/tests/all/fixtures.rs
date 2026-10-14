@@ -17,7 +17,7 @@ use kentos_domain::contracts::{
     EntitiesOffset, EntitiesOrder, EntitiesSetProperties, EntitiesTrim, LabelsPin, LayersCompose,
     LayersEdit, LayersFilter, LayersInfo, LayersLabels, LayersRenderer, LayersService, LayersSet,
     LayersStates, LayersTime, NetworkDefine, NurbsCreate, OffsetBy, ScenariosEdit, SettingsSet,
-    SheetsEdit, StylesEdit, UcsSet, UcsTo,
+    SheetsEdit, StylesEdit, UcsSet, UcsTo, ViewsEdit, ViewsOp,
 };
 use kentos_domain::contracts::{
     ArcCreate, ArrayLayout, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_ARRAY,
@@ -39,7 +39,7 @@ use kentos_native_application::{
     layers_filter, layers_info, layers_labels, layers_renderer, layers_service, layers_set,
     layers_states, layers_time, line, network_define, nurbs, offset, point, points_construct,
     polygon, polyline, scenarios_edit, set, settings_set, sheets_edit, snap_find, styles_edit,
-    transform, ucs_set, units_change,
+    transform, ucs_set, units_change, views_edit,
 };
 use kentos_native_application::{
     changeset, create, dimensions_create, divide, entities_boundary, entities_break,
@@ -868,6 +868,30 @@ impl Input for SettingsSet {
     }
 }
 
+impl Input for ViewsEdit {
+    /// A saved view's `op.center.x`, `op.center.y`, `op.width`, `op.height`, `op.twist` (docs/adr/0285 §1).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        let ViewsOp::Save {
+            center,
+            width,
+            height,
+            twist,
+            ..
+        } = &mut self.edit
+        else {
+            return None;
+        };
+        match path {
+            "edit.center.x" => Some(&mut center.x),
+            "edit.center.y" => Some(&mut center.y),
+            "edit.width" => Some(width),
+            "edit.height" => Some(height),
+            "edit.twist" => Some(twist.get_or_insert(0.0)),
+            _ => None,
+        }
+    }
+}
+
 impl Input for UcsSet {
     /// `to.angle`; a point's `x` or `y` (`to.origin.x`, `to.point.y`, `to.xPoint.x`, `to.at.y`);
     /// the command's errors name the point (docs/adr/0261 §2).
@@ -1542,6 +1566,7 @@ fn run_op(
         kentos_domain::contracts::CAD_STYLES_EDIT => run!(styles_edit, StylesEdit),
         kentos_domain::contracts::CAD_SETTINGS_SET => run!(settings_set, SettingsSet),
         kentos_domain::contracts::CAD_UCS_SET => run!(ucs_set, UcsSet),
+        kentos_domain::contracts::CAD_VIEWS_EDIT => run!(views_edit, ViewsEdit),
         kentos_domain::contracts::CAD_UNITS_CHANGE => run!(units_change, UnitsChange),
         kentos_domain::contracts::FILE_IMPORT_DXF => run!(file_import, ImportDxf),
         kentos_domain::contracts::CAD_SHEETS_EDIT => run!(sheets_edit, SheetsEdit),

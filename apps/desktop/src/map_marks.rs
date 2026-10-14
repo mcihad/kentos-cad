@@ -52,9 +52,11 @@ pub fn paint(
     lift: f32,
 ) {
     let size = frame.size();
+    // A twisted view (docs/adr/0285 §2): grid north and the axes turn with the drawing.
+    let twist = camera.twist;
     match axes {
         Axes::Gis => {
-            north_arrow(frame, size, colors);
+            north_arrow(frame, size, colors, twist);
             scale_bar(
                 frame,
                 camera.scale,
@@ -62,14 +64,14 @@ pub fn paint(
                 colors,
             );
             if let Some(a) = ucs {
-                ucs_icon(frame, ucs_at(size), colors, a, ["Y", "X"], false);
+                ucs_icon(frame, ucs_at(size), colors, a - twist, ["Y", "X"], false);
             }
         }
         Axes::Cad => ucs_icon(
             frame,
             ucs_at(size),
             colors,
-            ucs.unwrap_or(0.0),
+            ucs.unwrap_or(0.0) - twist,
             ["X", "Y"],
             ucs.is_none(),
         ),
@@ -191,7 +193,18 @@ fn two_digits(v: f64) -> String {
     format!("{v:.decimals$}")
 }
 
-fn north_arrow(frame: &mut Frame, size: Size, colors: &Colors) {
+fn north_arrow(frame: &mut Frame, size: Size, colors: &Colors, twist: f64) {
+    if twist != 0.0 {
+        // Turned about its middle as the view turns the north (clockwise on the screen).
+        let middle = Vector::new(size.width - 30.0, 22.0 + 17.0);
+        frame.with_save(|f| {
+            f.translate(middle);
+            f.rotate(twist as f32);
+            f.translate(Vector::new(-middle.x, -middle.y));
+            north_arrow(f, size, colors, 0.0);
+        });
+        return;
+    }
     let (x, y) = (size.width - 30.0, 22.0);
     let filled = Path::new(|b| {
         b.move_to(Point::new(x, y + 6.0));

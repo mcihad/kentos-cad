@@ -1,0 +1,90 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Adlı görünümler",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 100.0,
+    "workspace": "cad",
+    "namedViews": [
+      {
+        "name": "Bina girişi",
+        "center": {
+          "x": 16.5,
+          "y": -1.5
+        },
+        "width": 30.0,
+        "height": 18.0,
+        "twist": 0.5235987755982988
+      },
+      {
+        "name": "Bütün çizim",
+        "center": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "width": 250.0,
+        "height": 150.0,
+        "twist": 0.0
+      },
+      {
+        "name": "Yol ekseni",
+        "center": {
+          "x": 100.0,
+          "y": 250.0
+        },
+        "width": 80.0,
+        "height": 45.5,
+        "twist": 4.71238898038469
+      }
+    ]
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "uids": [
+    "0192f5a1-25a0-7000-8000-000000000101"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "line",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+        "x": 12.5,
+        "y": -4.0
+      },
+      "b": {
+        "x": 21.160254037844386,
+        "y": 1.0
+      }
+    }
+  ]
+}

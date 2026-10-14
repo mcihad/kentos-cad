@@ -176,6 +176,12 @@ SCHEMA_WITH_UCS = 49
 SCHEMA_WITH_IMPERIAL = 50
 # Schema 51: schema 50, a reference's place `along` (part, ring, index, t) and its block `path` (docs/adr/0263).
 SCHEMA_WITH_SUBREF_EXTRAS = 51
+# Schema 52: schema 51 and the settings' `namedViews`, the project's named views (docs/adr/0285 §1).
+SCHEMA_WITH_VIEWS = 52
+# A named view's bounds (kentos_contracts::cad_views): a middle within 10 000 km, a width and a height above 0 and at
+# most 20 000 km, a twist in [0, 2π), at most 100 named, a name trimmed, 1 to 64 characters, no control characters.
+MOST_VIEW_SIZE = 2.0e7
+MOST_NAMED_VIEWS = 100
 # A UCS's bounds (kentos_contracts::cad_ucs): an origin within 10 000 km, an angle in [0, 2π), at most 100 named, a name
 # trimmed, 1 to 64 characters, no control characters.
 UCS_REACH = 1.0e7
@@ -347,7 +353,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1842,6 +1848,7 @@ class _Schema:
         self.ucs = version >= SCHEMA_WITH_UCS
         self.imperial = version >= SCHEMA_WITH_IMPERIAL
         self.subref_extras = version >= SCHEMA_WITH_SUBREF_EXTRAS
+        self.views = version >= SCHEMA_WITH_VIEWS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -2070,6 +2077,7 @@ class _Schema:
                 **({"addressLocators": (self.address_locators_, False)} if self.addresses else {}),
                 **({"ucs": (self.ucs_, False), "namedUcs": (self.named_ucs_, False)} if self.ucs else {}),
                 **({"lengthStyle": (self.enum(("architectural", "engineering", "fractional")), False)} if self.imperial else {}),
+                **({"namedViews": (self.named_views_, False)} if self.views else {}),
             }
         )(v)
         # A second coordinate system is another system than the project's own; a project without one has none (a
@@ -2817,6 +2825,32 @@ class _Schema:
             if name in seen:
                 self.fail("bad_value", f"“{name}” adlı iki UCS var")
             seen.add(name)
+        return all_
+
+    def named_views_(self, v):
+        """The named views (schema 52, docs/adr/0285 §1): each a name, a middle within 10 000 km, a width and a height
+        above 0 and at most 20 000 km, a twist in [0, 2π); names trimmed, 1 to 64 characters without control
+        characters, unique, at most 100; an empty list is not written."""
+        read = self.fields({"name": (self.text, True), "center": (self.point, True), "width": (self.float, True), "height": (self.float, True), "twist": (self.float, True)})
+        all_ = self.array(read)(v)
+        if not all_:
+            self.fail("bad_value", "boş adlı görünüm listesi yazılmaz")
+        if len(all_) > MOST_NAMED_VIEWS:
+            self.fail("bad_value", f"en çok {MOST_NAMED_VIEWS} adlı görünüm olur")
+        seen = set()
+        for w in all_:
+            name = w["name"]
+            if name != name.strip() or not name or len(name) > MOST_UCS_NAME or any(unicodedata.category(c) == "Cc" for c in name):
+                self.fail("bad_value", f"“{name}” bir görünüm adı olamaz")
+            if name in seen:
+                self.fail("bad_value", f"“{name}” adlı iki görünüm var")
+            seen.add(name)
+            if abs(w["center"]["x"]) > UCS_REACH or abs(w["center"]["y"]) > UCS_REACH:
+                self.fail("bad_value", "görünümün ortası 10 000 km içinde olmalı")
+            if not all(0.0 < w[k] <= MOST_VIEW_SIZE for k in ("width", "height")):
+                self.fail("bad_value", "görünümün eni ve boyu 0'dan büyük ve en çok 20 000 km olmalı")
+            if not 0.0 <= w["twist"] < 2.0 * math.pi:
+                self.fail("bad_value", "görünümün dönüşü [0, 2π) aralığında olmalı")
         return all_
 
     def variables_(self, v):

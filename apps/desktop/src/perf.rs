@@ -99,6 +99,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
         settings: ProjectSettings {
             length_style: None,
             named_ucs: Vec::new(),
+            named_views: Vec::new(),
             ucs: None,
             srid: 5256,
             length_decimals: 3,

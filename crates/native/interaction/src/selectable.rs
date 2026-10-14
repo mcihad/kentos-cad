@@ -91,6 +91,9 @@ pub fn query(cx: &mut Context<'_>, region: SelectRegion) -> Vec<Slot> {
 /// two world corners, the filter's kinds with it and what it left out said; every tool that selects with a box asks
 /// here.
 pub fn in_box(cx: &mut Context<'_>, a: Vec2, b: Vec2, crossing: bool) -> Vec<Slot> {
+    if let Some(ring) = twisted_ring(cx, a, b, crossing) {
+        return query(cx, ring);
+    }
     let (a, b) = (point(a), point(b));
     let region = if crossing {
         SelectRegion::Crossing { a, b }
@@ -98,6 +101,28 @@ pub fn in_box(cx: &mut Context<'_>, a: Vec2, b: Vec2, crossing: bool) -> Vec<Slo
         SelectRegion::Window { a, b }
     };
     query(cx, region)
+}
+
+/// The box between two world corners as a twisted view draws it (docs/adr/0285 §2): its four screen corners'
+/// world points as a ring, wholly inside or touching as the box went; none with the north up, where the box is
+/// the world's own.
+pub fn twisted_ring(cx: &Context<'_>, a: Vec2, b: Vec2, crossing: bool) -> Option<SelectRegion> {
+    if cx.view.twist() == 0.0 {
+        return None;
+    }
+    let (sa, sb) = (cx.view.to_screen(a), cx.view.to_screen(b));
+    let mut points = Vec::with_capacity(4);
+    for c in [sa, [sb[0], sa[1]], sb, [sa[0], sb[1]]] {
+        points.push(point(cx.view.to_world(c)?));
+    }
+    Some(SelectRegion::Polygon {
+        points,
+        mode: if crossing {
+            kentos_contracts::PolygonSelectMode::Crossing
+        } else {
+            kentos_contracts::PolygonSelectMode::Inside
+        },
+    })
 }
 
 /// Says how many objects the filter left out of a selection; nothing when none.

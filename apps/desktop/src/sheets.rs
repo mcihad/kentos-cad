@@ -629,6 +629,7 @@ impl SheetPainter<'_> {
             scale: 1000.0 / (crate::sheet_pdf::PX_MM * scale),
             width: bw,
             height: bh,
+            twist: 0.0,
         };
         let view = camera.visible_bounds();
         let mut spots = self.spatial.labels(

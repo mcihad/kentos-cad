@@ -8,7 +8,7 @@ use kentos_native_style::batches::{
     BatchKind, Cap, FillPaintBatch, MarkerLook, StyledBatch, Unit, shape_index,
 };
 
-/// The frame uniform (WGSL `Frame`, 40 bytes).
+/// The frame uniform (WGSL `Frame`, 48 bytes).
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 pub struct StyledFrameUniform {
@@ -26,6 +26,8 @@ pub struct StyledFrameUniform {
     /// The camera centre's low part: `offset + offset_lo` is it to about
     /// 2⁻⁴⁸ of its size.
     pub offset_lo: [f32; 2],
+    /// The view's twist as cos − 1 and sin (docs/adr/0285 §2); zero with the north up.
+    pub twist: [f32; 2],
 }
 
 /// Bytes of one style block (WGSL `SStyle`: eight `vec4f`, a `vec4u` and the
@@ -321,6 +323,6 @@ mod tests {
     #[test]
     fn a_block_is_the_contract_s_size() {
         assert_eq!(StyleBlock::default().bytes().len(), STYLE_BYTES);
-        assert_eq!(std::mem::size_of::<StyledFrameUniform>(), 40);
+        assert_eq!(std::mem::size_of::<StyledFrameUniform>(), 48);
     }
 }
