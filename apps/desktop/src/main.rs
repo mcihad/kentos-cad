@@ -179,6 +179,8 @@ mod screen_scale;
 mod screens;
 mod search;
 mod second_crs;
+#[cfg(test)]
+mod segment_scenes;
 mod selecting;
 mod selection_chip;
 mod selection_commands;

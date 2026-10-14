@@ -8,6 +8,14 @@
 //!   typed text (the shared grammar, `point_text`);
 //! - Y turns the next segments into arcs (continuing tangentially, or shaped
 //!   once by Açı, Merkez, Yarıçap, İkinci nokta, Doğrultu), D back to lines;
+//!   AutoCAD's PLINE pairs (docs/adr/0288): after an angle typed Merkez (M,
+//!   the centre clicked) or Yarıçap (R, typed, then the chord's direction);
+//!   after a centre Açı (A, typed) or Uzunluk (U, the chord typed, negative
+//!   clockwise); after a radius typed Açı (A, then the chord's direction);
+//!   Çoklu çizgi's Kapat (K) in arc mode closes with an arc tangent to the
+//!   last edge; Genişlik (E) asks the start width, then the end width (Enter:
+//!   the same), the next edge tapers and the ones after keep the end width,
+//!   each edge keeping the widths it was drawn with;
 //!   in line mode U continues the last direction by a typed length; G takes
 //!   the last point back;
 //! - closed: giving the first corner again closes and finishes the area:
@@ -70,7 +78,8 @@ use kentos_geometry_core::geometry::{bearing_grad, dist};
 use kentos_geometry_core::jsmath::{PI, js_hypot};
 use kentos_geometry_core::ops::trace::Traced;
 use kentos_geometry_core::tools::drawing::{
-    centre_bulge, offset_along, radial_point, radius_bulge, unit_toward,
+    arc_end_about, centre_bulge, chord_end, chord_sweep, offset_along, radial_point, radius_bulge,
+    unit_toward,
 };
 use kentos_geometry_core::tools::locks::square_corner;
 use kentos_geometry_core::tools::point_input::Tracking;
@@ -211,6 +220,23 @@ enum Spec {
     Direction {
         dir: Option<Vec2>,
     },
+    /// After an angle, Merkez: the centre clicked ends the arc (docs/adr/0288).
+    AngleCentre {
+        sweep: f64,
+    },
+    /// After an angle, Yarıçap (typed), or after a radius, Açı (typed): then the chord's direction ends the arc.
+    ChordBy {
+        sweep: Option<f64>,
+        r: Option<f64>,
+    },
+    /// After a centre, Açı: the included angle typed ends the arc.
+    CentreAngle {
+        c: Vec2,
+    },
+    /// After a centre, Uzunluk: the chord's length typed ends the arc (negative clockwise).
+    CentreChord {
+        c: Vec2,
+    },
 }
 
 /// The path tool: a closed area or an open polyline.
@@ -233,6 +259,10 @@ pub struct Path {
     ask_step: bool,
     /// Çoklu çizgi's Genişlik: waiting for a typed width (docs/adr/0258 §2).
     ask_width: bool,
+    /// Genişlik's start width typed, the end width waited for (docs/adr/0288).
+    width_start: Option<f64>,
+    /// Çoklu çizgi: each edge's start and end widths as it was drawn (docs/adr/0288).
+    edge_widths: Vec<[f64; 2]>,
     /// Bulge of the closing segment: an arc when the area was closed on its first corner in arc mode.
     closing: f64,
     /// Where the button went down, while that click is being taken (closing on the first corner).
@@ -300,6 +330,8 @@ impl Path {
             ask_length: false,
             ask_step: false,
             ask_width: false,
+            width_start: None,
+            edge_widths: Vec::new(),
             closing: 0.0,
             pressed_at: None,
             memory: Memory::default(),
@@ -403,6 +435,18 @@ impl Path {
             (Spec::Centre { c: Some(c) }, Some(last)) if self.arc_mode => {
                 radial_point(c, dist(c, last), p).unwrap_or(p)
             }
+            // The centre clicked turns the start by the angle (docs/adr/0288).
+            (Spec::AngleCentre { sweep }, Some(last)) if self.arc_mode => {
+                arc_end_about(p, last, sweep)
+            }
+            // The chord laid toward the pointer.
+            (
+                Spec::ChordBy {
+                    sweep: Some(sweep),
+                    r: Some(r),
+                },
+                Some(last),
+            ) if self.arc_mode => chord_end(last, p, r, sweep).unwrap_or(p),
             _ => p,
         }
     }
@@ -423,6 +467,13 @@ impl Path {
             Spec::Centre { c } => c.and_then(|c| centre_bulge(c, last, self.end_for(p))),
             Spec::Second { via } => via.map(|via| bulge_through(last, via, p)),
             Spec::Direction { dir } => dir.and_then(|dir| tangent_bulge(last, dir, p)),
+            Spec::AngleCentre { sweep } => Some(bulge_of_sweep(sweep)),
+            Spec::ChordBy {
+                sweep: Some(sweep),
+                r: Some(_),
+            } => Some(bulge_of_sweep(sweep)),
+            // A value is waited for.
+            Spec::ChordBy { .. } | Spec::CentreAngle { .. } | Spec::CentreChord { .. } => None,
             Spec::Tangent => match self.tangent() {
                 Some(t) => tangent_bulge(last, t, p),
                 None => self.arc_via.map(|via| bulge_through(last, via, p)),
@@ -434,8 +485,99 @@ impl Path {
         points::echo(p, cx);
         // A point given while the width is asked leaves the width as it was.
         self.ask_width = false;
+        self.width_start = None;
         self.on_point(p, cx);
+        self.sync_widths(cx);
         self.refill(false, cx);
+    }
+
+    /// Çoklu çizgi (docs/adr/0288): every edge drawn since takes the session's widths; after an edge that tapers,
+    /// the start width is the end width.
+    fn sync_widths(&mut self, cx: &mut Context<'_>) {
+        if self.shape != Shape::Open {
+            return;
+        }
+        self.edge_widths.truncate(self.bulges.len());
+        while self.edge_widths.len() < self.bulges.len() {
+            let pair = [cx.memory.polyline_width, cx.memory.polyline_width_end];
+            self.edge_widths.push(pair);
+            cx.memory.polyline_width = pair[1];
+        }
+        self.memory.polyline_width = cx.memory.polyline_width;
+        self.memory.polyline_width_end = cx.memory.polyline_width_end;
+    }
+
+    /// A value typed for AutoCAD PLINE's pairs (docs/adr/0288): an angle or a chord after a centre ends the arc; a
+    /// radius after an angle, or an angle after a radius, then waits for the chord's direction. False when the
+    /// step waits for none of them.
+    fn typed_pair(&mut self, n: f64, metres: f64, cx: &mut Context<'_>) -> bool {
+        let Some(last) = self.last() else {
+            return false;
+        };
+        let angle = |cx: &mut Context<'_>| {
+            if n.abs() < 1e-9 || n.abs() >= 360.0 {
+                cx.say(Level::Warn, "İç açı 0 ile ±360 derece arasında olmalı.");
+                None
+            } else {
+                Some((n * PI) / 180.0)
+            }
+        };
+        match self.spec {
+            Spec::CentreAngle { c } => {
+                if let Some(sweep) = angle(cx) {
+                    // The arc ends where the angle turns the start; it goes in as an angle's arc would.
+                    let end = arc_end_about(c, last, sweep);
+                    self.spec = Spec::Angle { sweep: Some(sweep) };
+                    self.accept(end, cx);
+                }
+                true
+            }
+            Spec::CentreChord { c } => {
+                match chord_sweep(c, last, metres) {
+                    Some(sweep) => {
+                        let end = arc_end_about(c, last, sweep);
+                        self.spec = Spec::Angle { sweep: Some(sweep) };
+                        self.accept(end, cx);
+                    }
+                    None => cx.say(Level::Warn, "Kiriş sıfırdan farklı ve çaptan kısa olmalı."),
+                }
+                true
+            }
+            Spec::ChordBy {
+                sweep: Some(sweep),
+                r: None,
+            } => {
+                if n > 0.0 {
+                    self.spec = Spec::ChordBy {
+                        sweep: Some(sweep),
+                        r: Some(metres),
+                    };
+                } else {
+                    cx.say(Level::Warn, "Yarıçap sıfırdan büyük olmalı.");
+                }
+                true
+            }
+            Spec::ChordBy { sweep: None, r } => {
+                if let Some(sweep) = angle(cx) {
+                    self.spec = Spec::ChordBy {
+                        sweep: Some(sweep),
+                        r,
+                    };
+                }
+                true
+            }
+            _ => false,
+        }
+    }
+
+    /// The width the prompt shows: one width, or start → end when the next edge tapers.
+    fn width_text(&self) -> String {
+        let (a, b) = (self.memory.polyline_width, self.memory.polyline_width_end);
+        if a == b {
+            self.format.length(a)
+        } else {
+            format!("{} → {}", self.format.length_bare(a), self.format.length(b))
+        }
     }
 
     /// Bitişik alan: the region the preview fills. `live`, the path goes on
@@ -525,6 +667,22 @@ impl Path {
             self.measured = None;
             return;
         };
+        // A value is typed, not clicked (docs/adr/0288).
+        if self.arc_mode
+            && matches!(
+                self.spec,
+                Spec::CentreAngle { .. }
+                    | Spec::CentreChord { .. }
+                    | Spec::ChordBy { sweep: None, .. }
+                    | Spec::ChordBy { r: None, .. }
+            )
+        {
+            cx.say(
+                Level::Warn,
+                "Yayın değerini yazın: açı, kiriş ya da yarıçap.",
+            );
+            return;
+        }
         // Options that take a point before the end point.
         if self.arc_mode {
             let tangent = self.tangent();
@@ -856,7 +1014,7 @@ impl Path {
         }
         // Çoklu çizgi (docs/adr/0258): Kapat closes it with a straight edge, a closed line and no
         // area; Genişlik asks for every edge's width, kept for the session.
-        if self.shape == Shape::Open && !self.arc_mode && !self.ask_width {
+        if self.shape == Shape::Open && !self.ask_width {
             if key == "K" && self.pts.len() >= 2 {
                 self.close_line(cx);
                 return true;
@@ -869,7 +1027,29 @@ impl Path {
         if key == "G" && self.ask_width {
             // Geri leaves the width as it was; the points stay.
             self.ask_width = false;
+            self.width_start = None;
             return true;
+        }
+        // AutoCAD PLINE's pairs (docs/adr/0288): what follows an angle, a centre or a radius.
+        if self.arc_mode && !self.pts.is_empty() {
+            let pair = match (self.spec, key) {
+                (Spec::Angle { sweep: Some(sweep) }, "M") => Some(Spec::AngleCentre { sweep }),
+                (Spec::Angle { sweep: Some(sweep) }, "R") => Some(Spec::ChordBy {
+                    sweep: Some(sweep),
+                    r: None,
+                }),
+                (Spec::Centre { c: Some(c) }, "A") => Some(Spec::CentreAngle { c }),
+                (Spec::Centre { c: Some(c) }, "U") => Some(Spec::CentreChord { c }),
+                (Spec::Radius { r: Some(r) }, "A") => Some(Spec::ChordBy {
+                    sweep: None,
+                    r: Some(r),
+                }),
+                _ => None,
+            };
+            if let Some(spec) = pair {
+                self.spec = spec;
+                return true;
+            }
         }
         let arc = match key {
             "A" => Some(Spec::Angle { sweep: None }),
@@ -916,6 +1096,7 @@ impl Path {
         } else if key == "G" && !self.pts.is_empty() {
             self.pts.pop();
             self.bulges.pop();
+            self.edge_widths.truncate(self.bulges.len());
             self.spec = Spec::Tangent;
             // A length waited for along the last direction is not waited for any more (docs/adr/0067).
             self.ask_length = false;
@@ -1125,7 +1306,15 @@ impl Path {
     fn close_line(&mut self, cx: &mut Context<'_>) {
         let pts = self.pts.clone();
         let mut bulges = self.bulges.clone();
-        bulges.push(0.0);
+        // In arc mode the closing edge is an arc tangent to the last edge (docs/adr/0288).
+        let closing = match (self.arc_mode, self.tangent(), pts.last(), pts.first()) {
+            (true, Some(t), Some(&last), Some(&first)) => {
+                tangent_bulge(last, t, first).unwrap_or(0.0)
+            }
+            _ => 0.0,
+        };
+        bulges.push(closing);
+        self.closing = closing;
         let length = bulge_path_length(&pts, Some(&bulges), true);
         if self.create_polyline(&pts, true, cx) {
             let text = format!("Kapalı çoklu çizgi eklendi: {}", cx.format().length(length));
@@ -1134,10 +1323,14 @@ impl Path {
         self.reset();
     }
 
-    /// Every edge's widths at the session's Genişlik (docs/adr/0258 §2); none at 0.
+    /// Every edge's widths: those it was drawn with, the session's for the ones to come (docs/adr/0258 §2,
+    /// 0288); none when all are 0.
     fn widths(&self, edges: usize) -> Option<Vec<[f64; 2]>> {
-        let w = self.memory.polyline_width;
-        (w > 0.0).then(|| vec![[w, w]; edges])
+        let pair = [self.memory.polyline_width, self.memory.polyline_width_end];
+        let all: Vec<[f64; 2]> = (0..edges)
+            .map(|i| self.edge_widths.get(i).copied().unwrap_or(pair))
+            .collect();
+        all.iter().any(|[a, b]| *a > 0.0 || *b > 0.0).then_some(all)
     }
 
     /// The band a wide polyline will draw, lightly filled under its line (docs/adr/0258 §2).
@@ -1170,7 +1363,7 @@ impl Path {
     fn create_polyline(&self, pts: &[Vec2], closed: bool, cx: &mut Context<'_>) -> bool {
         let mut bulges = self.bulges.clone();
         if closed {
-            bulges.push(0.0);
+            bulges.push(self.closing);
         }
         let edges = if closed { pts.len() } else { pts.len() - 1 };
         let input = PolylineCreate {
@@ -1295,6 +1488,8 @@ impl Path {
         self.ask_length = false;
         self.ask_step = false;
         self.ask_width = false;
+        self.width_start = None;
+        self.edge_widths.clear();
         self.closing = 0.0;
         self.way = None;
         self.region.clear();
@@ -1319,15 +1514,26 @@ impl Path {
         point
     }
 
-    fn arc_options(prompt: Prompt, done: bool) -> Prompt {
-        let prompt = prompt
+    fn arc_options(&self, prompt: Prompt, done: bool) -> Prompt {
+        let mut prompt = prompt
             .option("Düz", "D")
             .option("Açı", "A")
             .option("Merkez", "M")
             .option("Yarıçap", "R")
             .option("İkinci nokta", "İ")
-            .option("Doğrultu", "T")
-            .option("Geri", "G");
+            .option("Doğrultu", "T");
+        // After a centre, the chord's length (docs/adr/0288).
+        if let Spec::Centre { c: Some(_) } = self.spec {
+            prompt = prompt.option("Uzunluk", "U");
+        }
+        // Çoklu çizgi's width and Kapat in arc mode too (docs/adr/0288).
+        if self.shape == Shape::Open {
+            prompt = prompt.option_with("Genişlik", "E", self.width_text());
+            if self.pts.len() >= 2 {
+                prompt = prompt.option("Kapat", "K");
+            }
+        }
+        let prompt = prompt.option("Geri", "G");
         if done {
             prompt.option("Bitir", "Enter")
         } else {
@@ -1419,11 +1625,7 @@ impl Path {
                 }
             }
             // Çoklu çizgi's width can be set before its first point (docs/adr/0258 §2).
-            Shape::Open => prompt.option_with(
-                "Genişlik",
-                "E",
-                self.format.length(self.memory.polyline_width),
-            ),
+            Shape::Open => prompt.option_with("Genişlik", "E", self.width_text()),
             _ => prompt,
         }
     }
@@ -1655,8 +1857,18 @@ impl Tool for Path {
             return Prompt::new(label, "akışın adım boyunu yazın").option("Geri", "G");
         }
         if self.ask_width {
-            return Prompt::new(label, "kenarların genişliğini yazın (0: genişliksiz)")
-                .option("Geri", "G");
+            return match self.width_start {
+                None => Prompt::new(label, "başlangıç genişliğini yazın (0: genişliksiz)")
+                    .option("Geri", "G"),
+                Some(start) => Prompt::new(
+                    label,
+                    format!(
+                        "bitiş genişliğini yazın (Enter: {})",
+                        self.format.length(start)
+                    ),
+                )
+                .option("Geri", "G"),
+            };
         }
         if !self.arc_mode {
             // Biçim değiştir's line: straight edges, not along the line work.
@@ -1683,11 +1895,7 @@ impl Tool for Path {
             }
             // Çoklu çizgi's width and Kapat (docs/adr/0258).
             if self.shape == Shape::Open {
-                prompt = prompt.option_with(
-                    "Genişlik",
-                    "E",
-                    self.format.length(self.memory.polyline_width),
-                );
+                prompt = prompt.option_with("Genişlik", "E", self.width_text());
                 if n >= 2 {
                     prompt = prompt.option("Kapat", "K");
                 }
@@ -1715,12 +1923,38 @@ impl Tool for Path {
             }
             Spec::Second { via: None } => "yayın üzerinden geçeceği bir nokta belirtin",
             Spec::Direction { dir: None } => "yayın başlangıç doğrultusunu gösterin",
+            Spec::AngleCentre { .. } => "yayın merkezini gösterin",
+            Spec::ChordBy {
+                sweep: Some(_),
+                r: None,
+            } => {
+                return Prompt::new(label, "yayın yarıçapını yazın").option("Geri", "G");
+            }
+            Spec::ChordBy { sweep: None, .. } => {
+                return Prompt::new(
+                    label,
+                    "yayın iç açısını derece olarak yazın (artı saat yönünün tersine)",
+                )
+                .option("Geri", "G");
+            }
+            Spec::ChordBy { .. } => "kirişin doğrultusunu gösterin",
+            Spec::CentreAngle { .. } => {
+                return Prompt::new(
+                    label,
+                    "yayın iç açısını derece olarak yazın (artı saat yönünün tersine)",
+                )
+                .option("Geri", "G");
+            }
+            Spec::CentreChord { .. } => {
+                return Prompt::new(label, "kirişin uzunluğunu yazın (eksi: saat yönünde)")
+                    .option("Geri", "G");
+            }
             Spec::Tangent if self.tangent().is_none() && self.arc_via.is_none() => {
                 "yayın üzerinden geçeceği bir nokta belirtin"
             }
             Spec::Tangent => "yayın bitiş noktasını belirtin",
         };
-        Self::arc_options(Prompt::new(label, step), done)
+        self.arc_options(Prompt::new(label, step), done)
     }
 
     fn point_count(&self) -> usize {
@@ -1821,9 +2055,18 @@ impl Tool for Path {
         let metres = value.map_or(f64::NAN, |(_, m)| m);
         if let Some(n) = plain.filter(|_| self.ask_width) {
             if n >= 0.0 {
-                cx.memory.polyline_width = metres;
-                self.memory.polyline_width = cx.memory.polyline_width;
-                self.ask_width = false;
+                // The start width, then the end width (docs/adr/0288).
+                match self.width_start {
+                    None => self.width_start = Some(metres),
+                    Some(start) => {
+                        cx.memory.polyline_width = start;
+                        cx.memory.polyline_width_end = metres;
+                        self.memory.polyline_width = start;
+                        self.memory.polyline_width_end = metres;
+                        self.ask_width = false;
+                        self.width_start = None;
+                    }
+                }
             } else {
                 cx.say(
                     Level::Warn,
@@ -1851,6 +2094,9 @@ impl Tool for Path {
                     }
                     _ => cx.say(Level::Warn, "Uzunluk sıfırdan büyük olmalı."),
                 }
+                return true;
+            }
+            if self.arc_mode && self.typed_pair(n, metres, cx) {
                 return true;
             }
             if self.arc_mode
@@ -1887,6 +2133,18 @@ impl Tool for Path {
     }
 
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
+        // Enter for the end width: the start's (docs/adr/0288).
+        if self.ask_width {
+            if let Some(start) = self.width_start {
+                cx.memory.polyline_width = start;
+                cx.memory.polyline_width_end = start;
+                self.memory.polyline_width = start;
+                self.memory.polyline_width_end = start;
+            }
+            self.ask_width = false;
+            self.width_start = None;
+            return Flow::Stay;
+        }
         if self.pts.is_empty() {
             return Flow::Exit;
         }

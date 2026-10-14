@@ -51,6 +51,7 @@ mod query;
 mod quick_dimension;
 mod records;
 mod reshaping;
+mod segments;
 mod select;
 mod select_query;
 mod shapes;

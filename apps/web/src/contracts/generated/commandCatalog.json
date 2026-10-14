@@ -68670,6 +68670,11 @@
                 "const": "annotationScale",
                 "description": "Yazı yüksekliklerini uydur (docs/adr/0205 §3): after the plot scale or\nan annotation height changed, the texts, leaders, dimensions and\ntables still at the old height given the new one\n(`follow_annotation_scale`).",
                 "type": "string"
+              },
+              {
+                "const": "edgeWidth",
+                "description": "Kenar genişliği (docs/adr/0288): a polyline edge's start and end widths\nset, from `cad.entities.vertex`'s `width`.",
+                "type": "string"
               }
             ]
           },
@@ -214260,7 +214265,7 @@
       "id": "cad.entities.vertex",
       "version": 1,
       "title": "Köşe ve kenar",
-      "summary": "Bir yolun köşesini ya da kenarını düzenler: Köşeyi sil (köşe yeri), Ortasına köşe ekle, Düz kenar yap ve Yaya dönüştür (kenarın ortasının yeri); nesne kalıcı kimliğiyle, yer cad.snap.find ya da cad.entities.pick'in verdiği gibi. Yay kenara eklenen köşe yayı çemberinde ikiye böler; Yaya dönüştür kenarı kirişin dörtte biri sehimle halkanın dışına ya da açık yolun sağına büker; çizgiye köşe eklenince çoklu çizgi olur. Alanın delikleri ve öbür parçaları kalır; topology ile ortak köşe ve kenarları olan komşular aynı adımda izler. Tek geri alma adımı.",
+      "summary": "Bir yolun köşesini ya da kenarını düzenler: Köşeyi sil (köşe yeri), Ortasına köşe ekle, Düz kenar yap ve Yaya dönüştür (kenarın ortasının yeri); nesne kalıcı kimliğiyle, yer cad.snap.find ya da cad.entities.pick'in verdiği gibi. Yay kenara eklenen köşe yayı çemberinde ikiye böler; Yaya dönüştür kenarı kirişin dörtte biri sehimle halkanın dışına ya da açık yolun sağına büker, through ile verilen noktadan, radius ile verilen yarıçapla (artı: kenarın sağına) geçen yay yapar, yay kenarı da yeniden biçimler; Kenar genişliği (width) çoklu çizginin kenarına başlangıç ve bitiş genişliği verir; çizgiye köşe eklenince çoklu çizgi olur. Alanın delikleri ve öbür parçaları kalır; topology ile ortak köşe ve kenarları olan komşular aynı adımda izler. Tek geri alma adımı.",
       "aliases": [
         "kose",
         "vertex"
@@ -214460,6 +214465,24 @@
               }
             ]
           },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          },
           "VertexAction": {
             "description": "What is done at the place.",
             "oneOf": [
@@ -214480,14 +214503,19 @@
               },
               {
                 "const": "arc",
-                "description": "Yaya dönüştür (a `mid` place): a straight edge a gentle arc, its sagitta a quarter of the chord (bulge 0.5),\nbowing out of a ring or to the right of an open path. “Yaya dönüştür”.",
+                "description": "Yaya dönüştür (a `mid` place): a straight edge a gentle arc, its sagitta a quarter of the chord (bulge 0.5),\nbowing out of a ring or to the right of an open path. With `through` or `radius` (docs/adr/0288) the edge, straight\nor an arc, becomes the arc through that point or of that radius. “Yaya dönüştür”.",
+                "type": "string"
+              },
+              {
+                "const": "width",
+                "description": "Kenar genişliği (a `mid` place, docs/adr/0288): a polyline edge's start and end widths (`widths`), as\nPEDIT's vertex Width. “Kenar genişliği”.",
                 "type": "string"
               }
             ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.vertex` v1. The place is on the object's own outer rings (a hole's vertices and edges are\nnot edited here); a multi-part area's other parts and an area's holes stay. An edge already as the action would\nmake it (straight, or an arc) does not change: nothing is written.\n\nRefusals (`CommandError.code`), checked in this order: `invalid_uid`, `invalid_revision`, `revision_conflict`\n(status `conflict`), `entity_not_found`, `layer_locked`, `not_a_path` (not a polyline or an area; a line takes\nOrtasına köşe ekle only), `wrong_place` (Köşeyi sil's place not a vertex, Köşe ekle's not an edge's middle or a place along it, the others'\nnot an edge's middle),\n`hole_edit` (a hole's place), `no_such_place` (no such part, vertex or edge, or a place along an edge at its vertex), `too_few_corners` (a ring left\nwith fewer than three vertices), `too_few_points` (an open path left with fewer than two).",
+        "description": "Input of `cad.entities.vertex` v1. The place is on the object's own outer rings (a hole's vertices and edges are\nnot edited here); a multi-part area's other parts and an area's holes stay. An edge already as the action would\nmake it (straight, or an arc) does not change: nothing is written.\n\nRefusals (`CommandError.code`), checked in this order: `invalid_uid`, `invalid_revision`, `revision_conflict`\n(status `conflict`), `entity_not_found`, `layer_locked`, `not_a_path` (not a polyline or an area; a line takes\nOrtasına köşe ekle only), `wrong_place` (Köşeyi sil's place not a vertex, Köşe ekle's not an edge's middle or a place along it, the others'\nnot an edge's middle),\n`hole_edit` (a hole's place), `no_such_place` (no such part, vertex or edge, or a place along an edge at its vertex), `too_few_corners` (a ring left\nwith fewer than three vertices), `too_few_points` (an open path left with fewer than two); docs/adr/0288's, before the\nobject is looked up: `invalid_arc_edge` (`through` or `radius` with another action, both together, a radius not\nfinite or of zero, a point not finite), `invalid_polyline` (`widths` with another action, Kenar genişliği without\nthem, a width below zero or not finite); after the place: `not_a_polyline` (Kenar genişliği on an area or a line),\n`invalid_arc_edge` (the point on the edge's line or at an end, a radius below half the chord).",
         "properties": {
           "action": {
             "$ref": "#/$defs/VertexAction"
@@ -214504,6 +214532,27 @@
             "$ref": "#/$defs/SubPlace",
             "description": "A `vertex` place for Köşeyi sil, a `mid` place (the edge from that vertex) for the others; Köşe ekle takes an\n`along` place too (a point inside the edge, docs/adr/0263 §1)."
           },
+          "radius": {
+            "description": "Yaya dönüştür with this radius (docs/adr/0288), the drawing's length: the shorter arc on the chord, bowing to\nthe right of the edge's travel when positive (a positive bulge), to its left when negative. At least half the\nchord; not with `through`.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "through": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Vec2"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Yaya dönüştür through this point (docs/adr/0288): the arc from the edge's start through it to its end. Not on\nthe edge's line nor at its ends; not with `radius`.",
+            "x-unit": "length"
+          },
           "topology": {
             "anyOf": [
               {
@@ -214519,6 +214568,20 @@
             "description": "The object's persistent id.",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
+          },
+          "widths": {
+            "description": "Kenar genişliği's start and end widths (docs/adr/0288), the drawing's length, zero or more; widths all zero\nleave the polyline without widths.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "length"
           }
         },
         "required": [
@@ -219798,8 +219861,11 @@
           "invalid_uid",
           "invalid_revision",
           "revision_conflict",
+          "invalid_arc_edge",
+          "invalid_polyline",
           "entity_not_found",
           "layer_locked",
+          "not_a_polyline",
           "not_a_path",
           "wrong_place",
           "hole_edit",
@@ -219824,6 +219890,37 @@
               "ring": 0
             },
             "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"
+          }
+        },
+        {
+          "title": "Çoklu çizginin ikinci kenarını 25 m yarıçaplı yaya dönüştür",
+          "input": {
+            "action": "arc",
+            "place": {
+              "index": 1,
+              "kind": "mid",
+              "part": 0,
+              "ring": 0
+            },
+            "radius": 25.0,
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002"
+          }
+        },
+        {
+          "title": "Çoklu çizginin ilk kenarını 0,5 m'den 0'a incelt",
+          "input": {
+            "action": "width",
+            "place": {
+              "index": 0,
+              "kind": "mid",
+              "part": 0,
+              "ring": 0
+            },
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002",
+            "widths": [
+              0.5,
+              0.0
+            ]
           }
         }
       ]
@@ -223711,6 +223808,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Yer işlemin istediği türden değil: köşe ya da kenarın ortası."
+    },
+    {
+      "code": "invalid_arc_edge",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Yayın noktası ya da yarıçapı yay vermiyor: nokta kenarın doğrusunda ya da ucunda, yarıçap kirişin yarısından küçük, ya da ikisi birlikte verilmiş."
+    },
+    {
+      "code": "not_a_polyline",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kenar genişliği yalnız çoklu çizgide olur; alanın ve çizginin genişliği yoktur."
     },
     {
       "code": "hole_edit",

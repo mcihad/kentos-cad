@@ -213,6 +213,39 @@ pub fn centre_bulge(c: Vec2, last: Vec2, end: Vec2) -> Option<f64> {
     }
 }
 
+/// PLINE's arc given its centre and its included angle (docs/adr/0288): the
+/// end, `start` turned about `c` by `sweep` radians (positive counter-clockwise).
+pub fn arc_end_about(c: Vec2, start: Vec2, sweep: f64) -> Vec2 {
+    let (s, k) = (sin(sweep), cos(sweep));
+    let (dx, dy) = (start.x - c.x, start.y - c.y);
+    Vec2::new(c.x + dx * k - dy * s, c.y + dx * s + dy * k)
+}
+
+/// PLINE's arc given its centre and its chord's length (docs/adr/0288): the
+/// included angle, 2 asin(|chord| / 2r) with `chord`'s sign (negative
+/// clockwise), r the centre's distance from `start`; none for a chord longer
+/// than the diameter, of no length, or a centre at the start.
+pub fn chord_sweep(c: Vec2, start: Vec2, chord: f64) -> Option<f64> {
+    let r = dist(c, start);
+    if !(r > 0.0) || chord == 0.0 || !chord.is_finite() || chord.abs() > 2.0 * r {
+        return None;
+    }
+    let half = asin(chord.abs() / (2.0 * r));
+    Some(if chord < 0.0 { -2.0 * half } else { 2.0 * half })
+}
+
+/// PLINE's arc given its included angle and its radius (docs/adr/0288): the
+/// end, the chord 2r sin(|sweep| / 2) laid from `start` toward `toward`; none
+/// when `toward` is the start, or for a radius of zero or less.
+pub fn chord_end(start: Vec2, toward: Vec2, r: f64, sweep: f64) -> Option<Vec2> {
+    let u = unit_toward(start, toward)?;
+    if !(r > 0.0) {
+        return None;
+    }
+    let chord = 2.0 * r * sin(sweep.abs() / 2.0);
+    Some(Vec2::new(start.x + u.x * chord, start.y + u.y * chord))
+}
+
 /// p moved `distance` along `dir`.
 pub fn offset_along(p: Vec2, dir: Vec2, distance: f64) -> Vec2 {
     Vec2::new(p.x + dir.x * distance, p.y + dir.y * distance)
@@ -314,6 +347,24 @@ pub(crate) static OPS: &[Op] = &[
 #[cfg(test)]
 mod method_tests {
     use super::*;
+
+    /// PLINE's arc pairs (docs/adr/0288): the end about a centre, the angle of a chord, the chord's end.
+    #[test]
+    fn the_arc_pairs() {
+        let near = |p: Vec2, x: f64, y: f64| (p.x - x).abs() < 1e-9 && (p.y - y).abs() < 1e-9;
+        let (c, s) = (Vec2::new(10.0, 10.0), Vec2::new(10.0, 0.0));
+        assert!(near(arc_end_about(c, s, PI / 2.0), 20.0, 10.0));
+        assert!(near(arc_end_about(c, s, -PI / 2.0), 0.0, 10.0));
+        let sweep = chord_sweep(c, s, 10.0).expect("60°");
+        assert!((sweep - PI / 3.0).abs() < 1e-12);
+        assert!(chord_sweep(c, s, -10.0).is_some_and(|w| (w + PI / 3.0).abs() < 1e-12));
+        assert_eq!(chord_sweep(c, s, 30.0), None, "longer than the diameter");
+        assert_eq!(chord_sweep(s, s, 1.0), None);
+        let end =
+            chord_end(Vec2::new(10.0, 0.0), Vec2::new(10.0, 30.0), 5.0, PI).expect("a chord of 10");
+        assert!(near(end, 10.0, 10.0));
+        assert_eq!(chord_end(s, s, 5.0, PI), None);
+    }
 
     /// XLINE's Offset (docs/adr/0287): on the side shown, the distance away; through the point without one.
     #[test]

@@ -4,6 +4,10 @@
 //! multi-part area's other parts stay; with Topolojik düzenleme the neighbours follow (`topology_follow`, as Esnet);
 //! the write is `cad.entities.edit`'s operation of the action, one undo step. The shared cases are
 //! `fixtures/commands/v1/cad.entities.vertex.json` (`scripts/fixtures/vertex_command_cases.py`).
+//!
+//! docs/adr/0288 adds Yaya dönüştür through a point (`through`, the core's `bulge_via`) or of a radius (`radius`,
+//! `bulge_of_radius`), on a straight or an arc edge, and Kenar genişliği (`width`): a polyline edge's start and end
+//! widths, PEDIT's vertex Width, written with the geometry.
 
 use kentos_contracts::{
     CommandResult, CommandWarning, EditOperation, EntitiesEdit, EntitiesVertex, EntitiesVertexPlan,
@@ -11,7 +15,9 @@ use kentos_contracts::{
 };
 use kentos_domain::{Document, Uuid};
 use kentos_geometry_core::entity::{Shape, area_parts, replace_part};
-use kentos_geometry_core::geom::bulge::{bulge_at, bulge_ring_area, is_arc_bulge, segment_mid};
+use kentos_geometry_core::geom::bulge::{
+    bulge_at, bulge_of_radius, bulge_ring_area, bulge_via, is_arc_bulge, segment_mid,
+};
 use kentos_geometry_core::ops::curve_cuts::Geometry;
 use kentos_geometry_core::ops::offset::path_like;
 use kentos_geometry_core::ops::subref::point;
@@ -125,6 +131,7 @@ fn operation(action: VertexAction) -> EditOperation {
         VertexAction::Insert => EditOperation::VertexAdd,
         VertexAction::Straighten => EditOperation::StraightEdge,
         VertexAction::Arc => EditOperation::ArcEdge,
+        VertexAction::Width => EditOperation::EdgeWidth,
     }
 }
 
@@ -167,6 +174,7 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesVertex) -> Resul
         ));
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
+    options(input)?;
     let Some((slot, e)) = Uuid::parse_str(&input.uid)
         .ok()
         .and_then(|u| doc.slot_of(u))
@@ -192,6 +200,14 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesVertex) -> Resul
         ));
     }
     let whole = shape(e);
+    if input.action == VertexAction::Width && !matches!(whole, Shape::Polyline { .. }) {
+        return Err(refuse(
+            codes::NOT_A_POLYLINE,
+            "Kenar genişliği yalnız çoklu çizgide olur; alanın ve çizginin genişliği yoktur."
+                .into(),
+            "uid",
+        ));
+    }
     let line = matches!(whole, Shape::Line { .. });
     let pathlike = matches!(whole, Shape::Polyline { .. } | Shape::Polygon { .. });
     if !(pathlike || line && input.action == VertexAction::Insert) {
@@ -290,6 +306,55 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesVertex) -> Resul
                 });
                 geometry(insert_vertex(&s, index, at))?
             }
+            VertexAction::Width => {
+                if index >= edges {
+                    return Err(no_place());
+                }
+                if parts.len() > 1 {
+                    return Err(refuse(
+                        codes::INVALID_POLYLINE,
+                        "Genişlikli çoklu çizgi tek parçalı olmalı; parçalarına ayırıp kenarın parçasında deneyin.".into(),
+                        "uid",
+                    ));
+                }
+                let Some(edited) = widened(&s, index, input.widths.unwrap_or_default()) else {
+                    return Ok(Checked {
+                        edit: None,
+                        warnings: Vec::new(),
+                    });
+                };
+                edited
+            }
+            VertexAction::Arc if input.through.is_some() || input.radius.is_some() => {
+                if index >= edges {
+                    return Err(no_place());
+                }
+                let (a, b) = (pts[index], pts[(index + 1) % n]);
+                let bulge = match (input.through, input.radius) {
+                    (Some(m), _) => bulge_via(a, Vec2::new(m.x, m.y), b).ok_or_else(|| {
+                        refuse(
+                            codes::INVALID_ARC_EDGE,
+                            "Yayın geçeceği nokta kenarın doğrusunda ya da ucunda; doğrunun dışında bir nokta verin.".into(),
+                            "through",
+                        )
+                    })?,
+                    (None, Some(r)) => bulge_of_radius(a, b, r).ok_or_else(|| {
+                        refuse(
+                            codes::INVALID_ARC_EDGE,
+                            "Yarıçap kirişin yarısından küçük; en az kirişin yarısı kadar bir yarıçap verin.".into(),
+                            "radius",
+                        )
+                    })?,
+                    (None, None) => 0.5,
+                };
+                if bulge == bulge_at(bulges, index) {
+                    return Ok(Checked {
+                        edit: None,
+                        warnings: Vec::new(),
+                    });
+                }
+                with_bulge(&s, pts, bulges, index, bulge)
+            }
             VertexAction::Straighten | VertexAction::Arc => {
                 if index >= edges {
                     return Err(no_place());
@@ -366,6 +431,94 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesVertex) -> Resul
             expected_revision: input.expected_revision.clone(),
         }),
         warnings,
+    })
+}
+
+/// docs/adr/0288's options, before the object is looked up: Yaya dönüştür's point or radius only with it and not
+/// together, finite, a radius not zero; Kenar genişliği's widths only with it, given, zero or more and finite.
+fn options(input: &EntitiesVertex) -> Result<(), Stop> {
+    let arc =
+        |message: &str, path: &str| Err(refuse(codes::INVALID_ARC_EDGE, message.into(), path));
+    let wide = |message: &str| Err(refuse(codes::INVALID_POLYLINE, message.into(), "widths"));
+    if input.action != VertexAction::Arc {
+        if input.through.is_some() {
+            return arc(
+                "Yayın geçeceği nokta yalnız Yaya dönüştür'de (arc) verilir.",
+                "through",
+            );
+        }
+        if input.radius.is_some() {
+            return arc("Yarıçap yalnız Yaya dönüştür'de (arc) verilir.", "radius");
+        }
+    }
+    if input.through.is_some() && input.radius.is_some() {
+        return arc(
+            "Yay ya bir noktadan ya da bir yarıçapla verilir; ikisi birlikte verilmez.",
+            "radius",
+        );
+    }
+    if let Some(m) = input.through
+        && !(m.x.is_finite() && m.y.is_finite())
+    {
+        return arc(
+            "Yayın geçeceği noktanın koordinatları sayı olmalı.",
+            "through",
+        );
+    }
+    if let Some(r) = input.radius
+        && (!r.is_finite() || r == 0.0)
+    {
+        return arc(
+            "Yarıçap sıfırdan farklı bir sayı olmalı (eksi: kenarın soluna).",
+            "radius",
+        );
+    }
+    match (input.action, input.widths) {
+        (VertexAction::Width, None) => {
+            wide("Kenar genişliği başlangıç ve bitiş genişlikleriyle (widths) verilir.")
+        }
+        (VertexAction::Width, Some([s, e]))
+            if !(s.is_finite() && e.is_finite() && s >= 0.0 && e >= 0.0) =>
+        {
+            wide("Genişlikler sıfır ya da büyük sayılar olmalı.")
+        }
+        (VertexAction::Width, _) | (_, None) => Ok(()),
+        (_, Some(_)) => wide("Genişlikler yalnız Kenar genişliği'nde (width) verilir."),
+    }
+}
+
+/// The polyline with edge `segment`'s widths set (one pair a vertex, the closing edge's last); none when they are
+/// already so. Widths all zero are none.
+fn widened(s: &Shape, segment: usize, pair: [f64; 2]) -> Option<Shape> {
+    let Shape::Polyline {
+        pts,
+        bulges,
+        closed,
+        widths,
+        ..
+    } = s
+    else {
+        return None;
+    };
+    let mut all: Vec<[f64; 2]> = widths
+        .clone()
+        .unwrap_or_else(|| vec![[0.0, 0.0]; pts.len()]);
+    all.resize(pts.len(), [0.0, 0.0]);
+    if all[segment] == pair {
+        return None;
+    }
+    all[segment] = pair;
+    let widths = all
+        .iter()
+        .any(|[a, b]| *a != 0.0 || *b != 0.0)
+        .then_some(all);
+    Some(Shape::Polyline {
+        pts: pts.clone(),
+        bulges: bulges.clone(),
+        holes: None,
+        parts: None,
+        closed: *closed,
+        widths,
     })
 }
 

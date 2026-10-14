@@ -217,6 +217,17 @@ impl App {
     /// heats the grip, a transform starts its tool and takes the grip as its
     /// first point (docs/adr/0279).
     pub(crate) fn grip_action(&mut self, grip: GripMenu, action: GripAction) -> Task<Message> {
+        // Yay… and Kenar genişliği…: Kenar düzenle on the edge (docs/adr/0288).
+        if action.segment_edit().is_some() {
+            if let Some(tool) = self
+                .with_tool(|_, cx| grip_menu::segment_tool(grip, action, cx))
+                .flatten()
+            {
+                self.session.run(Box::new(tool));
+                self.with_tool(|s, cx| s.activate(cx));
+            }
+            return Task::none();
+        }
         if action.vertex_action().is_some() {
             self.with_tool(|_, cx| grip_menu::apply(grip, action, cx));
         } else if action == GripAction::Stretch {

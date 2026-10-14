@@ -3248,9 +3248,12 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
     (kenarın ortasının yeri); nesne kalıcı kimliğiyle, yer cad.snap.find ya da
     cad.entities.pick'in verdiği gibi. Yay kenara eklenen köşe yayı çemberinde ikiye
     böler; Yaya dönüştür kenarı kirişin dörtte biri sehimle halkanın dışına ya da açık
-    yolun sağına büker; çizgiye köşe eklenince çoklu çizgi olur. Alanın delikleri ve
-    öbür parçaları kalır; topology ile ortak köşe ve kenarları olan komşular aynı adımda
-    izler. Tek geri alma adımı.
+    yolun sağına büker, through ile verilen noktadan, radius ile verilen yarıçapla
+    (artı: kenarın sağına) geçen yay yapar, yay kenarı da yeniden biçimler; Kenar
+    genişliği (width) çoklu çizginin kenarına başlangıç ve bitiş genişliği verir;
+    çizgiye köşe eklenince çoklu çizgi olur. Alanın delikleri ve öbür parçaları kalır;
+    topology ile ortak köşe ve kenarları olan komşular aynı adımda izler. Tek geri alma
+    adımı.
     """
     __slots__ = ()
     id = "cad.entities.vertex"
@@ -3270,7 +3273,10 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
         action: VertexAction | VertexActionName,
         place: SubPlace,
         expected_revision: str | None | Unset = UNSET,
+        radius: float | None | Unset = UNSET,
+        through: Vec2Like | None | Unset = UNSET,
         topology: StretchTopology | None | Unset = UNSET,
+        widths: Sequence[float] | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> EntitiesVertexed:
@@ -3278,9 +3284,12 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
         Ortasına köşe ekle, Düz kenar yap ve Yaya dönüştür (kenarın ortasının yeri); nesne
         kalıcı kimliğiyle, yer cad.snap.find ya da cad.entities.pick'in verdiği gibi. Yay
         kenara eklenen köşe yayı çemberinde ikiye böler; Yaya dönüştür kenarı kirişin dörtte
-        biri sehimle halkanın dışına ya da açık yolun sağına büker; çizgiye köşe eklenince
-        çoklu çizgi olur. Alanın delikleri ve öbür parçaları kalır; topology ile ortak köşe
-        ve kenarları olan komşular aynı adımda izler. Tek geri alma adımı.
+        biri sehimle halkanın dışına ya da açık yolun sağına büker, through ile verilen
+        noktadan, radius ile verilen yarıçapla (artı: kenarın sağına) geçen yay yapar, yay
+        kenarı da yeniden biçimler; Kenar genişliği (width) çoklu çizginin kenarına
+        başlangıç ve bitiş genişliği verir; çizgiye köşe eklenince çoklu çizgi olur. Alanın
+        delikleri ve öbür parçaları kalır; topology ile ortak köşe ve kenarları olan
+        komşular aynı adımda izler. Tek geri alma adımı.
 
         Args:
             doc: The drawing it works on.
@@ -3289,7 +3298,14 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
             place: A `vertex` place for Köşeyi sil, a `mid` place (the edge from that vertex) for the others; Köşe ekle takes an
                 `along` place too (a point inside the edge, docs/adr/0263 §1).
             expected_revision: The document revision the input was prepared against, as decimal text.
+            radius: Yaya dönüştür with this radius (docs/adr/0288), the drawing's length: the shorter arc on the chord, bowing to
+                the right of the edge's travel when positive (a positive bulge), to its left when negative. At least half the
+                chord; not with `through`. Unit: length.
+            through: Yaya dönüştür through this point (docs/adr/0288): the arc from the edge's start through it to its end. Not on
+                the edge's line nor at its ends; not with `radius`. Unit: length.
             topology: Topolojik düzenleme: the visible, unlocked neighbours sharing the changed vertices and edges follow.
+            widths: Kenar genişliği's start and end widths (docs/adr/0288), the drawing's length, zero or more; widths all zero
+                leave the polyline without widths. Unit: length.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -3307,7 +3323,10 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
             action=action,
             place=place,
             expected_revision=expected_revision,
+            radius=radius,
+            through=_opt(through, lambda x: Vec2.of(x)),
             topology=topology,
+            widths=_opt(widths, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -3319,7 +3338,10 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
         action: VertexAction | VertexActionName,
         place: SubPlace,
         expected_revision: str | None | Unset = UNSET,
+        radius: float | None | Unset = UNSET,
+        through: Vec2Like | None | Unset = UNSET,
         topology: StretchTopology | None | Unset = UNSET,
+        widths: Sequence[float] | None | Unset = UNSET,
     ) -> EntitiesVertexPlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -3329,7 +3351,10 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
             action=action,
             place=place,
             expected_revision=expected_revision,
+            radius=radius,
+            through=_opt(through, lambda x: Vec2.of(x)),
             topology=topology,
+            widths=_opt(widths, lambda x: list(x)),
         ))
 
     def validate(
@@ -3341,7 +3366,10 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
         action: VertexAction | VertexActionName,
         place: SubPlace,
         expected_revision: str | None | Unset = UNSET,
+        radius: float | None | Unset = UNSET,
+        through: Vec2Like | None | Unset = UNSET,
         topology: StretchTopology | None | Unset = UNSET,
+        widths: Sequence[float] | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -3351,7 +3379,10 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
             action=action,
             place=place,
             expected_revision=expected_revision,
+            radius=radius,
+            through=_opt(through, lambda x: Vec2.of(x)),
             topology=topology,
+            widths=_opt(widths, lambda x: list(x)),
         ))
 
     def answer(
@@ -3363,7 +3394,10 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
         action: VertexAction | VertexActionName,
         place: SubPlace,
         expected_revision: str | None | Unset = UNSET,
+        radius: float | None | Unset = UNSET,
+        through: Vec2Like | None | Unset = UNSET,
         topology: StretchTopology | None | Unset = UNSET,
+        widths: Sequence[float] | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -3378,7 +3412,10 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
             action=action,
             place=place,
             expected_revision=expected_revision,
+            radius=radius,
+            through=_opt(through, lambda x: Vec2.of(x)),
             topology=topology,
+            widths=_opt(widths, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 
 

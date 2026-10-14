@@ -194,6 +194,9 @@ impl Tool for Vertex {
             uid: uid.to_string(),
             action,
             place,
+            through: None,
+            radius: None,
+            widths: None,
             topology: None,
             expected_revision: None,
         };

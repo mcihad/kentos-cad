@@ -4,7 +4,7 @@
   "command": "cad.entities.vertex",
   "commandVersion": 1,
   "title": "Köşe ve kenar",
-  "note": "Written by scripts/fixtures/vertex_command_cases.py from the operations' definitions (docs/adr/0047, 0160, 0279); do not edit by hand.",
+  "note": "Written by scripts/fixtures/vertex_command_cases.py from the operations' definitions (docs/adr/0047, 0160, 0279, 0288); do not edit by hand.",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -440,6 +440,74 @@
             "y": 4420080
           }
         ]
+      },
+      {
+        "kind": "polyline",
+        "id": 17,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487000,
+            "y": 4420090
+          },
+          {
+            "x": 487010,
+            "y": 4420090
+          },
+          {
+            "x": 487020,
+            "y": 4420090
+          }
+        ],
+        "widths": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      },
+      {
+        "kind": "polyline",
+        "id": 18,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487000,
+            "y": 4420100
+          },
+          {
+            "x": 487010,
+            "y": 4420100
+          },
+          {
+            "x": 487020,
+            "y": 4420100
+          }
+        ],
+        "widths": [
+          [
+            0.5,
+            0.5
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ]
       }
     ],
     "styles": {
@@ -493,7 +561,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "3": {
@@ -545,7 +615,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "3": {
@@ -626,7 +698,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "3": {
@@ -705,7 +779,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "3": {
@@ -784,7 +860,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "1": {
@@ -864,7 +942,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "13": {
@@ -942,7 +1022,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "4": {
@@ -1018,7 +1100,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "1": {
@@ -1118,7 +1202,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "1": {
@@ -1179,7 +1265,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "1": {
@@ -1261,7 +1349,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "5": {
@@ -1340,7 +1430,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "4": {
@@ -1427,7 +1519,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "13": {
@@ -1513,7 +1607,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "9": {
@@ -1620,7 +1716,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "12": {
@@ -1732,7 +1830,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "1": {
@@ -1877,7 +1977,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "1": {
@@ -1966,7 +2068,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "5": {
@@ -2046,7 +2150,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "13": {
@@ -2132,7 +2238,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "4": {
@@ -2182,7 +2290,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "4": {
@@ -2262,7 +2372,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "1": {
@@ -2325,7 +2437,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "1": {
@@ -2407,7 +2521,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "6": {
@@ -2489,7 +2605,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "3": {
@@ -2583,7 +2701,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "1": {
@@ -2740,7 +2860,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "1": {
@@ -2865,7 +2987,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "entities": {
               "15": {
@@ -2938,7 +3062,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2989,7 +3115,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3071,7 +3199,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3121,7 +3251,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3172,7 +3304,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3222,7 +3356,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3272,7 +3408,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3322,7 +3460,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3372,7 +3512,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3422,7 +3564,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3472,7 +3616,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3523,7 +3669,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3574,7 +3722,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3625,7 +3775,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3676,7 +3828,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3726,7 +3880,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3776,7 +3932,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3826,7 +3984,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3876,7 +4036,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3926,7 +4088,9 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3976,7 +4140,3013 @@
               13,
               14,
               15,
-              16
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yaya dönüştür noktadan: alanın kenarı kirişin altındaki noktadan geçen yarım çember (+1); adım “Yaya dönüştür”",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "through": {
+              "x": 487005,
+              "y": 4419995
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:1"
+              ],
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {
+                  "Ada": "101"
+                },
+                "color": "#E5484D",
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420010
+                  }
+                ],
+                "bulges": [
+                  1,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Yaya dönüştür",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {
+                  "Ada": "101"
+                },
+                "color": "#E5484D",
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420010
+                  }
+                ]
+              }
+            },
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yaya dönüştür noktadan: sehim kirişin dörtte biri (+0,5)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "through": {
+              "x": 487005,
+              "y": 4419997.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:1"
+              ],
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {
+                  "Ada": "101"
+                },
+                "color": "#E5484D",
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420010
+                  }
+                ],
+                "bulges": [
+                  0.5,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yaya dönüştür noktadan: büyük yay (+2)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "through": {
+              "x": 487005,
+              "y": 4419990
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:1"
+              ],
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {
+                  "Ada": "101"
+                },
+                "color": "#E5484D",
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420010
+                  }
+                ],
+                "bulges": [
+                  2,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yaya dönüştür noktadan: alanın içine doğru (−0,5)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "through": {
+              "x": 487005,
+              "y": 4420002.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:1"
+              ],
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {
+                  "Ada": "101"
+                },
+                "color": "#E5484D",
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420010
+                  }
+                ],
+                "bulges": [
+                  -0.5,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yaya dönüştür noktadan: kirişin ortasında olmayan nokta, Thales'le yarım çember (+1)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 1
+            },
+            "through": {
+              "x": 487013,
+              "y": 4420021
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:3"
+              ],
+              "ids": [
+                3
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "3": {
+                "kind": "polyline",
+                "id": 3,
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Bordür"
+                },
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420030
+                  }
+                ],
+                "bulges": [
+                  0,
+                  1,
+                  0,
+                  0
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yaya dönüştür noktadan: yay kenar yeniden biçimlenir (1 → 0,5)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:4",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "through": {
+              "x": 487005,
+              "y": 4420037.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "ids": [
+                4
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "4": {
+                "kind": "polyline",
+                "id": 4,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420040
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420040
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420040
+                  }
+                ],
+                "bulges": [
+                  0.5,
+                  0,
+                  0
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yaya dönüştür noktadan: yay zaten o noktadan geçiyorsa hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:4",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "through": {
+              "x": 487005,
+              "y": 4420035
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "ids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Topoloji: noktadan yayın büküm komşuya da, ters yönde eksi işaretle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 1
+            },
+            "through": {
+              "x": 487012.5,
+              "y": 4420005
+            },
+            "topology": {}
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:1",
+                "$uidOf:2",
+                "$uidOf:14"
+              ],
+              "ids": [
+                1,
+                2,
+                14
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {
+                  "Ada": "101"
+                },
+                "color": "#E5484D",
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420010
+                  }
+                ],
+                "bulges": [
+                  0,
+                  0.5,
+                  0,
+                  0
+                ]
+              },
+              "2": {
+                "kind": "polygon",
+                "id": 2,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487010,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  }
+                ],
+                "bulges": [
+                  0,
+                  0,
+                  0,
+                  -0.5
+                ]
+              },
+              "14": {
+                "kind": "polyline",
+                "id": 14,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420010
+                  }
+                ],
+                "bulges": [
+                  0,
+                  0.5,
+                  0
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yaya dönüştür yarıçapla: kirişin yarısı yarıçap, yarım çember (+1)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "radius": 5
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:1"
+              ],
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {
+                  "Ada": "101"
+                },
+                "color": "#E5484D",
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420010
+                  }
+                ],
+                "bulges": [
+                  1,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yaya dönüştür yarıçapla: 6,25 m, kısa yay (+0,5)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 2
+            },
+            "radius": 6.25
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:1"
+              ],
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {
+                  "Ada": "101"
+                },
+                "color": "#E5484D",
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420010
+                  }
+                ],
+                "bulges": [
+                  0,
+                  0,
+                  0.5,
+                  0
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Yaya dönüştür",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "yapi",
+                "attrs": {
+                  "Ada": "101"
+                },
+                "color": "#E5484D",
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420010
+                  }
+                ]
+              }
+            },
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yaya dönüştür yarıçapla: eksi yarıçap kenarın soluna (−0,25)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "radius": -10.625
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:3"
+              ],
+              "ids": [
+                3
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "3": {
+                "kind": "polyline",
+                "id": 3,
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Bordür"
+                },
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420030
+                  }
+                ],
+                "bulges": [
+                  -0.25,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yaya dönüştür yarıçapla: yay kenar yeniden biçimlenir (1 → 0,5)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:4",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "radius": 6.25
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "ids": [
+                4
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "4": {
+                "kind": "polyline",
+                "id": 4,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420040
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420040
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420040
+                  }
+                ],
+                "bulges": [
+                  0.5,
+                  0,
+                  0
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yaya dönüştür yarıçapla: kapalı çoklu çizginin kenarı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:13",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "radius": 5
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:13"
+              ],
+              "ids": [
+                13
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "13": {
+                "kind": "polyline",
+                "id": 13,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487070,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487080,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487080,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487070,
+                    "y": 4420010
+                  }
+                ],
+                "bulges": [
+                  1,
+                  0,
+                  0,
+                  0
+                ],
+                "closed": true
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kenar genişliği: açık yolun ikinci kenarı 0,5'ten 0,25'e; adım “Kenar genişliği”",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "action": "width",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 1
+            },
+            "widths": [
+              0.5,
+              0.25
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:3"
+              ],
+              "ids": [
+                3
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "3": {
+                "kind": "polyline",
+                "id": 3,
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Bordür"
+                },
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420030
+                  }
+                ],
+                "widths": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    0.5,
+                    0.25
+                  ],
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    0
+                  ]
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kenar genişliği",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "3": {
+                "kind": "polyline",
+                "id": 3,
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Bordür"
+                },
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420030
+                  }
+                ]
+              }
+            },
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kenar genişliği: kapalı çoklu çizginin kapanan kenarı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:13",
+            "action": "width",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 3
+            },
+            "widths": [
+              1,
+              1
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:13"
+              ],
+              "ids": [
+                13
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "13": {
+                "kind": "polyline",
+                "id": 13,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487070,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487080,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487080,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487070,
+                    "y": 4420010
+                  }
+                ],
+                "closed": true,
+                "widths": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kenar genişliği: genişlikli çizginin ilk kenarı sıfıra, öbürü kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:17",
+            "action": "width",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "widths": [
+              0,
+              0
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:17"
+              ],
+              "ids": [
+                17
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "17": {
+                "kind": "polyline",
+                "id": 17,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420090
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420090
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420090
+                  }
+                ],
+                "widths": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ],
+                  [
+                    0,
+                    0
+                  ]
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kenar genişliği: tek genişlikli kenar sıfır olunca genişlikler düşer",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:18",
+            "action": "width",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "widths": [
+              0,
+              0
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "polyline",
+                "id": 18,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420100
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420100
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420100
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kenar genişliği: kenar zaten o genişlikteyse hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:17",
+            "action": "width",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 1
+            },
+            "widths": [
+              1,
+              1
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "ids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kenar genişliği: genişliksiz kenara sıfır yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "action": "width",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "widths": [
+              0,
+              0
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "ids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: noktadan yay, hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "through": {
+              "x": 487005,
+              "y": 4419995
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                {
+                  "kind": "polygon",
+                  "id": 1,
+                  "layerId": "yapi",
+                  "attrs": {
+                    "Ada": "101"
+                  },
+                  "color": "#E5484D",
+                  "pts": [
+                    {
+                      "x": 487000,
+                      "y": 4420000
+                    },
+                    {
+                      "x": 487010,
+                      "y": 4420000
+                    },
+                    {
+                      "x": 487010,
+                      "y": 4420010
+                    },
+                    {
+                      "x": 487000,
+                      "y": 4420010
+                    }
+                  ],
+                  "bulges": [
+                    1,
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nokta yalnız Yaya dönüştür'de: Düz kenar yap'a verilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "straighten",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "through": {
+              "x": 487005,
+              "y": 4419995
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arc_edge",
+              "message": "Yayın geçeceği nokta yalnız Yaya dönüştür'de (arc) verilir.",
+              "path": "through"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yarıçap yalnız Yaya dönüştür'de: köşe eklemeye verilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "insert",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "radius": 5
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arc_edge",
+              "message": "Yarıçap yalnız Yaya dönüştür'de (arc) verilir.",
+              "path": "radius"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nokta ve yarıçap birlikte verilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "through": {
+              "x": 487005,
+              "y": 4419995
+            },
+            "radius": 5
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arc_edge",
+              "message": "Yay ya bir noktadan ya da bir yarıçapla verilir; ikisi birlikte verilmez.",
+              "path": "radius"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yarıçap sıfır olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "radius": 0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arc_edge",
+              "message": "Yarıçap sıfırdan farklı bir sayı olmalı (eksi: kenarın soluna).",
+              "path": "radius"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yarıçap sayı olmalı (NaN)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "radius": 5
+          },
+          "nonFinite": {
+            "radius": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arc_edge",
+              "message": "Yarıçap sıfırdan farklı bir sayı olmalı (eksi: kenarın soluna).",
+              "path": "radius"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Noktanın koordinatı sayı olmalı (∞)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "through": {
+              "x": 487005,
+              "y": 4419995
+            }
+          },
+          "nonFinite": {
+            "through.y": "Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arc_edge",
+              "message": "Yayın geçeceği noktanın koordinatları sayı olmalı.",
+              "path": "through"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Seçenekler nesneden önce denetlenir: olmayan nesnede de",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "radius": 0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arc_edge",
+              "message": "Yarıçap sıfırdan farklı bir sayı olmalı (eksi: kenarın soluna).",
+              "path": "radius"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nokta kenarın doğrusunda: yay olmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "through": {
+              "x": 487005,
+              "y": 4420000
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arc_edge",
+              "message": "Yayın geçeceği nokta kenarın doğrusunda ya da ucunda; doğrunun dışında bir nokta verin.",
+              "path": "through"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nokta kenarın ucunda: yay olmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "through": {
+              "x": 487000,
+              "y": 4420000
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arc_edge",
+              "message": "Yayın geçeceği nokta kenarın doğrusunda ya da ucunda; doğrunun dışında bir nokta verin.",
+              "path": "through"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yarıçap kirişin yarısından küçük",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "radius": 4
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arc_edge",
+              "message": "Yarıçap kirişin yarısından küçük; en az kirişin yarısı kadar bir yarıçap verin.",
+              "path": "radius"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Genişlikler yalnız Kenar genişliği'nde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "widths": [
+              1,
+              1
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_polyline",
+              "message": "Genişlikler yalnız Kenar genişliği'nde (width) verilir.",
+              "path": "widths"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kenar genişliği genişliksiz verilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "action": "width",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 1
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_polyline",
+              "message": "Kenar genişliği başlangıç ve bitiş genişlikleriyle (widths) verilir.",
+              "path": "widths"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Genişlik eksi olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "action": "width",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 1
+            },
+            "widths": [
+              -1,
+              0
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_polyline",
+              "message": "Genişlikler sıfır ya da büyük sayılar olmalı.",
+              "path": "widths"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Genişlik sayı olmalı (NaN)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "action": "width",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 1
+            },
+            "widths": [
+              0.5,
+              0
+            ]
+          },
+          "nonFinite": {
+            "widths[1]": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_polyline",
+              "message": "Genişlikler sıfır ya da büyük sayılar olmalı.",
+              "path": "widths"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alanın kenar genişliği yoktur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "width",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 1
+            },
+            "widths": [
+              0.5,
+              0
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_polyline",
+              "message": "Kenar genişliği yalnız çoklu çizgide olur; alanın ve çizginin genişliği yoktur.",
+              "path": "uid"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizginin kenar genişliği yoktur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:5",
+            "action": "width",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "widths": [
+              0.5,
+              0
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_polyline",
+              "message": "Kenar genişliği yalnız çoklu çizgide olur; alanın ve çizginin genişliği yoktur.",
+              "path": "uid"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kenar genişliğinin yeri kenarın ortasıdır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "action": "width",
+            "place": {
+              "kind": "vertex",
+              "part": 0,
+              "ring": 0,
+              "index": 1
+            },
+            "widths": [
+              0.5,
+              0
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "wrong_place",
+              "message": "Köşe eklemenin yeri bir kenarın ortası (mid) ya da kenar üzerinde bir yerdir (along); kenarı düzeltme ve yaya dönüştürmenin yeri kenarın ortasıdır.",
+              "path": "place"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan kenarın genişliği",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "action": "width",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 3
+            },
+            "widths": [
+              0.5,
+              0
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_such_place",
+              "message": "Nesnede verilen yer yok: parça, köşe ya da kenar sırası nesnenin dışında.",
+              "path": "place"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
             ],
             "canUndo": false,
             "canRedo": false,

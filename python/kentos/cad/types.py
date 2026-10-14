@@ -598,6 +598,7 @@ class EditOperation(_StrEnum):
     - ``rasterGeoref``: Raster oturt (docs/adr/0204 §6): a raster's affine set from control points, or the raster
     - ``pointCloudStyle``: Nokta bulutu stili (docs/adr/0207 §5): clouds' looks and opacities written in place.
     - ``annotationScale``: Yazı yüksekliklerini uydur (docs/adr/0205 §3): after the plot scale or
+    - ``edgeWidth``: Kenar genişliği (docs/adr/0288): a polyline edge's start and end widths
     """
     OFFSET = "offset"
     TRIM = "trim"
@@ -655,9 +656,10 @@ class EditOperation(_StrEnum):
     RASTER_GEOREF = "rasterGeoref"
     POINT_CLOUD_STYLE = "pointCloudStyle"
     ANNOTATION_SCALE = "annotationScale"
+    EDGE_WIDTH = "edgeWidth"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose", "topologyFix", "networkAdjust", "levelAdjust", "rasterStyle", "rasterGeoref", "pointCloudStyle", "annotationScale"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose", "topologyFix", "networkAdjust", "levelAdjust", "rasterStyle", "rasterGeoref", "pointCloudStyle", "annotationScale", "edgeWidth"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 
@@ -1746,14 +1748,16 @@ class VertexAction(_StrEnum):
     - ``insert``: Ortasına köşe ekle (a `mid` place): a vertex at the edge's middle; or Köşe ekle at an `along` place: a vertex
     - ``straighten``: Düz kenar yap (a `mid` place): the edge straight. “Düz kenar yap”.
     - ``arc``: Yaya dönüştür (a `mid` place): a straight edge a gentle arc, its sagitta a quarter of the chord (bulge 0.5),
+    - ``width``: Kenar genişliği (a `mid` place, docs/adr/0288): a polyline edge's start and end widths (`widths`), as
     """
     REMOVE = "remove"
     INSERT = "insert"
     STRAIGHTEN = "straighten"
     ARC = "arc"
+    WIDTH = "width"
 
 
-VertexActionName = Literal["remove", "insert", "straighten", "arc"]
+VertexActionName = Literal["remove", "insert", "straighten", "arc", "width"]
 """The names of :class:`VertexAction`, for a plain string."""
 
 
@@ -7309,19 +7313,33 @@ class EntitiesVertex(_Model):
     Ortasına köşe ekle only), `wrong_place` (Köşeyi sil's place not a vertex, Köşe ekle's not an edge's middle or a place along it, the others'
     not an edge's middle),
     `hole_edit` (a hole's place), `no_such_place` (no such part, vertex or edge, or a place along an edge at its vertex), `too_few_corners` (a ring left
-    with fewer than three vertices), `too_few_points` (an open path left with fewer than two).
+    with fewer than three vertices), `too_few_points` (an open path left with fewer than two); docs/adr/0288's, before the
+    object is looked up: `invalid_arc_edge` (`through` or `radius` with another action, both together, a radius not
+    finite or of zero, a point not finite), `invalid_polyline` (`widths` with another action, Kenar genişliği without
+    them, a width below zero or not finite); after the place: `not_a_polyline` (Kenar genişliği on an area or a line),
+    `invalid_arc_edge` (the point on the edge's line or at an end, a radius below half the chord).
     Attributes:
         uid: The object's persistent id.
         place: A `vertex` place for Köşeyi sil, a `mid` place (the edge from that vertex) for the others; Köşe ekle takes an
             `along` place too (a point inside the edge, docs/adr/0263 §1).
         expected_revision: The document revision the input was prepared against, as decimal text.
+        radius: Yaya dönüştür with this radius (docs/adr/0288), the drawing's length: the shorter arc on the chord, bowing to
+            the right of the edge's travel when positive (a positive bulge), to its left when negative. At least half the
+            chord; not with `through`. Unit: length.
+        through: Yaya dönüştür through this point (docs/adr/0288): the arc from the edge's start through it to its end. Not on
+            the edge's line nor at its ends; not with `radius`. Unit: length.
         topology: Topolojik düzenleme: the visible, unlocked neighbours sharing the changed vertices and edges follow.
+        widths: Kenar genişliği's start and end widths (docs/adr/0288), the drawing's length, zero or more; widths all zero
+            leave the polyline without widths. Unit: length.
     """
     uid: str
     action: VertexAction | VertexActionName
     place: SubPlace
     expected_revision: str | None | Unset = UNSET
+    radius: float | None | Unset = UNSET
+    through: Vec2 | None | Unset = UNSET
     topology: StretchTopology | None | Unset = UNSET
+    widths: list[float] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -7330,8 +7348,14 @@ class EntitiesVertex(_Model):
         out["place"] = self.place.to_json()
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.radius is not UNSET:
+            out["radius"] = None if self.radius is None else float(self.radius)
+        if self.through is not UNSET:
+            out["through"] = None if self.through is None else _vec2_out(self.through)
         if self.topology is not UNSET:
             out["topology"] = None if self.topology is None else self.topology.to_json()
+        if self.widths is not UNSET:
+            out["widths"] = None if self.widths is None else [float(e0) for e0 in self.widths]
         return out
 
     @classmethod
@@ -7341,7 +7365,10 @@ class EntitiesVertex(_Model):
             action=_enum_in(VertexAction, data["action"]),
             place=SubPlace.from_json(data["place"]),
             expected_revision=data.get("expectedRevision", UNSET),
+            radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
+            through=UNSET if "through" not in data else None if data["through"] is None else Vec2.from_json(data["through"]),
             topology=UNSET if "topology" not in data else None if data["topology"] is None else StretchTopology.from_json(data["topology"]),
+            widths=UNSET if "widths" not in data else None if data["widths"] is None else [float(e0) for e0 in data["widths"]],
         )
 
 

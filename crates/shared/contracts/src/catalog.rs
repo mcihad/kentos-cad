@@ -3400,7 +3400,7 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             version: crate::CAD_ENTITIES_VERTEX_VERSION,
             title: "Köşe ve kenar".into(),
             summary: "Bir yolun köşesini ya da kenarını düzenler: Köşeyi sil (köşe yeri), Ortasına köşe ekle, Düz kenar yap ve Yaya dönüştür (kenarın ortasının yeri); nesne kalıcı kimliğiyle, yer cad.snap.find ya da cad.entities.pick'in verdiği gibi. \
-                      Yay kenara eklenen köşe yayı çemberinde ikiye böler; Yaya dönüştür kenarı kirişin dörtte biri sehimle halkanın dışına ya da açık yolun sağına büker; çizgiye köşe eklenince çoklu çizgi olur. Alanın delikleri ve öbür parçaları kalır; topology ile ortak köşe ve kenarları olan komşular aynı adımda izler. Tek geri alma adımı."
+                      Yay kenara eklenen köşe yayı çemberinde ikiye böler; Yaya dönüştür kenarı kirişin dörtte biri sehimle halkanın dışına ya da açık yolun sağına büker, through ile verilen noktadan, radius ile verilen yarıçapla (artı: kenarın sağına) geçen yay yapar, yay kenarı da yeniden biçimler; Kenar genişliği (width) çoklu çizginin kenarına başlangıç ve bitiş genişliği verir; çizgiye köşe eklenince çoklu çizgi olur. Alanın delikleri ve öbür parçaları kalır; topology ile ortak köşe ve kenarları olan komşular aynı adımda izler. Tek geri alma adımı."
                 .into(),
             aliases: vec!["kose".into(), "vertex".into()],
             effect: CommandEffect::Document,
@@ -3418,6 +3418,16 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 title: "Bir alanın üçüncü köşesini sil".into(),
                 input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "action": "remove",
                                "place": { "kind": "vertex", "part": 0, "ring": 0, "index": 2 } }),
+                output: None,
+            }, CommandExample {
+                title: "Çoklu çizginin ikinci kenarını 25 m yarıçaplı yaya dönüştür".into(),
+                input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002", "action": "arc", "radius": 25.0,
+                               "place": { "kind": "mid", "part": 0, "ring": 0, "index": 1 } }),
+                output: None,
+            }, CommandExample {
+                title: "Çoklu çizginin ilk kenarını 0,5 m'den 0'a incelt".into(),
+                input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002", "action": "width", "widths": [0.5, 0.0],
+                               "place": { "kind": "mid", "part": 0, "ring": 0, "index": 0 } }),
                 output: None,
             }],
         },

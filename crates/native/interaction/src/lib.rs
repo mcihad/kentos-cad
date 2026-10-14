@@ -207,6 +207,7 @@ pub mod rotated;
 pub mod scale;
 pub mod second;
 pub mod sector;
+pub mod segment_edit;
 pub mod select;
 pub mod select_circle;
 pub mod select_containing;

@@ -530,8 +530,16 @@ fn axis<'a>(p: &'a mut kentos_domain::contracts::Vec2, a: &str) -> Option<&'a mu
 }
 
 impl Input for kentos_domain::contracts::EntitiesVertex {
-    fn number(&mut self, _: &str) -> Option<&mut f64> {
-        None
+    /// `radius`, `through.x`, `through.y`, `widths[0]`, `widths[1]` (docs/adr/0288).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "radius" => self.radius.as_mut(),
+            "through.x" => self.through.as_mut().map(|p| &mut p.x),
+            "through.y" => self.through.as_mut().map(|p| &mut p.y),
+            "widths[0]" => self.widths.as_mut().map(|w| &mut w[0]),
+            "widths[1]" => self.widths.as_mut().map(|w| &mut w[1]),
+            _ => None,
+        }
     }
 }
 
