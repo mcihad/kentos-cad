@@ -349,6 +349,8 @@ pub enum Message {
     LayerFields(crate::layer_fields::Event),
     /// The Arama tab (search/, docs/adr/0178).
     Search(crate::search::Event),
+    /// A call's buttons in Komut geçmişi (history/, docs/adr/0284).
+    History(crate::history::Event),
     /// The Topoloji tab (topology/, docs/adr/0202 §5).
     Topology(crate::topology::Event),
     /// Topoloji kuralları (topology/rules.rs, docs/adr/0202 §6).
@@ -682,6 +684,8 @@ pub struct App {
     /// The log (message_log.rs): every line said, 500 at most, with its time
     /// and level; the bottom panel lists it, the status bar shows its newest.
     pub(crate) log: crate::log_plan::Log,
+    /// The commands' calls Komut geçmişi lists beside the log (history/, docs/adr/0284).
+    pub(crate) history: crate::history::History,
     /// What was typed in the command line: its ↑ brings them back.
     pub(crate) typed: Vec<Entry>,
     /// What the log's views follow: the status bar's message, the list's end.
@@ -1030,6 +1034,7 @@ impl App {
                 );
                 log
             },
+            history: Default::default(),
             typed: Vec::new(),
             follow: crate::message_log::Follow::default(),
             layout: crate::layout::Keeper::memory(),
@@ -1351,7 +1356,11 @@ impl App {
             self.follow_tracking(),
             // The grids the project's datum choices name, read into the core (grids.rs).
             self.follow_grids(),
-            self.follow_log(Instant::now()),
+            // The drawing's new calls join Komut geçmişi before the log is followed (history/).
+            {
+                self.follow_history();
+                self.follow_log(Instant::now())
+            },
             // The sheet templates' library follows the sign-in and the connection (sheet_library.rs).
             self.follow_sheet_library(Instant::now()),
         ]);
@@ -1511,6 +1520,7 @@ impl App {
             },
             Message::LayerFields(event) => return self.layer_fields_event(event),
             Message::Search(event) => return self.data_event(event),
+            Message::History(event) => return self.calls_event(event),
             Message::Topology(event) => return self.topology_event(event),
             Message::TopologyRules(event) => return self.topology_rules_event(event),
             Message::Networks(event) => return self.networks_event(event),

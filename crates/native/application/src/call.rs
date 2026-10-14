@@ -21,7 +21,7 @@ use kentos_contracts::{
     RequestRecord, StateStamps, SummaryCounts, UndoInfo, codes, request_id_valid,
 };
 use kentos_domain::etag::{block_stamp, entity_stamp, entity_value};
-use kentos_domain::{Document, Sealed, StepReport, Uuid};
+use kentos_domain::{Document, RefusedAs, Sealed, StepReport, Uuid};
 use kentos_geometry_core::entity::entity_bounds;
 use kentos_geometry_core::store::Store;
 use serde::Serialize;
@@ -191,7 +191,18 @@ where
             }
             CommandResult::Completed { output, warnings }
         }
-        Err(refused) => *refused,
+        Err(refused) => {
+            // What wrote nothing is kept for the command history (docs/adr/0284).
+            let (how, error) = match &*refused {
+                CommandResult::Failed { error: e } => (RefusedAs::Failed, Some(e.clone())),
+                CommandResult::Conflict { error: e } => (RefusedAs::Conflict, Some(e.clone())),
+                CommandResult::NeedsInput { error: e } => (RefusedAs::NeedsInput, Some(e.clone())),
+                _ => (RefusedAs::Cancelled, None),
+            };
+            cx.doc
+                .note_refusal(command, version, normalized, how, error);
+            *refused
+        }
     };
     state.outcome = outcome;
     cx.call = Some(state);

@@ -288,6 +288,7 @@ impl App {
     /// Geçmişi temizle: the lines go; the badge counts what comes after.
     pub(crate) fn clear_history(&mut self) {
         self.log.clear();
+        self.history.clear();
         self.last_level = None;
     }
 
