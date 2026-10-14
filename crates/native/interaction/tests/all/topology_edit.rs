@@ -139,7 +139,11 @@ fn the_grip_menu_puts_the_shared_edge_right() {
         .expect("the shared edge's middle");
     assert_eq!(
         edge.actions()[..edge.own_count()],
-        [GripAction::AddVertex, GripAction::ArcEdge]
+        [
+            GripAction::AddVertex,
+            GripAction::ArcEdge,
+            GripAction::ArcBy
+        ]
     );
     let before = b.log.len();
     b.run(|_, cx| grip_menu::apply(edge, GripAction::ArcEdge, cx));

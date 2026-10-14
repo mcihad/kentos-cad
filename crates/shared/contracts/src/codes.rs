@@ -436,6 +436,10 @@ codes! {
     NOT_A_PATH = "not_a_path", Failed, false, "Köşe ve kenar işlemleri çoklu çizgide ve kapalı alanda yapılır.";
     /// A place of the wrong kind for the action (a vertex for Köşeyi sil, an edge's middle for the others).
     WRONG_PLACE = "wrong_place", Failed, false, "Yer işlemin istediği türden değil: köşe ya da kenarın ortası.";
+    /// Yaya dönüştür's point or radius that gives no arc (docs/adr/0288).
+    INVALID_ARC_EDGE = "invalid_arc_edge", Failed, false, "Yayın noktası ya da yarıçapı yay vermiyor: nokta kenarın doğrusunda ya da ucunda, yarıçap kirişin yarısından küçük, ya da ikisi birlikte verilmiş.";
+    /// Kenar genişliği on an object that is not a polyline (docs/adr/0288).
+    NOT_A_POLYLINE = "not_a_polyline", Failed, false, "Kenar genişliği yalnız çoklu çizgide olur; alanın ve çizginin genişliği yoktur.";
     /// A hole's vertex or edge, which only moves by dragging.
     HOLE_EDIT = "hole_edit", Failed, false, "Deliğin köşe ve kenarları bu işlemle değişmez.";
 

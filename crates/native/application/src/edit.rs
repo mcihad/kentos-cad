@@ -225,6 +225,8 @@ pub fn label(operation: EditOperation) -> &'static str {
         EditOperation::LevelAdjust => "Kot ağı dengelemesi",
         // Ölçek ya da genel yükseklik değişince izleyenler (docs/adr/0205 §3).
         EditOperation::AnnotationScale => "Yazı yüksekliklerini uydur",
+        // cad.entities.vertex's width (docs/adr/0288).
+        EditOperation::EdgeWidth => "Kenar genişliği",
     }
 }
 
@@ -446,6 +448,8 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
     // Deliği doldur's area takes its hole's elevations, if it has any: its
     // area keeps its own (docs/adr/0173 §5).
     let keeps = input.operation == EditOperation::HoleFill;
+    // Kenar genişliği writes the widths it gives, none among them (docs/adr/0288).
+    let edge_width = input.operation == EditOperation::EdgeWidth;
     // Elevations written with the geometry are written as they are (Kot ver,
     // Öznitelikler, a script): `entity_of` already holds them. Measures alike
     // (docs/adr/0224 §2).
@@ -470,7 +474,7 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
             }
         }
         // Widths written with the geometry are written as they are (Öznitelikler, a script).
-        if !written_w(geometry) && !wide.is_empty() {
+        if !written_w(geometry) && !wide.is_empty() && !edge_width {
             let before = widths::source(from);
             let same = if by_place { before.as_ref() } else { None };
             if !widths::carry(&mut entity, &wide, same, how) && before.is_some() {

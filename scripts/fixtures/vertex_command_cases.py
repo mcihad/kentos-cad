@@ -26,6 +26,20 @@ here by hand from the ADR. What the command does is computed independently, from
 The geometry is computed in exact fractions over a drawing whose every value is a double exactly; the one
 transcendental value (tan(π/8) of a semicircle split in two) is computed to 60 digits by its series and rounded to the
 nearest double, not by the platform's libm.
+docs/adr/0288 adds, computed the same way:
+
+- Yaya dönüştür through a point m (`through`): the arc a → m → b, its bulge the cotangent of half the angle at m,
+  (|u||v| + u·v) / −(u × v) with u = a − m, v = b − m, positive bowing right of travel. Radius r (`radius`): the shorter
+  arc on the chord c, bulge c / (2|r| + √(4r² − c²)), its sign r's. On a straight or an arc edge; the bulge as it is:
+  nothing written. The points and radii are chosen so that every square root is of a square and every bulge a dyadic,
+  as the command's double arithmetic then gives them exactly.
+- Kenar genişliği (`width`): a polyline's widths, one pair a vertex (an open path's last [0, 0]), the edge's pair set;
+  widths all zero are none.
+- The new refusals, before the object is looked up: `invalid_arc_edge` (a point or a radius with another action, both,
+  a radius of zero or not finite), `invalid_polyline` (widths with another action, Kenar genişliği without them, a
+  width below zero or not finite); after it: `not_a_polyline` (Kenar genişliği on an area or a line),
+  `invalid_arc_edge` (a point on the edge's line or at its end, a radius below half the chord).
+
 `--check` rebuilds the file in memory and compares it with the one on disk.
 """
 import json
@@ -83,6 +97,8 @@ PART1 = [(110, 0), (120, 0), (120, 10), (110, 10)]
 RING = [(70, 0), (80, 0), (80, 10), (70, 10)]
 ALONG = [(0, 0), (10, 0), (10, 10), (0, 10)]
 QUAD = [(0, 70), (10, 70), (5, 80), (-5, 80)]
+WIDE = [(0, 90), (10, 90), (20, 90)]
+ONE_WIDE = [(0, 100), (10, 100), (20, 100)]
 TRIANGLE = [(0, 70), (10, 70), (5, 80)]
 
 ENTITIES = [
@@ -102,7 +118,12 @@ ENTITIES = [
     path("polyline", 14, ALONG),
     path("polygon", 15, QUAD),
     path("polygon", 16, TRIANGLE),
+    {**path("polyline", 17, WIDE), "widths": [[1, 1], [1, 1], [0, 0]]},
+    {**path("polyline", 18, ONE_WIDE), "widths": [[F(1, 2), F(1, 2)], [0, 0], [0, 0]]},
 ]
+for _e in ENTITIES:
+    if "widths" in _e:
+        _e["widths"] = [[num(a), num(b)] for a, b in _e["widths"]]
 BY_ID = {e["id"]: e for e in ENTITIES}
 IDS = [e["id"] for e in ENTITIES]
 LOCKED_LAYERS = {"kilitli"}
@@ -130,7 +151,19 @@ HOLE_EDIT = "Deliğin köşe ve kenarları bu işlemle değişmez; deliği tutam
 NO_PLACE = "Nesnede verilen yer yok: parça, köşe ya da kenar sırası nesnenin dışında."
 NEIGHBOUR_LOCKED = "Kilitli katmandaki {} komşu nesne değişmedi; ortak sınır ayrıldı."
 NEIGHBOUR_INVALID = "{} komşu nesne geçersiz kalacağı için değişmedi (açık yolda 2'den, halkada 3'ten az köşe)."
-LABELS = {"remove": "Köşe sil", "insert": "Köşe ekle", "straighten": "Düz kenar yap", "arc": "Yaya dönüştür"}
+LABELS = {"remove": "Köşe sil", "insert": "Köşe ekle", "straighten": "Düz kenar yap", "arc": "Yaya dönüştür",
+          "width": "Kenar genişliği"}
+ARC_ONLY_POINT = "Yayın geçeceği nokta yalnız Yaya dönüştür'de (arc) verilir."
+ARC_ONLY_RADIUS = "Yarıçap yalnız Yaya dönüştür'de (arc) verilir."
+ARC_BOTH = "Yay ya bir noktadan ya da bir yarıçapla verilir; ikisi birlikte verilmez."
+ARC_RADIUS = "Yarıçap sıfırdan farklı bir sayı olmalı (eksi: kenarın soluna)."
+ARC_POINT = "Yayın geçeceği noktanın koordinatları sayı olmalı."
+ARC_ON_LINE = "Yayın geçeceği nokta kenarın doğrusunda ya da ucunda; doğrunun dışında bir nokta verin."
+ARC_SHORT = "Yarıçap kirişin yarısından küçük; en az kirişin yarısı kadar bir yarıçap verin."
+WIDTHS_ONLY = "Genişlikler yalnız Kenar genişliği'nde (width) verilir."
+WIDTHS_NEEDED = "Kenar genişliği başlangıç ve bitiş genişlikleriyle (widths) verilir."
+WIDTHS_BAD = "Genişlikler sıfır ya da büyük sayılar olmalı."
+NOT_A_POLYLINE = "Kenar genişliği yalnız çoklu çizgide olur; alanın ve çizginin genişliği yoktur."
 
 
 def bad_uid(u):
@@ -342,6 +375,160 @@ def edited(i, action, index, part=0, topology=False, t=None):
     return [out] + follows, locked, invalid
 
 
+# ── docs/adr/0288 ─────────────────────────────────────────────────────────────────────────────────────────────────
+
+def isqrt_exact(q):
+    """The square root of a non-negative fraction that is a square, exactly."""
+    q = F(q)
+    n, d = math.isqrt(q.numerator), math.isqrt(q.denominator)
+    assert F(n * n, d * d) == q, f"{q} is no square"
+    return F(n, d)
+
+
+def bulge_via(a, m, b):
+    """The arc a → m → b: cot of half the angle at m, positive bowing right of travel; None on one line."""
+    u = (F(a[0]) - m[0], F(a[1]) - m[1])
+    v = (F(b[0]) - m[0], F(b[1]) - m[1])
+    cross = u[0] * v[1] - u[1] * v[0]
+    if cross == 0:
+        return None
+    norms = isqrt_exact((u[0] ** 2 + u[1] ** 2) * (v[0] ** 2 + v[1] ** 2))
+    return (norms + u[0] * v[0] + u[1] * v[1]) / -cross
+
+
+def bulge_of_radius(a, b, r):
+    """The shorter arc of radius |r| on the chord: c / (2|r| + √(4r² − c²)), its sign r's; None below half the chord."""
+    c = isqrt_exact((F(b[0]) - a[0]) ** 2 + (F(b[1]) - a[1]) ** 2)
+    rest = 4 * F(r) ** 2 - c * c
+    if rest < 0:
+        return None
+    k = c / (2 * abs(F(r)) + isqrt_exact(rest))
+    return -k if r < 0 else k
+
+
+def bent_case(name, i, index, through=None, radius=None, topology=False, undo=False):
+    """Yaya dönüştür through a point or with a radius: the edge's bulge as the arc's."""
+    e = BY_ID[i]
+    p = path_of(e)
+    n = len(p.pts)
+    a, b, was = p.pts[index], p.pts[(index + 1) % n], p.bulges[index]
+    to = bulge_via(a, through, b) if through is not None else bulge_of_radius(a, b, radius)
+    assert to is not None and to.denominator & (to.denominator - 1) == 0, to
+    inp = {"uid": UID(i), "action": "arc", "place": mid(index)}
+    if through is not None:
+        inp["through"] = P(*through)
+    if radius is not None:
+        inp["radius"] = num(radius)
+    if topology:
+        inp["topology"] = {}
+    if to == was:
+        return {"name": name, "steps": [{"op": "execute", "input": inp,
+                                          "result": completed({"changed": [], "ids": [], "revision": "$current"}),
+                                          "expect": UNCHANGED}]}
+    new = bent(p, index, to)
+    changed = [new.entity(e)]
+    if topology:
+        follows, _, _ = follow(i, ("bulge", a, b, was, to))
+        changed += follows
+    ids = [c["id"] for c in changed]
+    steps = [{"op": "execute", "input": inp,
+              "result": completed({"changed": [UID(k) for k in ids], "ids": ids, "revision": "$current"}),
+              "expect": {"ids": IDS, "entities": {str(c["id"]): c for c in changed}, "revision": "changed",
+                         "canUndo": True, "canRedo": False, "dirty": True}}]
+    if undo:
+        steps.append({"op": "undo", "returns": LABELS["arc"],
+                      "expect": {"ids": IDS, "entities": {str(k): BY_ID[k] for k in ids}, "canUndo": False, "canRedo": True}})
+    return {"name": name, "steps": steps}
+
+
+def width_case(name, i, index, pair, undo=False):
+    """Kenar genişliği: the polyline's widths, one pair a vertex, the edge's set; all zero: none."""
+    e = BY_ID[i]
+    n = len(e["pts"])
+    widths = [list(w) for w in e.get("widths", [[0, 0]] * n)]
+    pair = [num(F(v)) for v in pair]
+    inp = {"uid": UID(i), "action": "width", "place": mid(index), "widths": pair}
+    if widths[index] == pair:
+        return {"name": name, "steps": [{"op": "execute", "input": inp,
+                                          "result": completed({"changed": [], "ids": [], "revision": "$current"}),
+                                          "expect": UNCHANGED}]}
+    widths[index] = pair
+    out = {k: v for k, v in e.items() if k != "widths"}
+    if any(a != 0 or b != 0 for a, b in widths):
+        out["widths"] = widths
+    steps = [{"op": "execute", "input": inp,
+              "result": completed({"changed": [UID(i)], "ids": [i], "revision": "$current"}),
+              "expect": {"ids": IDS, "entities": {str(i): out}, "revision": "changed",
+                         "canUndo": True, "canRedo": False, "dirty": True}}]
+    if undo:
+        steps.append({"op": "undo", "returns": LABELS["width"],
+                      "expect": {"ids": IDS, "entities": {str(i): e}, "canUndo": False, "canRedo": True}})
+    return {"name": name, "steps": steps}
+
+
+def adr_0288_cases():
+    """Yaya dönüştür through a point and with a radius, Kenar genişliği, and their refusals (docs/adr/0288)."""
+    arc = {"uid": UID(1), "action": "arc", "place": mid(0)}
+    width = {"uid": UID(3), "action": "width", "place": mid(1), "widths": [num(F(1, 2)), 0]}
+    out = [
+        bent_case("Yaya dönüştür noktadan: alanın kenarı kirişin altındaki noktadan geçen yarım çember (+1); adım “Yaya dönüştür”",
+                  1, 0, through=(5, -5), undo=True),
+        bent_case("Yaya dönüştür noktadan: sehim kirişin dörtte biri (+0,5)", 1, 0, through=(5, F(-5, 2))),
+        bent_case("Yaya dönüştür noktadan: büyük yay (+2)", 1, 0, through=(5, -10)),
+        bent_case("Yaya dönüştür noktadan: alanın içine doğru (−0,5)", 1, 0, through=(5, F(5, 2))),
+        bent_case("Yaya dönüştür noktadan: kirişin ortasında olmayan nokta, Thales'le yarım çember (+1)", 3, 1, through=(13, 21)),
+        bent_case("Yaya dönüştür noktadan: yay kenar yeniden biçimlenir (1 → 0,5)", 4, 0, through=(5, F(75, 2))),
+        bent_case("Yaya dönüştür noktadan: yay zaten o noktadan geçiyorsa hiçbir şey yazılmaz", 4, 0, through=(5, 35)),
+        bent_case("Topoloji: noktadan yayın büküm komşuya da, ters yönde eksi işaretle", 1, 1, through=(F(25, 2), 5), topology=True),
+        bent_case("Yaya dönüştür yarıçapla: kirişin yarısı yarıçap, yarım çember (+1)", 1, 0, radius=5),
+        bent_case("Yaya dönüştür yarıçapla: 6,25 m, kısa yay (+0,5)", 1, 2, radius=F(25, 4), undo=True),
+        bent_case("Yaya dönüştür yarıçapla: eksi yarıçap kenarın soluna (−0,25)", 3, 0, radius=F(-85, 8)),
+        bent_case("Yaya dönüştür yarıçapla: yay kenar yeniden biçimlenir (1 → 0,5)", 4, 0, radius=F(25, 4)),
+        bent_case("Yaya dönüştür yarıçapla: kapalı çoklu çizginin kenarı", 13, 0, radius=5),
+        width_case("Kenar genişliği: açık yolun ikinci kenarı 0,5'ten 0,25'e; adım “Kenar genişliği”", 3, 1, (F(1, 2), F(1, 4)), undo=True),
+        width_case("Kenar genişliği: kapalı çoklu çizginin kapanan kenarı", 13, 3, (1, 1)),
+        width_case("Kenar genişliği: genişlikli çizginin ilk kenarı sıfıra, öbürü kalır", 17, 0, (0, 0)),
+        width_case("Kenar genişliği: tek genişlikli kenar sıfır olunca genişlikler düşer", 18, 0, (0, 0)),
+        width_case("Kenar genişliği: kenar zaten o genişlikteyse hiçbir şey yazılmaz", 17, 1, (1, 1)),
+        width_case("Kenar genişliği: genişliksiz kenara sıfır yazılmaz", 3, 0, (0, 0)),
+    ]
+    out.append({"name": "Plan: noktadan yay, hiçbir şey yazılmaz", "steps": [
+        {"op": "plan", "input": {**arc, "through": P(5, -5)},
+         "result": completed({"changed": [bent(path_of(BY_ID[1]), 0, F(1)).entity(BY_ID[1])], "revision": "$current"}),
+         "expect": UNCHANGED}]})
+    out += [
+        refused("Nokta yalnız Yaya dönüştür'de: Düz kenar yap'a verilmez", {**arc, "action": "straighten", "through": P(5, -5)},
+                "invalid_arc_edge", ARC_ONLY_POINT, "through"),
+        refused("Yarıçap yalnız Yaya dönüştür'de: köşe eklemeye verilmez", {**arc, "action": "insert", "radius": 5},
+                "invalid_arc_edge", ARC_ONLY_RADIUS, "radius"),
+        refused("Nokta ve yarıçap birlikte verilmez", {**arc, "through": P(5, -5), "radius": 5}, "invalid_arc_edge", ARC_BOTH, "radius"),
+        refused("Yarıçap sıfır olamaz", {**arc, "radius": 0}, "invalid_arc_edge", ARC_RADIUS, "radius"),
+        {"name": "Yarıçap sayı olmalı (NaN)", "steps": [
+            {"op": "execute", "input": {**arc, "radius": 5}, "nonFinite": {"radius": "NaN"},
+             "result": failed("invalid_arc_edge", ARC_RADIUS, "radius"), "expect": UNCHANGED}]},
+        {"name": "Noktanın koordinatı sayı olmalı (∞)", "steps": [
+            {"op": "execute", "input": {**arc, "through": P(5, -5)}, "nonFinite": {"through.y": "Infinity"},
+             "result": failed("invalid_arc_edge", ARC_POINT, "through"), "expect": UNCHANGED}]},
+        refused("Seçenekler nesneden önce denetlenir: olmayan nesnede de", {**arc, "uid": MISSING, "radius": 0},
+                "invalid_arc_edge", ARC_RADIUS, "radius"),
+        refused("Nokta kenarın doğrusunda: yay olmaz", {**arc, "through": P(5, 0)}, "invalid_arc_edge", ARC_ON_LINE, "through"),
+        refused("Nokta kenarın ucunda: yay olmaz", {**arc, "through": P(0, 0)}, "invalid_arc_edge", ARC_ON_LINE, "through"),
+        refused("Yarıçap kirişin yarısından küçük", {**arc, "radius": 4}, "invalid_arc_edge", ARC_SHORT, "radius"),
+        refused("Genişlikler yalnız Kenar genişliği'nde", {**arc, "widths": [1, 1]}, "invalid_polyline", WIDTHS_ONLY, "widths"),
+        refused("Kenar genişliği genişliksiz verilmez", {k: v for k, v in width.items() if k != "widths"},
+                "invalid_polyline", WIDTHS_NEEDED, "widths"),
+        refused("Genişlik eksi olamaz", {**width, "widths": [-1, 0]}, "invalid_polyline", WIDTHS_BAD, "widths"),
+        {"name": "Genişlik sayı olmalı (NaN)", "steps": [
+            {"op": "execute", "input": width, "nonFinite": {"widths[1]": "NaN"},
+             "result": failed("invalid_polyline", WIDTHS_BAD, "widths"), "expect": UNCHANGED}]},
+        refused("Alanın kenar genişliği yoktur", {**width, "uid": UID(1)}, "not_a_polyline", NOT_A_POLYLINE, "uid"),
+        refused("Çizginin kenar genişliği yoktur", {**width, "uid": UID(5), "place": mid(0)}, "not_a_polyline", NOT_A_POLYLINE, "uid"),
+        refused("Kenar genişliğinin yeri kenarın ortasıdır", {**width, "place": vertex(1)}, "wrong_place", WRONG_EDGE, "place"),
+        refused("Olmayan kenarın genişliği", {**width, "place": mid(3)}, "no_such_place", NO_PLACE, "place"),
+    ]
+    return out
+
+
 def case(name, i, action, place, index=None, part=0, topology=False, extra=(), undo=False):
     t = place.get("t")
     inp = {"uid": UID(i), "action": action, "place": place}
@@ -431,6 +618,7 @@ def cases():
         refused("İki köşeli çoklu çizgiden köşe silinmez", {"uid": UID(7), "action": "remove", "place": vertex(1)}, "too_few_points",
                 "Çoklu çizgide en az iki köşe kalmalı.", "place"),
     ]
+    out += adr_0288_cases()
     out.append({"name": "Beklenen sürüm geçmişte kaldıysa conflict, hiçbir şey yazılmaz", "steps": [
         {"op": "captureRevision", "as": "old"},
         {"op": "execute", "input": {"uid": UID(3), "action": "remove", "place": vertex(1)},
@@ -444,7 +632,7 @@ def build():
     return {
         "format": "kentos.command-cases", "version": 1, "command": "cad.entities.vertex", "commandVersion": 1,
         "title": "Köşe ve kenar",
-        "note": "Written by scripts/fixtures/vertex_command_cases.py from the operations' definitions (docs/adr/0047, 0160, 0279); do not edit by hand.",
+        "note": "Written by scripts/fixtures/vertex_command_cases.py from the operations' definitions (docs/adr/0047, 0160, 0279, 0288); do not edit by hand.",
         "setup": SETUP, "cases": cases(),
     }
 

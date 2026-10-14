@@ -715,6 +715,9 @@ pub struct Memory {
     /// Çoklu çizgi's Genişlik, metres: every edge's start and end width; 0 none
     /// (docs/adr/0258 §2). Kept for the session, as AutoCAD's PLINE keeps it.
     pub polyline_width: f64,
+    /// Genişlik's end width, metres (docs/adr/0288): the next edge tapers from `polyline_width` to it, the ones
+    /// after keep it.
+    pub polyline_width_end: f64,
     /// NURBS eğrisi's method (control points, else fit points) and degree
     /// (docs/adr/0259 §6), kept for the session as AutoCAD's SPLINE keeps them.
     pub nurbs_control: bool,
@@ -1026,6 +1029,7 @@ impl Default for Memory {
             stream: false,
             stream_step: 1.0,
             polyline_width: 0.0,
+            polyline_width_end: 0.0,
             nurbs_control: false,
             nurbs_degree: 3,
             block_insert: None,
