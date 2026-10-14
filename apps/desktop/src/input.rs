@@ -406,6 +406,8 @@ impl App {
                 self.pan_recorded = false;
                 let p = self.pointer_at(at);
                 self.with_tool(|s, cx| s.pointer_up(&p, cx));
+                // The candidate Tab chose was for this click (docs/adr/0271).
+                self.snap_cycle = None;
             }
             viewport::Event::Left => {
                 self.snap = None;
@@ -428,22 +430,7 @@ impl App {
     /// kept for its marker.
     pub(crate) fn pointer_at(&mut self, at: iced::Point) -> Pointer {
         let raw = self.viewport.world(at);
-        // A one-shot snap works even with running snaps off (F3), and only
-        // for its own kind (the web's `updateSnap`, drawing_menus.rs).
-        let draft = match self.snap_once() {
-            // A one-shot Uzantı snaps to ends too: an end is rested on to
-            // acquire its extension (docs/adr/0163 §2).
-            Some(kind) => Draft {
-                snap: true,
-                snap_kinds: if kind == SnapKind::Extension {
-                    kind.bit() | SnapKind::Endpoint.bit()
-                } else {
-                    kind.bit()
-                },
-                ..self.draft
-            },
-            None => self.draft,
-        };
+        let draft = self.snap_draft();
         self.snap = match &self.document {
             Some(doc) => {
                 self.spatial.sync(&doc.model);
@@ -453,6 +440,10 @@ impl App {
             }
             None => None,
         };
+        // Tab's pick among the candidates while the pointer stays (docs/adr/0271).
+        if let Some(hit) = self.cycled_snap(at) {
+            self.snap = Some(hit);
+        }
         // Nesne izleme and Uzantı's and Paralel's rests (tracking.rs): a rest
         // on a snap or an edge, and with no snap the lock.
         let view = CameraView(&self.viewport.camera);
@@ -473,6 +464,25 @@ impl App {
         .tracked(self.tracking.track().map(|t| t.point));
         self.cursor_point = Some((raw, pointer.world));
         pointer
+    }
+
+    /// The drafting aids the snap is asked with: a one-shot snap works even with running snaps off (F3), and
+    /// only for its own kind (the web's `updateSnap`, drawing_menus.rs).
+    pub(crate) fn snap_draft(&self) -> Draft {
+        match self.snap_once() {
+            // A one-shot Uzantı snaps to ends too: an end is rested on to
+            // acquire its extension (docs/adr/0163 §2).
+            Some(kind) => Draft {
+                snap: true,
+                snap_kinds: if kind == SnapKind::Extension {
+                    kind.bit() | SnapKind::Endpoint.bit()
+                } else {
+                    kind.bit()
+                },
+                ..self.draft
+            },
+            None => self.draft,
+        }
     }
 
     /// A key no text box captured, by ADR 0018's order (see the module).
@@ -698,6 +708,13 @@ impl App {
         // selected rows' vertices, not the object (vertices/).
         if self.vertices.keyboard && press.named() == Some(Named::Delete) {
             return self.vertices_event(crate::vertices::Event::Remove);
+        }
+        // 3. Tab over the drawing while a point is taken: the next snap candidate (docs/adr/0271).
+        if press.named() == Some(Named::Tab)
+            && (self.session.takes_points() || self.session.grip_active())
+            && self.cycle_snap(press.modifiers.shift())
+        {
+            return Task::none();
         }
         // 3. An option letter of the running command beats the shortcuts.
         if self.session.is_running()

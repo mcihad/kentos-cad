@@ -2,10 +2,10 @@
 //! with `@2.5m<0`, `@(1.2+0.3)m<90` and `@-50cm,(100*2)` typed, the cursor's value field holding `(1000/4)` while
 //! the next segment waits; and docs/adr/0268's: Shift held over a polyline, ortho ruling for the moment and polar
 //! tracking (on) shown out of use in the status bar; docs/adr/0269's: the one-shot Merkez through an arc's curve,
-//! and Ekleme noktası on a text. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
+//! and Ekleme noktası on a text; docs/adr/0271's: Tab on the second candidate where two lines meet a parcel. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -109,8 +109,36 @@ fn insertion(app: &mut App) {
     hover(app, [24.3, 8.2]);
 }
 
+/// A parcel, a wall line through its corner's neighbourhood; Çizgi from the north, the pointer near the corner,
+/// Tab once: from the crossing to the corner, “Uç nokta · kapalı alan · 2/2 (Tab)”.
+fn cycling(app: &mut App) {
+    let mut o = Objects::new();
+    o.path(
+        "cizim",
+        &[[0.0, 0.0], [12.0, 0.0], [12.0, 9.0], [0.0, 9.0]],
+        true,
+    );
+    o.line("cizim", [-3.0, 0.5], [8.0, 0.5]);
+    open(app, o);
+    make_cad(app);
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 14.0,
+            min_y: N - 8.0,
+            max_x: E + 20.0,
+            max_y: N + 14.0,
+        },
+        24.0,
+    );
+    run(app, "tool.line");
+    click(app, [6.0, 6.0]);
+    hover(app, [0.15, 0.3]);
+    app.cycle_snap(false);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
+        ("kenet-dolasma", cycling),
         ("giris-birim", units),
         ("giris-oncelik", priority),
         ("kenet-merkez", centre_through),

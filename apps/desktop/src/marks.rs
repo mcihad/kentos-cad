@@ -77,6 +77,9 @@ pub fn snap_name(kind: SnapKind) -> &'static str {
 pub struct Marks {
     pub camera: Camera,
     pub snap: Option<SnapHit>,
+    /// What the snap marker says after its kind (docs/adr/0271): the object's kind and, while Tab steps
+    /// through the candidates, which one of how many (“çizgi · 2/5”).
+    pub snap_note: Option<String>,
     pub select: Option<SelectBox>,
     pub grips: Vec<GripSet>,
     /// The grip being moved.
@@ -257,7 +260,11 @@ impl<Message> canvas::Program<Message> for Marks {
                 .as_ref()
                 .and_then(|t| t.snap_label.as_deref())
                 .unwrap_or(snap_label(hit.kind));
-            snap_marker(&mut frame, hit.kind, at, label, &self.colors);
+            let label = match &self.snap_note {
+                Some(note) => format!("{label} · {note}"),
+                None => label.to_owned(),
+            };
+            snap_marker(&mut frame, hit.kind, at, &label, &self.colors);
         }
         // Last, over the rest, as the web draws it.
         if let (Some(c), Some(at)) = (self.crosshair, cursor.position_in(bounds)) {
