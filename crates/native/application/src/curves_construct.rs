@@ -22,7 +22,7 @@ use kentos_geometry_core::geom::arc::{ArcGeom, arc_through, circle_through};
 use kentos_geometry_core::geom::ellipse::{EllipseGeom, ellipse_from_axis, ellipse_from_center, param_at_polar};
 use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geom::shapes::{
-    arc_start_center_chord, arc_start_center_end, arc_start_center_sweep, arc_start_end_direction,
+    arc_start_center_chord, arc_start_center_sweep, arc_start_center_to, arc_start_end_direction,
     arc_start_end_radius, arc_start_end_sweep,
 };
 use kentos_geometry_core::geom::tangent_circle::{
@@ -365,7 +365,7 @@ fn one(doc: Option<&Document>, c: &CurveConstruction, path: &str) -> Result<Cons
                 "Bitiş merkezle aynı yerde; bitişin doğrultusu yok. Merkezden ayrı bir bitiş verin.",
                 &format!("{path}.end"),
             )?;
-            let g = arc_start_center_end(s, c, e).ok_or_else(|| {
+            let g = arc_start_center_to(s, c, e).ok_or_else(|| {
                 refuse(
                     codes::INVALID_ANGLE,
                     "Bitiş başlangıçla aynı doğrultuda; yay oluşmaz (tam daire Daire'yle çizilir).",

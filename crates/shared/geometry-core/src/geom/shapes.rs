@@ -180,21 +180,31 @@ pub fn arc_start_center_end(start: Vec2, center: Vec2, end: Vec2) -> Option<ArcG
         return None;
     }
     let a0 = ang(center, start);
-    // An end on the start's ray gives no arc (docs/adr/0289): a whole circle is Daire's.
-    let sw = norm_angle(ang(center, end) - a0);
-    if sw < 1e-9 || sw > 2.0 * PI - 1e-9 {
-        return None;
+    let mut sw = norm_angle(ang(center, end) - a0);
+    if sw < 1e-9 {
+        sw = 2.0 * PI;
     }
     ccw(center, r, a0, sw)
 }
 
-/// Start, centre, included angle (degrees; negative runs clockwise).
-pub fn arc_start_center_angle(start: Vec2, center: Vec2, degrees: f64) -> Option<ArcGeom> {
-    arc_start_center_sweep(start, center, (degrees * PI) / 180.0)
+/// [`arc_start_center_end`] as `cad.curves.construct` takes it (docs/adr/0289): an end on the start's ray gives
+/// no arc, a whole circle being Daire's. The web's call keeps the whole turn (its frozen fixtures).
+pub fn arc_start_center_to(start: Vec2, center: Vec2, end: Vec2) -> Option<ArcGeom> {
+    let sw = norm_angle(ang(center, end) - ang(center, start));
+    if sw < 1e-9 || sw > 2.0 * PI - 1e-9 {
+        return None;
+    }
+    arc_start_center_end(start, center, end)
 }
 
-/// Start, centre, included angle in radians (negative runs clockwise); none for a zero or a whole turn or more
-/// (docs/adr/0289).
+/// Start, centre, included angle (degrees; negative runs clockwise).
+pub fn arc_start_center_angle(start: Vec2, center: Vec2, degrees: f64) -> Option<ArcGeom> {
+    let r = len(sub(start, center));
+    ccw(center, r, ang(center, start), (degrees * PI) / 180.0)
+}
+
+/// Start, centre, included angle in radians (negative runs clockwise), as `cad.curves.construct` takes it
+/// (docs/adr/0289): none for a zero or a whole turn or more.
 pub fn arc_start_center_sweep(start: Vec2, center: Vec2, sweep: f64) -> Option<ArcGeom> {
     if !(sweep.abs() < 2.0 * PI) {
         return None;

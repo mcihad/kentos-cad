@@ -70,8 +70,10 @@ dört yöntemi ve Elips aynı yolla.
   (`COLLINEAR`), ölçekten bağımsız.
 - `tangent_tangent_radius`: 2r arayla paralel iki doğruda yakın noktaların ortasının karşısındaki daire; `parallel_gap` reddin nedenini
   söyletir.
-- `arc_start_center_end`: bitiş başlangıcın doğrultusundaysa yay yok. `arc_start_center_sweep` ve `arc_start_end_sweep` radyanla, tam tur
-  ve üstü reddedilir; dereceli eski işlevler onları çağırır (WASM işlemleri aynı kalır). `arc_start_end_radius` dereceye dönmez.
+- `arc_start_center_to`: bitiş başlangıcın doğrultusundaysa yay yok; `arc_start_center_sweep` radyanla, tam tur ve üstü reddedilir;
+  `arc_start_end_sweep` radyanla. Komut bunları kullanır; web'in donmuş çağrı kayıtlarının (`fixtures/geometry/v1/calls-p2-curves.json`)
+  tuttuğu eski `arc_start_center_end` (tam tur) ve dereceli `arc_start_center_angle` olduğu gibi kalır. `arc_start_end_radius` dereceye
+  dönmez.
 - `end_tangent`: kapalı çoklu çizgi kapanan kenarın ucunda, uzunluksuz son kenar yok; `start_tangent` başlangıçtan tersine.
 
 ### 4. Doğrulama yolu
