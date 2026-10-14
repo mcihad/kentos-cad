@@ -171,7 +171,7 @@ impl Tool for Break {
                 (s.id >= 0.0 && s.id.fract() == 0.0).then_some(slot)
             })
             .filter(|slot| cx.doc.get(*slot).is_some_and(|e| editable(e, cx.doc)));
-        let Some(slot) = edge::pick(p, cx, editable).or(snapped) else {
+        let Some(slot) = edge::pick_said(p, cx, editable).or(snapped) else {
             cx.say(
                 Level::Warn,
                 "Kırılacak düzenlenebilir bir çizgi, çoklu çizgi, yay ya da daireye tıklayın.",

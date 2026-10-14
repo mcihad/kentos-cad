@@ -125,6 +125,11 @@ def locked_object(name, i):
     return failed("layer_locked", f"“{name}” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.", f"uids[{i}]")
 
 
+def locked_skipped(n):
+    """The warning of the objects left out for their locked layer (docs/adr/0278)."""
+    return {"code": "layer_locked", "message": f"{n} nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}
+
+
 def locked_target(name):
     return failed("layer_locked", f"“{name}” katmanı kilitli; nesneler ona taşınamaz. Kilidi Katmanlar panelinden açın ya da başka bir katman seçin.", "layerId")
 
@@ -462,11 +467,12 @@ cases.append({
 })
 
 cases.append({
-    "name": "kilitli katmandaki nesne değişmez: layer_locked; biri kilitliyse hiçbiri yazılmaz; kilitli grubun katmanı da kilitlidir",
+    "name": "kilitli katmandaki nesne değişmez: öbürleri yazılır, kilitliler sayıyla uyarılır (ADR 0278); hepsi kilitliyse layer_locked; kilitli grubun katmanı da kilitlidir",
     "steps": [
-        {"op": "execute", "input": {"uids": uids(1, 5), "color": GREEN, "operation": "color"}, "result": locked_object("Kilitli katman", 1),
-         "expect": {**NOTHING, "entities": {"1": E(1), "5": E(5)}}},
-        {"op": "execute", "input": {"uids": uids(6), "label": "E1", "operation": "label"}, "result": locked_object("Eski", 0), "expect": NOTHING},
+        {"op": "execute", "input": {"uids": uids(1, 5), "color": GREEN, "operation": "color"}, "result": done([1], [locked_skipped(1)]),
+         "expect": {"entities": {"1": after(1, color=GREEN), "5": E(5)}, "canUndo": True, "dirty": True, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": uids(6), "label": "E1", "operation": "label"}, "result": locked_object("Eski", 0),
+         "expect": {"entities": {"6": E(6)}, "revision": "same"}},
     ],
 })
 
@@ -804,8 +810,8 @@ cases.append({
 cases.append({
     "name": "Ekler: kilitli katmandaki nesneye ek yazılmaz",
     "setup": A_SETUP,
-    "steps": [{"op": "execute", "input": {"uids": uids(2, 5), "attachments": [SAYFA], "operation": "attachments"}, "result": locked_object("Kilitli katman", 1),
-               "expect": {"revision": "same", "entities": {"2": E(2), "5": E(5)}}}],
+    "steps": [{"op": "execute", "input": {"uids": uids(5), "attachments": [SAYFA], "operation": "attachments"}, "result": locked_object("Kilitli katman", 0),
+               "expect": {"revision": "same", "entities": {"5": E(5)}}}],
 })
 
 
@@ -907,7 +913,7 @@ cases.append({
         {"op": "execute", "input": {"uids": uids(1), "lineType": "dashed", "lineTypeScale": 4, "transparency": 0.25, "color": GREEN, "operation": "lineType"}, "result": done([1]),
          "expect": {"entities": {"1": looked(1, lineType="dashed", lineTypeScale=4, transparency=0.25, color=GREEN)}, "revision": "changed"}},
         {"op": "undo", "returns": "Çizgi tipi değiştir", "expect": {"entities": {"1": E(1)}, "canUndo": False}},
-        {"op": "execute", "input": {"uids": uids(1, 5), "transparency": 0.25, "operation": "transparency"}, "result": locked_object("Kilitli katman", 1),
+        {"op": "execute", "input": {"uids": uids(5), "transparency": 0.25, "operation": "transparency"}, "result": locked_object("Kilitli katman", 0),
          "note": "Geri alınan adım yinelenebilir kalır.", "expect": {"entities": {"1": E(1), "5": E(5)}, "canRedo": True, "revision": "same"}},
     ],
 })

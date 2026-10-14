@@ -6449,8 +6449,9 @@ class EntitiesOrder(_Model):
 
     Refusals (`CommandError.code`), checked in this order: `no_entities`,
     `invalid_uid`, `invalid_revision`, `revision_conflict` (status
-    `conflict`), `entity_not_found`, `layer_locked` (the first object on a
-    locked layer, in the input's order: nothing is written), `order_limit` (a
+    `conflict`), `entity_not_found`, `layer_locked` (every object on a locked
+    layer: the first one's, in the input's order; when only some are, they are
+    left out with the warning `layer_locked`, docs/adr/0278), `order_limit` (a
     layer's orders at the 32-bit bound, −2³¹ or 2³¹ − 1: no room past them).
     Attributes:
         uids: The objects' persistent ids, at least one; a repeated one counts once.
@@ -6707,9 +6708,10 @@ class EntitiesSetProperties(_Model):
     undo step, the revision stays).
 
     An object on a locked layer (by itself or a group above it) is not
-    changed, and no object moves to a locked layer: when one is named,
-    nothing is written and the answer is `layer_locked`. Objects move to a
-    hidden layer with the warning `layer_hidden`.
+    changed (docs/adr/0278): the others are, and the warning `layer_locked`
+    counts it; when every one is locked nothing is written and the answer is
+    `layer_locked`. No object moves to a locked layer (`layer_locked`).
+    Objects move to a hidden layer with the warning `layer_hidden`.
 
     Refusals (`CommandError.code`), checked in this order: `no_entities`,
     `invalid_uid` (each id in order), `nothing_to_set` (no property given),
@@ -6722,8 +6724,8 @@ class EntitiesSetProperties(_Model):
     `entity_not_found` (each id in order), `unknown_asset` (an embedded
     photo whose asset is not an image of the project's library, in the
     attachments' order), `layer_not_found` and
-    `not_a_layer` (the `layerId` given), `layer_locked` (each object's layer
-    in the input's order, then the `layerId` given), then `invalid_attribute`
+    `not_a_layer` (the `layerId` given), `layer_locked` (every object on a
+    locked layer: the first one's, in the input's order; then the `layerId` given), then `invalid_attribute`
     and `attribute_required` (the attributes given, by the fields of each
     object's layer, the one it moves to else its own, objects in the input's
     order, names in theirs, at `attrs.<name>`; docs/adr/0199 §2). Warning:

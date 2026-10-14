@@ -359,6 +359,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   (halka, günlük, çipte her adayın alt nesnesi), kısayol penceresinde Ctrl + tık ve Çizerken grubu (ADR 0276);
   fareyle çakışmalar: seçim kutusunun köşeleri çizimin noktaları (`SelectBox::worlds`; kaydırma ve yakınlaştırma kutuyu koparmaz,
   yönünü değiştirmez), izlerin ham fare adımı `mouse` ve `pointer-conflicts` izi (ADR 0277);
+  kilitli, gizli katman ve seçim süzgeci için tek kural: gizli ve süzgeçten geçmeyen hiçbir seçimde yok, seçim süzgeci nesne seçen her
+  adımda (kenar seçen araçlar da), kilitliler seçilir ama nesne kümesine iş yapan komutlar (`set` ve `order` dahil) onları sayıyla atlar
+  (`checks::skip_locked`), ilişki kuran düzenlemeler bütün ya da hiç; tıklamada neden söylenir (`edge::pick_said`) (ADR 0278);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş

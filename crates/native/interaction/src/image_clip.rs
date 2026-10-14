@@ -170,7 +170,7 @@ impl Tool for ImageClip {
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         if self.picture.is_none() {
-            match edge::pick(p, cx, editable)
+            match edge::pick_said(p, cx, editable)
                 .and_then(|slot| Some((slot, shape(cx.doc.get(slot)?))))
             {
                 Some(found) => {

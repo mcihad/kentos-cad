@@ -13,8 +13,9 @@ import type { OrderTo } from "./OrderTo";
  *
  * Refusals (`CommandError.code`), checked in this order: `no_entities`,
  * `invalid_uid`, `invalid_revision`, `revision_conflict` (status
- * `conflict`), `entity_not_found`, `layer_locked` (the first object on a
- * locked layer, in the input's order: nothing is written), `order_limit` (a
+ * `conflict`), `entity_not_found`, `layer_locked` (every object on a locked
+ * layer: the first one's, in the input's order; when only some are, they are
+ * left out with the warning `layer_locked`, docs/adr/0278), `order_limit` (a
  * layer's orders at the 32-bit bound, −2³¹ or 2³¹ − 1: no room past them).
  */
 export type EntitiesOrder = { 

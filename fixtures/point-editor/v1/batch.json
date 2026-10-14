@@ -3537,13 +3537,14 @@
    },
    "expected": {
     "said": [
-     "“Kilitli” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın."
+     "Nokta editörü: 2 nokta “Kot” katmanına taşındı.",
+     "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın."
     ],
-    "step": null,
+    "step": "Katmana taşı",
     "objects": [
      {
       "kind": "point",
-      "layerId": "cizim",
+      "layerId": "kot",
       "label": "101",
       "attrs": {
        "Kod": "ST"
@@ -3556,7 +3557,7 @@
      },
      {
       "kind": "point",
-      "layerId": "cizim",
+      "layerId": "kot",
       "label": "102",
       "attrs": {},
       "at": [

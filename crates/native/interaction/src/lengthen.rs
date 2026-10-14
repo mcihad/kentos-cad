@@ -236,7 +236,7 @@ impl Tool for Lengthen {
             self.drawn = Preview::default();
             return self.see(cx);
         }
-        let Some(slot) = edge::pick(p, cx, editable) else {
+        let Some(slot) = edge::pick_said(p, cx, editable) else {
             cx.say(
                 Level::Warn,
                 "Düzenlenebilir bir çizgiye, yaya ya da açık çoklu çizgiye tıklayın.",

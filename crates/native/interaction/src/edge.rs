@@ -48,9 +48,47 @@ pub(crate) fn pick(
     editable: impl Fn(&Entity, &Document) -> bool,
 ) -> Option<Slot> {
     let doc = &*cx.doc;
+    let kinds = cx.draft.select_kinds;
+    // The selection filter's kinds, as every selecting step (docs/adr/0278).
     cx.spatial.pick_edge(p.raw, cx.pick_tolerance(), |slot| {
-        doc.get(slot).is_some_and(|e| editable(e, doc))
+        doc.get(slot).is_some_and(|e| {
+            crate::selectable::entity_allowed(kinds, e) && editable(e, doc)
+        })
     })
+}
+
+/// [`pick`] for a click: when nothing the tool takes is there but an object is, why it was left out is said
+/// (docs/adr/0278): its layer is locked, or the selection filter holds not its kind.
+pub(crate) fn pick_said(
+    p: &Pointer,
+    cx: &mut Context<'_>,
+    editable: impl Fn(&Entity, &Document) -> bool,
+) -> Option<Slot> {
+    let picked = pick(p, cx, &editable);
+    if picked.is_some() {
+        return picked;
+    }
+    let under = cx.spatial.pick_edge(p.raw, cx.pick_tolerance(), |_| true)?;
+    let e = cx.doc.get(under)?;
+    let kind = crate::data_search::kind_name(e);
+    if !crate::selectable::entity_allowed(cx.draft.select_kinds, e) {
+        cx.say(
+            Level::Info,
+            format!("Seçim süzgeci tıklanan nesneyi ({kind}) dışarıda bıraktı."),
+        );
+    } else if !unlocked(e, cx.doc) && !editable(e, cx.doc) {
+        let layer = &e.base().layer_id;
+        let name = cx
+            .doc
+            .layers()
+            .get(layer)
+            .map_or(layer.clone(), |n| n.name.clone());
+        cx.say(
+            Level::Warn,
+            format!("“{name}” katmanı kilitli; {kind} düzenlenemez. Kilidi Katmanlar panelinden açın."),
+        );
+    }
+    None
 }
 
 /// The pointer moved with no object picked yet: the edge under it is

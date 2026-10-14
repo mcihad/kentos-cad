@@ -265,7 +265,7 @@ impl Tool for Offset {
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.see(cx);
         let Some(slot) = self.target else {
-            let Some(slot) = edge::pick(p, cx, edge::unlocked) else {
+            let Some(slot) = edge::pick_said(p, cx, edge::unlocked) else {
                 cx.say(
                     Level::Warn,
                     "Düzenlenebilir bir çizgi, çoklu çizgi, daire ya da yaya tıklayın.",

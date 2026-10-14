@@ -228,7 +228,7 @@ impl Split {
 
     /// A click on an object in Eşit parçalara or Uzunluktan.
     fn pick(&mut self, p: &Pointer, cx: &mut Context<'_>) {
-        let Some(slot) = edge::pick(p, cx, editable) else {
+        let Some(slot) = edge::pick_said(p, cx, editable) else {
             cx.say(
                 Level::Warn,
                 "Bölünecek bir çizgi, açık çoklu çizgi, yay ya da daireye tıklayın; alanları önce Patlat ile çizgilere ayırın.",

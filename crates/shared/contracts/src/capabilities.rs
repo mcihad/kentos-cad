@@ -186,7 +186,7 @@ const ENTRIES: &[Entry] = &[
             LAYER,
             REVISION,
         ],
-        warnings: &["layer_hidden"],
+        warnings: &["layer_hidden", "layer_locked"],
         targets: none,
     },
     Entry {
@@ -531,7 +531,7 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.entities.order",
         refusals: &[OBJECTS, &["order_limit"], REVISION],
-        warnings: &[],
+        warnings: &["layer_locked"],
         targets: || vec![target(None, &["*"], &[], None, None)],
     },
     Entry {

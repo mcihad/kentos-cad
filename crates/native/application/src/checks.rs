@@ -320,6 +320,42 @@ pub(crate) fn named<'a>(
     Ok(out)
 }
 
+/// An object a command names: where the input names it, its slot, itself and its id ([`named`]).
+pub(crate) type Named<'a> = (usize, Slot, &'a Entity, &'a String);
+
+/// The objects a command changes one by one, those on a locked layer (by itself or a group above it) left out
+/// (docs/adr/0278): every one locked, refused with the first one's words at its place; else the others, and a
+/// warning counting the left out.
+pub(crate) fn skip_locked<'a>(
+    doc: &Document,
+    found: Vec<Named<'a>>,
+) -> Result<(Vec<Named<'a>>, Option<CommandWarning>), Stop> {
+    let layers = doc.layers();
+    let (locked, open): (Vec<_>, Vec<_>) = found
+        .into_iter()
+        .partition(|(_, _, e, _)| layers.is_locked(&e.base().layer_id));
+    if open.is_empty()
+        && let Some((at, _, e, _)) = locked.first()
+    {
+        let layer = &e.base().layer_id;
+        let name = layers.get(layer).map_or(layer.as_str(), |n| n.name.as_str());
+        return Err(Stop::failed(error(
+            codes::LAYER_LOCKED,
+            format!("“{name}” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın."),
+            Some(format!("uids[{at}]")),
+        )));
+    }
+    let warning = (!locked.is_empty()).then(|| CommandWarning {
+        code: codes::LAYER_LOCKED.into(),
+        message: format!(
+            "{} nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.",
+            locked.len()
+        ),
+        path: Some("uids".into()),
+    });
+    Ok((open, warning))
+}
+
 /// A text that is empty or only white space, as Unicode's `White_Space` has
 /// it (the web's `isBlank`; not JavaScript's `trim`, which takes U+FEFF and
 /// leaves U+0085).

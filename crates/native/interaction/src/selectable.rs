@@ -87,6 +87,19 @@ pub fn query(cx: &mut Context<'_>, region: SelectRegion) -> Vec<Slot> {
     found.slots
 }
 
+/// A box's objects through the query (docs/adr/0275, 0278): a window (`crossing` false) or a crossing box between
+/// two world corners, the filter's kinds with it and what it left out said; every tool that selects with a box asks
+/// here.
+pub fn in_box(cx: &mut Context<'_>, a: Vec2, b: Vec2, crossing: bool) -> Vec<Slot> {
+    let (a, b) = (point(a), point(b));
+    let region = if crossing {
+        SelectRegion::Crossing { a, b }
+    } else {
+        SelectRegion::Window { a, b }
+    };
+    query(cx, region)
+}
+
 /// Says how many objects the filter left out of a selection; nothing when none.
 pub fn say_filtered(cx: &mut Context<'_>, n: usize) {
     if n > 0 {

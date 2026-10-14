@@ -140,7 +140,7 @@ impl DimensionReassociate {
     }
 
     fn pick(&mut self, p: &Pointer, cx: &mut Context<'_>) {
-        let Some(slot) = edge::pick(p, cx, dimension) else {
+        let Some(slot) = edge::pick_said(p, cx, dimension) else {
             cx.say(Level::Warn, NO_DIMENSION_HERE);
             return;
         };

@@ -1,0 +1,56 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "locked-and-filter",
+  "title": "Kilitli katman ve seçim süzgeci her araçta aynı kuralla: kilitli nesneye tıklanınca nedeni söylenir, kenar seçen araç da süzgece uyar, karışık seçimde Taşı kilitliyi sayıyla atlar",
+  "source": "ADR 0278 (plan/cad.md CAD-INPUT-14).",
+  "covers": ["CAD-INPUT-14"],
+  "document": "edits.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.125,
+  "steps": [
+    { "run": "tool.trim", "expect": { "tool": "trim" } },
+    {
+      "click": [8, -15],
+      "note": "Kilitli katmandaki çizgi budanmaz; neden söylenir.",
+      "expect": {
+        "logged": ["“Kilitli katman” katmanı kilitli; Çizgi düzenlenemez. Kilidi Katmanlar panelinden açın."],
+        "canUndo": false,
+        "objects": [{ "id": 13, "kind": "line", "points": [[8, -12], [8, -18]] }]
+      }
+    },
+    { "key": "Esc" },
+    { "run": "edit.selectFilterNone", "note": "Süzgeç açılır, hiçbir tür yok." },
+    { "run": "edit.selectFilter.polygon", "note": "Yalnız kapalı alanlar." },
+    { "run": "tool.trim" },
+    {
+      "click": [-26, 12],
+      "note": "Kenar seçen araç da süzgece uyar: çizgi dışarıda kalır, söylenir.",
+      "expect": {
+        "logged": ["Seçim süzgeci tıklanan nesneyi (Çizgi) dışarıda bıraktı."],
+        "canUndo": false,
+        "objects": [{ "id": 1, "kind": "line", "points": [[-28, 12], [-8, 12]] }]
+      }
+    },
+    { "key": "Esc" },
+    { "run": "edit.selectFilter", "note": "Süzgeç kapanır.", "expect": { "logged": ["Seçim süzgeci kapalı."] } },
+    { "click": [8, -15], "note": "Kilitli katmandaki çizgi seçilir: kilit düzenlemeyi yasaklar, seçmeyi değil.", "expect": { "selected": [13] } },
+    { "click": [-10, -18], "shift": true, "expect": { "selected": [13, 12] } },
+    { "run": "tool.move", "expect": { "tool": "move" } },
+    { "click": [0, 0] },
+    {
+      "click": [0, 2],
+      "note": "Taşı kilitsiz çizgiyi taşır, kilitliyi sayıyla atlar.",
+      "expect": {
+        "logged": ["1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın."],
+        "canUndo": true,
+        "objects": [
+          { "id": 12, "kind": "line", "points": [[-28, -16], [-8, -16]] },
+          { "id": 13, "kind": "line", "points": [[8, -12], [8, -18]] }
+        ]
+      }
+    }
+  ]
+}
