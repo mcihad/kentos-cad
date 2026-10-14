@@ -386,6 +386,10 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   eğri yapımı ve yöntemlerin doğrulanması: salt okunur `cad.curves.construct` (iki ve üç noktadan, TTY ve TTT daire; yayın on bir yöntemi ve
   Devam; eksen uçlarından ya da merkezden elips ve eliptik yay), Yay, Daire ve Elips eğriyi onun hesabından alır ve reddini söyler;
   bağımsız başvuru `curve_method_cases.py`, ortak durumlarda `within` (ADR 0289);
+  dönüşüm kuralları: Taşı ve Kopyala'da Yer değiştirme (Y ya da temel noktada Enter; `Memory::last_displacement`), Kopyala'da Kip
+  (`Memory::copy_single`) ve Dizi (adet, Sığdır; `cad.entities.array`'in `line`'ı), Döndür'de projenin açı düzeni
+  (`Format::turn_from_typed`, `direction_from_typed`: CAD derece saat yönü tersine, CBS grad saat yönünde) ve Noktalar, Ölçekle'de
+  Noktalar; her türün dönüşümü bağımsız başvurudan (`transform_kinds_cases.py`), dolu tarama deseniyle kalır (ADR 0291);
   yolundan yazar (`points::write_area_by`) (ADR 0290);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);

@@ -170,6 +170,11 @@ Liste:
   uyarıları komutun sözleri; paralel iki doğruya TTY, saat yönünde verilen yaydan Devam; araç durumları
   `fixtures/curve-methods/v1/tools.json`. Web'in donmuş çağrı kayıtları eski `arcStartCenterEnd` ve `arcStartCenterAngle`'ı (tam tur)
   tutar; geri dönüşte komutun kuralına getirilir.
+- [ ] `CAD-EDIT-05` (ADR 0291, 14 Ekim): web'de gerekenler: Taşı ve Kopyala'ya Yer değiştirme (Y, temel noktada Enter, son yer
+  değiştirme), Kopyala'ya Kip (P) ve Dizi (A, Sığdır S); `cad.entities.array` işleyicisine `line` yerleşimi; Döndür'ün yazılan açısı
+  projenin düzeniyle (CBS'de grad, saat yönünde; Referans'ta semt) ve Noktalar (N), Ölçekle'ye Noktalar (N); dolu taramanın deseni
+  dönüşümde değişmez; ortak durumlar `cad.entities.transform.kinds.json` ve `line` durumları; izler `move-copy`, `rotate-scale`,
+  `usage-blocks-view` web'de de.
 - [ ] `CAD-EDIT-04` (ADR 0290, 14 Ekim): web'de gerekenler: `cad.rectangle.create` ve `cad.polygon.regular`'ın web işleyicileri (ortak
   durumlar `fixtures/commands/v1/cad.rectangle.create.json`, `cad.polygon.regular.json`), web'in Dikdörtgen, Döndürülmüş dikdörtgen ve
   Düzgün çokgen araçlarının önizlemeyi komutun hesabından alıp komutla yazması (Çakışma ve Topoloji değiştirince alanın yolu).
