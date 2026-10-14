@@ -83,7 +83,8 @@ pub struct Marks {
     pub select: Option<SelectBox>,
     pub grips: Vec<GripSet>,
     /// The grip being moved.
-    pub hot: Option<(Slot, usize)>,
+    /// The hot grips: the one being moved and those made hot with Shift (docs/adr/0280).
+    pub hot: Vec<(Slot, usize)>,
     /// The vertices Köşe tablosu's selected rows name (docs/adr/0172 §3).
     pub marked: Vec<Vec2>,
     /// The place the data search's Git marked and its coordinates' words
@@ -217,7 +218,7 @@ impl<Message> canvas::Program<Message> for Marks {
         grips(
             &mut frame,
             &self.grips,
-            self.hot,
+            &self.hot,
             &self.camera,
             &self.colors,
             accent,
@@ -279,7 +280,7 @@ impl<Message> canvas::Program<Message> for Marks {
 fn grips(
     frame: &mut canvas::Frame,
     sets: &[GripSet],
-    hot: Option<(Slot, usize)>,
+    hot: &[(Slot, usize)],
     camera: &Camera,
     colors: &MarkColors,
     accent: iced::Color,
@@ -290,7 +291,7 @@ fn grips(
     for set in sets {
         let mut last: Option<[f64; 2]> = None;
         for (i, &p) in set.points.iter().enumerate() {
-            if hot == Some((set.slot, i)) {
+            if hot.contains(&(set.slot, i)) {
                 continue;
             }
             let s = camera.world_to_screen(p);
@@ -322,12 +323,12 @@ fn grips(
             );
         }
     }
-    let moving = hot.and_then(|(slot, index)| {
+    let moving = hot.iter().filter_map(|&(slot, index)| {
         sets.iter()
             .find(|set| set.slot == slot)
             .and_then(|set| set.points.get(index))
     });
-    if let Some(&p) = moving {
+    for &p in moving {
         let s = camera.world_to_screen(p);
         let (x, y) = (s[0].round() as f32, s[1].round() as f32);
         frame.fill_rectangle(Point::new(x - 4.0, y - 4.0), Size::new(8.0, 8.0), colors.fg);

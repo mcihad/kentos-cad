@@ -26,7 +26,7 @@ const COMMAND_CLICK: &str = if cfg!(target_os = "macos") {
 };
 
 /// What each mouse action does (the web's `MOUSE_ACTIONS`): its meaning, then the action.
-pub const MOUSE_ACTIONS: [(&str, &str); 18] = [
+pub const MOUSE_ACTIONS: [(&str, &str); 19] = [
     ("Seç, nokta koy, adımı onayla", "Sol tık"),
     ("Komutu onayla ya da bitir (Enter gibi)", "Sağ tık"),
     (
@@ -58,6 +58,10 @@ pub const MOUSE_ACTIONS: [(&str, &str); 18] = [
     ("Kesişim seçimi: dokunan her şey", "Sağdan sola sürükle"),
     ("Seçime ekle ya da çıkar", "Shift + tık"),
     (
+        "Birden çok tutamacı sıcak yap; birine tıklayınca hepsi birlikte düzenlenir",
+        "Shift + tutamaca tık",
+    ),
+    (
         "Alt nesneyi seç: köşe, kenar ya da blok parçası; kimliği ve yeri günlükte",
         COMMAND_CLICK,
     ),
@@ -72,7 +76,7 @@ pub const MOUSE_ACTIONS: [(&str, &str); 18] = [
 ];
 
 /// Keys a running tool reads that no command is bound to (docs/adr/0268, 0271): their meaning, then the keys.
-pub const DRAWING_KEYS: [(&str, &str); 2] = [
+pub const DRAWING_KEYS: [(&str, &str); 4] = [
     (
         "Kenet adayları arasında ileri ve geri (imleç dururken)",
         "Tab / Shift+Tab",
@@ -80,6 +84,14 @@ pub const DRAWING_KEYS: [(&str, &str); 2] = [
     (
         "Orto'yu o an çevir (nokta isteyen araçta)",
         "Shift'i basılı tut",
+    ),
+    (
+        "Sıcak tutamağın kipi: Esnet, Taşı, Döndür, Ölçekle, Aynala",
+        "E / T / D / L / A",
+    ),
+    (
+        "Sıcak tutamakta taban noktası, referans, kopya",
+        "B / R / K",
     ),
 ];
 

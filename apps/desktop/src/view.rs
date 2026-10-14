@@ -708,7 +708,7 @@ impl App {
                     snap_note: self.snap_marker_note(),
                     select: self.session.select_box(),
                     grips,
-                    hot: self.session.active_grip(),
+                    hot: self.session.hot_grips(),
                     marked: self.marked_points(),
                     found: self.address_mark_label().or_else(|| self.data_mark_label()),
                     problem: self.topology_problem().or_else(|| self.networks.mark.clone()),
@@ -859,7 +859,7 @@ impl App {
             snap_note: None,
             select: None,
             grips,
-            hot: self.session.active_grip(),
+            hot: self.session.hot_grips(),
             marked: self.marked_points(),
             found: self.address_mark_label().or_else(|| self.data_mark_label()),
             problem: self

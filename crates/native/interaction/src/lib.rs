@@ -144,6 +144,7 @@ mod format {
     pub use kentos_project::format::*;
 }
 pub mod gnss;
+pub mod grip_edit;
 pub mod grip_menu;
 pub mod ground;
 pub mod hatch;

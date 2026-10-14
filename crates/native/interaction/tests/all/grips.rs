@@ -16,7 +16,7 @@ use kentos_interaction::{Format, GripSet, Level, Vec2};
 
 const OBJECTS: &str = include_str!("../../../../../fixtures/interaction/v1/objects.kcad");
 
-const PROMPT: &str = "Tutamaç: yeni konumu belirtin ya da koordinat yazın (Esc: vazgeç)";
+const PROMPT: &str = "Tutamaç: yeni konumu belirtin ya da koordinat yazın (Esc: vazgeç) [Taşı (T) / Döndür (D) / Ölçekle (L) / Aynala (A) / Taban noktası (B) / Kopya (K): kapalı]";
 
 /// The drawing with `slots` selected, snapping off.
 fn bench(slots: &[u32]) -> Bench {

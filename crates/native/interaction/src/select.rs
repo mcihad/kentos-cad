@@ -32,18 +32,19 @@
 
 use kentos_contracts::{EditOperation, EntitiesEdit, EntityEdit};
 use kentos_domain::{Slot, Uuid};
-use kentos_geometry_core::entity::{Entity as CoreEntity, Shape};
+use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::jsmath::js_hypot;
-use kentos_geometry_core::ops::grips::{mid_grip_segment, move_grip};
+use kentos_geometry_core::ops::grips::mid_grip_segment;
 use kentos_geometry_core::tools::point_input::Tracking;
-use kentos_native_application::geometry::{edit_geometry, shape, with_shape};
+use kentos_native_application::geometry::{edit_geometry, shape};
 use kentos_native_application::{ExecutionContext, edit};
 
 use crate::Vec2;
 use crate::edge::Outline;
 use crate::elevation;
 use crate::format::Format;
+use crate::grip_edit::{GripMode, GripModes, HotGrip, Stage, Typed, stretched};
 use crate::log::Level;
 use crate::neighbours;
 use crate::points;
@@ -109,6 +110,10 @@ struct GripEdit {
     /// The elevation of the vertex the grip stands on, when it has one: its
     /// tag says it (docs/adr/0142). The vertex keeps it as it moves.
     z: Option<f64>,
+    /// The other hot grips (Shift), moved with it in Esnet (docs/adr/0280).
+    others: Vec<HotGrip>,
+    /// The grip's mode, base point, reference and Kopya (docs/adr/0280).
+    modes: GripModes,
 }
 
 /// The select tool's state between pointer events.
@@ -129,6 +134,13 @@ pub struct Select {
     /// The pointer rests on the grip of a vertex with something to say: its
     /// tag beside the pointer (docs/adr/0142, 0160).
     hover_grip: Option<GripTag>,
+    /// Grips made hot with Shift, waiting for a click on one of them (docs/adr/0280).
+    hot: Vec<HotGrip>,
+    /// A transform mode's ghosts of the selection, and their point marks.
+    ghosts: Vec<Stroke>,
+    marks: Vec<Vec2>,
+    /// A transform mode's tag: the angle, the factor, the distance.
+    mode_tag: Option<String>,
 }
 
 /// What the tag of the grip the pointer rests on says: the vertex's
@@ -161,6 +173,8 @@ impl Select {
             down: cx.view.to_screen(origin),
             hot: true,
             z: grip_z(slot, index, cx),
+            others: Vec::new(),
+            modes: GripModes::new(origin),
         });
         self.grip_point = Some(origin);
         self.moved = None;
@@ -176,6 +190,29 @@ impl Select {
             return self.commit(at, cx);
         }
         if let Some((slot, index, origin)) = grip_at(p.screen, cx) {
+            // Shift: the grip joins the hot ones, or leaves them (docs/adr/0280).
+            if p.shift {
+                return self.toggle_hot(
+                    HotGrip {
+                        slot,
+                        index,
+                        origin,
+                    },
+                    cx,
+                );
+            }
+            // A click on one of the hot grips starts the edit with the others; elsewhere they cool.
+            let others: Vec<HotGrip> =
+                if self.hot.iter().any(|h| h.slot == slot && h.index == index) {
+                    self.hot
+                        .iter()
+                        .copied()
+                        .filter(|h| !(h.slot == slot && h.index == index))
+                        .collect()
+                } else {
+                    Vec::new()
+                };
+            self.hot.clear();
             self.grip = Some(GripEdit {
                 slot,
                 uid: cx.doc.uid(slot),
@@ -184,12 +221,15 @@ impl Select {
                 down: p.screen,
                 hot: false,
                 z: grip_z(slot, index, cx),
+                others,
+                modes: GripModes::new(origin),
             });
             self.grip_point = Some(origin);
             self.moved = None;
             cx.selection.set_hover(None);
             return;
         }
+        self.hot.clear();
         let at = At {
             screen: p.screen,
             world: p.raw,
@@ -203,20 +243,10 @@ impl Select {
     /// under it is hovered.
     pub fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         if let Some(g) = &self.grip {
-            let (point, tracking) = points::constrain(Some(g.origin), p, cx);
+            let (point, tracking) = points::constrain(Some(g.modes.anchor()), p, cx);
             self.grip_point = Some(point);
             self.tracking = tracking;
-            let before = cx.doc.get(g.slot).map(shape);
-            self.moved = before
-                .as_ref()
-                .and_then(|b| move_grip(&CoreEntity::new(b.clone()), g.index, point))
-                .map(|e| e.shape);
-            self.follow = match (&before, &self.moved) {
-                (Some(before), Some(moved)) => neighbours::neighbours(cx, g.slot, before, moved)
-                    .map(|n| n.shapes)
-                    .unwrap_or_default(),
-                _ => Vec::new(),
-            };
+            self.see_grip(point, cx);
             return;
         }
         let Some(start) = self.start else {
@@ -354,22 +384,31 @@ impl Select {
     }
 
     pub fn prompt(&self) -> Prompt {
-        if self.grip.is_some() {
-            Prompt::new(
-                "Tutamaç",
-                "yeni konumu belirtin ya da koordinat yazın (Esc: vazgeç)",
-            )
-        } else {
-            Prompt::idle()
+        match &self.grip {
+            Some(g) => g.modes.prompt(),
+            None => Prompt::idle(),
         }
     }
 
-    /// A typed point places the grip, relative to where it was (`@dY,dX`).
+    /// A grip mode's letter or value (docs/adr/0280), else a typed point:
+    /// the grip goes there, relative to the base point (`@dY,dX`).
     pub fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
-        let Some(g) = &self.grip else {
+        let Some(g) = self.grip.as_mut() else {
             return false;
         };
-        let Some(p) = cx.typed_point(text, Some(g.origin), self.grip_point) else {
+        match g.modes.typed(text) {
+            Some(Typed::Said(line)) => {
+                g.hot = true;
+                cx.say(Level::Info, line);
+                return true;
+            }
+            Some(Typed::Write(t)) => {
+                self.write_transform(t, cx);
+                return true;
+            }
+            None => {}
+        }
+        let Some(p) = cx.typed_point(text, Some(g.modes.anchor()), self.grip_point) else {
             return false;
         };
         self.commit(p, cx);
@@ -399,8 +438,9 @@ impl Select {
 
     /// Esc: the grip stays where it was. False when no grip moves.
     pub fn cancel(&mut self) -> bool {
-        let moving = self.grip.is_some();
+        let moving = self.grip.is_some() || !self.hot.is_empty();
         self.end_grip();
+        self.hot.clear();
         moving
     }
 
@@ -410,59 +450,218 @@ impl Select {
         self.tracking = None;
         self.moved = None;
         self.follow.clear();
+        self.ghosts.clear();
+        self.marks.clear();
+        self.mode_tag = None;
     }
 
-    /// The object with its grip at `at`, written through `cad.entities.edit`,
-    /// operation `grip` (the step “Tutamaçla düzenle”): the object by its
-    /// persistent id, its whole new geometry explicit (TODOS.md CMD-07). An
-    /// object gone meanwhile, a shape it cannot take and the command's
-    /// refusal are said; nothing changes then (the web's `commitGrip`).
+    /// The grip's point at `at`: a base point or a reference's point, or the
+    /// mode's placement. Esnet writes the objects with their hot grips moved
+    /// by the same distance through `cad.entities.edit`, operation `grip` (the
+    /// step “Tutamaçla düzenle”): each object by its persistent id, its whole
+    /// new geometry explicit (TODOS.md CMD-07), with Kopya as a new object.
+    /// The other modes write the selection's transform. An object gone
+    /// meanwhile, a shape it cannot take and the command's refusal are said;
+    /// nothing changes then (the web's `commitGrip`). With Kopya the grip
+    /// stays hot for the next placement.
     fn commit(&mut self, at: Vec2, cx: &mut Context<'_>) {
+        let Some(g) = self.grip.as_mut() else {
+            return;
+        };
+        if g.modes.take_point(at) {
+            g.hot = true;
+            return;
+        }
+        if g.modes.mode != GripMode::Stretch {
+            let unit = cx.typed_length("1").unwrap_or(1.0);
+            match g.modes.transform(at, g.origin, unit) {
+                Some(t) => self.write_transform(t, cx),
+                None => g.hot = true,
+            }
+            return;
+        }
         let Some(g) = self.grip.take() else {
             return;
         };
+        let (dx, dy) = (at.x - g.modes.base.x, at.y - g.modes.base.y);
+        let copy = g.modes.copy;
+        let keep = copy.then(|| g.clone());
         self.end_grip();
-        let found = g
-            .uid
-            .and_then(|uid| Some((uid, cx.doc.slot_of(uid)?)))
-            .and_then(|(uid, slot)| Some((uid, slot, cx.doc.get(slot)?.clone())));
-        let Some((uid, slot, e)) = found else {
+        if g.uid.and_then(|uid| cx.doc.slot_of(uid)).is_none() {
             cx.say(
                 Level::Warn,
                 "Tutamacın nesnesi artık çizimde yok (silinmiş ya da geri alınmış); tutamaç bırakıldı.",
             );
             return;
-        };
-        let moved = move_grip(&CoreEntity::new(shape(&e)), g.index, at)
-            .and_then(|m| with_shape(&e, m.shape));
-        match moved {
-            None => cx.say(
+        }
+        if js_hypot(dx, dy) <= 1e-9 {
+            self.grip = keep.map(|g| GripEdit { hot: true, ..g });
+            return;
+        }
+        let grips: Vec<HotGrip> = std::iter::once(HotGrip {
+            slot: g.slot,
+            index: g.index,
+            origin: g.origin,
+        })
+        .chain(g.others.iter().copied())
+        .collect();
+        let moved = stretched(cx.doc, &grips, dx, dy);
+        if moved.is_empty() {
+            cx.say(
                 Level::Warn,
                 "Bu konum geçersiz bir şekil oluşturuyor; tutamaç yerinde bırakıldı.",
-            ),
-            Some(m) if dist(g.origin, at) > 1e-9 => {
-                let Some(geometry) = edit_geometry(shape(&m)) else {
-                    return;
-                };
-                // The neighbours sharing what moved go in the same step (docs/adr/0160 §6).
-                let follow = neighbours::neighbours(cx, slot, &shape(&e), &shape(&m));
-                let mut changes = vec![EntityEdit::Update {
+            );
+            return;
+        }
+        let mut changes = Vec::with_capacity(moved.len());
+        for (slot, _, after) in &moved {
+            let (Some(uid), Some(geometry)) = (cx.doc.uid(*slot), edit_geometry(shape(after)))
+            else {
+                continue;
+            };
+            changes.push(if copy {
+                EntityEdit::add(uid.to_string(), geometry, Some(true))
+            } else {
+                EntityEdit::Update {
                     uid: uid.to_string(),
                     geometry,
-                }];
-                changes.extend(follow.iter().flat_map(|n| n.changes.iter().cloned()));
-                let input = EntitiesEdit {
-                    operation: EditOperation::Grip,
-                    changes,
-                    expected_revision: None,
-                };
-                let result = edit::execute(&mut ExecutionContext::new(cx.doc), input);
-                if points::written(result, cx).is_some() {
-                    neighbours::say(follow.as_ref(), cx);
                 }
-            }
-            Some(_) => {}
+            });
         }
+        // The neighbours sharing what moved go in the same step (docs/adr/0160 §6); a copy has none.
+        let edits: Vec<(Slot, Shape, Shape)> = moved
+            .iter()
+            .map(|(slot, before, after)| (*slot, shape(before), shape(after)))
+            .collect();
+        let follow = if copy {
+            None
+        } else {
+            neighbours::neighbours_of(cx, &edits)
+        };
+        changes.extend(follow.iter().flat_map(|n| n.changes.iter().cloned()));
+        let input = EntitiesEdit {
+            operation: EditOperation::Grip,
+            changes,
+            expected_revision: None,
+        };
+        let result = edit::execute(&mut ExecutionContext::new(cx.doc), input);
+        if points::written(result, cx).is_some() {
+            neighbours::say(follow.as_ref(), cx);
+            if copy {
+                cx.say(
+                    Level::Success,
+                    format!("{} nesne kopyalandı (Esnet).", moved.len()),
+                );
+            }
+        }
+        if let Some(mut g) = keep {
+            g.hot = true;
+            g.modes.placed += 1;
+            self.grip = Some(g);
+        }
+    }
+
+    /// A transform mode's placement: the selection through `cad.entities.transform`, in place or as copies; with
+    /// Kopya the grip stays hot, else the edit ends.
+    fn write_transform(&mut self, t: kentos_contracts::Transform, cx: &mut Context<'_>) {
+        let Some(g) = self.grip.as_mut() else {
+            return;
+        };
+        let copy = g.modes.copy;
+        if let Some(n) = crate::modify::transform_selection(t.clone(), copy, cx) {
+            let line = g.modes.said(&t, n);
+            cx.say(Level::Success, line);
+        }
+        if copy {
+            if let Some(g) = self.grip.as_mut() {
+                g.hot = true;
+                g.modes.placed += 1;
+            }
+        } else {
+            self.end_grip();
+        }
+    }
+
+    /// What the grip would do at `point`: Esnet's objects and their neighbours, a transform's ghosts and tag.
+    fn see_grip(&mut self, point: Vec2, cx: &Context<'_>) {
+        let Some(g) = &self.grip else {
+            return;
+        };
+        self.moved = None;
+        self.follow.clear();
+        self.ghosts.clear();
+        self.marks.clear();
+        self.mode_tag = None;
+        if g.modes.stage != Stage::Point {
+            return;
+        }
+        if g.modes.mode == GripMode::Stretch {
+            let (dx, dy) = (point.x - g.modes.base.x, point.y - g.modes.base.y);
+            let grips: Vec<HotGrip> = std::iter::once(HotGrip {
+                slot: g.slot,
+                index: g.index,
+                origin: g.origin,
+            })
+            .chain(g.others.iter().copied())
+            .collect();
+            let moved = stretched(cx.doc, &grips, dx, dy);
+            let edits: Vec<(Slot, Shape, Shape)> = moved
+                .iter()
+                .map(|(slot, before, after)| (*slot, shape(before), shape(after)))
+                .collect();
+            if !g.modes.copy {
+                self.follow = neighbours::neighbours_of(cx, &edits)
+                    .map(|n| n.shapes)
+                    .unwrap_or_default();
+            }
+            // The first object as `moved`, the others with the neighbours: all alike, dashed.
+            let mut shapes = edits.into_iter().map(|(_, _, after)| after);
+            self.moved = shapes.next();
+            self.follow.extend(shapes);
+            return;
+        }
+        let unit = cx.typed_length("1").unwrap_or(1.0);
+        let Some(affine) = g.modes.affine(point, g.origin, unit) else {
+            return;
+        };
+        let ids: Vec<f64> = cx.selection.ids().iter().map(|s| f64::from(s.0)).collect();
+        let paths =
+            cx.spatial
+                .store()
+                .transform_outlines(&ids, &[affine], crate::modify::MAX_GHOSTS);
+        (self.ghosts, self.marks) = crate::modify::ghosts(&paths);
+        self.mode_tag = g.modes.tag(point, g.origin, unit, &cx.format());
+    }
+
+    /// Shift and a click on a grip: it joins the hot grips, or leaves them; the log says how many there are.
+    fn toggle_hot(&mut self, grip: HotGrip, cx: &mut Context<'_>) {
+        match self
+            .hot
+            .iter()
+            .position(|h| h.slot == grip.slot && h.index == grip.index)
+        {
+            Some(i) => {
+                self.hot.remove(i);
+            }
+            None => self.hot.push(grip),
+        }
+        let line = match self.hot.len() {
+            0 => "Sıcak tutamaç kalmadı.".to_owned(),
+            n => format!(
+                "{n} tutamaç sıcak; düzenlemek için birine tıklayın (Shift ile ekleyip çıkarın)."
+            ),
+        };
+        cx.say(Level::Info, line);
+    }
+
+    /// The hot grips: the one being moved, the others moved with it, those made hot with Shift.
+    pub fn hot_grips(&self) -> Vec<(Slot, usize)> {
+        let mut out: Vec<(Slot, usize)> = self.hot.iter().map(|h| (h.slot, h.index)).collect();
+        if let Some(g) = &self.grip {
+            out.push((g.slot, g.index));
+            out.extend(g.others.iter().map(|h| (h.slot, h.index)));
+        }
+        out
     }
 
     /// While a grip moves: the object as it would be, dashed; a dashed line
@@ -483,16 +682,25 @@ impl Select {
             });
         };
         let mut strokes = Vec::new();
-        // The object and the neighbours that follow it (docs/adr/0160 §5), alike.
+        // The objects and the neighbours that follow them (docs/adr/0160 §5), alike.
         for shape in self.moved.iter().chain(&self.follow) {
             strokes.extend(Outline::of(shape, Some([4.0, 3.0]), 1.5, Tone::Accent).strokes);
         }
-        strokes.push(Stroke::dashed(vec![g.origin, at], false, [2.0, 3.0]));
-        let mut lines = vec![format.length(dist(g.origin, at))];
-        lines.extend(g.z.map(|z| elevation_line(z, format)));
+        // A transform mode's ghosts of the selection (docs/adr/0280).
+        strokes.extend(self.ghosts.iter().cloned());
+        let from = g.modes.anchor();
+        strokes.push(Stroke::dashed(vec![from, at], false, [2.0, 3.0]));
+        let lines = if g.modes.mode == GripMode::Stretch && g.modes.stage == Stage::Point {
+            let mut lines = vec![format.length(dist(from, at))];
+            lines.extend(g.z.map(|z| elevation_line(z, format)));
+            lines
+        } else {
+            self.mode_tag.iter().cloned().collect()
+        };
         Some(Preview {
             strokes,
-            tag: Some(Tag { at, lines }),
+            marks: self.marks.clone(),
+            tag: (!lines.is_empty()).then_some(Tag { at, lines }),
             tracking: self.tracking,
             ..Preview::default()
         })

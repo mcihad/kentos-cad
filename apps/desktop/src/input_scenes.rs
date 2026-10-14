@@ -6,10 +6,10 @@
 //! docs/adr/0272's: Koordinat oku on a parcel's corner, the log saying the snap's object and place; docs/adr/0274's:
 //! inside a room block turned 30°, the midpoint of a nested, mirrored door's swing; docs/adr/0276's: a Ctrl click
 //! on a parcel's corner where a wall crosses it (the corner ringed, the log saying the parcel's id and corner, the
-//! chip for the wall), and the shortcuts window with Ctrl + tık and the drawing keys; docs/adr/0279's: the grip menu of a parcel's corner. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
+//! chip for the wall), and the shortcuts window with Ctrl + tık and the drawing keys; docs/adr/0279's: the grip menu of a parcel's corner; docs/adr/0280's: two hot corners turning the parcel. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma,kenet-oku,kenet-blok-ici,secim-alt-nesne,kisayollar,tutamac-menusu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma,kenet-oku,kenet-blok-ici,secim-alt-nesne,kisayollar,tutamac-menusu,tutamac-kipleri cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -294,6 +294,35 @@ fn grip_menu(app: &mut App) {
     ));
 }
 
+/// docs/adr/0280: the parcel selected, two of its corners made hot with Shift, the edit started on one, Döndür (D)
+/// chosen and the pointer up to the north-west: the selection's ghost turned about the grip, its angle beside it.
+fn grip_modes(app: &mut App) {
+    sub_ground(app);
+    click(app, [6.0, 0.0]);
+    grip_mode_keys(app);
+    hover(app, [4.0, 14.0]);
+}
+
+/// Shift and a click on two corners, a click on the first, then D.
+fn grip_mode_keys(app: &mut App) {
+    use crate::app::Message;
+    let _ = app.update(Message::Modifiers(iced::keyboard::Modifiers::SHIFT));
+    click(app, [12.0, 9.0]);
+    click(app, [12.0, 0.0]);
+    let _ = app.update(Message::Modifiers(iced::keyboard::Modifiers::empty()));
+    click(app, [12.0, 9.0]);
+    let key = iced::keyboard::Key::Character("d".into());
+    let _ = app.update(Message::Key(crate::keys::KeyPress {
+        key,
+        physical: iced::keyboard::key::Physical::Unidentified(
+            iced::keyboard::key::NativeCode::Unidentified,
+        ),
+        modifiers: iced::keyboard::Modifiers::default(),
+        text: Some("d".into()),
+        repeat: false,
+    }));
+}
+
 /// The shortcuts window, opened from Yardım.
 fn shortcut_list(app: &mut App) {
     open(app, Objects::new());
@@ -306,6 +335,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("secim-alt-nesne", sub_object),
         ("kisayollar", shortcut_list),
         ("tutamac-menusu", grip_menu),
+        ("tutamac-kipleri", grip_modes),
         ("kenet-blok-ici", in_blocks),
         ("kenet-oku", reading),
         ("kenet-dolasma", cycling),
@@ -320,7 +350,9 @@ pub(crate) fn scenes() -> Vec<Scene> {
 mod tests {
     use kentos_interaction::SnapKind;
 
-    use super::{centre_through, ctrl_click, in_blocks, in_room, insertion, sub_ground};
+    use super::{
+        centre_through, ctrl_click, grip_mode_keys, in_blocks, in_room, insertion, sub_ground,
+    };
     use crate::tools_scenes::{E, N};
 
     /// docs/adr/0269 §1–§2 on the desktop: the one-shot Merkez on an arc's curve snaps to its centre; a text's
@@ -393,5 +425,33 @@ mod tests {
             sub.place,
             kentos_contracts::SubPlace::Along { .. }
         ));
+    }
+
+    /// docs/adr/0280 on the desktop: Shift heats two corners, a click starts the edit, the letter D is the grip's
+    /// Döndür (not a shortcut), a typed angle turns the parcel a quarter about the grip in one step.
+    #[test]
+    fn two_hot_corners_take_the_rotate_letter_and_a_typed_angle() {
+        use kentos_domain::Slot;
+        let mut app = crate::files_testing::app_with_drawing();
+        sub_ground(&mut app);
+        crate::tools_scenes::click(&mut app, [6.0, 0.0]);
+        grip_mode_keys(&mut app);
+        assert_eq!(app.session.hot_grips().len(), 2);
+        assert!(app.session.prompt().text().starts_with("Tutamaç · Döndür"));
+        let _ = app.update(crate::app::Message::PromptOption("K"));
+        let _ = app.update(crate::app::Message::PromptOption("K"));
+        app.with_tool(|s, cx| s.input("90", cx));
+        let doc = app.document.as_ref().expect("open");
+        let slot = app.selection.ids().first().copied().unwrap_or(Slot(0));
+        let Some(kentos_contracts::Entity::Polygon(p)) = doc.model.get(slot) else {
+            panic!("the parcel");
+        };
+        // A quarter turn about the corner (12, 9): (0, 0) goes to (21, −3).
+        let first = [p.pts[0].x - E, p.pts[0].y - N];
+        assert!(
+            (first[0] - 21.0).abs() < 1e-9 && (first[1] + 3.0).abs() < 1e-9,
+            "{first:?}"
+        );
+        assert!(!app.session.grip_active());
     }
 }
