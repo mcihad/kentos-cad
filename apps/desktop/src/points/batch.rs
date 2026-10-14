@@ -302,7 +302,10 @@ pub fn run(doc: &mut Document, slots: &[Slot], op: &Op, follow: bool) -> Outcome
                 &mut ExecutionContext::new(doc),
                 input(uids, None, Some(layer.clone())),
             ) {
-                CommandResult::Completed { output, warnings: w } => {
+                CommandResult::Completed {
+                    output,
+                    warnings: w,
+                } => {
                     moved = output.changed.len();
                     warnings = w.into_iter().map(|w| w.message).collect();
                     None

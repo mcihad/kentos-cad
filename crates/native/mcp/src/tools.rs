@@ -507,6 +507,8 @@ fn command_tool(c: &Value) -> Value {
             // They move vertices, replace an object by its pieces and delete the joined ones;
             // Böl, Alan oluştur, Tarama and Ölçü ekle only add (docs/adr/0254, 0255).
             | "cad.entities.stretch"
+            // Köşeyi sil takes a vertex away (docs/adr/0279).
+            | "cad.entities.vertex"
             | "cad.entities.break"
             | "cad.entities.join"
             // Keeping the numbers scales every object of the drawing (docs/adr/0256 §1).

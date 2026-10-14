@@ -193,7 +193,10 @@ mod tests {
     /// The filter's bits are the query's kinds in one order (docs/adr/0275).
     #[test]
     fn the_mask_and_the_query_s_kinds_are_one_order() {
-        let names: Vec<&str> = kentos_contracts::SelectKind::ALL.iter().map(|k| k.name()).collect();
+        let names: Vec<&str> = kentos_contracts::SelectKind::ALL
+            .iter()
+            .map(|k| k.name())
+            .collect();
         assert_eq!(names, KINDS);
         let mask = bit("line") | bit("table");
         let kinds = entities_select::kinds_of_mask(mask);

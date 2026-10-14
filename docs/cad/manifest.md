@@ -17,8 +17,8 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 33 | 91 | 38 | 38 | 200 |
-| geometry | 19 | 74 | 0 | 8 | 101 |
+| semantic | 34 | 91 | 38 | 38 | 201 |
+| geometry | 18 | 74 | 0 | 8 | 100 |
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 20 | 0 | 6 | 26 |
 | query | 0 | 21 | 1 | 4 | 26 |
@@ -31,9 +31,9 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 464 satırdan 144'i: geometry 93, none 20, processing 13, query 18.
+CBS'ye özgü olmayan 464 satırdan 143'i: geometry 92, none 20, processing 13, query 18.
 
-### Sonucu çağıran hesaplar (geometry) — 93
+### Sonucu çağıran hesaplar (geometry) — 92
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -128,7 +128,6 @@ CBS'ye özgü olmayan 464 satırdan 144'i: geometry 93, none 20, processing 13, 
 | `tool.toArea` | Alana çevir | shared | cad.entities.edit `toArea` |  |
 | `tool.toPolyline` | Çizgiye çevir | shared | cad.entities.edit `toPolyline` |  |
 | `tool.topology` | Topolojik temizlik | shared | cad.entities.edit `topology` |  |
-| `tool.vertex` | Köşe ekle/sil | cad | cad.entities.edit `vertexAdd` |  |
 | `tool.vertexPoints` | Köşelere nokta | shared | cad.entities.create `vertexPoints` |  |
 
 ### Ürün komutu yok (none) — 20

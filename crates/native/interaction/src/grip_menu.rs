@@ -1,58 +1,62 @@
 //! The grip menu (the web's `gripItems`, `ui/shell/viewportMenus.ts`,
-//! docs/adr/0074): a right click on a grip of a selected path, an open
-//! polyline or a closed area, offers what that grip's vertex or edge can
-//! take:
+//! docs/adr/0074, 0279): a right click on a grip of a selected object offers
+//! what that grip can take, by the object:
 //!
-//! - a vertex: Köşeyi sil (its two edges merge into one straight edge);
-//! - an edge's middle: Ortasına köşe ekle (an arc edge is split in two,
+//! - a path's vertex: Köşeyi sil (its two edges merge into one straight edge);
+//! - a path's edge middle: Ortasına köşe ekle (an arc edge is split in two,
 //!   keeping its circle), then Düz kenar yap on an arc edge or Yaya dönüştür
 //!   on a straight one: a gentle arc, its sagitta a quarter of the chord,
-//!   bowing out of a ring or to the right of an open path.
+//!   bowing out of a ring or to the right of an open path;
+//! - every grip: Esnet (the grip turns hot, the next click places it), then
+//!   Taşı, Döndür, Ölçekle and Aynala with the grip as their base point, on
+//!   the whole selection.
 //!
-//! A hole's vertices only move by dragging (a hole's shape needs Patlat).
-//! A multi-part area's grip acts on its own part, the others kept
+//! A hole's vertices only move (Esnet; a hole's shape needs Patlat). A
+//! multi-part area's grip acts on its own part, the others kept
 //! (docs/adr/0143); the heading counts in that part.
-//! Each action writes through `cad.entities.edit`, its operation naming the
-//! step (Köşe sil, Köşe ekle, Düz kenar yap, Yaya dönüştür); the object's
-//! geometry stays but for what the action gives, so a hole stays. The
-//! core's refusal (a triangle's corner) or the command's (a lock) is said;
-//! else “<step>: tamam.”. With Topolojik düzenleme on, the shared corners
-//! and edges of the objects around go with it (docs/adr/0160, `neighbours`).
+//! The vertex and edge actions write through `cad.entities.vertex`, its
+//! action naming the step (Köşe sil, Köşe ekle, Düz kenar yap, Yaya
+//! dönüştür); with Topolojik düzenleme on, the shared corners and edges of
+//! the objects around go in the same step (docs/adr/0160). The command's
+//! refusal (a triangle's corner, a lock) is said; else “<step>: tamam.”.
+//! The transforms are the host's: it starts the tool and gives it the grip.
 
-use kentos_contracts::{EditOperation, EntitiesEdit, EntityEdit};
+use kentos_contracts::{EntitiesVertex, StretchTopology, SubPlace, VertexAction};
 use kentos_domain::Slot;
-use kentos_geometry_core::entity::{Shape, area_parts, replace_part};
-use kentos_geometry_core::geom::bulge::{bulge_at, bulge_ring_area, is_arc_bulge, segment_mid};
-use kentos_geometry_core::ops::curve_cuts::Geometry;
+use kentos_geometry_core::entity::{Shape, area_parts};
+use kentos_geometry_core::geom::bulge::{bulge_at, is_arc_bulge};
 use kentos_geometry_core::ops::grips::{grip_part, hole_grip, mid_grip_segment};
-use kentos_geometry_core::ops::offset::path_like;
-use kentos_geometry_core::ops::vertex::{insert_vertex, remove_vertex};
 use kentos_geometry_core::vec2::Vec2;
-use kentos_native_application::geometry::{edit_geometry, shape};
-use kentos_native_application::{ExecutionContext, edit};
+use kentos_native_application::geometry::shape;
+use kentos_native_application::{ExecutionContext, entities_vertex};
 
 use crate::log::Level;
-use crate::neighbours;
 use crate::points;
 use crate::select::grip_at;
 use crate::tool::Context;
 
-/// The grip a menu is about: its object, and a vertex or an edge's middle.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+/// The grip a menu is about: its object, the grip and where it stands.
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct GripMenu {
     pub slot: Slot,
+    /// The grip's index among the object's grips (for Esnet).
+    pub grip: usize,
+    /// Where the grip stands: the transforms' base point.
+    pub at: Vec2,
     /// The part of a multi-part area the grip is on (0: its first part, or any other object).
     pub part: usize,
     pub target: Target,
 }
 
-/// A path's vertex, or the middle of one of its edges.
+/// A path's vertex, the middle of one of its edges, or another grip.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Target {
     /// The vertex's index (from 0).
     Vertex(usize),
     /// The edge's index (from 0) and whether it is an arc.
     Edge { segment: usize, arc: bool },
+    /// A grip with no vertex action: a hole's vertex, a line's end, a circle's centre, a text's point.
+    Grip,
 }
 
 /// What the grip menu does.
@@ -62,16 +66,35 @@ pub enum GripAction {
     AddVertex,
     StraightEdge,
     ArcEdge,
+    Stretch,
+    Move,
+    Rotate,
+    Scale,
+    Mirror,
 }
 
+/// The transforms every grip offers, after the vertex actions.
+const TRANSFORMS: [GripAction; 5] = [
+    GripAction::Stretch,
+    GripAction::Move,
+    GripAction::Rotate,
+    GripAction::Scale,
+    GripAction::Mirror,
+];
+
 impl GripAction {
-    /// The item's words (the web's).
+    /// The item's words.
     pub fn label(self) -> &'static str {
         match self {
             GripAction::RemoveVertex => "Köşeyi sil",
             GripAction::AddVertex => "Ortasına köşe ekle",
             GripAction::StraightEdge => "Düz kenar yap",
             GripAction::ArcEdge => "Yaya dönüştür",
+            GripAction::Stretch => "Esnet",
+            GripAction::Move => "Taşı",
+            GripAction::Rotate => "Döndür",
+            GripAction::Scale => "Ölçekle",
+            GripAction::Mirror => "Aynala",
         }
     }
 
@@ -82,223 +105,148 @@ impl GripAction {
             GripAction::AddVertex => "vertex",
             GripAction::StraightEdge => "line",
             GripAction::ArcEdge => "arc",
+            GripAction::Stretch => "stretch",
+            GripAction::Move => "move",
+            GripAction::Rotate => "rotate",
+            GripAction::Scale => "scale",
+            GripAction::Mirror => "mirror",
+        }
+    }
+
+    /// The tool a transform starts with the grip as its first point; none for the others.
+    pub fn tool(self) -> Option<&'static str> {
+        match self {
+            GripAction::Move => Some("move"),
+            GripAction::Rotate => Some("rotate"),
+            GripAction::Scale => Some("scale"),
+            GripAction::Mirror => Some("mirror"),
+            _ => None,
+        }
+    }
+
+    /// The command's action of a vertex or edge item; none for the transforms.
+    pub fn vertex_action(self) -> Option<VertexAction> {
+        match self {
+            GripAction::RemoveVertex => Some(VertexAction::Remove),
+            GripAction::AddVertex => Some(VertexAction::Insert),
+            GripAction::StraightEdge => Some(VertexAction::Straighten),
+            GripAction::ArcEdge => Some(VertexAction::Arc),
+            _ => None,
         }
     }
 }
 
 impl GripMenu {
-    /// The menu's heading: “Köşe N” or “Kenar N”.
+    /// The menu's heading: “Köşe N”, “Kenar N” or “Tutamaç”.
     pub fn header(&self) -> String {
         match self.target {
             Target::Vertex(i) => format!("Köşe {}", i + 1),
             Target::Edge { segment, .. } => format!("Kenar {}", segment + 1),
+            Target::Grip => "Tutamaç".to_owned(),
         }
     }
 
-    /// The items, in the web's order.
+    /// The items: the vertex or edge actions in the web's order, then the transforms.
     pub fn actions(&self) -> Vec<GripAction> {
-        match self.target {
-            Target::Vertex(_) => vec![GripAction::RemoveVertex],
-            Target::Edge { arc: true, .. } => {
-                vec![GripAction::AddVertex, GripAction::StraightEdge]
-            }
-            Target::Edge { arc: false, .. } => vec![GripAction::AddVertex, GripAction::ArcEdge],
-        }
+        let own: &[GripAction] = match self.target {
+            Target::Vertex(_) => &[GripAction::RemoveVertex],
+            Target::Edge { arc: true, .. } => &[GripAction::AddVertex, GripAction::StraightEdge],
+            Target::Edge { arc: false, .. } => &[GripAction::AddVertex, GripAction::ArcEdge],
+            Target::Grip => &[],
+        };
+        own.iter().chain(&TRANSFORMS).copied().collect()
     }
-}
 
-/// A path's vertices and bulges, and whether it is closed.
-struct Path<'a> {
-    pts: &'a [Vec2],
-    bulges: Option<&'a [f64]>,
-    closed: bool,
-}
-
-fn path(s: &Shape) -> Option<Path<'_>> {
-    match s {
-        // A closed polyline's closing edge is an edge too (docs/adr/0258 §1).
-        Shape::Polyline {
-            pts,
-            bulges,
-            closed,
-            ..
-        } => Some(Path {
-            pts,
-            bulges: bulges.as_deref(),
-            closed: *closed,
-        }),
-        Shape::Polygon { pts, bulges, .. } => Some(Path {
-            pts,
-            bulges: bulges.as_deref(),
-            closed: true,
-        }),
-        _ => None,
+    /// The vertex actions are separate from the transforms after this many items.
+    pub fn own_count(&self) -> usize {
+        self.actions().len() - TRANSFORMS.len()
     }
 }
 
 /// The grip menu for the grip at `screen` (logical pixels on the drawing
-/// area): none when no selected path's grip is there, or it is a hole's vertex.
+/// area): none when no selected object's grip is there.
 pub fn at(screen: [f64; 2], cx: &Context<'_>) -> Option<GripMenu> {
-    let (slot, index, _) = grip_at(screen, cx)?;
+    let (slot, grip, at) = grip_at(screen, cx)?;
     let whole = shape(cx.doc.get(slot)?);
     // The grip's own part and its index there (docs/adr/0143).
-    let (part, index) = grip_part(&whole, index)?;
+    let (part, index) = grip_part(&whole, grip)?;
     let parts = area_parts(&whole);
     let s = parts.get(part)?;
-    let bulges = path(s)?.bulges;
-    if hole_grip(s, index).is_some() {
-        return None;
-    }
-    let target = match mid_grip_segment(s, index) {
-        None => Target::Vertex(index),
-        Some(segment) => Target::Edge {
-            segment,
-            arc: is_arc_bulge(bulge_at(bulges, segment)),
-        },
+    let bulges = match s {
+        Shape::Polyline { bulges, .. } | Shape::Polygon { bulges, .. } => Some(bulges.as_deref()),
+        _ => None,
     };
-    Some(GripMenu { slot, part, target })
+    let target = match bulges {
+        Some(_) if hole_grip(s, index).is_some() => Target::Grip,
+        Some(bulges) => match mid_grip_segment(s, index) {
+            None => Target::Vertex(index),
+            Some(segment) => Target::Edge {
+                segment,
+                arc: is_arc_bulge(bulge_at(bulges, segment)),
+            },
+        },
+        None => Target::Grip,
+    };
+    Some(GripMenu {
+        slot,
+        grip,
+        at,
+        part,
+        target,
+    })
 }
 
-/// Does `action` on the menu's object, through `cad.entities.edit`, and
-/// says how it went.
+/// The command's input for `action` on the menu's grip; none for a transform or a grip with no vertex action.
+pub fn request(menu: GripMenu, action: GripAction, cx: &Context<'_>) -> Option<EntitiesVertex> {
+    let action = action.vertex_action()?;
+    let uid = cx.doc.uid(menu.slot)?;
+    let part = menu.part as u32;
+    let place = match menu.target {
+        Target::Vertex(i) => SubPlace::Vertex {
+            part,
+            ring: 0,
+            index: i as u32,
+        },
+        Target::Edge { segment, .. } => SubPlace::Mid {
+            part,
+            ring: 0,
+            index: segment as u32,
+        },
+        Target::Grip => return None,
+    };
+    Some(EntitiesVertex {
+        uid: uid.to_string(),
+        action,
+        place,
+        topology: cx.draft.topology.then_some(StretchTopology {
+            points: cx.draft.topology_points,
+        }),
+        expected_revision: None,
+    })
+}
+
+/// Does a vertex or edge action on the menu's object through
+/// `cad.entities.vertex`, and says how it went.
 pub fn apply(menu: GripMenu, action: GripAction, cx: &mut Context<'_>) {
-    let (Some(e), Some(uid)) = (cx.doc.get(menu.slot).cloned(), cx.doc.uid(menu.slot)) else {
+    let Some(input) = request(menu, action, cx) else {
         return;
     };
-    let whole = shape(&e);
-    // The menu's part is edited, the object's other parts kept (docs/adr/0143).
-    let parts = area_parts(&whole);
-    let Some(s) = parts.get(menu.part).cloned() else {
-        return;
-    };
-    let Some(Path {
-        pts,
-        bulges,
-        closed,
-    }) = path(&s)
-    else {
-        return;
-    };
-    let n = pts.len();
-    let (operation, edited): (EditOperation, Result<Shape, String>) = match (action, menu.target) {
-        (GripAction::RemoveVertex, Target::Vertex(i)) => {
-            (EditOperation::VertexRemove, shape_of(remove_vertex(&s, i)))
-        }
-        (GripAction::AddVertex, Target::Edge { segment, .. }) => {
-            let (Some(&a), Some(&b)) = (pts.get(segment), pts.get((segment + 1) % n.max(1))) else {
-                return;
-            };
-            let mid = segment_mid(a, b, bulge_at(bulges, segment));
-            (
-                EditOperation::VertexAdd,
-                insert_vertex(&s, segment, mid).and_then(shape_of),
-            )
-        }
-        (GripAction::StraightEdge, Target::Edge { segment, .. }) => (
-            EditOperation::StraightEdge,
-            Ok(with_bulge(&s, pts, bulges, segment, 0.0)),
-        ),
-        (GripAction::ArcEdge, Target::Edge { segment, .. }) => {
-            // Outside of a counter-clockwise ring is right of travel, where a positive bulge bows.
-            let outward = if closed && bulge_ring_area(pts, bulges) <= 0.0 {
-                -0.5
-            } else {
-                0.5
-            };
-            (
-                EditOperation::ArcEdge,
-                Ok(with_bulge(&s, pts, bulges, segment, outward)),
-            )
-        }
-        _ => return,
-    };
-    let edited = match edited {
-        Ok(edited) => edited,
-        Err(refusal) => {
-            cx.say(Level::Warn, refusal);
+    let step = entities_vertex::label(input.action);
+    let mut ecx = ExecutionContext::with_store(cx.doc, cx.spatial.store());
+    let result = entities_vertex::execute(&mut ecx, input);
+    if let Some(output) = points::written(result, cx) {
+        if output.changed.is_empty() {
             return;
         }
-    };
-    // The object's geometry stays but for what the action gives: a hole stays, the other parts too.
-    let edited = keep_holes(&s, edited);
-    let edited = if parts.len() > 1 {
-        match replace_part(&whole, menu.part, edited) {
-            Some(joined) => joined,
-            None => return,
+        cx.say(Level::Success, format!("{step}: tamam."));
+        if output.changed.len() > 1 {
+            cx.say(
+                Level::Info,
+                format!(
+                    "Topolojik düzenleme: {} komşu nesne de değişti.",
+                    output.changed.len() - 1
+                ),
+            );
         }
-    } else {
-        edited
-    };
-    // The neighbours sharing what changed go in the same step (docs/adr/0160 §3).
-    let follow = neighbours::neighbours(cx, menu.slot, &whole, &edited);
-    let Some(geometry) = edit_geometry(edited) else {
-        return;
-    };
-    let mut changes = vec![EntityEdit::Update {
-        uid: uid.to_string(),
-        geometry,
-    }];
-    changes.extend(follow.iter().flat_map(|n| n.changes.iter().cloned()));
-    let input = EntitiesEdit {
-        operation,
-        changes,
-        expected_revision: None,
-    };
-    let result = edit::execute(&mut ExecutionContext::new(cx.doc), input);
-    if points::written(result, cx).is_some() {
-        cx.say(
-            Level::Success,
-            format!("{}: tamam.", edit::label(operation)),
-        );
-        neighbours::say(follow.as_ref(), cx);
-    }
-}
-
-/// The core's answer as a shape, or its refusal.
-fn shape_of(g: Geometry) -> Result<Shape, String> {
-    match g {
-        Geometry::Ok(e) => Ok(e.shape),
-        Geometry::Error(refusal) => Err(refusal),
-    }
-}
-
-/// The path with edge `segment` bent to `bulge`; its bulges kept only while
-/// one is an arc (the web's `withBulge`); of `like`'s kind, a closed polyline
-/// closed (docs/adr/0258 §1).
-fn with_bulge(
-    like: &Shape,
-    pts: &[Vec2],
-    bulges: Option<&[f64]>,
-    segment: usize,
-    bulge: f64,
-) -> Shape {
-    let all: Vec<f64> = (0..pts.len())
-        .map(|i| {
-            if i == segment {
-                bulge
-            } else {
-                bulge_at(bulges, i)
-            }
-        })
-        .collect();
-    let bulges = all.iter().any(|&b| is_arc_bulge(b)).then_some(all);
-    path_like(like, pts.to_vec(), bulges)
-}
-
-/// An area's holes kept on its edited ring (the web's `{...geometryOf(e), ...edit}`).
-fn keep_holes(before: &Shape, edited: Shape) -> Shape {
-    match (before, edited) {
-        (
-            Shape::Polygon {
-                holes: Some(holes), ..
-            },
-            Shape::Polygon { pts, bulges, .. },
-        ) => Shape::Polygon {
-            pts,
-            bulges,
-            holes: Some(holes.clone()),
-            parts: None,
-        },
-        (_, edited) => edited,
     }
 }

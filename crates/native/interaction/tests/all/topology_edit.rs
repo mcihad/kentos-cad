@@ -137,7 +137,10 @@ fn the_grip_menu_puts_the_shared_edge_right() {
     let edge = b
         .run(|_, cx| grip_menu::at(on_screen(-20.0, -5.0), cx))
         .expect("the shared edge's middle");
-    assert_eq!(edge.actions(), [GripAction::AddVertex, GripAction::ArcEdge]);
+    assert_eq!(
+        edge.actions()[..edge.own_count()],
+        [GripAction::AddVertex, GripAction::ArcEdge]
+    );
     let before = b.log.len();
     b.run(|_, cx| grip_menu::apply(edge, GripAction::ArcEdge, cx));
     assert_eq!(
@@ -182,7 +185,10 @@ fn the_grip_menu_puts_the_shared_edge_right() {
     let middle = b
         .run(|_, cx| grip_menu::at(on_screen(-20.0, -5.0), cx))
         .expect("the new corner's grip");
-    assert_eq!(middle.actions(), [GripAction::RemoveVertex]);
+    assert_eq!(
+        middle.actions()[..middle.own_count()],
+        [GripAction::RemoveVertex]
+    );
     let before = b.log.len();
     b.run(|_, cx| grip_menu::apply(middle, GripAction::RemoveVertex, cx));
     assert_eq!(

@@ -12,13 +12,15 @@
 //! with running snaps off (F3). A left press or another command drops it;
 //! the command line shows it with a × until then.
 //!
-//! Over a grip of a selected path, the idle menu starts with the grip's
-//! actions (kentos_interaction::grip_menu, docs/adr/0074): Köşe N with
-//! Köşeyi sil, or Kenar N with Ortasına köşe ekle and Düz kenar yap or Yaya
-//! dönüştür. While a command waits for a point, the command menu offers
-//! Nokta hesapla (docs/adr/0083).
+//! Over a grip of a selected object, the idle menu starts with the grip's
+//! actions (kentos_interaction::grip_menu, docs/adr/0074, 0279): a path's
+//! Köşe N with Köşeyi sil, or Kenar N with Ortasına köşe ekle and Düz kenar
+//! yap or Yaya dönüştür; then, on every grip, Esnet (the grip turns hot) and
+//! Taşı, Döndür, Ölçekle and Aynala with the grip as their first point.
+//! While a command waits for a point, the command menu offers Nokta hesapla
+//! (docs/adr/0083).
 
-use iced::Point;
+use iced::{Point, Task};
 use kentos_interaction::SnapKind;
 use kentos_interaction::grip_menu::{self, GripAction, GripMenu};
 use kentos_ui::icon::Icon;
@@ -196,7 +198,7 @@ impl App {
         }
     }
 
-    pub(crate) fn drawing_menu_event(&mut self, event: Event) {
+    pub(crate) fn drawing_menu_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Closed => self.drawing_menu = None,
             Event::SnapOnce(kind) => {
@@ -204,10 +206,29 @@ impl App {
             }
             Event::Grip(action) => {
                 if let Some(grip) = self.drawing_menu.take().and_then(|open| open.grip) {
-                    self.with_tool(|_, cx| grip_menu::apply(grip, action, cx));
+                    return self.grip_action(grip, action);
                 }
             }
         }
+        Task::none()
+    }
+
+    /// A grip menu's item: a vertex or edge action through its command, Esnet
+    /// heats the grip, a transform starts its tool and takes the grip as its
+    /// first point (docs/adr/0279).
+    pub(crate) fn grip_action(&mut self, grip: GripMenu, action: GripAction) -> Task<Message> {
+        if action.vertex_action().is_some() {
+            self.with_tool(|_, cx| grip_menu::apply(grip, action, cx));
+        } else if action == GripAction::Stretch {
+            self.with_tool(|s, cx| s.heat_grip(grip.slot, grip.grip, grip.at, cx));
+        } else if let Some(tool) = action.tool() {
+            let task = self.start_tool(tool);
+            if self.session.tool_id() == tool {
+                self.with_tool(|s, cx| s.accept_point(grip.at, cx));
+            }
+            return task;
+        }
+        Task::none()
     }
 
     /// The grip menu's grip under `at`, for the idle menu (the web's `gripItems`).
@@ -261,7 +282,11 @@ impl App {
         let mut menu = Menu::new();
         if let Some(grip) = self.drawing_menu.and_then(|open| open.grip) {
             menu = menu.header(grip.header());
-            for action in grip.actions() {
+            let own = grip.own_count();
+            for (i, action) in grip.actions().into_iter().enumerate() {
+                if i == own && own > 0 {
+                    menu = menu.separator();
+                }
                 menu = menu
                     .item(action.label(), Message::DrawingMenu(Event::Grip(action)))
                     .icon(crate::icons::from_web(Some(action.icon())));
@@ -577,6 +602,70 @@ mod tests {
             app.drawing_menu.map(|m| (m.kind, m.grip)),
             Some((Kind::Idle, None))
         );
+    }
+
+    /// Every grip offers Esnet and the transforms after its own actions
+    /// (docs/adr/0279): Taşı starts the move tool with the grip as its base
+    /// point, so the next point moves the selection from the grip; Esnet heats
+    /// the grip, so the next point places that corner alone.
+    #[test]
+    fn a_grip_takes_the_transforms_with_itself_as_the_base_point() {
+        use kentos_domain::Slot;
+        use kentos_interaction::Vec2;
+        use kentos_interaction::grip_menu::GripAction;
+
+        fn first(app: &App) -> (f64, f64, usize) {
+            match app.document.as_ref().and_then(|d| d.model.get(Slot(4))) {
+                Some(kentos_contracts::Entity::Polygon(p)) => (p.pts[0].x, p.pts[0].y, p.pts.len()),
+                _ => (0.0, 0.0, 0),
+            }
+        }
+        let mut app = app_with_drawing();
+        let parcel = Slot(4);
+        app.selection.set([parcel]);
+        let doc = app.document.as_ref().expect("open");
+        app.spatial.sync(&doc.model);
+        let corner = app.spatial.grips(&[parcel])[0].points[0];
+        let [x, y] = app.viewport.camera.world_to_screen(corner);
+        let at = Point::new(x as f32, y as f32);
+        view(&mut app, viewport::Event::RightPressed(at));
+        view(&mut app, viewport::Event::RightClick(at));
+        let grip = app.drawing_menu.and_then(|m| m.grip).expect("the grip");
+        assert_eq!(grip.own_count(), 1);
+        assert_eq!(
+            grip.actions()[1..],
+            [
+                GripAction::Stretch,
+                GripAction::Move,
+                GripAction::Rotate,
+                GripAction::Scale,
+                GripAction::Mirror
+            ]
+        );
+        let (x0, y0, n) = first(&app);
+        let _ = app.update(Message::DrawingMenu(Event::Grip(GripAction::Move)));
+        assert_eq!(app.session.tool_id(), "move");
+        let to = Vec2::new(corner.x + 2.0, corner.y - 1.0);
+        app.with_tool(|s, cx| s.accept_point(to, cx));
+        assert_eq!(first(&app), (x0 + 2.0, y0 - 1.0, n));
+        assert!(
+            !app.session.is_running(),
+            "one move, then back to selecting"
+        );
+
+        // Esnet: the grip turns hot; the next point is the corner's new place.
+        app.selection.set([parcel]);
+        let doc = app.document.as_ref().expect("open");
+        app.spatial.sync(&doc.model);
+        let corner = app.spatial.grips(&[parcel])[0].points[0];
+        let [x, y] = app.viewport.camera.world_to_screen(corner);
+        let at = Point::new(x as f32, y as f32);
+        view(&mut app, viewport::Event::RightPressed(at));
+        view(&mut app, viewport::Event::RightClick(at));
+        let _ = app.update(Message::DrawingMenu(Event::Grip(GripAction::Stretch)));
+        let to = Vec2::new(corner.x - 3.0, corner.y);
+        app.with_tool(|s, cx| s.accept_point(to, cx));
+        assert_eq!(first(&app), (corner.x - 3.0, corner.y, n));
     }
 
     #[test]

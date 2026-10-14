@@ -165,6 +165,9 @@ Liste:
 - [ ] `CAD-INPUT-01` (ADR 0266, 14 Ekim): web'de gerekenler: `coordinateInput.ts`'in metrik birimli uzunluğu (`2.5m`, `250cm`) ve
   parantezli toplamı (`fixtures/point-input/v1`'in 22 yeni satırı), `looksLikeCoordinate`'in `(`'u ve araçların uzunluk alanlarının
   birimli ve toplamlı okunması; web'in iz oynatıcısı `value-entry.json`'u geçmeli (`(`, `)`, `*` tuşları, Tab'ın birimli kilidi).
+- [ ] `CAD-INPUT-15` (ADR 0279, 14 Ekim): web'de gerekenler: `cad.entities.vertex`'in web işleyicisi (ortak durumlar
+  `fixtures/commands/v1/cad.entities.vertex.json`), web'in tutamaç menüsünün (`gripItems`) her tutamakta Esnet, Taşı, Döndür, Ölçekle
+  ve Aynala'yı sunması ve köşe işlerini komutla yazması, Köşe ekle/sil aracının (`VertexTool`) komutla yazması.
 - [ ] `CAD-INPUT-14` (ADR 0278, 14 Ekim): web'de gerekenler: `cad.entities.set` ve `.order`'ın web işleyicileri kilitlileri sayıyla atlamalı
   (ortak durumlar değişti), web'in kenar seçen araçları ve pencerelerin nesne seçmesi seçim süzgecine uymalı, kilitli nesneye tıklamada
   neden söylenmeli (`locked-and-filter.json`).

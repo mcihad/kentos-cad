@@ -1739,6 +1739,24 @@ VariableKindName = Literal["text", "number", "bool", "date"]
 """The names of :class:`VariableKind`, for a plain string."""
 
 
+class VertexAction(_StrEnum):
+    """What is done at the place.
+
+    - ``remove``: Köşeyi sil (a `vertex` place): its two edges become one straight edge. “Köşe sil”.
+    - ``insert``: Ortasına köşe ekle (a `mid` place): a vertex at the edge's middle; or Köşe ekle at an `along` place: a vertex
+    - ``straighten``: Düz kenar yap (a `mid` place): the edge straight. “Düz kenar yap”.
+    - ``arc``: Yaya dönüştür (a `mid` place): a straight edge a gentle arc, its sagitta a quarter of the chord (bulge 0.5),
+    """
+    REMOVE = "remove"
+    INSERT = "insert"
+    STRAIGHTEN = "straighten"
+    ARC = "arc"
+
+
+VertexActionName = Literal["remove", "insert", "straighten", "arc"]
+"""The names of :class:`VertexAction`, for a plain string."""
+
+
 class Workspace(_StrEnum):
     """A project's type (`app/workspaces.ts`, docs/adr/0165): CAD or CBS, each
     with its own scene, axes and ribbon; every command still runs in both.
@@ -7250,6 +7268,100 @@ class EntitiesTrimmed(_Model):
             changed=list(data["changed"]),
             created=list(data["created"]),
             removed=list(data["removed"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesVertex(_Model):
+    """Input of `cad.entities.vertex` v1. The place is on the object's own outer rings (a hole's vertices and edges are
+    not edited here); a multi-part area's other parts and an area's holes stay. An edge already as the action would
+    make it (straight, or an arc) does not change: nothing is written.
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_uid`, `invalid_revision`, `revision_conflict`
+    (status `conflict`), `entity_not_found`, `layer_locked`, `not_a_path` (not a polyline or an area; a line takes
+    Ortasına köşe ekle only), `wrong_place` (Köşeyi sil's place not a vertex, Köşe ekle's not an edge's middle or a place along it, the others'
+    not an edge's middle),
+    `hole_edit` (a hole's place), `no_such_place` (no such part, vertex or edge, or a place along an edge at its vertex), `too_few_corners` (a ring left
+    with fewer than three vertices), `too_few_points` (an open path left with fewer than two).
+    Attributes:
+        uid: The object's persistent id.
+        place: A `vertex` place for Köşeyi sil, a `mid` place (the edge from that vertex) for the others; Köşe ekle takes an
+            `along` place too (a point inside the edge, docs/adr/0263 §1).
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        topology: Topolojik düzenleme: the visible, unlocked neighbours sharing the changed vertices and edges follow.
+    """
+    uid: str
+    action: VertexAction | VertexActionName
+    place: SubPlace
+    expected_revision: str | None | Unset = UNSET
+    topology: StretchTopology | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["action"] = _enum_out(self.action)
+        out["place"] = self.place.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.topology is not UNSET:
+            out["topology"] = None if self.topology is None else self.topology.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesVertex:
+        return cls(
+            uid=data["uid"],
+            action=_enum_in(VertexAction, data["action"]),
+            place=SubPlace.from_json(data["place"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            topology=UNSET if "topology" not in data else None if data["topology"] is None else StretchTopology.from_json(data["topology"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesVertexPlan(_Model):
+    """Plan of `cad.entities.vertex` v1: the objects as execute would write them, and the revision."""
+    changed: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = [e0.to_json() for e0 in self.changed]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesVertexPlan:
+        return cls(
+            changed=[Entity.from_json(e0) for e0 in data["changed"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesVertexed(_Model):
+    """Output of `cad.entities.vertex` v1: the objects written (the object, then its neighbours), their slots, the
+    revision after.
+    Attributes:
+        ids: Unit: id.
+    """
+    changed: list[str]
+    ids: list[int]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = list(self.changed)
+        out["ids"] = list(self.ids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesVertexed:
+        return cls(
+            changed=list(data["changed"]),
+            ids=list(data["ids"]),
             revision=data["revision"],
         )
 
@@ -20222,6 +20334,9 @@ __all__ = [
     "EntitiesTrim",
     "EntitiesTrimPlan",
     "EntitiesTrimmed",
+    "EntitiesVertex",
+    "EntitiesVertexPlan",
+    "EntitiesVertexed",
     "Entity",
     "EntityEdit",
     "EntityGeometry",
@@ -20644,6 +20759,8 @@ __all__ = [
     "VariableValue",
     "Vec2",
     "Vec2Like",
+    "VertexAction",
+    "VertexActionName",
     "VertexCornerPick",
     "VertexSubPlace",
     "WindowSelectRegion",

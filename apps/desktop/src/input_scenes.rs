@@ -6,10 +6,10 @@
 //! docs/adr/0272's: Koordinat oku on a parcel's corner, the log saying the snap's object and place; docs/adr/0274's:
 //! inside a room block turned 30°, the midpoint of a nested, mirrored door's swing; docs/adr/0276's: a Ctrl click
 //! on a parcel's corner where a wall crosses it (the corner ringed, the log saying the parcel's id and corner, the
-//! chip for the wall), and the shortcuts window with Ctrl + tık and the drawing keys. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
+//! chip for the wall), and the shortcuts window with Ctrl + tık and the drawing keys; docs/adr/0279's: the grip menu of a parcel's corner. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma,kenet-oku,kenet-blok-ici,secim-alt-nesne,kisayollar cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=giris-birim,giris-oncelik,kenet-merkez,kenet-ekleme,kenet-dolasma,kenet-oku,kenet-blok-ici,secim-alt-nesne,kisayollar,tutamac-menusu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -203,8 +203,22 @@ fn in_room(q: [f64; 2]) -> [f64; 2] {
 /// Çizgi from outside the rooms, the pointer near the midpoint of the turned room's mirrored door's swing.
 fn in_blocks(app: &mut App) {
     let mut o = Objects::new();
-    o.insert("cizim", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4202", [0.0, 0.0], 1.5, 30f64.to_radians(), false);
-    o.insert("cizim", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4202", [16.0, 0.0], 1.5, 0.0, true);
+    o.insert(
+        "cizim",
+        "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4202",
+        [0.0, 0.0],
+        1.5,
+        30f64.to_radians(),
+        false,
+    );
+    o.insert(
+        "cizim",
+        "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4202",
+        [16.0, 0.0],
+        1.5,
+        0.0,
+        true,
+    );
     open_with_blocks(app, o, room_blocks());
     make_cad(app);
     app.viewport.camera.fit(
@@ -263,6 +277,23 @@ fn ctrl_click(app: &mut App) {
     ));
 }
 
+/// docs/adr/0279: the parcel selected, a right click on its corner's grip: Köşe 3 with Köşeyi sil, then Esnet,
+/// Taşı, Döndür, Ölçekle and Aynala.
+fn grip_menu(app: &mut App) {
+    sub_ground(app);
+    click(app, [6.0, 0.0]);
+    let corner = crate::tools_scenes::at(app, [12.0, 9.0]);
+    let _ = app.update(crate::app::Message::Viewport(
+        crate::viewport::Event::Moved(corner),
+    ));
+    let _ = app.update(crate::app::Message::Viewport(
+        crate::viewport::Event::RightPressed(corner),
+    ));
+    let _ = app.update(crate::app::Message::Viewport(
+        crate::viewport::Event::RightClick(corner),
+    ));
+}
+
 /// The shortcuts window, opened from Yardım.
 fn shortcut_list(app: &mut App) {
     open(app, Objects::new());
@@ -274,6 +305,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("secim-alt-nesne", sub_object),
         ("kisayollar", shortcut_list),
+        ("tutamac-menusu", grip_menu),
         ("kenet-blok-ici", in_blocks),
         ("kenet-oku", reading),
         ("kenet-dolasma", cycling),
@@ -357,6 +389,9 @@ mod tests {
         app.cycle_selection();
         let (wall, sub) = app.selection.sub().expect("the wall's sub-object");
         assert_ne!(wall, slot);
-        assert!(matches!(sub.place, kentos_contracts::SubPlace::Along { .. }));
+        assert!(matches!(
+            sub.place,
+            kentos_contracts::SubPlace::Along { .. }
+        ));
     }
 }

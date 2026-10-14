@@ -35,7 +35,7 @@ use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, blocks_define, blocks_edit,
     circle, delete, dimensions_reassociate, edit, entities_chamfer, entities_extend,
-    entities_fillet, entities_order, entities_pick, entities_select, entities_trim, labels_pin, layers_compose, layers_edit,
+    entities_fillet, entities_order, entities_pick, entities_select, entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit,
     layers_filter, layers_info, layers_labels, layers_renderer, layers_service, layers_set,
     layers_states, layers_time, line, network_define, nurbs, offset, point, points_construct,
     polygon, polyline, scenarios_edit, set, settings_set, sheets_edit, snap_find, styles_edit,
@@ -526,6 +526,12 @@ fn axis<'a>(p: &'a mut kentos_domain::contracts::Vec2, a: &str) -> Option<&'a mu
         "x" => Some(&mut p.x),
         "y" => Some(&mut p.y),
         _ => None,
+    }
+}
+
+impl Input for kentos_domain::contracts::EntitiesVertex {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
     }
 }
 
@@ -1477,6 +1483,9 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_SNAP_FIND => {
             run!(snap_find, kentos_domain::contracts::SnapFind)
+        }
+        kentos_domain::contracts::CAD_ENTITIES_VERTEX => {
+            run!(entities_vertex, kentos_domain::contracts::EntitiesVertex)
         }
         kentos_domain::contracts::CAD_ENTITIES_PICK => {
             run!(entities_pick, kentos_domain::contracts::EntitiesPick)

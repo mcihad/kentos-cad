@@ -345,8 +345,8 @@ impl<S: Stages> Tool for Modify<S> {
             match &mut self.press {
                 Some(press) => {
                     press.to = p.screen;
-                // The first corner stays on the drawing through a pan or a zoom (docs/adr/0277).
-                press.from = cx.view.to_screen(press.from_world);
+                    // The first corner stays on the drawing through a pan or a zoom (docs/adr/0277).
+                    press.from = cx.view.to_screen(press.from_world);
                     press.to_world = p.raw;
                     let moved = js_hypot(p.screen[0] - press.from[0], p.screen[1] - press.from[1]);
                     if !press.dragging && moved > DRAG_THRESHOLD {

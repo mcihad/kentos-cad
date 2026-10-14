@@ -75,6 +75,7 @@ pub use region::{entities_boundary, entities_hatch};
 pub mod entities_order;
 pub mod entities_pick;
 pub mod entities_select;
+pub mod entities_vertex;
 pub mod file_import;
 pub mod geometry_store;
 pub mod import_apply;
@@ -171,6 +172,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_NURBS_CREATE,
         kentos_contracts::CAD_NURBS_CREATE_VERSION,
+    ),
+    // A path's vertices and edges ([`entities_vertex`], docs/adr/0279).
+    (
+        kentos_contracts::CAD_ENTITIES_VERTEX,
+        kentos_contracts::CAD_ENTITIES_VERTEX_VERSION,
     ),
     // What a click can mean and the sub-object it falls on ([`entities_pick`], docs/adr/0276).
     (

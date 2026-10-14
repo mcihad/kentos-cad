@@ -8,23 +8,31 @@
 //! - a closed area's holes are not edited here: the tool says to explode it;
 //! - the tool stays until Esc.
 //!
-//! The object keeps its place and persistent id, through `cad.entities.edit`
-//! (“Köşe eklendi.”, “Köşe silindi.”); a closed area keeps its holes. The
-//! new geometry, the segment clicked and the hole check are the shared
-//! core's (`insert_vertex`, `remove_vertex`, `nearest_segment`, `near_hole`).
+//! The object keeps its place and persistent id, through `cad.entities.vertex`
+//! (docs/adr/0279): the click is a place on the object, a vertex or a point
+//! along its edge (“Köşe eklendi.”, “Köşe silindi.”); a closed area keeps its
+//! holes. The new geometry is the command's; the segment clicked, the place
+//! and the hole check are the shared core's (`nearest_segment`, `place_at`,
+//! `near_hole`).
 
-use kentos_contracts::{EditOperation, Entity, EntityEdit};
+use kentos_contracts::{EntitiesVertex, Entity, SubPlace, VertexAction};
 use kentos_domain::Document;
-use kentos_geometry_core::entity::Shape;
+use kentos_domain::dimension_ties::contract_place;
+use kentos_geometry_core::geom::intersect::closest_on_edge;
 use kentos_geometry_core::geometry::dist;
-use kentos_geometry_core::ops::curve_cuts::Geometry;
-use kentos_geometry_core::ops::vertex::{insert_vertex, near_hole, nearest_segment, remove_vertex};
+use kentos_geometry_core::ops::edges::entity_edges;
+use kentos_geometry_core::ops::subref::place_at;
+use kentos_geometry_core::ops::vertex::{near_hole, nearest_segment};
+use kentos_geometry_core::store::snap::SnapKind;
+use kentos_native_application::blocks::core_entity;
 use kentos_native_application::geometry::shape;
+use kentos_native_application::{ExecutionContext, entities_vertex};
 
 use crate::Vec2;
 use crate::edge;
 use crate::format::Format;
 use crate::log::Level;
+use crate::points;
 use crate::prompt::Prompt;
 use crate::tool::{Context, Cursor, Flow, Marker, MarkerShape, Pointer, Preview, Tag, Tone, Tool};
 
@@ -47,6 +55,8 @@ fn editable(e: &Entity, doc: &Document) -> bool {
 #[derive(Clone, Copy, Debug, PartialEq)]
 struct Action {
     remove: Option<usize>,
+    /// The vertex to remove as a place (its part and index there).
+    place: Option<SubPlace>,
     seg: usize,
     at: Vec2,
 }
@@ -72,7 +82,7 @@ impl Vertex {
             let rings =
                 std::iter::once(&path.pts).chain(path.parts.iter().flatten().map(|q| &q.pts));
             let mut offset = 0;
-            for ring in rings {
+            for (part, ring) in rings.enumerate() {
                 if let Some(i) = ring
                     .iter()
                     .position(|q| dist(Vec2::new(q.x, q.y), p.raw) <= tol)
@@ -80,6 +90,11 @@ impl Vertex {
                     let q = ring[i];
                     return Action {
                         remove: Some(offset + i),
+                        place: Some(SubPlace::Vertex {
+                            part: part as u32,
+                            ring: 0,
+                            index: i as u32,
+                        }),
                         seg: 0,
                         at: Vec2::new(q.x, q.y),
                     };
@@ -93,6 +108,7 @@ impl Vertex {
         };
         Action {
             remove: None,
+            place: None,
             seg,
             at: p.raw,
         }
@@ -143,7 +159,7 @@ impl Tool for Vertex {
             );
             return;
         };
-        let Some(e) = cx.doc.get(slot).cloned() else {
+        let (Some(e), Some(uid)) = (cx.doc.get(slot).cloned(), cx.doc.uid(slot)) else {
             return;
         };
         let s = shape(&e);
@@ -155,47 +171,35 @@ impl Tool for Vertex {
             return;
         }
         let a = Self::plan(&e, p, cx);
-        let result = match a.remove {
-            Some(i) => Ok(remove_vertex(&s, i)),
-            None => insert_vertex(&s, a.seg, a.at),
+        // The place the click names, by the core's places (docs/adr/0279): the vertex, or the edge's point.
+        let place = match a.place {
+            Some(place) => place,
+            None => {
+                let edges = entity_edges(&s);
+                let Some(on) = edges.get(a.seg).map(|g| closest_on_edge(g, a.at).p) else {
+                    return;
+                };
+                match place_at(&core_entity(&e), SnapKind::Nearest, on) {
+                    Some(place) => contract_place(place),
+                    None => return,
+                }
+            }
         };
-        let g = match result {
-            Ok(Geometry::Ok(g)) => g.shape,
-            Ok(Geometry::Error(error)) | Err(error) => return cx.say(Level::Warn, error),
-        };
-        let operation = if a.remove.is_some() {
-            EditOperation::VertexRemove
+        let action = if a.remove.is_some() {
+            VertexAction::Remove
         } else {
-            EditOperation::VertexAdd
+            VertexAction::Insert
         };
-        let same_kind = std::mem::discriminant(&g) == std::mem::discriminant(&s);
-        let written = if same_kind {
-            // The whole geometry is written (docs/adr/0047): a closed area keeps its holes,
-            // a multi-part area its parts as the core gives them back (docs/adr/0143).
-            let g = match (g, &s) {
-                (
-                    Shape::Polygon {
-                        pts, bulges, parts, ..
-                    },
-                    Shape::Polygon { holes, .. },
-                ) => Shape::Polygon {
-                    pts,
-                    bulges,
-                    holes: holes.clone(),
-                    parts,
-                },
-                (g, _) => g,
-            };
-            let uid = edge::uid(cx.doc, slot);
-            edge::geometry(&g)
-                .and_then(|geometry| {
-                    edge::write(operation, vec![EntityEdit::Update { uid, geometry }], cx)
-                })
-                .is_some()
-        } else {
-            edge::replace(operation, slot, &[g], cx)
+        let input = EntitiesVertex {
+            uid: uid.to_string(),
+            action,
+            place,
+            topology: None,
+            expected_revision: None,
         };
-        if written {
+        let mut ecx = ExecutionContext::with_store(cx.doc, cx.spatial.store());
+        let result = entities_vertex::execute(&mut ecx, input);
+        if points::written(result, cx).is_some() {
             cx.say(
                 Level::Success,
                 if a.remove.is_some() {

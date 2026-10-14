@@ -1580,7 +1580,7 @@ impl App {
             Message::RibbonFlashEnd(id) => self.search_flash_end(id),
             Message::RibbonModelFlashEnd(id) => self.search_model_flash_end(&id),
             Message::Layer(event) => return self.layer_event(event),
-            Message::DrawingMenu(event) => self.drawing_menu_event(event),
+            Message::DrawingMenu(event) => return self.drawing_menu_event(event),
             Message::DropLock(length) => self.drop_lock(length),
             Message::TextField(event) => self.text_field_event(event),
             Message::Paragraph(event) => self.paragraph_event(event),
