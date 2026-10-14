@@ -70,6 +70,9 @@ mod find_replace;
 mod grids;
 #[cfg(test)]
 mod hatch_scenes;
+mod history;
+#[cfg(test)]
+mod history_scenes;
 mod hover_card;
 #[cfg(test)]
 mod icon_tour;
