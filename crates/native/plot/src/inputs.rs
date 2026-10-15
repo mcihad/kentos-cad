@@ -222,13 +222,19 @@ impl LegendSources for Sources<'_> {
     }
 }
 
-/// A symbol's colour as the paper draws it: the theme's ink is black on paper.
+/// A symbol's colour as the paper draws it (docs/adr/0312 §5): a theme colour the paper's, as the map beside it
+/// draws it; a true colour as it is; any other word the paper's ink.
 fn ink(v: Option<&Value>) -> Option<String> {
     match v.and_then(Value::as_str) {
         None | Some("" | "none" | "transparent") => None,
-        Some("fg" | "fg-dim" | "label") => Some("#000000".to_owned()),
-        Some(c) if c.starts_with('#') => Some(c.to_owned()),
-        Some(_) => Some("#000000".to_owned()),
+        Some(c) => {
+            let on_paper = kentos_contracts::print_color(c);
+            Some(if on_paper.starts_with('#') {
+                on_paper.to_owned()
+            } else {
+                kentos_contracts::paper::INK.to_owned()
+            })
+        }
     }
 }
 
@@ -610,10 +616,15 @@ mod tests {
             panic!("a patch");
         };
         assert_eq!(p.fill.as_deref(), Some("#E1575933"));
+        // The theme's ink as the map beside it draws it (docs/adr/0312 §5).
         assert_eq!(
             p.stroke.map(|s| (s.color, s.width)),
-            Some(("#000000".into(), 350))
+            Some(("#111111".into(), 350))
         );
+        let dim = |c: &str| ink(Some(&Value::from(c)));
+        assert_eq!(dim("fg-dim").as_deref(), Some("#555555"));
+        assert_eq!(dim("paper").as_deref(), Some("#ffffff"));
+        assert_eq!(dim("ink").as_deref(), Some("#000000"));
         let ring: Value = serde_json::json!({"type": "marker", "layers": [
             {"id": "p", "type": "shape", "shape": "ring", "size": 7, "unit": "px", "stroke": "#E15759", "strokeWidth": 1.3}]});
         assert!(matches!(

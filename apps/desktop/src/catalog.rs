@@ -567,6 +567,9 @@ pub const PORTED: &[&str] = &[
     "tool.layerFreeze",
     "layer.thawAll",
     "layer.translate",
+    // docs/adr/0312: Standardı denetle and Standardı uygula (drawing_standard.rs).
+    "standards.check",
+    "standards.apply",
     // docs/adr/0177 §2: Katmanı eşle and Katmana kopyala.
     "tool.layerMatch",
     "tool.copyToLayer",

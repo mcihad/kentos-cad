@@ -1,0 +1,639 @@
+{
+  "format": "kentos.look-cases",
+  "version": 1,
+  "note": "Written by scripts/fixtures/look_cases.py from docs/adr/0312 §4; do not edit by hand.",
+  "layers": {
+    "duvar": {
+      "color": "#E5484D",
+      "lineType": "continuous",
+      "lineWeight": 0.5
+    },
+    "eksen": {
+      "color": "#E06C75",
+      "lineType": "dashdot",
+      "lineWeight": 0.18
+    },
+    "kapi": {
+      "color": "#C8A165",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+    },
+    "yardimci": {
+      "color": "fg-dim",
+      "lineType": "dashed",
+      "lineWeight": 0.13
+    },
+    "sifir": {
+      "color": "ink",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+    }
+  },
+  "cases": [
+    {
+      "name": "Çizimde kendi değeri olmayan nesne katmanından alır",
+      "chain": [
+        {
+          "layerId": "duvar"
+        }
+      ],
+      "expect": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.5,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "layer",
+          "lineType": "layer",
+          "lineWeight": "layer",
+          "transparency": "layer",
+          "lineTypeScale": "layer"
+        }
+      }
+    },
+    {
+      "name": "Çizimde kendi rengi olan nesne",
+      "chain": [
+        {
+          "layerId": "duvar",
+          "color": "#0090FF"
+        }
+      ],
+      "expect": {
+        "color": "#0090FF",
+        "lineType": "continuous",
+        "lineWeight": 0.5,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "own",
+          "lineType": "layer",
+          "lineWeight": "layer",
+          "transparency": "layer",
+          "lineTypeScale": "layer"
+        }
+      }
+    },
+    {
+      "name": "Çizimde kendi çizgi tipi, ölçeği ve saydamlığı",
+      "chain": [
+        {
+          "layerId": "duvar",
+          "lineType": "dashed",
+          "lineTypeScale": 2,
+          "transparency": 0.5
+        }
+      ],
+      "expect": {
+        "color": "#E5484D",
+        "lineType": "dashed",
+        "lineWeight": 0.5,
+        "transparency": 0.5,
+        "lineTypeScale": 2.0,
+        "from": {
+          "color": "layer",
+          "lineType": "own",
+          "lineWeight": "layer",
+          "transparency": "own",
+          "lineTypeScale": "own"
+        }
+      }
+    },
+    {
+      "name": "Çizimde kendi kalınlığı (0 en ince çizgi, kendi değeridir)",
+      "chain": [
+        {
+          "layerId": "eksen",
+          "lineWeight": 0
+        }
+      ],
+      "expect": {
+        "color": "#E06C75",
+        "lineType": "dashdot",
+        "lineWeight": 0.0,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "layer",
+          "lineType": "layer",
+          "lineWeight": "own",
+          "transparency": "layer",
+          "lineTypeScale": "layer"
+        }
+      }
+    },
+    {
+      "name": "Katmanın saydamlığı yok, çizgi ölçeği 1",
+      "chain": [
+        {
+          "layerId": "yardimci"
+        }
+      ],
+      "expect": {
+        "color": "fg-dim",
+        "lineType": "dashed",
+        "lineWeight": 0.13,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "layer",
+          "lineType": "layer",
+          "lineWeight": "layer",
+          "transparency": "layer",
+          "lineTypeScale": "layer"
+        }
+      }
+    },
+    {
+      "name": "Bloğun değersiz nesnesi yerleştirmenin katmanından alır (BYBLOCK)",
+      "chain": [
+        {
+          "layerId": "kapi"
+        },
+        {
+          "layerId": "sifir"
+        }
+      ],
+      "expect": {
+        "color": "#C8A165",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "block",
+          "lineType": "block",
+          "lineWeight": "block",
+          "transparency": "block",
+          "lineTypeScale": "block"
+        }
+      }
+    },
+    {
+      "name": "Bloğun değersiz nesnesi yerleştirmenin kendi değerlerini alır",
+      "chain": [
+        {
+          "layerId": "kapi",
+          "color": "#00FF00",
+          "lineType": "dashed",
+          "lineWeight": 0.35,
+          "transparency": 0.3
+        },
+        {
+          "layerId": "sifir"
+        }
+      ],
+      "expect": {
+        "color": "#00FF00",
+        "lineType": "dashed",
+        "lineWeight": 0.35,
+        "transparency": 0.3,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "block",
+          "lineType": "block",
+          "lineWeight": "block",
+          "transparency": "block",
+          "lineTypeScale": "block"
+        }
+      }
+    },
+    {
+      "name": "Bloğun nesnesinin kendi değerleri yerleştirmeninkini yener",
+      "chain": [
+        {
+          "layerId": "kapi",
+          "color": "#00FF00",
+          "lineType": "dashed"
+        },
+        {
+          "layerId": "sifir",
+          "color": "#FF0000",
+          "lineType": "continuous"
+        }
+      ],
+      "expect": {
+        "color": "#FF0000",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "own",
+          "lineType": "own",
+          "lineWeight": "block",
+          "transparency": "block",
+          "lineTypeScale": "block"
+        }
+      }
+    },
+    {
+      "name": "Katmana göre renk: bloğun nesnesi kendi katmanının rengini alır",
+      "chain": [
+        {
+          "layerId": "kapi",
+          "color": "#00FF00"
+        },
+        {
+          "layerId": "duvar",
+          "byLayer": [
+            "color"
+          ]
+        }
+      ],
+      "expect": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "layer",
+          "lineType": "block",
+          "lineWeight": "block",
+          "transparency": "block",
+          "lineTypeScale": "block"
+        }
+      }
+    },
+    {
+      "name": "Katmana göre çizgi tipi ve kalınlık, öbürleri yerleştirmeden",
+      "chain": [
+        {
+          "layerId": "kapi",
+          "color": "#00FF00",
+          "lineType": "dashed",
+          "lineWeight": 0.35
+        },
+        {
+          "layerId": "eksen",
+          "byLayer": [
+            "lineType",
+            "lineWeight"
+          ]
+        }
+      ],
+      "expect": {
+        "color": "#00FF00",
+        "lineType": "dashdot",
+        "lineWeight": 0.18,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "block",
+          "lineType": "layer",
+          "lineWeight": "layer",
+          "transparency": "block",
+          "lineTypeScale": "block"
+        }
+      }
+    },
+    {
+      "name": "Katmana göre saydamlık: katmanın saydamlığı yok",
+      "chain": [
+        {
+          "layerId": "kapi",
+          "transparency": 0.4
+        },
+        {
+          "layerId": "duvar",
+          "byLayer": [
+            "transparency"
+          ]
+        }
+      ],
+      "expect": {
+        "color": "#C8A165",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "block",
+          "lineType": "block",
+          "lineWeight": "block",
+          "transparency": "layer",
+          "lineTypeScale": "block"
+        }
+      }
+    },
+    {
+      "name": "Katmana göre her şey",
+      "chain": [
+        {
+          "layerId": "kapi",
+          "color": "#00FF00",
+          "lineType": "dashed",
+          "lineWeight": 0.35,
+          "transparency": 0.2
+        },
+        {
+          "layerId": "eksen",
+          "byLayer": [
+            "color",
+            "lineType",
+            "lineWeight",
+            "transparency"
+          ]
+        }
+      ],
+      "expect": {
+        "color": "#E06C75",
+        "lineType": "dashdot",
+        "lineWeight": 0.18,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "layer",
+          "lineType": "layer",
+          "lineWeight": "layer",
+          "transparency": "layer",
+          "lineTypeScale": "block"
+        }
+      }
+    },
+    {
+      "name": "Çizgi ölçeği yerleştirmeden gelir",
+      "chain": [
+        {
+          "layerId": "kapi",
+          "lineTypeScale": 3
+        },
+        {
+          "layerId": "sifir"
+        }
+      ],
+      "expect": {
+        "color": "#C8A165",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "transparency": 0.0,
+        "lineTypeScale": 3.0,
+        "from": {
+          "color": "block",
+          "lineType": "block",
+          "lineWeight": "block",
+          "transparency": "block",
+          "lineTypeScale": "block"
+        }
+      }
+    },
+    {
+      "name": "Kendi çizgi ölçeği yerleştirmeninkini yener",
+      "chain": [
+        {
+          "layerId": "kapi",
+          "lineTypeScale": 3
+        },
+        {
+          "layerId": "sifir",
+          "lineTypeScale": 0.5
+        }
+      ],
+      "expect": {
+        "color": "#C8A165",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "transparency": 0.0,
+        "lineTypeScale": 0.5,
+        "from": {
+          "color": "block",
+          "lineType": "block",
+          "lineWeight": "block",
+          "transparency": "block",
+          "lineTypeScale": "own"
+        }
+      }
+    },
+    {
+      "name": "İç içe: içteki yerleştirmenin değeri dıştakini yener",
+      "chain": [
+        {
+          "layerId": "kapi",
+          "color": "#00FF00"
+        },
+        {
+          "layerId": "sifir",
+          "color": "#0000FF"
+        },
+        {
+          "layerId": "sifir"
+        }
+      ],
+      "expect": {
+        "color": "#0000FF",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "block",
+          "lineType": "block",
+          "lineWeight": "block",
+          "transparency": "block",
+          "lineTypeScale": "block"
+        }
+      }
+    },
+    {
+      "name": "İç içe: içteki yerleştirme değersizse dıştakinden geçer",
+      "chain": [
+        {
+          "layerId": "kapi",
+          "color": "#00FF00",
+          "lineType": "dashed"
+        },
+        {
+          "layerId": "sifir"
+        },
+        {
+          "layerId": "sifir"
+        }
+      ],
+      "expect": {
+        "color": "#00FF00",
+        "lineType": "dashed",
+        "lineWeight": 0.25,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "block",
+          "lineType": "block",
+          "lineWeight": "block",
+          "transparency": "block",
+          "lineTypeScale": "block"
+        }
+      }
+    },
+    {
+      "name": "İç içe: içteki yerleştirme katmana göre, nesnesi ondan alır",
+      "chain": [
+        {
+          "layerId": "kapi",
+          "color": "#00FF00"
+        },
+        {
+          "layerId": "duvar",
+          "byLayer": [
+            "color"
+          ]
+        },
+        {
+          "layerId": "sifir"
+        }
+      ],
+      "expect": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "block",
+          "lineType": "block",
+          "lineWeight": "block",
+          "transparency": "block",
+          "lineTypeScale": "block"
+        }
+      }
+    },
+    {
+      "name": "İç içe: dıştaki yerleştirme değersiz, kendi katmanından; nesne katmana göre kendi katmanından",
+      "chain": [
+        {
+          "layerId": "eksen"
+        },
+        {
+          "layerId": "sifir"
+        },
+        {
+          "layerId": "yardimci",
+          "byLayer": [
+            "lineType"
+          ]
+        }
+      ],
+      "expect": {
+        "color": "#E06C75",
+        "lineType": "dashed",
+        "lineWeight": 0.18,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "block",
+          "lineType": "layer",
+          "lineWeight": "block",
+          "transparency": "block",
+          "lineTypeScale": "block"
+        }
+      }
+    },
+    {
+      "name": "Üç kat iç içe, saydamlık en dıştan",
+      "chain": [
+        {
+          "layerId": "kapi",
+          "transparency": 0.6
+        },
+        {
+          "layerId": "sifir"
+        },
+        {
+          "layerId": "sifir"
+        },
+        {
+          "layerId": "sifir"
+        }
+      ],
+      "expect": {
+        "color": "#C8A165",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "transparency": 0.6,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "block",
+          "lineType": "block",
+          "lineWeight": "block",
+          "transparency": "block",
+          "lineTypeScale": "block"
+        }
+      }
+    },
+    {
+      "name": "Tema rengi değer olarak taşınır (fg-dim)",
+      "chain": [
+        {
+          "layerId": "yardimci"
+        },
+        {
+          "layerId": "sifir"
+        }
+      ],
+      "expect": {
+        "color": "fg-dim",
+        "lineType": "dashed",
+        "lineWeight": 0.13,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "block",
+          "lineType": "block",
+          "lineWeight": "block",
+          "transparency": "block",
+          "lineTypeScale": "block"
+        }
+      }
+    },
+    {
+      "name": "Kendi rengi tema rengi (ink) olan nesne",
+      "chain": [
+        {
+          "layerId": "duvar",
+          "color": "ink"
+        }
+      ],
+      "expect": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.5,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "own",
+          "lineType": "layer",
+          "lineWeight": "layer",
+          "transparency": "layer",
+          "lineTypeScale": "layer"
+        }
+      }
+    },
+    {
+      "name": "Yerleştirmenin katmanı kesikli, nesnenin kendi çizgi tipi sürekli",
+      "chain": [
+        {
+          "layerId": "yardimci"
+        },
+        {
+          "layerId": "sifir",
+          "lineType": "continuous"
+        }
+      ],
+      "expect": {
+        "color": "fg-dim",
+        "lineType": "continuous",
+        "lineWeight": 0.13,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "block",
+          "lineType": "own",
+          "lineWeight": "block",
+          "transparency": "block",
+          "lineTypeScale": "block"
+        }
+      }
+    }
+  ]
+}

@@ -345,6 +345,7 @@ impl<'a> Reader<'a> {
                     };
                     let key = def.name.to_uppercase();
                     self.lib.layer_colors.insert(key.clone(), def.color.clone());
+                    self.lib.layer_line_types.insert(key.clone(), def.line_type);
                     if let Some(w) = def.line_weight {
                         self.lib.layer_weights.insert(key.clone(), w);
                     }

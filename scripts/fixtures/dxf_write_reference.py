@@ -18,7 +18,9 @@ library and no KentOS code:
 - a BLOCK and everything in it belong to its record (group 330); its base
   point and one-line description are the definition's;
 - a definition's object is on its layer's DXF name, or on 0 when it has none
-  of its own; BYBLOCK (62 0, 370 -2) where it has no colour or weight;
+  of its own; BYBLOCK (62 0, 370 -2) where it has no colour or weight, and
+  (docs/adr/0312 §4) where it has no line type (6 ByBlock) or transparency
+  (440 16777216) and does not follow its layer for it;
 - an INSERT names its block, sits at the insert's point, scales X and Z by
   the scale and Y by it or its negative (mirrored), turns by the rotation in
   degrees; KentOS's data carries the exact radians exactly when the degrees
@@ -869,6 +871,11 @@ def check_look(o: list[tuple[int, str]], e: dict, layers: dict[str, str], where:
         ensure(group(o, 62) == "0", f"{where}: BYBLOCK colour (62 0)")
     if e.get("lineWeight") is None:
         ensure(group(o, 370) == "-2", f"{where}: BYBLOCK weight (370 -2)")
+    follows = e.get("byLayer", [])
+    if e.get("lineType") is None and "lineType" not in follows:
+        ensure(group(o, 6) == "ByBlock", f"{where}: BYBLOCK line type (6 ByBlock)")
+    if e.get("transparency") is None and "transparency" not in follows:
+        ensure(group(o, 440) == str(0x01000000), f"{where}: BYBLOCK transparency (440 16777216)")
 
 
 def dxf_tags(b: dict) -> list[str]:

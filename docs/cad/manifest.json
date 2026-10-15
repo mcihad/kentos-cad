@@ -6161,6 +6161,38 @@
    "tests": 0
   },
   {
+   "id": "standards.apply",
+   "kind": "command",
+   "title": "Standardı uygula",
+   "level": "semantic",
+   "via": [
+    "cad.standards.apply"
+   ],
+   "operation": null,
+   "python": "kentos.cad.standards.apply",
+   "mcp": "cad.standards.apply",
+   "note": "Standart ve dört seçenek komuta verilir; pencerenin önizlemesi komutun planıdır (ADR 0312 §3).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "standards.check",
+   "kind": "command",
+   "title": "Standardı denetle",
+   "level": "query",
+   "via": [
+    "cad.standards.check"
+   ],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Bulgular komutun cevabıdır; pencere onları gösterir (ADR 0312 §2).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "style.assign",
    "kind": "command",
    "title": "Seçili nesnelere sembol ver…",

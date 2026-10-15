@@ -291844,6 +291844,1041 @@
       ]
     },
     {
+      "id": "cad.standards.check",
+      "version": 1,
+      "title": "Standardı denetle",
+      "summary": "Çizimin bir çizim standardından (AutoCAD'in CAD Standards'ı) neyi bozduğunu söyler: standart adıyla (name: mimari-ofis gibi yerleşik bir standart) ya da kendisiyle (standard: katmanları adları, renkleri, çizgi tipleri, kalınlıkları, Yazdır'ları ve topladıkları ad örüntüleriyle; öbür katmanların ad örüntüleri, yazı tipleri, yazı ve ölçü stilleri, çizgi tipleri, nesnelerin katmana göreliği) verilir. Bulgular sırasıyla: standardın katmanları (eksik; rengi, çizgi tipi, kalınlığı, Yazdır'ı farklı), çizimin öbür katmanları (bir standart katmana ait ad, ad örüntülerine uymayan ad, izinsiz çizgi tipi), projenin yazı tipi, stillerin yazı tipleri, eksik ve standartta olmayan stiller, izinsiz kendi çizgi tipli ve kendi görünüşlü nesnelerin sayıları. Her bulgu türü, konusu, katmanı, beklenen ve bulunan değeri, Türkçe iletisi ve cad.standards.apply'ın düzeltip düzeltmediğiyle gelir. Çizimi değiştirmez; plan aynı cevabı verir.",
+      "aliases": [
+        "checkstandards"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
+          "DrawingStandard": {
+            "description": "A drawing standard.",
+            "properties": {
+              "byLayer": {
+                "description": "Whether objects take colour, line type and line weight from their layers only.",
+                "type": "boolean"
+              },
+              "description": {
+                "type": "string"
+              },
+              "dimensionStyles": {
+                "description": "As the text styles.",
+                "items": {
+                  "$ref": "#/$defs/StandardDimensionStyle"
+                },
+                "type": "array"
+              },
+              "fonts": {
+                "description": "The fonts texts may be written in; none: any. The first is the one a fix gives.",
+                "items": {
+                  "$ref": "#/$defs/DrawingFont"
+                },
+                "type": "array"
+              },
+              "layers": {
+                "default": [],
+                "description": "Its layers, in the order they are added.",
+                "items": {
+                  "$ref": "#/$defs/StandardLayer"
+                },
+                "type": "array"
+              },
+              "lineTypes": {
+                "description": "The line types layers and objects may take; none: any.",
+                "items": {
+                  "$ref": "#/$defs/LineType"
+                },
+                "type": "array"
+              },
+              "name": {
+                "type": "string"
+              },
+              "naming": {
+                "description": "The names other layers may take (patterns, `A-*`); none: only its layers'.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "textStyles": {
+                "description": "The text styles the project has; when there are some, it has no others.",
+                "items": {
+                  "$ref": "#/$defs/StandardTextStyle"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
+          },
+          "StandardDimensionStyle": {
+            "description": "A dimension style the standard asks for.",
+            "properties": {
+              "height": {
+                "description": "The value's height on paper.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "paper-mm"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "height"
+            ],
+            "type": "object"
+          },
+          "StandardLayer": {
+            "description": "A layer the standard defines.",
+            "properties": {
+              "color": {
+                "description": "`#rrggbb`, or a theme colour (`fg`, `fg-dim`, `ink`, `paper`).",
+                "type": "string"
+              },
+              "description": {
+                "description": "What it holds, for people.",
+                "type": "string"
+              },
+              "from": {
+                "description": "The names of the layers that belong to it (`cad.layers.find`'s\npattern, comma separated alternatives): Standardı uygula merges them\ninto it as Katmanları çevir does.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "lineType": {
+                "$ref": "#/$defs/LineType"
+              },
+              "lineWeight": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "paper-mm"
+              },
+              "name": {
+                "description": "Its name; the drawing's layer of this name (letters folded as Turkish writes them) is it.",
+                "type": "string"
+              },
+              "plot": {
+                "description": "Yazdır: whether it is printed.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "color",
+              "lineType",
+              "lineWeight"
+            ],
+            "type": "object"
+          },
+          "StandardTextStyle": {
+            "description": "A text style the standard asks for.",
+            "properties": {
+              "font": {
+                "$ref": "#/$defs/DrawingFont"
+              },
+              "height": {
+                "description": "The texts' height on paper; absent: the tool's.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "paper-mm"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "font"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "`cad.standards.check` v1: what the drawing breaks of a standard. It writes nothing.",
+        "properties": {
+          "name": {
+            "description": "A built-in standard by its id (`mimari-ofis`); or",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "standard": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DrawingStandard"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "the standard itself."
+          }
+        },
+        "title": "StandardsCheck",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "StandardIssue": {
+            "description": "A finding.",
+            "properties": {
+              "expected": {
+                "description": "What the standard asks for.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fixable": {
+                "description": "Whether `cad.standards.apply` fixes it.",
+                "type": "boolean"
+              },
+              "found": {
+                "description": "What the drawing has.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/StandardIssueKind"
+              },
+              "layer": {
+                "description": "The layer's id, when it is about one of the drawing's layers.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "message": {
+                "description": "For people: what is wrong and what fixes it.",
+                "type": "string"
+              },
+              "objects": {
+                "description": "The objects it is about (ObjectLineType, OwnLook).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "subject": {
+                "description": "What it is about: a layer's, a style's or a line type's name.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "subject",
+              "fixable",
+              "message"
+            ],
+            "type": "object"
+          },
+          "StandardIssueKind": {
+            "description": "What a finding is about.",
+            "oneOf": [
+              {
+                "enum": [
+                  "layerColor",
+                  "layerLineType",
+                  "layerWeight",
+                  "layerPlot",
+                  "missingTextStyle",
+                  "missingDimensionStyle",
+                  "dimensionStyleName"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "missingLayer",
+                "description": "A standard layer the drawing lacks.",
+                "type": "string"
+              },
+              {
+                "const": "layerName",
+                "description": "A layer whose name the standard does not have nor allow.",
+                "type": "string"
+              },
+              {
+                "const": "projectFont",
+                "description": "The project's drawing font is not one of the standard's.",
+                "type": "string"
+              },
+              {
+                "const": "textFont",
+                "description": "A text style written in a font the standard does not have.",
+                "type": "string"
+              },
+              {
+                "const": "textStyleName",
+                "description": "A text style the standard does not have.",
+                "type": "string"
+              },
+              {
+                "const": "objectLineType",
+                "description": "Objects with a line type of their own the standard does not have.",
+                "type": "string"
+              },
+              {
+                "const": "ownLook",
+                "description": "Objects with a look of their own when the standard has them take their layers'.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "`cad.standards.check`'s answer.",
+        "properties": {
+          "fixable": {
+            "description": "How many of them `cad.standards.apply` fixes.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "issues": {
+            "description": "In the order: the standard's layers, the drawing's other layers, the\nfonts and styles, the objects.",
+            "items": {
+              "$ref": "#/$defs/StandardIssue"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "standard": {
+            "description": "The standard's name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "standard",
+          "issues",
+          "fixable",
+          "revision"
+        ],
+        "title": "StandardsReport",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "StandardIssue": {
+            "description": "A finding.",
+            "properties": {
+              "expected": {
+                "description": "What the standard asks for.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fixable": {
+                "description": "Whether `cad.standards.apply` fixes it.",
+                "type": "boolean"
+              },
+              "found": {
+                "description": "What the drawing has.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/StandardIssueKind"
+              },
+              "layer": {
+                "description": "The layer's id, when it is about one of the drawing's layers.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "message": {
+                "description": "For people: what is wrong and what fixes it.",
+                "type": "string"
+              },
+              "objects": {
+                "description": "The objects it is about (ObjectLineType, OwnLook).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "subject": {
+                "description": "What it is about: a layer's, a style's or a line type's name.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "subject",
+              "fixable",
+              "message"
+            ],
+            "type": "object"
+          },
+          "StandardIssueKind": {
+            "description": "What a finding is about.",
+            "oneOf": [
+              {
+                "enum": [
+                  "layerColor",
+                  "layerLineType",
+                  "layerWeight",
+                  "layerPlot",
+                  "missingTextStyle",
+                  "missingDimensionStyle",
+                  "dimensionStyleName"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "missingLayer",
+                "description": "A standard layer the drawing lacks.",
+                "type": "string"
+              },
+              {
+                "const": "layerName",
+                "description": "A layer whose name the standard does not have nor allow.",
+                "type": "string"
+              },
+              {
+                "const": "projectFont",
+                "description": "The project's drawing font is not one of the standard's.",
+                "type": "string"
+              },
+              {
+                "const": "textFont",
+                "description": "A text style written in a font the standard does not have.",
+                "type": "string"
+              },
+              {
+                "const": "textStyleName",
+                "description": "A text style the standard does not have.",
+                "type": "string"
+              },
+              {
+                "const": "objectLineType",
+                "description": "Objects with a line type of their own the standard does not have.",
+                "type": "string"
+              },
+              {
+                "const": "ownLook",
+                "description": "Objects with a look of their own when the standard has them take their layers'.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "`cad.standards.check`'s answer.",
+        "properties": {
+          "fixable": {
+            "description": "How many of them `cad.standards.apply` fixes.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "issues": {
+            "description": "In the order: the standard's layers, the drawing's other layers, the\nfonts and styles, the objects.",
+            "items": {
+              "$ref": "#/$defs/StandardIssue"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "standard": {
+            "description": "The standard's name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "standard",
+          "issues",
+          "fixable",
+          "revision"
+        ],
+        "title": "StandardsReport",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_standard",
+          "standard_not_found",
+          "invalid_standard"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Çizimi mimari ofis standardıyla denetle",
+          "input": {
+            "name": "mimari-ofis"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.standards.apply",
+      "version": 1,
+      "title": "Standardı uygula",
+      "summary": "Çizimi bir çizim standardına getirir; cad.standards.check'in düzeltilebilir bulgularının ayrı, planlı düzeltmesidir. Standart denetimdeki gibi verilir. rename (varsayılan açık): standart katmanlara ait eski katmanlar (standart katmanın from örüntüsü) Katmanları çevir'in yazmasıyla birleşir; layers: eksik standart katmanlar standardın sırasıyla parent grubunun sonuna (verilmezse en üste) eklenir; restyle: var olan standart katmanlar standardın rengini, çizgi tipini, kalınlığını ve Yazdır'ını alır (birleşmede açılan katman her zaman alır). Katmanlar tek geri alma adımıdır (“Standardı uygula”). styles: projenin yazı tipi, stillerin yazı tipleri ve eksik yazı ve ölçü stilleri proje ayarı olarak yazılır (geri alma adımı değil; yeni stiller UUIDv7 kimlik alır, cevap onları adlarıyla söyler). Nesnelerin kendi görünüşüne dokunulmaz. plan önizlemedir. Kilitli bir eski katman hiçbir şeyi yazdırmaz (layer_locked). expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [
+        "standards"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
+          "DrawingStandard": {
+            "description": "A drawing standard.",
+            "properties": {
+              "byLayer": {
+                "description": "Whether objects take colour, line type and line weight from their layers only.",
+                "type": "boolean"
+              },
+              "description": {
+                "type": "string"
+              },
+              "dimensionStyles": {
+                "description": "As the text styles.",
+                "items": {
+                  "$ref": "#/$defs/StandardDimensionStyle"
+                },
+                "type": "array"
+              },
+              "fonts": {
+                "description": "The fonts texts may be written in; none: any. The first is the one a fix gives.",
+                "items": {
+                  "$ref": "#/$defs/DrawingFont"
+                },
+                "type": "array"
+              },
+              "layers": {
+                "default": [],
+                "description": "Its layers, in the order they are added.",
+                "items": {
+                  "$ref": "#/$defs/StandardLayer"
+                },
+                "type": "array"
+              },
+              "lineTypes": {
+                "description": "The line types layers and objects may take; none: any.",
+                "items": {
+                  "$ref": "#/$defs/LineType"
+                },
+                "type": "array"
+              },
+              "name": {
+                "type": "string"
+              },
+              "naming": {
+                "description": "The names other layers may take (patterns, `A-*`); none: only its layers'.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "textStyles": {
+                "description": "The text styles the project has; when there are some, it has no others.",
+                "items": {
+                  "$ref": "#/$defs/StandardTextStyle"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
+          },
+          "StandardDimensionStyle": {
+            "description": "A dimension style the standard asks for.",
+            "properties": {
+              "height": {
+                "description": "The value's height on paper.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "paper-mm"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "height"
+            ],
+            "type": "object"
+          },
+          "StandardLayer": {
+            "description": "A layer the standard defines.",
+            "properties": {
+              "color": {
+                "description": "`#rrggbb`, or a theme colour (`fg`, `fg-dim`, `ink`, `paper`).",
+                "type": "string"
+              },
+              "description": {
+                "description": "What it holds, for people.",
+                "type": "string"
+              },
+              "from": {
+                "description": "The names of the layers that belong to it (`cad.layers.find`'s\npattern, comma separated alternatives): Standardı uygula merges them\ninto it as Katmanları çevir does.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "lineType": {
+                "$ref": "#/$defs/LineType"
+              },
+              "lineWeight": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "paper-mm"
+              },
+              "name": {
+                "description": "Its name; the drawing's layer of this name (letters folded as Turkish writes them) is it.",
+                "type": "string"
+              },
+              "plot": {
+                "description": "Yazdır: whether it is printed.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "color",
+              "lineType",
+              "lineWeight"
+            ],
+            "type": "object"
+          },
+          "StandardTextStyle": {
+            "description": "A text style the standard asks for.",
+            "properties": {
+              "font": {
+                "$ref": "#/$defs/DrawingFont"
+              },
+              "height": {
+                "description": "The texts' height on paper; absent: the tool's.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "paper-mm"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "font"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "`cad.standards.apply` v1: the drawing brought to a standard. The layers\nin one undo step “Standardı uygula”; the styles and the project's font\nare settings (docs/adr/0183), written with it.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "Add the standard layers the drawing lacks.",
+            "type": "boolean"
+          },
+          "name": {
+            "description": "As the check's.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "parent": {
+            "description": "The group new layers go into; absent: the top.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "rename": {
+            "description": "Merge the layers that belong to a standard layer into it.",
+            "type": "boolean"
+          },
+          "restyle": {
+            "description": "Give the standard layers the drawing has their colour, line type, weight and Yazdır.",
+            "type": "boolean"
+          },
+          "standard": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DrawingStandard"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "styles": {
+            "description": "The project's font, the text styles' fonts, the missing text and dimension styles.",
+            "type": "boolean"
+          }
+        },
+        "title": "StandardsApply",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "LayerTranslation": {
+            "description": "A layer translated: where it went and how many objects with it.",
+            "properties": {
+              "layer": {
+                "description": "The source layer's id and name.",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "rule": {
+                "description": "The rule it took, by its place in `rules`.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "to": {
+                "description": "The standard layer's id and name.",
+                "type": "string"
+              },
+              "toName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "name",
+              "rule",
+              "to",
+              "toName",
+              "objects"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.standards.apply` did.",
+        "properties": {
+          "changed": {
+            "type": "boolean"
+          },
+          "created": {
+            "description": "The layers added, by id, in the standard's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "dimensionStyles": {
+            "description": "The dimension styles added, by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "font": {
+            "description": "Whether the project's drawing font changed.",
+            "type": "boolean"
+          },
+          "objects": {
+            "description": "The objects moved.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "restyled": {
+            "description": "The standard layers whose look or Yazdır changed, by id.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "textStyles": {
+            "description": "The text styles added or given the standard's font, by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "translations": {
+            "description": "The layers merged into a standard layer.",
+            "items": {
+              "$ref": "#/$defs/LayerTranslation"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "changed",
+          "created",
+          "restyled",
+          "translations",
+          "objects",
+          "textStyles",
+          "dimensionStyles",
+          "font",
+          "revision"
+        ],
+        "title": "StandardsApplied",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "LayerTranslation": {
+            "description": "A layer translated: where it went and how many objects with it.",
+            "properties": {
+              "layer": {
+                "description": "The source layer's id and name.",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "rule": {
+                "description": "The rule it took, by its place in `rules`.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "to": {
+                "description": "The standard layer's id and name.",
+                "type": "string"
+              },
+              "toName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "name",
+              "rule",
+              "to",
+              "toName",
+              "objects"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.standards.apply` did.",
+        "properties": {
+          "changed": {
+            "type": "boolean"
+          },
+          "created": {
+            "description": "The layers added, by id, in the standard's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "dimensionStyles": {
+            "description": "The dimension styles added, by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "font": {
+            "description": "Whether the project's drawing font changed.",
+            "type": "boolean"
+          },
+          "objects": {
+            "description": "The objects moved.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "restyled": {
+            "description": "The standard layers whose look or Yazdır changed, by id.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "textStyles": {
+            "description": "The text styles added or given the standard's font, by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "translations": {
+            "description": "The layers merged into a standard layer.",
+            "items": {
+              "$ref": "#/$defs/LayerTranslation"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "changed",
+          "created",
+          "restyled",
+          "translations",
+          "objects",
+          "textStyles",
+          "dimensionStyles",
+          "font",
+          "revision"
+        ],
+        "title": "StandardsApplied",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_standard",
+          "standard_not_found",
+          "invalid_standard",
+          "layer_not_found",
+          "not_a_group",
+          "service_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Mimari ofis standardını uygula",
+          "input": {
+            "name": "mimari-ofis"
+          }
+        },
+        {
+          "title": "Yalnız eksik katmanları ekle",
+          "input": {
+            "name": "mimari-ofis",
+            "rename": false,
+            "restyle": false,
+            "styles": false
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.styles.edit",
       "version": 1,
       "title": "Yazı ve ölçü stilleri",
@@ -318395,6 +319430,24 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Çevirme kuralı verilmedi."
+    },
+    {
+      "code": "no_standard",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çizim standardı verilmedi."
+    },
+    {
+      "code": "standard_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu adda yerleşik çizim standardı yok."
+    },
+    {
+      "code": "invalid_standard",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çizim standardı kurallarına uymuyor."
     },
     {
       "code": "no_definition",

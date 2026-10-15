@@ -406,13 +406,16 @@ impl Writer<'_> {
             }
         };
         self.out.str(8, layer);
-        // Its own line type (docs/adr/0260 §2), its LTYPE record written with the table.
+        let follows =
+            |p: kentos_contracts::LookPart| self.defining && base.look.by_layer.contains(&p);
+        // Its own line type (docs/adr/0260 §2), its LTYPE record written with the table; a definition's object
+        // without one draws with the insert's, BYBLOCK, unless it follows its layer (docs/adr/0312 §4).
         if let Some(t) = base.look.line_type {
             ltype_handle(self.ltypes, self.handles, t);
             self.out.str(6, super::layers::ltype_name(t));
+        } else if self.defining && !follows(kentos_contracts::LookPart::LineType) {
+            self.out.str(6, "ByBlock");
         }
-        let follows =
-            |p: kentos_contracts::LookPart| self.defining && base.look.by_layer.contains(&p);
         if follows(kentos_contracts::LookPart::Color) {
             // A block's object that follows its own layer: BYLAYER (docs/adr/0260 §1).
             self.out.int(62, 256);
@@ -455,6 +458,9 @@ impl Writer<'_> {
         if let Some(t) = base.look.transparency {
             let alpha = ((1.0 - t) * 255.0).round().clamp(0.0, 255.0) as i64;
             self.out.int(440, 0x0200_0000 | alpha);
+        } else if self.defining && !follows(kentos_contracts::LookPart::Transparency) {
+            // BYBLOCK: the insert's transparency (docs/adr/0312 §4).
+            self.out.int(440, 0x0100_0000);
         }
     }
 

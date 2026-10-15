@@ -672,14 +672,9 @@ pub struct PaperPalette {
     pub label_halo: String,
 }
 
-/// [`PaperPalette`]'s values.
+/// [`PaperPalette`]'s values: the contracts' one table of the colours on paper (docs/adr/0312 §5).
 pub mod paper {
-    pub const PAPER: &str = "#ffffff";
-    pub const INK: &str = "#000000";
-    pub const FG: &str = "#111111";
-    pub const FG_DIM: &str = "#555555";
-    pub const LABEL: &str = FG;
-    pub const LABEL_HALO: &str = PAPER;
+    pub use kentos_contracts::paper::{FG, FG_DIM, INK, LABEL, LABEL_HALO, PAPER};
 }
 
 pub fn paper_palette() -> PaperPalette {

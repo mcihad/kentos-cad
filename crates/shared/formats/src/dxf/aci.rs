@@ -219,4 +219,31 @@ mod tests {
         }
         assert_eq!(nearest([250, 5, 5]), 1);
     }
+
+    #[test]
+    fn theme_and_true_colours_follow_the_shared_cases() {
+        // fixtures/look/v1/print.json (docs/adr/0312 §5): the CAD palette, never the interface's theme.
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../fixtures/look/v1/print.json");
+        let doc: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(path).expect("the fixture"))
+                .expect("it reads");
+        for case in doc["cases"].as_array().expect("cases") {
+            let Some(want) = case.get("dxf") else {
+                continue;
+            };
+            let color = case["color"].as_str().expect("a colour");
+            let (got, _) = from_app(color);
+            assert_eq!(
+                u64::from(got.aci),
+                want["aci"].as_u64().expect("an index"),
+                "{color}"
+            );
+            assert_eq!(
+                got.rgb,
+                want.get("rgb").and_then(serde_json::Value::as_i64),
+                "{color}"
+            );
+        }
+    }
 }

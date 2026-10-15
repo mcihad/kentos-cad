@@ -1,0 +1,119 @@
+{
+  "format": "kentos.print-colour-cases",
+  "version": 1,
+  "note": "Written by scripts/fixtures/print_color_cases.py from docs/adr/0312 §5; do not edit by hand.",
+  "cases": [
+    {
+      "color": "ink",
+      "paper": "#000000",
+      "dxf": {
+        "aci": 7
+      }
+    },
+    {
+      "color": "fg",
+      "paper": "#111111",
+      "dxf": {
+        "aci": 7
+      }
+    },
+    {
+      "color": "fg-dim",
+      "paper": "#555555",
+      "dxf": {
+        "aci": 8
+      }
+    },
+    {
+      "color": "paper",
+      "paper": "#ffffff",
+      "dxf": {
+        "aci": 255
+      }
+    },
+    {
+      "color": "label",
+      "paper": "#111111"
+    },
+    {
+      "color": "#FF0000",
+      "paper": "#FF0000",
+      "dxf": {
+        "aci": 1,
+        "rgb": 16711680
+      }
+    },
+    {
+      "color": "#FFFF00",
+      "paper": "#FFFF00",
+      "dxf": {
+        "aci": 2,
+        "rgb": 16776960
+      }
+    },
+    {
+      "color": "#00FF00",
+      "paper": "#00FF00",
+      "dxf": {
+        "aci": 3,
+        "rgb": 65280
+      }
+    },
+    {
+      "color": "#00FFFF",
+      "paper": "#00FFFF",
+      "dxf": {
+        "aci": 4,
+        "rgb": 65535
+      }
+    },
+    {
+      "color": "#0000FF",
+      "paper": "#0000FF",
+      "dxf": {
+        "aci": 5,
+        "rgb": 255
+      }
+    },
+    {
+      "color": "#FF00FF",
+      "paper": "#FF00FF",
+      "dxf": {
+        "aci": 6,
+        "rgb": 16711935
+      }
+    },
+    {
+      "color": "#808080",
+      "paper": "#808080",
+      "dxf": {
+        "aci": 8,
+        "rgb": 8421504
+      }
+    },
+    {
+      "color": "#C0C0C0",
+      "paper": "#C0C0C0",
+      "dxf": {
+        "aci": 9,
+        "rgb": 12632256
+      }
+    },
+    {
+      "color": "#ff0000",
+      "paper": "#ff0000",
+      "dxf": {
+        "aci": 1,
+        "rgb": 16711680
+      }
+    },
+    {
+      "color": "#E5484D",
+      "paper": "#E5484D"
+    },
+    {
+      "color": "#0090FF",
+      "paper": "#0090FF"
+    }
+  ]
+}

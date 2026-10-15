@@ -1166,12 +1166,16 @@ CIRCLE
 AcDbEntity
   8
 0
+  6
+ByBlock
  62
 40
 420
 16111882
 370
 -2
+440
+16777216
 100
 AcDbCircle
  10
@@ -1192,10 +1196,14 @@ LINE
 AcDbEntity
   8
 Yapı
+  6
+ByBlock
  62
 0
 370
 35
+440
+16777216
 100
 AcDbLine
  10
@@ -1260,10 +1268,14 @@ LINE
 AcDbEntity
   8
 0
+  6
+ByBlock
  62
 0
 370
 -2
+440
+16777216
 100
 AcDbLine
  10
@@ -1288,10 +1300,14 @@ LWPOLYLINE
 AcDbEntity
   8
 0
+  6
+ByBlock
  62
 0
 370
 -2
+440
+16777216
 100
 AcDbPolyline
  90
@@ -1324,10 +1340,14 @@ LWPOLYLINE
 AcDbEntity
   8
 0
+  6
+ByBlock
  62
 0
 370
 -2
+440
+16777216
 100
 AcDbPolyline
  90
@@ -1366,10 +1386,14 @@ INSERT
 AcDbEntity
   8
 0
+  6
+ByBlock
  62
 0
 370
 -2
+440
+16777216
 100
 AcDbBlockReference
   2
@@ -1528,10 +1552,14 @@ CIRCLE
 AcDbEntity
   8
 0
+  6
+ByBlock
  62
 0
 370
 -2
+440
+16777216
 100
 AcDbCircle
  10

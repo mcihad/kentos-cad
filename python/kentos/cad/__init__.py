@@ -30,7 +30,7 @@ from .errors import *  # noqa: F403
 from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 
-from . import addresses, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, file, labels, layers, line, network, nurbs, point, points, polygon, polyline, project, rectangle, scenarios, settings, sheets, snap, styles, ucs, units, views  # noqa: E402  isort: skip
+from . import addresses, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, file, labels, layers, line, network, nurbs, point, points, polygon, polyline, project, rectangle, scenarios, settings, sheets, snap, standards, styles, ucs, units, views  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -240,6 +240,7 @@ __all__ = [
     "DrawingAudited",
     "DrawingFont",
     "DrawingFontName",
+    "DrawingStandard",
     "DrawingUnit",
     "DrawingUnitName",
     "DxfExported",
@@ -747,6 +748,16 @@ __all__ = [
     "StackMode",
     "StackModeName",
     "Stamps",
+    "StandardDimensionStyle",
+    "StandardIssue",
+    "StandardIssueKind",
+    "StandardIssueKindName",
+    "StandardLayer",
+    "StandardTextStyle",
+    "StandardsApplied",
+    "StandardsApply",
+    "StandardsCheck",
+    "StandardsReport",
     "StartSubPlace",
     "StepDivision",
     "StepExplodeDensity",
@@ -877,6 +888,7 @@ __all__ = [
     "settings",
     "sheets",
     "snap",
+    "standards",
     "styles",
     "types",
     "ucs",

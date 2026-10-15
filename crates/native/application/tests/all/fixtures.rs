@@ -17,7 +17,8 @@ use kentos_domain::contracts::{
     EntitiesOffset, EntitiesOrder, EntitiesSetProperties, EntitiesTrim, LabelsPin, LayersCompose,
     LayersEdit, LayersFilter, LayersFind, LayersInfo, LayersLabels, LayersRenderer, LayersService,
     LayersSet, LayersStates, LayersTime, LayersTranslate, NetworkDefine, NurbsCreate, OffsetBy,
-    ScenariosEdit, SettingsSet, SheetsEdit, StylesEdit, UcsSet, UcsTo, ViewsEdit, ViewsOp,
+    ScenariosEdit, SettingsSet, SheetsEdit, StandardsApply, StandardsCheck, StylesEdit, UcsSet,
+    UcsTo, ViewsEdit, ViewsOp,
 };
 use kentos_domain::contracts::{
     ArcCreate, ArrayLayout, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_ARRAY,
@@ -32,6 +33,7 @@ use kentos_domain::contracts::{
     UnitsChange,
 };
 use kentos_domain::{Document, Slot, Uuid};
+use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, blocks_define, blocks_edit,
     circle, curves_construct, delete, dimensions_reassociate, edit, entities_chamfer,
@@ -1180,6 +1182,18 @@ impl Input for LayersFind {
     }
 }
 
+impl Input for StandardsCheck {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for StandardsApply {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for LayersTranslate {
     /// `rules[2].lineWeight`.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -1964,6 +1978,8 @@ fn run_op(
         kentos_domain::contracts::CAD_LAYERS_STATES => run!(layers_states, LayersStates),
         kentos_domain::contracts::CAD_LAYERS_FIND => run!(layers_find, LayersFind),
         kentos_domain::contracts::CAD_LAYERS_TRANSLATE => run!(layers_translate, LayersTranslate),
+        kentos_domain::contracts::CAD_STANDARDS_CHECK => run!(standards_check, StandardsCheck),
+        kentos_domain::contracts::CAD_STANDARDS_APPLY => run!(standards_apply, StandardsApply),
         kentos_domain::contracts::CAD_STYLES_EDIT => run!(styles_edit, StylesEdit),
         kentos_domain::contracts::CAD_SETTINGS_SET => run!(settings_set, SettingsSet),
         kentos_domain::contracts::CAD_UCS_SET => run!(ucs_set, UcsSet),
@@ -2377,6 +2393,28 @@ fn check(
                     serde_json::to_value(kentos_native_application::sheets_edit::sheets_in(doc))
                         .map_err(|e| format!("{at}: {e}"))?;
                 expect_same(&got, want, "paftalar", at)?;
+            }
+            // The project's text and dimension styles without their ids: a new one's is a UUIDv7 (docs/adr/0312 §3).
+            "styleNames" => {
+                let without_ids = |v: Value| match v {
+                    Value::Array(list) => Value::Array(
+                        list.into_iter()
+                            .map(|mut x| {
+                                if let Some(o) = x.as_object_mut() {
+                                    o.remove("id");
+                                }
+                                x
+                            })
+                            .collect(),
+                    ),
+                    other => other,
+                };
+                let settings = doc.settings();
+                let got = json!({
+                    "text": without_ids(serde_json::to_value(&settings.text_styles).map_err(|e| format!("{at}: {e}"))?),
+                    "dimension": without_ids(serde_json::to_value(&settings.dimension_styles).map_err(|e| format!("{at}: {e}"))?),
+                });
+                expect_same(&got, want, "stiller", at)?;
             }
             // The project's settings, only the keys given; an absent one is null (docs/adr/0248).
             "settings" => {

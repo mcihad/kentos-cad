@@ -72,6 +72,8 @@ pub struct Library {
     pub layer_colors: HashMap<String, String>,
     /// Upper-case layer name → the layer's line weight (mm), for BYBLOCK children of inserts on it.
     pub layer_weights: HashMap<String, f64>,
+    /// Upper-case layer name → the layer's line type, for a definition's BYLAYER children (docs/adr/0312 §4).
+    pub layer_line_types: HashMap<String, kentos_contracts::LineType>,
     /// Upper-case line type name → the type KentOS draws it as (an object's 6, docs/adr/0260 §2).
     pub ltypes: HashMap<String, kentos_contracts::LineType>,
     /// Upper-case layer name → the name as the LAYER table spells it (DXF layer names ignore case).
@@ -944,21 +946,27 @@ impl<'l> Emitter<'l> {
     }
 
     /// An object's own look from its 6, 48 and 440 (docs/adr/0260 §2, §3): a
-    /// named line type as KentOS draws it (BYLAYER and BYBLOCK none), a
-    /// pattern scale other than 1, a transparency from its alpha in whole
-    /// percents (BYLAYER and BYBLOCK none), at most 90 %.
-    fn look_of(&self, e: &Parsed) -> kentos_contracts::ObjectLook {
+    /// named line type as KentOS draws it (BYBLOCK none; BYLAYER, or no 6, none
+    /// in the drawing and in a definition on a layer other than 0 that layer's,
+    /// as its colour and weight, docs/adr/0312 §4), a pattern scale other than
+    /// 1, a transparency from its alpha in whole percents (BYLAYER and BYBLOCK
+    /// none), at most 90 %.
+    fn look_of(&self, e: &Parsed, ctx: &Ctx) -> kentos_contracts::ObjectLook {
         let c = &e.common;
-        let line_type = c.line_type.as_deref().and_then(|n| {
-            let up = n.to_uppercase();
-            (!up.is_empty() && up != "BYLAYER" && up != "BYBLOCK").then(|| {
-                self.lib
-                    .ltypes
-                    .get(&up)
-                    .copied()
-                    .unwrap_or_else(|| super::classify_name(n))
-            })
-        });
+        let up = c
+            .line_type
+            .as_deref()
+            .map(str::to_uppercase)
+            .unwrap_or_default();
+        let line_type = match up.as_str() {
+            "BYBLOCK" => None,
+            "" | "BYLAYER" if ctx.definition => Self::own_layer(e, ctx)
+                .and_then(|l| self.lib.layer_line_types.get(&l.to_uppercase()).copied()),
+            "" | "BYLAYER" => None,
+            _ => Some(self.lib.ltypes.get(&up).copied().unwrap_or_else(|| {
+                super::classify_name(c.line_type.as_deref().unwrap_or_default())
+            })),
+        };
         let line_type_scale = c
             .ltscale
             .filter(|s| s.is_finite() && *s > 0.0 && *s != 1.0)
@@ -999,7 +1007,7 @@ impl<'l> Emitter<'l> {
         self.emit_kind(e, ctx);
         let end = self.out.entities.len();
         // Its own line type, pattern scale and transparency (docs/adr/0260): BYLAYER and BYBLOCK are its source's.
-        let look = self.look_of(e);
+        let look = self.look_of(e, ctx);
         if !look.is_empty() {
             for x in &mut self.out.entities[start..end] {
                 x.base_mut().look = look.clone();

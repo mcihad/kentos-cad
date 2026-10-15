@@ -170,6 +170,11 @@ Liste:
   uyarıları komutun sözleri; paralel iki doğruya TTY, saat yönünde verilen yaydan Devam; araç durumları
   `fixtures/curve-methods/v1/tools.json`. Web'in donmuş çağrı kayıtları eski `arcStartCenterEnd` ve `arcStartCenterAngle`'ı (tam tur)
   tutar; geri dönüşte komutun kuralına getirilir.
+- [ ] `CAD-STYLE-03`, `06`, `07`, `16` çizim standardı, görünüşün kaynağı ve kâğıdın renkleri (ADR 0312, 15 Ekim): web'de gerekenler:
+  `cad.standards.check` ve `.apply`'ın TS işleyicileri (yerleşik standart sözleşmenin `built_in_standard`'ından ya da web'in kendi
+  kopyasıyla), Çizim standardı penceresi ve şeridin Standart paneli; web'in çizim hattında blok parçasının çizgi tipi, ölçeği ve
+  saydamlığı (`PieceStroke`, `resolve_look`'un kuralı, `fixtures/look/v1/cases.json`) ve bloktaki `byLayer`'ın çizilmesi; web'in
+  pafta lejantının tema renkleri `print_color` ile (`fixtures/look/v1/print.json`); DXF'i ortak çekirdek yazar ve okur.
 - [ ] `CAD-STYLE-01`, `02`, `04`, `05` katmanlar (ADR 0311, 15 Ekim): web'de gerekenler: katmanın `frozen`'ı (`.kcad` şema 55,
   web'in kopyası 54'te) ve durum düğümünün `frozen`, `plot`'u; dondurulmuş düğümün çizilmemesi, seçilmemesi, kapsama sayılmaması
   (`LayerStore` ve iki çizim hattı), Hepsini göster'in çözmemesi; `cad.layers.set`'in `frozen`, `thawAll` ve `unisolate`'i, yalıtımın

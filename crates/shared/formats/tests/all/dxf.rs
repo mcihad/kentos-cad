@@ -2466,3 +2466,59 @@ fn another_programs_styles_come_in_as_the_projects() {
         ]
     );
 }
+
+#[test]
+fn a_definitions_by_layer_line_type_is_its_layers_and_by_block_the_inserts() {
+    // docs/adr/0312 §4: in a definition, BYLAYER (or no 6) on a layer other than 0 is that layer's line type, as its
+    // colour and weight; on 0 and BYBLOCK it is none (the insert's, when it is drawn).
+    let tables = groups(&[
+        (0, "TABLE"),
+        (2, "LAYER"),
+        (0, "LAYER"),
+        (2, "ESKI"),
+        (70, "0"),
+        (62, "1"),
+        (6, "DASHED"),
+        (0, "ENDTAB"),
+    ]);
+    let line = |layer: &'static str, ltype: Option<&'static str>| {
+        let mut g = vec![(0, "LINE"), (8, layer)];
+        if let Some(t) = ltype {
+            g.push((6, t));
+        }
+        g.extend([(10, "0"), (20, "0"), (11, "1"), (21, "1")]);
+        groups(&g)
+    };
+    let mut blocks = groups(&[(0, "BLOCK"), (2, "B"), (70, "0"), (10, "0"), (20, "0")]);
+    blocks.extend(line("ESKI", None));
+    blocks.extend(line("ESKI", Some("BYLAYER")));
+    blocks.extend(line("ESKI", Some("BYBLOCK")));
+    blocks.extend(line("0", None));
+    blocks.extend(line("0", Some("BYLAYER")));
+    blocks.extend(groups(&[(0, "ENDBLK")]));
+    let entities = groups(&[(0, "INSERT"), (8, "0"), (2, "B"), (10, "0"), (20, "0")]);
+    let r = dxf::read(
+        &dxf_of(&[
+            ("TABLES", tables),
+            ("BLOCKS", blocks),
+            ("ENTITIES", entities),
+        ]),
+        &DxfReadOptions::default(),
+    )
+    .expect("read");
+    let types: Vec<Option<LineType>> = r.blocks[0]
+        .entities
+        .iter()
+        .map(|e| e.base().look.line_type)
+        .collect();
+    assert_eq!(
+        types,
+        [
+            Some(LineType::Dashed),
+            Some(LineType::Dashed),
+            None,
+            None,
+            None
+        ]
+    );
+}

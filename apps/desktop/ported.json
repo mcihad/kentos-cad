@@ -385,6 +385,8 @@
     "tool.layerFreeze",
     "layer.thawAll",
     "layer.translate",
+    "standards.check",
+    "standards.apply",
     "tool.layerMatch",
     "tool.copyToLayer",
     "layer.duplicate",

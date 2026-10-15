@@ -276,6 +276,12 @@ class Case:
                 settings = json.loads(self.doc._session.summary())["settings"]
                 for k, v in want.items():
                     same(settings.get(k), v, f"{at}: settings.{k}")
+            elif key == "styleNames":
+                # The text and dimension styles without their ids: a new one's is a UUIDv7 (docs/adr/0312 §3).
+                settings = json.loads(self.doc._session.summary())["settings"]
+                strip = lambda rows: [{k: v for k, v in r.items() if k != "id"} for r in rows]
+                got = {"text": strip(settings.get("textStyles", [])), "dimension": strip(settings.get("dimensionStyles", []))}
+                same(got, want, f"{at}: styleNames")
             elif key == "sheets":
                 # The sheet book's sheets as the command lists them (docs/adr/0252 §2).
                 same(json.loads(self.doc._session.summary())["sheets"], want, f"{at}: sheets")

@@ -178,6 +178,123 @@ pub fn look_problem(
     None
 }
 
+// ── Where a part of the look comes from (docs/adr/0312 §4) ──────────────────
+
+/// Where a part of a drawn object's look comes from.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum LookSource {
+    /// The object's own value.
+    Own,
+    /// Its layer's (in a block: a `byLayer` part, its own layer's).
+    Layer,
+    /// In a block: the insert's, as the insert draws it (BYBLOCK).
+    Block,
+}
+
+/// The look an object is drawn with, each part with its source.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ResolvedLook {
+    pub color: String,
+    pub line_type: LineType,
+    pub line_type_scale: f64,
+    pub line_weight: f64,
+    pub transparency: f64,
+    /// Colour, line type, scale, weight and transparency's sources, in that order.
+    pub from: [LookSource; 5],
+}
+
+/// An object's own parts: its colour and line weight (on its base) and its look.
+#[derive(Clone, Copy, Debug)]
+pub struct OwnLook<'a> {
+    pub color: Option<&'a str>,
+    pub line_weight: Option<f64>,
+    pub look: &'a ObjectLook,
+}
+
+/// The look an object is drawn with: each part its own, else in a block (`insert`: the insert it is drawn through,
+/// resolved) its own layer's for a `byLayer` part and the insert's for the rest, else its layer's. A layer has no
+/// transparency and no pattern scale.
+pub fn resolve_look(
+    own: OwnLook<'_>,
+    layer: &crate::LayerStyle,
+    insert: Option<&ResolvedLook>,
+) -> ResolvedLook {
+    let follows = |p: LookPart| own.look.by_layer.contains(&p);
+    let source = |has: bool, part: Option<LookPart>| match (has, insert) {
+        (true, _) => LookSource::Own,
+        (false, Some(_)) if part.is_none_or(|p| !follows(p)) => LookSource::Block,
+        _ => LookSource::Layer,
+    };
+    let from = [
+        source(own.color.is_some(), Some(LookPart::Color)),
+        source(own.look.line_type.is_some(), Some(LookPart::LineType)),
+        source(own.look.line_type_scale.is_some(), None),
+        source(own.line_weight.is_some(), Some(LookPart::LineWeight)),
+        source(
+            own.look.transparency.is_some(),
+            Some(LookPart::Transparency),
+        ),
+    ];
+    let pick = |i: usize| from[i];
+    ResolvedLook {
+        color: match pick(0) {
+            LookSource::Own => own.color.unwrap_or_default().to_owned(),
+            LookSource::Block => insert.map_or_else(|| layer.color.clone(), |r| r.color.clone()),
+            LookSource::Layer => layer.color.clone(),
+        },
+        line_type: match pick(1) {
+            LookSource::Own => own.look.line_type.unwrap_or(layer.line_type),
+            LookSource::Block => insert.map_or(layer.line_type, |r| r.line_type),
+            LookSource::Layer => layer.line_type,
+        },
+        line_type_scale: match pick(2) {
+            LookSource::Own => own.look.line_type_scale.unwrap_or(1.0),
+            LookSource::Block => insert.map_or(1.0, |r| r.line_type_scale),
+            LookSource::Layer => 1.0,
+        },
+        line_weight: match pick(3) {
+            LookSource::Own => own.line_weight.unwrap_or(layer.line_weight),
+            LookSource::Block => insert.map_or(layer.line_weight, |r| r.line_weight),
+            LookSource::Layer => layer.line_weight,
+        },
+        transparency: match pick(4) {
+            LookSource::Own => own.look.transparency.unwrap_or(0.0),
+            LookSource::Block => insert.map_or(0.0, |r| r.transparency),
+            LookSource::Layer => 0.0,
+        },
+        from,
+    }
+}
+
+// ── The colours on paper (docs/adr/0312 §5) ─────────────────────────────────
+
+/// The paper's colours (DESIGN.md §9a): what a theme colour is on a sheet, in its PDF and its legend, whatever the
+/// interface's theme. A true colour is drawn as it is.
+pub mod paper {
+    pub const PAPER: &str = "#ffffff";
+    pub const INK: &str = "#000000";
+    pub const FG: &str = "#111111";
+    pub const FG_DIM: &str = "#555555";
+    /// The drawing's text.
+    pub const LABEL: &str = FG;
+    /// The halo round the drawing's text.
+    pub const LABEL_HALO: &str = PAPER;
+}
+
+/// A colour as paper takes it: a theme colour (`fg`, `fg-dim`, `ink`, `paper`, `label`) the paper's, any other as
+/// it is.
+pub fn print_color(color: &str) -> &str {
+    match color {
+        "paper" => paper::PAPER,
+        "ink" => paper::INK,
+        "fg" => paper::FG,
+        "label" => paper::LABEL,
+        "fg-dim" => paper::FG_DIM,
+        other => other,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -234,5 +351,70 @@ mod tests {
     fn an_empty_look_writes_nothing() {
         let json = serde_json::to_string(&ObjectLook::default()).unwrap();
         assert_eq!(json, "{}");
+    }
+
+    fn fixture(name: &str) -> serde_json::Value {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../fixtures/look/v1")
+            .join(name);
+        serde_json::from_str(&std::fs::read_to_string(path).expect("the fixture"))
+            .expect("it reads")
+    }
+
+    #[test]
+    fn the_look_s_sources_follow_the_shared_cases() {
+        let doc = fixture("cases.json");
+        let layers = &doc["layers"];
+        for case in doc["cases"].as_array().expect("cases") {
+            let name = case["name"].as_str().unwrap_or_default();
+            let mut resolved: Option<ResolvedLook> = None;
+            for link in case["chain"].as_array().expect("a chain") {
+                let layer: crate::LayerStyle = serde_json::from_value(
+                    layers[link["layerId"].as_str().expect("a layer")].clone(),
+                )
+                .expect("a layer style");
+                let look: ObjectLook = serde_json::from_value(link.clone()).expect("a look");
+                let own = OwnLook {
+                    color: link["color"].as_str(),
+                    line_weight: link["lineWeight"].as_f64(),
+                    look: &look,
+                };
+                resolved = Some(resolve_look(own, &layer, resolved.as_ref()));
+            }
+            let r = resolved.expect("a look");
+            let want = &case["expect"];
+            let from = |s: LookSource| match s {
+                LookSource::Own => "own",
+                LookSource::Layer => "layer",
+                LookSource::Block => "block",
+            };
+            let got = serde_json::json!({
+                "color": r.color,
+                "lineType": r.line_type,
+                "lineWeight": r.line_weight,
+                "transparency": r.transparency,
+                "lineTypeScale": r.line_type_scale,
+                "from": {
+                    "color": from(r.from[0]),
+                    "lineType": from(r.from[1]),
+                    "lineTypeScale": from(r.from[2]),
+                    "lineWeight": from(r.from[3]),
+                    "transparency": from(r.from[4]),
+                },
+            });
+            assert_eq!(&got, want, "{name}");
+        }
+    }
+
+    #[test]
+    fn the_colours_on_paper_follow_the_shared_cases() {
+        for case in fixture("print.json")["cases"].as_array().expect("cases") {
+            let color = case["color"].as_str().expect("a colour");
+            assert_eq!(
+                print_color(color),
+                case["paper"].as_str().expect("paper"),
+                "{color}"
+            );
+        }
     }
 }

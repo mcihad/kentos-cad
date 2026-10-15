@@ -443,3 +443,83 @@ fn a_changed_definition_draws_its_inserts_again() {
         "parsel, which does not, stays"
     );
 }
+
+/// A block's object takes the insert's own line type and transparency (BYBLOCK), one that follows its layer that
+/// layer's line type (docs/adr/0312 §4).
+#[test]
+fn a_block_s_pieces_take_the_insert_s_line_type_and_transparency() {
+    let library = kentos_native_style::system::library();
+    let mut doc = drawing(1, None);
+    let block: kentos_contracts::BlockDefinition = serde_json::from_value(json!({
+        "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002", "name": "Kapı", "base": { "x": 0, "y": 0 },
+        "entities": [
+            { "kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": { "x": -2, "y": 0 }, "b": { "x": 2, "y": 0 } },
+            { "kind": "line", "id": 2, "layerId": "parsel", "attrs": {}, "byLayer": ["lineType", "transparency"],
+              "a": { "x": 0, "y": -2 }, "b": { "x": 0, "y": 2 } }
+        ]
+    }))
+    .expect("a definition");
+    doc.model.add_block(block).expect("defined");
+    let insert: Entity = serde_json::from_value(json!({
+        "kind": "insert", "id": 0, "layerId": "yol", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+        "p": { "x": 486_500.0, "y": 4_420_500.0 }, "scale": 1.0, "rotation": 0.0,
+        "lineType": "dashed", "transparency": 0.5
+    }))
+    .expect("an insert");
+    doc.model.add(insert).expect("placed");
+    let mut spatial = Spatial::of(&doc.model);
+    spatial.sync(&doc.model);
+    let look = look(&doc);
+    let names = |id: &str| id.to_owned();
+    let styles: std::collections::HashMap<String, LayerStyle> = ["yol", "parsel"]
+        .iter()
+        .map(|id| {
+            let n = doc.model.layers().get(id).expect("a layer");
+            ((*id).to_owned(), n.style.clone())
+        })
+        .collect();
+    let opts = BuildOptions {
+        layer_styles: Some(&styles),
+        origin: look.origin,
+        plot_scale: look.symbol_scale,
+        screen: look.screen,
+        hairlines: look.hairlines,
+        clip: Some(construction_clip(&VIEW)),
+        library: &library,
+        layer_name: &names,
+        view: Default::default(),
+        frame: None,
+        reading_unit: look.reading_unit,
+    };
+    let entities: Vec<&Entity> = doc
+        .model
+        .by_layer("yol")
+        .filter(|e| matches!(e, Entity::Insert(_)))
+        .collect();
+    let node = doc.model.layers().get("yol").expect("yol").clone();
+    let call =
+        kentos_native_style::program::layer_call(&node.style, &entities, &opts, spatial.store());
+    let program: Value = serde_json::from_str(&call.program).expect("a program");
+    let set = |i: usize| program["sets"][call.pieces[i] as usize].to_string();
+    assert_eq!(call.pieces.len(), 2);
+    assert!(
+        set(0).contains("\"dash\":["),
+        "the plain piece is dashed: {}",
+        set(0)
+    );
+    assert!(
+        set(0).contains("\"opacity\":0.5"),
+        "and half seen: {}",
+        set(0)
+    );
+    assert!(
+        !set(1).contains("\"dash\":["),
+        "the piece on parsel keeps its layer's continuous line: {}",
+        set(1)
+    );
+    assert!(
+        !set(1).contains("\"opacity\""),
+        "and its layer's opacity: {}",
+        set(1)
+    );
+}

@@ -645,6 +645,12 @@ codes! {
     INVALID_PATTERN = "invalid_pattern", Failed, false, "Katman adı örüntüsü okunmuyor: boş ya da kapanmayan küme.";
     /// Katmanları çevir without a rule (docs/adr/0311 §5).
     NO_RULES = "no_rules", Failed, false, "Çevirme kuralı verilmedi.";
+    /// A drawing standard neither named nor given (docs/adr/0312 §1).
+    NO_STANDARD = "no_standard", Failed, false, "Çizim standardı verilmedi.";
+    /// A built-in standard's name that is not one.
+    STANDARD_NOT_FOUND = "standard_not_found", Failed, false, "Bu adda yerleşik çizim standardı yok.";
+    /// A drawing standard against its rules.
+    INVALID_STANDARD = "invalid_standard", Failed, false, "Çizim standardı kurallarına uymuyor.";
     /// A style created or updated without its definition.
     NO_DEFINITION = "no_definition", Failed, false, "Stilin tanımı verilmedi.";
     /// A style renamed or removed without its id.

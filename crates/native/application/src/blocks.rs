@@ -73,6 +73,29 @@ pub fn core_entity(e: &Entity) -> CoreEntity {
     if let Some(w) = base.line_weight {
         rest.push(("lineWeight".to_owned(), Json::Num(w)));
     }
+    // Its own line type, scale and transparency and the parts that follow its layer: what a block's piece draws
+    // with (docs/adr/0260 §1, 0312 §4).
+    let look = &base.look;
+    if let Some(t) = look.line_type {
+        rest.push(("lineType".to_owned(), Json::Str(t.name().to_owned())));
+    }
+    if let Some(s) = look.line_type_scale {
+        rest.push(("lineTypeScale".to_owned(), Json::Num(s)));
+    }
+    if let Some(t) = look.transparency {
+        rest.push(("transparency".to_owned(), Json::Num(t)));
+    }
+    if !look.by_layer.is_empty() {
+        rest.push((
+            "byLayer".to_owned(),
+            Json::Arr(
+                look.by_layer
+                    .iter()
+                    .map(|p| Json::Str(p.name().to_owned()))
+                    .collect(),
+            ),
+        ));
+    }
     CoreEntity {
         shape: shape(e),
         rest,

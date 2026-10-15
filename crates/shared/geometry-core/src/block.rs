@@ -99,7 +99,30 @@ pub struct Piece {
     /// rather than the insert (`byLayer`, docs/adr/0260 §1): a mask of
     /// [`BY_LAYER_COLOR`] …; none when it has none.
     pub by_layer: Option<(String, u8)>,
+    /// Its line type, its pattern's scale and its transparency: its own, or a nested insert's (BYBLOCK, docs/adr/0312
+    /// §4); none of a part draws with the insert's, then its layer's.
+    pub stroke: PieceStroke,
     pub attribute: Option<String>,
+}
+
+/// A piece's line type (its name in the contract, `dashed`), its pattern's scale and its transparency, each when it
+/// has its own.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct PieceStroke {
+    pub line_type: Option<String>,
+    pub scale: Option<f64>,
+    pub transparency: Option<f64>,
+}
+
+impl PieceStroke {
+    /// A definition's object's own parts.
+    fn of(rest: &[(String, Json)]) -> Self {
+        Self {
+            line_type: text_field(rest, "lineType"),
+            scale: number_field(rest, "lineTypeScale"),
+            transparency: number_field(rest, "transparency"),
+        }
+    }
 }
 
 /// A definition ready to place: its base point, its own objects and
@@ -207,6 +230,7 @@ impl Blocks {
                     color: piece.color.clone(),
                     line_weight: piece.line_weight,
                     by_layer: piece.by_layer.clone(),
+                    stroke: piece.stroke.clone(),
                     attribute: piece.attribute.clone(),
                 }
             })
@@ -550,6 +574,7 @@ fn flatten(
     for e in &def.entities {
         let own_color = text_field(&e.rest, "color");
         let own_weight = number_field(&e.rest, "lineWeight");
+        let own_stroke = PieceStroke::of(&e.rest);
         if let Shape::Insert {
             block,
             p,
@@ -593,6 +618,20 @@ fn flatten(
                         .line_weight
                         .or_else(|| (!follows(BY_LAYER_WEIGHT)).then_some(own_weight).flatten()),
                     by_layer: piece.by_layer.clone(),
+                    // The nested insert's line type, scale and transparency, as its colour (BYBLOCK).
+                    stroke: PieceStroke {
+                        line_type: piece.stroke.line_type.clone().or_else(|| {
+                            (!follows(BY_LAYER_LINE_TYPE))
+                                .then(|| own_stroke.line_type.clone())
+                                .flatten()
+                        }),
+                        scale: piece.stroke.scale.or(own_stroke.scale),
+                        transparency: piece.stroke.transparency.or_else(|| {
+                            (!follows(BY_LAYER_TRANSPARENCY))
+                                .then_some(own_stroke.transparency)
+                                .flatten()
+                        }),
+                    },
                     attribute: None,
                 });
             }
@@ -602,6 +641,7 @@ fn flatten(
                 color: own_color,
                 line_weight: own_weight,
                 by_layer: by_layer(&e.rest),
+                stroke: own_stroke,
                 attribute: None,
             });
         }
@@ -613,6 +653,7 @@ fn flatten(
             color: None,
             line_weight: None,
             by_layer: None,
+            stroke: PieceStroke::default(),
             attribute: Some(a.tag.clone()),
         });
     }

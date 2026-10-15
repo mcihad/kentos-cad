@@ -142,6 +142,7 @@ pub mod set;
 pub mod settings_set;
 pub mod sheets_edit;
 pub mod snap_find;
+pub mod standards;
 pub mod stretch;
 pub mod style_tables;
 pub mod styles_edit;
@@ -444,6 +445,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_LAYERS_TRANSLATE,
         kentos_contracts::CAD_LAYERS_TRANSLATE_VERSION,
+    ),
+    // A drawing standard checked and applied ([`standards`], docs/adr/0312).
+    (
+        kentos_contracts::CAD_STANDARDS_CHECK,
+        kentos_contracts::CAD_STANDARDS_CHECK_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_STANDARDS_APPLY,
+        kentos_contracts::CAD_STANDARDS_APPLY_VERSION,
     ),
     (
         kentos_contracts::CAD_STYLES_EDIT,

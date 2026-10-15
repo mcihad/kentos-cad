@@ -17,21 +17,21 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 49 | 128 | 38 | 38 | 253 |
+| semantic | 49 | 129 | 38 | 38 | 254 |
 | geometry | 19 | 61 | 0 | 8 | 88 |
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 20 | 0 | 6 | 26 |
-| query | 0 | 21 | 1 | 4 | 26 |
+| query | 0 | 22 | 1 | 4 | 27 |
 | session | 0 | 80 | 48 | 5 | 133 |
 | host | 0 | 15 | 14 | 4 | 33 |
-| **toplam** | 68 | 336 | 103 | 205 | 712 |
+| **toplam** | 68 | 338 | 103 | 205 | 714 |
 
 Kapsam: `cad` yalnız CAD şeridinde, `gis` yalnız CBS şeridinde, `shared` ikisinde, `none` hiçbir şeritte (kısayol, menü,
 komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 507 satırdan 131'i: geometry 80, none 20, processing 13, query 18.
+CBS'ye özgü olmayan 509 satırdan 132'i: geometry 80, none 20, processing 13, query 19.
 
 ### Sonucu çağıran hesaplar (geometry) — 80
 
@@ -161,7 +161,7 @@ CBS'ye özgü olmayan 507 satırdan 131'i: geometry 80, none 20, processing 13, 
 | `processing.run.pointcloud.thin` | Seyrelt… | shared | — | İşlemler aracı; Python ve MCP'den çalıştırılamaz. |
 | `processing.run.pointcloud.tile` | Karola… | shared | — | İşlemler aracı; Python ve MCP'den çalıştırılamaz. |
 
-### Okuma, Python'da yok (query) — 18
+### Okuma, Python'da yok (query) — 19
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -179,6 +179,7 @@ CBS'ye özgü olmayan 507 satırdan 131'i: geometry 80, none 20, processing 13, 
 | `data.statistics` | Alan istatistikleri | shared | — |  |
 | `pointcloud.query` | Nokta bulutu XYZ sor | shared | — |  |
 | `sheet.preflight` | Ön denetim | none | — |  |
+| `standards.check` | Standardı denetle | shared | cad.standards.check | Bulgular komutun cevabıdır; pencere onları gösterir (ADR 0312 §2). |
 | `tool.measure` | Mesafe ölç | shared | — | İki nokta arası uzunluk: noktalardan hesap; ölçme API'si nesne ister. |
 | `tool.measureAngle` | Açı ölç | shared | — |  |
 | `tool.stationOffset` | Dik ayak ölç | shared | — |  |

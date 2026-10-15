@@ -16,10 +16,12 @@ use kentos_contracts::{
     LayersLabels, LayersRenderer, LayersService, LayersSet, LayersStates, LayersTime,
     LayersTranslate, LineCreate, NetworkDefine, NurbsCreate, PointCreate, PointsConstruct,
     PolygonCreate, PolylineCreate, RectangleCreate, RegularPolygonCreate, ScenariosEdit,
-    SettingsSet, SheetsEdit, SnapFind, StylesEdit, UcsSet, UnitsChange, ViewsEdit, codes,
+    SettingsSet, SheetsEdit, SnapFind, StandardsApply, StandardsCheck, StylesEdit, UcsSet,
+    UnitsChange, ViewsEdit, codes,
 };
 use serde_json::Value;
 
+use crate::standards::{apply as standards_apply, check as standards_check};
 use crate::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, arrays_edit, blocks_define,
     blocks_edit, changeset, circle, create, curves_construct, curves_edit, delete,
@@ -145,6 +147,8 @@ macro_rules! by_command {
             kentos_contracts::CAD_LAYERS_STATES => $then!(layers_states, LayersStates),
             kentos_contracts::CAD_LAYERS_FIND => $then!(layers_find, LayersFind),
             kentos_contracts::CAD_LAYERS_TRANSLATE => $then!(layers_translate, LayersTranslate),
+            kentos_contracts::CAD_STANDARDS_CHECK => $then!(standards_check, StandardsCheck),
+            kentos_contracts::CAD_STANDARDS_APPLY => $then!(standards_apply, StandardsApply),
             kentos_contracts::CAD_STYLES_EDIT => $then!(styles_edit, StylesEdit),
             kentos_contracts::CAD_SETTINGS_SET => $then!(settings_set, SettingsSet),
             kentos_contracts::CAD_UNITS_CHANGE => $then!(units_change, UnitsChange),

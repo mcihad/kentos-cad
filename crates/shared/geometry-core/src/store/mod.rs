@@ -78,6 +78,8 @@ pub struct Expanded {
     pub weights: Vec<Option<f64>>,
     /// Each piece's own layer and its parts that follow it (docs/adr/0260 §1).
     pub by_layer: Vec<Option<(String, u8)>>,
+    /// Each piece's own line type, scale and transparency (docs/adr/0312 §4).
+    pub strokes: Vec<crate::block::PieceStroke>,
 }
 
 /// One object: its id, geometry, layer and cached box.
@@ -440,6 +442,7 @@ impl Store {
             x.colors.push(piece.color);
             x.weights.push(piece.line_weight);
             x.by_layer.push(piece.by_layer);
+            x.strokes.push(piece.stroke);
         }
         (Some(Arc::new(x)), b)
     }

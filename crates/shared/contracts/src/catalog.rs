@@ -3446,6 +3446,70 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Standardı denetle (docs/adr/0312 §2), held together by fixtures/commands/v1/cad.standards.check.json.
+        CommandDescriptor {
+            id: crate::CAD_STANDARDS_CHECK.into(),
+            version: crate::CAD_STANDARDS_CHECK_VERSION,
+            title: "Standardı denetle".into(),
+            summary: "Çizimin bir çizim standardından (AutoCAD'in CAD Standards'ı) neyi bozduğunu söyler: standart adıyla (name: mimari-ofis gibi yerleşik bir standart) ya da kendisiyle (standard: katmanları adları, renkleri, çizgi tipleri, kalınlıkları, Yazdır'ları ve topladıkları ad örüntüleriyle; \
+                      öbür katmanların ad örüntüleri, yazı tipleri, yazı ve ölçü stilleri, çizgi tipleri, nesnelerin katmana göreliği) verilir. Bulgular sırasıyla: standardın katmanları (eksik; rengi, çizgi tipi, kalınlığı, Yazdır'ı farklı), \
+                      çizimin öbür katmanları (bir standart katmana ait ad, ad örüntülerine uymayan ad, izinsiz çizgi tipi), projenin yazı tipi, stillerin yazı tipleri, eksik ve standartta olmayan stiller, izinsiz kendi çizgi tipli ve kendi görünüşlü nesnelerin sayıları. \
+                      Her bulgu türü, konusu, katmanı, beklenen ve bulunan değeri, Türkçe iletisi ve cad.standards.apply'ın düzeltip düzeltmediğiyle gelir. Çizimi değiştirmez; plan aynı cevabı verir."
+                .into(),
+            aliases: vec!["checkstandards".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::StandardsCheck>(),
+            output: schema::<crate::StandardsReport>(),
+            plan: Some(schema::<crate::StandardsReport>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Çizimi mimari ofis standardıyla denetle".into(),
+                input: json!({ "name": "mimari-ofis" }),
+                output: None,
+            }],
+        },
+        // Standardı uygula (docs/adr/0312 §3), held together by fixtures/commands/v1/cad.standards.apply.json.
+        CommandDescriptor {
+            id: crate::CAD_STANDARDS_APPLY.into(),
+            version: crate::CAD_STANDARDS_APPLY_VERSION,
+            title: "Standardı uygula".into(),
+            summary: "Çizimi bir çizim standardına getirir; cad.standards.check'in düzeltilebilir bulgularının ayrı, planlı düzeltmesidir. Standart denetimdeki gibi verilir. \
+                      rename (varsayılan açık): standart katmanlara ait eski katmanlar (standart katmanın from örüntüsü) Katmanları çevir'in yazmasıyla birleşir; layers: eksik standart katmanlar standardın sırasıyla parent grubunun sonuna (verilmezse en üste) eklenir; \
+                      restyle: var olan standart katmanlar standardın rengini, çizgi tipini, kalınlığını ve Yazdır'ını alır (birleşmede açılan katman her zaman alır). Katmanlar tek geri alma adımıdır (“Standardı uygula”). \
+                      styles: projenin yazı tipi, stillerin yazı tipleri ve eksik yazı ve ölçü stilleri proje ayarı olarak yazılır (geri alma adımı değil; yeni stiller UUIDv7 kimlik alır, cevap onları adlarıyla söyler). Nesnelerin kendi görünüşüne dokunulmaz. \
+                      plan önizlemedir. Kilitli bir eski katman hiçbir şeyi yazdırmaz (layer_locked). expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec!["standards".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::StandardsApply>(),
+            output: schema::<crate::StandardsApplied>(),
+            plan: Some(schema::<crate::StandardsApplied>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Mimari ofis standardını uygula".into(),
+                    input: json!({ "name": "mimari-ofis" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Yalnız eksik katmanları ekle".into(),
+                    input: json!({ "name": "mimari-ofis", "restyle": false, "rename": false, "styles": false }),
+                    output: None,
+                },
+            ],
+        },
         // Yazı ve ölçü stilleri (docs/adr/0248 §4), held together by fixtures/commands/v1/cad.styles.edit.json.
         CommandDescriptor {
             id: crate::CAD_STYLES_EDIT.into(),
@@ -4574,6 +4638,12 @@ mod tests {
                     crate::CAD_LAYERS_TRANSLATE => {
                         serde_json::from_value::<crate::LayersTranslate>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_STANDARDS_CHECK => {
+                        serde_json::from_value::<crate::StandardsCheck>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_STANDARDS_APPLY => {
+                        serde_json::from_value::<crate::StandardsApply>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_STYLES_EDIT => {
                         serde_json::from_value::<crate::StylesEdit>(e.input.clone()).map(|_| ())
                     }
@@ -4813,6 +4883,14 @@ mod tests {
                         }
                         crate::CAD_LAYERS_TRANSLATE => {
                             serde_json::from_value::<crate::LayersTranslated>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_STANDARDS_CHECK => {
+                            serde_json::from_value::<crate::StandardsReport>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_STANDARDS_APPLY => {
+                            serde_json::from_value::<crate::StandardsApplied>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_STYLES_EDIT => {

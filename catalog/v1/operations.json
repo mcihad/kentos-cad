@@ -1044,6 +1044,20 @@
       ],
       "note": "Pencerenin önizlemesi komutun planıdır (ADR 0311 §5)."
     },
+    "standards.check": {
+      "level": "query",
+      "via": [
+        "cad.standards.check"
+      ],
+      "note": "Bulgular komutun cevabıdır; pencere onları gösterir (ADR 0312 §2)."
+    },
+    "standards.apply": {
+      "level": "semantic",
+      "via": [
+        "cad.standards.apply"
+      ],
+      "note": "Standart ve dört seçenek komuta verilir; pencerenin önizlemesi komutun planıdır (ADR 0312 §3)."
+    },
     "tool.layerFreeze": {
       "level": "semantic",
       "via": [

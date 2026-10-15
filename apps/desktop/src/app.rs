@@ -168,6 +168,8 @@ pub enum Dialog {
     LayerMerge,
     /// Katmanları çevir (layer_translate.rs, docs/adr/0311 §5); the window is `App::layer_translate`.
     LayerTranslate,
+    /// Çizim standardı (drawing_standard.rs, docs/adr/0312 §7); the window is `App::drawing_standard`.
+    DrawingStandard,
     /// Alanlar (layer_fields.rs, docs/adr/0199 §3); the window is `App::layer_fields`.
     LayerFields,
     /// Katman süzgeci (layer_filters.rs, docs/adr/0211 §4); the window is `App::layer_filter`.
@@ -412,6 +414,8 @@ pub enum Message {
     FindReplace(crate::find_replace::Event),
     LayerMerge(crate::layer_merge::Event),
     LayerTranslate(crate::layer_translate::Event),
+    /// Çizim standardı's window (drawing_standard.rs, docs/adr/0312 §7).
+    DrawingStandard(crate::drawing_standard::Event),
     /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
     LayerFilter(crate::layer_filters::Event),
     /// An object's attachments: their windows, the viewer and the photos decoded (attachments.rs).
@@ -818,6 +822,8 @@ pub struct App {
     pub(crate) layer_merge: Option<crate::layer_merge::Window>,
     /// Katmanları çevir's window (layer_translate.rs, docs/adr/0311 §5).
     pub(crate) layer_translate: Option<crate::layer_translate::Window>,
+    /// Çizim standardı's window (drawing_standard.rs, docs/adr/0312 §7).
+    pub(crate) drawing_standard: Option<crate::drawing_standard::Window>,
     /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
     pub(crate) layer_filter: Option<crate::layer_filters::Window>,
     /// Bilgi's card: the object it shows and the drawing's point it was clicked at (info_card.rs).
@@ -1113,6 +1119,7 @@ impl App {
             template_names: std::collections::HashMap::new(),
             layer_merge: None,
             layer_translate: None,
+            drawing_standard: None,
             layer_filter: None,
             info_card: None,
             photos: crate::photo_view::Photos::default(),
@@ -1632,6 +1639,7 @@ impl App {
             Message::FindReplace(event) => return self.find_replace_event(event),
             Message::LayerMerge(event) => return self.layer_merge_event(event),
             Message::LayerTranslate(event) => return self.layer_translate_event(event),
+            Message::DrawingStandard(event) => return self.drawing_standard_event(event),
             Message::LayerFilter(event) => return self.layer_filter_event(event),
             Message::Attachment(event) => return self.attachment_event(event),
             Message::InfoCard(event) => return self.info_card_event(event),
@@ -2425,6 +2433,8 @@ impl App {
             // Bütün katmanları çöz and Katmanları çevir (docs/adr/0311).
             "layer.thawAll" => self.thaw_all_layers(),
             "layer.translate" => self.open_layer_translate(),
+            // Standardı denetle and Standardı uygula: one window (docs/adr/0312 §7).
+            "standards.check" | "standards.apply" => self.open_drawing_standard(),
             // Edits, not undo steps (layering.rs).
             "layer.new" => self.new_layer(),
             "layer.newGroup" => self.new_group(),

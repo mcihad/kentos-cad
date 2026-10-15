@@ -1731,6 +1731,44 @@ StackModeName = Literal["always", "ifNeeded"]
 """The names of :class:`StackMode`, for a plain string."""
 
 
+class StandardIssueKind(_StrEnum):
+    """What a finding is about.
+
+    - ``layerColor``
+    - ``layerLineType``
+    - ``layerWeight``
+    - ``layerPlot``
+    - ``missingTextStyle``
+    - ``missingDimensionStyle``
+    - ``dimensionStyleName``
+    - ``missingLayer``: A standard layer the drawing lacks.
+    - ``layerName``: A layer whose name the standard does not have nor allow.
+    - ``projectFont``: The project's drawing font is not one of the standard's.
+    - ``textFont``: A text style written in a font the standard does not have.
+    - ``textStyleName``: A text style the standard does not have.
+    - ``objectLineType``: Objects with a line type of their own the standard does not have.
+    - ``ownLook``: Objects with a look of their own when the standard has them take their layers'.
+    """
+    LAYER_COLOR = "layerColor"
+    LAYER_LINE_TYPE = "layerLineType"
+    LAYER_WEIGHT = "layerWeight"
+    LAYER_PLOT = "layerPlot"
+    MISSING_TEXT_STYLE = "missingTextStyle"
+    MISSING_DIMENSION_STYLE = "missingDimensionStyle"
+    DIMENSION_STYLE_NAME = "dimensionStyleName"
+    MISSING_LAYER = "missingLayer"
+    LAYER_NAME = "layerName"
+    PROJECT_FONT = "projectFont"
+    TEXT_FONT = "textFont"
+    TEXT_STYLE_NAME = "textStyleName"
+    OBJECT_LINE_TYPE = "objectLineType"
+    OWN_LOOK = "ownLook"
+
+
+StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "layerPlot", "missingTextStyle", "missingDimensionStyle", "dimensionStyleName", "missingLayer", "layerName", "projectFont", "textFont", "textStyleName", "objectLineType", "ownLook"]
+"""The names of :class:`StandardIssueKind`, for a plain string."""
+
+
 class StyleEditOperation(_StrEnum):
     """What `cad.styles.edit` does."""
     CREATE = "create"
@@ -5902,6 +5940,63 @@ class DrawingAudited(_Model):
             unused=[UnusedResource.from_json(e0) for e0 in data["unused"]],
             changed=list(data["changed"]),
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrawingStandard(_Model):
+    """A drawing standard.
+    Attributes:
+        by_layer: Whether objects take colour, line type and line weight from their layers only.
+        dimension_styles: As the text styles.
+        fonts: The fonts texts may be written in; none: any. The first is the one a fix gives.
+        layers: Its layers, in the order they are added.
+        line_types: The line types layers and objects may take; none: any.
+        naming: The names other layers may take (patterns, `A-*`); none: only its layers'.
+        text_styles: The text styles the project has; when there are some, it has no others.
+    """
+    name: str
+    by_layer: bool | Unset = UNSET
+    description: str | Unset = UNSET
+    dimension_styles: list[StandardDimensionStyle] | Unset = UNSET
+    fonts: list[DrawingFont | DrawingFontName] | Unset = UNSET
+    layers: list[StandardLayer] = field(default_factory=list)
+    line_types: list[LineType | LineTypeName] | Unset = UNSET
+    naming: list[str] | Unset = UNSET
+    text_styles: list[StandardTextStyle] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.by_layer is not UNSET:
+            out["byLayer"] = self.by_layer
+        if self.description is not UNSET:
+            out["description"] = self.description
+        if self.dimension_styles is not UNSET:
+            out["dimensionStyles"] = [e0.to_json() for e0 in self.dimension_styles]
+        if self.fonts is not UNSET:
+            out["fonts"] = [_enum_out(e0) for e0 in self.fonts]
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        if self.line_types is not UNSET:
+            out["lineTypes"] = [_enum_out(e0) for e0 in self.line_types]
+        if self.naming is not UNSET:
+            out["naming"] = list(self.naming)
+        if self.text_styles is not UNSET:
+            out["textStyles"] = [e0.to_json() for e0 in self.text_styles]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrawingStandard:
+        return cls(
+            name=data["name"],
+            by_layer=data.get("byLayer", UNSET),
+            description=data.get("description", UNSET),
+            dimension_styles=[StandardDimensionStyle.from_json(e0) for e0 in data["dimensionStyles"]] if "dimensionStyles" in data else UNSET,
+            fonts=[_enum_in(DrawingFont, e0) for e0 in data["fonts"]] if "fonts" in data else UNSET,
+            layers=[StandardLayer.from_json(e0) for e0 in data["layers"]] if "layers" in data else list(),
+            line_types=[_enum_in(LineType, e0) for e0 in data["lineTypes"]] if "lineTypes" in data else UNSET,
+            naming=list(data["naming"]) if "naming" in data else UNSET,
+            text_styles=[StandardTextStyle.from_json(e0) for e0 in data["textStyles"]] if "textStyles" in data else UNSET,
         )
 
 
@@ -17563,6 +17658,319 @@ class SplineEntity(Entity):
 
 
 @dataclass(kw_only=True, slots=True)
+class StandardDimensionStyle(_Model):
+    """A dimension style the standard asks for.
+    Attributes:
+        height: The value's height on paper. Unit: paper-mm.
+    """
+    name: str
+    height: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["height"] = float(self.height)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardDimensionStyle:
+        return cls(
+            name=data["name"],
+            height=float(data["height"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardIssue(_Model):
+    """A finding.
+    Attributes:
+        subject: What it is about: a layer's, a style's or a line type's name.
+        fixable: Whether `cad.standards.apply` fixes it.
+        message: For people: what is wrong and what fixes it.
+        expected: What the standard asks for.
+        found: What the drawing has.
+        layer: The layer's id, when it is about one of the drawing's layers.
+        objects: The objects it is about (ObjectLineType, OwnLook). Unit: count.
+    """
+    kind: StandardIssueKind | StandardIssueKindName
+    subject: str
+    fixable: bool
+    message: str
+    expected: str | None | Unset = UNSET
+    found: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    objects: int | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["subject"] = self.subject
+        out["fixable"] = self.fixable
+        out["message"] = self.message
+        if self.expected is not UNSET:
+            out["expected"] = self.expected
+        if self.found is not UNSET:
+            out["found"] = self.found
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.objects is not UNSET:
+            out["objects"] = self.objects
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardIssue:
+        return cls(
+            kind=_enum_in(StandardIssueKind, data["kind"]),
+            subject=data["subject"],
+            fixable=data["fixable"],
+            message=data["message"],
+            expected=data.get("expected", UNSET),
+            found=data.get("found", UNSET),
+            layer=data.get("layer", UNSET),
+            objects=data.get("objects", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardLayer(_Model):
+    """A layer the standard defines.
+    Attributes:
+        name: Its name; the drawing's layer of this name (letters folded as Turkish writes them) is it.
+        color: `#rrggbb`, or a theme colour (`fg`, `fg-dim`, `ink`, `paper`).
+        line_weight: Unit: paper-mm.
+        description: What it holds, for people.
+        from_: The names of the layers that belong to it (`cad.layers.find`'s
+            pattern, comma separated alternatives): Standardı uygula merges them
+            into it as Katmanları çevir does.
+        plot: Yazdır: whether it is printed.
+    """
+    name: str
+    color: str
+    line_type: LineType | LineTypeName
+    line_weight: float
+    description: str | Unset = UNSET
+    from_: str | None | Unset = UNSET
+    plot: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["color"] = self.color
+        out["lineType"] = _enum_out(self.line_type)
+        out["lineWeight"] = float(self.line_weight)
+        if self.description is not UNSET:
+            out["description"] = self.description
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        if self.plot is not UNSET:
+            out["plot"] = self.plot
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardLayer:
+        return cls(
+            name=data["name"],
+            color=data["color"],
+            line_type=_enum_in(LineType, data["lineType"]),
+            line_weight=float(data["lineWeight"]),
+            description=data.get("description", UNSET),
+            from_=data.get("from", UNSET),
+            plot=data.get("plot", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardTextStyle(_Model):
+    """A text style the standard asks for.
+    Attributes:
+        height: The texts' height on paper; absent: the tool's. Unit: paper-mm.
+    """
+    name: str
+    font: DrawingFont | DrawingFontName
+    height: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["font"] = _enum_out(self.font)
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardTextStyle:
+        return cls(
+            name=data["name"],
+            font=_enum_in(DrawingFont, data["font"]),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardsApplied(_Model):
+    """What `cad.standards.apply` did.
+    Attributes:
+        created: The layers added, by id, in the standard's order.
+        restyled: The standard layers whose look or Yazdır changed, by id.
+        translations: The layers merged into a standard layer.
+        objects: The objects moved. Unit: count.
+        text_styles: The text styles added or given the standard's font, by name.
+        dimension_styles: The dimension styles added, by name.
+        font: Whether the project's drawing font changed.
+    """
+    changed: bool
+    created: list[str]
+    restyled: list[str]
+    translations: list[LayerTranslation]
+    objects: int
+    text_styles: list[str]
+    dimension_styles: list[str]
+    font: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = self.changed
+        out["created"] = list(self.created)
+        out["restyled"] = list(self.restyled)
+        out["translations"] = [e0.to_json() for e0 in self.translations]
+        out["objects"] = self.objects
+        out["textStyles"] = list(self.text_styles)
+        out["dimensionStyles"] = list(self.dimension_styles)
+        out["font"] = self.font
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardsApplied:
+        return cls(
+            changed=data["changed"],
+            created=list(data["created"]),
+            restyled=list(data["restyled"]),
+            translations=[LayerTranslation.from_json(e0) for e0 in data["translations"]],
+            objects=data["objects"],
+            text_styles=list(data["textStyles"]),
+            dimension_styles=list(data["dimensionStyles"]),
+            font=data["font"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardsApply(_Model):
+    """`cad.standards.apply` v1: the drawing brought to a standard. The layers
+    in one undo step “Standardı uygula”; the styles and the project's font
+    are settings (docs/adr/0183), written with it.
+    Attributes:
+        layers: Add the standard layers the drawing lacks.
+        name: As the check's.
+        parent: The group new layers go into; absent: the top.
+        rename: Merge the layers that belong to a standard layer into it.
+        restyle: Give the standard layers the drawing has their colour, line type, weight and Yazdır.
+        styles: The project's font, the text styles' fonts, the missing text and dimension styles.
+    """
+    expected_revision: str | None | Unset = UNSET
+    layers: bool | Unset = UNSET
+    name: str | None | Unset = UNSET
+    parent: str | None | Unset = UNSET
+    rename: bool | Unset = UNSET
+    restyle: bool | Unset = UNSET
+    standard: DrawingStandard | None | Unset = UNSET
+    styles: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.layers is not UNSET:
+            out["layers"] = self.layers
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.parent is not UNSET:
+            out["parent"] = self.parent
+        if self.rename is not UNSET:
+            out["rename"] = self.rename
+        if self.restyle is not UNSET:
+            out["restyle"] = self.restyle
+        if self.standard is not UNSET:
+            out["standard"] = None if self.standard is None else self.standard.to_json()
+        if self.styles is not UNSET:
+            out["styles"] = self.styles
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardsApply:
+        return cls(
+            expected_revision=data.get("expectedRevision", UNSET),
+            layers=data.get("layers", UNSET),
+            name=data.get("name", UNSET),
+            parent=data.get("parent", UNSET),
+            rename=data.get("rename", UNSET),
+            restyle=data.get("restyle", UNSET),
+            standard=UNSET if "standard" not in data else None if data["standard"] is None else DrawingStandard.from_json(data["standard"]),
+            styles=data.get("styles", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardsCheck(_Model):
+    """`cad.standards.check` v1: what the drawing breaks of a standard. It writes nothing.
+    Attributes:
+        name: A built-in standard by its id (`mimari-ofis`); or
+        standard: the standard itself.
+    """
+    name: str | None | Unset = UNSET
+    standard: DrawingStandard | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.standard is not UNSET:
+            out["standard"] = None if self.standard is None else self.standard.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardsCheck:
+        return cls(
+            name=data.get("name", UNSET),
+            standard=UNSET if "standard" not in data else None if data["standard"] is None else DrawingStandard.from_json(data["standard"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardsReport(_Model):
+    """`cad.standards.check`'s answer.
+    Attributes:
+        standard: The standard's name.
+        issues: In the order: the standard's layers, the drawing's other layers, the
+            fonts and styles, the objects.
+        fixable: How many of them `cad.standards.apply` fixes. Unit: count.
+    """
+    standard: str
+    issues: list[StandardIssue]
+    fixable: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["standard"] = self.standard
+        out["issues"] = [e0.to_json() for e0 in self.issues]
+        out["fixable"] = self.fixable
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardsReport:
+        return cls(
+            standard=data["standard"],
+            issues=[StandardIssue.from_json(e0) for e0 in data["issues"]],
+            fixable=data["fixable"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class StepWarning(_Model):
     """Something a completed command wants the caller to know.
     Attributes:
@@ -24207,6 +24615,7 @@ __all__ = [
     "DrawingAudited",
     "DrawingFont",
     "DrawingFontName",
+    "DrawingStandard",
     "DrawingUnit",
     "DrawingUnitName",
     "DxfExported",
@@ -24681,6 +25090,16 @@ __all__ = [
     "SplineEntityGeometry",
     "StackMode",
     "StackModeName",
+    "StandardDimensionStyle",
+    "StandardIssue",
+    "StandardIssueKind",
+    "StandardIssueKindName",
+    "StandardLayer",
+    "StandardTextStyle",
+    "StandardsApplied",
+    "StandardsApply",
+    "StandardsCheck",
+    "StandardsReport",
     "StartSubPlace",
     "StepDivision",
     "StepExplodeDensity",

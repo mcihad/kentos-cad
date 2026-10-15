@@ -1331,6 +1331,29 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.standards.check",
+        refusals: &[&["no_standard", "standard_not_found", "invalid_standard"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.standards.apply",
+        refusals: &[
+            &[
+                "no_standard",
+                "standard_not_found",
+                "invalid_standard",
+                "layer_not_found",
+                "not_a_group",
+                "service_layer",
+                "layer_locked",
+            ],
+            REVISION,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
         id: "cad.layers.translate",
         refusals: &[
             &[

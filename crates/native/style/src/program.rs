@@ -404,6 +404,27 @@ pub fn layer_call(
                     _ => weight,
                 });
                 let style = piece_style;
+                // Its line type, scale and transparency (docs/adr/0312 §4): its own, else a part that follows its
+                // layer that layer's (the piece's style), else the insert's own, else the insert's layer's.
+                let own_stroke = x.strokes.get(i).cloned().unwrap_or_default();
+                let insert_stroke = Stroke::of(&base.look);
+                let piece_stroke = Stroke {
+                    line_type: own_stroke
+                        .line_type
+                        .as_deref()
+                        .and_then(kentos_contracts::LineType::from_name)
+                        .or_else(|| {
+                            (!follows(kentos_geometry_core::block::BY_LAYER_LINE_TYPE))
+                                .then_some(insert_stroke.line_type)
+                                .flatten()
+                        }),
+                    scale: own_stroke.scale.unwrap_or(insert_stroke.scale),
+                    opacity: match own_stroke.transparency {
+                        Some(t) => 1.0 - t,
+                        None if follows(kentos_geometry_core::block::BY_LAYER_TRANSPARENCY) => 1.0,
+                        None => insert_stroke.opacity,
+                    },
+                };
                 let hatch = match shape {
                     Shape::Hatch { .. } => {
                         edit_geometry(shape.clone()).map(|g| entity_of(&g, base.clone()))
@@ -412,11 +433,17 @@ pub fn layer_call(
                 };
                 pieces.push(match (hatch, shape) {
                     (Some(Entity::Hatch(h)), _) => {
-                        it.set(json!({ "fill": hatch_symbol_of(&h, color) }))
+                        it.set(piece_stroke.apply(json!({ "fill": hatch_symbol_of(&h, color) })))
                     }
                     // A leader its own look (docs/adr/0146 §5).
-                    (_, Shape::Leader { .. }) => {
-                        it.set(leader_symbols_of(style, color, weight, opts.hairlines))
+                    (_, Shape::Leader { .. }) => it.set(piece_stroke.apply(leader_symbols_of(
+                        style,
+                        color,
+                        weight,
+                        opts.hairlines,
+                    ))),
+                    _ if !piece_stroke.plain() => {
+                        it.stroked(style, color, weight, opts.hairlines, piece_stroke)
                     }
                     _ => it.simple(style, color, weight, opts.hairlines),
                 });

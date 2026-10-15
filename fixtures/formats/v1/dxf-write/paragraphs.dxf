@@ -1092,10 +1092,14 @@ MTEXT
 AcDbEntity
   8
 0
+  6
+ByBlock
  62
 0
 370
 -2
+440
+16777216
 100
 AcDbMText
  10

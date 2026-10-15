@@ -1,0 +1,27 @@
+{
+  "name": "Mimari ofis",
+  "description": "Mimari projelerin katmanları, yazı ve ölçü stilleri: A- önekli katmanlar, nesneler görünüşünü katmanından alır.",
+  "layers": [
+    { "name": "A-DUVAR", "description": "Duvarlar ve kolonlar", "color": "ink", "lineType": "continuous", "lineWeight": 0.5, "from": "duvar*,wall*,a-wall*,kolon*" },
+    { "name": "A-KAPI", "description": "Kapı doğramaları ve açılış yayları", "color": "#C8A165", "lineType": "continuous", "lineWeight": 0.25, "from": "kapı*,kapi*,door*,a-door*" },
+    { "name": "A-PENCERE", "description": "Pencere doğramaları", "color": "#4AA3DF", "lineType": "continuous", "lineWeight": 0.25, "from": "pencere*,window*,a-glaz*" },
+    { "name": "A-MOBİLYA", "description": "Mobilya ve donatılar", "color": "#8A94A6", "lineType": "continuous", "lineWeight": 0.13, "from": "mobilya*,furn*,a-furn*" },
+    { "name": "A-EKSEN", "description": "Akslar", "color": "#E06C75", "lineType": "dashdot", "lineWeight": 0.18, "from": "aks*,eksen*,grid*,a-grid*" },
+    { "name": "A-ÖLÇÜ", "description": "Ölçüler", "color": "#56B6C2", "lineType": "continuous", "lineWeight": 0.18, "from": "ölçü*,olcu*,dim*,a-anno-dims*" },
+    { "name": "A-YAZI", "description": "Yazılar ve oda adları", "color": "fg", "lineType": "continuous", "lineWeight": 0.18, "from": "yazı*,yazi*,text*,a-anno-text*" },
+    { "name": "A-TARAMA", "description": "Taramalar", "color": "#8C9AAA", "lineType": "continuous", "lineWeight": 0.13, "from": "tarama*,hatch*,a-patt*" },
+    { "name": "A-REVİZYON", "description": "Revizyon bulutları ve işaretleri", "color": "#F5A524", "lineType": "continuous", "lineWeight": 0.25, "from": "rev*,a-anno-revs*" },
+    { "name": "A-YARDIMCI", "description": "Yardımcı çizgiler; yazdırılmaz", "color": "fg-dim", "lineType": "dashed", "lineWeight": 0.13, "plot": false, "from": "yardımcı*,yardimci*,defpoints,a-anno-nplt*" }
+  ],
+  "naming": ["A-*"],
+  "fonts": ["barlow", "arimo"],
+  "textStyles": [
+    { "name": "A-Yazı", "font": "barlow", "height": 2.5 },
+    { "name": "A-Başlık", "font": "barlow", "height": 5 }
+  ],
+  "dimensionStyles": [
+    { "name": "A-Ölçü", "height": 2.5 }
+  ],
+  "lineTypes": ["continuous", "dashed", "dashdot"],
+  "byLayer": true
+}
