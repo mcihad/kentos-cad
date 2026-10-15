@@ -6,6 +6,7 @@ import type { DimensionStyleDef } from "./DimensionStyleDef";
 import type { Entity } from "./Entity";
 import type { ImportLayer } from "./ImportLayer";
 import type { ImportReport } from "./ImportReport";
+import type { LineTypeDef } from "./LineTypeDef";
 import type { TextStyleDef } from "./TextStyleDef";
 import type { UnitDecision } from "./UnitDecision";
 
@@ -47,4 +48,12 @@ textStyles?: Array<TextStyleDef>, dimensionStyles?: Array<DimensionStyleDef>,
  * The unit the file's lengths were read in and why (a DXF's,
  * docs/adr/0257 §1); none for a format without units.
  */
-unit?: UnitDecision, };
+unit?: UnitDecision, 
+/**
+ * The file's line types with patterns (a DXF's LTYPE table, docs/adr/0313 §6), lengths in the file's unit as read.
+ */
+lineTypes?: Array<LineTypeDef>, 
+/**
+ * The file's line type scale ($LTSCALE), when other than 1.
+ */
+lineTypeScale?: number, };

@@ -16,9 +16,9 @@ use kentos_domain::contracts::{
     CAD_ENTITIES_SET, DimensionsReassociate, EntitiesChamfer, EntitiesCreate, EntitiesFillet,
     EntitiesOffset, EntitiesOrder, EntitiesSetProperties, EntitiesTrim, LabelsPin, LayersCompose,
     LayersEdit, LayersFilter, LayersFind, LayersInfo, LayersLabels, LayersRenderer, LayersService,
-    LayersSet, LayersStates, LayersTime, LayersTranslate, NetworkDefine, NurbsCreate, OffsetBy,
-    ScenariosEdit, SettingsSet, SheetsEdit, StandardsApply, StandardsCheck, StylesEdit, UcsSet,
-    UcsTo, ViewsEdit, ViewsOp,
+    LayersSet, LayersStates, LayersTime, LayersTranslate, LineTypesEdit, NetworkDefine,
+    NurbsCreate, OffsetBy, ScenariosEdit, SettingsSet, SheetsEdit, StandardsApply, StandardsCheck,
+    StylesEdit, UcsSet, UcsTo, ViewsEdit, ViewsOp,
 };
 use kentos_domain::contracts::{
     ArcCreate, ArrayLayout, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_ARRAY,
@@ -33,6 +33,7 @@ use kentos_domain::contracts::{
     UnitsChange,
 };
 use kentos_domain::{Document, Slot, Uuid};
+use kentos_native_application::line_types_edit;
 use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, blocks_define, blocks_edit,
@@ -1182,6 +1183,13 @@ impl Input for LayersFind {
     }
 }
 
+impl Input for LineTypesEdit {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        (path == "scale").then_some(())?;
+        self.scale.as_mut()
+    }
+}
+
 impl Input for StandardsCheck {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
@@ -1980,6 +1988,7 @@ fn run_op(
         kentos_domain::contracts::CAD_LAYERS_TRANSLATE => run!(layers_translate, LayersTranslate),
         kentos_domain::contracts::CAD_STANDARDS_CHECK => run!(standards_check, StandardsCheck),
         kentos_domain::contracts::CAD_STANDARDS_APPLY => run!(standards_apply, StandardsApply),
+        kentos_domain::contracts::CAD_LINE_TYPES_EDIT => run!(line_types_edit, LineTypesEdit),
         kentos_domain::contracts::CAD_STYLES_EDIT => run!(styles_edit, StylesEdit),
         kentos_domain::contracts::CAD_SETTINGS_SET => run!(settings_set, SettingsSet),
         kentos_domain::contracts::CAD_UCS_SET => run!(ucs_set, UcsSet),

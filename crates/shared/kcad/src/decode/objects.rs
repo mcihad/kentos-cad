@@ -204,6 +204,9 @@ pub(super) struct Features {
     wipeouts: bool,
     /// Schema 55: a layer's `frozen`, a layer state node's `frozen` and `plot` (docs/adr/0311 §1, §3).
     pub(super) frozen: bool,
+    /// Schema 56: the settings' `lineTypes` and `lineTypeScale`, a layer style's and an object's `pattern`
+    /// (docs/adr/0313 §1).
+    pub(super) patterns: bool,
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
     pub(super) look: bool,
@@ -274,6 +277,7 @@ impl Features {
             arrays: schema >= crate::SCHEMA_WITH_ARRAYS,
             wipeouts: schema >= crate::SCHEMA_WITH_WIPEOUTS,
             frozen: schema >= crate::SCHEMA_WITH_FROZEN,
+            patterns: schema >= crate::SCHEMA_WITH_PATTERNS,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,
@@ -308,6 +312,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
         || (has.look && has.uids && key == "order")
         || (has.look && !has.uids && key == "byLayer")
         || (has.wipeouts && key == "wipeout")
+        || (has.patterns && key == "linePattern")
         || match kind {
             Kind::Point => matches!(key, "p" | "z") || (has.line_parts && key == "parts"),
             Kind::Line => {
@@ -763,6 +768,7 @@ pub(super) fn object(
                 )?)
             }
             "lineTypeScale" => f.object_look.line_type_scale = Some(r.float()?),
+            "linePattern" => f.object_look.line_pattern = Some(text(r)?),
             "transparency" => f.object_look.transparency = Some(r.float()?),
             "order" => f.object_look.order = Some(r.int(crate::MAX_ORDER)? as i32),
             "wipeout" => f.object_look.wipeout = Some(wipeout(r)?),

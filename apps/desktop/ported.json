@@ -387,6 +387,7 @@
     "layer.translate",
     "standards.check",
     "standards.apply",
+    "lineTypes.manage",
     "tool.layerMatch",
     "tool.copyToLayer",
     "layer.duplicate",

@@ -88,6 +88,7 @@ fn a_mask_is_picked_by_its_boundary_and_what_it_covers_stays_reachable() {
     // Made an ordinary area again, its inside picks it.
     let uid = b.doc.uid(mask).expect("its id").to_string();
     let input = kentos_contracts::EntitiesSetProperties {
+        line_pattern: None,
         uids: vec![uid],
         layer_id: None,
         color: None,

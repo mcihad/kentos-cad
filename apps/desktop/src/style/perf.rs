@@ -53,6 +53,7 @@ fn layer(id: &str, style: LayerStyle) -> LayerNode {
 
 fn style(color: &str, line_type: LineType, weight: f64) -> LayerStyle {
     LayerStyle {
+        line_pattern: None,
         color: color.into(),
         line_type,
         line_weight: weight,
@@ -165,6 +166,8 @@ fn document(name: String, layers: Vec<LayerNode>, entities: Vec<Entity>) -> Docu
         version: 1,
         name,
         settings: ProjectSettings {
+            line_type_scale: None,
+            line_types: Vec::new(),
             length_style: None,
             named_ucs: Vec::new(),
             named_views: Vec::new(),
@@ -213,6 +216,7 @@ fn ms(t: Instant) -> f64 {
 
 fn look(doc: &Document, screen_scale: f64) -> Look {
     Look {
+        line_types: Default::default(),
         palette: StylePalette::graphite(),
         symbol_scale: screen_scale,
         screen: false,

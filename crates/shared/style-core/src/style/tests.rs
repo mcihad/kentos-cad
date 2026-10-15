@@ -547,6 +547,37 @@ fn equal_styles_share_a_batch_of_origin_relative_segments() {
     );
 }
 
+/// A line type's pattern runs on along a polyline as AutoCAD's PLINEGEN (docs/adr/0313 §4): each segment carries
+/// the distance from the path's start, the same number the desktop's, the web's and the plot's dashes start from,
+/// so a dash cut at a vertex goes on past it; a closed line's closing edge goes on from its last.
+#[test]
+fn a_pattern_runs_on_along_a_path_past_its_vertices() {
+    let p = format!(
+        r##"{{"symbols":{{}},"renderer":null,"sets":[{{"line":{RED}}}],"refs":[],"colors":["#FF0000"],"assets":{{}}}}"##
+    );
+    let path = |closed: bool| Obj {
+        shape: Shape::Polyline {
+            pts: vec![v(0.0, 0.0), v(3.0, 4.0), v(3.0, 10.0)],
+            bulges: None,
+            holes: None,
+            parts: None,
+            closed,
+            widths: None,
+        },
+        attrs: &[],
+        how: [MODE_SET, 0, 0, 0],
+    };
+    let (_, data) = build(&p, &[path(false)], v(0.0, 0.0));
+    let d: Vec<f32> = data.chunks(6).map(|s| s[4]).collect();
+    assert_eq!(d, [0.0, 5.0]);
+    // Only the path's own ends take the caps: 1 the start, 2 the end.
+    let ends: Vec<f32> = data.chunks(6).map(|s| s[5]).collect();
+    assert_eq!(ends, [1.0, 2.0]);
+    let (_, data) = build(&p, &[path(true)], v(0.0, 0.0));
+    let d: Vec<f32> = data.chunks(6).map(|s| s[4]).collect();
+    assert_eq!(d, [0.0, 5.0, 11.0]);
+}
+
 #[test]
 fn dimensions_keep_their_hairlines_at_every_scale() {
     // A rule with a scale range comes first; the dimension after it is not limited by that range.

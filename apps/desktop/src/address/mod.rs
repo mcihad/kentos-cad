@@ -858,6 +858,7 @@ impl App {
         let set = kentos_native_application::set::execute(
             &mut ExecutionContext::new(model),
             EntitiesSetProperties {
+                line_pattern: None,
                 line_type: None,
                 line_type_scale: None,
                 transparency: None,

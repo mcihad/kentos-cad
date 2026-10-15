@@ -79,6 +79,9 @@ pub fn core_entity(e: &Entity) -> CoreEntity {
     if let Some(t) = look.line_type {
         rest.push(("lineType".to_owned(), Json::Str(t.name().to_owned())));
     }
+    if let Some(p) = &look.line_pattern {
+        rest.push(("linePattern".to_owned(), Json::Str(p.clone())));
+    }
     if let Some(s) = look.line_type_scale {
         rest.push(("lineTypeScale".to_owned(), Json::Num(s)));
     }

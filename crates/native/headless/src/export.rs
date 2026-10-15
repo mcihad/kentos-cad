@@ -56,6 +56,7 @@ fn write_layer(doc: &Document, id: &str) -> Option<DxfWriteLayer> {
         up = layers.parent(&group.id);
     }
     Some(DxfWriteLayer {
+        line_pattern: l.style.line_pattern.clone(),
         plot: (!layers.printed(id)).then_some(false),
         frozen: layers.is_frozen(id).then_some(true),
         id: id.to_owned(),
@@ -92,6 +93,9 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
         }
     }
     DxfWriteInput {
+        // The project's line types and their scale (docs/adr/0313 §6).
+        line_type_scale: settings.line_type_scale,
+        line_types: settings.line_types.clone(),
         entities,
         layers: chosen
             .iter()

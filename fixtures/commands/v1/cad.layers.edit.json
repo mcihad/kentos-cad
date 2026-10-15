@@ -5882,6 +5882,2493 @@
       ]
     },
     {
+      "name": "Stil: desen; çizgi tipi desenin en yakın yerleşik tipi; adımı “Çizgi tipi”",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Katman ağacı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "lineTypes": [
+            {
+              "name": "NK",
+              "elements": [
+                {
+                  "length": 5.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 0.0
+                },
+                {
+                  "length": -1.0
+                }
+              ],
+              "unit": "paper"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "kadastro",
+            "name": "Kadastro",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "parsel",
+                "name": "Parsel",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#0090FF",
+                  "lineType": "continuous",
+                  "lineWeight": 0.35
+                },
+                "children": [],
+                "fields": [
+                  {
+                    "name": "Ada",
+                    "kind": "text"
+                  }
+                ]
+              },
+              {
+                "id": "bina",
+                "name": "Bina",
+                "type": "layer",
+                "visible": true,
+                "locked": true,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "yol",
+            "name": "Yol",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "bos",
+            "name": "Boş",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "arsiv",
+            "name": "Arşiv",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": false,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "eski",
+                "name": "Eski",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "altlik",
+            "name": "OpenStreetMap",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "service": {
+              "kind": "xyz",
+              "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+              "maxZoom": 19
+            }
+          },
+          {
+            "id": "koruma",
+            "name": "Koruma alanı",
+            "type": "group",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "sit",
+                "name": "Sit alanı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "parsel",
+        "entities": [
+          {
+            "kind": "polygon",
+            "id": 1,
+            "layerId": "parsel",
+            "color": "#E5484D",
+            "attrs": {
+              "Ada": "101",
+              "Nitelik": "Arsa"
+            },
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400000
+              },
+              {
+                "x": 500040,
+                "y": 4400000
+              },
+              {
+                "x": 500040,
+                "y": 4400030
+              },
+              {
+                "x": 500000,
+                "y": 4400030
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 2,
+            "layerId": "parsel",
+            "attrs": {
+              "Ada": "102"
+            },
+            "pts": [
+              {
+                "x": 500040,
+                "y": 4400000
+              },
+              {
+                "x": 500060,
+                "y": 4400000
+              },
+              {
+                "x": 500060,
+                "y": 4400020
+              },
+              {
+                "x": 500040,
+                "y": 4400020
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 3,
+            "layerId": "bina",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500005,
+                "y": 4400005
+              },
+              {
+                "x": 500015,
+                "y": 4400005
+              },
+              {
+                "x": 500015,
+                "y": 4400015
+              },
+              {
+                "x": 500005,
+                "y": 4400015
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yol",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400040
+            },
+            "b": {
+              "x": 500120,
+              "y": 4400040
+            }
+          },
+          {
+            "kind": "insert",
+            "id": 5,
+            "layerId": "yol",
+            "attrs": {
+              "NO": "A-1"
+            },
+            "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+            "p": {
+              "x": 500050,
+              "y": 4400045
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "point",
+            "id": 6,
+            "layerId": "gizli",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400060
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+            "name": "Ağaç",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "circle",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "c": {
+                  "x": 0,
+                  "y": 0
+                },
+                "r": 1.5
+              }
+            ]
+          },
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2102",
+            "name": "Lamba",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "circle",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "c": {
+                  "x": 0,
+                  "y": 0
+                },
+                "r": 0.25
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "style",
+            "layer": "parsel",
+            "linePattern": "nk"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": true,
+              "objects": 0,
+              "removed": [],
+              "blocks": [],
+              "kept": 0,
+              "revision": "$current",
+              "layer": "parsel"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#0090FF",
+                      "lineType": "dashdot",
+                      "lineWeight": 0.35,
+                      "linePattern": "nk"
+                    },
+                    "children": [],
+                    "fields": [
+                      {
+                        "name": "Ada",
+                        "kind": "text"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": true,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "bos",
+                "name": "Boş",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "arsiv",
+                "name": "Arşiv",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": false,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "eski",
+                    "name": "Eski",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "altlik",
+                "name": "OpenStreetMap",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "service": {
+                  "kind": "xyz",
+                  "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  "maxZoom": 19
+                }
+              },
+              {
+                "id": "koruma",
+                "name": "Koruma alanı",
+                "type": "group",
+                "visible": true,
+                "locked": true,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "sit",
+                    "name": "Sit alanı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "canUndo": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Çizgi tipi",
+          "expect": {
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#0090FF",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": [],
+                    "fields": [
+                      {
+                        "name": "Ada",
+                        "kind": "text"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": true,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "bos",
+                "name": "Boş",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "arsiv",
+                "name": "Arşiv",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": false,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "eski",
+                    "name": "Eski",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "altlik",
+                "name": "OpenStreetMap",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "service": {
+                  "kind": "xyz",
+                  "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  "maxZoom": 19
+                }
+              },
+              {
+                "id": "koruma",
+                "name": "Koruma alanı",
+                "type": "group",
+                "visible": true,
+                "locked": true,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "sit",
+                    "name": "Sit alanı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stil: yerleşik tip tek başına deseni kaldırır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Katman ağacı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "lineTypes": [
+            {
+              "name": "NK",
+              "elements": [
+                {
+                  "length": 5.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 0.0
+                },
+                {
+                  "length": -1.0
+                }
+              ],
+              "unit": "paper"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "kadastro",
+            "name": "Kadastro",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "parsel",
+                "name": "Parsel",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#0090FF",
+                  "lineType": "dashdot",
+                  "lineWeight": 0.35,
+                  "linePattern": "NK"
+                },
+                "children": [],
+                "fields": [
+                  {
+                    "name": "Ada",
+                    "kind": "text"
+                  }
+                ]
+              },
+              {
+                "id": "bina",
+                "name": "Bina",
+                "type": "layer",
+                "visible": true,
+                "locked": true,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "yol",
+            "name": "Yol",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "bos",
+            "name": "Boş",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "arsiv",
+            "name": "Arşiv",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": false,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "eski",
+                "name": "Eski",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "altlik",
+            "name": "OpenStreetMap",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "service": {
+              "kind": "xyz",
+              "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+              "maxZoom": 19
+            }
+          },
+          {
+            "id": "koruma",
+            "name": "Koruma alanı",
+            "type": "group",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "sit",
+                "name": "Sit alanı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "parsel",
+        "entities": [
+          {
+            "kind": "polygon",
+            "id": 1,
+            "layerId": "parsel",
+            "color": "#E5484D",
+            "attrs": {
+              "Ada": "101",
+              "Nitelik": "Arsa"
+            },
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400000
+              },
+              {
+                "x": 500040,
+                "y": 4400000
+              },
+              {
+                "x": 500040,
+                "y": 4400030
+              },
+              {
+                "x": 500000,
+                "y": 4400030
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 2,
+            "layerId": "parsel",
+            "attrs": {
+              "Ada": "102"
+            },
+            "pts": [
+              {
+                "x": 500040,
+                "y": 4400000
+              },
+              {
+                "x": 500060,
+                "y": 4400000
+              },
+              {
+                "x": 500060,
+                "y": 4400020
+              },
+              {
+                "x": 500040,
+                "y": 4400020
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 3,
+            "layerId": "bina",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500005,
+                "y": 4400005
+              },
+              {
+                "x": 500015,
+                "y": 4400005
+              },
+              {
+                "x": 500015,
+                "y": 4400015
+              },
+              {
+                "x": 500005,
+                "y": 4400015
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yol",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400040
+            },
+            "b": {
+              "x": 500120,
+              "y": 4400040
+            }
+          },
+          {
+            "kind": "insert",
+            "id": 5,
+            "layerId": "yol",
+            "attrs": {
+              "NO": "A-1"
+            },
+            "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+            "p": {
+              "x": 500050,
+              "y": 4400045
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "point",
+            "id": 6,
+            "layerId": "gizli",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400060
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+            "name": "Ağaç",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "circle",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "c": {
+                  "x": 0,
+                  "y": 0
+                },
+                "r": 1.5
+              }
+            ]
+          },
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2102",
+            "name": "Lamba",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "circle",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "c": {
+                  "x": 0,
+                  "y": 0
+                },
+                "r": 0.25
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "style",
+            "layer": "parsel",
+            "lineType": "dashed"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": true,
+              "objects": 0,
+              "removed": [],
+              "blocks": [],
+              "kept": 0,
+              "revision": "$current",
+              "layer": "parsel"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#0090FF",
+                      "lineType": "dashed",
+                      "lineWeight": 0.35
+                    },
+                    "children": [],
+                    "fields": [
+                      {
+                        "name": "Ada",
+                        "kind": "text"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": true,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "bos",
+                "name": "Boş",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "arsiv",
+                "name": "Arşiv",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": false,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "eski",
+                    "name": "Eski",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "altlik",
+                "name": "OpenStreetMap",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "service": {
+                  "kind": "xyz",
+                  "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  "maxZoom": 19
+                }
+              },
+              {
+                "id": "koruma",
+                "name": "Koruma alanı",
+                "type": "group",
+                "visible": true,
+                "locked": true,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "sit",
+                    "name": "Sit alanı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stil: desen null deseni kaldırır, çizgi tipi kalır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Katman ağacı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "lineTypes": [
+            {
+              "name": "NK",
+              "elements": [
+                {
+                  "length": 5.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 0.0
+                },
+                {
+                  "length": -1.0
+                }
+              ],
+              "unit": "paper"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "kadastro",
+            "name": "Kadastro",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "parsel",
+                "name": "Parsel",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#0090FF",
+                  "lineType": "dashdot",
+                  "lineWeight": 0.35,
+                  "linePattern": "NK"
+                },
+                "children": [],
+                "fields": [
+                  {
+                    "name": "Ada",
+                    "kind": "text"
+                  }
+                ]
+              },
+              {
+                "id": "bina",
+                "name": "Bina",
+                "type": "layer",
+                "visible": true,
+                "locked": true,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "yol",
+            "name": "Yol",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "bos",
+            "name": "Boş",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "arsiv",
+            "name": "Arşiv",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": false,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "eski",
+                "name": "Eski",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "altlik",
+            "name": "OpenStreetMap",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "service": {
+              "kind": "xyz",
+              "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+              "maxZoom": 19
+            }
+          },
+          {
+            "id": "koruma",
+            "name": "Koruma alanı",
+            "type": "group",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "sit",
+                "name": "Sit alanı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "parsel",
+        "entities": [
+          {
+            "kind": "polygon",
+            "id": 1,
+            "layerId": "parsel",
+            "color": "#E5484D",
+            "attrs": {
+              "Ada": "101",
+              "Nitelik": "Arsa"
+            },
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400000
+              },
+              {
+                "x": 500040,
+                "y": 4400000
+              },
+              {
+                "x": 500040,
+                "y": 4400030
+              },
+              {
+                "x": 500000,
+                "y": 4400030
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 2,
+            "layerId": "parsel",
+            "attrs": {
+              "Ada": "102"
+            },
+            "pts": [
+              {
+                "x": 500040,
+                "y": 4400000
+              },
+              {
+                "x": 500060,
+                "y": 4400000
+              },
+              {
+                "x": 500060,
+                "y": 4400020
+              },
+              {
+                "x": 500040,
+                "y": 4400020
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 3,
+            "layerId": "bina",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500005,
+                "y": 4400005
+              },
+              {
+                "x": 500015,
+                "y": 4400005
+              },
+              {
+                "x": 500015,
+                "y": 4400015
+              },
+              {
+                "x": 500005,
+                "y": 4400015
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yol",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400040
+            },
+            "b": {
+              "x": 500120,
+              "y": 4400040
+            }
+          },
+          {
+            "kind": "insert",
+            "id": 5,
+            "layerId": "yol",
+            "attrs": {
+              "NO": "A-1"
+            },
+            "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+            "p": {
+              "x": 500050,
+              "y": 4400045
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "point",
+            "id": 6,
+            "layerId": "gizli",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400060
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+            "name": "Ağaç",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "circle",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "c": {
+                  "x": 0,
+                  "y": 0
+                },
+                "r": 1.5
+              }
+            ]
+          },
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2102",
+            "name": "Lamba",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "circle",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "c": {
+                  "x": 0,
+                  "y": 0
+                },
+                "r": 0.25
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "style",
+            "layer": "parsel",
+            "linePattern": null
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": true,
+              "objects": 0,
+              "removed": [],
+              "blocks": [],
+              "kept": 0,
+              "revision": "$current",
+              "layer": "parsel"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#0090FF",
+                      "lineType": "dashdot",
+                      "lineWeight": 0.35
+                    },
+                    "children": [],
+                    "fields": [
+                      {
+                        "name": "Ada",
+                        "kind": "text"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": true,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "bos",
+                "name": "Boş",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "arsiv",
+                "name": "Arşiv",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": false,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "eski",
+                    "name": "Eski",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "altlik",
+                "name": "OpenStreetMap",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "service": {
+                  "kind": "xyz",
+                  "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  "maxZoom": 19
+                }
+              },
+              {
+                "id": "koruma",
+                "name": "Koruma alanı",
+                "type": "group",
+                "visible": true,
+                "locked": true,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "sit",
+                    "name": "Sit alanı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stil: desen projede yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "style",
+            "layer": "parsel",
+            "linePattern": "YOK"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "line_type_not_found",
+              "message": "“YOK” adlı çizgi tipi projede yok. Çizgi tipleri penceresinden yükleyin ya da var olan bir adı verin.",
+              "path": "linePattern"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#0090FF",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": [],
+                    "fields": [
+                      {
+                        "name": "Ada",
+                        "kind": "text"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": true,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "bos",
+                "name": "Boş",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "arsiv",
+                "name": "Arşiv",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": false,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "eski",
+                    "name": "Eski",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "altlik",
+                "name": "OpenStreetMap",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "service": {
+                  "kind": "xyz",
+                  "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  "maxZoom": 19
+                }
+              },
+              {
+                "id": "koruma",
+                "name": "Koruma alanı",
+                "type": "group",
+                "visible": true,
+                "locked": true,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "sit",
+                    "name": "Sit alanı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Katman ağacı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "lineTypes": [
+            {
+              "name": "NK",
+              "elements": [
+                {
+                  "length": 5.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 0.0
+                },
+                {
+                  "length": -1.0
+                }
+              ],
+              "unit": "paper"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "kadastro",
+            "name": "Kadastro",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "parsel",
+                "name": "Parsel",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#0090FF",
+                  "lineType": "continuous",
+                  "lineWeight": 0.35
+                },
+                "children": [],
+                "fields": [
+                  {
+                    "name": "Ada",
+                    "kind": "text"
+                  }
+                ]
+              },
+              {
+                "id": "bina",
+                "name": "Bina",
+                "type": "layer",
+                "visible": true,
+                "locked": true,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "yol",
+            "name": "Yol",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "bos",
+            "name": "Boş",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "arsiv",
+            "name": "Arşiv",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": false,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "eski",
+                "name": "Eski",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "altlik",
+            "name": "OpenStreetMap",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "service": {
+              "kind": "xyz",
+              "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+              "maxZoom": 19
+            }
+          },
+          {
+            "id": "koruma",
+            "name": "Koruma alanı",
+            "type": "group",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "sit",
+                "name": "Sit alanı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "parsel",
+        "entities": [
+          {
+            "kind": "polygon",
+            "id": 1,
+            "layerId": "parsel",
+            "color": "#E5484D",
+            "attrs": {
+              "Ada": "101",
+              "Nitelik": "Arsa"
+            },
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400000
+              },
+              {
+                "x": 500040,
+                "y": 4400000
+              },
+              {
+                "x": 500040,
+                "y": 4400030
+              },
+              {
+                "x": 500000,
+                "y": 4400030
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 2,
+            "layerId": "parsel",
+            "attrs": {
+              "Ada": "102"
+            },
+            "pts": [
+              {
+                "x": 500040,
+                "y": 4400000
+              },
+              {
+                "x": 500060,
+                "y": 4400000
+              },
+              {
+                "x": 500060,
+                "y": 4400020
+              },
+              {
+                "x": 500040,
+                "y": 4400020
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 3,
+            "layerId": "bina",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500005,
+                "y": 4400005
+              },
+              {
+                "x": 500015,
+                "y": 4400005
+              },
+              {
+                "x": 500015,
+                "y": 4400015
+              },
+              {
+                "x": 500005,
+                "y": 4400015
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yol",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400040
+            },
+            "b": {
+              "x": 500120,
+              "y": 4400040
+            }
+          },
+          {
+            "kind": "insert",
+            "id": 5,
+            "layerId": "yol",
+            "attrs": {
+              "NO": "A-1"
+            },
+            "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+            "p": {
+              "x": 500050,
+              "y": 4400045
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "point",
+            "id": 6,
+            "layerId": "gizli",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400060
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+            "name": "Ağaç",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "circle",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "c": {
+                  "x": 0,
+                  "y": 0
+                },
+                "r": 1.5
+              }
+            ]
+          },
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2102",
+            "name": "Lamba",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "circle",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "c": {
+                  "x": 0,
+                  "y": 0
+                },
+                "r": 0.25
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "name": "Stil: katmansız",
       "steps": [
         {

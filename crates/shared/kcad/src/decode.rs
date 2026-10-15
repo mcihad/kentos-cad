@@ -436,6 +436,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let (mut custom_crs, mut second_custom_crs, mut datum_transforms) = (None, None, Vec::new());
     let mut survey = None;
     let mut layer_states = Vec::new();
+    let (mut line_types, mut line_type_scale) = (Vec::new(), None);
     let mut topology = None;
     let mut annotation = None;
     let mut connections = Vec::new();
@@ -468,6 +469,40 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 )?)
             }
             "plotScale" => plot_scale = Some(r.float()?),
+            // Schema 56 (docs/adr/0313 §1): the project's line types and line type scale.
+            "lineTypes" if has.patterns => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let types: Vec<kentos_contracts::LineTypeDef> = serde_json::from_value(value)
+                    .map_err(|e| {
+                        r.fail_at(Code::BadValue, at, &format!("çizgi tipleri okunamadı: {e}"))
+                    })?;
+                if types.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boş liste yazılmaz; çizgi tipi yoksa alan hiç yazılmaz",
+                    ));
+                }
+                if let Some(problem) = kentos_contracts::line_types_problem(&types) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                line_types = types;
+            }
+            "lineTypeScale" if has.patterns => {
+                let at = r.position();
+                let s = r.float()?;
+                if !(s.is_finite() && s > 0.0 && s <= kentos_contracts::MAX_LINE_TYPE_SCALE)
+                    || s == 1.0
+                {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "çizgi tipi ölçeği 0'dan büyük ve en çok 1000 olmalı; 1 yazılmaz",
+                    ));
+                }
+                line_type_scale = Some(s);
+            }
             "workspace" => {
                 workspace = Some(named(
                     r,
@@ -530,7 +565,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "datumTransforms" if has.custom_crs => datum_transforms = crs::datum_transforms(r)?,
             "survey" if has.survey => survey = Some(survey_settings(r, has)?),
             "layerStates" if has.layer_states => {
-                layer_states = layer_states_list(r, has.labels, has.frozen)?
+                layer_states = layer_states_list(r, has.labels, has.frozen, has.patterns)?
             }
             "topology" if has.topology => topology = Some(topology_settings(r)?),
             "annotation" if has.annotation => annotation = Some(annotation_heights(r)?),
@@ -601,6 +636,8 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         ));
     }
     Ok(ProjectSettings {
+        line_type_scale,
+        line_types,
         srid,
         length_decimals: required(r, length_decimals, "lengthDecimals")?,
         area_decimals: required(r, area_decimals, "areaDecimals")?,
@@ -753,6 +790,7 @@ fn layer_states_list(
     r: &mut Reader<'_>,
     engine: bool,
     frozen: bool,
+    patterns: bool,
 ) -> Result<Vec<LayerState>, KcadError> {
     let at = r.position();
     let all = list(r, |r, _| {
@@ -761,7 +799,11 @@ fn layer_states_list(
             match key {
                 "id" => id = Some(text(r)?),
                 "name" => name = Some(text(r)?),
-                "nodes" => nodes = Some(list(r, |r, _| layer_state_node(r, engine, frozen))?),
+                "nodes" => {
+                    nodes = Some(list(r, |r, _| {
+                        layer_state_node(r, engine, frozen, patterns)
+                    })?)
+                }
                 _ => return Err(unknown(r)),
             }
             Ok(())
@@ -783,6 +825,7 @@ fn layer_state_node(
     r: &mut Reader<'_>,
     engine: bool,
     frozen_too: bool,
+    patterns: bool,
 ) -> Result<LayerStateNode, KcadError> {
     let (mut node, mut visible, mut locked, mut style) = (None, None, None, None);
     let (mut frozen, mut plot) = (None, None);
@@ -790,7 +833,7 @@ fn layer_state_node(
         match key {
             "node" => node = Some(text(r)?),
             "plot" if frozen_too => plot = Some(r.bool()?),
-            "style" => style = Some(layer_style(r, engine)?),
+            "style" => style = Some(layer_style(r, engine, patterns)?),
             "frozen" if frozen_too => frozen = Some(r.bool()?),
             "locked" => locked = Some(r.bool()?),
             "visible" => visible = Some(r.bool()?),
@@ -958,7 +1001,7 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
                     ],
                 )?)
             }
-            "style" => style = Some(layer_style(r, has.labels)?),
+            "style" => style = Some(layer_style(r, has.labels, has.patterns)?),
             "locked" => locked = Some(r.bool()?),
             "visible" => visible = Some(r.bool()?),
             "children" => children = Some(list(r, |r, _| layer(r, has))?),
@@ -1192,8 +1235,9 @@ pub(super) fn line_type_named(r: &mut Reader<'_>) -> Result<LineType, KcadError>
     )
 }
 
-fn layer_style(r: &mut Reader<'_>, engine: bool) -> Result<LayerStyle, KcadError> {
+fn layer_style(r: &mut Reader<'_>, engine: bool, patterns: bool) -> Result<LayerStyle, KcadError> {
     let (mut fill, mut color, mut label, mut point_) = (None, None, None, None);
+    let mut pattern = None;
     let mut labels = None;
     let (mut line_type, mut renderer, mut line_weight, mut pick_interior) =
         (None, None, None, None);
@@ -1205,6 +1249,7 @@ fn layer_style(r: &mut Reader<'_>, engine: bool) -> Result<LayerStyle, KcadError
             "labels" if engine => labels = Some(labels::layer_labels(r)?),
             "point" => point_ = Some(point_style(r)?),
             "lineType" => line_type = Some(line_type_named(r)?),
+            "linePattern" if patterns => pattern = Some(text(r)?),
             "renderer" => {
                 if r.next_is_null() {
                     return Err(r.fail(
@@ -1221,6 +1266,7 @@ fn layer_style(r: &mut Reader<'_>, engine: bool) -> Result<LayerStyle, KcadError
         Ok(())
     })?;
     Ok(LayerStyle {
+        line_pattern: pattern,
         color: required(r, color, "color")?,
         line_type: required(r, line_type, "lineType")?,
         line_weight: required(r, line_weight, "lineWeight")?,

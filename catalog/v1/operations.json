@@ -1058,6 +1058,13 @@
       ],
       "note": "Standart ve dört seçenek komuta verilir; pencerenin önizlemesi komutun planıdır (ADR 0312 §3)."
     },
+    "lineTypes.manage": {
+      "level": "semantic",
+      "via": [
+        "cad.linetypes.edit"
+      ],
+      "note": "Yükleme, silme, dışa aktarma ve ölçek komuta verilir; katmana ve nesneye desen cad.layers.edit ve cad.entities.set ile (ADR 0313)."
+    },
     "tool.layerFreeze": {
       "level": "semantic",
       "via": [

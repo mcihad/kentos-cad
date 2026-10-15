@@ -41,6 +41,11 @@ attachments?: Array<Attachment>,
  */
 lineType?: LineType, 
 /**
+ * Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+ * `line_type`.
+ */
+linePattern?: string, 
+/**
  * Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own.
  */
 lineTypeScale?: number, 

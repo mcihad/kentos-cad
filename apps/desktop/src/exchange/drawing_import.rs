@@ -639,6 +639,7 @@ impl App {
                         style: Box::new(LayerStyle {
                             color: l.color.clone(),
                             line_type: l.line_type,
+                            line_pattern: l.line_pattern.clone(),
                             // The web's `...(l.lineWeight ? { lineWeight } : {})`: none or 0 is the default.
                             line_weight: l
                                 .line_weight
@@ -775,6 +776,8 @@ impl App {
         let styles = Styles {
             text: result.text_styles.clone(),
             dimension: result.dimension_styles.clone(),
+            line_types: result.line_types.clone(),
+            line_type_scale: result.line_type_scale,
         };
         let Some(doc) = &mut self.document else {
             return Task::none();

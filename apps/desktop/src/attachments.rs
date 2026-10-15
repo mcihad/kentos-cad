@@ -385,6 +385,7 @@ impl App {
             return false;
         };
         let input = EntitiesSetProperties {
+            line_pattern: None,
             line_type: None,
             line_type_scale: None,
             transparency: None,

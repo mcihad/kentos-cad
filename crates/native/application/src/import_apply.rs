@@ -78,6 +78,9 @@ pub struct Applied {
 pub struct Styles {
     pub text: Vec<TextStyleDef>,
     pub dimension: Vec<DimensionStyleDef>,
+    /// The file's line types with patterns and its line type scale (docs/adr/0313 §6).
+    pub line_types: Vec<kentos_contracts::LineTypeDef>,
+    pub line_type_scale: Option<f64>,
 }
 
 /// The styles ready to go in (docs/adr/0183 §7; the web's `importedStyles`):
@@ -91,6 +94,10 @@ struct ImportedStyles {
     ids: HashMap<String, Option<String>>,
     text: Vec<TextStyleDef>,
     dimension: Vec<DimensionStyleDef>,
+    /// The file's line types the project lacks (a name it has is its own), and the scale when it has none
+    /// (docs/adr/0313 §6).
+    line_types: Vec<kentos_contracts::LineTypeDef>,
+    line_type_scale: Option<f64>,
 }
 
 /// Two style names the same, case aside (the tables' rule).
@@ -153,6 +160,22 @@ impl ImportedStyles {
             };
             out.ids.insert(read, id);
         }
+        for t in styles.line_types {
+            let known = settings
+                .line_types
+                .iter()
+                .chain(&out.line_types)
+                .any(|p| kentos_contracts::same_line_type_name(&p.name, &t.name));
+            let mut table = settings.line_types.clone();
+            table.extend(out.line_types.iter().cloned());
+            table.push(t.clone());
+            if !known && kentos_contracts::line_types_problem(&table).is_none() {
+                out.line_types.push(t);
+            }
+        }
+        out.line_type_scale = styles.line_type_scale.filter(|s| {
+            settings.line_type_scale.is_none() && *s <= kentos_contracts::MAX_LINE_TYPE_SCALE
+        });
         out
     }
 
@@ -170,10 +193,14 @@ impl ImportedStyles {
     /// (docs/adr/0183 §1); undoing the import leaves them, unused.
     fn add(&mut self, doc: &mut Document) -> (usize, usize) {
         let added = (self.text.len(), self.dimension.len());
-        if added != (0, 0) {
+        if added != (0, 0) || !self.line_types.is_empty() || self.line_type_scale.is_some() {
             let mut settings = doc.settings().clone();
             settings.text_styles.append(&mut self.text);
             settings.dimension_styles.append(&mut self.dimension);
+            settings.line_types.append(&mut self.line_types);
+            if let Some(s) = self.line_type_scale.take() {
+                settings.line_type_scale = Some(s);
+            }
             doc.set_settings(settings);
         }
         added
@@ -1374,6 +1401,8 @@ mod tests {
         let mut def = block(1, "Pafta", None);
         def.entities.push(text_in("", "dxf-text-2"));
         let styles = Styles {
+            line_type_scale: None,
+            line_types: Vec::new(),
             text: vec![
                 text_style("dxf-text-1", "ADA NO"),
                 text_style("dxf-text-2", "Yol adı"),

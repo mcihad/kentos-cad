@@ -135,6 +135,9 @@ impl SheetMaps {
         }
         let origin = scene::scene_origin(doc);
         let look = crate::style::scene::Look {
+            line_types: std::sync::Arc::new(kentos_native_style::line_types::LineTypes::of(
+                doc.model.settings(),
+            )),
             palette: crate::sheet_pdf::paper_style(),
             symbol_scale: f64::from(scale.max(1)),
             screen: false,

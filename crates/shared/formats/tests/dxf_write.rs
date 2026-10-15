@@ -59,6 +59,7 @@ fn layer(
     weight: f64,
 ) -> DxfWriteLayer {
     DxfWriteLayer {
+        line_pattern: None,
         frozen: None,
         plot: None,
         id: id.into(),
@@ -497,6 +498,8 @@ fn input(entities: Vec<Entity>) -> DxfWriteInput {
         })
         .collect();
     DxfWriteInput {
+        line_type_scale: None,
+        line_types: Vec::new(),
         entities,
         layers: layers(),
         scale: 1000.0,
@@ -1003,6 +1006,8 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
         }),
     ];
     let (text, report) = write(&DxfWriteInput {
+        line_type_scale: None,
+        line_types: Vec::new(),
         entities: entities.clone(),
         layers,
         scale: 500.0,
@@ -1060,6 +1065,8 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
 #[test]
 fn nothing_to_write_is_still_a_file_autocad_opens() {
     let (text, report) = write(&DxfWriteInput {
+        line_type_scale: None,
+        line_types: Vec::new(),
         entities: Vec::new(),
         layers: Vec::new(),
         scale: 1000.0,
@@ -1145,7 +1152,8 @@ fn fnv64(bytes: &[u8]) -> u64 {
 /// A drawing without elevations is the file it was before elevations were
 /// (docs/adr/0142): the same bytes, so nothing an old reader was given changes.
 /// The length and fingerprint are those the writer gave for `objects()` before
-/// the elevations existed (without the NURBS curves, which came later, docs/adr/0259).
+/// the elevations existed (without the NURBS curves, which came later, docs/adr/0259), with one change since: a
+/// polyline's 70 carries PLINEGEN (128; docs/adr/0313 §5), two bytes more in each of its six polylines' groups.
 #[test]
 fn a_drawing_without_elevations_is_written_byte_for_byte_as_before() {
     let old: Vec<Entity> = objects()
@@ -1153,7 +1161,7 @@ fn a_drawing_without_elevations_is_written_byte_for_byte_as_before() {
         .filter(|e| !matches!(e, Entity::Nurbs(_)))
         .collect();
     let (bytes, report) = dxf::write(&input(old));
-    assert_eq!((bytes.len(), fnv64(&bytes)), (38014, 0x5452_5a32_43b1_f0e6));
+    assert_eq!((bytes.len(), fnv64(&bytes)), (38026, 0xd2ba_382a_1ed2_50d0));
     // And it says nothing of elevations.
     assert!(
         report
@@ -3044,4 +3052,132 @@ fn an_objects_look_and_a_layers_plot_go_out_and_come_back() {
             .filter(|l| l.name != "Yapı")
             .all(|l| l.plot.is_none())
     );
+}
+
+/// The project's line types go out as LTYPE records and come back as the project's (docs/adr/0313 §6): a drawing
+/// pattern as it is, a paper one in drawing units at the plot scale, a text attached to the element before it with
+/// the Standard style, a shape left out and said; the layers and objects name them; $LTSCALE the project's.
+#[test]
+fn line_types_with_patterns_go_out_and_come_back() {
+    use kentos_contracts::{
+        LineTypeDef, PatternElement, PatternPlace, PatternShape, PatternText, PatternUnit,
+    };
+    let plain = |l: f64| PatternElement {
+        length: l,
+        text: None,
+        shape: None,
+    };
+    let place = PatternPlace {
+        scale: 0.1,
+        rotation: 0.0,
+        absolute: false,
+        upright: false,
+        x: -0.1,
+        y: -0.05,
+    };
+    let gaz = LineTypeDef {
+        name: "GAZ".into(),
+        description: "Gaz hattı".into(),
+        elements: vec![
+            plain(0.5),
+            plain(-0.2),
+            PatternElement {
+                length: 0.0,
+                text: Some(PatternText {
+                    text: "GAZ".into(),
+                    style: "STANDARD".into(),
+                    place: place.clone(),
+                }),
+                shape: None,
+            },
+            plain(-0.25),
+        ],
+        unit: PatternUnit::Drawing,
+        source: Some("deneme.lin".into()),
+    };
+    let sinir = LineTypeDef {
+        name: "SINIR".into(),
+        description: String::new(),
+        elements: vec![
+            plain(0.25),
+            plain(-0.1),
+            PatternElement {
+                length: 0.0,
+                text: None,
+                shape: Some(PatternShape {
+                    name: "CIRC1".into(),
+                    file: "ltypeshp.shx".into(),
+                    place,
+                }),
+            },
+            plain(-0.1),
+        ],
+        unit: PatternUnit::Drawing,
+        source: None,
+    };
+    let ince = LineTypeDef {
+        name: "KESIK-INCE".into(),
+        description: String::new(),
+        elements: vec![plain(2.0), plain(-1.0)],
+        unit: PatternUnit::Paper,
+        source: None,
+    };
+    let mut base = base("parsel");
+    base.look.line_pattern = Some("KESIK-INCE".into());
+    base.look.line_type = Some(LineType::Dashed);
+    let l = LineEntity {
+        base,
+        a: Vec2 { x: 0.0, y: 0.0 },
+        b: Vec2 { x: 10.0, y: 0.0 },
+        za: None,
+        zb: None,
+        ma: None,
+        mb: None,
+    };
+    let mut input = input(vec![Entity::Line(l)]);
+    input.layers[0].line_pattern = Some("GAZ".into());
+    input.layers[0].line_type = LineType::Dashed;
+    input.line_types = vec![gaz.clone(), sinir, ince];
+    input.line_type_scale = Some(2.5);
+    let (text, report) = write(&input);
+    assert!(
+        report
+            .notes
+            .iter()
+            .any(|n| n.what == "Çizgi tipi" && n.reason.contains("SINIR")),
+        "the shape is said: {:?}",
+        report.notes
+    );
+    let r = dxf::read(text.as_bytes(), &DxfReadOptions::default()).expect("reads");
+    assert_eq!(r.line_type_scale, Some(2.5));
+    let names: Vec<&str> = r.line_types.iter().map(|t| t.name.as_str()).collect();
+    assert!(
+        names.starts_with(&["GAZ", "SINIR", "KESIK-INCE"]),
+        "{names:?}"
+    );
+    // The drawing pattern as it was, its text's style the Standard record's name.
+    let back = &r.line_types[0];
+    assert_eq!(back.elements.len(), 4);
+    assert_eq!(back.elements[0].length, 0.5);
+    let t = back.elements[2].text.as_ref().expect("its text");
+    assert_eq!((t.text.as_str(), t.style.as_str()), ("GAZ", "STANDARD"));
+    assert_eq!((t.place.scale, t.place.x, t.place.y), (0.1, -0.1, -0.05));
+    // The paper pattern: 2 mm and 1 mm at 1:1000 are 2 m and 1 m in the drawing.
+    let paper = &r.line_types[2];
+    assert_eq!(paper.unit, PatternUnit::Drawing);
+    assert_eq!(
+        paper.elements.iter().map(|e| e.length).collect::<Vec<_>>(),
+        [2.0, -1.0]
+    );
+    let layer = r
+        .layers
+        .iter()
+        .find(|l| l.name == "Parsel sınırı")
+        .expect("the layer");
+    assert_eq!(layer.line_pattern.as_deref(), Some("GAZ"));
+    assert_eq!(
+        r.entities[0].base().look.line_pattern.as_deref(),
+        Some("KESIK-INCE")
+    );
+    assert_eq!(r.entities[0].base().look.line_type, Some(LineType::Dashed));
 }

@@ -283,6 +283,7 @@ impl App {
         };
         let text = |key: &str| set.get(key).map(|v| v.as_str().map(str::to_owned));
         let input = EntitiesSetProperties {
+            line_pattern: None,
             line_type: None,
             line_type_scale: None,
             transparency: None,

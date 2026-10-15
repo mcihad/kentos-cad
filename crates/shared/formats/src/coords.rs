@@ -713,6 +713,8 @@ pub fn read(bytes: &[u8], opts: &CoordReadOptions) -> CoordRead {
         bounds,
         result: opts.entities.then(|| {
             let mut result = ImportResult {
+                line_type_scale: None,
+                line_types: Vec::new(),
                 entities,
                 layers: Vec::new(),
                 report: report.import(),

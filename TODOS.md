@@ -170,6 +170,12 @@ Liste:
   uyarıları komutun sözleri; paralel iki doğruya TTY, saat yönünde verilen yaydan Devam; araç durumları
   `fixtures/curve-methods/v1/tools.json`. Web'in donmuş çağrı kayıtları eski `arcStartCenterEnd` ve `arcStartCenterAngle`'ı (tam tur)
   tutar; geri dönüşte komutun kuralına getirilir.
+- [ ] `CAD-STYLE-08`, `09`, `10`, `11` çizgi tipleri (ADR 0313, 15 Ekim): web'de gerekenler: `.kcad` şema 56'nın `lineTypes`,
+  `lineTypeScale` ve `linePattern`'ı (web'in kopyası 55'te), `cad.linetypes.edit`'in TS işleyicisi (LIN okuyucu ve yazıcı WASM'la
+  `kentos_formats::lin`'den), `cad.layers.edit` ve `cad.entities.set`'in `linePattern`'ı; web'in stil motoru bağında
+  `BuildOptions.line_types` (desenin kâğıt mm'si `dashes_of`, LTSCALE) ve bloğun parçasının deseni; Çizgi tipleri penceresi, Öznitelikler'in
+  ve Katmanlar'ın Çizgi tipi listeleri; DXF'i ortak çekirdek yazar ve okur. SHX şekillerinin ve desendeki yazıların çizilmesi iki
+  platformda ayrı iştir.
 - [ ] `CAD-STYLE-03`, `06`, `07`, `16` çizim standardı, görünüşün kaynağı ve kâğıdın renkleri (ADR 0312, 15 Ekim): web'de gerekenler:
   `cad.standards.check` ve `.apply`'ın TS işleyicileri (yerleşik standart sözleşmenin `built_in_standard`'ından ya da web'in kendi
   kopyasıyla), Çizim standardı penceresi ve şeridin Standart paneli; web'in çizim hattında blok parçasının çizgi tipi, ölçeği ve

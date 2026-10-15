@@ -133,6 +133,9 @@ pub fn vector_content(
         view_build: Default::default(),
         view_colors: Default::default(),
         reading_unit: kentos_native_style::reading_unit(doc.settings()),
+        line_types: std::sync::Arc::new(kentos_native_style::line_types::LineTypes::of(
+            doc.settings(),
+        )),
     };
     let clip = Bounds {
         min_x: reach[0],

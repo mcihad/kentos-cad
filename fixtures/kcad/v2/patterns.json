@@ -1,0 +1,225 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Çizgi tipleri",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 100.0,
+    "workspace": "cad",
+    "lineTypes": [
+      {
+        "name": "GAZ",
+        "description": "Gaz hattı ---- GAZ ----",
+        "elements": [
+          {
+            "length": 0.5
+          },
+          {
+            "length": -0.2
+          },
+          {
+            "length": 0.0,
+            "text": {
+              "text": "GAZ",
+              "style": "STANDARD",
+              "scale": 0.1,
+              "x": -0.1,
+              "y": -0.05
+            }
+          },
+          {
+            "length": -0.25
+          }
+        ],
+        "unit": "drawing",
+        "source": "deneme.lin"
+      },
+      {
+        "name": "SINIR",
+        "elements": [
+          {
+            "length": 0.25
+          },
+          {
+            "length": -0.1
+          },
+          {
+            "length": 0.0,
+            "shape": {
+              "name": "CIRC1",
+              "file": "ltypeshp.shx",
+              "scale": 0.1,
+              "rotation": 90.0,
+              "absolute": true,
+              "x": -0.1
+            }
+          },
+          {
+            "length": -0.1
+          },
+          {
+            "length": 1.0
+          }
+        ],
+        "unit": "drawing",
+        "source": "deneme.lin"
+      },
+      {
+        "name": "KESIK-İNCE",
+        "description": "Kâğıtta 2 mm çizgi, 1 mm boşluk",
+        "elements": [
+          {
+            "length": 2.0
+          },
+          {
+            "length": -1.0
+          }
+        ],
+        "unit": "paper"
+      }
+    ],
+    "lineTypeScale": 2.5,
+    "layerStates": [
+      {
+        "id": "durum-1",
+        "name": "Pafta",
+        "nodes": [
+          {
+            "node": "su",
+            "visible": true,
+            "locked": false,
+            "style": {
+              "color": "#4AA3DF",
+              "lineType": "dashed",
+              "linePattern": "KESIK-İNCE",
+              "lineWeight": 0.25
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "gaz",
+      "name": "GAZ",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#F5A524",
+        "lineType": "dashed",
+        "linePattern": "GAZ",
+        "lineWeight": 0.35
+      },
+      "children": []
+    },
+    {
+      "id": "su",
+      "name": "SU",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#4AA3DF",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "gaz",
+  "blocks": [
+    {
+      "id": "0192f5a1-2800-7000-8000-0000000000b1",
+      "name": "Vana",
+      "base": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "entities": [
+        {
+          "kind": "line",
+          "id": 1,
+          "layerId": "su",
+          "attrs": {},
+          "lineType": "dashdot",
+          "linePattern": "SINIR",
+          "a": {
+            "x": -1.0,
+            "y": 0.0
+          },
+          "b": {
+            "x": 1.0,
+            "y": 0.0
+          }
+        }
+      ]
+    }
+  ],
+  "entities": [
+    {
+      "kind": "line",
+      "id": 1,
+      "layerId": "gaz",
+      "attrs": {},
+      "a": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "b": {
+        "x": 20.0,
+        "y": 0.0
+      }
+    },
+    {
+      "kind": "line",
+      "id": 2,
+      "layerId": "su",
+      "attrs": {},
+      "lineType": "dashed",
+      "linePattern": "KESIK-İNCE",
+      "lineTypeScale": 0.5,
+      "a": {
+        "x": 0.0,
+        "y": 5.0
+      },
+      "b": {
+        "x": 20.0,
+        "y": 5.0
+      }
+    },
+    {
+      "kind": "insert",
+      "id": 3,
+      "layerId": "su",
+      "attrs": {},
+      "block": "0192f5a1-2800-7000-8000-0000000000b1",
+      "p": {
+        "x": 10.0,
+        "y": 5.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+    }
+  ],
+  "uids": [
+    "0192f5a1-2800-7000-8000-000000000001",
+    "0192f5a1-2800-7000-8000-000000000002",
+    "0192f5a1-2800-7000-8000-000000000003"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

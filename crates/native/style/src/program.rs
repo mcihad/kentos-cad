@@ -30,9 +30,7 @@ pub use kentos_native_application::expression_unit::{Unit as ReadingUnit, readin
 use kentos_native_application::geometry::{edit_geometry, entity_of};
 
 use crate::library::StyleLibrary;
-use crate::simple::{
-    Stroke, hatch_symbol_of, leader_symbols_of, symbols_of_layer_style, symbols_of_object,
-};
+use crate::simple::{Stroke, hatch_symbol_of, leader_symbols_of, symbols_of_layer_style};
 use crate::table::{ExprTable, expr_table};
 
 /// Metres of paper per CSS pixel at 96 dpi (0.26458 mm), as the web's `METRES_PER_PX`.
@@ -84,6 +82,8 @@ pub struct BuildOptions<'a> {
     /// The layers' looks by id, for a block's pieces that follow their own
     /// layer (`byLayer`, docs/adr/0260 §1); none: they take the insert's.
     pub layer_styles: Option<&'a std::collections::HashMap<String, LayerStyle>>,
+    /// The project's line types and line type scale (docs/adr/0313 §3); none: the built-in types as they are.
+    pub line_types: Option<&'a crate::line_types::LineTypes>,
 }
 
 /// What the page gives the core for a layer: the program's JSON, the
@@ -212,12 +212,15 @@ struct Interned {
     ref_index: HashMap<String, i32>,
     /// The simple look's set by colour and line weight (its bits).
     simple: HashMap<(String, u64), i32>,
-    /// An object's own stroke's set by colour, weight and stroke (docs/adr/0260).
+    /// An object's own stroke's set by colour, weight, stroke and pattern (docs/adr/0260, 0313).
     stroked: HashMap<StrokeKey, i32>,
+    /// The project's line types (docs/adr/0313 §3).
+    lines: crate::line_types::LineTypes,
 }
 
-/// An own stroke's key: colour, weight bits and the stroke's line type, scale and transparency bits.
-type StrokeKey = (String, u64, (u8, u64, u64));
+/// An own stroke's key: colour, weight bits, the stroke's line type, scale and transparency bits and the pattern it
+/// draws with.
+type StrokeKey = (String, u64, (u8, u64, u64), Option<String>);
 
 impl Interned {
     fn set(&mut self, s: Value) -> i32 {
@@ -247,7 +250,12 @@ impl Interned {
         if let Some(&s) = self.simple.get(&key) {
             return s;
         }
-        let s = self.set(symbols_of_layer_style(style, color, weight, hairlines));
+        // The layer's pattern and the project's scale (docs/adr/0313 §3).
+        let symbols = self.lines.apply(
+            style.line_pattern.as_deref(),
+            symbols_of_layer_style(style, color, weight, hairlines),
+        );
+        let s = self.set(symbols);
         self.simple.insert(key, s);
         s
     }
@@ -280,12 +288,26 @@ impl Interned {
         weight: f64,
         hairlines: bool,
         stroke: Stroke,
+        pattern: Option<&str>,
     ) -> i32 {
-        let key = (color.to_owned(), weight.to_bits(), stroke.key());
+        let key = (
+            color.to_owned(),
+            weight.to_bits(),
+            stroke.key(),
+            pattern.map(str::to_owned),
+        );
         if let Some(&s) = self.stroked.get(&key) {
             return s;
         }
-        let s = self.set(symbols_of_object(style, color, weight, hairlines, stroke));
+        let s = self.set(crate::simple::symbols_of_object_in(
+            style,
+            color,
+            weight,
+            hairlines,
+            stroke,
+            pattern,
+            &self.lines,
+        ));
         self.stroked.insert(key, s);
         s
     }
@@ -338,7 +360,10 @@ pub fn layer_call(
     opts: &BuildOptions,
     store: &Store,
 ) -> LayerCall {
-    let mut it = Interned::default();
+    let mut it = Interned {
+        lines: opts.line_types.cloned().unwrap_or_default(),
+        ..Interned::default()
+    };
     let mut objects = Vec::with_capacity(4 * entities.len());
     let mut pieces = Vec::new();
     // Most objects take the layer's colour and weight: the last ones' indices are kept, not looked up again.
@@ -356,10 +381,20 @@ pub fn layer_call(
                 it.color(color),
                 it.wipeout(style, color, weight, opts.hairlines, w.frame),
             )
-        } else if !stroke.plain() {
+        } else if !stroke.plain() || base.look.line_pattern.is_some() {
+            // Its own pattern, else its own built-in type, else its layer's pattern (docs/adr/0313 §3).
+            let pattern = base
+                .look
+                .line_pattern
+                .as_deref()
+                .or(if stroke.line_type.is_none() {
+                    style.line_pattern.as_deref()
+                } else {
+                    None
+                });
             (
                 it.color(color),
-                it.stroked(style, color, weight, opts.hairlines, stroke),
+                it.stroked(style, color, weight, opts.hairlines, stroke, pattern),
             )
         } else {
             match last {
@@ -425,6 +460,18 @@ pub fn layer_call(
                         None => insert_stroke.opacity,
                     },
                 };
+                // Its pattern (docs/adr/0313 §3): its own, else none with its own built-in type, else a pattern its layer
+                // gives (following it), else the insert's own (BYBLOCK), else none with the insert's own built-in type.
+                let piece_pattern: Option<&str> = match own_stroke.pattern.as_deref() {
+                    Some(p) => Some(p),
+                    None if own_stroke.line_type.is_some() => None,
+                    None if follows(kentos_geometry_core::block::BY_LAYER_LINE_TYPE) => {
+                        style.line_pattern.as_deref()
+                    }
+                    None if base.look.line_pattern.is_some() => base.look.line_pattern.as_deref(),
+                    None if base.look.line_type.is_some() => None,
+                    None => style.line_pattern.as_deref(),
+                };
                 let hatch = match shape {
                     Shape::Hatch { .. } => {
                         edit_geometry(shape.clone()).map(|g| entity_of(&g, base.clone()))
@@ -442,9 +489,14 @@ pub fn layer_call(
                         weight,
                         opts.hairlines,
                     ))),
-                    _ if !piece_stroke.plain() => {
-                        it.stroked(style, color, weight, opts.hairlines, piece_stroke)
-                    }
+                    _ if !piece_stroke.plain() || piece_pattern.is_some() => it.stroked(
+                        style,
+                        color,
+                        weight,
+                        opts.hairlines,
+                        piece_stroke,
+                        piece_pattern,
+                    ),
                     _ => it.simple(style, color, weight, opts.hairlines),
                 });
             }

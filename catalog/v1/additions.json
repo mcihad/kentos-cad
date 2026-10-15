@@ -582,6 +582,21 @@
       "shortcuts": [],
       "category": "Yönet",
       "status": "implemented"
+    },
+    {
+      "id": "lineTypes.manage",
+      "title": "Çizgi tipleri",
+      "short": "Çizgi tipleri",
+      "icon": "lineTypesManage",
+      "description": "Projenin desenli çizgi tipleri: LIN dosyasından yükle, dışa aktar, sil; desenlerin önizlemesi ve çizilemeyen kısmı; projenin çizgi tipi ölçeği (LTSCALE). cad.linetypes.edit ile; katmana ve nesneye Katmanlar'ın ve Öznitelikler'in Çizgi tipi seçiminden verilir.",
+      "aliases": [
+        "LINETYPE",
+        "CIZGITIPI",
+        "ÇİZGİTİPİ"
+      ],
+      "shortcuts": [],
+      "category": "Yönet",
+      "status": "implemented"
     }
   ],
   "icons": {
@@ -650,7 +665,8 @@
     "layersThawAll": "<path d=\"m8 3 6.2 3.3L8 9.6 1.8 6.3z\" fill=\"currentColor\" fill-opacity=\".3\"/><path d=\"m1.8 9.8 6.2 3.3 1.4-.7M1.8 13.3 8 16.6l1.4-.7\"/><circle cx=\"15\" cy=\"13.6\" r=\"2.1\"/><path d=\"M15 9.7v1.1M15 16.4v1.1M11.1 13.6h1.1M17.8 13.6h1.1M12.2 10.8l.8.8M17 15.6l.8.8M17.8 10.8l-.8.8M13 15.6l-.8.8\" stroke-width=\"1.05\"/>",
     "layersTranslate": "<path d=\"m6 2.8 4.6 2.5L6 7.8 1.4 5.3z\" fill=\"currentColor\" fill-opacity=\".3\"/><path d=\"m1.4 8.4 4.6 2.5 4.6-2.5\"/><path d=\"m14 10.4 4.6 2.5-4.6 2.5-4.6-2.5z\" fill=\"currentColor\" fill-opacity=\".3\"/><path d=\"m9.4 16 4.6 2.5 4.6-2.5\"/><path d=\"M12.2 3.6h2.4a2 2 0 0 1 2 2v2.6m-1.6-1.4 1.6 1.6 1.6-1.6\" stroke-width=\"1.15\"/>",
     "standardsCheck": "<path d=\"M4 2.5h6.5L14 6v3.2\"/><path d=\"M4 2.5v15h5.5\"/><path d=\"M10.5 2.5V6H14\"/><path d=\"M6.5 8.5h4.5M6.5 11h2.5\"/><circle cx=\"13.6\" cy=\"13.6\" r=\"3\" fill=\"currentColor\" fill-opacity=\".2\"/><path d=\"m15.8 15.8 2.4 2.4\" stroke-width=\"1.4\"/>",
-    "standardsApply": "<path d=\"m7.5 2.6 5.6 2.9-5.6 2.9-5.6-2.9z\" fill=\"currentColor\" fill-opacity=\".3\"/><path d=\"m1.9 9 5.6 2.9 5.6-2.9\"/><path d=\"m1.9 12.5 5.6 2.9 2.6-1.3\"/><circle cx=\"15\" cy=\"14.6\" r=\"3.4\" fill=\"currentColor\" fill-opacity=\".3\"/><path d=\"m13.5 14.7 1.1 1.1 2-2.2\"/>"
+    "standardsApply": "<path d=\"m7.5 2.6 5.6 2.9-5.6 2.9-5.6-2.9z\" fill=\"currentColor\" fill-opacity=\".3\"/><path d=\"m1.9 9 5.6 2.9 5.6-2.9\"/><path d=\"m1.9 12.5 5.6 2.9 2.6-1.3\"/><circle cx=\"15\" cy=\"14.6\" r=\"3.4\" fill=\"currentColor\" fill-opacity=\".3\"/><path d=\"m13.5 14.7 1.1 1.1 2-2.2\"/>",
+    "lineTypesManage": "<path d=\"M2.5 4.5h15\"/><path d=\"M2.5 10h3.6m2.4 0h3.6m2.4 0h3\"/><path d=\"M2.5 15.5h5m2 0h.5m2 0h5.5\"/>"
   },
   "ribbon": [
     {
@@ -1093,6 +1109,10 @@
         {
           "command": "standards.apply",
           "size": "small"
+        },
+        {
+          "command": "lineTypes.manage",
+          "size": "small"
         }
       ]
     },
@@ -1110,6 +1130,10 @@
         },
         {
           "command": "standards.apply",
+          "size": "small"
+        },
+        {
+          "command": "lineTypes.manage",
           "size": "small"
         }
       ]

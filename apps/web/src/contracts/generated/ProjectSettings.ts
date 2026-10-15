@@ -10,6 +10,7 @@ import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
 import type { LayerState } from "./LayerState";
 import type { LengthStyle } from "./LengthStyle";
+import type { LineTypeDef } from "./LineTypeDef";
 import type { NamedUcs } from "./NamedUcs";
 import type { NamedView } from "./NamedView";
 import type { NetworkDef } from "./NetworkDef";
@@ -39,6 +40,15 @@ workspace?: Workspace,
  * Absent in files written before drawing typefaces (read as Barlow).
  */
 drawingFont?: DrawingFont, 
+/**
+ * The project's line types with patterns (docs/adr/0313 §1).
+ */
+lineTypes?: Array<LineTypeDef>, 
+/**
+ * The project's line type scale (AutoCAD's LTSCALE, docs/adr/0313 §3): every pattern's lengths times it, above 0;
+ * absent: 1.
+ */
+lineTypeScale?: number, 
 /**
  * A local project's unit (docs/adr/0165 §2); absent: metres. Only a
  * project without a coordinate system (SRID 0) has another.

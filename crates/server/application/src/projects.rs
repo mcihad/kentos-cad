@@ -747,6 +747,7 @@ mod tests {
             locked: false,
             expanded: true,
             style: LayerStyle {
+                line_pattern: None,
                 color: "fg".to_owned(),
                 line_type: LineType::Continuous,
                 line_weight: 0.25,

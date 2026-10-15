@@ -109,6 +109,7 @@ fn check_input(input: &LayersEdit) -> Result<(), Stop> {
     if op == Op::Style
         && input.color.is_none()
         && input.line_type.is_none()
+        && input.line_pattern.is_none()
         && input.line_weight.is_none()
     {
         return Err(Stop::failed(error(
@@ -280,6 +281,25 @@ fn check_doc(doc: &Document, input: &LayersEdit) -> Result<(), Stop> {
 
 fn check(doc: &Document, input: &LayersEdit) -> Result<(), Stop> {
     check_input(input)?;
+    // A project line type by its name (docs/adr/0313 §1).
+    if matches!(
+        input.operation,
+        LayerEditOperation::Add | LayerEditOperation::Style
+    ) && let Some(Some(name)) = &input.line_pattern
+        && !doc
+            .settings()
+            .line_types
+            .iter()
+            .any(|t| kentos_contracts::same_line_type_name(&t.name, name))
+    {
+        return Err(fail(
+            codes::LINE_TYPE_NOT_FOUND,
+            format!(
+                "“{name}” adlı çizgi tipi projede yok. Çizgi tipleri penceresinden yükleyin ya da var olan bir adı verin."
+            ),
+            "linePattern",
+        ));
+    }
     checks::revision(doc, input.expected_revision.as_deref())?;
     check_doc(doc, input)
 }
@@ -377,6 +397,28 @@ fn passed_on<T, U>(result: CommandResult<T>, fallback: &str) -> CommandResult<U>
     }
 }
 
+/// A layer's pattern as the input gives it (docs/adr/0313 §1): a name with its nearest built-in type (unless the
+/// line type is given), none, or a built-in type given alone taking it away.
+fn pattern_into(doc: &Document, style: &mut kentos_contracts::LayerStyle, input: &LayersEdit) {
+    match &input.line_pattern {
+        Some(p) => {
+            style.line_pattern.clone_from(p);
+            if input.line_type.is_none()
+                && let Some(t) = p.as_deref().and_then(|name| {
+                    doc.settings()
+                        .line_types
+                        .iter()
+                        .find(|t| kentos_contracts::same_line_type_name(&t.name, name))
+                })
+            {
+                style.line_type = t.nearest();
+            }
+        }
+        None if input.line_type.is_some() => style.line_pattern = None,
+        None => {}
+    }
+}
+
 fn write(doc: &mut Document, input: LayersEdit) -> CommandResult<LayersEdited> {
     use LayerEditOperation as Op;
     let layer = input.layer.clone().unwrap_or_default();
@@ -388,7 +430,7 @@ fn write(doc: &mut Document, input: LayersEdit) -> CommandResult<LayersEdited> {
             };
             let given = [
                 input.color.is_some(),
-                input.line_type.is_some(),
+                input.line_type.is_some() || input.line_pattern.is_some(),
                 input.line_weight.is_some(),
             ];
             let label = match given {
@@ -397,6 +439,7 @@ fn write(doc: &mut Document, input: LayersEdit) -> CommandResult<LayersEdited> {
                 [false, false, true] => LINE_WEIGHT,
                 _ => LAYER_STYLE,
             };
+            pattern_into(doc, &mut style, &input);
             if let Some(c) = input.color {
                 style.color = c;
             }
@@ -455,6 +498,7 @@ fn add(doc: &mut Document, input: LayersEdit) -> CommandResult<LayersEdited> {
         }),
     };
     let mut style = default_style();
+    pattern_into(doc, &mut style, &input);
     if let Some(c) = input.color {
         style.color = c;
     }
@@ -565,6 +609,7 @@ fn merge(doc: &mut Document, target: &str, from: &[String]) -> CommandResult<Lay
     let moved = uids.len();
     if !uids.is_empty() {
         let input = EntitiesSetProperties {
+            line_pattern: None,
             line_type: None,
             line_type_scale: None,
             transparency: None,

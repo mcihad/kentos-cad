@@ -11,7 +11,15 @@ export type LayerStyle = {
 /**
  * Hex colour or a theme token (fg, fg-dim, ink, paper).
  */
-color: string, lineType: LineType, 
+color: string, 
+/**
+ * Its built-in line type; with a `pattern`, the one nearest to it (what a reader without patterns draws).
+ */
+lineType: LineType, 
+/**
+ * A project line type by its name (docs/adr/0313 §1; `pattern` is a hatch's); absent: `line_type`.
+ */
+linePattern?: string, 
 /**
  * Plot line weight in mm.
  */

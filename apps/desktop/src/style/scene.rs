@@ -594,6 +594,7 @@ impl StyledCache {
         let build = |node: &LayerNode, entities: &[&Entity]| -> (StyledLayer, bool) {
             let framed = frames.get(&node.id);
             let opts = BuildOptions {
+                line_types: Some(&look.line_types),
                 layer_styles: Some(&layer_styles),
                 origin: look.origin,
                 plot_scale: look.symbol_scale,

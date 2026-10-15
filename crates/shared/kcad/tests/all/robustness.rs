@@ -315,6 +315,7 @@ fn layer(rng: &mut Rng, depth: u32, ids: &mut Vec<String>) -> LayerNode {
         locked: rng.chance(20),
         expanded: rng.chance(50),
         style: LayerStyle {
+            line_pattern: None,
             color: "fg".to_owned(),
             line_type: LineType::Dashdot,
             line_weight: rng.float(),
@@ -368,6 +369,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             locked: false,
             expanded: true,
             style: LayerStyle {
+                line_pattern: None,
                 color: "fg".to_owned(),
                 line_type: LineType::Continuous,
                 line_weight: 0.18,
@@ -470,6 +472,8 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
         version: 2,
         name: rng.text(),
         settings: ProjectSettings {
+            line_type_scale: None,
+            line_types: Vec::new(),
             length_style: None,
             named_ucs: Vec::new(),
             named_views: Vec::new(),

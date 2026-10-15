@@ -1301,6 +1301,7 @@ impl Path {
             return;
         }
         let input = kentos_contracts::EntitiesSetProperties {
+            line_pattern: None,
             uids: vec![uid.to_string()],
             layer_id: None,
             color: None,

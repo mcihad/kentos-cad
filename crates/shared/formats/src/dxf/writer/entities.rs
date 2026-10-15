@@ -410,7 +410,10 @@ impl Writer<'_> {
             |p: kentos_contracts::LookPart| self.defining && base.look.by_layer.contains(&p);
         // Its own line type (docs/adr/0260 §2), its LTYPE record written with the table; a definition's object
         // without one draws with the insert's, BYBLOCK, unless it follows its layer (docs/adr/0312 §4).
-        if let Some(t) = base.look.line_type {
+        if let Some(p) = &base.look.line_pattern {
+            // Its own project line type, an LTYPE record of the table (docs/adr/0313 §6).
+            self.out.str(6, &super::layers::valid_name(p));
+        } else if let Some(t) = base.look.line_type {
             ltype_handle(self.ltypes, self.handles, t);
             self.out.str(6, super::layers::ltype_name(t));
         } else if self.defining && !follows(kentos_contracts::LookPart::LineType) {
@@ -831,7 +834,8 @@ impl Writer<'_> {
         let h = self.begin("LWPOLYLINE", base);
         self.out.str(100, "AcDbPolyline");
         self.out.int(90, pts.len() as i64);
-        self.out.int(70, i64::from(closed));
+        // PLINEGEN (128): the pattern runs on round the corners, as KentOS draws it (docs/adr/0313 §5).
+        self.out.int(70, i64::from(closed) | 128);
         let edges = if closed {
             pts.len()
         } else {

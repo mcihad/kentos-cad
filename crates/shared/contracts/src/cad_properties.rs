@@ -157,6 +157,13 @@ pub struct EntitiesSetProperties {
     )]
     #[cfg_attr(feature = "schema", schemars(with = "Option<crate::layer::LineType>"))]
     pub line_type: Option<Option<crate::layer::LineType>>,
+    /// Their own project line type by its name (`ObjectLook.line_pattern`, docs/adr/0313 §1), its nearest built-in
+    /// written as their line type unless `lineType` is given; null: none (a `lineType` given alone takes it away
+    /// too). Absent: unchanged.
+    #[serde(default, with = "nullable", skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
+    pub line_pattern: Option<Option<String>>,
     /// Their pattern's own factor, above 0, at most 1000; null: 1. Absent: unchanged.
     #[serde(default, with = "nullable", skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]

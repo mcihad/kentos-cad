@@ -40,6 +40,7 @@ pub mod designer;
 pub mod file;
 pub mod legend;
 pub mod library;
+pub mod line_types;
 pub mod object_template;
 pub mod preview;
 pub mod program;

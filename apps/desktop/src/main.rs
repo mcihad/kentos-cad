@@ -130,6 +130,9 @@ mod layout_tests;
 mod leader_scenes;
 #[cfg(test)]
 mod lengthen_scenes;
+#[cfg(test)]
+mod line_type_scenes;
+mod line_types_window;
 mod locks;
 mod log_plan;
 #[cfg(test)]

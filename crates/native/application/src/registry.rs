@@ -14,10 +14,10 @@ use kentos_contracts::{
     EntitiesSetProperties, EntitiesStretch, EntitiesTransform, EntitiesTrim, EntitiesVertex,
     ImportDxf, LabelsPin, LayersCompose, LayersEdit, LayersFilter, LayersFind, LayersInfo,
     LayersLabels, LayersRenderer, LayersService, LayersSet, LayersStates, LayersTime,
-    LayersTranslate, LineCreate, NetworkDefine, NurbsCreate, PointCreate, PointsConstruct,
-    PolygonCreate, PolylineCreate, RectangleCreate, RegularPolygonCreate, ScenariosEdit,
-    SettingsSet, SheetsEdit, SnapFind, StandardsApply, StandardsCheck, StylesEdit, UcsSet,
-    UnitsChange, ViewsEdit, codes,
+    LayersTranslate, LineCreate, LineTypesEdit, NetworkDefine, NurbsCreate, PointCreate,
+    PointsConstruct, PolygonCreate, PolylineCreate, RectangleCreate, RegularPolygonCreate,
+    ScenariosEdit, SettingsSet, SheetsEdit, SnapFind, StandardsApply, StandardsCheck, StylesEdit,
+    UcsSet, UnitsChange, ViewsEdit, codes,
 };
 use serde_json::Value;
 
@@ -31,10 +31,10 @@ use crate::{
     entities_match, entities_order, entities_paste, entities_pick, entities_reverse,
     entities_select, entities_trim, entities_vertex, file_import, labels_pin, layers_compose,
     layers_edit, layers_filter, layers_find, layers_info, layers_labels, layers_renderer,
-    layers_service, layers_set, layers_states, layers_time, layers_translate, line, network_define,
-    nurbs, offset, point, points_construct, polygon, polygon_regular, polyline, rectangle_create,
-    scenarios_edit, set, settings_set, sheets_edit, snap_find, stretch, styles_edit, transform,
-    ucs_set, units_change, views_edit,
+    layers_service, layers_set, layers_states, layers_time, layers_translate, line,
+    line_types_edit, network_define, nurbs, offset, point, points_construct, polygon,
+    polygon_regular, polyline, rectangle_create, scenarios_edit, set, settings_set, sheets_edit,
+    snap_find, stretch, styles_edit, transform, ucs_set, units_change, views_edit,
 };
 
 /// Why a command was not run: not a refusal of the command (that is its
@@ -149,6 +149,7 @@ macro_rules! by_command {
             kentos_contracts::CAD_LAYERS_TRANSLATE => $then!(layers_translate, LayersTranslate),
             kentos_contracts::CAD_STANDARDS_CHECK => $then!(standards_check, StandardsCheck),
             kentos_contracts::CAD_STANDARDS_APPLY => $then!(standards_apply, StandardsApply),
+            kentos_contracts::CAD_LINE_TYPES_EDIT => $then!(line_types_edit, LineTypesEdit),
             kentos_contracts::CAD_STYLES_EDIT => $then!(styles_edit, StylesEdit),
             kentos_contracts::CAD_SETTINGS_SET => $then!(settings_set, SettingsSet),
             kentos_contracts::CAD_UNITS_CHANGE => $then!(units_change, UnitsChange),

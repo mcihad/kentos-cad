@@ -170,6 +170,8 @@ pub enum Dialog {
     LayerTranslate,
     /// Çizim standardı (drawing_standard.rs, docs/adr/0312 §7); the window is `App::drawing_standard`.
     DrawingStandard,
+    /// Çizgi tipleri (line_types_window.rs, docs/adr/0313 §7); the window is `App::line_types_window`.
+    LineTypes,
     /// Alanlar (layer_fields.rs, docs/adr/0199 §3); the window is `App::layer_fields`.
     LayerFields,
     /// Katman süzgeci (layer_filters.rs, docs/adr/0211 §4); the window is `App::layer_filter`.
@@ -416,6 +418,8 @@ pub enum Message {
     LayerTranslate(crate::layer_translate::Event),
     /// Çizim standardı's window (drawing_standard.rs, docs/adr/0312 §7).
     DrawingStandard(crate::drawing_standard::Event),
+    /// Çizgi tipleri's window (line_types_window.rs, docs/adr/0313 §7).
+    LineTypes(crate::line_types_window::Event),
     /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
     LayerFilter(crate::layer_filters::Event),
     /// An object's attachments: their windows, the viewer and the photos decoded (attachments.rs).
@@ -824,6 +828,8 @@ pub struct App {
     pub(crate) layer_translate: Option<crate::layer_translate::Window>,
     /// Çizim standardı's window (drawing_standard.rs, docs/adr/0312 §7).
     pub(crate) drawing_standard: Option<crate::drawing_standard::Window>,
+    /// Çizgi tipleri's window (line_types_window.rs, docs/adr/0313 §7).
+    pub(crate) line_types_window: Option<crate::line_types_window::Window>,
     /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
     pub(crate) layer_filter: Option<crate::layer_filters::Window>,
     /// Bilgi's card: the object it shows and the drawing's point it was clicked at (info_card.rs).
@@ -1120,6 +1126,7 @@ impl App {
             layer_merge: None,
             layer_translate: None,
             drawing_standard: None,
+            line_types_window: None,
             layer_filter: None,
             info_card: None,
             photos: crate::photo_view::Photos::default(),
@@ -1640,6 +1647,7 @@ impl App {
             Message::LayerMerge(event) => return self.layer_merge_event(event),
             Message::LayerTranslate(event) => return self.layer_translate_event(event),
             Message::DrawingStandard(event) => return self.drawing_standard_event(event),
+            Message::LineTypes(event) => return self.line_types_event(event),
             Message::LayerFilter(event) => return self.layer_filter_event(event),
             Message::Attachment(event) => return self.attachment_event(event),
             Message::InfoCard(event) => return self.info_card_event(event),
@@ -2435,6 +2443,8 @@ impl App {
             "layer.translate" => self.open_layer_translate(),
             // Standardı denetle and Standardı uygula: one window (docs/adr/0312 §7).
             "standards.check" | "standards.apply" => self.open_drawing_standard(),
+            // Çizgi tipleri (docs/adr/0313 §7).
+            "lineTypes.manage" => self.open_line_types(),
             // Edits, not undo steps (layering.rs).
             "layer.new" => self.new_layer(),
             "layer.newGroup" => self.new_group(),

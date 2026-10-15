@@ -1045,6 +1045,7 @@ impl Emitter {
             .map(|i| {
                 let l = &self.layers[i];
                 ImportLayer {
+                    line_pattern: None,
                     frozen: None,
                     plot: None,
                     name: l.name.clone(),
@@ -1169,6 +1170,8 @@ pub fn read(
         e.base_mut().id = 0;
     }
     let mut result = ImportResult {
+        line_type_scale: None,
+        line_types: Vec::new(),
         entities,
         layers,
         report: report.import(),
@@ -1308,6 +1311,8 @@ mod tests {
         assert_eq!((zs(8), zs(9), zs(10)), (None, None, None));
         // The heights are counted where every import says it: as a fact of the file.
         let mut result = ImportResult {
+            line_type_scale: None,
+            line_types: Vec::new(),
             entities: out.clone(),
             layers: Vec::new(),
             report,

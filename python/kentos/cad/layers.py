@@ -278,6 +278,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
         kind: LayerNodeType | LayerNodeTypeName | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
+        line_pattern: str | None | Unset = UNSET,
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         locked: bool | None | Unset = UNSET,
@@ -322,6 +323,8 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
             kind: Add's kind of node; absent: a layer.
             layer: The node it acts on; merge's target.
             layers: Merge's sources; purge's layers and groups.
+            line_pattern: add, style: a project line type by its name (docs/adr/0313 §1), its nearest built-in written as the line type
+                unless `lineType` is given; null: none (a `lineType` given alone takes it away too).
             line_type:
             line_weight: Plot line weight, mm. Unit: paper-mm.
             locked:
@@ -352,6 +355,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
             kind=kind,
             layer=layer,
             layers=_opt(layers, lambda x: list(x)),
+            line_pattern=line_pattern,
             line_type=line_type,
             line_weight=line_weight,
             locked=locked,
@@ -376,6 +380,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
         kind: LayerNodeType | LayerNodeTypeName | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
+        line_pattern: str | None | Unset = UNSET,
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         locked: bool | None | Unset = UNSET,
@@ -398,6 +403,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
             kind=kind,
             layer=layer,
             layers=_opt(layers, lambda x: list(x)),
+            line_pattern=line_pattern,
             line_type=line_type,
             line_weight=line_weight,
             locked=locked,
@@ -422,6 +428,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
         kind: LayerNodeType | LayerNodeTypeName | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
+        line_pattern: str | None | Unset = UNSET,
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         locked: bool | None | Unset = UNSET,
@@ -444,6 +451,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
             kind=kind,
             layer=layer,
             layers=_opt(layers, lambda x: list(x)),
+            line_pattern=line_pattern,
             line_type=line_type,
             line_weight=line_weight,
             locked=locked,
@@ -468,6 +476,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
         kind: LayerNodeType | LayerNodeTypeName | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
+        line_pattern: str | None | Unset = UNSET,
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         locked: bool | None | Unset = UNSET,
@@ -495,6 +504,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
             kind=kind,
             layer=layer,
             layers=_opt(layers, lambda x: list(x)),
+            line_pattern=line_pattern,
             line_type=line_type,
             line_weight=line_weight,
             locked=locked,

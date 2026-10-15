@@ -97,6 +97,8 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
         version: 2,
         name: format!("olcum-{n}"),
         settings: ProjectSettings {
+            line_type_scale: None,
+            line_types: Vec::new(),
             length_style: None,
             named_ucs: Vec::new(),
             named_views: Vec::new(),
@@ -140,6 +142,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             locked: false,
             expanded: true,
             style: LayerStyle {
+                line_pattern: None,
                 color: "#E06C75".into(),
                 line_type: LineType::Continuous,
                 line_weight: 0.35,

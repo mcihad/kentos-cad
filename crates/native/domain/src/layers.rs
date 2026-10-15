@@ -109,6 +109,7 @@ impl NewLayer {
 /// A new node's style when none is given (the web's `defaultStyle`).
 pub fn default_style() -> LayerStyle {
     LayerStyle {
+        line_pattern: None,
         color: "fg".into(),
         line_type: LineType::Continuous,
         line_weight: 0.18,

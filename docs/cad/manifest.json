@@ -2765,6 +2765,22 @@
    "tests": 1
   },
   {
+   "id": "lineTypes.manage",
+   "kind": "command",
+   "title": "Çizgi tipleri",
+   "level": "semantic",
+   "via": [
+    "cad.linetypes.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.linetypes.edit",
+   "mcp": "cad.linetypes.edit",
+   "note": "Yükleme, silme, dışa aktarma ve ölçek komuta verilir; katmana ve nesneye desen cad.layers.edit ve cad.entities.set ile (ADR 0313).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "map.contours",
    "kind": "command",
    "title": "Eşyükselti üret…",

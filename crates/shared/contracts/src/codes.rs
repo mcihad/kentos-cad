@@ -651,6 +651,14 @@ codes! {
     STANDARD_NOT_FOUND = "standard_not_found", Failed, false, "Bu adda yerleşik çizim standardı yok.";
     /// A drawing standard against its rules.
     INVALID_STANDARD = "invalid_standard", Failed, false, "Çizim standardı kurallarına uymuyor.";
+    /// A project line type's name the project does not have (docs/adr/0313 §1).
+    LINE_TYPE_NOT_FOUND = "line_type_not_found", Failed, false, "Projede bu adda çizgi tipi yok.";
+    /// A line type a layer, a state or an object still draws with.
+    LINE_TYPE_IN_USE = "line_type_in_use", Failed, false, "Çizgi tipi bir katmanda, durumda ya da nesnede kullanılıyor.";
+    /// A line type against its rules.
+    INVALID_LINE_TYPE = "invalid_line_type", Failed, false, "Çizgi tipi kurallarına uymuyor.";
+    /// Line types loaded without a LIN file's text.
+    NO_LIN = "no_lin", Failed, false, "Yüklenecek LIN dosyası verilmedi.";
     /// A style created or updated without its definition.
     NO_DEFINITION = "no_definition", Failed, false, "Stilin tanımı verilmedi.";
     /// A style renamed or removed without its id.

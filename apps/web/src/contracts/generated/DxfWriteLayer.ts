@@ -24,6 +24,10 @@ color: string,
  */
 visible: boolean, locked: boolean, lineType: LineType, 
 /**
+ * The project line type it draws with (docs/adr/0313 §6), one of the input's `line_types`.
+ */
+linePattern?: string, 
+/**
  * Plot line weight in mm (written as AutoCAD's nearest weight).
  */
 lineWeight: number, 

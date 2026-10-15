@@ -424,6 +424,7 @@ impl Collect {
             }
             let i = *index.entry(base.layer_id.clone()).or_insert_with(|| {
                 layers.push(ImportLayer {
+                    line_pattern: None,
                     frozen: None,
                     plot: None,
                     name: base.layer_id.clone(),
@@ -472,6 +473,8 @@ impl Collect {
             }
         }
         let mut result = ImportResult {
+            line_type_scale: None,
+            line_types: Vec::new(),
             entities: self.entities,
             layers,
             report: self.report.import(),

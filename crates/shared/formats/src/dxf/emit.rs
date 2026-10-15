@@ -76,6 +76,11 @@ pub struct Library {
     pub layer_line_types: HashMap<String, kentos_contracts::LineType>,
     /// Upper-case line type name → the type KentOS draws it as (an object's 6, docs/adr/0260 §2).
     pub ltypes: HashMap<String, kentos_contracts::LineType>,
+    /// The LTYPE table's types with a pattern, in its order (docs/adr/0313 §6): lengths in the file's unit, a
+    /// complex element's style its STYLE record's handle (`#2A`) until the table is read.
+    pub patterns: Vec<kentos_contracts::LineTypeDef>,
+    /// Upper-case layer name → the pattern its layer draws with, by name.
+    pub layer_patterns: HashMap<String, String>,
     /// Upper-case layer name → the name as the LAYER table spells it (DXF layer names ignore case).
     pub layer_names: HashMap<String, String>,
     /// Upper-case text style name → fixed height (0: none).
@@ -958,6 +963,20 @@ impl<'l> Emitter<'l> {
             .as_deref()
             .map(str::to_uppercase)
             .unwrap_or_default();
+        // A pattern of the table by its name; in a definition BYLAYER on another layer than 0 its layer's
+        // (docs/adr/0313 §6).
+        let line_pattern = match up.as_str() {
+            "BYBLOCK" => None,
+            "" | "BYLAYER" if ctx.definition => Self::own_layer(e, ctx)
+                .and_then(|l| self.lib.layer_patterns.get(&l.to_uppercase()).cloned()),
+            "" | "BYLAYER" => None,
+            _ => self
+                .lib
+                .patterns
+                .iter()
+                .find(|p| p.name.to_uppercase() == up)
+                .map(|p| p.name.clone()),
+        };
         let line_type = match up.as_str() {
             "BYBLOCK" => None,
             "" | "BYLAYER" if ctx.definition => Self::own_layer(e, ctx)
@@ -978,6 +997,7 @@ impl<'l> Emitter<'l> {
         });
         kentos_contracts::ObjectLook {
             line_type,
+            line_pattern,
             line_type_scale,
             transparency: transparency.filter(|t| *t > 0.0),
             ..Default::default()

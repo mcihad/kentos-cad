@@ -218,6 +218,8 @@ mod tests {
 
     fn settings(srid: u32, second: Option<u32>) -> ProjectSettings {
         ProjectSettings {
+            line_type_scale: None,
+            line_types: Vec::new(),
             length_style: None,
             named_ucs: Vec::new(),
             named_views: Vec::new(),

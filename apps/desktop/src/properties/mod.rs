@@ -68,6 +68,8 @@ pub enum Event {
     /// Çizgi tipi ▾, Çizgi tipi ölçeği ▾, Saydamlık ▾ (docs/adr/0260 §2, §3):
     /// the objects' own; none, their source's (a scale of 1).
     LineType(Vec<Slot>, Option<kentos_contracts::LineType>),
+    /// A project line type with a pattern by its name (docs/adr/0313 §7); none: none.
+    LinePattern(Vec<Slot>, Option<String>),
     LineTypeScale(Vec<Slot>, Option<f64>),
     Transparency(Vec<Slot>, Option<f64>),
     /// Maske ▾ of areas (docs/adr/0310 §5): a mask with its frame or without, or an ordinary area.
@@ -533,6 +535,11 @@ impl App {
                 input.line_type = Some(t);
                 properties::set_properties(model, input)
             }
+            Event::LinePattern(ids, p) => {
+                let mut input = set_input(model, &ids, PropertiesOperation::LineType);
+                input.line_pattern = Some(p);
+                properties::set_properties(model, input)
+            }
             Event::LineTypeScale(ids, s) => {
                 let mut input = set_input(model, &ids, PropertiesOperation::LineTypeScale);
                 input.line_type_scale = Some(s);
@@ -705,6 +712,7 @@ fn set_input(
     operation: PropertiesOperation,
 ) -> EntitiesSetProperties {
     EntitiesSetProperties {
+        line_pattern: None,
         line_type: None,
         line_type_scale: None,
         transparency: None,

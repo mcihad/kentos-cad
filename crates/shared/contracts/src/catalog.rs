@@ -3446,6 +3446,41 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Çizgi tipleri (docs/adr/0313 §2), held together by fixtures/commands/v1/cad.linetypes.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_LINE_TYPES_EDIT.into(),
+            version: crate::CAD_LINE_TYPES_EDIT_VERSION,
+            title: "Çizgi tipleri".into(),
+            summary: "Projenin desenli çizgi tiplerini değiştirir (AutoCAD'in LIN dosyaları ve LTYPE'ı): load bir LIN dosyasının metnindeki (lin; source dosyanın adı, her tipin kaynağı) tipleri alır, names verilmişse yalnız onları; \
+                      projede aynı adlı tip (harf büyüklüğüne bakılmaz) kalır ve skipped'da söylenir, replace ile değişir; dosyanın okunmayan satırları problems'ta satırlarıyla söylenir. add tek bir tipi (lineType: ad, öğeler, birim paper ya da drawing) ekler, replace ile aynı adlıyı değiştirir. \
+                      remove adı verilen tipi siler; bir katman, katman durumu ya da nesne onu kullanıyorsa line_type_in_use. scale projenin çizgi tipi ölçeğini (LTSCALE, 0'dan büyük, en çok 1000; 1 ölçeksiz) verir. export tipleri (names verilmişse onları) LIN metni olarak lin'de verir, çizimi değiştirmez. \
+                      Tablo proje ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı değildir. Katmana desen cad.layers.set'in stiliyle (linePattern), nesneye cad.entities.set'in linePattern'iyle verilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec!["linetype".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LineTypesEdit>(),
+            output: schema::<crate::LineTypesEdited>(),
+            plan: Some(schema::<crate::LineTypesEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bir LIN dosyasının tiplerini al".into(),
+                    input: json!({ "operation": "load", "lin": "*GAZ,Gaz hattı ---- GAZ ----\nA,.5,-.2,[\"GAZ\",STANDARD,S=.1,X=-.1,Y=-.05],-.25\n", "source": "kentos.lin" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Çizgi tipi ölçeğini 2 yap".into(),
+                    input: json!({ "operation": "scale", "scale": 2.0 }),
+                    output: None,
+                },
+            ],
+        },
         // Standardı denetle (docs/adr/0312 §2), held together by fixtures/commands/v1/cad.standards.check.json.
         CommandDescriptor {
             id: crate::CAD_STANDARDS_CHECK.into(),
@@ -4641,6 +4676,9 @@ mod tests {
                     crate::CAD_STANDARDS_CHECK => {
                         serde_json::from_value::<crate::StandardsCheck>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_LINE_TYPES_EDIT => {
+                        serde_json::from_value::<crate::LineTypesEdit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_STANDARDS_APPLY => {
                         serde_json::from_value::<crate::StandardsApply>(e.input.clone()).map(|_| ())
                     }
@@ -4887,6 +4925,10 @@ mod tests {
                         }
                         crate::CAD_STANDARDS_CHECK => {
                             serde_json::from_value::<crate::StandardsReport>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LINE_TYPES_EDIT => {
+                            serde_json::from_value::<crate::LineTypesEdited>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_STANDARDS_APPLY => {

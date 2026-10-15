@@ -422,11 +422,15 @@ pub const SCHEMA_WITH_WIPEOUTS: u32 = 54;
 /// written only when a node is frozen or a state keeps them; older readers refuse the file instead of drawing a frozen
 /// layer or applying a state without its freeze.
 pub const SCHEMA_WITH_FROZEN: u32 = 55;
+/// Schema 56 (docs/adr/0313 §1): the settings' line types with patterns (`lineTypes`) and line type scale
+/// (`lineTypeScale`), a layer style's and an object's `pattern`, written only when the drawing has one; older readers
+/// refuse the file instead of drawing a pattern as its nearest built-in type.
+pub const SCHEMA_WITH_PATTERNS: u32 = 56;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 54] = [
+pub const SCHEMAS: [u32; 55] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -481,6 +485,7 @@ pub const SCHEMAS: [u32; 54] = [
     SCHEMA_WITH_ARRAYS,
     SCHEMA_WITH_WIPEOUTS,
     SCHEMA_WITH_FROZEN,
+    SCHEMA_WITH_PATTERNS,
 ];
 
 /// The file a drawing is saved as.

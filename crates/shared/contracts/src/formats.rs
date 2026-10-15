@@ -152,7 +152,10 @@ use crate::layer::LineType;
 ///    none when removed, `kept` when changed by hand). The web's copy stays 53.
 /// 64 (docs/adr/0310): an area's mask: `.kcad` document schema 54, the look's `wipeout` (`{ frame }`), in the
 ///    typed columns the look's bits 32 and 64. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 64;
+/// 65 (docs/adr/0313): line types with patterns: `.kcad` document schema 56, the settings' `lineTypes` and
+///    `lineTypeScale`, a layer style's and an object's `linePattern`; in the typed columns the look's bit 128 and
+///    its name. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 65;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -169,6 +172,11 @@ pub struct ImportLayer {
     pub visible: bool,
     pub locked: bool,
     pub line_type: LineType,
+    /// The file's line type with a pattern the layer draws with, by its name (docs/adr/0313 §6), one of the result's
+    /// `line_types`; `line_type` its nearest built-in.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub line_pattern: Option<String>,
     /// Plot line weight in mm, when the file gives one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -328,6 +336,14 @@ pub struct ImportResult {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<UnitDecision>,
+    /// The file's line types with patterns (a DXF's LTYPE table, docs/adr/0313 §6), lengths in the file's unit as read.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::LineTypeDef>>", optional))]
+    pub line_types: Vec<crate::LineTypeDef>,
+    /// The file's line type scale ($LTSCALE), when other than 1.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub line_type_scale: Option<f64>,
 }
 
 // ── Coordinate lists (Netcad NCN, TXT, CSV) ─────────────────────────────
@@ -1073,6 +1089,10 @@ pub struct DxfWriteLayer {
     pub visible: bool,
     pub locked: bool,
     pub line_type: LineType,
+    /// The project line type it draws with (docs/adr/0313 §6), one of the input's `line_types`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub line_pattern: Option<String>,
     /// Plot line weight in mm (written as AutoCAD's nearest weight).
     pub line_weight: f64,
     /// Yazdır (docs/adr/0260 §4): absent, printed; `false`, written with
@@ -1127,6 +1147,15 @@ pub struct DxfWriteInput {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DimensionStyleDef>>", optional))]
     pub dimension_styles: Vec<DimensionStyleDef>,
+    /// The project's line types (docs/adr/0313 §6): each an LTYPE record, the layers and objects that draw with one
+    /// name it.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::LineTypeDef>>", optional))]
+    pub line_types: Vec<crate::LineTypeDef>,
+    /// The project's line type scale ($LTSCALE); absent: 1.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub line_type_scale: Option<f64>,
 }
 
 /// What a writer did besides writing: counts, and anything it could not write as it was.

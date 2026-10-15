@@ -60,6 +60,68 @@ pub(super) fn ltype_name(t: LineType) -> &'static str {
     dashes(t).map_or("Continuous", |d| d.name)
 }
 
+/// A project line type's LTYPE record (docs/adr/0313 §6): its elements' lengths in drawing units (a paper pattern's
+/// millimetres at the plot scale); a text attached to the element before it (74 2, the Standard style, its height,
+/// turn and shift); a shape left out and said, DXF holding only a shape file's number.
+fn pattern_record(
+    out: &mut Out,
+    handle: u64,
+    p: &kentos_contracts::LineTypeDef,
+    name: &str,
+    scale: f64,
+    report: &mut crate::report::Report,
+) {
+    let length = |l: f64| match p.unit {
+        kentos_contracts::PatternUnit::Paper => l * scale / 1000.0,
+        kentos_contracts::PatternUnit::Drawing => l,
+    };
+    // Each drawn element with the complex one that follows it.
+    let mut parts: Vec<(f64, Option<&kentos_contracts::PatternText>)> = Vec::new();
+    for e in &p.elements {
+        if let Some(t) = &e.text {
+            match parts.last_mut() {
+                Some(last) if last.1.is_none() => last.1 = Some(t),
+                _ => parts.push((0.0, Some(t))),
+            }
+        } else if e.shape.is_some() {
+            report.note(
+                "Çizgi tipi",
+                &format!(
+                    "“{}”: SHX şekli yazılmadı (DXF şekli yalnız dosyasının numarasıyla tutar)",
+                    p.name
+                ),
+                0,
+            );
+        } else {
+            parts.push((length(e.length), None));
+        }
+    }
+    template::record(out, "LTYPE", handle, LTYPE_TABLE, "AcDbLinetypeTableRecord");
+    out.str(2, name);
+    out.int(70, 0);
+    out.str(3, &p.description);
+    out.int(72, 65);
+    out.int(73, parts.len() as i64);
+    out.real(40, parts.iter().map(|(l, _)| l.abs()).sum());
+    for (l, text) in parts {
+        out.real(49, l);
+        match text {
+            None => out.int(74, 0),
+            Some(t) => {
+                let place = &t.place;
+                out.int(74, 2 | i64::from(place.absolute));
+                out.int(75, 0);
+                out.handle(340, template::STYLE);
+                out.real(46, length(place.scale));
+                out.real(50, place.rotation);
+                out.real(44, length(place.x));
+                out.real(45, length(place.y));
+                out.str(9, &t.text);
+            }
+        }
+    }
+}
+
 /// The AutoCAD weight nearest to `mm`, and whether it differs.
 pub(super) fn line_weight(mm: f64) -> (i64, bool) {
     if !(mm >= 0.0) || !mm.is_finite() {
@@ -107,6 +169,8 @@ pub(super) struct Layer {
     pub visible: bool,
     pub locked: bool,
     pub line_type: LineType,
+    /// The project line type it draws with, by its DXF name (docs/adr/0313 §6).
+    pub pattern: Option<String>,
     pub weight: i64,
     /// Printed (DXF's 290; docs/adr/0260 §4).
     pub plot: bool,
@@ -219,6 +283,7 @@ impl Layers {
                 visible: l.visible,
                 locked: l.locked,
                 line_type: l.line_type,
+                pattern: l.line_pattern.as_deref().map(valid_name),
                 weight,
                 plot: l.plot != Some(false),
                 frozen: l.frozen == Some(true),
@@ -246,7 +311,11 @@ impl Layers {
         handles: &mut super::Handles,
         scale: f64,
         given: &[(LineType, u64)],
+        patterns: &[kentos_contracts::LineTypeDef],
+        report: &mut crate::report::Report,
     ) {
+        let names: Vec<String> = patterns.iter().map(|p| valid_name(&p.name)).collect();
+        let taken = |n: &str| names.iter().any(|x| x.eq_ignore_ascii_case(n));
         let mut used: Vec<LineType> = Vec::new();
         for l in &self.list {
             if dashes(l.line_type).is_some() && !used.contains(&l.line_type) {
@@ -258,8 +327,14 @@ impl Layers {
                 used.push(*t);
             }
         }
-        template::table(out, "LTYPE", LTYPE_TABLE, 3 + used.len());
+        // A project type of a built-in's name is that one (docs/adr/0313 §6).
+        used.retain(|t| !taken(ltype_name(*t)));
+        template::table(out, "LTYPE", LTYPE_TABLE, 3 + used.len() + patterns.len());
         template::builtin_ltypes(out);
+        for (p, name) in patterns.iter().zip(&names) {
+            let handle = handles.take();
+            pattern_record(out, handle, p, name, scale, report);
+        }
         for t in used {
             let Some(d) = dashes(t) else { continue };
             let metres: Vec<f64> = d.mm.iter().map(|m| m * scale / 1000.0).collect();
@@ -298,6 +373,7 @@ impl Layers {
                     visible: true,
                     locked: false,
                     line_type: LineType::Continuous,
+                    pattern: None,
                     weight: -3,
                     plot: true,
                     frozen: false,
@@ -321,7 +397,10 @@ impl Layers {
         if let Some(rgb) = l.color.rgb {
             out.int(420, rgb);
         }
-        out.str(6, ltype_name(l.line_type));
+        match &l.pattern {
+            Some(name) => out.str(6, name),
+            None => out.str(6, ltype_name(l.line_type)),
+        }
         if !l.plot {
             out.int(290, 0);
         }
@@ -341,6 +420,7 @@ mod tests {
 
     fn layer(id: &str, name: &str, path: &[&str]) -> DxfWriteLayer {
         DxfWriteLayer {
+            line_pattern: None,
             frozen: None,
             plot: None,
             id: id.into(),

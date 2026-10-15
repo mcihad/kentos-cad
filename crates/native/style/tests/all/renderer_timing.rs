@@ -129,6 +129,7 @@ fn build(
     let library = StyleLibrary::default();
     let names = |_: &str| "Katman".to_owned();
     let opts = BuildOptions {
+        line_types: None,
         layer_styles: None,
         origin: Vec2::new(X0, Y0),
         plot_scale: 5000.0,

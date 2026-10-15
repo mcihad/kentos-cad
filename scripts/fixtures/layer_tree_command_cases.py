@@ -412,6 +412,25 @@ def edit_cases():
                                {"layers": changed(changed(t, "bina", style={**STYLE, "color": "fg-dim"}), "koruma", style={**STYLE, "lineType": "dotted"})})]})
     out.append({"name": "Stil: aynı değerler bir şey yazmaz",
                 "steps": [step("execute", {"operation": "style", "layer": "parsel", "color": "#0090FF"}, edited("parsel", False), unchanged(t))]})
+    # A project line type with a pattern (docs/adr/0313 §1): its nearest built-in written as the line type.
+    nk = {"name": "NK", "elements": [{"length": 5.0}, {"length": -1.0}, {"length": 0.0}, {"length": -1.0}], "unit": "paper"}
+    patterned = setup(t, ENTITIES, "parsel", lineTypes=[nk])
+    out.append({"name": "Stil: desen; çizgi tipi desenin en yakın yerleşik tipi; adımı “Çizgi tipi”", "setup": patterned,
+                "steps": [step("execute", {"operation": "style", "layer": "parsel", "linePattern": "nk"}, edited("parsel"),
+                               {"layers": changed(t, "parsel", style={**BLUE, "lineType": "dashdot", "linePattern": "nk"}), "canUndo": True}),
+                          step("undo", returns="Çizgi tipi", expect={"layers": t})]})
+    with_pattern = changed(t, "parsel", style={**BLUE, "lineType": "dashdot", "linePattern": "NK"})
+    out.append({"name": "Stil: yerleşik tip tek başına deseni kaldırır",
+                "setup": setup(with_pattern, ENTITIES, "parsel", lineTypes=[nk]),
+                "steps": [step("execute", {"operation": "style", "layer": "parsel", "lineType": "dashed"}, edited("parsel"),
+                               {"layers": changed(t, "parsel", style={**BLUE, "lineType": "dashed"})})]})
+    out.append({"name": "Stil: desen null deseni kaldırır, çizgi tipi kalır",
+                "setup": setup(with_pattern, ENTITIES, "parsel", lineTypes=[nk]),
+                "steps": [step("execute", {"operation": "style", "layer": "parsel", "linePattern": None}, edited("parsel"),
+                               {"layers": changed(t, "parsel", style={**BLUE, "lineType": "dashdot"})})]})
+    out.append({**refused("Stil: desen projede yok", {"operation": "style", "layer": "parsel", "linePattern": "YOK"}, "line_type_not_found",
+                          "“YOK” adlı çizgi tipi projede yok. Çizgi tipleri penceresinden yükleyin ya da var olan bir adı verin.",
+                          "linePattern", t), "setup": patterned})
     out.append(refused("Stil: katmansız", {"operation": "style", "color": "ink"}, "no_layer", "İşlemin katmanını ya da grubunu kimliğiyle verin (layer).", "layer", t))
     out.append({"name": "Stil: değişecek bir şey yok",
                 "steps": [step("execute", {"operation": "style", "layer": "parsel"},

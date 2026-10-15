@@ -37,6 +37,8 @@ pub struct Look {
     /// `kentos_native_style::reading_unit`), the same in the drawing area, a
     /// sheet's map and the PDF, so a layer is classed alike on all three.
     pub reading_unit: kentos_native_style::ReadingUnit,
+    /// The project's line types and line type scale (docs/adr/0313 §3), as the drawing area draws them.
+    pub line_types: std::sync::Arc<kentos_native_style::line_types::LineTypes>,
 }
 
 /// The shown layers a sheet prints, bottom first: [`shown_layers`] without
@@ -133,6 +135,7 @@ pub fn build_whole(
 ) -> StyledLayer {
     let names = tables.names;
     let opts = BuildOptions {
+        line_types: Some(&look.line_types),
         layer_styles: Some(tables.styles),
         origin: look.origin,
         plot_scale: look.symbol_scale,

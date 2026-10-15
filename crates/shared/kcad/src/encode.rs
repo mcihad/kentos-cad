@@ -367,7 +367,9 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.address_locators.is_empty())
             + usize::from(s.ucs.is_some())
             + usize::from(!s.named_ucs.is_empty())
-            + usize::from(!s.named_views.is_empty());
+            + usize::from(!s.named_views.is_empty())
+            + usize::from(!s.line_types.is_empty())
+            + usize::from(s.line_type_scale.is_some());
         self.open(n, true)?;
         if let Some(u) = &s.ucs {
             self.key("ucs");
@@ -406,6 +408,10 @@ impl<'d> Encoder<'d> {
                 }
                 e.crs_definition(d)
             })?;
+        }
+        if !s.line_types.is_empty() {
+            self.key("lineTypes");
+            self.at(Seg::Name("lineTypes"), |e| e.line_types(&s.line_types))?;
         }
         self.key("plotScale");
         self.at(Seg::Name("plotScale"), |e| e.float(s.plot_scale))?;
@@ -475,6 +481,19 @@ impl<'d> Encoder<'d> {
         }
         self.key("areaDecimals");
         self.w.uint(u64::from(s.area_decimals));
+        if let Some(scale) = s.line_type_scale {
+            self.key("lineTypeScale");
+            self.at(Seg::Name("lineTypeScale"), |e| {
+                if !(scale > 0.0 && scale <= kentos_contracts::MAX_LINE_TYPE_SCALE) || scale == 1.0
+                {
+                    return Err(e.fail(
+                        Code::BadValue,
+                        "çizgi tipi ölçeği 0'dan büyük ve en çok 1000 olmalı; 1 yazılmaz",
+                    ));
+                }
+                e.float(scale)
+            })?;
+        }
         self.key("lengthDecimals");
         self.w.uint(u64::from(s.length_decimals));
         if !s.address_locators.is_empty() {
@@ -508,6 +527,136 @@ impl<'d> Encoder<'d> {
             })?;
         }
         self.close();
+        Ok(())
+    }
+
+    /// The project's line types (docs/adr/0313 §1), checked whole as a reader checks them; keys in the canonical
+    /// order.
+    fn line_types(&mut self, types: &'d [kentos_contracts::LineTypeDef]) -> Result<(), KcadError> {
+        if let Some(problem) = kentos_contracts::line_types_problem(types) {
+            return Err(self.fail(Code::BadValue, &problem));
+        }
+        self.open(types.len(), false)?;
+        for (i, t) in types.iter().enumerate() {
+            self.at(Seg::Index(i), |e| {
+                let n =
+                    3 + usize::from(t.source.is_some()) + usize::from(!t.description.is_empty());
+                e.open(n, true)?;
+                // name unit (4), source (6), elements (8), description (11).
+                e.key("name");
+                e.text(&t.name)?;
+                e.key("unit");
+                e.w.text(match t.unit {
+                    kentos_contracts::PatternUnit::Paper => "paper",
+                    kentos_contracts::PatternUnit::Drawing => "drawing",
+                });
+                if let Some(source) = &t.source {
+                    e.key("source");
+                    e.text(source)?;
+                }
+                e.key("elements");
+                e.at(Seg::Name("elements"), |e| {
+                    e.open(t.elements.len(), false)?;
+                    for (k, el) in t.elements.iter().enumerate() {
+                        e.at(Seg::Index(k), |e| e.pattern_element(el))?;
+                    }
+                    e.close();
+                    Ok(())
+                })?;
+                if !t.description.is_empty() {
+                    e.key("description");
+                    e.text(&t.description)?;
+                }
+                e.close();
+                Ok(())
+            })?;
+        }
+        self.close();
+        Ok(())
+    }
+
+    /// A pattern's element: text (4), shape (5), length (6).
+    fn pattern_element(
+        &mut self,
+        el: &'d kentos_contracts::PatternElement,
+    ) -> Result<(), KcadError> {
+        self.open(
+            1 + usize::from(el.text.is_some()) + usize::from(el.shape.is_some()),
+            true,
+        )?;
+        if let Some(t) = &el.text {
+            self.key("text");
+            self.at(Seg::Name("text"), |e| {
+                let place = &t.place;
+                e.open(2 + place_count(place), true)?;
+                e.place_xy(place)?;
+                // text (4), scale style (5), upright (7), absolute rotation (8).
+                e.key("text");
+                e.text(&t.text)?;
+                e.place_scale(place)?;
+                e.key("style");
+                e.text(&t.style)?;
+                e.place_turn(place)?;
+                e.close();
+                Ok(())
+            })?;
+        }
+        if let Some(s) = &el.shape {
+            self.key("shape");
+            self.at(Seg::Name("shape"), |e| {
+                let place = &s.place;
+                e.open(2 + place_count(place), true)?;
+                e.place_xy(place)?;
+                // file name (4), scale (5), upright (7), absolute rotation (8).
+                e.key("file");
+                e.text(&s.file)?;
+                e.key("name");
+                e.text(&s.name)?;
+                e.place_scale(place)?;
+                e.place_turn(place)?;
+                e.close();
+                Ok(())
+            })?;
+        }
+        self.key("length");
+        self.at(Seg::Name("length"), |e| e.float(el.length))?;
+        self.close();
+        Ok(())
+    }
+
+    fn place_xy(&mut self, p: &kentos_contracts::PatternPlace) -> Result<(), KcadError> {
+        if p.x != 0.0 {
+            self.key("x");
+            self.at(Seg::Name("x"), |e| e.float(p.x))?;
+        }
+        if p.y != 0.0 {
+            self.key("y");
+            self.at(Seg::Name("y"), |e| e.float(p.y))?;
+        }
+        Ok(())
+    }
+
+    fn place_scale(&mut self, p: &kentos_contracts::PatternPlace) -> Result<(), KcadError> {
+        if p.scale != 1.0 {
+            self.key("scale");
+            self.at(Seg::Name("scale"), |e| e.float(p.scale))?;
+        }
+        Ok(())
+    }
+
+    fn place_turn(&mut self, p: &kentos_contracts::PatternPlace) -> Result<(), KcadError> {
+        if p.upright {
+            self.key("upright");
+            self.w.bool(true);
+        }
+        if p.absolute {
+            self.key("absolute");
+            self.w.bool(true);
+        }
+        if p.rotation != 0.0 {
+            self.key("rotation");
+            self.at(Seg::Name("rotation"), |e| e.float(p.rotation))?;
+        }
         Ok(())
     }
 
@@ -1010,6 +1159,7 @@ impl<'d> Encoder<'d> {
             ));
         }
         let n = 3
+            + usize::from(s.line_pattern.is_some())
             + usize::from(s.fill.is_some())
             + usize::from(s.label.is_some())
             + usize::from(s.labels.is_some())
@@ -1017,7 +1167,8 @@ impl<'d> Encoder<'d> {
             + usize::from(s.renderer.is_some())
             + usize::from(s.pick_interior.is_some());
         self.open(n, true)?;
-        // fill (4), color label point (5), labels (6), lineType renderer (8), lineWeight (10), pickInterior (12).
+        // fill (4), color label point (5), labels (6), lineType renderer (8), lineWeight (10), linePattern (11),
+        // pickInterior (12).
         if let Some(fill) = &s.fill {
             self.key("fill");
             self.at(Seg::Name("fill"), |e| e.text(fill))?;
@@ -1052,6 +1203,10 @@ impl<'d> Encoder<'d> {
         }
         self.key("lineWeight");
         self.at(Seg::Name("lineWeight"), |e| e.float(s.line_weight))?;
+        if let Some(pattern) = &s.line_pattern {
+            self.key("linePattern");
+            self.at(Seg::Name("linePattern"), |e| e.text(pattern))?;
+        }
         if let Some(pick) = s.pick_interior {
             self.key("pickInterior");
             self.w.bool(pick);
@@ -1101,6 +1256,16 @@ impl<'d> Encoder<'d> {
         }
         Ok(())
     }
+}
+
+/// How many of a complex element's placing's keys are written: those other than their defaults.
+fn place_count(p: &kentos_contracts::PatternPlace) -> usize {
+    usize::from(p.x != 0.0)
+        + usize::from(p.y != 0.0)
+        + usize::from(p.scale != 1.0)
+        + usize::from(p.upright)
+        + usize::from(p.absolute)
+        + usize::from(p.rotation != 0.0)
 }
 
 /// Whether the settings give an annotation height (docs/adr/0205 §1): a
@@ -1188,6 +1353,28 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
+    }
+    // Schema 56 (docs/adr/0313): a line type with a pattern, a line type scale, a pattern named by a layer, a layer
+    // state's style or an object of the drawing or of a block definition.
+    fn patterned(nodes: &[LayerNode]) -> bool {
+        nodes
+            .iter()
+            .any(|n| n.style.line_pattern.is_some() || patterned(&n.children))
+    }
+    let named = |list: &[Entity]| list.iter().any(|e| e.base().look.line_pattern.is_some());
+    if !doc.settings.line_types.is_empty()
+        || doc.settings.line_type_scale.is_some()
+        || patterned(&doc.layers)
+        || doc
+            .settings
+            .layer_states
+            .iter()
+            .flat_map(|s| &s.nodes)
+            .any(|n| n.style.as_ref().is_some_and(|s| s.line_pattern.is_some()))
+        || named(&doc.entities)
+        || doc.blocks.iter().any(|b| named(&b.entities))
+    {
+        return crate::SCHEMA_WITH_PATTERNS;
     }
     // Schema 55 (docs/adr/0311): a frozen node, or a layer state keeping freezes and printing.
     fn frozen(nodes: &[LayerNode]) -> bool {

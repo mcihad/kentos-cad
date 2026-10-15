@@ -1741,6 +1741,7 @@ impl App {
             Asking::LayerMerge => self.layer_merge_view(),
             Asking::LayerTranslate => self.layer_translate_view(),
             Asking::DrawingStandard => self.drawing_standard_view(),
+            Asking::LineTypes => self.line_types_view(),
             Asking::LayerFields => self.layer_fields_view(),
             Asking::LayerFilter => self.layer_filter_view(),
             Asking::Attachment => self.attachment_form_view(),

@@ -55,6 +55,8 @@ pub struct NewProject {
 /// The default units of a project (the web's `PROJECT_SETTINGS_DEFAULTS`).
 pub fn default_settings(srid: u32) -> ProjectSettings {
     ProjectSettings {
+        line_type_scale: None,
+        line_types: Vec::new(),
         length_style: None,
         named_ucs: Vec::new(),
         named_views: Vec::new(),

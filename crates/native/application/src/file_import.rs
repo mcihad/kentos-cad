@@ -244,6 +244,7 @@ fn plan_of(
                 style: Box::new(LayerStyle {
                     color: l.color.clone(),
                     line_type: l.line_type,
+                    line_pattern: l.line_pattern.clone(),
                     // None or 0 is the default weight, as the web's import reads it.
                     line_weight: l
                         .line_weight
@@ -373,6 +374,8 @@ fn write(doc: &mut Document, input: &ImportDxf, read: ReadDxf) -> CommandResult<
     let styles = Styles {
         text: result.text_styles,
         dimension: result.dimension_styles,
+        line_types: result.line_types,
+        line_type_scale: result.line_type_scale,
     };
     match import_apply::apply_styled_import(doc, result.entities, result.blocks, styles, &plan) {
         Err(message) => CommandResult::Failed {

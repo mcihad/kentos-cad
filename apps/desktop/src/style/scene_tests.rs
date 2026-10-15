@@ -35,6 +35,7 @@ fn layer(id: &str, color: &str, renderer: Option<Value>) -> LayerNode {
         locked: false,
         expanded: true,
         style: LayerStyle {
+            line_pattern: None,
             color: color.into(),
             line_type: LineType::Continuous,
             line_weight: 0.35,
@@ -125,6 +126,8 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
         version: 1,
         name: "parcalar".into(),
         settings: ProjectSettings {
+            line_type_scale: None,
+            line_types: Vec::new(),
             length_style: None,
             named_ucs: Vec::new(),
             named_views: Vec::new(),
@@ -180,6 +183,7 @@ const VIEW: Bounds = Bounds {
 
 fn look(doc: &Document) -> Look {
     Look {
+        line_types: Default::default(),
         palette: StylePalette::graphite(),
         symbol_scale: 1000.0,
         screen: false,
@@ -350,6 +354,7 @@ fn the_parts_draw_what_the_layer_built_whole_draws() {
     let look = look(&doc);
     let names = |id: &str| id.to_owned();
     let opts = BuildOptions {
+        line_types: None,
         layer_styles: None,
         origin: look.origin,
         plot_scale: look.symbol_scale,
@@ -479,6 +484,7 @@ fn a_block_s_pieces_take_the_insert_s_line_type_and_transparency() {
         })
         .collect();
     let opts = BuildOptions {
+        line_types: None,
         layer_styles: Some(&styles),
         origin: look.origin,
         plot_scale: look.symbol_scale,

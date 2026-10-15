@@ -788,7 +788,7 @@ def check_arrow_block(b: list[list[tuple[int, str]]], arrow: str, record: str, w
         else:
             pts, closed = rest
             got = [(float(a[1]), float(b[1])) for a, b in zip(o, o[1:]) if a[0] == 10 and b[0] == 20]
-            ensure(o[0] == (0, "LWPOLYLINE") and group(o, 70) == ("1" if closed else "0"), f"{where}: {name}'s polyline")
+            ensure(o[0] == (0, "LWPOLYLINE") and int(group(o, 70)) & 127 == (1 if closed else 0), f"{where}: {name}'s polyline")
             ensure(len(got) == len(pts) and all(near(a[0], b[0]) and near(a[1], b[1]) for a, b in zip(got, pts)), f"{where}: {name}'s points {pts}")
 
 
@@ -1658,6 +1658,10 @@ def check(name: str) -> list[str]:
 
     # The drawing's inserts, each with its ATTRIBs after it; a table's INSERT names an anonymous block (*U).
     drawn = split(section(p, "ENTITIES"))
+    # A drawn polyline runs its pattern on round its corners as KentOS draws it: PLINEGEN, 70 bit 128 (docs/adr/0313 §5).
+    for o in drawn:
+        if o[0] == (0, "LWPOLYLINE"):
+            ensure(int(group(o, 70) or "0") & 128 == 128, f"{name}: a polyline with PLINEGEN (70 bit 128)")
     at = [k for k, e in enumerate(drawn) if e[0] == (0, "INSERT") and not (group(e, 2) or "").startswith("*U")]
     given = [e for e in spec["entities"] if e["kind"] == "insert" and e["block"] in names]
     ensure(len(at) == len(given), f"{len(given)} inserts written, the unknown block's left out")

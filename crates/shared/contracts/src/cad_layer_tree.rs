@@ -162,6 +162,16 @@ pub struct LayersEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type: Option<LineType>,
+    /// add, style: a project line type by its name (docs/adr/0313 §1), its nearest built-in written as the line type
+    /// unless `lineType` is given; null: none (a `lineType` given alone takes it away too).
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
+    pub line_pattern: Option<Option<String>>,
     /// Plot line weight, mm.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -194,6 +204,7 @@ impl LayersEdit {
     /// The operation with nothing else given (the fields are set after).
     pub fn new(operation: LayerEditOperation) -> Self {
         Self {
+            line_pattern: None,
             operation,
             layer: None,
             layers: None,

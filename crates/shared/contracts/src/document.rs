@@ -185,6 +185,16 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing_font: Option<DrawingFont>,
+    /// The project's line types with patterns (docs/adr/0313 §1).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::LineTypeDef>>"))]
+    pub line_types: Vec<crate::LineTypeDef>,
+    /// The project's line type scale (AutoCAD's LTSCALE, docs/adr/0313 §3): every pattern's lengths times it, above 0;
+    /// absent: 1.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub line_type_scale: Option<f64>,
     /// A local project's unit (docs/adr/0165 §2); absent: metres. Only a
     /// project without a coordinate system (SRID 0) has another.
     #[serde(default, skip_serializing_if = "Option::is_none")]

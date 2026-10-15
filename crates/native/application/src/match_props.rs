@@ -181,6 +181,8 @@ fn write(
                 continue;
             }
             let input = EntitiesSetProperties {
+                // The source's pattern goes with its line type (docs/adr/0313 §1).
+                line_pattern: has(MatchProperty::LineType).then(|| base.look.line_pattern.clone()),
                 uids: group.iter().map(|(_, uid)| uid.clone()).collect(),
                 layer_id: has(MatchProperty::Layer).then(|| base.layer_id.clone()),
                 color: has(MatchProperty::Color).then(|| base.color.clone()),

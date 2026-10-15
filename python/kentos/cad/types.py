@@ -1194,6 +1194,26 @@ LineTypeName = Literal["continuous", "dashed", "dashdot", "dotted"]
 """The names of :class:`LineType`, for a plain string."""
 
 
+class LineTypesOperation(_StrEnum):
+    """What `cad.linetypes.edit` does.
+
+    - ``load``: The types of a LIN file's text taken in.
+    - ``add``: One type added, or one of its name replaced.
+    - ``remove``: One type taken away.
+    - ``scale``: The project's line type scale (LTSCALE) set.
+    - ``export``: The project's types as a LIN file's text; writes nothing.
+    """
+    LOAD = "load"
+    ADD = "add"
+    REMOVE = "remove"
+    SCALE = "scale"
+    EXPORT = "export"
+
+
+LineTypesOperationName = Literal["load", "add", "remove", "scale", "export"]
+"""The names of :class:`LineTypesOperation`, for a plain string."""
+
+
 class LookPart(_StrEnum):
     """A part of an object's look whose source can be its layer."""
     COLOR = "color"
@@ -1333,6 +1353,20 @@ class OrderTo(_StrEnum):
 
 OrderToName = Literal["front", "back", "above", "under"]
 """The names of :class:`OrderTo`, for a plain string."""
+
+
+class PatternUnit(_StrEnum):
+    """Where a pattern's lengths are measured.
+
+    - ``paper``: Millimetres on paper: the same on every sheet, the drawing's scale over 1000 metres in it (KentOS's own types).
+    - ``drawing``: The drawing's own lengths, in the project's unit (a LIN file's).
+    """
+    PAPER = "paper"
+    DRAWING = "drawing"
+
+
+PatternUnitName = Literal["paper", "drawing"]
+"""The names of :class:`PatternUnit`, for a plain string."""
 
 
 class PointLabelMode(_StrEnum):
@@ -2321,6 +2355,7 @@ class Entity(_Union):
         label: str | None | Unset
         label_pins: list[LabelPin] | Unset
         layer_id: str
+        line_pattern: str | None | Unset
         line_type: LineType | LineTypeName | None | Unset
         line_type_scale: float | None | Unset
         line_weight: float | None | Unset
@@ -3202,6 +3237,8 @@ class ArcEntity(Entity):
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
         line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
@@ -3228,6 +3265,7 @@ class ArcEntity(Entity):
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
@@ -3255,6 +3293,8 @@ class ArcEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_type_scale is not UNSET:
@@ -3286,6 +3326,7 @@ class ArcEntity(Entity):
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
@@ -4538,6 +4579,8 @@ class CircleEntity(Entity):
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
         line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
@@ -4562,6 +4605,7 @@ class CircleEntity(Entity):
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
@@ -4587,6 +4631,8 @@ class CircleEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_type_scale is not UNSET:
@@ -4616,6 +4662,7 @@ class CircleEntity(Entity):
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
@@ -4849,6 +4896,8 @@ class ConstructionEntity(_Model):
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
         line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
@@ -4872,6 +4921,7 @@ class ConstructionEntity(_Model):
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
@@ -4897,6 +4947,8 @@ class ConstructionEntity(_Model):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_type_scale is not UNSET:
@@ -4926,6 +4978,7 @@ class ConstructionEntity(_Model):
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
@@ -5214,6 +5267,8 @@ class DimensionEntity(Entity):
         font: The value's typeface; absent: the project's.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
         line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
@@ -5266,6 +5321,7 @@ class DimensionEntity(Entity):
     font: DrawingFont | DrawingFontName | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
@@ -5335,6 +5391,8 @@ class DimensionEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_type_scale is not UNSET:
@@ -5405,6 +5463,7 @@ class DimensionEntity(Entity):
             font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
@@ -6166,6 +6225,8 @@ class EllipseEntity(Entity):
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
         line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
@@ -6193,6 +6254,7 @@ class EllipseEntity(Entity):
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
@@ -6221,6 +6283,8 @@ class EllipseEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_type_scale is not UNSET:
@@ -6253,6 +6317,7 @@ class EllipseEntity(Entity):
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
@@ -8303,6 +8368,9 @@ class EntitiesSetProperties(_Model):
             unchanged.
         layer_id: The layer they move to: a layer's id (`LayerNode.id`), not a group's.
             Absent: they stay on theirs.
+        line_pattern: Their own project line type by its name (`ObjectLook.line_pattern`, docs/adr/0313 §1), its nearest built-in
+            written as their line type unless `lineType` is given; null: none (a `lineType` given alone takes it away
+            too). Absent: unchanged.
         line_type: Their own line type (`ObjectLook.line_type`, docs/adr/0260 §2); null:
             their source's (katmana göre). Absent: unchanged.
         line_type_scale: Their pattern's own factor, above 0, at most 1000; null: 1. Absent: unchanged. Unit: 1.
@@ -8328,6 +8396,7 @@ class EntitiesSetProperties(_Model):
     expected_revision: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     layer_id: str | None | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
@@ -8352,6 +8421,8 @@ class EntitiesSetProperties(_Model):
             out["label"] = self.label
         if self.layer_id is not UNSET:
             out["layerId"] = self.layer_id
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_type_scale is not UNSET:
@@ -8379,6 +8450,7 @@ class EntitiesSetProperties(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             label=data.get("label", UNSET),
             layer_id=data.get("layerId", UNSET),
+            line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
@@ -9364,6 +9436,8 @@ class HatchEntity(Entity):
         holes: Unit: length.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
         line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
@@ -9390,6 +9464,7 @@ class HatchEntity(Entity):
     holes: list[list[Vec2]] | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
@@ -9419,6 +9494,8 @@ class HatchEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_type_scale is not UNSET:
@@ -9450,6 +9527,7 @@ class HatchEntity(Entity):
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [[Vec2.from_json(e1) for e1 in e0] for e0 in data["holes"]],
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
@@ -9638,6 +9716,8 @@ class ImageEntity(Entity):
         file: The file it shows (linked): absolute, or relative to the drawing's folder.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
         line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
@@ -9669,6 +9749,7 @@ class ImageEntity(Entity):
     file: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
@@ -9704,6 +9785,8 @@ class ImageEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_type_scale is not UNSET:
@@ -9742,6 +9825,7 @@ class ImageEntity(Entity):
             file=data.get("file", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
@@ -9969,6 +10053,8 @@ class InsertEntity(Entity):
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
         line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
@@ -9996,6 +10082,7 @@ class InsertEntity(Entity):
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
@@ -10024,6 +10111,8 @@ class InsertEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_type_scale is not UNSET:
@@ -10057,6 +10146,7 @@ class InsertEntity(Entity):
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
@@ -11344,9 +11434,11 @@ class LayerStyle(_Model):
     """A layer's look. `renderer` (the style engine, docs/STYLE.md) is opaque JSON in v1.
     Attributes:
         color: Hex colour or a theme token (fg, fg-dim, ink, paper).
+        line_type: Its built-in line type; with a `pattern`, the one nearest to it (what a reader without patterns draws).
         line_weight: Plot line weight in mm. Unit: paper-mm.
         labels: How the layer is labelled (docs/adr/0212 §2): rule-based classes,
             none, its objects as obstacles; absent, by `label` (one label).
+        line_pattern: A project line type by its name (docs/adr/0313 §1; `pattern` is a hatch's); absent: `line_type`.
     """
     color: str
     line_type: LineType | LineTypeName
@@ -11354,6 +11446,7 @@ class LayerStyle(_Model):
     fill: str | None | Unset = UNSET
     label: LabelStyle | None | Unset = UNSET
     labels: LayerLabels | None | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
     pick_interior: bool | None | Unset = UNSET
     point: PointStyle | None | Unset = UNSET
     renderer: Any | Unset = UNSET
@@ -11369,6 +11462,8 @@ class LayerStyle(_Model):
             out["label"] = None if self.label is None else self.label.to_json()
         if self.labels is not UNSET:
             out["labels"] = None if self.labels is None else self.labels.to_json()
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
         if self.pick_interior is not UNSET:
             out["pickInterior"] = self.pick_interior
         if self.point is not UNSET:
@@ -11386,6 +11481,7 @@ class LayerStyle(_Model):
             fill=data.get("fill", UNSET),
             label=UNSET if "label" not in data else None if data["label"] is None else LabelStyle.from_json(data["label"]),
             labels=UNSET if "labels" not in data else None if data["labels"] is None else LayerLabels.from_json(data["labels"]),
+            line_pattern=data.get("linePattern", UNSET),
             pick_interior=data.get("pickInterior", UNSET),
             point=UNSET if "point" not in data else None if data["point"] is None else PointStyle.from_json(data["point"]),
             renderer=data.get("renderer", UNSET),
@@ -11664,6 +11760,8 @@ class LayersEdit(_Model):
         kind: Add's kind of node; absent: a layer.
         layer: The node it acts on; merge's target.
         layers: Merge's sources; purge's layers and groups.
+        line_pattern: add, style: a project line type by its name (docs/adr/0313 §1), its nearest built-in written as the line type
+            unless `lineType` is given; null: none (a `lineType` given alone takes it away too).
         line_weight: Plot line weight, mm. Unit: paper-mm.
         name: Add's and duplicate's name, trimmed.
     """
@@ -11677,6 +11775,7 @@ class LayersEdit(_Model):
     kind: LayerNodeType | LayerNodeTypeName | None | Unset = UNSET
     layer: str | None | Unset = UNSET
     layers: list[str] | None | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     locked: bool | None | Unset = UNSET
@@ -11706,6 +11805,8 @@ class LayersEdit(_Model):
             out["layer"] = self.layer
         if self.layers is not UNSET:
             out["layers"] = None if self.layers is None else list(self.layers)
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_weight is not UNSET:
@@ -11735,6 +11836,7 @@ class LayersEdit(_Model):
             kind=UNSET if "kind" not in data else None if data["kind"] is None else _enum_in(LayerNodeType, data["kind"]),
             layer=data.get("layer", UNSET),
             layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+            line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             locked=data.get("locked", UNSET),
@@ -12807,6 +12909,8 @@ class LeaderEntity(Entity):
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
         line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
@@ -12838,6 +12942,7 @@ class LeaderEntity(Entity):
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
@@ -12870,6 +12975,8 @@ class LeaderEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_type_scale is not UNSET:
@@ -12906,6 +13013,7 @@ class LeaderEntity(Entity):
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
@@ -12915,6 +13023,29 @@ class LeaderEntity(Entity):
             text=data.get("text", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LinLineProblem(_Model):
+    """A LIN file's line that did not read.
+    Attributes:
+        line: Unit: count.
+    """
+    line: int
+    message: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["line"] = self.line
+        out["message"] = self.message
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LinLineProblem:
+        return cls(
+            line=data["line"],
+            message=data["message"],
         )
 
 
@@ -13050,6 +13181,8 @@ class LineEntity(Entity):
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
         line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
@@ -13079,6 +13212,7 @@ class LineEntity(Entity):
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
@@ -13108,6 +13242,8 @@ class LineEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_type_scale is not UNSET:
@@ -13145,6 +13281,7 @@ class LineEntity(Entity):
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
@@ -13181,6 +13318,150 @@ class LinePlan(_Model):
         return cls(
             entity=Entity.from_json(data["entity"]),
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LineTypeDef(_Model):
+    """A project's line type.
+    Attributes:
+        name: One of its kind among the project's, letters' case aside.
+        source: The file it came from (`kentos.lin`, a DXF's name).
+    """
+    name: str
+    elements: list[PatternElement]
+    description: str | Unset = UNSET
+    source: str | None | Unset = UNSET
+    unit: PatternUnit | PatternUnitName = PatternUnit.PAPER
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["elements"] = [e0.to_json() for e0 in self.elements]
+        if self.description is not UNSET:
+            out["description"] = self.description
+        if self.source is not UNSET:
+            out["source"] = self.source
+        out["unit"] = _enum_out(self.unit)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LineTypeDef:
+        return cls(
+            name=data["name"],
+            elements=[PatternElement.from_json(e0) for e0 in data["elements"]],
+            description=data.get("description", UNSET),
+            source=data.get("source", UNSET),
+            unit=_enum_in(PatternUnit, data["unit"]) if "unit" in data else PatternUnit.PAPER,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LineTypesEdit(_Model):
+    """`cad.linetypes.edit` v1 (docs/adr/0313 §2).
+    Attributes:
+        lin: load: a LIN file's text.
+        line_type: add: the type.
+        name: remove: its name.
+        names: load: the types to take, by name; export: those to write. Absent: all.
+        replace: load, add: a type of a name the project has replaces it; else load skips it and add refuses.
+        scale: scale: LTSCALE, above 0 and at most 1000; 1 is none. Unit: 1.
+        source: load: the file's name, each type's source.
+    """
+    operation: LineTypesOperation | LineTypesOperationName
+    expected_revision: str | None | Unset = UNSET
+    lin: str | None | Unset = UNSET
+    line_type: LineTypeDef | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    names: list[str] | None | Unset = UNSET
+    replace: bool | Unset = UNSET
+    scale: float | None | Unset = UNSET
+    source: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.lin is not UNSET:
+            out["lin"] = self.lin
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else self.line_type.to_json()
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.names is not UNSET:
+            out["names"] = None if self.names is None else list(self.names)
+        if self.replace is not UNSET:
+            out["replace"] = self.replace
+        if self.scale is not UNSET:
+            out["scale"] = None if self.scale is None else float(self.scale)
+        if self.source is not UNSET:
+            out["source"] = self.source
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LineTypesEdit:
+        return cls(
+            operation=_enum_in(LineTypesOperation, data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            lin=data.get("lin", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else LineTypeDef.from_json(data["lineType"]),
+            name=data.get("name", UNSET),
+            names=UNSET if "names" not in data else None if data["names"] is None else list(data["names"]),
+            replace=data.get("replace", UNSET),
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
+            source=data.get("source", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LineTypesEdited(_Model):
+    """What `cad.linetypes.edit` did.
+    Attributes:
+        added: The types added, by name, in their order.
+        replaced: The project's types a load or an add replaced.
+        skipped: load: the file's types of a name the project has, kept as they are.
+        problems: load: the file's lines that did not read.
+        lin: export: the LIN file's text.
+        scale: The project's line type scale after; absent: 1. Unit: 1.
+    """
+    changed: bool
+    added: list[str]
+    replaced: list[str]
+    skipped: list[str]
+    removed: list[str]
+    problems: list[LinLineProblem]
+    revision: str
+    lin: str | None | Unset = UNSET
+    scale: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = self.changed
+        out["added"] = list(self.added)
+        out["replaced"] = list(self.replaced)
+        out["skipped"] = list(self.skipped)
+        out["removed"] = list(self.removed)
+        out["problems"] = [e0.to_json() for e0 in self.problems]
+        out["revision"] = self.revision
+        if self.lin is not UNSET:
+            out["lin"] = self.lin
+        if self.scale is not UNSET:
+            out["scale"] = None if self.scale is None else float(self.scale)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LineTypesEdited:
+        return cls(
+            changed=data["changed"],
+            added=list(data["added"]),
+            replaced=list(data["replaced"]),
+            skipped=list(data["skipped"]),
+            removed=list(data["removed"]),
+            problems=[LinLineProblem.from_json(e0) for e0 in data["problems"]],
+            revision=data["revision"],
+            lin=data.get("lin", UNSET),
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
         )
 
 
@@ -13666,6 +13947,8 @@ class NurbsEntity(Entity):
         fit_tolerance: How far the curve may pass from its fit points, ≥ 0 (AutoCAD's 44). Unit: length.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
         line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
@@ -13697,6 +13980,7 @@ class NurbsEntity(Entity):
     fit_tolerance: float | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
@@ -13732,6 +14016,8 @@ class NurbsEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_type_scale is not UNSET:
@@ -13771,6 +14057,7 @@ class NurbsEntity(Entity):
             fit_tolerance=UNSET if "fitTolerance" not in data else None if data["fitTolerance"] is None else float(data["fitTolerance"]),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
@@ -13893,6 +14180,8 @@ class PathEntity(_Model):
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
         line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
@@ -13931,6 +14220,7 @@ class PathEntity(_Model):
     holes: list[RingGeometry] | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
@@ -13965,6 +14255,8 @@ class PathEntity(_Model):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_type_scale is not UNSET:
@@ -14004,6 +14296,7 @@ class PathEntity(_Model):
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [RingGeometry.from_json(e0) for e0 in data["holes"]],
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
@@ -14015,6 +14308,35 @@ class PathEntity(_Model):
             widths=UNSET if "widths" not in data else None if data["widths"] is None else [[float(e1) for e1 in e0] for e0 in data["widths"]],
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
             zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PatternElement(_Model):
+    """An element of a pattern: a dash (a positive length), a gap (negative), a dot (0), or a text or a shape (0: it
+    takes no length of its own).
+    Attributes:
+        length: Unit: 1.
+    """
+    length: float
+    shape: PatternShape | None | Unset = UNSET
+    text: PatternText | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["length"] = float(self.length)
+        if self.shape is not UNSET:
+            out["shape"] = None if self.shape is None else self.shape.to_json()
+        if self.text is not UNSET:
+            out["text"] = None if self.text is None else self.text.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PatternElement:
+        return cls(
+            length=float(data["length"]),
+            shape=UNSET if "shape" not in data else None if data["shape"] is None else PatternShape.from_json(data["shape"]),
+            text=UNSET if "text" not in data else None if data["text"] is None else PatternText.from_json(data["text"]),
         )
 
 
@@ -14051,6 +14373,108 @@ class PatternLine(_Model):
             origin=[float(e0) for e0 in data["origin"]],
             offset=[float(e0) for e0 in data["offset"]],
             dashes=[float(e0) for e0 in data["dashes"]] if "dashes" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PatternShape(_Model):
+    """A shape of a shape file in a pattern (`[CIRC1,ltypeshp.shx]`).
+    Attributes:
+        file: The SHX file it is in, as written.
+        rotation: R (along the line), A (absolute) or U (along the line, kept readable): degrees. Unit: deg.
+        scale: S: its height (a text) or its scale (a shape), in the pattern's unit. Unit: 1.
+        x: Unit: 1.
+        y: Unit: 1.
+    """
+    name: str
+    file: str
+    absolute: bool | Unset = UNSET
+    rotation: float | Unset = UNSET
+    scale: float | Unset = UNSET
+    upright: bool | Unset = UNSET
+    x: float | Unset = UNSET
+    y: float | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["file"] = self.file
+        if self.absolute is not UNSET:
+            out["absolute"] = self.absolute
+        if self.rotation is not UNSET:
+            out["rotation"] = float(self.rotation)
+        if self.scale is not UNSET:
+            out["scale"] = float(self.scale)
+        if self.upright is not UNSET:
+            out["upright"] = self.upright
+        if self.x is not UNSET:
+            out["x"] = float(self.x)
+        if self.y is not UNSET:
+            out["y"] = float(self.y)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PatternShape:
+        return cls(
+            name=data["name"],
+            file=data["file"],
+            absolute=data.get("absolute", UNSET),
+            rotation=float(data["rotation"]) if "rotation" in data else UNSET,
+            scale=float(data["scale"]) if "scale" in data else UNSET,
+            upright=data.get("upright", UNSET),
+            x=float(data["x"]) if "x" in data else UNSET,
+            y=float(data["y"]) if "y" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PatternText(_Model):
+    """A text in a pattern (`["GAZ",STANDARD,S=.1]`).
+    Attributes:
+        style: The text style it names, as written.
+        rotation: R (along the line), A (absolute) or U (along the line, kept readable): degrees. Unit: deg.
+        scale: S: its height (a text) or its scale (a shape), in the pattern's unit. Unit: 1.
+        x: Unit: 1.
+        y: Unit: 1.
+    """
+    text: str
+    style: str
+    absolute: bool | Unset = UNSET
+    rotation: float | Unset = UNSET
+    scale: float | Unset = UNSET
+    upright: bool | Unset = UNSET
+    x: float | Unset = UNSET
+    y: float | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["text"] = self.text
+        out["style"] = self.style
+        if self.absolute is not UNSET:
+            out["absolute"] = self.absolute
+        if self.rotation is not UNSET:
+            out["rotation"] = float(self.rotation)
+        if self.scale is not UNSET:
+            out["scale"] = float(self.scale)
+        if self.upright is not UNSET:
+            out["upright"] = self.upright
+        if self.x is not UNSET:
+            out["x"] = float(self.x)
+        if self.y is not UNSET:
+            out["y"] = float(self.y)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PatternText:
+        return cls(
+            text=data["text"],
+            style=data["style"],
+            absolute=data.get("absolute", UNSET),
+            rotation=float(data["rotation"]) if "rotation" in data else UNSET,
+            scale=float(data["scale"]) if "scale" in data else UNSET,
+            upright=data.get("upright", UNSET),
+            x=float(data["x"]) if "x" in data else UNSET,
+            y=float(data["y"]) if "y" in data else UNSET,
         )
 
 
@@ -14216,6 +14640,8 @@ class PointCloudEntity(_Model):
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
         line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
@@ -14243,6 +14669,7 @@ class PointCloudEntity(_Model):
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
@@ -14272,6 +14699,8 @@ class PointCloudEntity(_Model):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_type_scale is not UNSET:
@@ -14306,6 +14735,7 @@ class PointCloudEntity(_Model):
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
@@ -14535,6 +14965,8 @@ class PointEntity(Entity):
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
         line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
@@ -14561,6 +14993,7 @@ class PointEntity(Entity):
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
@@ -14587,6 +15020,8 @@ class PointEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_type_scale is not UNSET:
@@ -14619,6 +15054,7 @@ class PointEntity(Entity):
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
@@ -15830,6 +16266,9 @@ class ProjectSettings(_Model):
         layer_states: The project's named layer states (docs/adr/0177 §4), in the menu's order.
         length_style: How lengths are written (docs/adr/0262 §2): none, decimal; the others
             only in an inch or foot drawing.
+        line_type_scale: The project's line type scale (AutoCAD's LTSCALE, docs/adr/0313 §3): every pattern's lengths times it, above 0;
+            absent: 1. Unit: 1.
+        line_types: The project's line types with patterns (docs/adr/0313 §1).
         named_ucs: The project's named UCSs, in the order they were kept.
         named_views: The project's named views, in the order they were kept (docs/adr/0285 §1).
         networks: The project's networks (docs/adr/0209 §2).
@@ -15864,6 +16303,8 @@ class ProjectSettings(_Model):
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
     layer_states: list[LayerState] | Unset = UNSET
     length_style: LengthStyle | LengthStyleName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
+    line_types: list[LineTypeDef] | Unset = UNSET
     named_ucs: list[NamedUcs] | Unset = UNSET
     named_views: list[NamedView] | Unset = UNSET
     networks: list[NetworkDef] | Unset = UNSET
@@ -15904,6 +16345,10 @@ class ProjectSettings(_Model):
             out["layerStates"] = [e0.to_json() for e0 in self.layer_states]
         if self.length_style is not UNSET:
             out["lengthStyle"] = None if self.length_style is None else _enum_out(self.length_style)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
+        if self.line_types is not UNSET:
+            out["lineTypes"] = [e0.to_json() for e0 in self.line_types]
         if self.named_ucs is not UNSET:
             out["namedUcs"] = [e0.to_json() for e0 in self.named_ucs]
         if self.named_views is not UNSET:
@@ -15947,6 +16392,8 @@ class ProjectSettings(_Model):
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
             layer_states=[LayerState.from_json(e0) for e0 in data["layerStates"]] if "layerStates" in data else UNSET,
             length_style=UNSET if "lengthStyle" not in data else None if data["lengthStyle"] is None else _enum_in(LengthStyle, data["lengthStyle"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
+            line_types=[LineTypeDef.from_json(e0) for e0 in data["lineTypes"]] if "lineTypes" in data else UNSET,
             named_ucs=[NamedUcs.from_json(e0) for e0 in data["namedUcs"]] if "namedUcs" in data else UNSET,
             named_views=[NamedView.from_json(e0) for e0 in data["namedViews"]] if "namedViews" in data else UNSET,
             networks=[NetworkDef.from_json(e0) for e0 in data["networks"]] if "networks" in data else UNSET,
@@ -16247,6 +16694,8 @@ class RasterEntity(Entity):
         file: The file it shows (linked): absolute, or relative to the drawing's folder.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
         line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
@@ -16281,6 +16730,7 @@ class RasterEntity(Entity):
     file: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
@@ -16319,6 +16769,8 @@ class RasterEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_type_scale is not UNSET:
@@ -16360,6 +16812,7 @@ class RasterEntity(Entity):
             file=data.get("file", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
@@ -17569,6 +18022,8 @@ class SplineEntity(Entity):
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
         line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
@@ -17593,6 +18048,7 @@ class SplineEntity(Entity):
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
@@ -17618,6 +18074,8 @@ class SplineEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_type_scale is not UNSET:
@@ -17647,6 +18105,7 @@ class SplineEntity(Entity):
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
@@ -18351,6 +18810,8 @@ class TableEntity(Entity):
         header: The first row is its heading: bold, centred.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
         line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
@@ -18391,6 +18852,7 @@ class TableEntity(Entity):
     italic: bool | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
@@ -18438,6 +18900,8 @@ class TableEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_type_scale is not UNSET:
@@ -18486,6 +18950,7 @@ class TableEntity(Entity):
             italic=data.get("italic", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
@@ -18529,6 +18994,8 @@ class TextEntity(Entity):
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
         label_scale: The scale's denominator (1:N) the linked label is written at; finite, over 0. Unit: scale.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
         line_spacing: The distance between the lines' baselines in 5/3 of the height (DXF's
             group 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`. Unit: 1.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
@@ -18577,6 +19044,7 @@ class TextEntity(Entity):
     label_of: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
     label_scale: float | None | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
     line_spacing: float | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
@@ -18625,6 +19093,8 @@ class TextEntity(Entity):
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
         if self.label_scale is not UNSET:
             out["labelScale"] = None if self.label_scale is None else float(self.label_scale)
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
         if self.line_spacing is not UNSET:
             out["lineSpacing"] = None if self.line_spacing is None else float(self.line_spacing)
         if self.line_type is not UNSET:
@@ -18677,6 +19147,7 @@ class TextEntity(Entity):
             label_of=data.get("labelOf", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             label_scale=UNSET if "labelScale" not in data else None if data["labelScale"] is None else float(data["labelScale"]),
+            line_pattern=data.get("linePattern", UNSET),
             line_spacing=UNSET if "lineSpacing" not in data else None if data["lineSpacing"] is None else float(data["lineSpacing"]),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
@@ -24851,6 +25322,7 @@ __all__ = [
     "LengthenChange",
     "LengthenEnd",
     "LengthenEndName",
+    "LinLineProblem",
     "LineArrayLayout",
     "LineCreate",
     "LineCreated",
@@ -24860,7 +25332,12 @@ __all__ = [
     "LineLabelModeName",
     "LinePlan",
     "LineType",
+    "LineTypeDef",
     "LineTypeName",
+    "LineTypesEdit",
+    "LineTypesEdited",
+    "LineTypesOperation",
+    "LineTypesOperationName",
     "LinearDimensionMeasure",
     "LinesCornerPick",
     "LocalCrsSystem",
@@ -24921,7 +25398,12 @@ __all__ = [
     "PasteReport",
     "PathArrayLayout",
     "PathEntity",
+    "PatternElement",
     "PatternLine",
+    "PatternShape",
+    "PatternText",
+    "PatternUnit",
+    "PatternUnitName",
     "PdfExported",
     "PercentLengthenChange",
     "PickedEntity",

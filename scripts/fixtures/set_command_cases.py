@@ -883,6 +883,36 @@ cases.append({
     ],
 })
 
+# A project line type with a pattern (docs/adr/0313 §1): its nearest built-in written as the line type unless one is given.
+P_SETUP = {**SETUP, "settings": {**SETUP["settings"], "lineTypes": [
+    {"name": "NK", "elements": [{"length": 5.0}, {"length": -1.0}, {"length": 0.0}, {"length": -1.0}], "unit": "paper"}]}}
+
+cases.append({
+    "name": "Desen: nesneye projenin çizgi tipi; çizgi tipi desenin en yakın yerleşik tipi, verilmişse o; yerleşik tip tek başına deseni kaldırır; null kaldırır (ADR 0313 §1)",
+    "setup": P_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(1), "linePattern": "NK", "operation": "lineType"}, "result": done([1]),
+         "expect": {"entities": {"1": looked(1, lineType="dashdot", linePattern="NK")}, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": uids(1), "lineType": "dashed", "operation": "lineType"}, "result": done([1]),
+         "expect": {"entities": {"1": looked(1, lineType="dashed")}, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": uids(2), "linePattern": "nk", "lineType": "dotted", "operation": "lineType"}, "result": done([2]),
+         "expect": {"entities": {"2": looked(2, lineType="dotted", linePattern="nk")}, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": uids(2), "linePattern": None, "operation": "lineType"}, "result": done([2]),
+         "expect": {"entities": {"2": looked(2, lineType="dotted")}, "revision": "changed"}},
+        {"op": "undo", "returns": "Çizgi tipi değiştir", "expect": {"entities": {"2": looked(2, lineType="dotted", linePattern="nk")}}},
+    ],
+})
+
+cases.append({
+    "name": "desen projede yok: line_type_not_found (yolu linePattern)",
+    "setup": P_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(1), "linePattern": "YOK", "operation": "lineType"},
+         "result": failed("line_type_not_found", "“YOK” adlı çizgi tipi projede yok. Çizgi tipleri penceresinden yükleyin ya da var olan bir adı verin.", "linePattern"),
+         "expect": NOTHING},
+    ],
+})
+
 cases.append({
     "name": "Saydamlık değiştir: 0 ile 0,9 arası (ADR 0260 §3); 0 da bir değerdir (bloktaki nesne yerleştirmeninkini almaz); null kaynağına döndürür",
     "steps": [

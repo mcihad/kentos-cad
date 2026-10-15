@@ -12,6 +12,11 @@ export type ImportLayer = { name: string,
  */
 color: string, visible: boolean, locked: boolean, lineType: LineType, 
 /**
+ * The file's line type with a pattern the layer draws with, by its name (docs/adr/0313 §6), one of the result's
+ * `line_types`; `line_type` its nearest built-in.
+ */
+linePattern?: string, 
+/**
  * Plot line weight in mm, when the file gives one.
  */
 lineWeight?: number, 

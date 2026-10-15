@@ -323,6 +323,9 @@ def settings(s):
                 "namedViews": (named_views, False),
                 # Schema 50 (docs/adr/0262 §2): how lengths are written; decimal is no setting.
                 "lengthStyle": (enum(("architectural", "engineering", "fractional")), False),
+                # Schema 56 (docs/adr/0313 §1): the project's line types with patterns and its line type scale.
+                "lineTypes": (line_types, False),
+                "lineTypeScale": (line_type_scale, False),
             },
             "settings",
         )
@@ -694,6 +697,49 @@ def not_null(v):
     return opaque(v)
 
 
+def line_type_scale(x):
+    """Schema 56's LTSCALE (docs/adr/0313 §3): above 0, at most 1000, never 1 (its absence)."""
+    assert 0 < x <= 1000 and x != 1.0, "çizgi tipi ölçeği 0'dan büyük, en çok 1000, 1 yazılmaz"
+    return f64(x)
+
+
+def pattern_place(p):
+    """A complex element's placing: only what is not its default (scale 1, the rest 0 or false)."""
+    assert p.get("scale", 1.0) > 0, "ölçek 0'dan büyük"
+    return {"scale": (lambda x: f64(x) if x != 1.0 else None, False), "rotation": (lambda x: f64(x) if x != 0.0 else None, False),
+            "absolute": (lambda b: boolean(b) if b else None, False), "upright": (lambda b: boolean(b) if b else None, False),
+            "x": (lambda x: f64(x) if x != 0.0 else None, False), "y": (lambda x: f64(x) if x != 0.0 else None, False)}
+
+
+def pattern_element(el):
+    """A pattern's element (docs/adr/0313 §1): a length; a text or a shape takes none (0)."""
+    assert ("text" not in el and "shape" not in el) or el["length"] == 0.0, "yazı ya da şeklin uzunluğu 0"
+    def text_el(t):
+        return cmap(fields(t, {"text": (text, True), "style": (text, True), **pattern_place(t)}, "patternText"))
+    def shape_el(s):
+        return cmap(fields(s, {"name": (text, True), "file": (text, True), **pattern_place(s)}, "patternShape"))
+    return cmap(fields(el, {"length": (f64, True), "text": (text_el, False), "shape": (shape_el, False)}, "patternElement"))
+
+
+def line_types(types):
+    """Schema 56's line types (docs/adr/0313 §1): not empty; names neither empty nor twice (case aside); at most 12
+    elements, the first that draws not a gap; a unit, `paper` or `drawing`."""
+    assert types, "boş liste yazılmaz"
+    seen = set()
+    out = []
+    for t in types:
+        name = t["name"]
+        assert name and name.strip() == name and name.lower() not in seen, "çizgi tipinin adı boş ya da iki kez"
+        seen.add(name.lower())
+        assert len(t["elements"]) <= 12, "en çok 12 öğe"
+        drawn = [e["length"] for e in t["elements"] if "text" not in e and "shape" not in e]
+        assert not drawn or drawn[0] >= 0, "desen bir çizgi ya da noktayla başlar"
+        out.append(cmap(fields(t, {"name": (text, True), "description": (lambda s: text(s) if s else None, False),
+                                   "elements": (lambda es: array([pattern_element(e) for e in es]), True),
+                                   "unit": (enum(("paper", "drawing")), True), "source": (text, False)}, "lineType")))
+    return array(out)
+
+
 def layer_style(s):
     return cmap(
         fields(
@@ -709,6 +755,8 @@ def layer_style(s):
                 "labels": (layer_labels, False),
                 "pickInterior": (lambda b: b"\xf5" if b else b"\xf4", False),
                 "renderer": (not_null, False),
+                # Schema 56 (docs/adr/0313 §1): a project line type by its name.
+                "linePattern": (text, False),
             },
             "style",
         )
@@ -1585,6 +1633,8 @@ def entity(e, uid, index):
         "byLayer": (lambda ps: array([text(p) for p in ps]), False),
         # Schema 54 (docs/adr/0310): an area's mask.
         "wipeout": (lambda w: cmap({"frame": boolean(w["frame"])}), False),
+        # Schema 56 (docs/adr/0313 §1): its own project line type by its name.
+        "linePattern": (text, False),
         **KINDS[kind],
     }
     look_rule(e, uid is None)
@@ -1863,6 +1913,17 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def composed(nodes):
         return any("compose" in n or composed(n["children"]) for n in nodes)
 
+    # Schema 56 (docs/adr/0313): a line type with a pattern, a line type scale, a pattern named by a layer, a state's
+    # style or an object.
+    def line_patterned(nodes):
+        return any("linePattern" in n.get("style", {}) or line_patterned(n.get("children", [])) for n in nodes)
+
+    named_pattern = lambda es: any("linePattern" in e for e in es)  # noqa: E731
+    s_ = settings or {}
+    if ("lineTypes" in s_ or "lineTypeScale" in s_ or line_patterned(layers)
+            or any("linePattern" in n.get("style", {}) for st in s_.get("layerStates", []) for n in st["nodes"])
+            or named_pattern(entities) or any(named_pattern(b["entities"]) for b in blocks or [])):
+        return 56
     # Schema 55 (docs/adr/0311): a frozen node, or a layer state keeping freezes and printing.
     def frozen(nodes):
         return any(n.get("frozen") is True or frozen(n["children"]) for n in nodes)
@@ -2195,7 +2256,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-56.kcad"] = container(root(cmap(parts), version=uint(56)))
+    files["schema-version-57.kcad"] = container(root(cmap(parts), version=uint(57)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -3327,6 +3388,14 @@ def broken(minimal_content, minimal_file):
     # A state node's freeze and printing are schema 55's (docs/adr/0311 §3); its path only an exported file's.
     files["layer-states-frozen-in-schema-54.kcad"] = with_settings(54, layerStates=array([state("a", "Görünüm", [node("0", frozen=b"\xf4")])]))
     files["layer-states-path.kcad"] = with_settings(55, layerStates=array([state("a", "Görünüm", [node("0", path=text("0"))])]))
+    # The line types and their scale are schema 56's (docs/adr/0313 §1): unknown fields in 55; the scale never 1, the
+    # list never empty, a name once.
+    def line_type_of(name):
+        return cmap({"name": text(name), "unit": text("paper"), "elements": array([cmap({"length": f64(1.0)}), cmap({"length": f64(-1.0)})])})
+    files["line-type-scale-in-schema-55.kcad"] = with_settings(55, lineTypeScale=f64(2.0))
+    files["line-type-scale-one.kcad"] = with_settings(56, lineTypeScale=f64(1.0))
+    files["line-types-empty.kcad"] = with_settings(56, lineTypes=array([]))
+    files["line-types-same-name.kcad"] = with_settings(56, lineTypes=array([line_type_of("KESIK"), line_type_of("kesik")]))
     # The topology settings are schema 27's (docs/adr/0202 §7): an unknown field in schema 26; not empty, a tolerance in
     # range, a rule's id neither empty nor twice, a known kind, another layer only and always between two layers and
     # never the rule's own, a value only where a kind takes one, an angle below a right angle, an exception's rule there.
@@ -3465,6 +3534,10 @@ def build():
     payload = document(load("wipeouts.json"))
     assert payload.count(b"\x67version\x18\x36") == 1
     out["broken/wipeouts-in-schema-53.kcad"] = container(payload.replace(b"\x67version\x18\x36", b"\x67version\x18\x35"))
+    out["patterns.kcad"] = container(document(load("patterns.json")))
+    payload = document(load("patterns.json"))
+    assert payload.count(b"\x67version\x18\x38") == 1
+    out["broken/patterns-in-schema-55.kcad"] = container(payload.replace(b"\x67version\x18\x38", b"\x67version\x18\x37"))
     out["frozen.kcad"] = container(document(load("frozen.json")))
     payload = document(load("frozen.json"))
     assert payload.count(b"\x67version\x18\x37") == 1

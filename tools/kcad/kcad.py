@@ -184,6 +184,11 @@ SCHEMA_WITH_ARRAYS = 53
 SCHEMA_WITH_WIPEOUTS = 54
 # Schema 55: schema 54 and a layer's `frozen` (only true), a layer state node's `frozen` and `plot` (docs/adr/0311).
 SCHEMA_WITH_FROZEN = 55
+# Schema 56: schema 55 and the settings' line types with patterns (`lineTypes`) and line type scale (`lineTypeScale`),
+# a layer style's and an object's `linePattern` (docs/adr/0313 §1).
+SCHEMA_WITH_PATTERNS = 56
+# A pattern has at most 12 elements (AutoCAD's LIN, kentos_contracts::MAX_PATTERN_ELEMENTS).
+MOST_PATTERN_ELEMENTS = 12
 # An associative array holds 2 to 10 000 places (kentos_contracts::ARRAY_PLACES_MAX).
 ARRAY_PLACES_MAX = 10_000
 # A named view's bounds (kentos_contracts::cad_views): a middle within 10 000 km, a width and a height above 0 and at
@@ -361,7 +366,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1860,6 +1865,7 @@ class _Schema:
         self.arrays = version >= SCHEMA_WITH_ARRAYS
         self.wipeouts = version >= SCHEMA_WITH_WIPEOUTS
         self.frozen = version >= SCHEMA_WITH_FROZEN
+        self.patterns = version >= SCHEMA_WITH_PATTERNS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -2182,6 +2188,7 @@ class _Schema:
                 **({"ucs": (self.ucs_, False), "namedUcs": (self.named_ucs_, False)} if self.ucs else {}),
                 **({"lengthStyle": (self.enum(("architectural", "engineering", "fractional")), False)} if self.imperial else {}),
                 **({"namedViews": (self.named_views_, False)} if self.views else {}),
+                **({"lineTypes": (self.line_types_, False), "lineTypeScale": (self.line_type_scale_, False)} if self.patterns else {}),
             }
         )(v)
         # A second coordinate system is another system than the project's own; a project without one has none (a
@@ -3149,8 +3156,54 @@ class _Schema:
                 "renderer": (self.not_null, False),
                 "lineWeight": (self.float, True),
                 "pickInterior": (self.bool, False),
+                **({"linePattern": (self.text, False)} if self.patterns else {}),
             }
         )(v)
+
+    def line_type_scale_(self, v):
+        """The project's line type scale (schema 56, docs/adr/0313 §3): above 0, at most 1000, never 1 (its absence)."""
+        self.float(v)
+        if not (0.0 < v <= 1000.0) or v == 1.0:
+            self.fail("bad_value", "çizgi tipi ölçeği 0'dan büyük ve en çok 1000 olmalı; 1 yazılmaz")
+        return v
+
+    def line_types_(self, v):
+        """The project's line types (schema 56, docs/adr/0313 §1): a name trimmed, not empty, once (case aside); at most
+        12 elements, a text or a shape of length 0, the first that draws not a gap; the unit paper or drawing; an empty
+        list is not written."""
+        place = {"scale": (self.float, False), "rotation": (self.float, False), "absolute": (self.bool, False),
+                 "upright": (self.bool, False), "x": (self.float, False), "y": (self.float, False)}
+        element = self.fields({
+            "length": (self.float, True),
+            "text": (self.fields({"text": (self.text, True), "style": (self.text, True), **place}), False),
+            "shape": (self.fields({"name": (self.text, True), "file": (self.text, True), **place}), False),
+        })
+        read = self.fields({"name": (self.text, True), "description": (self.text, False), "elements": (self.array(element), True),
+                            "unit": (self.enum(("paper", "drawing")), True), "source": (self.text, False)})
+        all_ = self.array(read)(v)
+        if not all_:
+            self.fail("bad_value", "boş liste yazılmaz; çizgi tipi yoksa alan hiç yazılmaz")
+        seen = set()
+        for t in all_:
+            name = t["name"]
+            if not name or name != name.strip():
+                self.fail("bad_value", f"“{name}” bir çizgi tipi adı olamaz")
+            if name.lower() in seen:
+                self.fail("bad_value", f"“{name}” çizgi tipi iki kez var")
+            seen.add(name.lower())
+            els = t["elements"]
+            if len(els) > MOST_PATTERN_ELEMENTS:
+                self.fail("bad_value", f"“{name}” çizgi tipinin deseni en çok {MOST_PATTERN_ELEMENTS} öğe olur")
+            for e in els:
+                if ("text" in e or "shape" in e) and e["length"] != 0.0:
+                    self.fail("bad_value", f"“{name}” çizgi tipinde yazı ya da şeklin uzunluğu 0 olmalı")
+                for c in (e.get("text"), e.get("shape")):
+                    if c is not None and c.get("scale", 1.0) <= 0.0:
+                        self.fail("bad_value", f"“{name}” çizgi tipinde bir yazının ya da şeklin ölçeği 0'dan büyük olmalı")
+            drawn = [e["length"] for e in els if "text" not in e and "shape" not in e]
+            if drawn and drawn[0] < 0.0:
+                self.fail("bad_value", f"“{name}” çizgi tipinin deseni bir çizgi ya da noktayla başlamalı")
+        return all_
 
     def label_style(self, v):
         engine = {}
@@ -4140,6 +4193,8 @@ class _Schema:
             **({"byLayer": (self.array(self.enum(LOOK_PARTS)), False)} if self.look and self.inside is not None else {}),
             # An area's mask (schema 54, docs/adr/0310): `{ frame }`; only an area has it.
             **({"wipeout": (self.fields({"frame": (self.bool, True)}), False)} if self.wipeouts else {}),
+            # Its own project line type (schema 56, docs/adr/0313 §1).
+            **({"linePattern": (self.text, False)} if self.patterns else {}),
         }
 
     def order(self, v):

@@ -243,6 +243,7 @@ fn one_line(x: f64) -> DocumentSnapshotV1 {
         locked: false,
         expanded: false,
         style: LayerStyle {
+            line_pattern: None,
             color: "#ffffff".into(),
             line_type: LineType::Continuous,
             line_weight: 0.25,

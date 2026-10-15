@@ -200,6 +200,7 @@ pub fn preview(
     let mut store = Store::new();
     store.put_many(std::iter::once((1.0, "preview", false, shape(&sample))));
     let style = LayerStyle {
+        line_pattern: None,
         color: "fg".into(),
         line_type: LineType::Continuous,
         line_weight: 0.25,
@@ -211,6 +212,7 @@ pub fn preview(
         labels: None,
     };
     let opts = BuildOptions {
+        line_types: None,
         layer_styles: None,
         origin: Vec2::new(0.0, 0.0),
         plot_scale: 1000.0,

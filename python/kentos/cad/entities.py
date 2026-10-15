@@ -3731,6 +3731,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
+        line_pattern: str | None | Unset = UNSET,
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_type_scale: float | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
@@ -3773,6 +3774,9 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
                 unchanged.
             layer_id: The layer they move to: a layer's id (`LayerNode.id`), not a group's.
                 Absent: they stay on theirs.
+            line_pattern: Their own project line type by its name (`ObjectLook.line_pattern`, docs/adr/0313 §1), its nearest built-in
+                written as their line type unless `lineType` is given; null: none (a `lineType` given alone takes it away
+                too). Absent: unchanged.
             line_type: Their own line type (`ObjectLook.line_type`, docs/adr/0260 §2); null:
                 their source's (katmana göre). Absent: unchanged.
             line_type_scale: Their pattern's own factor, above 0, at most 1000; null: 1. Absent: unchanged. Unit: 1.
@@ -3810,6 +3814,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
             expected_revision=expected_revision,
             label=label,
             layer_id=layer_id,
+            line_pattern=line_pattern,
             line_type=line_type,
             line_type_scale=line_type_scale,
             line_weight=line_weight,
@@ -3832,6 +3837,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
+        line_pattern: str | None | Unset = UNSET,
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_type_scale: float | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
@@ -3852,6 +3858,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
             expected_revision=expected_revision,
             label=label,
             layer_id=layer_id,
+            line_pattern=line_pattern,
             line_type=line_type,
             line_type_scale=line_type_scale,
             line_weight=line_weight,
@@ -3874,6 +3881,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
+        line_pattern: str | None | Unset = UNSET,
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_type_scale: float | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
@@ -3894,6 +3902,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
             expected_revision=expected_revision,
             label=label,
             layer_id=layer_id,
+            line_pattern=line_pattern,
             line_type=line_type,
             line_type_scale=line_type_scale,
             line_weight=line_weight,
@@ -3916,6 +3925,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
+        line_pattern: str | None | Unset = UNSET,
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_type_scale: float | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
@@ -3941,6 +3951,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
             expected_revision=expected_revision,
             label=label,
             layer_id=layer_id,
+            line_pattern=line_pattern,
             line_type=line_type,
             line_type_scale=line_type_scale,
             line_weight=line_weight,

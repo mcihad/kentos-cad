@@ -213,6 +213,29 @@ pub fn symbols_of_object(
     stroke.apply(symbols)
 }
 
+/// [`symbols_of_object`] with the project's line types (docs/adr/0313 §3): the object's own built-in type over its
+/// layer's, then `pattern` (the one it draws with, decided by its caller) and the project's scale, then its stroke's
+/// scale and opacity.
+pub fn symbols_of_object_in(
+    style: &LayerStyle,
+    color: &str,
+    weight: f64,
+    hairlines: bool,
+    stroke: Stroke,
+    pattern: Option<&str>,
+    lines: &crate::line_types::LineTypes,
+) -> Value {
+    let symbols = match stroke.line_type {
+        Some(t) if t != style.line_type => {
+            let mut own = style.clone();
+            own.line_type = t;
+            symbols_of_layer_style(&own, color, weight, hairlines)
+        }
+        _ => symbols_of_layer_style(style, color, weight, hairlines),
+    };
+    stroke.apply(lines.apply(pattern, symbols))
+}
+
 /// A hatch object's own pattern (`hatchSymbolOf`): solid at 45 %, a
 /// gradient (docs/adr/0186 §3), or one hatch fill a family, as the geometry
 /// core gives the families (spacing in metres; a user-defined pattern's

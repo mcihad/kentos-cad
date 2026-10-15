@@ -120,6 +120,7 @@ fn build(renderer: &Value, list: &[&Entity], reading: ReadingUnit, view: bool) -
     let library = StyleLibrary::default();
     let names = |_: &str| "Katman".to_owned();
     let opts = BuildOptions {
+        line_types: None,
         layer_styles: None,
         origin: Vec2::new(0.0, 0.0),
         plot_scale: 1000.0,

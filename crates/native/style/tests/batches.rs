@@ -179,6 +179,7 @@ fn builds_the_web_s_batches() {
         let name = layer_name.clone();
         let names = move |_: &str| name.clone();
         let opts = BuildOptions {
+            line_types: None,
             layer_styles: None,
             origin,
             plot_scale: scale,
@@ -321,6 +322,7 @@ fn a_layer_built_in_parts_draws_as_the_layer_built_whole() {
         let name = layer_name.clone();
         let names = move |_: &str| name.clone();
         let opts = BuildOptions {
+            line_types: None,
             layer_styles: None,
             origin,
             plot_scale: scale,

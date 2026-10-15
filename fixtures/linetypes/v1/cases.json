@@ -1,0 +1,1275 @@
+{
+  "format": "kentos.linetype-cases",
+  "version": 1,
+  "note": "Written by scripts/fixtures/line_type_cases.py from AutoCAD's LIN documentation and docs/adr/0313; do not edit by hand.",
+  "maxElements": 12,
+  "lin": [
+    {
+      "name": "Basit kesikli",
+      "text": "*KESIK,Kesikli __ __ __\nA,.5,-.25\n",
+      "source": "deneme.lin",
+      "expect": {
+        "types": [
+          {
+            "name": "KESIK",
+            "elements": [
+              {
+                "length": 0.5
+              },
+              {
+                "length": -0.25
+              }
+            ],
+            "unit": "drawing",
+            "source": "deneme.lin",
+            "description": "Kesikli __ __ __"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "Nokta ve çizgi, açıklamasız",
+      "text": "*NOKTAKESIK\nA,1,-.25,0,-.25\n",
+      "source": "deneme.lin",
+      "expect": {
+        "types": [
+          {
+            "name": "NOKTAKESIK",
+            "elements": [
+              {
+                "length": 1.0
+              },
+              {
+                "length": -0.25
+              },
+              {
+                "length": 0.0
+              },
+              {
+                "length": -0.25
+              }
+            ],
+            "unit": "drawing",
+            "source": "deneme.lin"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "Yorumlar ve boş satırlar atlanır",
+      "text": ";; KentOS deneme dosyası\n\n*KESIK,Kesikli\n;; ara\nA,.5,-.25\n",
+      "source": "deneme.lin",
+      "expect": {
+        "types": [
+          {
+            "name": "KESIK",
+            "elements": [
+              {
+                "length": 0.5
+              },
+              {
+                "length": -0.25
+              }
+            ],
+            "unit": "drawing",
+            "source": "deneme.lin",
+            "description": "Kesikli"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "Birden çok tip, sırasıyla",
+      "text": "*A1,Birinci\nA,1,-1\n*B2,İkinci\nA,2,-1,0,-1\n",
+      "source": "deneme.lin",
+      "expect": {
+        "types": [
+          {
+            "name": "A1",
+            "elements": [
+              {
+                "length": 1.0
+              },
+              {
+                "length": -1.0
+              }
+            ],
+            "unit": "drawing",
+            "source": "deneme.lin",
+            "description": "Birinci"
+          },
+          {
+            "name": "B2",
+            "elements": [
+              {
+                "length": 2.0
+              },
+              {
+                "length": -1.0
+              },
+              {
+                "length": 0.0
+              },
+              {
+                "length": -1.0
+              }
+            ],
+            "unit": "drawing",
+            "source": "deneme.lin",
+            "description": "İkinci"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "Yazılı tip (göreli dönüş)",
+      "text": "*GAZ,Gaz hattı ---- GAZ ----\nA,.5,-.2,[\"GAZ\",STANDARD,S=.1,R=0.0,X=-0.1,Y=-.05],-.25\n",
+      "source": "deneme.lin",
+      "expect": {
+        "types": [
+          {
+            "name": "GAZ",
+            "elements": [
+              {
+                "length": 0.5
+              },
+              {
+                "length": -0.2
+              },
+              {
+                "length": 0.0,
+                "text": {
+                  "text": "GAZ",
+                  "style": "STANDARD",
+                  "scale": 0.1,
+                  "rotation": 0.0,
+                  "absolute": false,
+                  "x": -0.1,
+                  "y": -0.05
+                }
+              },
+              {
+                "length": -0.25
+              }
+            ],
+            "unit": "drawing",
+            "source": "deneme.lin",
+            "description": "Gaz hattı ---- GAZ ----"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "Yazılı tip (mutlak dönüş, derece işaretli)",
+      "text": "*SU,Su ---- SU ----\nA,.5,-.2,[\"SU\",STANDARD,S=.1,A=90d,X=-0.1,Y=-.05],-.25\n",
+      "source": "deneme.lin",
+      "expect": {
+        "types": [
+          {
+            "name": "SU",
+            "elements": [
+              {
+                "length": 0.5
+              },
+              {
+                "length": -0.2
+              },
+              {
+                "length": 0.0,
+                "text": {
+                  "text": "SU",
+                  "style": "STANDARD",
+                  "scale": 0.1,
+                  "rotation": 90.0,
+                  "absolute": true,
+                  "x": -0.1,
+                  "y": -0.05
+                }
+              },
+              {
+                "length": -0.25
+              }
+            ],
+            "unit": "drawing",
+            "source": "deneme.lin",
+            "description": "Su ---- SU ----"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "Okunur yazı (U)",
+      "text": "*KABLO\nA,1,-.3,[\"K\",STANDARD,S=.2,U=0.0,X=-.1,Y=-.1],-.3\n",
+      "source": "deneme.lin",
+      "expect": {
+        "types": [
+          {
+            "name": "KABLO",
+            "elements": [
+              {
+                "length": 1.0
+              },
+              {
+                "length": -0.3
+              },
+              {
+                "length": 0.0,
+                "text": {
+                  "text": "K",
+                  "style": "STANDARD",
+                  "scale": 0.2,
+                  "rotation": 0.0,
+                  "absolute": false,
+                  "x": -0.1,
+                  "y": -0.1,
+                  "upright": true
+                }
+              },
+              {
+                "length": -0.3
+              }
+            ],
+            "unit": "drawing",
+            "source": "deneme.lin"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "Şekilli tip (SHX)",
+      "text": "*SINIR,Sınır --o--o--\nA,.25,-.1,[CIRC1,ltypeshp.shx,X=-.1,S=.1],-.1,1\n",
+      "source": "deneme.lin",
+      "expect": {
+        "types": [
+          {
+            "name": "SINIR",
+            "elements": [
+              {
+                "length": 0.25
+              },
+              {
+                "length": -0.1
+              },
+              {
+                "length": 0.0,
+                "shape": {
+                  "name": "CIRC1",
+                  "file": "ltypeshp.shx",
+                  "scale": 0.1,
+                  "rotation": 0.0,
+                  "absolute": false,
+                  "x": -0.1,
+                  "y": 0.0
+                }
+              },
+              {
+                "length": -0.1
+              },
+              {
+                "length": 1.0
+              }
+            ],
+            "unit": "drawing",
+            "source": "deneme.lin",
+            "description": "Sınır --o--o--"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "Radyan ve grad açılar",
+      "text": "*R1\nA,1,-.5,[\"X\",STANDARD,R=1.5708r],-.5\n*G1\nA,1,-.5,[\"Y\",STANDARD,R=100g],-.5\n",
+      "source": "deneme.lin",
+      "expect": {
+        "types": [
+          {
+            "name": "R1",
+            "elements": [
+              {
+                "length": 1.0
+              },
+              {
+                "length": -0.5
+              },
+              {
+                "length": 0.0,
+                "text": {
+                  "text": "X",
+                  "style": "STANDARD",
+                  "scale": 1.0,
+                  "rotation": 90.00021045914971,
+                  "absolute": false,
+                  "x": 0.0,
+                  "y": 0.0
+                }
+              },
+              {
+                "length": -0.5
+              }
+            ],
+            "unit": "drawing",
+            "source": "deneme.lin"
+          },
+          {
+            "name": "G1",
+            "elements": [
+              {
+                "length": 1.0
+              },
+              {
+                "length": -0.5
+              },
+              {
+                "length": 0.0,
+                "text": {
+                  "text": "Y",
+                  "style": "STANDARD",
+                  "scale": 1.0,
+                  "rotation": 90.0,
+                  "absolute": false,
+                  "x": 0.0,
+                  "y": 0.0
+                }
+              },
+              {
+                "length": -0.5
+              }
+            ],
+            "unit": "drawing",
+            "source": "deneme.lin"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "12 öğe sınırda",
+      "text": "*ON2\nA,1,-1,1,-1,1,-1,1,-1,1,-1,1,-1\n",
+      "source": "deneme.lin",
+      "expect": {
+        "types": [
+          {
+            "name": "ON2",
+            "elements": [
+              {
+                "length": 1.0
+              },
+              {
+                "length": -1.0
+              },
+              {
+                "length": 1.0
+              },
+              {
+                "length": -1.0
+              },
+              {
+                "length": 1.0
+              },
+              {
+                "length": -1.0
+              },
+              {
+                "length": 1.0
+              },
+              {
+                "length": -1.0
+              },
+              {
+                "length": 1.0
+              },
+              {
+                "length": -1.0
+              },
+              {
+                "length": 1.0
+              },
+              {
+                "length": -1.0
+              }
+            ],
+            "unit": "drawing",
+            "source": "deneme.lin"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "13 öğe reddedilir",
+      "text": "*ON3\nA,1,-1,1,-1,1,-1,1,-1,1,-1,1,-1,1\n",
+      "source": "deneme.lin",
+      "expect": {
+        "types": [],
+        "problems": [
+          {
+            "line": 2,
+            "message": "“ON3”: desen en çok 12 öğe olur, 13 var"
+          }
+        ]
+      }
+    },
+    {
+      "name": "A ile başlamayan desen",
+      "text": "*YANLIS\nB,1,-1\n",
+      "source": "deneme.lin",
+      "expect": {
+        "types": [],
+        "problems": [
+          {
+            "line": 2,
+            "message": "“YANLIS”: desen A ile başlamalı (hizalama)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Boşlukla başlayan desen",
+      "text": "*BOSLUK\nA,-1,1\n",
+      "source": "deneme.lin",
+      "expect": {
+        "types": [],
+        "problems": [
+          {
+            "line": 2,
+            "message": "“BOSLUK”: desen bir çizgi ya da noktayla başlamalı"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sayı olmayan uzunluk",
+      "text": "*SAYI\nA,1,-bir\n",
+      "source": "deneme.lin",
+      "expect": {
+        "types": [],
+        "problems": [
+          {
+            "line": 2,
+            "message": "“SAYI”: “-bir” bir uzunluk değil"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Kapanmayan köşeli parantez",
+      "text": "*ACIK\nA,1,[\"X\",STANDARD,S=1\n",
+      "source": "deneme.lin",
+      "expect": {
+        "types": [],
+        "problems": [
+          {
+            "line": 2,
+            "message": "“ACIK”: köşeli parantez ya da tırnak kapanmıyor"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Bilinmeyen dönüşüm",
+      "text": "*DON\nA,1,[\"X\",STANDARD,Q=1],-1\n",
+      "source": "deneme.lin",
+      "expect": {
+        "types": [],
+        "problems": [
+          {
+            "line": 2,
+            "message": "“DON”: “Q” bilinen bir dönüşüm değil (S, R, A, U, X, Y)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Desensiz başlık",
+      "text": "*BOS,Desensiz\n*IKI\nA,1,-1\n",
+      "source": "deneme.lin",
+      "expect": {
+        "types": [
+          {
+            "name": "IKI",
+            "elements": [
+              {
+                "length": 1.0
+              },
+              {
+                "length": -1.0
+              }
+            ],
+            "unit": "drawing",
+            "source": "deneme.lin"
+          }
+        ],
+        "problems": [
+          {
+            "line": 1,
+            "message": "“BOS” çizgi tipinin deseni yok (A, satırı)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Başlıksız desen",
+      "text": "A,1,-1\n",
+      "source": "deneme.lin",
+      "expect": {
+        "types": [],
+        "problems": [
+          {
+            "line": 1,
+            "message": "desen bir *AD satırının altında olmalı"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Aynı ad iki kez (harf büyüklüğü sayılmaz)",
+      "text": "*Kesik\nA,1,-1\n*KESIK\nA,2,-2\n",
+      "source": "deneme.lin",
+      "expect": {
+        "types": [
+          {
+            "name": "Kesik",
+            "elements": [
+              {
+                "length": 1.0
+              },
+              {
+                "length": -1.0
+              }
+            ],
+            "unit": "drawing",
+            "source": "deneme.lin"
+          }
+        ],
+        "problems": [
+          {
+            "line": 4,
+            "message": "“KESIK” dosyada iki kez var; ilki alındı"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Türkçe adlar ve açıklama",
+      "text": "*SINIR_ÇİZGİSİ,İmar sınırı ─ · ─\nA,2,-.5,0,-.5\n",
+      "source": "deneme.lin",
+      "expect": {
+        "types": [
+          {
+            "name": "SINIR_ÇİZGİSİ",
+            "elements": [
+              {
+                "length": 2.0
+              },
+              {
+                "length": -0.5
+              },
+              {
+                "length": 0.0
+              },
+              {
+                "length": -0.5
+              }
+            ],
+            "unit": "drawing",
+            "source": "deneme.lin",
+            "description": "İmar sınırı ─ · ─"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "Pencere satır sonları ve kenar boşlukları",
+      "text": "*KESIK , Kesikli\r\n  A , .5 , -.25  \r\n",
+      "source": "deneme.lin",
+      "expect": {
+        "types": [
+          {
+            "name": "KESIK",
+            "elements": [
+              {
+                "length": 0.5
+              },
+              {
+                "length": -0.25
+              }
+            ],
+            "unit": "drawing",
+            "source": "deneme.lin",
+            "description": "Kesikli"
+          }
+        ],
+        "problems": []
+      }
+    }
+  ],
+  "scale": [
+    {
+      "name": "Kâğıt deseni 1:1000'de: mm metre olur",
+      "lengths": [
+        3.0,
+        -1.5
+      ],
+      "unit": "paper",
+      "plotScale": 1000,
+      "drawingUnit": "m",
+      "ltscale": 1.0,
+      "objectScale": 1.0,
+      "expect": {
+        "lengths": [
+          3.0,
+          -1.5
+        ],
+        "period": 4.5
+      }
+    },
+    {
+      "name": "Kâğıt deseni 1:50'de",
+      "lengths": [
+        3.0,
+        -1.5
+      ],
+      "unit": "paper",
+      "plotScale": 50,
+      "drawingUnit": "m",
+      "ltscale": 1.0,
+      "objectScale": 1.0,
+      "expect": {
+        "lengths": [
+          0.15,
+          -0.075
+        ],
+        "period": 0.22499999999999998
+      }
+    },
+    {
+      "name": "Kâğıt deseni, LTSCALE 2",
+      "lengths": [
+        3.0,
+        -1.5
+      ],
+      "unit": "paper",
+      "plotScale": 1000,
+      "drawingUnit": "m",
+      "ltscale": 2.0,
+      "objectScale": 1.0,
+      "expect": {
+        "lengths": [
+          6.0,
+          -3.0
+        ],
+        "period": 9.0
+      }
+    },
+    {
+      "name": "Kâğıt deseni, nesnenin ölçeği 0,5",
+      "lengths": [
+        3.0,
+        -1.5
+      ],
+      "unit": "paper",
+      "plotScale": 1000,
+      "drawingUnit": "m",
+      "ltscale": 1.0,
+      "objectScale": 0.5,
+      "expect": {
+        "lengths": [
+          1.5,
+          -0.75
+        ],
+        "period": 2.25
+      }
+    },
+    {
+      "name": "Kâğıt deseni, ikisi birden çarpılır",
+      "lengths": [
+        5.0,
+        -1.2,
+        0.0,
+        -1.2
+      ],
+      "unit": "paper",
+      "plotScale": 200,
+      "drawingUnit": "m",
+      "ltscale": 1.5,
+      "objectScale": 2.0,
+      "expect": {
+        "lengths": [
+          3.0,
+          -0.72,
+          0.0,
+          -0.72
+        ],
+        "period": 4.4399999999999995
+      }
+    },
+    {
+      "name": "Çizim deseni metre projesinde",
+      "lengths": [
+        12.0,
+        -3.0
+      ],
+      "unit": "drawing",
+      "plotScale": 1000,
+      "drawingUnit": "m",
+      "ltscale": 1.0,
+      "objectScale": 1.0,
+      "expect": {
+        "lengths": [
+          12.0,
+          -3.0
+        ],
+        "period": 15.0
+      }
+    },
+    {
+      "name": "Çizim deseni milimetre projesinde (ISO deseni)",
+      "lengths": [
+        12.0,
+        -3.0
+      ],
+      "unit": "drawing",
+      "plotScale": 1000,
+      "drawingUnit": "mm",
+      "ltscale": 1.0,
+      "objectScale": 1.0,
+      "expect": {
+        "lengths": [
+          0.012,
+          -0.003
+        ],
+        "period": 0.015
+      }
+    },
+    {
+      "name": "Çizim deseni santimetre projesinde",
+      "lengths": [
+        12.0,
+        -3.0
+      ],
+      "unit": "drawing",
+      "plotScale": 1000,
+      "drawingUnit": "cm",
+      "ltscale": 1.0,
+      "objectScale": 1.0,
+      "expect": {
+        "lengths": [
+          0.12,
+          -0.03
+        ],
+        "period": 0.15
+      }
+    },
+    {
+      "name": "Çizim deseni inç projesinde",
+      "lengths": [
+        0.5,
+        -0.25
+      ],
+      "unit": "drawing",
+      "plotScale": 1000,
+      "drawingUnit": "in",
+      "ltscale": 1.0,
+      "objectScale": 1.0,
+      "expect": {
+        "lengths": [
+          0.0127,
+          -0.00635
+        ],
+        "period": 0.019049999999999997
+      }
+    },
+    {
+      "name": "Çizim deseni ayak projesinde",
+      "lengths": [
+        0.5,
+        -0.25
+      ],
+      "unit": "drawing",
+      "plotScale": 1000,
+      "drawingUnit": "ft",
+      "ltscale": 1.0,
+      "objectScale": 1.0,
+      "expect": {
+        "lengths": [
+          0.1524,
+          -0.0762
+        ],
+        "period": 0.22860000000000003
+      }
+    },
+    {
+      "name": "Çizim deseni çizim ölçeğinden bağımsız",
+      "lengths": [
+        12.0,
+        -3.0
+      ],
+      "unit": "drawing",
+      "plotScale": 50,
+      "drawingUnit": "mm",
+      "ltscale": 1.0,
+      "objectScale": 1.0,
+      "expect": {
+        "lengths": [
+          0.012,
+          -0.003
+        ],
+        "period": 0.015
+      }
+    },
+    {
+      "name": "Çizim deseni, LTSCALE 10 ve nesnenin ölçeği",
+      "lengths": [
+        12.0,
+        -3.0
+      ],
+      "unit": "drawing",
+      "plotScale": 1000,
+      "drawingUnit": "mm",
+      "ltscale": 10.0,
+      "objectScale": 0.25,
+      "expect": {
+        "lengths": [
+          0.03,
+          -0.0075
+        ],
+        "period": 0.0375
+      }
+    },
+    {
+      "name": "Nokta uzunluksuz kalır",
+      "lengths": [
+        0.0,
+        -1.0
+      ],
+      "unit": "paper",
+      "plotScale": 500,
+      "drawingUnit": "m",
+      "ltscale": 3.0,
+      "objectScale": 1.0,
+      "expect": {
+        "lengths": [
+          0.0,
+          -1.5
+        ],
+        "period": 1.5
+      }
+    }
+  ],
+  "written": [
+    {
+      "name": "Basit kesikli",
+      "types": [
+        {
+          "name": "KESIK",
+          "elements": [
+            {
+              "length": 0.5
+            },
+            {
+              "length": -0.25
+            }
+          ],
+          "unit": "drawing",
+          "source": "deneme.lin",
+          "description": "Kesikli __ __ __"
+        }
+      ],
+      "expect": "*KESIK,Kesikli __ __ __\nA,.5,-.25\n"
+    },
+    {
+      "name": "Nokta ve çizgi, açıklamasız",
+      "types": [
+        {
+          "name": "NOKTAKESIK",
+          "elements": [
+            {
+              "length": 1.0
+            },
+            {
+              "length": -0.25
+            },
+            {
+              "length": 0.0
+            },
+            {
+              "length": -0.25
+            }
+          ],
+          "unit": "drawing",
+          "source": "deneme.lin"
+        }
+      ],
+      "expect": "*NOKTAKESIK\nA,1,-.25,0,-.25\n"
+    },
+    {
+      "name": "Yorumlar ve boş satırlar atlanır",
+      "types": [
+        {
+          "name": "KESIK",
+          "elements": [
+            {
+              "length": 0.5
+            },
+            {
+              "length": -0.25
+            }
+          ],
+          "unit": "drawing",
+          "source": "deneme.lin",
+          "description": "Kesikli"
+        }
+      ],
+      "expect": "*KESIK,Kesikli\nA,.5,-.25\n"
+    },
+    {
+      "name": "Birden çok tip, sırasıyla",
+      "types": [
+        {
+          "name": "A1",
+          "elements": [
+            {
+              "length": 1.0
+            },
+            {
+              "length": -1.0
+            }
+          ],
+          "unit": "drawing",
+          "source": "deneme.lin",
+          "description": "Birinci"
+        },
+        {
+          "name": "B2",
+          "elements": [
+            {
+              "length": 2.0
+            },
+            {
+              "length": -1.0
+            },
+            {
+              "length": 0.0
+            },
+            {
+              "length": -1.0
+            }
+          ],
+          "unit": "drawing",
+          "source": "deneme.lin",
+          "description": "İkinci"
+        }
+      ],
+      "expect": "*A1,Birinci\nA,1,-1\n*B2,İkinci\nA,2,-1,0,-1\n"
+    },
+    {
+      "name": "Yazılı tip (göreli dönüş)",
+      "types": [
+        {
+          "name": "GAZ",
+          "elements": [
+            {
+              "length": 0.5
+            },
+            {
+              "length": -0.2
+            },
+            {
+              "length": 0.0,
+              "text": {
+                "text": "GAZ",
+                "style": "STANDARD",
+                "scale": 0.1,
+                "rotation": 0.0,
+                "absolute": false,
+                "x": -0.1,
+                "y": -0.05
+              }
+            },
+            {
+              "length": -0.25
+            }
+          ],
+          "unit": "drawing",
+          "source": "deneme.lin",
+          "description": "Gaz hattı ---- GAZ ----"
+        }
+      ],
+      "expect": "*GAZ,Gaz hattı ---- GAZ ----\nA,.5,-.2,[\"GAZ\",STANDARD,S=.1,X=-.1,Y=-.05],-.25\n"
+    },
+    {
+      "name": "Yazılı tip (mutlak dönüş, derece işaretli)",
+      "types": [
+        {
+          "name": "SU",
+          "elements": [
+            {
+              "length": 0.5
+            },
+            {
+              "length": -0.2
+            },
+            {
+              "length": 0.0,
+              "text": {
+                "text": "SU",
+                "style": "STANDARD",
+                "scale": 0.1,
+                "rotation": 90.0,
+                "absolute": true,
+                "x": -0.1,
+                "y": -0.05
+              }
+            },
+            {
+              "length": -0.25
+            }
+          ],
+          "unit": "drawing",
+          "source": "deneme.lin",
+          "description": "Su ---- SU ----"
+        }
+      ],
+      "expect": "*SU,Su ---- SU ----\nA,.5,-.2,[\"SU\",STANDARD,S=.1,A=90,X=-.1,Y=-.05],-.25\n"
+    },
+    {
+      "name": "Okunur yazı (U)",
+      "types": [
+        {
+          "name": "KABLO",
+          "elements": [
+            {
+              "length": 1.0
+            },
+            {
+              "length": -0.3
+            },
+            {
+              "length": 0.0,
+              "text": {
+                "text": "K",
+                "style": "STANDARD",
+                "scale": 0.2,
+                "rotation": 0.0,
+                "absolute": false,
+                "x": -0.1,
+                "y": -0.1,
+                "upright": true
+              }
+            },
+            {
+              "length": -0.3
+            }
+          ],
+          "unit": "drawing",
+          "source": "deneme.lin"
+        }
+      ],
+      "expect": "*KABLO\nA,1,-.3,[\"K\",STANDARD,S=.2,U=0,X=-.1,Y=-.1],-.3\n"
+    },
+    {
+      "name": "Şekilli tip (SHX)",
+      "types": [
+        {
+          "name": "SINIR",
+          "elements": [
+            {
+              "length": 0.25
+            },
+            {
+              "length": -0.1
+            },
+            {
+              "length": 0.0,
+              "shape": {
+                "name": "CIRC1",
+                "file": "ltypeshp.shx",
+                "scale": 0.1,
+                "rotation": 0.0,
+                "absolute": false,
+                "x": -0.1,
+                "y": 0.0
+              }
+            },
+            {
+              "length": -0.1
+            },
+            {
+              "length": 1.0
+            }
+          ],
+          "unit": "drawing",
+          "source": "deneme.lin",
+          "description": "Sınır --o--o--"
+        }
+      ],
+      "expect": "*SINIR,Sınır --o--o--\nA,.25,-.1,[CIRC1,ltypeshp.shx,S=.1,X=-.1],-.1,1\n"
+    },
+    {
+      "name": "Radyan ve grad açılar",
+      "types": [
+        {
+          "name": "R1",
+          "elements": [
+            {
+              "length": 1.0
+            },
+            {
+              "length": -0.5
+            },
+            {
+              "length": 0.0,
+              "text": {
+                "text": "X",
+                "style": "STANDARD",
+                "scale": 1.0,
+                "rotation": 90.00021045914971,
+                "absolute": false,
+                "x": 0.0,
+                "y": 0.0
+              }
+            },
+            {
+              "length": -0.5
+            }
+          ],
+          "unit": "drawing",
+          "source": "deneme.lin"
+        },
+        {
+          "name": "G1",
+          "elements": [
+            {
+              "length": 1.0
+            },
+            {
+              "length": -0.5
+            },
+            {
+              "length": 0.0,
+              "text": {
+                "text": "Y",
+                "style": "STANDARD",
+                "scale": 1.0,
+                "rotation": 90.0,
+                "absolute": false,
+                "x": 0.0,
+                "y": 0.0
+              }
+            },
+            {
+              "length": -0.5
+            }
+          ],
+          "unit": "drawing",
+          "source": "deneme.lin"
+        }
+      ],
+      "expect": "*R1\nA,1,-.5,[\"X\",STANDARD,R=90.00021045914971],-.5\n*G1\nA,1,-.5,[\"Y\",STANDARD,R=90],-.5\n"
+    },
+    {
+      "name": "12 öğe sınırda",
+      "types": [
+        {
+          "name": "ON2",
+          "elements": [
+            {
+              "length": 1.0
+            },
+            {
+              "length": -1.0
+            },
+            {
+              "length": 1.0
+            },
+            {
+              "length": -1.0
+            },
+            {
+              "length": 1.0
+            },
+            {
+              "length": -1.0
+            },
+            {
+              "length": 1.0
+            },
+            {
+              "length": -1.0
+            },
+            {
+              "length": 1.0
+            },
+            {
+              "length": -1.0
+            },
+            {
+              "length": 1.0
+            },
+            {
+              "length": -1.0
+            }
+          ],
+          "unit": "drawing",
+          "source": "deneme.lin"
+        }
+      ],
+      "expect": "*ON2\nA,1,-1,1,-1,1,-1,1,-1,1,-1,1,-1\n"
+    },
+    {
+      "name": "Türkçe adlar ve açıklama",
+      "types": [
+        {
+          "name": "SINIR_ÇİZGİSİ",
+          "elements": [
+            {
+              "length": 2.0
+            },
+            {
+              "length": -0.5
+            },
+            {
+              "length": 0.0
+            },
+            {
+              "length": -0.5
+            }
+          ],
+          "unit": "drawing",
+          "source": "deneme.lin",
+          "description": "İmar sınırı ─ · ─"
+        }
+      ],
+      "expect": "*SINIR_ÇİZGİSİ,İmar sınırı ─ · ─\nA,2,-.5,0,-.5\n"
+    },
+    {
+      "name": "Pencere satır sonları ve kenar boşlukları",
+      "types": [
+        {
+          "name": "KESIK",
+          "elements": [
+            {
+              "length": 0.5
+            },
+            {
+              "length": -0.25
+            }
+          ],
+          "unit": "drawing",
+          "source": "deneme.lin",
+          "description": "Kesikli"
+        }
+      ],
+      "expect": "*KESIK,Kesikli\nA,.5,-.25\n"
+    }
+  ]
+}

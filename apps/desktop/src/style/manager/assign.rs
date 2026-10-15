@@ -46,6 +46,7 @@ impl App {
         let mut said = Vec::new();
         if !slots.is_empty() {
             let input = EntitiesSetProperties {
+                line_pattern: None,
                 line_type: None,
                 line_type_scale: None,
                 transparency: None,

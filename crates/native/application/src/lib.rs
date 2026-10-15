@@ -125,6 +125,7 @@ pub mod layers_states;
 pub mod layers_time;
 pub mod layers_translate;
 pub mod line;
+pub mod line_types_edit;
 pub mod match_props;
 pub mod network_define;
 pub mod nurbs;
@@ -454,6 +455,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_STANDARDS_APPLY,
         kentos_contracts::CAD_STANDARDS_APPLY_VERSION,
+    ),
+    // The project's line types with patterns ([`line_types_edit`], docs/adr/0313).
+    (
+        kentos_contracts::CAD_LINE_TYPES_EDIT,
+        kentos_contracts::CAD_LINE_TYPES_EDIT_VERSION,
     ),
     (
         kentos_contracts::CAD_STYLES_EDIT,

@@ -66,6 +66,11 @@ pub struct ObjectLook {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type: Option<LineType>,
+    /// Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+    /// `line_type`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub line_pattern: Option<String>,
     /// Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -302,6 +307,7 @@ mod tests {
     #[test]
     fn a_look_is_checked_by_its_rules() {
         let ok = ObjectLook {
+            line_pattern: None,
             line_type: Some(LineType::Dashed),
             line_type_scale: Some(2.5),
             transparency: Some(0.5),

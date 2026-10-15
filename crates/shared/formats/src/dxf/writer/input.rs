@@ -664,6 +664,10 @@ struct Input {
     text_styles: Vec<kentos_contracts::TextStyleDef>,
     #[serde(default)]
     dimension_styles: Vec<kentos_contracts::DimensionStyleDef>,
+    #[serde(default)]
+    line_types: Vec<kentos_contracts::LineTypeDef>,
+    #[serde(default)]
+    line_type_scale: Option<f64>,
 }
 
 /// A `DxfWriteInput` read with this module's visitor for the objects. The
@@ -686,6 +690,8 @@ impl<'de> Deserialize<'de> for WriteInput {
             unit: i.unit,
             text_styles: i.text_styles,
             dimension_styles: i.dimension_styles,
+            line_types: i.line_types,
+            line_type_scale: i.line_type_scale,
         }))
     }
 }

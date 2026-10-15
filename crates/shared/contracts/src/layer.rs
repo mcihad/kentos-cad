@@ -333,7 +333,12 @@ pub fn default_label(kind: &str) -> Option<LabelStyle> {
 pub struct LayerStyle {
     /// Hex colour or a theme token (fg, fg-dim, ink, paper).
     pub color: String,
+    /// Its built-in line type; with a `pattern`, the one nearest to it (what a reader without patterns draws).
     pub line_type: LineType,
+    /// A project line type by its name (docs/adr/0313 §1; `pattern` is a hatch's); absent: `line_type`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub line_pattern: Option<String>,
     /// Plot line weight in mm.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: f64,

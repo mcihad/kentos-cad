@@ -110,6 +110,8 @@ pub struct Piece {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct PieceStroke {
     pub line_type: Option<String>,
+    /// Its own project line type by its name (docs/adr/0313 §1).
+    pub pattern: Option<String>,
     pub scale: Option<f64>,
     pub transparency: Option<f64>,
 }
@@ -119,6 +121,7 @@ impl PieceStroke {
     fn of(rest: &[(String, Json)]) -> Self {
         Self {
             line_type: text_field(rest, "lineType"),
+            pattern: text_field(rest, "linePattern"),
             scale: number_field(rest, "lineTypeScale"),
             transparency: number_field(rest, "transparency"),
         }
@@ -623,6 +626,13 @@ fn flatten(
                         line_type: piece.stroke.line_type.clone().or_else(|| {
                             (!follows(BY_LAYER_LINE_TYPE))
                                 .then(|| own_stroke.line_type.clone())
+                                .flatten()
+                        }),
+                        // A pattern as its line type: the piece's own, else the nested insert's when the piece has
+                        // no type of its own.
+                        pattern: piece.stroke.pattern.clone().or_else(|| {
+                            (!follows(BY_LAYER_LINE_TYPE) && piece.stroke.line_type.is_none())
+                                .then(|| own_stroke.pattern.clone())
                                 .flatten()
                         }),
                         scale: piece.stroke.scale.or(own_stroke.scale),

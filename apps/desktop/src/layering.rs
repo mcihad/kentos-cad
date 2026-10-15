@@ -60,6 +60,8 @@ pub enum Event {
     ZoomTo(String),
     Color(String, String),
     LineType(String, LineType),
+    /// A project line type with a pattern by its name (docs/adr/0313 §7).
+    LinePattern(String, String),
     LineWeight(String, f64),
     /// Yeniden adlandır: the row's name becomes a text box.
     Rename(String),
@@ -252,6 +254,13 @@ impl App {
                 self.edit_layers(input);
                 return Task::none();
             }
+            Event::LinePattern(id, name) => {
+                let mut input = LayersEdit::new(LayerEditOperation::Style);
+                input.layer = Some(id);
+                input.line_pattern = Some(Some(name));
+                self.edit_layers(input);
+                return Task::none();
+            }
             Event::LineWeight(id, weight) => {
                 let mut input = LayersEdit::new(LayerEditOperation::Style);
                 input.layer = Some(id);
@@ -299,6 +308,7 @@ impl App {
             | Event::Isolate(_)
             | Event::Color(..)
             | Event::LineType(..)
+            | Event::LinePattern(..)
             | Event::LineWeight(..)
             | Event::RenameDone
             | Event::AddBeside(_) => {}
@@ -575,10 +585,32 @@ impl App {
             let types = LINE_TYPES.iter().fold(Menu::new(), |menu, (t, name)| {
                 menu.radio(
                     *name,
-                    style.line_type == *t,
+                    style.line_pattern.is_none() && style.line_type == *t,
                     event(Event::LineType(id.clone(), *t)),
                 )
             });
+            // The project's types with patterns (docs/adr/0313 §7).
+            let patterns = self
+                .document
+                .as_ref()
+                .map(|d| d.model.settings().line_types.clone())
+                .unwrap_or_default();
+            let types = if patterns.is_empty() {
+                types
+            } else {
+                patterns.iter().fold(types.separator(), |menu, t| {
+                    menu.radio(
+                        t.name.clone(),
+                        style
+                            .line_pattern
+                            .as_deref()
+                            .is_some_and(|p| kentos_contracts::same_line_type_name(p, &t.name)),
+                        event(Event::LinePattern(id.clone(), t.name.clone())),
+                    )
+                })
+            }
+            .separator()
+            .item("Çizgi tipleri…", Some(Message::Run("lineTypes.manage")));
             let weights = LINE_WEIGHTS.iter().fold(Menu::new(), |menu, w| {
                 menu.radio(
                     weight_text(*w),

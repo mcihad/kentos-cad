@@ -217,7 +217,8 @@ const ATT_NOTE: u32 = 8;
 /// An object's look (docs/adr/0260): after the attachments, its bits (`LOOK_TYPE` …), then its line type
 /// (its place in `LineType::ALL`), scale, transparency and order (floats) and its by-layer parts (a mask in
 /// `LookPart::ALL`'s order) as it has them. An area's mask (docs/adr/0310) is two bits alone: `LOOK_WIPEOUT` and,
-/// with its frame drawn, `LOOK_FRAME`.
+/// with its frame drawn, `LOOK_FRAME`. Its own line type with a pattern (docs/adr/0313 §1) is `LOOK_PATTERN`, the
+/// name a text after the rest.
 const LOOK: u32 = 64;
 const LOOK_TYPE: u32 = 1;
 const LOOK_SCALE: u32 = 2;
@@ -226,6 +227,7 @@ const LOOK_ORDER: u32 = 8;
 const LOOK_BY_LAYER: u32 = 16;
 const LOOK_WIPEOUT: u32 = 32;
 const LOOK_FRAME: u32 = 64;
+const LOOK_PATTERN: u32 = 128;
 /// A kind's optional fields, in the order the module's table names them.
 const OPT: [u32; 19] = [
     1 << 8,
@@ -571,6 +573,7 @@ impl Packer {
                 (LOOK_BY_LAYER, !look.by_layer.is_empty()),
                 (LOOK_WIPEOUT, look.wipeout.is_some()),
                 (LOOK_FRAME, look.wipeout.is_some_and(|w| w.frame)),
+                (LOOK_PATTERN, look.line_pattern.is_some()),
             ]
             .iter()
             .filter(|(_, on)| *on)
@@ -595,6 +598,9 @@ impl Packer {
                     m | 1 << LookPart::ALL.iter().position(|x| x == p).unwrap_or(0)
                 });
                 self.int(mask);
+            }
+            if let Some(p) = &look.line_pattern {
+                self.text(p);
             }
         }
         for (key, value) in attrs {
@@ -1865,7 +1871,8 @@ fn object(c: &mut Cursor<'_>, table: &[String], i: usize, k: u8) -> Result<Entit
             | LOOK_ORDER
             | LOOK_BY_LAYER
             | LOOK_WIPEOUT
-            | LOOK_FRAME;
+            | LOOK_FRAME
+            | LOOK_PATTERN;
         if bits & !known != 0 || (bits & LOOK_FRAME != 0 && bits & LOOK_WIPEOUT == 0) {
             return Err(broken(&format!(
                 "{}. nesnenin görünüşünün bayrakları {bits:#x}",
@@ -1908,6 +1915,9 @@ fn object(c: &mut Cursor<'_>, table: &[String], i: usize, k: u8) -> Result<Entit
                 .filter(|(k, _)| mask & 1 << k != 0)
                 .map(|(_, p)| *p)
                 .collect();
+        }
+        if bits & LOOK_PATTERN != 0 {
+            look.line_pattern = Some(c.text(|| place("linePattern"))?);
         }
     }
     let mut attrs = BTreeMap::new();

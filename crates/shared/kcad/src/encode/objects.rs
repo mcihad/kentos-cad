@@ -272,6 +272,9 @@ impl<'d> Encoder<'d> {
         if let Some(t) = look.line_type {
             f.push(("lineType", Val::Name(t.name())));
         }
+        if let Some(p) = &look.line_pattern {
+            f.push(("linePattern", Val::Text(p)));
+        }
         if let Some(x) = look.line_type_scale {
             f.push(("lineTypeScale", Val::Float(x)));
         }

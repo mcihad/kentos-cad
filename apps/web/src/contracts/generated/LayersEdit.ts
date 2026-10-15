@@ -79,6 +79,11 @@ kind?: LayerNodeType,
  */
 name?: string, parent?: string, index?: number, color?: string, lineType?: LineType, 
 /**
+ * add, style: a project line type by its name (docs/adr/0313 §1), its nearest built-in written as the line type
+ * unless `lineType` is given; null: none (a `lineType` given alone takes it away too).
+ */
+linePattern?: string | null, 
+/**
  * Plot line weight, mm.
  */
 lineWeight?: number, visible?: boolean, locked?: boolean, activate?: boolean, 

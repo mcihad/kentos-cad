@@ -7,6 +7,7 @@ mod designer;
 mod generator_timing;
 mod kstil;
 mod legend;
+mod line_type_timing;
 mod object_templates;
 mod renderer_timing;
 mod table_lines;

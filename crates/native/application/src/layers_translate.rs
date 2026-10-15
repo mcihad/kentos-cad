@@ -382,6 +382,7 @@ pub(crate) fn write(doc: &mut Document, input: &LayersTranslate) -> CommandResul
             continue;
         }
         let set_input = EntitiesSetProperties {
+            line_pattern: None,
             line_type: None,
             line_type_scale: None,
             transparency: None,

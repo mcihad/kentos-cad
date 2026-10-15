@@ -523,24 +523,49 @@ fn pick(label: String, chosen: bool, message: Message) -> Choice {
     }
 }
 
-/// Çizgi tipi ▾ (docs/adr/0260 §2): by layer, then the four types.
-fn line_type_row(ids: &[Slot], current: Option<Option<kentos_contracts::LineType>>) -> Row {
-    let text = match current {
-        None => "Çeşitli".to_owned(),
-        Some(t) => crate::ribbon_panels::line_type_text(t).to_owned(),
+/// Çizgi tipi ▾ (docs/adr/0260 §2, 0313 §7): by layer, then the four types, then the project's types with patterns;
+/// `pattern` the objects' own pattern (none: various).
+fn line_type_row(
+    doc: &Document,
+    ids: &[Slot],
+    current: Option<Option<kentos_contracts::LineType>>,
+    pattern: Option<Option<&str>>,
+) -> Row {
+    let text = match (current, pattern) {
+        (_, Some(Some(name))) => name.to_owned(),
+        (None, _) | (_, None) => "Çeşitli".to_owned(),
+        (Some(t), Some(None)) => crate::ribbon_panels::line_type_text(t).to_owned(),
     };
+    let plain = pattern == Some(None);
     let set = |t| Message::Properties(Event::LineType(ids.to_vec(), t));
     let mut items = vec![
-        pick("Katmana göre".into(), current == Some(None), set(None)),
+        pick(
+            "Katmana göre".into(),
+            plain && current == Some(None),
+            set(None),
+        ),
         Choice::Separator,
     ];
     items.extend(kentos_contracts::LineType::ALL.into_iter().map(|t| {
         pick(
             crate::ribbon_panels::line_type_text(Some(t)).to_owned(),
-            current == Some(Some(t)),
+            plain && current == Some(Some(t)),
             set(Some(t)),
         )
     }));
+    let types = &doc.model.settings().line_types;
+    if !types.is_empty() {
+        items.push(Choice::Separator);
+        items.extend(types.iter().map(|t| {
+            pick(
+                t.name.clone(),
+                pattern
+                    .flatten()
+                    .is_some_and(|p| kentos_contracts::same_line_type_name(p, &t.name)),
+                Message::Properties(Event::LinePattern(ids.to_vec(), Some(t.name.clone()))),
+            )
+        }));
+    }
     Row::text("Çizgi tipi", text.clone()).editor(Some(Editor::Select {
         text,
         swatch: None,
@@ -894,7 +919,15 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             Row::text("Kalınlık", weight_text(weight)).editor(edit(weight_editor(&ids, weight))),
         );
         // Its own line type, its scale and transparency (docs/adr/0260).
-        general.push(line_type_row(&ids, Some(base.look.line_type)).editor_if(!locked));
+        general.push(
+            line_type_row(
+                doc,
+                &ids,
+                Some(base.look.line_type),
+                Some(base.look.line_pattern.as_deref()),
+            )
+            .editor_if(!locked),
+        );
         general.push(line_type_scale_row(&ids, Some(base.look.line_type_scale)).editor_if(!locked));
     }
     general.push(transparency_row(&ids, Some(base.look.transparency)).editor_if(!locked));
@@ -2131,7 +2164,9 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
             .then(|| lined[0].base().look.line_type);
         let scale = same(&|e| format!("{:?}", e.base().look.line_type_scale))
             .then(|| lined[0].base().look.line_type_scale);
-        rows.push(line_type_row(&lined_ids, line_type).editor_if(!any_locked));
+        let pattern = same(&|e| format!("{:?}", e.base().look.line_pattern))
+            .then(|| lined[0].base().look.line_pattern.as_deref());
+        rows.push(line_type_row(doc, &lined_ids, line_type, pattern).editor_if(!any_locked));
         rows.push(line_type_scale_row(&lined_ids, scale).editor_if(!any_locked));
     }
     {

@@ -30,7 +30,7 @@ from .errors import *  # noqa: F403
 from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 
-from . import addresses, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, file, labels, layers, line, network, nurbs, point, points, polygon, polyline, project, rectangle, scenarios, settings, sheets, snap, standards, styles, ucs, units, views  # noqa: E402  isort: skip
+from . import addresses, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, file, labels, layers, line, linetypes, network, nurbs, point, points, polygon, polyline, project, rectangle, scenarios, settings, sheets, snap, standards, styles, ucs, units, views  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -486,6 +486,7 @@ __all__ = [
     "LengthenChange",
     "LengthenEnd",
     "LengthenEndName",
+    "LinLineProblem",
     "LineArrayLayout",
     "LineCreate",
     "LineCreated",
@@ -495,7 +496,12 @@ __all__ = [
     "LineLabelModeName",
     "LinePlan",
     "LineType",
+    "LineTypeDef",
     "LineTypeName",
+    "LineTypesEdit",
+    "LineTypesEdited",
+    "LineTypesOperation",
+    "LineTypesOperationName",
     "LinearDimensionMeasure",
     "LinesCornerPick",
     "LocalCommand",
@@ -567,7 +573,12 @@ __all__ = [
     "PasteReport",
     "PathArrayLayout",
     "PathEntity",
+    "PatternElement",
     "PatternLine",
+    "PatternShape",
+    "PatternText",
+    "PatternUnit",
+    "PatternUnitName",
     "PdfExported",
     "PercentLengthenChange",
     "PickedEntity",
@@ -876,6 +887,7 @@ __all__ = [
     "labels",
     "layers",
     "line",
+    "linetypes",
     "network",
     "nurbs",
     "point",

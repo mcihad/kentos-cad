@@ -80,6 +80,12 @@ lineWeight?: number | null,
  */
 lineType?: LineType | null, 
 /**
+ * Their own project line type by its name (`ObjectLook.line_pattern`, docs/adr/0313 §1), its nearest built-in
+ * written as their line type unless `lineType` is given; null: none (a `lineType` given alone takes it away
+ * too). Absent: unchanged.
+ */
+linePattern?: string | null, 
+/**
  * Their pattern's own factor, above 0, at most 1000; null: 1. Absent: unchanged.
  */
 lineTypeScale?: number | null, 

@@ -75,6 +75,7 @@ fn build(entities: &[Entity], store: &Store, style: &LayerStyle) -> StyledLayer 
     let library = StyleLibrary::default();
     let names = |_: &str| "Katman".to_owned();
     let opts = BuildOptions {
+        line_types: None,
         layer_styles: None,
         origin: Vec2::new(X0, Y0),
         plot_scale: 1000.0,

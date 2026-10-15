@@ -165,6 +165,7 @@ fn changed(
     e: &Entity,
     input: &EntitiesSetProperties,
     attrs: Option<&BTreeMap<String, Option<String>>>,
+    nearest: &kentos_contracts::LineType,
 ) -> Option<Entity> {
     let mut next = e.clone();
     let mut unlinked = false;
@@ -195,6 +196,16 @@ fn changed(
     }
     if let Some(t) = input.line_type {
         base.look.line_type = t;
+        // A built-in type chosen alone takes the pattern away (docs/adr/0313 §1).
+        if input.line_pattern.is_none() {
+            base.look.line_pattern = None;
+        }
+    }
+    if let Some(p) = &input.line_pattern {
+        base.look.line_pattern.clone_from(p);
+        if input.line_type.is_none() && p.is_some() {
+            base.look.line_type = Some(*nearest);
+        }
     }
     // A scale of 1 is no scale of its own: absent is 1 (docs/adr/0260 §2).
     if let Some(x) = input.line_type_scale {
@@ -236,6 +247,7 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
         && input.color.is_none()
         && input.line_weight.is_none()
         && input.line_type.is_none()
+        && input.line_pattern.is_none()
         && input.line_type_scale.is_none()
         && input.transparency.is_none()
         && input.wipeout.is_none()
@@ -286,6 +298,22 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
                 "Ekler: {problem}. Her eke bir ad ve tek bir kaynak (gömülü fotoğraf, dosya yolu ya da http/https adresi) verin."
             ),
             Some("attachments".into()),
+        )));
+    }
+    // A project line type by its name (docs/adr/0313 §1).
+    if let Some(Some(name)) = &input.line_pattern
+        && !doc
+            .settings()
+            .line_types
+            .iter()
+            .any(|t| kentos_contracts::same_line_type_name(&t.name, name))
+    {
+        return Err(Stop::failed(error(
+            codes::LINE_TYPE_NOT_FOUND,
+            format!(
+                "“{name}” adlı çizgi tipi projede yok. Çizgi tipleri penceresinden yükleyin ya da var olan bir adı verin."
+            ),
+            Some("linePattern".into()),
         )));
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
@@ -371,11 +399,23 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
             None => None,
         });
     }
+    // The pattern's nearest built-in type, what a reader without patterns draws (docs/adr/0313 §1).
+    let nearest = input
+        .line_pattern
+        .as_ref()
+        .and_then(Option::as_deref)
+        .and_then(|name| {
+            doc.settings()
+                .line_types
+                .iter()
+                .find(|t| kentos_contracts::same_line_type_name(&t.name, name))
+        })
+        .map_or(kentos_contracts::LineType::Continuous, |t| t.nearest());
     let changes: Vec<Change> = found
         .iter()
         .zip(&given)
         .filter_map(|(&(_, slot, e, uid), attrs)| {
-            let entity = changed(e, input, attrs.as_ref())?;
+            let entity = changed(e, input, attrs.as_ref(), &nearest)?;
             Some(Change {
                 slot,
                 uid: uid.clone(),

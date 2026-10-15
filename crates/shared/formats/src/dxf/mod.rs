@@ -69,6 +69,8 @@ struct LayerDef {
     visible: bool,
     locked: bool,
     line_type: LineType,
+    /// The table's pattern it draws with (docs/adr/0313 §6).
+    pattern: Option<String>,
     line_weight: Option<f64>,
     /// Printed: DXF's 290 (docs/adr/0260 §4); absent, printed.
     plot: bool,
@@ -228,6 +230,110 @@ fn decide_units(
     (scale, decision)
 }
 
+/// An LTYPE record's pattern (docs/adr/0313 §6): each 49 an element, its 74 a text (2) or a shape (4) after it, its
+/// 75 a shape's number, 340 its STYLE record's handle (`#2A`, its name taken once the table is read), 46 its size,
+/// 50 its turn (74 bit 1 absolute), 44 and 45 its shift, 9 a text; lengths in the file's unit. None for ByBlock,
+/// ByLayer, Continuous and a type without a gap.
+fn ltype_pattern(
+    groups: &[lexer::Pair<'_>],
+    name: &str,
+    dec: Decoder,
+) -> Option<kentos_contracts::LineTypeDef> {
+    use kentos_contracts::{PatternElement, PatternPlace, PatternShape, PatternText};
+    if ["BYBLOCK", "BYLAYER", "CONTINUOUS"].contains(&name.to_uppercase().as_str()) {
+        return None;
+    }
+    let description = groups
+        .iter()
+        .find(|x| x.code == 3)
+        .map(|x| dec.string(x.value))
+        .unwrap_or_default();
+    struct Part {
+        length: f64,
+        flags: i64,
+        shape: i64,
+        style: Option<String>,
+        place: PatternPlace,
+        text: String,
+    }
+    let mut parts: Vec<Part> = Vec::new();
+    for g in groups {
+        let real = || parse_real(g.text()).unwrap_or(0.0);
+        match (g.code, parts.last_mut()) {
+            (49, _) => parts.push(Part {
+                length: real(),
+                flags: 0,
+                shape: 0,
+                style: None,
+                place: PatternPlace {
+                    scale: 1.0,
+                    rotation: 0.0,
+                    absolute: false,
+                    upright: false,
+                    x: 0.0,
+                    y: 0.0,
+                },
+                text: String::new(),
+            }),
+            (74, Some(p)) => p.flags = parse_int(g.text()).unwrap_or(0),
+            (75, Some(p)) => p.shape = parse_int(g.text()).unwrap_or(0),
+            (340, Some(p)) => p.style = Some(format!("#{}", g.text().trim().to_uppercase())),
+            (46, Some(p)) => p.place.scale = real(),
+            (50, Some(p)) => p.place.rotation = real(),
+            (44, Some(p)) => p.place.x = real(),
+            (45, Some(p)) => p.place.y = real(),
+            (9, Some(p)) => p.text = dec.string(g.value),
+            _ => {}
+        }
+    }
+    if !parts.iter().any(|p| p.length < 0.0) {
+        return None;
+    }
+    let mut elements = Vec::new();
+    for p in parts {
+        elements.push(PatternElement {
+            length: p.length,
+            text: None,
+            shape: None,
+        });
+        let mut place = p.place;
+        place.absolute = p.flags & 1 != 0;
+        if !(place.scale.is_finite() && place.scale > 0.0) {
+            place.scale = 1.0;
+        }
+        let style = p.style.unwrap_or_default();
+        if p.flags & 2 != 0 {
+            elements.push(PatternElement {
+                length: 0.0,
+                text: Some(PatternText {
+                    text: p.text,
+                    style,
+                    place,
+                }),
+                shape: None,
+            });
+        } else if p.flags & 4 != 0 {
+            elements.push(PatternElement {
+                length: 0.0,
+                text: None,
+                shape: Some(PatternShape {
+                    name: p.shape.to_string(),
+                    file: style,
+                    place,
+                }),
+            });
+        }
+    }
+    elements.truncate(kentos_contracts::MAX_PATTERN_ELEMENTS);
+    Some(kentos_contracts::LineTypeDef {
+        name: name.to_owned(),
+        description,
+        elements,
+        unit: kentos_contracts::PatternUnit::Drawing,
+        source: Some("DXF".to_owned()),
+    })
+}
+
 /// A line type from its LTYPE pattern (dash lengths: positive dash, negative gap, zero dot).
 fn classify_pattern(elements: &[f64]) -> LineType {
     let dots = elements.contains(&0.0);
@@ -264,6 +370,8 @@ struct Reader<'a> {
     version: String,
     codepage: String,
     units: Option<i64>,
+    /// $LTSCALE (docs/adr/0313 §6).
+    ltscale: Option<f64>,
     layers: Vec<LayerDef>,
     ltypes: HashMap<String, LineType>,
     lib: Library,
@@ -289,6 +397,7 @@ impl<'a> Reader<'a> {
                 1 if var == "$ACADVER" => self.version = p.text().to_uppercase(),
                 3 if var == "$DWGCODEPAGE" => self.codepage = p.text().to_uppercase(),
                 70 if var == "$INSUNITS" => self.units = parse_int(p.text()),
+                40 if var == "$LTSCALE" => self.ltscale = parse_real(p.text()),
                 _ => {}
             }
         }
@@ -333,6 +442,13 @@ impl<'a> Reader<'a> {
                         .and_then(|x| parse_int(x.text()))
                         .filter(|&w| w > 0)
                         .map(|w| w as f64 / 100.0);
+                    // A pattern of the table (docs/adr/0313 §6), by the name it has there.
+                    let pattern = self
+                        .lib
+                        .patterns
+                        .iter()
+                        .find(|p| p.name.eq_ignore_ascii_case(&ltype))
+                        .map(|p| p.name.clone());
                     let def = LayerDef {
                         name: name(),
                         color,
@@ -340,12 +456,16 @@ impl<'a> Reader<'a> {
                         frozen: flags & 1 != 0,
                         locked: flags & 4 != 0,
                         line_type,
+                        pattern,
                         line_weight: weight,
                         plot: g(290).and_then(|x| parse_int(x.text())) != Some(0),
                     };
                     let key = def.name.to_uppercase();
                     self.lib.layer_colors.insert(key.clone(), def.color.clone());
                     self.lib.layer_line_types.insert(key.clone(), def.line_type);
+                    if let Some(p) = &def.pattern {
+                        self.lib.layer_patterns.insert(key.clone(), p.clone());
+                    }
                     if let Some(w) = def.line_weight {
                         self.lib.layer_weights.insert(key.clone(), w);
                     }
@@ -366,6 +486,10 @@ impl<'a> Reader<'a> {
                     };
                     self.ltypes.insert(n.to_uppercase(), t);
                     self.lib.ltypes.insert(n.to_uppercase(), t);
+                    // Its pattern as the project keeps it (docs/adr/0313 §6): a type with a gap, not a built-in name.
+                    if let Some(p) = ltype_pattern(&groups, &n, self.dec) {
+                        self.lib.patterns.push(p);
+                    }
                     // By its handle too: a DIMSTYLE names its lines' types so (docs/adr/0205 §6).
                     if let Some(h) = g(5).and_then(|x| u64::from_str_radix(x.text(), 16).ok()) {
                         self.lib.ltype_handles.insert(h, t);
@@ -581,6 +705,7 @@ fn read_once(
         version: String::new(),
         codepage: String::new(),
         units: None,
+        ltscale: None,
         layers: Vec::new(),
         ltypes: HashMap::new(),
         lib: Library::default(),
@@ -706,6 +831,7 @@ fn read_once(
         if let Some(&count) = out.per_layer.get(&l.name) {
             listed.insert(l.name.clone());
             layers.push(ImportLayer {
+                line_pattern: l.pattern.clone(),
                 name: l.name.clone(),
                 color: l.color.clone(),
                 visible: l.visible,
@@ -729,6 +855,7 @@ fn read_once(
     extra.sort();
     for (name, &count) in extra {
         layers.push(ImportLayer {
+            line_pattern: None,
             frozen: None,
             plot: None,
             name: name.clone(),
@@ -848,7 +975,44 @@ fn read_once(
         }
         dimension_styles.push(style);
     }
+    // The table's patterns (docs/adr/0313 §6): lengths in the project's unit, a complex element's style its name.
+    let per = opts
+        .unit
+        .unwrap_or(kentos_contracts::DrawingUnit::M)
+        .per_metre();
+    let to_project = |x: f64| metres(x) * per;
+    let line_types: Vec<kentos_contracts::LineTypeDef> = lib
+        .patterns
+        .iter()
+        .map(|t| {
+            let mut t = t.clone();
+            for e in &mut t.elements {
+                e.length = to_project(e.length);
+                let place = e
+                    .text
+                    .as_mut()
+                    .map(|x| (&mut x.place, &mut x.style))
+                    .or(e.shape.as_mut().map(|s| (&mut s.place, &mut s.file)));
+                if let Some((place, style)) = place {
+                    place.scale = to_project(place.scale);
+                    place.x = to_project(place.x);
+                    place.y = to_project(place.y);
+                    if let Some(h) = style
+                        .strip_prefix('#')
+                        .and_then(|h| u64::from_str_radix(h, 16).ok())
+                    {
+                        *style = lib.style_handles.get(&h).cloned().unwrap_or_default();
+                    }
+                }
+            }
+            t
+        })
+        .collect();
     let mut result = ImportResult {
+        line_type_scale: rd
+            .ltscale
+            .filter(|s| s.is_finite() && *s > 0.0 && *s != 1.0),
+        line_types,
         entities: out.entities,
         layers,
         report: out.report.import(),

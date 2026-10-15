@@ -27,6 +27,7 @@ mod measures;
 mod networks;
 mod nurbs;
 mod parts;
+mod patterns;
 mod pointclouds;
 mod polyline_extras;
 mod rasters;

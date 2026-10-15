@@ -4,6 +4,7 @@ import type { DimensionStyleDef } from "./DimensionStyleDef";
 import type { DrawingUnit } from "./DrawingUnit";
 import type { DxfWriteLayer } from "./DxfWriteLayer";
 import type { Entity } from "./Entity";
+import type { LineTypeDef } from "./LineTypeDef";
 import type { TextStyleDef } from "./TextStyleDef";
 
 /**
@@ -44,4 +45,13 @@ unit?: DrawingUnit,
  * The project's text and dimension styles (docs/adr/0183 §7): each is a
  * STYLE or DIMSTYLE record, the objects that follow one name it.
  */
-textStyles?: Array<TextStyleDef>, dimensionStyles?: Array<DimensionStyleDef>, };
+textStyles?: Array<TextStyleDef>, dimensionStyles?: Array<DimensionStyleDef>, 
+/**
+ * The project's line types (docs/adr/0313 §6): each an LTYPE record, the layers and objects that draw with one
+ * name it.
+ */
+lineTypes?: Array<LineTypeDef>, 
+/**
+ * The project's line type scale ($LTSCALE); absent: 1.
+ */
+lineTypeScale?: number, };

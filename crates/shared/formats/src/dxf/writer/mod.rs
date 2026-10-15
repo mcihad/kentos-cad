@@ -193,6 +193,8 @@ struct Header<'a> {
     point_size: Option<f64>,
     /// $INSUNITS: metres, or a local project's unit (docs/adr/0165 §2).
     insunits: i64,
+    /// $LTSCALE: the project's line type scale (docs/adr/0313 §6).
+    ltscale: f64,
 }
 
 fn header(out: &mut Out, h: &Header) {
@@ -231,7 +233,7 @@ fn header(out: &mut Out, h: &Header) {
         out.xy(10, max);
     }
     var(out, "$LTSCALE");
-    out.real(40, 1.0);
+    out.real(40, h.ltscale);
     var(out, "$TEXTSTYLE");
     out.str(7, "Standard");
     var(out, "$CLAYER");
@@ -445,7 +447,14 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             entities::ltype_handle(&mut ltypes, &mut handles, t);
         }
     }
-    layers.ltype_table(&mut tables, &mut handles, paper, &ltypes);
+    layers.ltype_table(
+        &mut tables,
+        &mut handles,
+        paper,
+        &ltypes,
+        &input.line_types,
+        &mut report,
+    );
     layers.layer_table(&mut tables, &mut handles);
     // A style's paper mm in drawing units (docs/adr/0183 §7).
     let length = |mm: f64| mm / 1000.0 * paper;
@@ -481,6 +490,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             grads: input.grads,
             point_size: points.then_some(1.5 * paper / 1000.0),
             insunits: units::insunits_of(unit),
+            ltscale: input.line_type_scale.unwrap_or(1.0),
         },
     );
     template::classes(&mut out);

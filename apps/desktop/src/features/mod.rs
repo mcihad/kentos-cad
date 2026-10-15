@@ -544,6 +544,7 @@ impl App {
         };
         let value = (!js_trim(&text).is_empty()).then(|| text.clone());
         let input = EntitiesSetProperties {
+            line_pattern: None,
             line_type: None,
             line_type_scale: None,
             transparency: None,
