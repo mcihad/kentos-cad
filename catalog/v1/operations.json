@@ -414,8 +414,8 @@
       "via": [
         "cad.layers.set"
       ],
-      "operation": "visible",
-      "note": "Yalıt'ın gizlediklerini oturum hatırlar; Python ve MCP onları visible ile gösterir."
+      "operation": "unisolate",
+      "note": "Yalıt'ın gizlediklerini çizim oturum boyunca hatırlar; Python ve MCP aynı unisolate'i çağırır (ADR 0311 §2)."
     },
     "layer.states": {
       "level": "semantic",
@@ -1029,6 +1029,28 @@
         "cad.views.edit"
       ],
       "note": "Kaydet, Güncelle, Yeniden adlandır ve Sil komuta verilir; Göster oturumun kamerasıdır (ADR 0285 §1)."
+    },
+    "layer.thawAll": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.set"
+      ],
+      "operation": "thawAll"
+    },
+    "layer.translate": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.translate"
+      ],
+      "note": "Pencerenin önizlemesi komutun planıdır (ADR 0311 §5)."
+    },
+    "tool.layerFreeze": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.set"
+      ],
+      "operation": "frozen",
+      "note": "Araç tıklanan nesnenin katmanını bulur; komut katmanın kimliğini alır (ADR 0311 §1)."
     }
   },
   "tools": {

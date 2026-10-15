@@ -2717,6 +2717,38 @@
    "tests": 1
   },
   {
+   "id": "layer.thawAll",
+   "kind": "command",
+   "title": "Bütün katmanları çöz",
+   "level": "semantic",
+   "via": [
+    "cad.layers.set"
+   ],
+   "operation": "thawAll",
+   "python": "kentos.cad.layers.set",
+   "mcp": "cad.layers.set",
+   "note": null,
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "layer.translate",
+   "kind": "command",
+   "title": "Katmanları çevir",
+   "level": "semantic",
+   "via": [
+    "cad.layers.translate"
+   ],
+   "operation": null,
+   "python": "kentos.cad.layers.translate",
+   "mcp": "cad.layers.translate",
+   "note": "Pencerenin önizlemesi komutun planıdır (ADR 0311 §5).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "layer.unisolate",
    "kind": "command",
    "title": "Yalıtımı kaldır",
@@ -2724,10 +2756,10 @@
    "via": [
     "cad.layers.set"
    ],
-   "operation": "visible",
+   "operation": "unisolate",
    "python": "kentos.cad.layers.set",
    "mcp": "cad.layers.set",
-   "note": "Yalıt'ın gizlediklerini oturum hatırlar; Python ve MCP onları visible ile gösterir.",
+   "note": "Yalıt'ın gizlediklerini çizim oturum boyunca hatırlar; Python ve MCP aynı unisolate'i çağırır (ADR 0311 §2).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -8143,6 +8175,22 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 3
+  },
+  {
+   "id": "tool.layerFreeze",
+   "kind": "command",
+   "title": "Katmanı dondur",
+   "level": "semantic",
+   "via": [
+    "cad.layers.set"
+   ],
+   "operation": "frozen",
+   "python": "kentos.cad.layers.set",
+   "mcp": "cad.layers.set",
+   "note": "Araç tıklanan nesnenin katmanını bulur; komut katmanın kimliğini alır (ADR 0311 §1).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.layerIsolate",

@@ -116,6 +116,7 @@ mod layer_merge;
 mod layer_purge;
 mod layer_snap;
 mod layer_states;
+mod layer_translate;
 mod layer_tree;
 mod layering;
 mod layout;
@@ -234,6 +235,8 @@ mod distance_scenes;
 mod hydrology_scenes;
 #[cfg(test)]
 mod interpolation_scenes;
+#[cfg(test)]
+mod layer_style_scenes;
 #[cfg(test)]
 mod multidim_scenes;
 mod networks;

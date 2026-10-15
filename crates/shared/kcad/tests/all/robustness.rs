@@ -302,6 +302,7 @@ fn layer(rng: &mut Rng, depth: u32, ids: &mut Vec<String>) -> LayerNode {
         ..LabelStyle::default()
     });
     LayerNode {
+        frozen: None,
         plot: None,
         id,
         name: rng.text(),
@@ -358,6 +359,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
     if ids.is_empty() {
         ids.push("son".to_owned());
         layers.push(LayerNode {
+            frozen: None,
             plot: None,
             id: "son".to_owned(),
             name: "Son".to_owned(),

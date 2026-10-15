@@ -1048,6 +1048,9 @@ class LayerSetOperation(_StrEnum):
     - ``isolate``
     - ``showAll``
     - ``plot``: Yazdır (docs/adr/0260 §4): whether the node is printed.
+    - ``frozen``: Dondur / Çöz (docs/adr/0311 §1): whether the node is frozen.
+    - ``thawAll``: Bütün katmanları çöz: every node thawed.
+    - ``unisolate``: Yalıtımı kaldır: the nodes the last `isolate` hid, still hidden, shown again.
     """
     RENAME = "rename"
     VISIBLE = "visible"
@@ -1056,22 +1059,36 @@ class LayerSetOperation(_StrEnum):
     ISOLATE = "isolate"
     SHOW_ALL = "showAll"
     PLOT = "plot"
+    FROZEN = "frozen"
+    THAW_ALL = "thawAll"
+    UNISOLATE = "unisolate"
 
 
-LayerSetOperationName = Literal["rename", "visible", "locked", "active", "isolate", "showAll", "plot"]
+LayerSetOperationName = Literal["rename", "visible", "locked", "active", "isolate", "showAll", "plot", "frozen", "thawAll", "unisolate"]
 """The names of :class:`LayerSetOperation`, for a plain string."""
 
 
 class LayerStatesOperation(_StrEnum):
-    """What `cad.layers.states` does."""
+    """What `cad.layers.states` does.
+
+    - ``save``
+    - ``update``
+    - ``rename``
+    - ``remove``
+    - ``apply``
+    - ``export``: The states as a file (docs/adr/0311 §3).
+    - ``import``: A file's states added to the project's (docs/adr/0311 §3).
+    """
     SAVE = "save"
     UPDATE = "update"
     RENAME = "rename"
     REMOVE = "remove"
     APPLY = "apply"
+    EXPORT = "export"
+    IMPORT = "import"
 
 
-LayerStatesOperationName = Literal["save", "update", "rename", "remove", "apply"]
+LayerStatesOperationName = Literal["save", "update", "rename", "remove", "apply", "export", "import"]
 """The names of :class:`LayerStatesOperation`, for a plain string."""
 
 
@@ -10776,6 +10793,58 @@ class LayerFilter(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayerFound(_Model):
+    """A layer found, as the Katmanlar panel shows it.
+    Attributes:
+        path: Its names from the top of the tree, “Kadastro / Parsel”.
+        objects: Unit: count.
+        line_weight: Unit: paper-mm.
+    """
+    id: str
+    name: str
+    path: str
+    objects: int
+    color: str
+    line_type: LineType | LineTypeName
+    line_weight: float
+    on: bool
+    frozen: bool
+    locked: bool
+    plot: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["path"] = self.path
+        out["objects"] = self.objects
+        out["color"] = self.color
+        out["lineType"] = _enum_out(self.line_type)
+        out["lineWeight"] = float(self.line_weight)
+        out["on"] = self.on
+        out["frozen"] = self.frozen
+        out["locked"] = self.locked
+        out["plot"] = self.plot
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerFound:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            path=data["path"],
+            objects=data["objects"],
+            color=data["color"],
+            line_type=_enum_in(LineType, data["lineType"]),
+            line_weight=float(data["lineWeight"]),
+            on=data["on"],
+            frozen=data["frozen"],
+            locked=data["locked"],
+            plot=data["plot"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayerLabels(_Model):
     """How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).
     Attributes:
@@ -10857,6 +10926,11 @@ class LayerNode(_Model):
         filter: The layer's filter (docs/adr/0211 §2): only the objects that pass it
             are shown, picked and given to its tools. Only a layer has it, never a
             group or a layer drawn from a service.
+        frozen: Dondur (AutoCAD's freeze, DXF's 70 bit 1; docs/adr/0311 §1): absent,
+            thawed; `true`, frozen: neither drawn, picked, snapped to nor counted
+            in the drawing's extent, and Hepsini göster leaves it frozen; the
+            active layer is never frozen. A group's covers what it holds. Only
+            `true` is written.
         plot: Yazdır: absent, it is printed; `false`, it is drawn on screen but not
             on a sheet, its PDF or a print (AutoCAD's plot switch, DXF's 290;
             docs/adr/0260 §4). A group's covers what it holds. Only `false` is written.
@@ -10883,6 +10957,7 @@ class LayerNode(_Model):
     feed: FeatureFeed | None | Unset = UNSET
     fields: list[LayerField] | Unset = UNSET
     filter: LayerFilter | None | Unset = UNSET
+    frozen: bool | None | Unset = UNSET
     plot: bool | None | Unset = UNSET
     replaces: str | None | Unset = UNSET
     scenario: ScenarioInfo | None | Unset = UNSET
@@ -10912,6 +10987,8 @@ class LayerNode(_Model):
             out["fields"] = [e0.to_json() for e0 in self.fields]
         if self.filter is not UNSET:
             out["filter"] = None if self.filter is None else self.filter.to_json()
+        if self.frozen is not UNSET:
+            out["frozen"] = self.frozen
         if self.plot is not UNSET:
             out["plot"] = self.plot
         if self.replaces is not UNSET:
@@ -10943,6 +11020,7 @@ class LayerNode(_Model):
             feed=UNSET if "feed" not in data else None if data["feed"] is None else FeatureFeed.from_json(data["feed"]),
             fields=[LayerField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
             filter=UNSET if "filter" not in data else None if data["filter"] is None else LayerFilter.from_json(data["filter"]),
+            frozen=data.get("frozen", UNSET),
             plot=data.get("plot", UNSET),
             replaces=data.get("replaces", UNSET),
             scenario=UNSET if "scenario" not in data else None if data["scenario"] is None else ScenarioInfo.from_json(data["scenario"]),
@@ -11018,20 +11096,35 @@ class LayerStateNode(_Model):
     """A node of a layer state: a layer's or a group's id and what was kept of it.
     Attributes:
         node: The node's id; a node the tree no longer has is passed over.
+        frozen: Its own freeze and printing (docs/adr/0311 §3): every state saved
+            since schema 55 keeps both; absent in an older state, applying it
+            leaves them as they are.
         locked: Its own lock, when the state keeps locks.
+        path: The node's names from the top of the tree (“Kadastro / Parsel”), only
+            in a file of exported states (docs/adr/0311 §3): importing finds the
+            node by it in another drawing. A project's own states never keep it.
         style: A layer's style, when the state keeps styles; a group has none.
     """
     node: str
     visible: bool
+    frozen: bool | None | Unset = UNSET
     locked: bool | None | Unset = UNSET
+    path: str | None | Unset = UNSET
+    plot: bool | None | Unset = UNSET
     style: LayerStyle | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["node"] = self.node
         out["visible"] = self.visible
+        if self.frozen is not UNSET:
+            out["frozen"] = self.frozen
         if self.locked is not UNSET:
             out["locked"] = self.locked
+        if self.path is not UNSET:
+            out["path"] = self.path
+        if self.plot is not UNSET:
+            out["plot"] = self.plot
         if self.style is not UNSET:
             out["style"] = None if self.style is None else self.style.to_json()
         return out
@@ -11041,7 +11134,10 @@ class LayerStateNode(_Model):
         return cls(
             node=data["node"],
             visible=data["visible"],
+            frozen=data.get("frozen", UNSET),
             locked=data.get("locked", UNSET),
+            path=data.get("path", UNSET),
+            plot=data.get("plot", UNSET),
             style=UNSET if "style" not in data else None if data["style"] is None else LayerStyle.from_json(data["style"]),
         )
 
@@ -11058,6 +11154,13 @@ class LayerStatesDone(_Model):
         missing: Apply's nodes the tree no longer has. Unit: count.
         revision: The document's revision afterwards (plan: the one it was made
             against), as decimal text.
+        added: Import's states added, written over and skipped (their name the
+            project's, without `replace`). Unit: count.
+        file: Export's file.
+        frozen: Apply's nodes frozen or thawed, and printed or not (docs/adr/0311 §3). Unit: count.
+        plot: Unit: count.
+        replaced: Unit: count.
+        skipped: Unit: count.
     """
     state: str
     changed: bool
@@ -11066,6 +11169,12 @@ class LayerStatesDone(_Model):
     styles: int
     missing: int
     revision: str
+    added: int | Unset = UNSET
+    file: LayerStatesFile | None | Unset = UNSET
+    frozen: int = 0
+    plot: int = 0
+    replaced: int | Unset = UNSET
+    skipped: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -11076,6 +11185,16 @@ class LayerStatesDone(_Model):
         out["styles"] = self.styles
         out["missing"] = self.missing
         out["revision"] = self.revision
+        if self.added is not UNSET:
+            out["added"] = self.added
+        if self.file is not UNSET:
+            out["file"] = None if self.file is None else self.file.to_json()
+        out["frozen"] = self.frozen
+        out["plot"] = self.plot
+        if self.replaced is not UNSET:
+            out["replaced"] = self.replaced
+        if self.skipped is not UNSET:
+            out["skipped"] = self.skipped
         return out
 
     @classmethod
@@ -11088,6 +11207,40 @@ class LayerStatesDone(_Model):
             styles=data["styles"],
             missing=data["missing"],
             revision=data["revision"],
+            added=data.get("added", UNSET),
+            file=UNSET if "file" not in data else None if data["file"] is None else LayerStatesFile.from_json(data["file"]),
+            frozen=data["frozen"] if "frozen" in data else 0,
+            plot=data["plot"] if "plot" in data else 0,
+            replaced=data.get("replaced", UNSET),
+            skipped=data.get("skipped", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayerStatesFile(_Model):
+    """A file of exported layer states (docs/adr/0311 §3): each node with its
+    path, so another drawing finds it by its names.
+    Attributes:
+        format: Always `kentos.layer-states`.
+        version: Always 1. Unit: version.
+    """
+    format: str
+    version: int
+    states: list[LayerState]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["format"] = self.format
+        out["version"] = self.version
+        out["states"] = [e0.to_json() for e0 in self.states]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerStatesFile:
+        return cls(
+            format=data["format"],
+            version=data["version"],
+            states=[LayerState.from_json(e0) for e0 in data["states"]],
         )
 
 
@@ -11177,6 +11330,44 @@ class LayerTime(_Model):
             cumulative=data.get("cumulative", UNSET),
             end=data.get("end", UNSET),
             key=data.get("key", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayerTranslation(_Model):
+    """A layer translated: where it went and how many objects with it.
+    Attributes:
+        layer: The source layer's id and name.
+        rule: The rule it took, by its place in `rules`. Unit: count.
+        to: The standard layer's id and name.
+        objects: Unit: count.
+    """
+    layer: str
+    name: str
+    rule: int
+    to: str
+    to_name: str
+    objects: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["name"] = self.name
+        out["rule"] = self.rule
+        out["to"] = self.to
+        out["toName"] = self.to_name
+        out["objects"] = self.objects
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerTranslation:
+        return cls(
+            layer=data["layer"],
+            name=data["name"],
+            rule=data["rule"],
+            to=data["to"],
+            to_name=data["toName"],
+            objects=data["objects"],
         )
 
 
@@ -11612,6 +11803,97 @@ class LayersFiltered(_Model):
             changed=data["changed"],
             passed=data["passed"],
             total=data["total"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersFind(_Model):
+    """Input of `cad.layers.find` v1 (docs/adr/0311 §4): what a layer must be,
+    every condition given (absent: any). Only layers are found, never groups;
+    a group's eye, freeze, lock and printing count for what it holds.
+
+    - `name`: a pattern (`pattern_matches`) over the layer's own name;
+    - `group`: only the layers under this group (or this layer itself);
+    - `color` (`#rrggbb`, compared without case, or a theme token),
+      `lineType`, `lineWeight` (mm): the layer's own style;
+    - `on`: shown (its eye and every group's above it open);
+    - `frozen`, `locked`: by itself or a group above; `plot`: printed with
+      every group above;
+    - `empty`: holding no objects (a layer drawn from a service is never empty).
+
+    Refusals (`CommandError.code`): `invalid_pattern` (`name`),
+    `invalid_color`, `invalid_line_weight`, `layer_not_found` (`group`).
+    Attributes:
+        line_weight: Unit: paper-mm.
+    """
+    color: str | None | Unset = UNSET
+    empty: bool | None | Unset = UNSET
+    frozen: bool | None | Unset = UNSET
+    group: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    locked: bool | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    on: bool | None | Unset = UNSET
+    plot: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.empty is not UNSET:
+            out["empty"] = self.empty
+        if self.frozen is not UNSET:
+            out["frozen"] = self.frozen
+        if self.group is not UNSET:
+            out["group"] = self.group
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.locked is not UNSET:
+            out["locked"] = self.locked
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.on is not UNSET:
+            out["on"] = self.on
+        if self.plot is not UNSET:
+            out["plot"] = self.plot
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersFind:
+        return cls(
+            color=data.get("color", UNSET),
+            empty=data.get("empty", UNSET),
+            frozen=data.get("frozen", UNSET),
+            group=data.get("group", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            locked=data.get("locked", UNSET),
+            name=data.get("name", UNSET),
+            on=data.get("on", UNSET),
+            plot=data.get("plot", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersFound(_Model):
+    """Output of `cad.layers.find` v1: the layers found, in the tree's order."""
+    layers: list[LayerFound]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersFound:
+        return cls(
+            layers=[LayerFound.from_json(e0) for e0 in data["layers"]],
             revision=data["revision"],
         )
 
@@ -12076,17 +12358,31 @@ class LayersSet(_Model):
       everything under it, a hidden group hides everything under it;
     - `active`: `layer`, a layer holding objects;
     - `isolate`: `layers`: these nodes, the groups above them and everything
-      under them shown, the rest hidden;
-    - `showAll`: every node shown.
+      under them shown, the rest hidden; the drawing remembers the nodes it
+      hid (for this session, not in the file);
+    - `unisolate`: the nodes the last `isolate` hid that are still hidden
+      shown again; those shown by hand meanwhile stay as they are; nothing
+      remembered changes nothing;
+    - `showAll`: every node shown; a frozen node stays frozen;
+    - `frozen`: `layer`, `value` (docs/adr/0311 §1): a frozen node is neither
+      drawn, picked, snapped to nor counted in the extent; a group's covers
+      everything under it;
+    - `thawAll`: every node thawed.
+
+    The eye, the lock, the freeze, printing, the name and the active layer
+    are the project's (kept in the file); only what `isolate` hid is the
+    session's (docs/adr/0311 §2).
 
     Refusals (`CommandError.code`), checked in this order: `no_layer`
-    (rename, visible, locked, plot, active without `layer`), `no_layers` (isolate
-    without a node), `empty_name` (rename with a name empty or only white
-    space), `no_value` (visible, locked, plot without `value`); then
-    `invalid_revision`, `revision_conflict` (status `conflict`);
-    `layer_not_found` (`layer`, `layers[i]`), `not_a_layer` (active: a
-    group), `service_layer` (active: a layer drawn from a map service holds
-    no objects). A change that changes nothing answers `changed` false.
+    (rename, visible, locked, plot, frozen, active without `layer`),
+    `no_layers` (isolate without a node), `empty_name` (rename with a name
+    empty or only white space), `no_value` (visible, locked, plot, frozen
+    without `value`); then `invalid_revision`, `revision_conflict` (status
+    `conflict`); `layer_not_found` (`layer`, `layers[i]`), `not_a_layer`
+    (active: a group), `service_layer` (active: a layer drawn from a map
+    service holds no objects), `layer_frozen` (active: a frozen layer, or one
+    in a frozen group), `active_frozen` (frozen: the active layer, or a group
+    holding it). A change that changes nothing answers `changed` false.
     Attributes:
         expected_revision: The document revision the input was prepared against, as decimal text.
     """
@@ -12138,7 +12434,15 @@ class LayersStates(_Model):
     - `apply`: `state`: the visibility and the locks (when kept) of the
       nodes it names that the tree still has become what it kept (the tree's
       own changes, no undo step), their styles (when kept) in one undo step
-      “Katman durumu: <ad>”.
+      “Katman durumu: <ad>”; their freeze and printing (when the state keeps
+      them, docs/adr/0311 §3) as the visibility;
+    - `export`: the states named in `states` (absent: every one) as a file
+      (`file` in the answer), each node with its path; nothing written;
+    - `import`: `file`'s states added: a node is found by its id, else by its
+      path (the names from the top, case and Turkish letters folded), else
+      kept as it is and counted `missing` when applied; a state whose name
+      the project has is skipped, or with `replace` written over it (its id
+      kept); a new one gets the next free `durum-n`.
 
     The states are the project's settings: saving, updating, renaming and
     removing make the drawing dirty and are no undo step.
@@ -12146,18 +12450,26 @@ class LayersStates(_Model):
     Refusals (`CommandError.code`), checked in this order: `no_state`
     (update, rename, remove, apply without `state`), `empty_name` (rename,
     or save with a name, empty or only white space); then
-    `invalid_revision`, `revision_conflict` (status `conflict`);
-    `state_not_found`, `duplicate_name` (another state has the name, spaces
-    at its ends aside).
+    `no_file` (import without `file`), `invalid_states` (a file against its
+    rules, `layer_states_file_problem`); then `invalid_revision`,
+    `revision_conflict` (status `conflict`); `state_not_found` (`state`,
+    export's `states[i]`), `duplicate_name` (another state has the name,
+    spaces at its ends aside).
     Attributes:
         expected_revision: The document revision the input was prepared against, as decimal text.
+        file: Import's file.
+        replace: Import: a state whose name the project has written over (absent: skipped).
         state: The state's id.
+        states: Export's states, by id; absent, every one.
     """
     operation: LayerStatesOperation | LayerStatesOperationName
     expected_revision: str | None | Unset = UNSET
+    file: LayerStatesFile | None | Unset = UNSET
     locks: bool | None | Unset = UNSET
     name: str | None | Unset = UNSET
+    replace: bool | None | Unset = UNSET
     state: str | None | Unset = UNSET
+    states: list[str] | None | Unset = UNSET
     styles: bool | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -12165,12 +12477,18 @@ class LayersStates(_Model):
         out["operation"] = _enum_out(self.operation)
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.file is not UNSET:
+            out["file"] = None if self.file is None else self.file.to_json()
         if self.locks is not UNSET:
             out["locks"] = self.locks
         if self.name is not UNSET:
             out["name"] = self.name
+        if self.replace is not UNSET:
+            out["replace"] = self.replace
         if self.state is not UNSET:
             out["state"] = self.state
+        if self.states is not UNSET:
+            out["states"] = None if self.states is None else list(self.states)
         if self.styles is not UNSET:
             out["styles"] = self.styles
         return out
@@ -12180,9 +12498,12 @@ class LayersStates(_Model):
         return cls(
             operation=_enum_in(LayerStatesOperation, data["operation"]),
             expected_revision=data.get("expectedRevision", UNSET),
+            file=UNSET if "file" not in data else None if data["file"] is None else LayerStatesFile.from_json(data["file"]),
             locks=data.get("locks", UNSET),
             name=data.get("name", UNSET),
+            replace=data.get("replace", UNSET),
             state=data.get("state", UNSET),
+            states=UNSET if "states" not in data else None if data["states"] is None else list(data["states"]),
             styles=data.get("styles", UNSET),
         )
 
@@ -12274,6 +12595,95 @@ class LayersTimed(_Model):
         return cls(
             layer=data["layer"],
             changed=data["changed"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersTranslate(_Model):
+    """Input of `cad.layers.translate` v1 (docs/adr/0311 §5), AutoCAD's LAYTRANS:
+
+    - every layer holding objects (not a group, not drawn from a service)
+      takes the first rule whose `from` matches its name, unless its name is
+      that rule's `to` (folded): it is the standard layer itself;
+    - a rule's standard layer is the first layer holding objects named `to`
+      (folded); when there is none and a layer takes the rule, it is added
+      last in `parent` (absent: the top), named `to` as written, in the
+      rule's style over its first source's; an existing one takes the rule's
+      given style;
+    - the sources' objects go to their standard layer, the sources are
+      removed; a source that is the active layer gives that to its standard
+      layer; all of it one undo step “Katmanları çevir”;
+    - a rule no layer takes changes nothing; nothing taken writes nothing
+      (`changed` false). Its plan is the preview: what goes where, with
+      the objects' count, the layers to add and to restyle.
+
+    Refusals (`CommandError.code`), checked in this order: `no_rules`,
+    `empty_name` (`rules[i].to`), `invalid_pattern` (`rules[i].from`),
+    `invalid_color`, `invalid_line_weight` (`rules[i]…`); then
+    `invalid_revision`, `revision_conflict` (status `conflict`);
+    `layer_not_found`, `not_a_group` (`parent`); `service_layer` (a rule's
+    `to` names a layer drawn from a service); `layer_locked` (a source or a
+    standard layer taking part locked, by itself or a group above: nothing
+    is written).
+    Attributes:
+        expected_revision: The document revision the input was prepared against, as decimal text.
+    """
+    rules: list[TranslateRule]
+    expected_revision: str | None | Unset = UNSET
+    parent: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rules"] = [e0.to_json() for e0 in self.rules]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.parent is not UNSET:
+            out["parent"] = self.parent
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersTranslate:
+        return cls(
+            rules=[TranslateRule.from_json(e0) for e0 in data["rules"]],
+            expected_revision=data.get("expectedRevision", UNSET),
+            parent=data.get("parent", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersTranslated(_Model):
+    """Output of `cad.layers.translate` v1, and its plan (the preview).
+    Attributes:
+        translations: The sources in the tree's order.
+        created: The standard layers added and restyled, by id.
+        objects: The objects moved. Unit: count.
+    """
+    changed: bool
+    translations: list[LayerTranslation]
+    created: list[str]
+    restyled: list[str]
+    objects: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = self.changed
+        out["translations"] = [e0.to_json() for e0 in self.translations]
+        out["created"] = list(self.created)
+        out["restyled"] = list(self.restyled)
+        out["objects"] = self.objects
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersTranslated:
+        return cls(
+            changed=data["changed"],
+            translations=[LayerTranslation.from_json(e0) for e0 in data["translations"]],
+            created=list(data["created"]),
+            restyled=list(data["restyled"]),
+            objects=data["objects"],
             revision=data["revision"],
         )
 
@@ -18230,6 +18640,44 @@ class TopologySettings(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TranslateRule(_Model):
+    """One rule: the layers whose names match `from` go to the layer named `to`,
+    which takes the given style.
+    Attributes:
+        from_: A name pattern (`pattern_matches`).
+        to: The standard layer's name.
+        line_weight: Unit: paper-mm.
+    """
+    from_: str
+    to: str
+    color: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TranslateRule:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+            color=data.get("color", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TrimPick(_Model):
     """Where an object was picked.
     Attributes:
@@ -23934,6 +24382,7 @@ __all__ = [
     "LayerFieldKind",
     "LayerFieldKindName",
     "LayerFilter",
+    "LayerFound",
     "LayerLabels",
     "LayerMask",
     "LayerNode",
@@ -23947,10 +24396,12 @@ __all__ = [
     "LayerState",
     "LayerStateNode",
     "LayerStatesDone",
+    "LayerStatesFile",
     "LayerStatesOperation",
     "LayerStatesOperationName",
     "LayerStyle",
     "LayerTime",
+    "LayerTranslation",
     "LayersChanged",
     "LayersCompose",
     "LayersComposePlan",
@@ -23960,6 +24411,8 @@ __all__ = [
     "LayersFilter",
     "LayersFilterPlan",
     "LayersFiltered",
+    "LayersFind",
+    "LayersFound",
     "LayersInfo",
     "LayersInfoPlan",
     "LayersInformed",
@@ -23977,6 +24430,8 @@ __all__ = [
     "LayersTime",
     "LayersTimePlan",
     "LayersTimed",
+    "LayersTranslate",
+    "LayersTranslated",
     "LayoutArrayEdit",
     "LeaderArrow",
     "LeaderArrowName",
@@ -24274,6 +24729,7 @@ __all__ = [
     "TotalLengthenChange",
     "TrackPointConstruction",
     "Transform",
+    "TranslateRule",
     "TrimBoundaries",
     "TrimEdgeMode",
     "TrimEdgeModeName",

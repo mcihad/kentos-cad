@@ -110,6 +110,7 @@ fn opened(n: usize) -> Opened {
         address_locators: Vec::new(),
     };
     let layers = vec![LayerNode {
+        frozen: None,
         plot: None,
         id: "parsel".into(),
         name: "Parsel".into(),

@@ -541,17 +541,16 @@ impl Document {
         if let Some(reason) = self.layer_removal_refused(id) {
             return Err(Refusal(reason));
         }
-        let kept: HashSet<&str> = self
+        // The layers' objects in document order, from the store's layer index (not a walk over every object: a
+        // drawing of 100 000 objects removes a layer in microseconds, docs/adr/0311 §9).
+        let mut placed: Vec<(u64, Slot)> = self
             .layers
             .leaves_of(id)
             .into_iter()
-            .map(|layer| layer.id.as_str())
+            .flat_map(|layer| self.store.layer_slots(&layer.id))
             .collect();
-        let gone: Vec<Slot> = self
-            .entities()
-            .filter(|e| kept.contains(e.base().layer_id.as_str()))
-            .map(|e| Slot(e.base().id))
-            .collect();
+        placed.sort_unstable_by_key(|(place, _)| *place);
+        let gone: Vec<Slot> = placed.into_iter().map(|(_, slot)| slot).collect();
         let place = LayerPlace {
             node,
             parent,
@@ -651,6 +650,32 @@ impl Document {
     pub fn set_layer_plot(&mut self, id: &str, plot: bool) -> bool {
         let (framed, base) = (self.before_part(ProjectPart::LayerFlags), self.edits);
         let changed = self.layers.set_plot(id, plot);
+        self.flags_written(framed, changed, base);
+        changed
+    }
+
+    /// Dondur / Çöz (docs/adr/0311 §1): whether a layer or group is frozen;
+    /// an edit when it changes, never an undo step, as a lock. Whether it changed.
+    pub fn set_layer_frozen(&mut self, id: &str, frozen: bool) -> bool {
+        let (framed, base) = (self.before_part(ProjectPart::LayerFlags), self.edits);
+        let changed = self.layers.set_frozen(id, frozen);
+        self.flags_written(framed, changed, base);
+        changed
+    }
+
+    /// Bütün katmanları çöz: an edit only when a node was frozen. Whether one was.
+    pub fn thaw_all_layers(&mut self) -> bool {
+        let (framed, base) = (self.before_part(ProjectPart::LayerFlags), self.edits);
+        let changed = self.layers.thaw_all();
+        self.flags_written(framed, changed, base);
+        changed
+    }
+
+    /// Yalıtımı kaldır (docs/adr/0311 §2): the nodes the last isolation hid
+    /// that are still hidden shown again; an edit only when one was.
+    pub fn unisolate_layers(&mut self) -> bool {
+        let (framed, base) = (self.before_part(ProjectPart::LayerFlags), self.edits);
+        let changed = self.layers.unisolate();
         self.flags_written(framed, changed, base);
         changed
     }
@@ -815,16 +840,10 @@ impl Document {
 
     /// Whether any object is on a layer of this node or under it now.
     pub(crate) fn holds_objects(&self, id: &str) -> bool {
-        let kept: HashSet<&str> = self
-            .layers
+        self.layers
             .leaves_of(id)
             .into_iter()
-            .map(|layer| layer.id.as_str())
-            .collect();
-        !kept.is_empty()
-            && self
-                .entities()
-                .any(|e| kept.contains(e.base().layer_id.as_str()))
+            .any(|layer| self.store.layer_slots(&layer.id).next().is_some())
     }
 
     /// Names the drawing (web `doc.name.set`): an edit when the name

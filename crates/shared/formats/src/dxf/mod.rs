@@ -72,6 +72,8 @@ struct LayerDef {
     line_weight: Option<f64>,
     /// Printed: DXF's 290 (docs/adr/0260 §4); absent, printed.
     plot: bool,
+    /// Frozen: 70 bit 1 (docs/adr/0311 §1); its eye is the colour's sign alone.
+    frozen: bool,
 }
 
 /// AutoCAD's name for a DXF version.
@@ -334,7 +336,8 @@ impl<'a> Reader<'a> {
                     let def = LayerDef {
                         name: name(),
                         color,
-                        visible: aci_ >= 0 && flags & 1 == 0,
+                        visible: aci_ >= 0,
+                        frozen: flags & 1 != 0,
                         locked: flags & 4 != 0,
                         line_type,
                         line_weight: weight,
@@ -709,6 +712,7 @@ fn read_once(
                 line_type: l.line_type,
                 line_weight: l.line_weight,
                 plot: (!l.plot).then_some(false),
+                frozen: l.frozen.then_some(true),
                 count,
                 kinds: BTreeMap::new(),
                 bounds: None,
@@ -724,6 +728,7 @@ fn read_once(
     extra.sort();
     for (name, &count) in extra {
         layers.push(ImportLayer {
+            frozen: None,
             plot: None,
             name: name.clone(),
             color: "ink".to_string(),

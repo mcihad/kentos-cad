@@ -1,5 +1,6 @@
-//! `cad.layers.states` v1 (docs/adr/0248 §3): the project's named layer
-//! states (docs/adr/0177 §4) saved, updated, renamed, removed and applied,
+//! `cad.layers.states` v1 (docs/adr/0248 §3, 0311 §3): the project's named
+//! layer states (docs/adr/0177 §4) saved, updated, renamed, removed, applied,
+//! exported as a file and imported from one,
 //! by the shared rules (`kentos_domain::layer_states`). The states are the
 //! project's settings: changing them is an edit, no undo step. Applying one
 //! changes the visibility and locks as the eye and the lock do (the tree's
@@ -8,7 +9,8 @@
 //! it; the shared cases are in `fixtures/commands/v1/cad.layers.states.json`.
 
 use kentos_contracts::{
-    CommandResult, LayerState, LayerStatesDone, LayerStatesOperation, LayersStates,
+    CommandResult, LAYER_STATES_FORMAT, LAYER_STATES_VERSION, LayerState, LayerStatesDone,
+    LayerStatesFile, LayerStatesOperation, LayersStates, layer_states_file_problem,
 };
 use kentos_domain::Document;
 use kentos_domain::layer_states::{self, LayerStateParts};
@@ -29,7 +31,7 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
 fn check(doc: &Document, input: &LayersStates) -> Result<(), Stop> {
     use LayerStatesOperation as Op;
     let op = input.operation;
-    if op != Op::Save && input.state.is_none() {
+    if !matches!(op, Op::Save | Op::Export | Op::Import) && input.state.is_none() {
         return Err(fail(
             codes::NO_STATE,
             "Katman durumunu kimliğiyle verin (state).".into(),
@@ -44,9 +46,39 @@ fn check(doc: &Document, input: &LayersStates) -> Result<(), Stop> {
             "name",
         ));
     }
+    if op == Op::Import {
+        let Some(file) = input.file.as_ref() else {
+            return Err(fail(
+                codes::NO_FILE,
+                "İçe aktarılacak katman durumlarının dosyasını verin (file).".into(),
+                "file",
+            ));
+        };
+        if let Some(problem) = layer_states_file_problem(file) {
+            return Err(fail(
+                codes::INVALID_STATES,
+                format!("Katman durumları dosyası okunamadı: {problem}."),
+                "file",
+            ));
+        }
+    }
     checks::revision(doc, input.expected_revision.as_deref())?;
     let states = &doc.settings().layer_states;
-    if let Some(id) = input.state.as_deref().filter(|_| op != Op::Save)
+    if op == Op::Export {
+        for (i, id) in input.states.iter().flatten().enumerate() {
+            if !states.iter().any(|s| &s.id == id) {
+                return Err(fail(
+                    codes::STATE_NOT_FOUND,
+                    format!("“{id}” kimlikli katman durumu projede yok."),
+                    &format!("states[{i}]"),
+                ));
+            }
+        }
+    }
+    if let Some(id) = input
+        .state
+        .as_deref()
+        .filter(|_| !matches!(op, Op::Save | Op::Export | Op::Import))
         && !states.iter().any(|s| s.id == id)
     {
         return Err(fail(
@@ -140,7 +172,13 @@ fn write(doc: &mut Document, input: &LayersStates) -> LayerStatesDone {
         visible: 0,
         locked: 0,
         styles: 0,
+        frozen: 0,
+        plot: 0,
         missing: 0,
+        added: 0,
+        replaced: 0,
+        skipped: 0,
+        file: None,
         revision: String::new(),
     };
     match (input.operation, at) {
@@ -189,12 +227,19 @@ fn write(doc: &mut Document, input: &LayersStates) -> LayerStatesDone {
         }
         (Op::Apply, Some(at)) => {
             let state = states[at].clone();
-            let c = layer_states::changes(doc.layers().nodes(), &state);
+            let active = doc.layers().active().to_owned();
+            let c = layer_states::changes_keeping(doc.layers().nodes(), &state, Some(&active));
             for (node, visible) in &c.visible {
                 doc.set_layer_visible(node, *visible);
             }
             for (node, locked) in &c.locked {
                 doc.set_layer_locked(node, *locked);
+            }
+            for (node, frozen) in &c.frozen {
+                doc.set_layer_frozen(node, *frozen);
+            }
+            for (node, plot) in &c.plot {
+                doc.set_layer_plot(node, *plot);
             }
             if !c.styles.is_empty() {
                 let label = apply_label(&state.name);
@@ -208,7 +253,56 @@ fn write(doc: &mut Document, input: &LayersStates) -> LayerStatesDone {
             out.visible = count(c.visible.len());
             out.locked = count(c.locked.len());
             out.styles = count(c.styles.len());
+            out.frozen = count(c.frozen.len());
+            out.plot = count(c.plot.len());
             out.missing = count(c.missing);
+        }
+        (Op::Export, _) => {
+            let chosen: Vec<LayerState> = match input.states.as_deref() {
+                Some(ids) => states
+                    .iter()
+                    .filter(|s| ids.contains(&s.id))
+                    .cloned()
+                    .collect(),
+                None => states.clone(),
+            };
+            out.file = Some(LayerStatesFile {
+                format: LAYER_STATES_FORMAT.to_owned(),
+                version: LAYER_STATES_VERSION,
+                states: layer_states::exported(doc.layers().nodes(), &chosen),
+            });
+        }
+        (Op::Import, _) => {
+            let replace = input.replace.unwrap_or(false);
+            for given in input.file.iter().flat_map(|f| &f.states) {
+                let name = given.name.trim().to_owned();
+                let nodes = layer_states::imported(doc.layers().nodes(), given);
+                match states.iter().position(|s| s.name.trim() == name) {
+                    Some(at) if replace => {
+                        let next = LayerState {
+                            id: states[at].id.clone(),
+                            name,
+                            nodes,
+                        };
+                        if states[at] != next {
+                            states[at] = next;
+                            out.replaced += 1;
+                        } else {
+                            out.skipped += 1;
+                        }
+                    }
+                    Some(_) => out.skipped += 1,
+                    None => {
+                        let id = layer_states::next_state_id(&states);
+                        states.push(LayerState { id, name, nodes });
+                        out.added += 1;
+                    }
+                }
+            }
+            out.changed = out.added + out.replaced > 0;
+            if out.changed {
+                write_states(doc, states);
+            }
         }
         _ => {}
     }

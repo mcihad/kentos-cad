@@ -12,11 +12,11 @@ use kentos_contracts::{
     EntitiesFillet, EntitiesHatch, EntitiesJoin, EntitiesLengthen, EntitiesMatch, EntitiesOffset,
     EntitiesOrder, EntitiesPaste, EntitiesPick, EntitiesReverse, EntitiesSelect,
     EntitiesSetProperties, EntitiesStretch, EntitiesTransform, EntitiesTrim, EntitiesVertex,
-    ImportDxf, LabelsPin, LayersCompose, LayersEdit, LayersFilter, LayersInfo, LayersLabels,
-    LayersRenderer, LayersService, LayersSet, LayersStates, LayersTime, LineCreate, NetworkDefine,
-    NurbsCreate, PointCreate, PointsConstruct, PolygonCreate, PolylineCreate, RectangleCreate,
-    RegularPolygonCreate, ScenariosEdit, SettingsSet, SheetsEdit, SnapFind, StylesEdit, UcsSet,
-    UnitsChange, ViewsEdit, codes,
+    ImportDxf, LabelsPin, LayersCompose, LayersEdit, LayersFilter, LayersFind, LayersInfo,
+    LayersLabels, LayersRenderer, LayersService, LayersSet, LayersStates, LayersTime,
+    LayersTranslate, LineCreate, NetworkDefine, NurbsCreate, PointCreate, PointsConstruct,
+    PolygonCreate, PolylineCreate, RectangleCreate, RegularPolygonCreate, ScenariosEdit,
+    SettingsSet, SheetsEdit, SnapFind, StylesEdit, UcsSet, UnitsChange, ViewsEdit, codes,
 };
 use serde_json::Value;
 
@@ -28,11 +28,11 @@ use crate::{
     entities_extend, entities_fillet, entities_hatch, entities_join, entities_lengthen,
     entities_match, entities_order, entities_paste, entities_pick, entities_reverse,
     entities_select, entities_trim, entities_vertex, file_import, labels_pin, layers_compose,
-    layers_edit, layers_filter, layers_info, layers_labels, layers_renderer, layers_service,
-    layers_set, layers_states, layers_time, line, network_define, nurbs, offset, point,
-    points_construct, polygon, polygon_regular, polyline, rectangle_create, scenarios_edit, set,
-    settings_set, sheets_edit, snap_find, stretch, styles_edit, transform, ucs_set, units_change,
-    views_edit,
+    layers_edit, layers_filter, layers_find, layers_info, layers_labels, layers_renderer,
+    layers_service, layers_set, layers_states, layers_time, layers_translate, line, network_define,
+    nurbs, offset, point, points_construct, polygon, polygon_regular, polyline, rectangle_create,
+    scenarios_edit, set, settings_set, sheets_edit, snap_find, stretch, styles_edit, transform,
+    ucs_set, units_change, views_edit,
 };
 
 /// Why a command was not run: not a refusal of the command (that is its
@@ -143,6 +143,8 @@ macro_rules! by_command {
             kentos_contracts::CAD_LAYERS_EDIT => $then!(layers_edit, LayersEdit),
             kentos_contracts::CAD_LAYERS_SET => $then!(layers_set, LayersSet),
             kentos_contracts::CAD_LAYERS_STATES => $then!(layers_states, LayersStates),
+            kentos_contracts::CAD_LAYERS_FIND => $then!(layers_find, LayersFind),
+            kentos_contracts::CAD_LAYERS_TRANSLATE => $then!(layers_translate, LayersTranslate),
             kentos_contracts::CAD_STYLES_EDIT => $then!(styles_edit, StylesEdit),
             kentos_contracts::CAD_SETTINGS_SET => $then!(settings_set, SettingsSet),
             kentos_contracts::CAD_UNITS_CHANGE => $then!(units_change, UnitsChange),

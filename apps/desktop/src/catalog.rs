@@ -563,6 +563,10 @@ pub const PORTED: &[&str] = &[
     "tool.layerLock",
     "tool.layerMakeActive",
     "layer.unisolate",
+    // docs/adr/0311: Katmanı dondur, Bütün katmanları çöz, Katmanları çevir.
+    "tool.layerFreeze",
+    "layer.thawAll",
+    "layer.translate",
     // docs/adr/0177 §2: Katmanı eşle and Katmana kopyala.
     "tool.layerMatch",
     "tool.copyToLayer",

@@ -110,6 +110,8 @@ pub(super) struct Layer {
     pub weight: i64,
     /// Printed (DXF's 290; docs/adr/0260 §4).
     pub plot: bool,
+    /// Frozen (70 bit 1; docs/adr/0311 §1).
+    pub frozen: bool,
 }
 
 pub(super) struct Layers {
@@ -219,6 +221,7 @@ impl Layers {
                 line_type: l.line_type,
                 weight,
                 plot: l.plot != Some(false),
+                frozen: l.frozen == Some(true),
             });
         }
         Layers { list, by_id, zero }
@@ -297,6 +300,7 @@ impl Layers {
                     line_type: LineType::Continuous,
                     weight: -3,
                     plot: true,
+                    frozen: false,
                 },
             ),
         }
@@ -311,7 +315,7 @@ impl Layers {
     fn record(&self, out: &mut Out, handle: u64, l: &Layer) {
         template::record(out, "LAYER", handle, LAYER_TABLE, "AcDbLayerTableRecord");
         out.str(2, &l.name);
-        out.int(70, if l.locked { 4 } else { 0 });
+        out.int(70, i64::from(l.frozen) | if l.locked { 4 } else { 0 });
         let aci = i64::from(l.color.aci);
         out.int(62, if l.visible { aci } else { -aci });
         if let Some(rgb) = l.color.rgb {
@@ -337,6 +341,7 @@ mod tests {
 
     fn layer(id: &str, name: &str, path: &[&str]) -> DxfWriteLayer {
         DxfWriteLayer {
+            frozen: None,
             plot: None,
             id: id.into(),
             name: name.into(),

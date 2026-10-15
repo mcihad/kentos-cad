@@ -37,6 +37,9 @@ fn state(id: &str, name: &str, nodes: &[&str]) -> LayerState {
         nodes: nodes
             .iter()
             .map(|n| LayerStateNode {
+                frozen: None,
+                path: None,
+                plot: None,
                 node: (*n).into(),
                 visible: true,
                 locked: None,

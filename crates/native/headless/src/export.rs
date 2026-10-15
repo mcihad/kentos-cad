@@ -57,11 +57,12 @@ fn write_layer(doc: &Document, id: &str) -> Option<DxfWriteLayer> {
     }
     Some(DxfWriteLayer {
         plot: (!layers.printed(id)).then_some(false),
+        frozen: layers.is_frozen(id).then_some(true),
         id: id.to_owned(),
         name: l.name.clone(),
         path,
         color: l.style.color.clone(),
-        visible: layers.is_visible(id),
+        visible: layers.is_on(id),
         locked: layers.is_locked(id),
         line_type: l.style.line_type,
         line_weight: l.style.line_weight,

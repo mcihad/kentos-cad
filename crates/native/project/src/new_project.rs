@@ -250,6 +250,7 @@ fn label(placement: LabelPlacement, size: f64) -> LabelStyle {
 
 fn node(id: &str, name: &str, style: LayerStyle) -> LayerNode {
     LayerNode {
+        frozen: None,
         plot: None,
         id: id.to_owned(),
         name: name.to_owned(),

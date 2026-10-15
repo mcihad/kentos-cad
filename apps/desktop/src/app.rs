@@ -166,6 +166,8 @@ pub enum Dialog {
     FindReplace,
     /// Katmanları birleştir (layer_merge.rs, docs/adr/0177 §3); the window is `App::layer_merge`.
     LayerMerge,
+    /// Katmanları çevir (layer_translate.rs, docs/adr/0311 §5); the window is `App::layer_translate`.
+    LayerTranslate,
     /// Alanlar (layer_fields.rs, docs/adr/0199 §3); the window is `App::layer_fields`.
     LayerFields,
     /// Katman süzgeci (layer_filters.rs, docs/adr/0211 §4); the window is `App::layer_filter`.
@@ -409,6 +411,7 @@ pub enum Message {
     AttributeValues(crate::attribute_values::Event),
     FindReplace(crate::find_replace::Event),
     LayerMerge(crate::layer_merge::Event),
+    LayerTranslate(crate::layer_translate::Event),
     /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
     LayerFilter(crate::layer_filters::Event),
     /// An object's attachments: their windows, the viewer and the photos decoded (attachments.rs).
@@ -489,6 +492,8 @@ pub enum Message {
     Modifiers(keyboard::Modifiers),
     Dock(docking::Event<Panel>),
     LayerSelected(String),
+    /// Süzgeç ▾ over the layer tree: a property turned over (docs/adr/0311 §4).
+    LayerProps(crate::layer_tree::Prop),
     /// Katman ara typed in; ↓ in it.
     LayerSearch(String),
     LayerSearchDown,
@@ -504,6 +509,8 @@ pub enum Message {
     LayerLocked(String),
     /// Yazdır: a node printed or not (`cad.layers.set`'s `plot`, docs/adr/0260 §4).
     LayerPlot(String),
+    /// Dondur / Çöz a node (docs/adr/0311 §1).
+    LayerFrozen(String),
     LayerExpanded(String),
     /// A drawing read from disk, or `None` when the file dialog was cancelled.
     /// Boxed: a drawing is large and messages are moved often.
@@ -585,6 +592,8 @@ pub struct App {
     pub(crate) renaming: Option<(String, String)>,
     /// The tree's last row press and when: a second one soon is a double click.
     pub(crate) last_layer_press: Option<(String, Instant)>,
+    /// Süzgeç ▾'s properties over the layer tree (layer_tree.rs, docs/adr/0311 §4).
+    pub(crate) layer_props: crate::layer_tree::LayerProps,
     /// Katman ara's text (layer_tree.rs).
     pub(crate) layer_query: String,
     /// Komut ara's text, and the command whose ribbon place is outlined
@@ -805,11 +814,10 @@ pub struct App {
     /// its id: its series goes on from run to run in the drawing (docs/adr/0176
     /// §3b), and a group's members take theirs from it (§5).
     pub(crate) template_names: std::collections::HashMap<String, String>,
-    /// The layers and groups Katmanı yalıt hid since the last Yalıtımı kaldır
-    /// (docs/adr/0177 §1): the drawing's, forgotten with it.
-    pub(crate) isolated_layers: Vec<String>,
     /// Katmanları birleştir's window (layer_merge.rs, docs/adr/0177 §3).
     pub(crate) layer_merge: Option<crate::layer_merge::Window>,
+    /// Katmanları çevir's window (layer_translate.rs, docs/adr/0311 §5).
+    pub(crate) layer_translate: Option<crate::layer_translate::Window>,
     /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
     pub(crate) layer_filter: Option<crate::layer_filters::Window>,
     /// Bilgi's card: the object it shows and the drawing's point it was clicked at (info_card.rs).
@@ -984,6 +992,7 @@ impl App {
             renaming: None,
             last_layer_press: None,
             layer_query: String::new(),
+            layer_props: Default::default(),
             ribbon_search: String::new(),
             ribbon_flash: None,
             ribbon_flash_model: None,
@@ -1102,8 +1111,8 @@ impl App {
             template: None,
             last_template: None,
             template_names: std::collections::HashMap::new(),
-            isolated_layers: Vec::new(),
             layer_merge: None,
+            layer_translate: None,
             layer_filter: None,
             info_card: None,
             photos: crate::photo_view::Photos::default(),
@@ -1600,6 +1609,7 @@ impl App {
             }
             Message::LayerSelected(id) => self.layer_pressed(id),
             Message::LayerSearch(text) => self.layer_search(text),
+            Message::LayerProps(prop) => self.layer_props(prop),
             Message::LayerSearchDown => return self.layer_search_down(),
             Message::RibbonSearch(text) => self.search_typed(text),
             Message::RibbonSearchRun(index) => return self.search_run(index),
@@ -1621,6 +1631,7 @@ impl App {
             Message::AttributeValues(event) => self.attribute_values_event(event),
             Message::FindReplace(event) => return self.find_replace_event(event),
             Message::LayerMerge(event) => return self.layer_merge_event(event),
+            Message::LayerTranslate(event) => return self.layer_translate_event(event),
             Message::LayerFilter(event) => return self.layer_filter_event(event),
             Message::Attachment(event) => return self.attachment_event(event),
             Message::InfoCard(event) => return self.info_card_event(event),
@@ -1663,6 +1674,7 @@ impl App {
             Message::LayerVisible(id) => self.toggle_layer_visible(&id),
             Message::LayerLocked(id) => self.toggle_layer_locked(&id),
             Message::LayerPlot(id) => self.toggle_layer_plot(&id),
+            Message::LayerFrozen(id) => self.toggle_layer_frozen(&id),
             Message::LayerExpanded(id) => {
                 if let Some(doc) = &mut self.document
                     && let Some(expanded) = doc.find(&id).map(|n| !n.expanded)
@@ -2016,7 +2028,6 @@ impl App {
         // The annotation tools' heights typed in the last drawing: the new one's annotations take
         // its own project's (docs/adr/0205 §2).
         self.memory.forget_heights();
-        self.isolated_layers.clear();
         self.selected_layer = None;
         // A linked photo's key is its path from the drawing's folder (attachments.rs); Bilgi's card was
         // on an object of the drawing left.
@@ -2406,14 +2417,14 @@ impl App {
             // Yalıtımı kaldır (docs/adr/0177 §1): what Katmanı yalıt hid, shown again.
             "layer.unisolate" => match &mut self.document {
                 Some(doc) => {
-                    let (level, text) = kentos_interaction::layer_tools::unisolate(
-                        &mut doc.model,
-                        &mut self.isolated_layers,
-                    );
+                    let (level, text) = kentos_interaction::layer_tools::unisolate(&mut doc.model);
                     self.say(level, text);
                 }
                 None => self.output("Açık çizim yok."),
             },
+            // Bütün katmanları çöz and Katmanları çevir (docs/adr/0311).
+            "layer.thawAll" => self.thaw_all_layers(),
+            "layer.translate" => self.open_layer_translate(),
             // Edits, not undo steps (layering.rs).
             "layer.new" => self.new_layer(),
             "layer.newGroup" => self.new_group(),

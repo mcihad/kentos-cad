@@ -367,6 +367,7 @@ impl App {
         Some(match layer_named(&doc.model, name) {
             Some(same) => LayerTarget::Existing(same.id.clone()),
             None => LayerTarget::New {
+                frozen: None,
                 plot: None,
                 name: name.to_owned(),
                 style: Box::new(point_layer_style()),

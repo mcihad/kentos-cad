@@ -31,4 +31,9 @@ lineWeight: number,
  * Yazdır (docs/adr/0260 §4): absent, printed; `false`, written with
  * DXF's plot switch off (290).
  */
-plot?: boolean, };
+plot?: boolean, 
+/**
+ * Dondur (docs/adr/0311 §1): `true`, written frozen (DXF's 70 bit 1);
+ * `visible` is then its eye alone.
+ */
+frozen?: boolean, };

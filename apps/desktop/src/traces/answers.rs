@@ -88,6 +88,7 @@ impl App {
             Some(Dialog::AttributeValues) => self.attribute_values_control(control),
             Some(Dialog::FindReplace) => self.find_replace_control(control),
             Some(Dialog::LayerMerge) => self.layer_merge_control(control),
+            Some(Dialog::LayerTranslate) => self.layer_translate_control(control),
             Some(Dialog::LayerFields) => self.layer_fields_control(control),
             Some(Dialog::TopologyRules) => self.topology_rules_control(control),
             Some(Dialog::Networks) => self.networks_control(control),

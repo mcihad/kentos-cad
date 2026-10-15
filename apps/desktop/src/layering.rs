@@ -452,6 +452,16 @@ impl App {
         }
     }
 
+    /// Whether the node is the active layer or a group holding it: never frozen.
+    fn holds_active(&self, node: &LayerNode) -> bool {
+        self.document.as_ref().is_some_and(|d| {
+            let tree = d.model.layers();
+            tree.leaves_of(&node.id)
+                .iter()
+                .any(|l| l.id == tree.active())
+        })
+    }
+
     /// A row's context menu, the web's `LayersPanel.menuFor` item by item.
     pub(crate) fn layer_menu(&self, node: &LayerNode, active: bool) -> Menu<Message> {
         let id = node.id.clone();
@@ -496,7 +506,22 @@ impl App {
                 },
                 Message::LayerPlot(id.clone()),
             )
-            .icon(Icon::Print);
+            .icon(Icon::Print)
+            // Dondur / Çöz (docs/adr/0311 §1): the active layer is never frozen.
+            .item(
+                if node.frozen == Some(true) {
+                    "Çöz"
+                } else {
+                    "Dondur"
+                },
+                (node.frozen == Some(true) || !self.holds_active(node))
+                    .then(|| Message::LayerFrozen(id.clone())),
+            )
+            .icon(crate::icons::from_web(Some(if node.frozen == Some(true) {
+                "sun"
+            } else {
+                "freeze"
+            })));
         // A layer drawn from a map service: its service's items, none of the objects' (docs/adr/0208 §14).
         if node.service.is_some() {
             return self
@@ -529,6 +554,8 @@ impl App {
             .icon(crate::icons::from_web(Some("layerIsolate")))
             .item("Tüm katmanları göster", Message::Run("layer.showAll"))
             .icon(crate::icons::from_web(Some("layersShowAll")))
+            .item("Bütün katmanları çöz", Message::Run("layer.thawAll"))
+            .icon(crate::icons::from_web(Some("layersThawAll")))
             .separator()
             .item("Nesnelerini seç", event(Event::SelectObjects(id.clone())))
             .icon(crate::icons::from_web(Some("select")))
@@ -972,12 +999,20 @@ impl App {
                     .icon(crate::icons::from_web(Some("layerPurge")))
                     .item("Katman listesi…", Message::Run("layer.list"))
                     .icon(crate::icons::from_web(Some("layerList")))
+                    .separator()
+                    .item(
+                        "Katmanları çevir…",
+                        (!locked).then_some(Message::Run("layer.translate")),
+                    )
+                    .icon(crate::icons::from_web(Some("layersTranslate")))
+                    .item("Bütün katmanları çöz", Message::Run("layer.thawAll"))
+                    .icon(crate::icons::from_web(Some("layersThawAll")))
             },
         );
         tip(
             menu,
             Tip::new("Katman işlemleri")
-                .body("Katmanları birleştir, Kullanılmayanları temizle ve Katman listesi."),
+                .body("Katmanları birleştir, Kullanılmayanları temizle, Katman listesi, Katmanları çevir ve Bütün katmanları çöz."),
             tooltip::Position::Bottom,
         )
     }

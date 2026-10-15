@@ -86,8 +86,8 @@ fn every_kind_with_layers_colours_and_the_turkish_code_page() {
         ("#0000FF", false, LineType::Dashed)
     );
     assert!(layer("Kot").locked);
-    // The Turkish name came through Windows-1254; a frozen layer is hidden.
-    assert!(!layer("Yazı").visible);
+    // The Turkish name came through Windows-1254; a frozen layer is frozen, its eye open (docs/adr/0311 §1).
+    assert!(layer("Yazı").frozen == Some(true) && layer("Yazı").visible);
     assert_eq!(layer("0").color, "ink");
 
     let e = &r.entities;

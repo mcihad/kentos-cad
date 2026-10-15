@@ -44,7 +44,7 @@ pub struct Look {
 pub fn printed_layers(nodes: &[LayerNode]) -> Vec<&LayerNode> {
     fn walk<'a>(nodes: &'a [LayerNode], on: bool, out: &mut Vec<&'a LayerNode>) {
         for node in nodes {
-            let on = on && node.visible && node.plot != Some(false);
+            let on = on && node.visible && node.plot != Some(false) && node.frozen != Some(true);
             match node.kind {
                 LayerNodeType::Layer => {
                     if on {
@@ -76,11 +76,16 @@ pub fn shown_layers(nodes: &[LayerNode]) -> Vec<&LayerNode> {
         for node in nodes {
             match node.kind {
                 LayerNodeType::Layer => {
-                    if visible && node.visible {
+                    if visible && node.visible && node.frozen != Some(true) {
                         out.push(node);
                     }
                 }
-                LayerNodeType::Group => walk(&node.children, visible && node.visible, out),
+                // A frozen group's are frozen with it (docs/adr/0311 §1).
+                LayerNodeType::Group => walk(
+                    &node.children,
+                    visible && node.visible && node.frozen != Some(true),
+                    out,
+                ),
             }
         }
     }

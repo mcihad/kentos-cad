@@ -224,6 +224,7 @@ pub const TOOLS: &[&str] = &[
     layer_tools::ISOLATE_ID,
     layer_tools::LOCK_ID,
     layer_tools::ACTIVE_ID,
+    layer_tools::FREEZE_ID,
     // Bilgi (docs/adr/0225 §5): an object's card.
     crate::identify::ID,
     // Konumdan adres (docs/adr/0229 §13).
@@ -508,6 +509,7 @@ impl Session {
             layer_tools::ISOLATE_ID => Box::new(layer_tools::LayerTool::isolate()),
             layer_tools::LOCK_ID => Box::new(layer_tools::LayerTool::lock()),
             layer_tools::ACTIVE_ID => Box::new(layer_tools::LayerTool::make_active()),
+            layer_tools::FREEZE_ID => Box::new(layer_tools::LayerTool::freeze()),
             crate::identify::ID => Box::new(crate::identify::IdentifyTool::default()),
             crate::address_reverse::ID => Box::new(crate::address_reverse::AddressReverse::new()),
             layer_move::MATCH_ID => Box::new(layer_move::LayerMove::layer_match()),

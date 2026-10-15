@@ -59,6 +59,7 @@ fn layer(
     weight: f64,
 ) -> DxfWriteLayer {
     DxfWriteLayer {
+        frozen: None,
         plot: None,
         id: id.into(),
         name: name.into(),

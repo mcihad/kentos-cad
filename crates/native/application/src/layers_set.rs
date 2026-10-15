@@ -1,5 +1,6 @@
-//! `cad.layers.set` v1 (docs/adr/0248 §2): the layer tree's own changes, as
-//! the Katmanlar panel's eye, lock, name and Etkin katman yap make them: an
+//! `cad.layers.set` v1 (docs/adr/0248 §2, 0311 §1–§2): the layer tree's own
+//! changes, as the Katmanlar panel's eye, lock, freeze, name and Etkin katman
+//! yap make them: an
 //! edit of the drawing (dirty, a new revision), never an undo step
 //! (docs/adr/0020, the shared document cases); the active layer is kept in
 //! the file but is no edit. The shared cases are in
@@ -21,7 +22,7 @@ fn check(doc: &Document, input: &LayersSet) -> Result<(), Stop> {
     let op = input.operation;
     if matches!(
         op,
-        Op::Rename | Op::Visible | Op::Locked | Op::Plot | Op::Active
+        Op::Rename | Op::Visible | Op::Locked | Op::Plot | Op::Frozen | Op::Active
     ) && input.layer.is_none()
     {
         return Err(fail(
@@ -44,7 +45,7 @@ fn check(doc: &Document, input: &LayersSet) -> Result<(), Stop> {
             "name",
         ));
     }
-    if matches!(op, Op::Visible | Op::Locked | Op::Plot) && input.value.is_none() {
+    if matches!(op, Op::Visible | Op::Locked | Op::Plot | Op::Frozen) && input.value.is_none() {
         return Err(fail(
             codes::NO_VALUE,
             "Açık mı kapalı mı olduğunu value ile verin (true ya da false).".into(),
@@ -66,7 +67,7 @@ fn check(doc: &Document, input: &LayersSet) -> Result<(), Stop> {
     if let Some(id) = input
         .layer
         .as_deref()
-        .filter(|_| op != Op::Isolate && op != Op::ShowAll)
+        .filter(|_| !matches!(op, Op::Isolate | Op::ShowAll | Op::ThawAll | Op::Unisolate))
     {
         let n = known(id, "layer")?;
         if op == Op::Active {
@@ -86,6 +87,33 @@ fn check(doc: &Document, input: &LayersSet) -> Result<(), Stop> {
                     format!(
                         "“{}” servisten çizilir ve nesne tutmaz; etkin katman nesneleri alan bir katman olur.",
                         n.name
+                    ),
+                    "layer",
+                ));
+            }
+            if doc.layers().is_frozen(id) {
+                return Err(fail(
+                    codes::LAYER_FROZEN,
+                    format!(
+                        "“{}” dondurulmuş; etkin katman olamaz. Önce katmanı ya da grubunu çözün.",
+                        n.name
+                    ),
+                    "layer",
+                ));
+            }
+        }
+        if op == Op::Frozen && input.value == Some(true) {
+            let active = doc.layers().active();
+            let holds = doc.layers().leaves_of(id).iter().any(|l| l.id == active);
+            if holds {
+                let what = match n.kind {
+                    LayerNodeType::Group => format!("“{}” grubu etkin katmanı içeriyor", n.name),
+                    LayerNodeType::Layer => format!("“{}” etkin katman", n.name),
+                };
+                return Err(fail(
+                    codes::ACTIVE_FROZEN,
+                    format!(
+                        "{what}; etkin katman dondurulamaz. Önce başka bir katmanı etkin yapın."
                     ),
                     "layer",
                 ));
@@ -165,6 +193,9 @@ fn write(doc: &mut Document, input: &LayersSet) -> LayersChanged {
         }
         Op::Locked => doc.set_layer_locked(id, value),
         Op::Plot => doc.set_layer_plot(id, value),
+        Op::Frozen => doc.set_layer_frozen(id, value),
+        Op::ThawAll => doc.thaw_all_layers(),
+        Op::Unisolate => doc.unisolate_layers(),
         Op::Active => {
             let before = doc.layers().active() != id;
             doc.set_active_layer(id) && before

@@ -78,4 +78,12 @@ compose?: LayerCompose,
  * on a sheet, its PDF or a print (AutoCAD's plot switch, DXF's 290;
  * docs/adr/0260 §4). A group's covers what it holds. Only `false` is written.
  */
-plot?: boolean, };
+plot?: boolean, 
+/**
+ * Dondur (AutoCAD's freeze, DXF's 70 bit 1; docs/adr/0311 §1): absent,
+ * thawed; `true`, frozen: neither drawn, picked, snapped to nor counted
+ * in the drawing's extent, and Hepsini göster leaves it frozen; the
+ * active layer is never frozen. A group's covers what it holds. Only
+ * `true` is written.
+ */
+frozen?: boolean, };

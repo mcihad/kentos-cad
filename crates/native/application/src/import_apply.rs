@@ -36,6 +36,8 @@ pub enum LayerTarget {
         fields: Vec<kentos_contracts::LayerField>,
         /// `Some(false)`: the file's layer is not printed (docs/adr/0260 §4).
         plot: Option<bool>,
+        /// `Some(true)`: the file's layer is frozen (docs/adr/0311 §1).
+        frozen: Option<bool>,
     },
 }
 
@@ -435,6 +437,7 @@ fn make_layers(
             locked,
             fields,
             plot,
+            frozen,
         } = t
         else {
             continue;
@@ -445,6 +448,7 @@ fn make_layers(
             .find(|(s, _)| s == source)
             .map(|(_, id)| id.clone());
         let new = NewLayer {
+            frozen: *frozen,
             id,
             name: name.clone(),
             kind: LayerNodeType::Layer,
@@ -928,6 +932,7 @@ mod tests {
                 (
                     "PARSEL".into(),
                     LayerTarget::New {
+                        frozen: None,
                         plot: None,
                         name: "PARSEL".into(),
                         style: Box::new(style("#FF0000")),
@@ -939,6 +944,7 @@ mod tests {
                 (
                     "YOL".into(),
                     LayerTarget::New {
+                        frozen: None,
                         plot: None,
                         name: "YOL".into(),
                         style: Box::new(style("fg")),
@@ -1057,6 +1063,7 @@ mod tests {
                     (
                         "1".into(),
                         LayerTarget::New {
+                            frozen: None,
                             plot: None,
                             name: "Yeni".into(),
                             style: Box::new(style("fg")),

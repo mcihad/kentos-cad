@@ -1045,6 +1045,7 @@ impl Emitter {
             .map(|i| {
                 let l = &self.layers[i];
                 ImportLayer {
+                    frozen: None,
                     plot: None,
                     name: l.name.clone(),
                     color: l.color.map_or_else(|| "ink".to_owned(), app_color),

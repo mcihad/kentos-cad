@@ -14,6 +14,7 @@ mod dimensions;
 mod elevations;
 mod filters;
 mod fixtures;
+mod frozen;
 mod hatches;
 mod images;
 mod imperial;

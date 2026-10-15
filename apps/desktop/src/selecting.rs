@@ -87,7 +87,20 @@ impl App {
             return;
         };
         self.spatial.sync(&doc.model);
-        if let Some(bounds) = self.spatial.extent() {
+        // A frozen layer's objects are not counted (docs/adr/0311 §1); a hidden one's are, as AutoCAD's.
+        let tree = doc.model.layers();
+        let bounds = if tree.leaves().iter().any(|l| tree.is_frozen(&l.id)) {
+            let ids: Vec<f64> = doc
+                .model
+                .entities()
+                .filter(|e| !tree.is_frozen(&e.base().layer_id))
+                .map(|e| f64::from(e.base().id))
+                .collect();
+            self.spatial.store().extent(Some(&ids))
+        } else {
+            self.spatial.extent()
+        };
+        if let Some(bounds) = bounds {
             self.viewport.show(&bounds);
         }
     }

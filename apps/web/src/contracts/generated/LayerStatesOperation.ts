@@ -3,4 +3,4 @@
 /**
  * What `cad.layers.states` does.
  */
-export type LayerStatesOperation = "save" | "update" | "rename" | "remove" | "apply";
+export type LayerStatesOperation = "save" | "update" | "rename" | "remove" | "apply" | "export" | "import";

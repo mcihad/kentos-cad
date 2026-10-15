@@ -23,6 +23,9 @@ pub struct LayerTree {
     /// The number in the last `layer-N` id given or read: new layers count on
     /// from it, so an id is never given twice (the web's `uid`).
     counter: u64,
+    /// The nodes the last Katmanı yalıt hid (docs/adr/0311 §2): the
+    /// session's, never the file's; Yalıtımı kaldır shows them again.
+    isolated: Vec<String>,
 }
 
 /// A layer or group to add (the web's `LayerInit` for `CadDocument.addLayer`).
@@ -57,6 +60,8 @@ pub struct NewLayer {
     pub filter: Option<kentos_contracts::LayerFilter>,
     /// Yazdır (docs/adr/0260 §4): `Some(false)` not printed.
     pub plot: Option<bool>,
+    /// Dondur (docs/adr/0311 §1): `Some(true)` frozen (a DXF's frozen layer).
+    pub frozen: Option<bool>,
     /// A layer's actions and information card (docs/adr/0225 §4, §5), kept
     /// by the node it makes (Başka çizimden al's layers); a group keeps none.
     pub actions: Vec<kentos_contracts::LayerAction>,
@@ -71,6 +76,7 @@ impl NewLayer {
     pub fn layer(name: impl Into<String>) -> Self {
         Self {
             plot: None,
+            frozen: None,
             id: None,
             name: name.into(),
             kind: LayerNodeType::Layer,
@@ -135,6 +141,7 @@ impl LayerTree {
             active: String::new(),
             paths,
             counter,
+            isolated: Vec::new(),
         };
         tree.active = match tree.get(active) {
             Some(node) if node.kind == LayerNodeType::Layer => active.to_owned(),
@@ -206,9 +213,29 @@ impl LayerTree {
         ))
     }
 
-    /// Whether the node and every group above it are shown. An unknown id is shown (web).
+    /// Whether the node and every group above it are shown and none of them
+    /// frozen (docs/adr/0311 §1): what is drawn, picked and snapped to. An
+    /// unknown id is shown (web).
     pub fn is_visible(&self, id: &str) -> bool {
+        self.along(id)
+            .all(|node| node.visible && node.frozen != Some(true))
+    }
+
+    /// Whether the node and every group above it have their eyes open,
+    /// frozen or not (the Katmanlar panel's eye, `cad.layers.find`'s `on`).
+    pub fn is_on(&self, id: &str) -> bool {
         self.along(id).all(|node| node.visible)
+    }
+
+    /// Whether the node or a group above it is frozen (docs/adr/0311 §1).
+    /// An unknown id is not.
+    pub fn is_frozen(&self, id: &str) -> bool {
+        self.along(id).any(|node| node.frozen == Some(true))
+    }
+
+    /// The nodes the last Katmanı yalıt hid, for Yalıtımı kaldır.
+    pub fn isolated(&self) -> &[String] {
+        &self.isolated
     }
 
     /// Whether the node or a group above it is locked. An unknown id is not (web).
@@ -243,6 +270,39 @@ impl LayerTree {
         self.node_mut(id)
             .map(|node| node.locked = !node.locked)
             .is_some()
+    }
+
+    /// A node's freeze set (docs/adr/0311 §1): only `true` is kept; whether it changed.
+    pub(crate) fn set_frozen(&mut self, id: &str, frozen: bool) -> bool {
+        let want = frozen.then_some(true);
+        match self.node_mut(id) {
+            Some(node) if node.frozen != want => {
+                node.frozen = want;
+                true
+            }
+            _ => false,
+        }
+    }
+
+    /// Thaws every node; whether one was frozen.
+    pub(crate) fn thaw_all(&mut self) -> bool {
+        let mut changed = false;
+        visit_mut(&mut self.roots, &mut Vec::new(), &mut |_, node| {
+            changed |= node.frozen.is_some();
+            node.frozen = None;
+        });
+        changed
+    }
+
+    /// Yalıtımı kaldır: the nodes the last isolation hid that are still
+    /// hidden shown again, the memory forgotten; whether one was.
+    pub(crate) fn unisolate(&mut self) -> bool {
+        let remembered = std::mem::take(&mut self.isolated);
+        let mut changed = false;
+        for id in remembered {
+            changed |= self.set_visible(&id, true);
+        }
+        changed
     }
 
     /// A node's printing set (docs/adr/0260 §4): only `false` is kept; whether it changed.
@@ -392,13 +452,23 @@ impl LayerTree {
             return false;
         }
         let mut changed = false;
+        let mut hid = Vec::new();
         visit_mut(&mut self.roots, &mut Vec::new(), &mut |path, node| {
             let shown = targets
                 .iter()
                 .any(|target| target.starts_with(path) || path.starts_with(target));
             changed |= node.visible != shown;
+            if node.visible && !shown {
+                hid.push(node.id.clone());
+            }
             node.visible = shown;
         });
+        // A second isolation adds to what the first hid (docs/adr/0311 §2).
+        for id in hid {
+            if !self.isolated.contains(&id) {
+                self.isolated.push(id);
+            }
+        }
         changed
     }
 
@@ -594,6 +664,7 @@ impl LayerTree {
         };
         LayerNode {
             plot: new.plot.filter(|p| !p),
+            frozen: new.frozen.filter(|f| *f),
             id,
             name: new.name,
             kind: new.kind,
@@ -633,6 +704,7 @@ impl LayerTree {
             active: String::new(),
             paths: self.paths.clone(),
             counter: self.counter,
+            isolated: Vec::new(),
         };
         copy.make(new)
     }
@@ -646,6 +718,7 @@ impl LayerTree {
             active: String::new(),
             paths: self.paths.clone(),
             counter: self.counter,
+            isolated: Vec::new(),
         };
         (0..n).map(|_| copy.next_id()).collect()
     }

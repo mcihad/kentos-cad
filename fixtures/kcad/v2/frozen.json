@@ -1,0 +1,231 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Dondurulmuş katmanlar",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 100.0,
+    "workspace": "cad",
+    "layerStates": [
+      {
+        "id": "durum-1",
+        "name": "Pafta",
+        "nodes": [
+          {
+            "node": "duvar",
+            "visible": true,
+            "frozen": false,
+            "plot": true
+          },
+          {
+            "node": "mobilya",
+            "visible": true,
+            "frozen": true,
+            "plot": true
+          },
+          {
+            "node": "eski",
+            "visible": false,
+            "frozen": true,
+            "plot": false
+          },
+          {
+            "node": "eski-duvar",
+            "visible": true,
+            "locked": false,
+            "style": {
+              "color": "#8C9AAA",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "frozen": false,
+            "plot": true
+          }
+        ]
+      },
+      {
+        "id": "durum-2",
+        "name": "Eski durum",
+        "nodes": [
+          {
+            "node": "duvar",
+            "visible": true
+          }
+        ]
+      }
+    ]
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "duvar",
+      "name": "A-DUVAR",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+      },
+      "children": []
+    },
+    {
+      "id": "mobilya",
+      "name": "A-MOBİLYA",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#8A94A6",
+        "lineType": "continuous",
+        "lineWeight": 0.13
+      },
+      "frozen": true,
+      "children": []
+    },
+    {
+      "id": "aks",
+      "name": "A-AKS",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E06C75",
+        "lineType": "dashdot",
+        "lineWeight": 0.18
+      },
+      "plot": false,
+      "children": []
+    },
+    {
+      "id": "eski",
+      "name": "Eski",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": false,
+      "frozen": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "eski-duvar",
+          "name": "duvar_eski",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#8C9AAA",
+            "lineType": "continuous",
+            "lineWeight": 0.18
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "activeLayer": "duvar",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 10.0,
+          "y": 0.0
+        },
+        {
+          "x": 10.0,
+          "y": 0.25
+        },
+        {
+          "x": 0.0,
+          "y": 0.25
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "mobilya",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 1.0,
+          "y": 1.0
+        },
+        {
+          "x": 3.0,
+          "y": 1.0
+        },
+        {
+          "x": 3.0,
+          "y": 2.6
+        },
+        {
+          "x": 1.0,
+          "y": 2.6
+        }
+      ]
+    },
+    {
+      "kind": "line",
+      "id": 3,
+      "layerId": "aks",
+      "attrs": {},
+      "a": {
+        "x": -1.0,
+        "y": 0.125
+      },
+      "b": {
+        "x": 11.0,
+        "y": 0.125
+      }
+    },
+    {
+      "kind": "line",
+      "id": 4,
+      "layerId": "eski-duvar",
+      "attrs": {},
+      "a": {
+        "x": 0.0,
+        "y": 5.0
+      },
+      "b": {
+        "x": 10.0,
+        "y": 5.0
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a1-2700-7000-8000-000000000001",
+    "0192f5a1-2700-7000-8000-000000000002",
+    "0192f5a1-2700-7000-8000-000000000003",
+    "0192f5a1-2700-7000-8000-000000000004"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

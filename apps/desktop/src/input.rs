@@ -134,7 +134,6 @@ impl App {
                 overlap_layers: &self.overlap_layers,
                 locks: &mut self.locks,
                 template: self.template.as_ref().map(|run| &run.stamp),
-                isolated_layers: &mut self.isolated_layers,
             },
         );
         // Geçici izleme noktası (docs/adr/0270 §3): the point given is a tracking point now.

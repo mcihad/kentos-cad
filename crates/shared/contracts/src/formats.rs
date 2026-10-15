@@ -177,6 +177,10 @@ pub struct ImportLayer {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub plot: Option<bool>,
+    /// Dondur (docs/adr/0311 §1): `true` when the file's layer is frozen (DXF's 70 bit 1).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub frozen: Option<bool>,
     /// Objects read onto this layer.
     pub count: u32,
     /// Those objects by kind (`point`, `line`, …): what a choice of layers
@@ -1076,6 +1080,11 @@ pub struct DxfWriteLayer {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub plot: Option<bool>,
+    /// Dondur (docs/adr/0311 §1): `true`, written frozen (DXF's 70 bit 1);
+    /// `visible` is then its eye alone.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub frozen: Option<bool>,
 }
 
 /// What `file.export.dxf` writes (an AutoCAD 2007 DXF).

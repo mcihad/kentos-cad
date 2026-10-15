@@ -66,6 +66,8 @@ fn layer_states_keep_and_change_the_tree_as_the_shared_cases_say() {
         let want = &c["changes"];
         assert_eq!(got.visible, pairs(&want["visible"]), "{}", c["name"]);
         assert_eq!(got.locked, pairs(&want["locked"]), "{}", c["name"]);
+        assert_eq!(got.frozen, pairs(&want["frozen"]), "{}", c["name"]);
+        assert_eq!(got.plot, pairs(&want["plot"]), "{}", c["name"]);
         let styles: Vec<(String, LayerStyle)> = want["styles"]
             .as_array()
             .expect("styles")

@@ -115,6 +115,7 @@ pub mod layer_filter;
 pub mod layers_compose;
 pub mod layers_edit;
 pub mod layers_filter;
+pub mod layers_find;
 pub mod layers_info;
 pub mod layers_labels;
 pub mod layers_renderer;
@@ -122,6 +123,7 @@ pub mod layers_service;
 pub mod layers_set;
 pub mod layers_states;
 pub mod layers_time;
+pub mod layers_translate;
 pub mod line;
 pub mod match_props;
 pub mod network_define;
@@ -432,6 +434,16 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_LAYERS_STATES,
         kentos_contracts::CAD_LAYERS_STATES_VERSION,
+    ),
+    // The layers found by a name pattern and their properties, and layers
+    // translated to a standard's ([`layers_find`], [`layers_translate`], docs/adr/0311).
+    (
+        kentos_contracts::CAD_LAYERS_FIND,
+        kentos_contracts::CAD_LAYERS_FIND_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_LAYERS_TRANSLATE,
+        kentos_contracts::CAD_LAYERS_TRANSLATE_VERSION,
     ),
     (
         kentos_contracts::CAD_STYLES_EDIT,

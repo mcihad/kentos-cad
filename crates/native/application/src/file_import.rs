@@ -239,6 +239,7 @@ fn plan_of(
             let default = kentos_domain::default_style();
             LayerTarget::New {
                 plot: l.plot,
+                frozen: l.frozen,
                 name: l.name.clone(),
                 style: Box::new(LayerStyle {
                     color: l.color.clone(),

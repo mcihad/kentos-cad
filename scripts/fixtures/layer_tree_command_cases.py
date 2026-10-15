@@ -1,8 +1,9 @@
-"""Writes the shared cases of the layer tree's three commands (docs/adr/0248 §1–§3):
+"""Writes the shared cases of the layer tree's three commands (docs/adr/0248 §1–§3, 0311 §1–§3):
 
 - fixtures/commands/v1/cad.layers.edit.json   (`cad.layers.edit` v1: add, style, move, remove, duplicate, merge, fields, purge)
-- fixtures/commands/v1/cad.layers.set.json    (`cad.layers.set` v1: rename, visible, locked, active, isolate, showAll)
-- fixtures/commands/v1/cad.layers.states.json (`cad.layers.states` v1: save, update, rename, remove, apply)
+- fixtures/commands/v1/cad.layers.set.json    (`cad.layers.set` v1: rename, visible, locked, active, isolate, unisolate,
+  showAll, plot, frozen, thawAll)
+- fixtures/commands/v1/cad.layers.states.json (`cad.layers.states` v1: save, update, rename, remove, apply, export, import)
 
 The expectations are built here from the contract's rules (crates/shared/contracts/src/cad_layer_tree.rs: the checks and
 their order, the codes, paths and words, the steps' names) and from the ADRs' meaning of each change (docs/adr/0072 a
@@ -646,6 +647,58 @@ def set_cases():
     out.append({"name": "Hepsini göster",
                 "steps": [step("execute", {"operation": "showAll"}, set_result(), edit_flags(all_shown)),
                           step("execute", {"operation": "showAll"}, set_result(False), {"layers": all_shown, "revision": "same"})]})
+    # Dondur (docs/adr/0311 §1): only true is kept; a group's covers what it holds; the active layer never.
+    out.append({"name": "Dondur: katman; düzenlemedir, geri alma adımı değildir (ADR 0311 §1)",
+                "steps": [step("execute", {"operation": "frozen", "layer": "yol", "value": True}, set_result(), edit_flags(changed(t, "yol", frozen=True))),
+                          step("undo", returns=None, expect={"layers": changed(t, "yol", frozen=True)})]})
+    out.append({"name": "Dondur ve çöz: grup; çözülünce alan kalkar",
+                "steps": [step("execute", {"operation": "frozen", "layer": "arsiv", "value": True}, set_result(), edit_flags(changed(t, "arsiv", frozen=True))),
+                          step("execute", {"operation": "frozen", "layer": "arsiv", "value": False}, set_result(), edit_flags(t))]})
+    out.append({"name": "Çöz: zaten çözülmüş bir şey değiştirmez",
+                "steps": [step("execute", {"operation": "frozen", "layer": "yol", "value": False}, set_result(False), unchanged(t))]})
+    out.append(refused("Dondur: etkin katman", {"operation": "frozen", "layer": "parsel", "value": True}, "active_frozen",
+                       "“Parsel” etkin katman; etkin katman dondurulamaz. Önce başka bir katmanı etkin yapın.", "layer", t))
+    out.append(refused("Dondur: etkin katmanı içeren grup", {"operation": "frozen", "layer": "kadastro", "value": True}, "active_frozen",
+                       "“Kadastro” grubu etkin katmanı içeriyor; etkin katman dondurulamaz. Önce başka bir katmanı etkin yapın.", "layer", t))
+    out.append(refused("Dondur: değersiz", {"operation": "frozen", "layer": "yol"}, "no_value",
+                       "Açık mı kapalı mı olduğunu value ile verin (true ya da false).", "value", t))
+    frozen_yol = changed(t, "yol", frozen=True)
+    out.append({"name": "Etkin katman: dondurulmuş katman olmaz",
+                "setup": setup(frozen_yol),
+                "steps": [step("execute", {"operation": "active", "layer": "yol"},
+                               failed("layer_frozen", "“Yol” dondurulmuş; etkin katman olamaz. Önce katmanı ya da grubunu çözün.", "layer"),
+                               unchanged(frozen_yol))]})
+    two_frozen = changed(changed(t, "yol", frozen=True), "arsiv", frozen=True)
+    out.append({"name": "Bütün katmanları çöz",
+                "setup": setup(two_frozen),
+                "steps": [step("execute", {"operation": "thawAll"}, set_result(), edit_flags(t)),
+                          step("execute", {"operation": "thawAll"}, set_result(False), {"layers": t, "revision": "same"})]})
+    shown_frozen = copy.deepcopy(changed(t, "yol", frozen=True))
+    for n, _ in walk(shown_frozen):
+        n["visible"] = True
+    out.append({"name": "Hepsini göster: dondurulmuş katman dondurulmuş kalır",
+                "setup": setup(changed(t, "yol", frozen=True)),
+                "steps": [step("execute", {"operation": "showAll"}, set_result(), edit_flags(shown_frozen))]})
+    # Yalıtımı kaldır (docs/adr/0311 §2): what isolate hid, still hidden, shown again; the memory is the session's.
+    iso = isolate(t, ["parsel"])
+    hand = changed(iso, "bos", visible=True)
+    back = copy.deepcopy(hand)
+    for n, _ in walk(back):
+        if get(t, n["id"])["visible"]:
+            n["visible"] = True
+    out.append({"name": "Yalıtımı kaldır: yalıt'ın gizledikleri yeniden görünür; elle gösterilen olduğu gibi kalır",
+                "steps": [step("execute", {"operation": "isolate", "layers": ["parsel"]}, set_result(), edit_flags(iso)),
+                          step("execute", {"operation": "visible", "layer": "bos", "value": True}, set_result(), edit_flags(hand)),
+                          step("execute", {"operation": "unisolate"}, set_result(), edit_flags(back)),
+                          step("execute", {"operation": "unisolate"}, set_result(False), {"layers": back, "revision": "same"})]})
+    out.append({"name": "Yalıtımı kaldır: yalıt'ın gizlediği yoksa bir şey değiştirmez",
+                "steps": [step("execute", {"operation": "unisolate"}, set_result(False), unchanged(t))]})
+    iso2 = isolate(iso, ["yol"])
+    out.append({"name": "Yalıtımı kaldır: iki yalıtımın gizlediklerinin hepsi geri gelir",
+                "steps": [step("execute", {"operation": "isolate", "layers": ["parsel"]}, set_result(), edit_flags(iso)),
+                          step("execute", {"operation": "isolate", "layers": ["yol"]}, set_result(), edit_flags(isolate(t, ["yol"]))),
+                          step("plan", {"operation": "unisolate"}, set_result(), {"layers": isolate(t, ["yol"]), "revision": "same"}),
+                          step("execute", {"operation": "unisolate"}, set_result(), edit_flags(t))]})
     out.append({"name": "Plan: yazmaz", "steps": [step("plan", {"operation": "locked", "layer": "yol", "value": True}, set_result(), unchanged(t))]})
     out.append({"name": "Doğrula: yazmaz", "steps": [step("validate", {"operation": "showAll"}, VALID, unchanged(t))]})
     out.append(refused("katmansız", {"operation": "rename", "name": "A"}, "no_layer", "Katmanı ya da grubu kimliğiyle verin (layer).", "layer", t))
@@ -671,7 +724,7 @@ def set_cases():
 
 def capture(nodes, id_, name, locks, styles):
     """docs/adr/0177 §4: every node in the tree's order with its own visibility; with locks its own lock, with styles a
-    layer's style."""
+    layer's style; since docs/adr/0311 §3 its own freeze and printing always."""
     out = []
     for n, _ in walk(nodes):
         e = {"node": n["id"], "visible": n["visible"]}
@@ -679,15 +732,23 @@ def capture(nodes, id_, name, locks, styles):
             e["locked"] = n["locked"]
         if styles and n["type"] == "layer":
             e["style"] = copy.deepcopy(n["style"])
+        e["frozen"] = n.get("frozen") is True
+        e["plot"] = n.get("plot") is not False
         out.append(e)
     return {"id": id_, "name": name, "nodes": out}
 
 
-def apply_state(nodes, state):
+def holds(nodes, id_, active):
+    """Whether the node is the active layer or a group above it."""
+    return active in leaves(get(nodes, id_))
+
+
+def apply_state(nodes, state, active="parsel"):
     """What applying a state does: the nodes it names that the tree has take its visibility and its lock (when kept),
-    the layers its style (when kept); the counts of each and of the nodes the tree lacks."""
+    the layers its style (when kept), their freeze and printing (when kept; a freeze holding the active layer passed
+    over, docs/adr/0311 §3); the counts of each and of the nodes the tree lacks."""
     out = copy.deepcopy(nodes)
-    vis = lock = sty = missing = 0
+    vis = lock = sty = frz = plt = missing = 0
     for e in state["nodes"]:
         n = get(out, e["node"])
         if n is None:
@@ -702,7 +763,19 @@ def apply_state(nodes, state):
         if "style" in e and n["type"] == "layer" and n["style"] != e["style"]:
             n["style"] = copy.deepcopy(e["style"])
             sty += 1
-    return out, vis, lock, sty, missing
+        if "frozen" in e and (n.get("frozen") is True) != e["frozen"] and not (e["frozen"] and holds(nodes, n["id"], active)):
+            if e["frozen"]:
+                n["frozen"] = True
+            else:
+                n.pop("frozen", None)
+            frz += 1
+        if "plot" in e and (n.get("plot") is not False) != e["plot"]:
+            if e["plot"]:
+                n.pop("plot", None)
+            else:
+                n["plot"] = False
+            plt += 1
+    return out, vis, lock, sty, frz, plt, missing
 
 
 def styles_only(before, after):
@@ -738,8 +811,61 @@ def pafta(nodes):
     return s
 
 
-def states_done(state, changed_=True, visible=0, locked_=0, styles=0, missing=0):
-    return completed({"state": state, "changed": changed_, "visible": visible, "locked": locked_, "styles": styles, "missing": missing, "revision": "$current"})
+def states_done(state, changed_=True, visible=0, locked_=0, styles=0, missing=0, frozen=0, plot=0, **extra):
+    out = {"state": state, "changed": changed_, "visible": visible, "locked": locked_, "styles": styles, "frozen": frozen,
+           "plot": plot, "missing": missing}
+    out.update(extra)
+    out["revision"] = "$current"
+    return completed(out)
+
+
+def path_of(nodes, id_):
+    """A node's names from the top, joined by “ / ” (the tree's path)."""
+    parts, n = [], get(nodes, id_)
+    while n is not None:
+        parts.insert(0, n["name"])
+        n = parent_of(nodes, n["id"])
+    return " / ".join(parts)
+
+
+def exported(nodes, states):
+    """docs/adr/0311 §3: each node with its path when the tree has it."""
+    out = copy.deepcopy(states)
+    for s in out:
+        for e in s["nodes"]:
+            if get(nodes, e["node"]) is not None:
+                e["path"] = path_of(nodes, e["node"])
+    return {"format": "kentos.layer-states", "version": 1, "states": out}
+
+
+def fold(text):
+    """Lower case as Turkish writes it (I ı, İ i)."""
+    return "".join("ı" if c == "I" else "i" if c == "İ" else c.lower() for c in text)
+
+
+def imported_nodes(nodes, state):
+    """A file's state's nodes as this drawing keeps them: by id, else by path (folded, the first in the tree's
+    order), else with its id; without an id nor a path found, left out; paths dropped; a node twice, the first."""
+    ids = {n["id"] for n, _ in walk(nodes)}
+    by_path = {}
+    for n, _ in walk(nodes):
+        by_path.setdefault(fold(path_of(nodes, n["id"])), n["id"])
+    out = []
+    for e in state["nodes"]:
+        if e["node"] in ids:
+            node_ = e["node"]
+        elif "path" in e and fold(e["path"]) in by_path:
+            node_ = by_path[fold(e["path"])]
+        elif not e["node"]:
+            continue
+        else:
+            node_ = e["node"]
+        if any(m["node"] == node_ for m in out):
+            continue
+        d = {k: v for k, v in e.items() if k != "path"}
+        d["node"] = node_
+        out.append(d)
+    return out
 
 
 def states_cases():
@@ -767,16 +893,74 @@ def states_cases():
                                {**unchanged(t), "settings": {"layerStates": [p]}})]})
     # An empty list is not written: the setting reads as absent (null).
     out.append({"name": "Sil", "steps": [step("execute", {"operation": "remove", "state": "durum-1"}, states_done("durum-1"), {**flags, "settings": {"layerStates": None}})]})
-    applied, vis, lock, sty, missing = apply_state(t, p)
+    applied, vis, lock, sty, frz, plt, missing = apply_state(t, p)
     out.append({"name": "Uygula: görünürlük ve kilit ağacın kendi değişikliği, stiller tek adımda “Katman durumu: Pafta”; olmayan düğüm sayılır",
-                "steps": [step("execute", {"operation": "apply", "state": "durum-1"}, states_done("durum-1", True, vis, lock, sty, missing),
+                "steps": [step("execute", {"operation": "apply", "state": "durum-1"}, states_done("durum-1", True, vis, lock, sty, missing, frz, plt),
                                {"layers": applied, "canUndo": True, "dirty": True}),
                           step("undo", returns="Katman durumu: Pafta", expect={"layers": styles_only(t, applied)})]})
     out.append({"name": "Uygula: ağaç zaten durumda",
-                "steps": [step("execute", {"operation": "apply", "state": "durum-1"}, states_done("durum-1", True, vis, lock, sty, missing), {"layers": applied}),
+                "steps": [step("execute", {"operation": "apply", "state": "durum-1"}, states_done("durum-1", True, vis, lock, sty, missing, frz, plt), {"layers": applied}),
                           step("execute", {"operation": "apply", "state": "durum-1"}, states_done("durum-1", False, 0, 0, 0, missing), {"layers": applied, "revision": "same"})]})
     out.append({"name": "Plan: uygulamanın sayıları; yazmaz",
-                "steps": [step("plan", {"operation": "apply", "state": "durum-1"}, states_done("durum-1", True, vis, lock, sty, missing), unchanged(t))]})
+                "steps": [step("plan", {"operation": "apply", "state": "durum-1"}, states_done("durum-1", True, vis, lock, sty, missing, frz, plt), unchanged(t))]})
+    # Freeze and printing (docs/adr/0311 §3): a state keeps them; the active layer is never frozen.
+    cold = copy.deepcopy(p)
+    for e in cold["nodes"]:
+        if e["node"] in ("yol", "parsel", "gizli"):
+            e["frozen"] = True
+        if e["node"] == "bina":
+            e["plot"] = False
+    cold["id"], cold["name"] = "durum-2", "Soğuk"
+    applied2, vis2, lock2, sty2, frz2, plt2, missing2 = apply_state(t, cold)
+    out.append({"name": "Uygula: dondurma ve yazdırma saklanır; etkin katman dondurulmaz (ADR 0311 §3)",
+                "setup": setup(t, layerStates=[p, cold]),
+                "steps": [step("execute", {"operation": "apply", "state": "durum-2"},
+                               states_done("durum-2", True, vis2, lock2, sty2, missing2, frz2, plt2), {"layers": applied2, "dirty": True})]})
+    old_state = copy.deepcopy(p)
+    for e in old_state["nodes"]:
+        e.pop("frozen", None)
+        e.pop("plot", None)
+    frozen_tree = changed(changed(t, "yol", frozen=True), "bina", plot=False)
+    applied3, vis3, lock3, sty3, frz3, plt3, missing3 = apply_state(frozen_tree, old_state)
+    out.append({"name": "Uygula: dondurmayı saklamayan eski durum dondurmaya ve yazdırmaya dokunmaz",
+                "setup": setup(frozen_tree, layerStates=[old_state]),
+                "steps": [step("execute", {"operation": "apply", "state": "durum-1"},
+                               states_done("durum-1", True, vis3, lock3, sty3, missing3, frz3, plt3), {"layers": applied3})]})
+    # Export and import (docs/adr/0311 §3).
+    out.append({"name": "Dışa aktar: bütün durumlar, düğümler yollarıyla; çizim değişmez",
+                "steps": [step("execute", {"operation": "export"}, states_done("", False, file=exported(t, [p])), unchanged(t))]})
+    out.append({"name": "Dışa aktar: seçilen durum",
+                "setup": setup(t, layerStates=[p, cold]),
+                "steps": [step("execute", {"operation": "export", "states": ["durum-2"]}, states_done("", False, file=exported(t, [cold])),
+                               {"layers": t, "revision": "same", "dirty": False})]})
+    out.append(refused("Dışa aktar: projede olmayan durum", {"operation": "export", "states": ["durum-1", "durum-7"]}, "state_not_found",
+                       "“durum-7” kimlikli katman durumu projede yok.", "states[1]", t))
+    # Another drawing's file: its ids differ, its paths find the nodes.
+    foreign = {"id": "durum-1", "name": "Ofis", "nodes": [
+        {"node": "x-1", "path": "KADASTRO / parsel", "visible": False, "frozen": False, "plot": True},
+        {"node": "x-2", "path": "Yol", "visible": True, "frozen": True, "plot": False},
+        {"node": "", "path": "Yok olan", "visible": True},
+        {"node": "x-9", "visible": True},
+    ]}
+    file_ = {"format": "kentos.layer-states", "version": 1, "states": [foreign, dict(copy.deepcopy(p), name="Pafta ")]}
+    added = {"id": "durum-2", "name": "Ofis", "nodes": imported_nodes(t, foreign)}
+    out.append({"name": "İçe aktar: düğümler kimlikleriyle ya da yollarıyla (büyük küçük harf katlanır); aynı adlı durum atlanır",
+                "steps": [step("execute", {"operation": "import", "file": file_},
+                               states_done("", True, added=1, skipped=1), {**flags, "settings": {"layerStates": [p, added]}})]})
+    replaced_state = {"id": "durum-1", "name": "Pafta", "nodes": imported_nodes(t, dict(copy.deepcopy(p), name="Pafta"))}
+    out.append({"name": "İçe aktar: replace aynı adlının üzerine yazar, kimliği kalır",
+                "setup": setup(t, layerStates=[cold]),
+                "steps": [step("execute", {"operation": "import", "replace": True,
+                                           "file": {"format": "kentos.layer-states", "version": 1, "states": [dict(copy.deepcopy(p), name="Soğuk", id="durum-9")]}},
+                               states_done("", True, replaced=1),
+                               {**flags, "settings": {"layerStates": [{"id": "durum-2", "name": "Soğuk", "nodes": imported_nodes(t, p)}]}})]})
+    out.append(refused("İçe aktar: dosyasız", {"operation": "import"}, "no_file",
+                       "İçe aktarılacak katman durumlarının dosyasını verin (file).", "file", t))
+    out.append(refused("İçe aktar: başka biçim", {"operation": "import", "file": {"format": "kentos.document", "version": 1, "states": []}}, "invalid_states",
+                       "Katman durumları dosyası okunamadı: dosya kentos.layer-states sürüm 1 değil (“kentos.document” sürüm 1).", "file", t))
+    out.append(refused("İçe aktar: aynı adlı iki durum", {"operation": "import", "file": {"format": "kentos.layer-states", "version": 1,
+                                                                                         "states": [foreign, dict(foreign, id="durum-5")]}},
+                       "invalid_states", "Katman durumları dosyası okunamadı: “Ofis” adlı durum dosyada iki kez var.", "file", t))
     out.append({"name": "Doğrula: yazmaz", "steps": [step("validate", {"operation": "remove", "state": "durum-1"}, VALID, unchanged(t))]})
     out.append(refused("durumsuz", {"operation": "apply"}, "no_state", "Katman durumunu kimliğiyle verin (state).", "state", t))
     out.append(refused("Yeniden adlandır: adsız", {"operation": "rename", "state": "durum-1"}, "empty_name", "Durumun adını yazın.", "name", t))

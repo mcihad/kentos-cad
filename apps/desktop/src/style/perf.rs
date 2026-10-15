@@ -27,6 +27,7 @@ use crate::document::Document;
 
 fn layer(id: &str, style: LayerStyle) -> LayerNode {
     LayerNode {
+        frozen: None,
         plot: None,
         id: id.into(),
         name: id.into(),

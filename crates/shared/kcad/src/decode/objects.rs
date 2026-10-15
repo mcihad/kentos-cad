@@ -202,6 +202,8 @@ pub(super) struct Features {
     subref_extras: bool,
     /// Schema 54: an object's `wipeout` (docs/adr/0310).
     wipeouts: bool,
+    /// Schema 55: a layer's `frozen`, a layer state node's `frozen` and `plot` (docs/adr/0311 §1, §3).
+    pub(super) frozen: bool,
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
     pub(super) look: bool,
@@ -271,6 +273,7 @@ impl Features {
             views: schema >= crate::SCHEMA_WITH_VIEWS,
             arrays: schema >= crate::SCHEMA_WITH_ARRAYS,
             wipeouts: schema >= crate::SCHEMA_WITH_WIPEOUTS,
+            frozen: schema >= crate::SCHEMA_WITH_FROZEN,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,

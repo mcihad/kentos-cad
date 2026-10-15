@@ -44,13 +44,16 @@ def capture(tree, id_, name, locks, styles):
             e["locked"] = n["locked"]
         if styles and n["type"] == "layer":
             e["style"] = copy.deepcopy(n["style"])
+        # docs/adr/0311 §3: every state keeps the node's own freeze and printing.
+        e["frozen"] = n.get("frozen") is True
+        e["plot"] = n.get("plot") is not False
         out.append(e)
     return {"id": id_, "name": name, "nodes": out}
 
 
 def changes(tree, state):
     by = {n["id"]: n for n in walk(tree)}
-    visible, locked, styles, missing = [], [], [], 0
+    visible, locked, styles, frozen, plot, missing = [], [], [], [], [], 0
     for e in state["nodes"]:
         n = by.get(e["node"])
         if n is None:
@@ -62,13 +65,17 @@ def changes(tree, state):
             locked.append([e["node"], e["locked"]])
         if "style" in e and n["type"] == "layer" and n["style"] != e["style"]:
             styles.append([e["node"], e["style"]])
-    return {"visible": visible, "locked": locked, "styles": styles, "missing": missing}
+        if "frozen" in e and (n.get("frozen") is True) != e["frozen"]:
+            frozen.append([e["node"], e["frozen"]])
+        if "plot" in e and (n.get("plot") is not False) != e["plot"]:
+            plot.append([e["node"], e["plot"]])
+    return {"visible": visible, "locked": locked, "styles": styles, "frozen": frozen, "plot": plot, "missing": missing}
 
 
 def matches(tree, state):
     c = changes(tree, state)
     present = len(state["nodes"]) - c["missing"]
-    return present > 0 and not (c["visible"] or c["locked"] or c["styles"])
+    return present > 0 and not (c["visible"] or c["locked"] or c["styles"] or c["frozen"] or c["plot"])
 
 
 def tree():
@@ -125,6 +132,10 @@ def cases():
     find(t4, "bina")["locked"] = False
     find(t4, "parsel")["style"] = style("#4F8EF7")
     apply_case("Kilitsiz ve stilsiz kaydedilen durum kilide ve stile dokunmaz", t4, only_visible)
+    t5 = tree()
+    find(t5, "yol")["frozen"] = True
+    find(t5, "cizim")["plot"] = False
+    apply_case("Dondurulan ve yazdırılmayan düğümler saklanan hâllerine döner (ADR 0311 §3)", t5)
     ghost = {"id": "hayalet", "name": "Hayalet", "nodes": [{"node": "silinmis", "visible": True}]}
     apply_case("Düğümlerinin hiçbiri ağaçta olmayan durum hiçbir şey değiştirmez, ağaç onda sayılmaz", tree(), ghost)
     group_style = {"id": "grup", "name": "Grup", "nodes": [{"node": "kadastro", "visible": True, "style": style("#000000")}]}

@@ -16,6 +16,7 @@ mod divide;
 mod edit;
 mod fixtures;
 mod info_templates;
+mod layers_find_cmd;
 mod lengthen;
 mod match_props;
 mod order_cmd;

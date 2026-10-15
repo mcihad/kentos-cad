@@ -15,9 +15,9 @@ use kentos_domain::contracts::{
     AddressesDefine, BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT,
     CAD_ENTITIES_SET, DimensionsReassociate, EntitiesChamfer, EntitiesCreate, EntitiesFillet,
     EntitiesOffset, EntitiesOrder, EntitiesSetProperties, EntitiesTrim, LabelsPin, LayersCompose,
-    LayersEdit, LayersFilter, LayersInfo, LayersLabels, LayersRenderer, LayersService, LayersSet,
-    LayersStates, LayersTime, NetworkDefine, NurbsCreate, OffsetBy, ScenariosEdit, SettingsSet,
-    SheetsEdit, StylesEdit, UcsSet, UcsTo, ViewsEdit, ViewsOp,
+    LayersEdit, LayersFilter, LayersFind, LayersInfo, LayersLabels, LayersRenderer, LayersService,
+    LayersSet, LayersStates, LayersTime, LayersTranslate, NetworkDefine, NurbsCreate, OffsetBy,
+    ScenariosEdit, SettingsSet, SheetsEdit, StylesEdit, UcsSet, UcsTo, ViewsEdit, ViewsOp,
 };
 use kentos_domain::contracts::{
     ArcCreate, ArrayLayout, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_ARRAY,
@@ -37,10 +37,11 @@ use kentos_native_application::{
     circle, curves_construct, delete, dimensions_reassociate, edit, entities_chamfer,
     entities_extend, entities_fillet, entities_order, entities_pick, entities_select,
     entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit, layers_filter,
-    layers_info, layers_labels, layers_renderer, layers_service, layers_set, layers_states,
-    layers_time, line, network_define, nurbs, offset, point, points_construct, polygon,
-    polygon_regular, polyline, rectangle_create, scenarios_edit, set, settings_set, sheets_edit,
-    snap_find, styles_edit, transform, ucs_set, units_change, views_edit,
+    layers_find, layers_info, layers_labels, layers_renderer, layers_service, layers_set,
+    layers_states, layers_time, layers_translate, line, network_define, nurbs, offset, point,
+    points_construct, polygon, polygon_regular, polyline, rectangle_create, scenarios_edit, set,
+    settings_set, sheets_edit, snap_find, styles_edit, transform, ucs_set, units_change,
+    views_edit,
 };
 use kentos_native_application::{
     arrays_edit, changeset, create, curves_edit, dimensions_create, divide, drawing_audit,
@@ -1172,6 +1173,24 @@ impl Input for LayersStates {
     }
 }
 
+impl Input for LayersFind {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        (path == "lineWeight").then_some(())?;
+        self.line_weight.as_mut()
+    }
+}
+
+impl Input for LayersTranslate {
+    /// `rules[2].lineWeight`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        let rest = path.strip_prefix("rules[")?;
+        let (i, field) = rest.split_once("].")?;
+        let rule = self.rules.get_mut(i.parse::<usize>().ok()?)?;
+        (field == "lineWeight").then_some(())?;
+        rule.line_weight.as_mut()
+    }
+}
+
 /// No style's number is a NaN or ±∞ case: the table's rule refuses them as
 /// any other value out of its bounds (docs/adr/0248 §4).
 impl Input for StylesEdit {
@@ -1943,6 +1962,8 @@ fn run_op(
         kentos_domain::contracts::CAD_LAYERS_EDIT => run!(layers_edit, LayersEdit),
         kentos_domain::contracts::CAD_LAYERS_SET => run!(layers_set, LayersSet),
         kentos_domain::contracts::CAD_LAYERS_STATES => run!(layers_states, LayersStates),
+        kentos_domain::contracts::CAD_LAYERS_FIND => run!(layers_find, LayersFind),
+        kentos_domain::contracts::CAD_LAYERS_TRANSLATE => run!(layers_translate, LayersTranslate),
         kentos_domain::contracts::CAD_STYLES_EDIT => run!(styles_edit, StylesEdit),
         kentos_domain::contracts::CAD_SETTINGS_SET => run!(settings_set, SettingsSet),
         kentos_domain::contracts::CAD_UCS_SET => run!(ucs_set, UcsSet),

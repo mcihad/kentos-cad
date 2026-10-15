@@ -633,6 +633,18 @@ codes! {
     STATE_NOT_FOUND = "state_not_found", Failed, false, "Projede bu katman durumu yok.";
     /// A layer state's name another state has.
     DUPLICATE_NAME = "duplicate_name", Failed, false, "Bu ad başka bir durumun.";
+    /// A frozen layer made active (docs/adr/0311 §1).
+    LAYER_FROZEN = "layer_frozen", Failed, false, "Katman ya da üstündeki bir grup dondurulmuş; etkin katman olamaz.";
+    /// The active layer, or a group holding it, frozen.
+    ACTIVE_FROZEN = "active_frozen", Failed, false, "Etkin katman dondurulamaz; önce başka bir katmanı etkin yapın.";
+    /// Import of layer states without a file (docs/adr/0311 §3).
+    NO_FILE = "no_file", Failed, false, "İçe aktarılacak durumların dosyası verilmedi.";
+    /// A layer states file against its rules.
+    INVALID_STATES = "invalid_states", Failed, false, "Katman durumları dosyası kurallarına uymuyor.";
+    /// A layer name pattern that does not read (docs/adr/0311 §4).
+    INVALID_PATTERN = "invalid_pattern", Failed, false, "Katman adı örüntüsü okunmuyor: boş ya da kapanmayan küme.";
+    /// Katmanları çevir without a rule (docs/adr/0311 §5).
+    NO_RULES = "no_rules", Failed, false, "Çevirme kuralı verilmedi.";
     /// A style created or updated without its definition.
     NO_DEFINITION = "no_definition", Failed, false, "Stilin tanımı verilmedi.";
     /// A style renamed or removed without its id.

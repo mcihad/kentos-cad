@@ -3306,8 +3306,9 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_LAYERS_SET_VERSION,
             title: "Katman ağacı".into(),
             summary: "Katmanlar panelinin göz, kilit, ad ve etkin katman değişikliklerini yapar (operation): rename (layer, name), visible ve locked (layer, value; grubun gizliliği ve kilidi altındakilerin hepsine geçer), \
-                      active (layer: nesne alan bir katman; grup ve servis katmanı olmaz), isolate (layers: bu düğümler, üstlerindeki gruplar ve altlarındakiler görünür, gerisi gizlenir) ve showAll (hepsi görünür). \
-                      Bunlar ağacın kendi değişiklikleridir: çizimi kirli yapar ve sürümü değiştirir ama geri alma adımı değildir; etkin katman dosyada saklanır ama düzenleme sayılmaz. Değişmeyen hiçbir şey yazmaz (changed false). \
+                      active (layer: nesne alan, dondurulmamış bir katman; grup ve servis katmanı olmaz), isolate (layers: bu düğümler, üstlerindeki gruplar ve altlarındakiler görünür, gerisi gizlenir; gizlediklerini çizim oturum boyunca hatırlar), \
+                      unisolate (isolate'in gizledikleri, hâlâ gizliyse yeniden görünür), showAll (hepsi görünür; dondurulmuş düğüm dondurulmuş kalır), plot (layer, value: yazdırılır mı), frozen (layer, value: dondurulmuş düğüm çizilmez, seçilmez, kenetlenmez, kapsama sayılmaz; etkin katman dondurulamaz) ve thawAll (hepsi çözülür). \
+                      Bunlar ağacın kendi değişiklikleridir: çizimi kirli yapar ve sürümü değiştirir ama geri alma adımı değildir; etkin katman dosyada saklanır ama düzenleme sayılmaz; yalnız isolate'in hatırladıkları oturumundur. Değişmeyen hiçbir şey yazmaz (changed false). \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
             aliases: vec![],
@@ -3342,7 +3343,9 @@ pub fn catalog() -> CommandCatalog {
             title: "Katman durumları".into(),
             summary: "Projenin adlı katman durumlarını yönetir (operation): save ağacın şimdiki görünürlüğünü, istenirse kilitlerini (locks) ve katmanların stillerini (styles, verilmezse açık) yeni bir durum olarak kaydeder (name verilmezse “Durum n”); \
                       update durumu (state) şimdiki ağaçtan yeniden kaydeder; rename durumu yeniden adlandırır; remove siler; apply durumu uygular: adını verdiği ve ağaçta hâlâ olan düğümlerin görünürlüğü ve (saklandıysa) kilidi ağacın kendi değişikliği olarak, \
-                      katmanların stilleri tek geri alma adımında (“Katman durumu: <ad>”) yazılır; ağaçta olmayan düğümler missing'de sayılır. Durumlar proje ayarıdır: kaydetmek, güncellemek, adlandırmak ve silmek çizimi kirli yapar, geri alma adımı değildir. \
+                      katmanların stilleri tek geri alma adımında (“Katman durumu: <ad>”) yazılır, saklandıysa dondurma ve yazdırma görünürlük gibi; ağaçta olmayan düğümler missing'de sayılır. \
+                      export durumları (states, verilmezse hepsi) düğümlerinin yollarıyla bir dosya olarak verir (file; kentos.layer-states sürüm 1), çizimi değiştirmez; import dosyanın (file) durumlarını ekler: düğüm kimliğiyle, yoksa yoluyla (adlar büyük küçük harf ve Türkçe harfler katlanarak) bulunur; \
+                      projede adı olan durum atlanır ya da replace ile üzerine yazılır (kimliği kalır), yenisi ilk boş durum-n kimliğini alır. Durumlar proje ayarıdır: kaydetmek, güncellemek, adlandırmak, silmek ve içe aktarmak çizimi kirli yapar, geri alma adımı değildir. \
                       Adlar baştaki ve sondaki boşluklar sayılmadan bir kez kullanılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
             aliases: vec![],
@@ -3361,12 +3364,85 @@ pub fn catalog() -> CommandCatalog {
                 CommandExample {
                     title: "Pafta görünümünü kilitleriyle kaydet".into(),
                     input: json!({ "operation": "save", "name": "Pafta", "locks": true }),
-                    output: Some(json!({ "state": "durum-1", "changed": true, "visible": 0, "locked": 0, "styles": 0, "missing": 0, "revision": "15" })),
+                    output: Some(json!({ "state": "durum-1", "changed": true, "visible": 0, "locked": 0, "styles": 0, "frozen": 0, "plot": 0, "missing": 0, "revision": "15" })),
                 },
                 CommandExample {
                     title: "Pafta görünümüne dön".into(),
                     input: json!({ "operation": "apply", "state": "durum-1" }),
                     output: None,
+                },
+                CommandExample {
+                    title: "Ofisin durumlarını başka bir çizimden al; aynı adlıların üzerine yaz".into(),
+                    input: json!({ "operation": "import", "replace": true,
+                                   "file": { "format": "kentos.layer-states", "version": 1,
+                                             "states": [{ "id": "durum-1", "name": "Pafta",
+                                                          "nodes": [{ "node": "layer-4", "path": "Mimari / A-DUVAR", "visible": true, "frozen": false, "plot": true }] }] } }),
+                    output: None,
+                },
+            ],
+        },
+        // Katmanları bul (docs/adr/0311 §4), held together by fixtures/commands/v1/cad.layers.find.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_FIND.into(),
+            version: crate::CAD_LAYERS_FIND_VERSION,
+            title: "Katmanları bul".into(),
+            summary: "Katmanları adlarının örüntüsüyle ve özellikleriyle bulur (AutoCAD'in katman süzgeçleri): name AutoCAD'in wcmatch örüntüsüdür (* herhangi bir dizi, ? bir karakter, # rakam, @ harf, . ikisi de değil, [..] ve [~..] kümeler, ` kaçış, virgülle seçenekler, başta ~ değili; harfler Türkçe katlanır); \
+                      group yalnız o grubun altındakiler; color, lineType, lineWeight katmanın kendi stili; on görünür (gözü ve üstündeki grupların gözü açık), frozen ve locked kendisi ya da üstündeki bir grup, plot üstündekilerle birlikte yazdırılıyor, empty nesnesiz (servis katmanı boş sayılmaz). \
+                      Yalnız katmanlar bulunur, ağacın sırasıyla, yolları, nesne sayıları ve özellikleriyle. Çizimi değiştirmez; plan aynı cevabı verir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersFind>(),
+            output: schema::<crate::LayersFound>(),
+            plan: Some(schema::<crate::LayersFound>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Adı A- ile başlayan, nesnesiz katmanlar".into(),
+                    input: json!({ "name": "A-*", "empty": true }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Dondurulmuş ya da yazdırılmayan duvar katmanları".into(),
+                    input: json!({ "name": "*duvar*", "frozen": true }),
+                    output: None,
+                },
+            ],
+        },
+        // Katmanları çevir (docs/adr/0311 §5), held together by fixtures/commands/v1/cad.layers.translate.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_TRANSLATE.into(),
+            version: crate::CAD_LAYERS_TRANSLATE_VERSION,
+            title: "Katmanları çevir".into(),
+            summary: "Katmanları kurallarla bir çizim standardının katmanlarına birleştirir (AutoCAD'in LAYTRANS'ı): nesne tutan her katman adına uyan ilk kuralı alır (from bir ad örüntüsüdür; adı kuralın to'su olan katman standart katmanın kendisidir); \
+                      kuralın standart katmanı to adlı ilk katmandır, yoksa ve kuralı bir katman alırsa parent grubunun sonuna (verilmezse en üste) kuralın stiliyle (verilmeyen alanlar ilk kaynağınki) eklenir; var olanı kuralın verilen stilini alır. \
+                      Kaynakların nesneleri standart katmana taşınır, kaynaklar silinir; etkin katman kaynaksa standart katman etkin olur; hepsi tek geri alma adımı (“Katmanları çevir”). Kilitli bir kaynak ya da standart katman hiçbir şeyi yazdırmaz (layer_locked). \
+                      plan önizlemedir: neyin nereye gideceği, nesne sayıları, eklenecek ve stili değişecek katmanlar. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec!["laytrans".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersTranslate>(),
+            output: schema::<crate::LayersTranslated>(),
+            plan: Some(schema::<crate::LayersTranslated>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Eski duvar katmanlarını ofisin A-DUVAR'ına çevir".into(),
+                    input: json!({ "rules": [{ "from": "duvar*,wall*", "to": "A-DUVAR", "color": "#E5484D", "lineWeight": 0.5 }] }),
+                    output: Some(json!({ "changed": true, "translations": [{ "layer": "layer-3", "name": "duvar", "rule": 0, "to": "layer-9", "toName": "A-DUVAR", "objects": 42 }],
+                                         "created": ["layer-9"], "restyled": [], "objects": 42, "revision": "16" })),
                 },
             ],
         },
@@ -4492,6 +4568,12 @@ mod tests {
                     crate::CAD_LAYERS_STATES => {
                         serde_json::from_value::<crate::LayersStates>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_LAYERS_FIND => {
+                        serde_json::from_value::<crate::LayersFind>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_LAYERS_TRANSLATE => {
+                        serde_json::from_value::<crate::LayersTranslate>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_STYLES_EDIT => {
                         serde_json::from_value::<crate::StylesEdit>(e.input.clone()).map(|_| ())
                     }
@@ -4723,6 +4805,14 @@ mod tests {
                         }
                         crate::CAD_LAYERS_STATES => {
                             serde_json::from_value::<crate::LayerStatesDone>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LAYERS_FIND => {
+                            serde_json::from_value::<crate::LayersFound>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LAYERS_TRANSLATE => {
+                            serde_json::from_value::<crate::LayersTranslated>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_STYLES_EDIT => {

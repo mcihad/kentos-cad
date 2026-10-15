@@ -5,6 +5,10 @@
 //! - Katman ara keeps the nodes whose name holds the text (lower case, the
 //!   Turkish way) and the groups above them, every such group open while it
 //!   searches; with none left the tree says “Aramayla eşleşen katman yok.”.
+//!   Text with `*`, `?`, `#`, `@`, `[` or `~` is a name pattern, AutoCAD's
+//!   `wcmatch` (`A-*`, `duvar*,wall*`); Süzgeç ▾ beside it keeps the layers
+//!   by their properties (shown, hidden, frozen, locked, not printed, empty)
+//!   through `cad.layers.find`'s rule (docs/adr/0311 §4).
 //! - A pressed row gives the tree the keyboard (the web's focused tree) until
 //!   a press on the drawing, the command line taking it, or a command from
 //!   the ribbon or a menu:
@@ -40,39 +44,94 @@ pub(crate) struct OpenRow<'a> {
     pub parent_visible: bool,
 }
 
-/// The tree's rows as shown, depth first: the nodes the search keeps
-/// (`query` as [`query`] makes it; empty keeps every node) and the children
-/// of the open groups. The search keeps a match with everything under it (a
-/// matching group shows its layers) and the groups above it; while it
-/// searches every group it keeps is open (the web's `render`, since c63cd77).
-pub(crate) fn open_rows<'a>(nodes: &'a [LayerNode], query: &str) -> Vec<OpenRow<'a>> {
-    fn matches(node: &LayerNode, query: &str) -> bool {
-        !query.is_empty() && lower_tr(&node.name).contains(query)
+/// What the tree searches for: the text (as [`query`] makes it) and the
+/// layers Süzgeç ▾ keeps, by id (none: no property asked).
+#[derive(Clone, Debug, Default)]
+pub(crate) struct Search {
+    pub query: String,
+    pub layers: Option<std::collections::HashSet<String>>,
+}
+
+impl Search {
+    pub(crate) fn text(query: &str) -> Self {
+        Self {
+            query: query.to_owned(),
+            layers: None,
+        }
     }
-    fn keep(node: &LayerNode, query: &str) -> bool {
-        query.is_empty()
-            || matches(node, query)
-            || node.children.iter().any(|child| keep(child, query))
+
+    fn active(&self) -> bool {
+        !self.query.is_empty() || self.layers.is_some()
+    }
+
+    /// Whether the text is a name pattern rather than a part of the name.
+    fn pattern(&self) -> bool {
+        self.query
+            .chars()
+            .any(|c| matches!(c, '*' | '?' | '#' | '@' | '[' | '~' | ','))
+    }
+
+    fn name_matches(&self, name: &str) -> bool {
+        if self.query.is_empty() {
+            true
+        } else if self.pattern() {
+            kentos_contracts::pattern_matches(&self.query, name)
+        } else {
+            lower_tr(name).contains(&self.query)
+        }
+    }
+
+    /// Whether a node is what the search asks for: a group by its name, only
+    /// when no property is asked; a layer by its name and its properties.
+    fn matches(&self, node: &LayerNode) -> bool {
+        if !self.active() {
+            return false;
+        }
+        match node.kind {
+            LayerNodeType::Group => {
+                self.layers.is_none() && !self.query.is_empty() && self.name_matches(&node.name)
+            }
+            LayerNodeType::Layer => {
+                self.name_matches(&node.name)
+                    && self
+                        .layers
+                        .as_ref()
+                        .is_none_or(|ids| ids.contains(&node.id))
+            }
+        }
+    }
+}
+
+/// The tree's rows as shown, depth first: the nodes the search keeps (an
+/// empty one keeps every node) and the children of the open groups. The
+/// search keeps a match with everything under it (a matching group shows its
+/// layers) and the groups above it; while it searches every group it keeps
+/// is open (the web's `render`, since c63cd77).
+pub(crate) fn open_rows<'a>(nodes: &'a [LayerNode], search: &Search) -> Vec<OpenRow<'a>> {
+    fn keep(node: &LayerNode, search: &Search) -> bool {
+        !search.active()
+            || search.matches(node)
+            || node.children.iter().any(|child| keep(child, search))
     }
     fn walk<'a>(
         nodes: &'a [LayerNode],
-        query: &str,
+        search: &Search,
         depth: usize,
         visible: bool,
         under: bool,
         rows: &mut Vec<OpenRow<'a>>,
     ) {
-        for node in nodes.iter().filter(|node| under || keep(node, query)) {
+        for node in nodes.iter().filter(|node| under || keep(node, search)) {
             rows.push(OpenRow {
                 depth,
                 node,
                 parent_visible: visible,
             });
-            if open(node, query) {
-                let under = under || matches(node, query);
+            if open(node, search.active()) {
+                let under = under || search.matches(node);
                 walk(
                     &node.children,
-                    query,
+                    search,
                     depth + 1,
                     visible && node.visible,
                     under,
@@ -82,16 +141,59 @@ pub(crate) fn open_rows<'a>(nodes: &'a [LayerNode], query: &str) -> Vec<OpenRow<
         }
     }
     let mut rows = Vec::new();
-    walk(nodes, query, 0, true, false, &mut rows);
+    walk(nodes, search, 0, true, false, &mut rows);
     rows
 }
 
 /// Whether a node's children are shown: a group with children that is open,
 /// or any while searching.
-fn open(node: &LayerNode, query: &str) -> bool {
-    node.kind == LayerNodeType::Group
-        && !node.children.is_empty()
-        && (node.expanded || !query.is_empty())
+fn open(node: &LayerNode, searching: bool) -> bool {
+    node.kind == LayerNodeType::Group && !node.children.is_empty() && (node.expanded || searching)
+}
+
+/// Süzgeç ▾'s properties (docs/adr/0311 §4): each kept layer has them all.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub(crate) struct LayerProps {
+    pub shown: bool,
+    pub hidden: bool,
+    pub frozen: bool,
+    pub locked: bool,
+    pub unprinted: bool,
+    pub empty: bool,
+}
+
+impl LayerProps {
+    fn any(self) -> bool {
+        self.shown || self.hidden || self.frozen || self.locked || self.unprinted || self.empty
+    }
+
+    /// The command's input for them.
+    fn find(self) -> kentos_contracts::LayersFind {
+        kentos_contracts::LayersFind {
+            on: if self.shown == self.hidden {
+                None
+            } else {
+                Some(self.shown)
+            },
+            frozen: self.frozen.then_some(true),
+            locked: self.locked.then_some(true),
+            plot: self.unprinted.then_some(false),
+            empty: self.empty.then_some(true),
+            ..Default::default()
+        }
+    }
+}
+
+/// A property of Süzgeç ▾, turned over.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum Prop {
+    Shown,
+    Hidden,
+    Frozen,
+    Locked,
+    Unprinted,
+    Empty,
+    Clear,
 }
 
 /// The search as the tree compares it: trimmed, lower case the Turkish way.
@@ -125,12 +227,100 @@ impl App {
     /// into the tree at its first row; Esc clears the text, and on an empty
     /// box gives the keyboard back to the drawing (the web's since c63cd77).
     pub(crate) fn layer_search_view(&self) -> Element<'_, Message> {
-        let field = SearchBox::new(self.layer_query.clone(), "Katman ara", Message::LayerSearch)
-            .id(LAYER_SEARCH)
-            .fill()
-            .height(28.0)
-            .on_down(Message::LayerSearchDown);
-        container(field).padding([6, 8]).width(Fill).into()
+        let field = SearchBox::new(
+            self.layer_query.clone(),
+            "Katman ara (A-*, *duvar*)",
+            Message::LayerSearch,
+        )
+        .id(LAYER_SEARCH)
+        .fill()
+        .height(28.0)
+        .on_down(Message::LayerSearchDown);
+        let p = self.layer_props;
+        let on = p.any();
+        let menu = kentos_ui::widget::MenuButton::new(
+            container(
+                kentos_ui::icon::icon(crate::icons::from_web(Some("funnel")))
+                    .size(14.0)
+                    .tone(if on {
+                        kentos_ui::icon::Tone::Accent
+                    } else {
+                        kentos_ui::icon::Tone::Muted
+                    }),
+            )
+            .padding([5, 6]),
+            move || {
+                let item = |m: kentos_ui::widget::Menu<Message>,
+                            label: &str,
+                            checked: bool,
+                            prop: Prop| {
+                    m.check(label.to_owned(), checked, Message::LayerProps(prop))
+                        .stay()
+                };
+                let m = kentos_ui::widget::Menu::new().header("Katmanları süz");
+                let m = item(m, "Görünenler", p.shown, Prop::Shown);
+                let m = item(m, "Gizliler", p.hidden, Prop::Hidden);
+                let m = item(m, "Dondurulmuşlar", p.frozen, Prop::Frozen);
+                let m = item(m, "Kilitliler", p.locked, Prop::Locked);
+                let m = item(m, "Yazdırılmayanlar", p.unprinted, Prop::Unprinted);
+                let m = item(m, "Nesnesizler", p.empty, Prop::Empty);
+                m.separator()
+                    .item(
+                        "Süzgeci temizle",
+                        on.then_some(Message::LayerProps(Prop::Clear)),
+                    )
+                    .icon(crate::icons::from_web(Some("layerFilterClear")))
+            },
+        );
+        let menu = kentos_ui::widget::tip(
+            menu,
+            kentos_ui::widget::Tip::new("Katmanları süz").body(
+                "Katmanları özellikleriyle süzer: görünen, gizli, dondurulmuş, kilitli, yazdırılmayan ya da nesnesiz. Arama kutusuna A-* gibi bir örüntü de yazılabilir.",
+            ),
+            iced::widget::tooltip::Position::Bottom,
+        );
+        container(
+            iced::widget::row![field, menu]
+                .spacing(4)
+                .align_y(iced::Center),
+        )
+        .padding([6, 8])
+        .width(Fill)
+        .into()
+    }
+
+    /// Whether Süzgeç ▾ keeps the layers by a property.
+    pub(crate) fn layer_props_on(&self) -> bool {
+        self.layer_props.any()
+    }
+
+    /// Süzgeç ▾: a property turned over, or all of them cleared.
+    pub(crate) fn layer_props(&mut self, prop: Prop) {
+        let p = &mut self.layer_props;
+        match prop {
+            Prop::Shown => p.shown = !p.shown,
+            Prop::Hidden => p.hidden = !p.hidden,
+            Prop::Frozen => p.frozen = !p.frozen,
+            Prop::Locked => p.locked = !p.locked,
+            Prop::Unprinted => p.unprinted = !p.unprinted,
+            Prop::Empty => p.empty = !p.empty,
+            Prop::Clear => *p = LayerProps::default(),
+        }
+        self.layers_keyboard = false;
+    }
+
+    /// What the tree searches for now: Katman ara's text and the layers
+    /// Süzgeç ▾ keeps, by `cad.layers.find`'s rule.
+    pub(crate) fn layer_search_state(&self) -> Search {
+        let mut search = Search::text(&query(&self.layer_query));
+        if self.layer_props.any()
+            && let Some(doc) = &self.document
+        {
+            let found =
+                kentos_native_application::layers_find::find(&doc.model, &self.layer_props.find());
+            search.layers = Some(found.into_iter().map(|l| l.id).collect());
+        }
+        search
     }
 
     /// ↓ in Katman ara: the tree has the keyboard, its first row chosen
@@ -158,7 +348,7 @@ impl App {
         let Some(doc) = &self.document else {
             return Vec::new();
         };
-        open_rows(doc.layers(), &query(&self.layer_query))
+        open_rows(doc.layers(), &self.layer_search_state())
             .into_iter()
             .map(|row| {
                 (
@@ -318,7 +508,7 @@ mod tests {
 
     fn ids(app: &App) -> Vec<String> {
         let doc = app.document.as_ref().expect("open");
-        open_rows(doc.layers(), &query(&app.layer_query))
+        open_rows(doc.layers(), &app.layer_search_state())
             .iter()
             .map(|row| row.node.id.clone())
             .collect()

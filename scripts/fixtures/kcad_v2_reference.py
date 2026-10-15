@@ -537,7 +537,9 @@ def layer_states(states):
         for n in st["nodes"]:
             assert n["node"] and n["node"] not in seen, "düğüm boş ya da iki kez"
             seen.add(n["node"])
-            nodes.append(cmap(fields(n, {"node": (text, True), "style": (layer_style, False), "locked": (boolean, False), "visible": (boolean, True)}, "layerStateNode")))
+            # Schema 55 (docs/adr/0311 §3): the node's own freeze and printing, kept by every state since.
+            nodes.append(cmap(fields(n, {"node": (text, True), "style": (layer_style, False), "locked": (boolean, False), "visible": (boolean, True),
+                                         "frozen": (boolean, False), "plot": (boolean, False)}, "layerStateNode")))
         out.append(cmap(fields(st, {"id": (text, True), "name": (text, True), "nodes": (lambda _: array(nodes), True)}, "layerState")))
     return array(out)
 
@@ -1101,6 +1103,8 @@ def layer_entries(n):
                 "compose": (layer_compose, False),
                 # Schema 48 (docs/adr/0260 §4): a layer or group not printed; only `false` is written.
                 "plot": (lambda b: boolean(b) if b is False else None, False),
+                # Schema 55 (docs/adr/0311 §1): a layer or group frozen; only `true` is written.
+                "frozen": (lambda b: boolean(b) if b is True else None, False),
                 "type": (enum(("group", "layer")), True),
                 "visible": (boolean, True),
                 "locked": (boolean, True),
@@ -1859,6 +1863,12 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def composed(nodes):
         return any("compose" in n or composed(n["children"]) for n in nodes)
 
+    # Schema 55 (docs/adr/0311): a frozen node, or a layer state keeping freezes and printing.
+    def frozen(nodes):
+        return any(n.get("frozen") is True or frozen(n["children"]) for n in nodes)
+
+    if frozen(layers) or any("frozen" in n or "plot" in n for st in (settings or {}).get("layerStates", []) for n in st["nodes"]):
+        return 55
     # Schema 54 (docs/adr/0310): an area's mask, a block definition's too.
     masked = lambda es: any("wipeout" in e for e in es)  # noqa: E731
     if masked(entities) or any(masked(b["entities"]) for b in blocks or []):
@@ -2185,7 +2195,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-55.kcad"] = container(root(cmap(parts), version=uint(55)))
+    files["schema-version-56.kcad"] = container(root(cmap(parts), version=uint(56)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2518,6 +2528,8 @@ def broken(minimal_content, minimal_file):
     files["wipeout-frame-not-bool.kcad"] = in_schema(54, path("polygon", 3, wipeout=cmap({"frame": uint(1)})))
     files["wipeout-unknown-field.kcad"] = in_schema(54, path("polygon", 3, wipeout=cmap({"fill": boolean(True), "frame": boolean(True)})))
     files["plot-true.kcad"] = container(root(cmap({**parts, "layers": array([cmap({**layer_entries(m["layers"][0]), "plot": boolean(True)})])}), version=uint(48)))
+    # A layer's freeze is schema 55's (docs/adr/0311 §1): only true is written.
+    files["frozen-false.kcad"] = container(root(cmap({**parts, "layers": array([cmap({**layer_entries(m["layers"][0]), "frozen": boolean(False)})])}), version=uint(55)))
     # The UCS settings are schema 49's (docs/adr/0261 §1): in schema 48 unknown fields; the world's never written as the
     # current one, an angle in [0, 2π), an origin within 10 000 km, names that hold and are unique, an empty list refused.
     def with_ucs(extra, schema=49):
@@ -3312,6 +3324,9 @@ def broken(minimal_content, minimal_file):
     files["layer-states-same-node.kcad"] = with_settings(19, layerStates=array([state("a", "Görünüm", [node("0"), node("0")])]))
     files["layer-states-visible-not-bool.kcad"] = with_settings(19, layerStates=array([state("a", "Görünüm", [cmap({"node": text("0"), "visible": uint(1)})])]))
     files["layer-states-without-visible.kcad"] = with_settings(19, layerStates=array([state("a", "Görünüm", [cmap({"node": text("0")})])]))
+    # A state node's freeze and printing are schema 55's (docs/adr/0311 §3); its path only an exported file's.
+    files["layer-states-frozen-in-schema-54.kcad"] = with_settings(54, layerStates=array([state("a", "Görünüm", [node("0", frozen=b"\xf4")])]))
+    files["layer-states-path.kcad"] = with_settings(55, layerStates=array([state("a", "Görünüm", [node("0", path=text("0"))])]))
     # The topology settings are schema 27's (docs/adr/0202 §7): an unknown field in schema 26; not empty, a tolerance in
     # range, a rule's id neither empty nor twice, a known kind, another layer only and always between two layers and
     # never the rule's own, a value only where a kind takes one, an angle below a right angle, an exception's rule there.
@@ -3450,6 +3465,10 @@ def build():
     payload = document(load("wipeouts.json"))
     assert payload.count(b"\x67version\x18\x36") == 1
     out["broken/wipeouts-in-schema-53.kcad"] = container(payload.replace(b"\x67version\x18\x36", b"\x67version\x18\x35"))
+    out["frozen.kcad"] = container(document(load("frozen.json")))
+    payload = document(load("frozen.json"))
+    assert payload.count(b"\x67version\x18\x37") == 1
+    out["broken/frozen-in-schema-54.kcad"] = container(payload.replace(b"\x67version\x18\x37", b"\x67version\x18\x36"))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

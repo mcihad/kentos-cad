@@ -20,6 +20,10 @@ lineWeight?: number,
  */
 plot?: boolean, 
 /**
+ * Dondur (docs/adr/0311 §1): `true` when the file's layer is frozen (DXF's 70 bit 1).
+ */
+frozen?: boolean, 
+/**
  * Objects read onto this layer.
  */
 count: number, 

@@ -529,7 +529,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             }
             "datumTransforms" if has.custom_crs => datum_transforms = crs::datum_transforms(r)?,
             "survey" if has.survey => survey = Some(survey_settings(r, has)?),
-            "layerStates" if has.layer_states => layer_states = layer_states_list(r, has.labels)?,
+            "layerStates" if has.layer_states => {
+                layer_states = layer_states_list(r, has.labels, has.frozen)?
+            }
             "topology" if has.topology => topology = Some(topology_settings(r)?),
             "annotation" if has.annotation => annotation = Some(annotation_heights(r)?),
             "connections" if has.services => connections = services::connections(r)?,
@@ -747,7 +749,11 @@ fn topology_settings(r: &mut Reader<'_>) -> Result<TopologySettings, KcadError> 
 /// a node its id, visibility and, when kept, its lock and a layer's style;
 /// checked whole (`layer_states_problem`): no empty or repeated id or name,
 /// no empty or repeated node in a state.
-fn layer_states_list(r: &mut Reader<'_>, engine: bool) -> Result<Vec<LayerState>, KcadError> {
+fn layer_states_list(
+    r: &mut Reader<'_>,
+    engine: bool,
+    frozen: bool,
+) -> Result<Vec<LayerState>, KcadError> {
     let at = r.position();
     let all = list(r, |r, _| {
         let (mut id, mut name, mut nodes) = (None, None, None);
@@ -755,7 +761,7 @@ fn layer_states_list(r: &mut Reader<'_>, engine: bool) -> Result<Vec<LayerState>
             match key {
                 "id" => id = Some(text(r)?),
                 "name" => name = Some(text(r)?),
-                "nodes" => nodes = Some(list(r, |r, _| layer_state_node(r, engine))?),
+                "nodes" => nodes = Some(list(r, |r, _| layer_state_node(r, engine, frozen))?),
                 _ => return Err(unknown(r)),
             }
             Ok(())
@@ -772,12 +778,20 @@ fn layer_states_list(r: &mut Reader<'_>, engine: bool) -> Result<Vec<LayerState>
     }
 }
 
-fn layer_state_node(r: &mut Reader<'_>, engine: bool) -> Result<LayerStateNode, KcadError> {
+/// A state's node; schema 55's `frozen` and `plot` (docs/adr/0311 §3).
+fn layer_state_node(
+    r: &mut Reader<'_>,
+    engine: bool,
+    frozen_too: bool,
+) -> Result<LayerStateNode, KcadError> {
     let (mut node, mut visible, mut locked, mut style) = (None, None, None, None);
+    let (mut frozen, mut plot) = (None, None);
     map(r, |r, key| {
         match key {
             "node" => node = Some(text(r)?),
+            "plot" if frozen_too => plot = Some(r.bool()?),
             "style" => style = Some(layer_style(r, engine)?),
+            "frozen" if frozen_too => frozen = Some(r.bool()?),
             "locked" => locked = Some(r.bool()?),
             "visible" => visible = Some(r.bool()?),
             _ => return Err(unknown(r)),
@@ -789,6 +803,9 @@ fn layer_state_node(r: &mut Reader<'_>, engine: bool) -> Result<LayerStateNode, 
         visible: required(r, visible, "visible")?,
         locked,
         style,
+        frozen,
+        plot,
+        path: None,
     })
 }
 
@@ -898,11 +915,20 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
     let (mut time, mut scenario, mut replaces) = (None, None, None);
     let mut filter = None;
     let (mut actions, mut card, mut compose) = (None, None, None);
-    let mut plot = None;
+    let (mut plot, mut frozen) = (None, None);
     map(r, |r, key| {
         match key {
             "id" => id = Some(text(r)?),
             "name" => name = Some(text(r)?),
+            "frozen" if has.frozen => {
+                if !r.bool()? {
+                    return Err(r.fail(
+                        Code::BadValue,
+                        "frozen yalnız true yazılır; çözülmüş katmanda alan yoktur",
+                    ));
+                }
+                frozen = Some(true);
+            }
             "card" if has.attachments => card = Some(info::info_card(r)?),
             "actions" if has.attachments => actions = Some(info::layer_actions(r)?),
             "compose" if has.compose => compose = Some(compose::layer_compose(r)?),
@@ -943,6 +969,7 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
     })?;
     Ok(LayerNode {
         plot,
+        frozen,
         id: required(r, id, "id")?,
         name: required(r, name, "name")?,
         kind: required(r, kind, "type")?,

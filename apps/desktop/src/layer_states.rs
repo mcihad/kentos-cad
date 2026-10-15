@@ -17,7 +17,10 @@
 //! come into the fields below), applied with Uygula, saved again from the
 //! layers as they are with Güncelle, removed with Sil. Yeni durum kaydet saves
 //! the layers as a new state under the name in Ad; Yeniden adlandır gives the
-//! chosen state that name. The window stays open; Kapat closes it.
+//! chosen state that name. Dışa aktar… writes the states to a file (each
+//! node with its path), İçe aktar… adds a file's states, a node found by its
+//! id or its path, a state whose name the project has skipped
+//! (docs/adr/0311 §3). The window stays open; Kapat closes it.
 
 use iced::widget::{Column, button, container, row, text_input};
 use iced::{Center, Element, Fill, Task};
@@ -46,6 +49,8 @@ const REMOVE: &str = "Sil";
 const SAVE: &str = "Yeni durum kaydet";
 const RENAME: &str = "Yeniden adlandır";
 const CLOSE: &str = "Kapat";
+const EXPORT: &str = "Dışa aktar…";
+const IMPORT: &str = "İçe aktar…";
 
 /// What a state keeps, in words: “görünürlük”, “görünürlük ve stil”,
 /// “görünürlük, kilit ve stil”.
@@ -88,6 +93,11 @@ pub enum Event {
     Name(String),
     Locks(bool),
     Styles(bool),
+    /// Dışa aktar… and İçe aktar… (docs/adr/0311 §3), then the file chosen.
+    Export,
+    Exported(Option<std::path::PathBuf>),
+    Import,
+    Imported(Option<std::path::PathBuf>),
     Close,
 }
 
@@ -113,6 +123,81 @@ impl App {
         self.document
             .as_ref()
             .is_some_and(|d| layer_states::matches(d.model.layers().nodes(), state))
+    }
+
+    /// Dışa aktar…: every state to `path`, through `cad.layers.states`' export.
+    pub(crate) fn export_layer_states(&mut self, path: &std::path::Path) {
+        let input = LayersStates::new(LayerStatesOperation::Export, None);
+        let Some(done) = self.layer_states_command(input) else {
+            return;
+        };
+        let Some(file) = done.file else {
+            return;
+        };
+        let text = match serde_json::to_string_pretty(&file) {
+            Ok(text) => text + "\n",
+            Err(e) => {
+                self.warn(format!("Katman durumları yazılamadı ({e})."));
+                return;
+            }
+        };
+        match std::fs::write(path, text) {
+            Ok(()) => self.say(
+                Level::Success,
+                format!(
+                    "{} katman durumu dışa aktarıldı: {}.",
+                    file.states.len(),
+                    path.file_name()
+                        .map_or_else(String::new, |f| f.to_string_lossy().into_owned())
+                ),
+            ),
+            Err(e) => self.warn(format!(
+                "Katman durumları kaydedilemedi ({e}); başka bir klasör seçip yeniden deneyin."
+            )),
+        }
+    }
+
+    /// İçe aktar…: a file's states added through `cad.layers.states`' import;
+    /// a state whose name the project has is skipped (said).
+    pub(crate) fn import_layer_states(&mut self, path: &std::path::Path) {
+        if let Some(locked) = self.states_locked() {
+            self.warn(locked);
+            return;
+        }
+        let file: kentos_contracts::LayerStatesFile = match std::fs::read_to_string(path)
+            .map_err(|e| e.to_string())
+            .and_then(|t| serde_json::from_str(&t).map_err(|e| e.to_string()))
+        {
+            Ok(file) => file,
+            Err(e) => {
+                self.warn(format!(
+                    "Dosya katman durumları dosyası olarak okunamadı ({e}). KentOS'un Dışa aktar… ile yazdığı bir .json seçin."
+                ));
+                return;
+            }
+        };
+        let mut input = LayersStates::new(LayerStatesOperation::Import, None);
+        input.file = Some(file);
+        let Some(done) = self.layer_states_command(input) else {
+            return;
+        };
+        let skipped = if done.skipped > 0 {
+            format!(
+                " Projede aynı adlı {} durum vardı; onlar atlandı.",
+                done.skipped
+            )
+        } else {
+            String::new()
+        };
+        let level = if done.added > 0 {
+            Level::Success
+        } else {
+            Level::Info
+        };
+        self.say(
+            level,
+            format!("{} katman durumu içe aktarıldı.{skipped}", done.added),
+        );
     }
 
     /// Saves the tree as a new state named `name` keeping `parts`; its id, or
@@ -384,6 +469,40 @@ impl App {
                     w.styles = on;
                 }
             }
+            Event::Export => {
+                let name = self
+                    .document
+                    .as_ref()
+                    .map_or_else(|| "cizim".to_owned(), |d| d.model.name().to_owned());
+                return Task::perform(
+                    async move {
+                        let file = rfd::AsyncFileDialog::new()
+                            .set_title("Katman durumlarını dışa aktar")
+                            .add_filter("Katman durumları (.json)", &["json"])
+                            .set_file_name(format!("{name}-katman-durumlari.json"))
+                            .save_file()
+                            .await?;
+                        Some(file.path().to_path_buf())
+                    },
+                    |path| msg(Event::Exported(path)),
+                );
+            }
+            Event::Exported(None) | Event::Imported(None) => {}
+            Event::Exported(Some(path)) => self.export_layer_states(&path),
+            Event::Import => {
+                return Task::perform(
+                    async move {
+                        let file = rfd::AsyncFileDialog::new()
+                            .set_title("Katman durumlarını içe aktar")
+                            .add_filter("Katman durumları (.json)", &["json"])
+                            .pick_file()
+                            .await?;
+                        Some(file.path().to_path_buf())
+                    },
+                    |path| msg(Event::Imported(path)),
+                );
+            }
+            Event::Imported(Some(path)) => self.import_layer_states(&path),
             Event::Close => {
                 self.layer_states_window = None;
                 self.dialog = None;
@@ -457,6 +576,12 @@ impl App {
                 REMOVE,
                 chosen.filter(|_| editable).map(|_| msg(Event::Remove))
             ),
+            iced::widget::Space::new().width(Fill),
+            words::secondary(
+                EXPORT,
+                (!self.layer_states().is_empty()).then(|| msg(Event::Export))
+            ),
+            words::secondary(IMPORT, editable.then(|| msg(Event::Import))),
         ]
         .spacing(8);
         let name = text_input("Durumun adı", &w.name)
@@ -487,7 +612,7 @@ impl App {
             .push(words::field(
                 "Kaydedilecekler",
                 checks,
-                Some("Görünürlük her durumda kaydedilir.".to_owned()),
+                Some("Görünürlük, dondurma ve yazdırma her durumda kaydedilir.".to_owned()),
             ))
             .push(saving);
         overlay::modal(
@@ -520,6 +645,8 @@ impl App {
             Control::Press(SAVE) => editable.then(|| msg(Event::Save)),
             Control::Press(RENAME) => chosen.filter(|_| editable).map(|_| msg(Event::Rename)),
             Control::Press(CLOSE) => Some(msg(Event::Close)),
+            Control::Press(EXPORT) => Some(msg(Event::Export)),
+            Control::Press(IMPORT) => editable.then(|| msg(Event::Import)),
             Control::Press(words) => match self.layer_states().iter().find(|s| s.name == words) {
                 Some(s) => Some(msg(Event::Choose(s.id.clone()))),
                 None => {

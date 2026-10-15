@@ -424,6 +424,7 @@ impl Collect {
             }
             let i = *index.entry(base.layer_id.clone()).or_insert_with(|| {
                 layers.push(ImportLayer {
+                    frozen: None,
                     plot: None,
                     name: base.layer_id.clone(),
                     color: "ink".to_string(),

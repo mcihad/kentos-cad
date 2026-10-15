@@ -268,6 +268,12 @@ pub enum LayerSetOperation {
     ShowAll,
     /// Yazdır (docs/adr/0260 §4): whether the node is printed.
     Plot,
+    /// Dondur / Çöz (docs/adr/0311 §1): whether the node is frozen.
+    Frozen,
+    /// Bütün katmanları çöz: every node thawed.
+    ThawAll,
+    /// Yalıtımı kaldır: the nodes the last `isolate` hid, still hidden, shown again.
+    Unisolate,
 }
 
 /// Input of `cad.layers.set` v1: one of the tree's own changes, as the eye,
@@ -284,17 +290,31 @@ pub enum LayerSetOperation {
 ///   everything under it, a hidden group hides everything under it;
 /// - `active`: `layer`, a layer holding objects;
 /// - `isolate`: `layers`: these nodes, the groups above them and everything
-///   under them shown, the rest hidden;
-/// - `showAll`: every node shown.
+///   under them shown, the rest hidden; the drawing remembers the nodes it
+///   hid (for this session, not in the file);
+/// - `unisolate`: the nodes the last `isolate` hid that are still hidden
+///   shown again; those shown by hand meanwhile stay as they are; nothing
+///   remembered changes nothing;
+/// - `showAll`: every node shown; a frozen node stays frozen;
+/// - `frozen`: `layer`, `value` (docs/adr/0311 §1): a frozen node is neither
+///   drawn, picked, snapped to nor counted in the extent; a group's covers
+///   everything under it;
+/// - `thawAll`: every node thawed.
+///
+/// The eye, the lock, the freeze, printing, the name and the active layer
+/// are the project's (kept in the file); only what `isolate` hid is the
+/// session's (docs/adr/0311 §2).
 ///
 /// Refusals (`CommandError.code`), checked in this order: `no_layer`
-/// (rename, visible, locked, plot, active without `layer`), `no_layers` (isolate
-/// without a node), `empty_name` (rename with a name empty or only white
-/// space), `no_value` (visible, locked, plot without `value`); then
-/// `invalid_revision`, `revision_conflict` (status `conflict`);
-/// `layer_not_found` (`layer`, `layers[i]`), `not_a_layer` (active: a
-/// group), `service_layer` (active: a layer drawn from a map service holds
-/// no objects). A change that changes nothing answers `changed` false.
+/// (rename, visible, locked, plot, frozen, active without `layer`),
+/// `no_layers` (isolate without a node), `empty_name` (rename with a name
+/// empty or only white space), `no_value` (visible, locked, plot, frozen
+/// without `value`); then `invalid_revision`, `revision_conflict` (status
+/// `conflict`); `layer_not_found` (`layer`, `layers[i]`), `not_a_layer`
+/// (active: a group), `service_layer` (active: a layer drawn from a map
+/// service holds no objects), `layer_frozen` (active: a frozen layer, or one
+/// in a frozen group), `active_frozen` (frozen: the active layer, or a group
+/// holding it). A change that changes nothing answers `changed` false.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -370,6 +390,64 @@ pub enum LayerStatesOperation {
     Rename,
     Remove,
     Apply,
+    /// The states as a file (docs/adr/0311 §3).
+    Export,
+    /// A file's states added to the project's (docs/adr/0311 §3).
+    Import,
+}
+
+/// A file of exported layer states (docs/adr/0311 §3): each node with its
+/// path, so another drawing finds it by its names.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayerStatesFile {
+    /// Always `kentos.layer-states`.
+    pub format: String,
+    /// Always 1.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub version: u32,
+    pub states: Vec<crate::LayerState>,
+}
+
+/// A layer states file's format and version.
+pub const LAYER_STATES_FORMAT: &str = "kentos.layer-states";
+pub const LAYER_STATES_VERSION: u32 = 1;
+
+/// What is wrong with a layer states file: its format or version, an empty
+/// or repeated name, an empty node or a node twice in a state.
+pub fn layer_states_file_problem(file: &LayerStatesFile) -> Option<String> {
+    if file.format != LAYER_STATES_FORMAT || file.version != LAYER_STATES_VERSION {
+        return Some(format!(
+            "dosya {LAYER_STATES_FORMAT} sürüm {LAYER_STATES_VERSION} değil (“{}” sürüm {})",
+            file.format, file.version
+        ));
+    }
+    for (i, s) in file.states.iter().enumerate() {
+        let name = s.name.trim();
+        if name.is_empty() {
+            return Some(format!("{}. durumun adı boş", i + 1));
+        }
+        if file.states[..i].iter().any(|t| t.name.trim() == name) {
+            return Some(format!("“{name}” adlı durum dosyada iki kez var"));
+        }
+        for (j, n) in s.nodes.iter().enumerate() {
+            if n.node.is_empty() && n.path.as_deref().is_none_or(str::is_empty) {
+                return Some(format!(
+                    "“{name}” durumunda kimliği ve yolu boş bir düğüm var"
+                ));
+            }
+            if s.nodes[..j]
+                .iter()
+                .any(|m| m.node == n.node && m.path == n.path)
+            {
+                return Some(format!("“{name}” durumunda bir düğüm iki kez var"));
+            }
+        }
+    }
+    None
 }
 
 /// Input of `cad.layers.states` v1 (docs/adr/0177 §4).
@@ -384,7 +462,15 @@ pub enum LayerStatesOperation {
 /// - `apply`: `state`: the visibility and the locks (when kept) of the
 ///   nodes it names that the tree still has become what it kept (the tree's
 ///   own changes, no undo step), their styles (when kept) in one undo step
-///   “Katman durumu: <ad>”.
+///   “Katman durumu: <ad>”; their freeze and printing (when the state keeps
+///   them, docs/adr/0311 §3) as the visibility;
+/// - `export`: the states named in `states` (absent: every one) as a file
+///   (`file` in the answer), each node with its path; nothing written;
+/// - `import`: `file`'s states added: a node is found by its id, else by its
+///   path (the names from the top, case and Turkish letters folded), else
+///   kept as it is and counted `missing` when applied; a state whose name
+///   the project has is skipped, or with `replace` written over it (its id
+///   kept); a new one gets the next free `durum-n`.
 ///
 /// The states are the project's settings: saving, updating, renaming and
 /// removing make the drawing dirty and are no undo step.
@@ -392,9 +478,11 @@ pub enum LayerStatesOperation {
 /// Refusals (`CommandError.code`), checked in this order: `no_state`
 /// (update, rename, remove, apply without `state`), `empty_name` (rename,
 /// or save with a name, empty or only white space); then
-/// `invalid_revision`, `revision_conflict` (status `conflict`);
-/// `state_not_found`, `duplicate_name` (another state has the name, spaces
-/// at its ends aside).
+/// `no_file` (import without `file`), `invalid_states` (a file against its
+/// rules, `layer_states_file_problem`); then `invalid_revision`,
+/// `revision_conflict` (status `conflict`); `state_not_found` (`state`,
+/// export's `states[i]`), `duplicate_name` (another state has the name,
+/// spaces at its ends aside).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -415,6 +503,18 @@ pub struct LayersStates {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub styles: Option<bool>,
+    /// Export's states, by id; absent, every one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub states: Option<Vec<String>>,
+    /// Import's file.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub file: Option<LayerStatesFile>,
+    /// Import: a state whose name the project has written over (absent: skipped).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub replace: Option<bool>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -431,13 +531,16 @@ impl LayersStates {
             name: None,
             locks: None,
             styles: None,
+            states: None,
+            file: None,
+            replace: None,
             expected_revision: None,
         }
     }
 }
 
 /// Output of `cad.layers.states` v1, and what plan says it would do.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -454,11 +557,40 @@ pub struct LayerStatesDone {
     pub locked: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub styles: u32,
+    /// Apply's nodes frozen or thawed, and printed or not (docs/adr/0311 §3).
+    #[serde(default)]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub frozen: u32,
+    #[serde(default)]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub plot: u32,
     /// Apply's nodes the tree no longer has.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub missing: u32,
+    /// Import's states added, written over and skipped (their name the
+    /// project's, without `replace`).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub added: u32,
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub replaced: u32,
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub skipped: u32,
+    /// Export's file.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub file: Option<LayerStatesFile>,
     /// The document's revision afterwards (plan: the one it was made
     /// against), as decimal text.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
+}
+
+fn is_zero(n: &u32) -> bool {
+    *n == 0
 }

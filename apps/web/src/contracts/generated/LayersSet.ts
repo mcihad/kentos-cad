@@ -16,17 +16,31 @@ import type { LayerSetOperation } from "./LayerSetOperation";
  *   everything under it, a hidden group hides everything under it;
  * - `active`: `layer`, a layer holding objects;
  * - `isolate`: `layers`: these nodes, the groups above them and everything
- *   under them shown, the rest hidden;
- * - `showAll`: every node shown.
+ *   under them shown, the rest hidden; the drawing remembers the nodes it
+ *   hid (for this session, not in the file);
+ * - `unisolate`: the nodes the last `isolate` hid that are still hidden
+ *   shown again; those shown by hand meanwhile stay as they are; nothing
+ *   remembered changes nothing;
+ * - `showAll`: every node shown; a frozen node stays frozen;
+ * - `frozen`: `layer`, `value` (docs/adr/0311 §1): a frozen node is neither
+ *   drawn, picked, snapped to nor counted in the extent; a group's covers
+ *   everything under it;
+ * - `thawAll`: every node thawed.
+ *
+ * The eye, the lock, the freeze, printing, the name and the active layer
+ * are the project's (kept in the file); only what `isolate` hid is the
+ * session's (docs/adr/0311 §2).
  *
  * Refusals (`CommandError.code`), checked in this order: `no_layer`
- * (rename, visible, locked, plot, active without `layer`), `no_layers` (isolate
- * without a node), `empty_name` (rename with a name empty or only white
- * space), `no_value` (visible, locked, plot without `value`); then
- * `invalid_revision`, `revision_conflict` (status `conflict`);
- * `layer_not_found` (`layer`, `layers[i]`), `not_a_layer` (active: a
- * group), `service_layer` (active: a layer drawn from a map service holds
- * no objects). A change that changes nothing answers `changed` false.
+ * (rename, visible, locked, plot, frozen, active without `layer`),
+ * `no_layers` (isolate without a node), `empty_name` (rename with a name
+ * empty or only white space), `no_value` (visible, locked, plot, frozen
+ * without `value`); then `invalid_revision`, `revision_conflict` (status
+ * `conflict`); `layer_not_found` (`layer`, `layers[i]`), `not_a_layer`
+ * (active: a group), `service_layer` (active: a layer drawn from a map
+ * service holds no objects), `layer_frozen` (active: a frozen layer, or one
+ * in a frozen group), `active_frozen` (frozen: the active layer, or a group
+ * holding it). A change that changes nothing answers `changed` false.
  */
 export type LayersSet = { operation: LayerSetOperation, layer?: string, layers?: Array<string>, name?: string, value?: boolean, 
 /**

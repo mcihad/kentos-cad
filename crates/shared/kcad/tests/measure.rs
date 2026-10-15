@@ -104,6 +104,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
         },
         home_view: None,
         layers: vec![LayerNode {
+            frozen: None,
             plot: None,
             id: "parsel".into(),
             name: "Parsel".into(),

@@ -170,6 +170,13 @@ Liste:
   uyarıları komutun sözleri; paralel iki doğruya TTY, saat yönünde verilen yaydan Devam; araç durumları
   `fixtures/curve-methods/v1/tools.json`. Web'in donmuş çağrı kayıtları eski `arcStartCenterEnd` ve `arcStartCenterAngle`'ı (tam tur)
   tutar; geri dönüşte komutun kuralına getirilir.
+- [ ] `CAD-STYLE-01`, `02`, `04`, `05` katmanlar (ADR 0311, 15 Ekim): web'de gerekenler: katmanın `frozen`'ı (`.kcad` şema 55,
+  web'in kopyası 54'te) ve durum düğümünün `frozen`, `plot`'u; dondurulmuş düğümün çizilmemesi, seçilmemesi, kapsama sayılmaması
+  (`LayerStore` ve iki çizim hattı), Hepsini göster'in çözmemesi; `cad.layers.set`'in `frozen`, `thawAll` ve `unisolate`'i, yalıtımın
+  belgedeki notu; `cad.layers.states`'in `export` ve `import`'u (`kentos.layer-states` dosyası); `cad.layers.find` ve
+  `cad.layers.translate`'in TS işleyicileri ve `wcmatch` örüntüsü; Katmanlar panelinde Dondur / Çöz, kar tanesi, Süzgeç ▾ ve örüntülü
+  arama; Katmanı dondur, Bütün katmanları çöz, Katmanları çevir penceresi; DXF'in 70 grubunun 1. biti dondurma olarak (web'in okuyucusu
+  ortak çekirdeği kullanır); `fixtures/layers/v1/states.json` web'in testinde dondurma ve yazdırmayla.
 - [ ] `CAD-EDIT-23` çizim sırası ve maske (ADR 0310, 15 Ekim): web'de gerekenler: `cad.entities.order`'ın `above`, `under` ve
   `reference`'ı, `cad.polygon.create`'in ve `cad.entities.set`'in `wipeout`'u TS işleyicilerinde; web'in çizim hatlarında maskenin
   dolgusu (zemin rengi, renk kiplerinde değişmez) ve maskeli katmanın bantları; `.kcad` şema 54'ün ve sütunların 32 ve 64 bitlerinin

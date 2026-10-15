@@ -26,7 +26,9 @@
             {
               "node": "kadastro",
               "visible": true,
-              "locked": false
+              "locked": false,
+              "frozen": false,
+              "plot": true
             },
             {
               "node": "parsel",
@@ -36,7 +38,9 @@
                 "color": "#E5484D",
                 "lineType": "continuous",
                 "lineWeight": 0.35
-              }
+              },
+              "frozen": false,
+              "plot": true
             },
             {
               "node": "bina",
@@ -46,7 +50,9 @@
                 "color": "fg",
                 "lineType": "continuous",
                 "lineWeight": 0.25
-              }
+              },
+              "frozen": false,
+              "plot": true
             },
             {
               "node": "yol",
@@ -56,7 +62,9 @@
                 "color": "fg",
                 "lineType": "continuous",
                 "lineWeight": 0.25
-              }
+              },
+              "frozen": false,
+              "plot": true
             },
             {
               "node": "gizli",
@@ -66,7 +74,9 @@
                 "color": "fg",
                 "lineType": "continuous",
                 "lineWeight": 0.25
-              }
+              },
+              "frozen": false,
+              "plot": true
             },
             {
               "node": "silinmis",
@@ -340,6 +350,8 @@
               "visible": 0,
               "locked": 0,
               "styles": 0,
+              "frozen": 0,
+              "plot": 0,
               "missing": 0,
               "revision": "$current"
             },
@@ -366,7 +378,9 @@
                     {
                       "node": "kadastro",
                       "visible": true,
-                      "locked": false
+                      "locked": false,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "parsel",
@@ -376,7 +390,9 @@
                         "color": "#E5484D",
                         "lineType": "continuous",
                         "lineWeight": 0.35
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "bina",
@@ -386,7 +402,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "yol",
@@ -396,7 +414,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "gizli",
@@ -406,7 +426,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "silinmis",
@@ -420,7 +442,9 @@
                   "nodes": [
                     {
                       "node": "kadastro",
-                      "visible": true
+                      "visible": true,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "parsel",
@@ -429,7 +453,9 @@
                         "color": "#0090FF",
                         "lineType": "continuous",
                         "lineWeight": 0.35
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "bina",
@@ -438,7 +464,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "yol",
@@ -447,7 +475,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "gizli",
@@ -456,7 +486,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     }
                   ]
                 }
@@ -484,6 +516,8 @@
               "visible": 0,
               "locked": 0,
               "styles": 0,
+              "frozen": 0,
+              "plot": 0,
               "missing": 0,
               "revision": "$current"
             },
@@ -510,7 +544,9 @@
                     {
                       "node": "kadastro",
                       "visible": true,
-                      "locked": false
+                      "locked": false,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "parsel",
@@ -520,7 +556,9 @@
                         "color": "#E5484D",
                         "lineType": "continuous",
                         "lineWeight": 0.35
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "bina",
@@ -530,7 +568,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "yol",
@@ -540,7 +580,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "gizli",
@@ -550,7 +592,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "silinmis",
@@ -565,27 +609,37 @@
                     {
                       "node": "kadastro",
                       "visible": true,
-                      "locked": false
+                      "locked": false,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "parsel",
                       "visible": true,
-                      "locked": false
+                      "locked": false,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "bina",
                       "visible": true,
-                      "locked": true
+                      "locked": true,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "yol",
                       "visible": false,
-                      "locked": false
+                      "locked": false,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "gizli",
                       "visible": true,
-                      "locked": false
+                      "locked": false,
+                      "frozen": false,
+                      "plot": true
                     }
                   ]
                 }
@@ -612,6 +666,8 @@
               "visible": 0,
               "locked": 0,
               "styles": 0,
+              "frozen": 0,
+              "plot": 0,
               "missing": 0,
               "revision": "$current"
             },
@@ -638,7 +694,9 @@
                     {
                       "node": "kadastro",
                       "visible": true,
-                      "locked": false
+                      "locked": false,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "parsel",
@@ -648,7 +706,9 @@
                         "color": "#0090FF",
                         "lineType": "continuous",
                         "lineWeight": 0.35
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "bina",
@@ -658,7 +718,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "yol",
@@ -668,7 +730,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "gizli",
@@ -678,7 +742,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     }
                   ]
                 }
@@ -706,6 +772,8 @@
               "visible": 0,
               "locked": 0,
               "styles": 0,
+              "frozen": 0,
+              "plot": 0,
               "missing": 0,
               "revision": "$current"
             },
@@ -731,7 +799,9 @@
                   "nodes": [
                     {
                       "node": "kadastro",
-                      "visible": true
+                      "visible": true,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "parsel",
@@ -740,7 +810,9 @@
                         "color": "#0090FF",
                         "lineType": "continuous",
                         "lineWeight": 0.35
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "bina",
@@ -749,7 +821,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "yol",
@@ -758,7 +832,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "gizli",
@@ -767,7 +843,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     }
                   ]
                 }
@@ -795,6 +873,8 @@
               "visible": 0,
               "locked": 0,
               "styles": 0,
+              "frozen": 0,
+              "plot": 0,
               "missing": 0,
               "revision": "$current"
             },
@@ -821,7 +901,9 @@
                     {
                       "node": "kadastro",
                       "visible": true,
-                      "locked": false
+                      "locked": false,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "parsel",
@@ -831,7 +913,9 @@
                         "color": "#E5484D",
                         "lineType": "continuous",
                         "lineWeight": 0.35
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "bina",
@@ -841,7 +925,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "yol",
@@ -851,7 +937,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "gizli",
@@ -861,7 +949,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "silinmis",
@@ -893,6 +983,8 @@
               "visible": 0,
               "locked": 0,
               "styles": 0,
+              "frozen": 0,
+              "plot": 0,
               "missing": 0,
               "revision": "$current"
             },
@@ -993,7 +1085,9 @@
                     {
                       "node": "kadastro",
                       "visible": true,
-                      "locked": false
+                      "locked": false,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "parsel",
@@ -1003,7 +1097,9 @@
                         "color": "#E5484D",
                         "lineType": "continuous",
                         "lineWeight": 0.35
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "bina",
@@ -1013,7 +1109,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "yol",
@@ -1023,7 +1121,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "gizli",
@@ -1033,7 +1133,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "silinmis",
@@ -1064,6 +1166,8 @@
               "visible": 0,
               "locked": 0,
               "styles": 0,
+              "frozen": 0,
+              "plot": 0,
               "missing": 0,
               "revision": "$current"
             },
@@ -1105,6 +1209,8 @@
               "visible": 2,
               "locked": 1,
               "styles": 1,
+              "frozen": 0,
+              "plot": 0,
               "missing": 1,
               "revision": "$current"
             },
@@ -1286,6 +1392,8 @@
               "visible": 2,
               "locked": 1,
               "styles": 1,
+              "frozen": 0,
+              "plot": 0,
               "missing": 1,
               "revision": "$current"
             },
@@ -1381,6 +1489,8 @@
               "visible": 0,
               "locked": 0,
               "styles": 0,
+              "frozen": 0,
+              "plot": 0,
               "missing": 1,
               "revision": "$current"
             },
@@ -1482,10 +1592,2933 @@
               "visible": 2,
               "locked": 1,
               "styles": 1,
+              "frozen": 0,
+              "plot": 0,
               "missing": 1,
               "revision": "$current"
             },
             "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#0090FF",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": true,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uygula: dondurma ve yazdırma saklanır; etkin katman dondurulmaz (ADR 0311 §3)",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Katman ağacı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "layerStates": [
+            {
+              "id": "durum-1",
+              "name": "Pafta",
+              "nodes": [
+                {
+                  "node": "kadastro",
+                  "visible": true,
+                  "locked": false,
+                  "frozen": false,
+                  "plot": true
+                },
+                {
+                  "node": "parsel",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "#E5484D",
+                    "lineType": "continuous",
+                    "lineWeight": 0.35
+                  },
+                  "frozen": false,
+                  "plot": true
+                },
+                {
+                  "node": "bina",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  },
+                  "frozen": false,
+                  "plot": true
+                },
+                {
+                  "node": "yol",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  },
+                  "frozen": false,
+                  "plot": true
+                },
+                {
+                  "node": "gizli",
+                  "visible": false,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  },
+                  "frozen": false,
+                  "plot": true
+                },
+                {
+                  "node": "silinmis",
+                  "visible": true
+                }
+              ]
+            },
+            {
+              "id": "durum-2",
+              "name": "Soğuk",
+              "nodes": [
+                {
+                  "node": "kadastro",
+                  "visible": true,
+                  "locked": false,
+                  "frozen": false,
+                  "plot": true
+                },
+                {
+                  "node": "parsel",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "#E5484D",
+                    "lineType": "continuous",
+                    "lineWeight": 0.35
+                  },
+                  "frozen": true,
+                  "plot": true
+                },
+                {
+                  "node": "bina",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  },
+                  "frozen": false,
+                  "plot": false
+                },
+                {
+                  "node": "yol",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  },
+                  "frozen": true,
+                  "plot": true
+                },
+                {
+                  "node": "gizli",
+                  "visible": false,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  },
+                  "frozen": true,
+                  "plot": true
+                },
+                {
+                  "node": "silinmis",
+                  "visible": true
+                }
+              ]
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "kadastro",
+            "name": "Kadastro",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "parsel",
+                "name": "Parsel",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#0090FF",
+                  "lineType": "continuous",
+                  "lineWeight": 0.35
+                },
+                "children": []
+              },
+              {
+                "id": "bina",
+                "name": "Bina",
+                "type": "layer",
+                "visible": true,
+                "locked": true,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "yol",
+            "name": "Yol",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "parsel",
+        "entities": [
+          {
+            "kind": "polygon",
+            "id": 1,
+            "layerId": "parsel",
+            "color": "#E5484D",
+            "attrs": {
+              "Ada": "101",
+              "Nitelik": "Arsa"
+            },
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400000
+              },
+              {
+                "x": 500040,
+                "y": 4400000
+              },
+              {
+                "x": 500040,
+                "y": 4400030
+              },
+              {
+                "x": 500000,
+                "y": 4400030
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 2,
+            "layerId": "parsel",
+            "attrs": {
+              "Ada": "102"
+            },
+            "pts": [
+              {
+                "x": 500040,
+                "y": 4400000
+              },
+              {
+                "x": 500060,
+                "y": 4400000
+              },
+              {
+                "x": 500060,
+                "y": 4400020
+              },
+              {
+                "x": 500040,
+                "y": 4400020
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 3,
+            "layerId": "bina",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500005,
+                "y": 4400005
+              },
+              {
+                "x": 500015,
+                "y": 4400005
+              },
+              {
+                "x": 500015,
+                "y": 4400015
+              },
+              {
+                "x": 500005,
+                "y": 4400015
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yol",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400040
+            },
+            "b": {
+              "x": 500120,
+              "y": 4400040
+            }
+          },
+          {
+            "kind": "insert",
+            "id": 5,
+            "layerId": "yol",
+            "attrs": {
+              "NO": "A-1"
+            },
+            "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+            "p": {
+              "x": 500050,
+              "y": 4400045
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "point",
+            "id": 6,
+            "layerId": "gizli",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400060
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+            "name": "Ağaç",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "circle",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "c": {
+                  "x": 0,
+                  "y": 0
+                },
+                "r": 1.5
+              }
+            ]
+          },
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2102",
+            "name": "Lamba",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "circle",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "c": {
+                  "x": 0,
+                  "y": 0
+                },
+                "r": 0.25
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "apply",
+            "state": "durum-2"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "state": "durum-2",
+              "changed": true,
+              "visible": 2,
+              "locked": 1,
+              "styles": 1,
+              "frozen": 2,
+              "plot": 1,
+              "missing": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#E5484D",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "plot": false
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "frozen": true
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "frozen": true
+              }
+            ],
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uygula: dondurmayı saklamayan eski durum dondurmaya ve yazdırmaya dokunmaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Katman ağacı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "layerStates": [
+            {
+              "id": "durum-1",
+              "name": "Pafta",
+              "nodes": [
+                {
+                  "node": "kadastro",
+                  "visible": true,
+                  "locked": false
+                },
+                {
+                  "node": "parsel",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "#E5484D",
+                    "lineType": "continuous",
+                    "lineWeight": 0.35
+                  }
+                },
+                {
+                  "node": "bina",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  }
+                },
+                {
+                  "node": "yol",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  }
+                },
+                {
+                  "node": "gizli",
+                  "visible": false,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  }
+                },
+                {
+                  "node": "silinmis",
+                  "visible": true
+                }
+              ]
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "kadastro",
+            "name": "Kadastro",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "parsel",
+                "name": "Parsel",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#0090FF",
+                  "lineType": "continuous",
+                  "lineWeight": 0.35
+                },
+                "children": []
+              },
+              {
+                "id": "bina",
+                "name": "Bina",
+                "type": "layer",
+                "visible": true,
+                "locked": true,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "plot": false
+              }
+            ]
+          },
+          {
+            "id": "yol",
+            "name": "Yol",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "frozen": true
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "parsel",
+        "entities": [
+          {
+            "kind": "polygon",
+            "id": 1,
+            "layerId": "parsel",
+            "color": "#E5484D",
+            "attrs": {
+              "Ada": "101",
+              "Nitelik": "Arsa"
+            },
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400000
+              },
+              {
+                "x": 500040,
+                "y": 4400000
+              },
+              {
+                "x": 500040,
+                "y": 4400030
+              },
+              {
+                "x": 500000,
+                "y": 4400030
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 2,
+            "layerId": "parsel",
+            "attrs": {
+              "Ada": "102"
+            },
+            "pts": [
+              {
+                "x": 500040,
+                "y": 4400000
+              },
+              {
+                "x": 500060,
+                "y": 4400000
+              },
+              {
+                "x": 500060,
+                "y": 4400020
+              },
+              {
+                "x": 500040,
+                "y": 4400020
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 3,
+            "layerId": "bina",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500005,
+                "y": 4400005
+              },
+              {
+                "x": 500015,
+                "y": 4400005
+              },
+              {
+                "x": 500015,
+                "y": 4400015
+              },
+              {
+                "x": 500005,
+                "y": 4400015
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yol",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400040
+            },
+            "b": {
+              "x": 500120,
+              "y": 4400040
+            }
+          },
+          {
+            "kind": "insert",
+            "id": 5,
+            "layerId": "yol",
+            "attrs": {
+              "NO": "A-1"
+            },
+            "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+            "p": {
+              "x": 500050,
+              "y": 4400045
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "point",
+            "id": 6,
+            "layerId": "gizli",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400060
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+            "name": "Ağaç",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "circle",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "c": {
+                  "x": 0,
+                  "y": 0
+                },
+                "r": 1.5
+              }
+            ]
+          },
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2102",
+            "name": "Lamba",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "circle",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "c": {
+                  "x": 0,
+                  "y": 0
+                },
+                "r": 0.25
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "apply",
+            "state": "durum-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "state": "durum-1",
+              "changed": true,
+              "visible": 2,
+              "locked": 1,
+              "styles": 1,
+              "frozen": 0,
+              "plot": 0,
+              "missing": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#E5484D",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "plot": false
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "frozen": true
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dışa aktar: bütün durumlar, düğümler yollarıyla; çizim değişmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "export"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "state": "",
+              "changed": false,
+              "visible": 0,
+              "locked": 0,
+              "styles": 0,
+              "frozen": 0,
+              "plot": 0,
+              "missing": 0,
+              "file": {
+                "format": "kentos.layer-states",
+                "version": 1,
+                "states": [
+                  {
+                    "id": "durum-1",
+                    "name": "Pafta",
+                    "nodes": [
+                      {
+                        "node": "kadastro",
+                        "visible": true,
+                        "locked": false,
+                        "frozen": false,
+                        "plot": true,
+                        "path": "Kadastro"
+                      },
+                      {
+                        "node": "parsel",
+                        "visible": true,
+                        "locked": false,
+                        "style": {
+                          "color": "#E5484D",
+                          "lineType": "continuous",
+                          "lineWeight": 0.35
+                        },
+                        "frozen": false,
+                        "plot": true,
+                        "path": "Kadastro / Parsel"
+                      },
+                      {
+                        "node": "bina",
+                        "visible": true,
+                        "locked": false,
+                        "style": {
+                          "color": "fg",
+                          "lineType": "continuous",
+                          "lineWeight": 0.25
+                        },
+                        "frozen": false,
+                        "plot": true,
+                        "path": "Kadastro / Bina"
+                      },
+                      {
+                        "node": "yol",
+                        "visible": true,
+                        "locked": false,
+                        "style": {
+                          "color": "fg",
+                          "lineType": "continuous",
+                          "lineWeight": 0.25
+                        },
+                        "frozen": false,
+                        "plot": true,
+                        "path": "Yol"
+                      },
+                      {
+                        "node": "gizli",
+                        "visible": false,
+                        "locked": false,
+                        "style": {
+                          "color": "fg",
+                          "lineType": "continuous",
+                          "lineWeight": 0.25
+                        },
+                        "frozen": false,
+                        "plot": true,
+                        "path": "Gizli"
+                      },
+                      {
+                        "node": "silinmis",
+                        "visible": true
+                      }
+                    ]
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#0090FF",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": true,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dışa aktar: seçilen durum",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Katman ağacı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "layerStates": [
+            {
+              "id": "durum-1",
+              "name": "Pafta",
+              "nodes": [
+                {
+                  "node": "kadastro",
+                  "visible": true,
+                  "locked": false,
+                  "frozen": false,
+                  "plot": true
+                },
+                {
+                  "node": "parsel",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "#E5484D",
+                    "lineType": "continuous",
+                    "lineWeight": 0.35
+                  },
+                  "frozen": false,
+                  "plot": true
+                },
+                {
+                  "node": "bina",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  },
+                  "frozen": false,
+                  "plot": true
+                },
+                {
+                  "node": "yol",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  },
+                  "frozen": false,
+                  "plot": true
+                },
+                {
+                  "node": "gizli",
+                  "visible": false,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  },
+                  "frozen": false,
+                  "plot": true
+                },
+                {
+                  "node": "silinmis",
+                  "visible": true
+                }
+              ]
+            },
+            {
+              "id": "durum-2",
+              "name": "Soğuk",
+              "nodes": [
+                {
+                  "node": "kadastro",
+                  "visible": true,
+                  "locked": false,
+                  "frozen": false,
+                  "plot": true
+                },
+                {
+                  "node": "parsel",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "#E5484D",
+                    "lineType": "continuous",
+                    "lineWeight": 0.35
+                  },
+                  "frozen": true,
+                  "plot": true
+                },
+                {
+                  "node": "bina",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  },
+                  "frozen": false,
+                  "plot": false
+                },
+                {
+                  "node": "yol",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  },
+                  "frozen": true,
+                  "plot": true
+                },
+                {
+                  "node": "gizli",
+                  "visible": false,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  },
+                  "frozen": true,
+                  "plot": true
+                },
+                {
+                  "node": "silinmis",
+                  "visible": true
+                }
+              ]
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "kadastro",
+            "name": "Kadastro",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "parsel",
+                "name": "Parsel",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#0090FF",
+                  "lineType": "continuous",
+                  "lineWeight": 0.35
+                },
+                "children": []
+              },
+              {
+                "id": "bina",
+                "name": "Bina",
+                "type": "layer",
+                "visible": true,
+                "locked": true,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "yol",
+            "name": "Yol",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "parsel",
+        "entities": [
+          {
+            "kind": "polygon",
+            "id": 1,
+            "layerId": "parsel",
+            "color": "#E5484D",
+            "attrs": {
+              "Ada": "101",
+              "Nitelik": "Arsa"
+            },
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400000
+              },
+              {
+                "x": 500040,
+                "y": 4400000
+              },
+              {
+                "x": 500040,
+                "y": 4400030
+              },
+              {
+                "x": 500000,
+                "y": 4400030
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 2,
+            "layerId": "parsel",
+            "attrs": {
+              "Ada": "102"
+            },
+            "pts": [
+              {
+                "x": 500040,
+                "y": 4400000
+              },
+              {
+                "x": 500060,
+                "y": 4400000
+              },
+              {
+                "x": 500060,
+                "y": 4400020
+              },
+              {
+                "x": 500040,
+                "y": 4400020
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 3,
+            "layerId": "bina",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500005,
+                "y": 4400005
+              },
+              {
+                "x": 500015,
+                "y": 4400005
+              },
+              {
+                "x": 500015,
+                "y": 4400015
+              },
+              {
+                "x": 500005,
+                "y": 4400015
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yol",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400040
+            },
+            "b": {
+              "x": 500120,
+              "y": 4400040
+            }
+          },
+          {
+            "kind": "insert",
+            "id": 5,
+            "layerId": "yol",
+            "attrs": {
+              "NO": "A-1"
+            },
+            "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+            "p": {
+              "x": 500050,
+              "y": 4400045
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "point",
+            "id": 6,
+            "layerId": "gizli",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400060
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+            "name": "Ağaç",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "circle",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "c": {
+                  "x": 0,
+                  "y": 0
+                },
+                "r": 1.5
+              }
+            ]
+          },
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2102",
+            "name": "Lamba",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "circle",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "c": {
+                  "x": 0,
+                  "y": 0
+                },
+                "r": 0.25
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "export",
+            "states": [
+              "durum-2"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "state": "",
+              "changed": false,
+              "visible": 0,
+              "locked": 0,
+              "styles": 0,
+              "frozen": 0,
+              "plot": 0,
+              "missing": 0,
+              "file": {
+                "format": "kentos.layer-states",
+                "version": 1,
+                "states": [
+                  {
+                    "id": "durum-2",
+                    "name": "Soğuk",
+                    "nodes": [
+                      {
+                        "node": "kadastro",
+                        "visible": true,
+                        "locked": false,
+                        "frozen": false,
+                        "plot": true,
+                        "path": "Kadastro"
+                      },
+                      {
+                        "node": "parsel",
+                        "visible": true,
+                        "locked": false,
+                        "style": {
+                          "color": "#E5484D",
+                          "lineType": "continuous",
+                          "lineWeight": 0.35
+                        },
+                        "frozen": true,
+                        "plot": true,
+                        "path": "Kadastro / Parsel"
+                      },
+                      {
+                        "node": "bina",
+                        "visible": true,
+                        "locked": false,
+                        "style": {
+                          "color": "fg",
+                          "lineType": "continuous",
+                          "lineWeight": 0.25
+                        },
+                        "frozen": false,
+                        "plot": false,
+                        "path": "Kadastro / Bina"
+                      },
+                      {
+                        "node": "yol",
+                        "visible": true,
+                        "locked": false,
+                        "style": {
+                          "color": "fg",
+                          "lineType": "continuous",
+                          "lineWeight": 0.25
+                        },
+                        "frozen": true,
+                        "plot": true,
+                        "path": "Yol"
+                      },
+                      {
+                        "node": "gizli",
+                        "visible": false,
+                        "locked": false,
+                        "style": {
+                          "color": "fg",
+                          "lineType": "continuous",
+                          "lineWeight": 0.25
+                        },
+                        "frozen": true,
+                        "plot": true,
+                        "path": "Gizli"
+                      },
+                      {
+                        "node": "silinmis",
+                        "visible": true
+                      }
+                    ]
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#0090FF",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": true,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "revision": "same",
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dışa aktar: projede olmayan durum",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "export",
+            "states": [
+              "durum-1",
+              "durum-7"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "state_not_found",
+              "message": "“durum-7” kimlikli katman durumu projede yok.",
+              "path": "states[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#0090FF",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": true,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "İçe aktar: düğümler kimlikleriyle ya da yollarıyla (büyük küçük harf katlanır); aynı adlı durum atlanır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "import",
+            "file": {
+              "format": "kentos.layer-states",
+              "version": 1,
+              "states": [
+                {
+                  "id": "durum-1",
+                  "name": "Ofis",
+                  "nodes": [
+                    {
+                      "node": "x-1",
+                      "path": "KADASTRO / parsel",
+                      "visible": false,
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "x-2",
+                      "path": "Yol",
+                      "visible": true,
+                      "frozen": true,
+                      "plot": false
+                    },
+                    {
+                      "node": "",
+                      "path": "Yok olan",
+                      "visible": true
+                    },
+                    {
+                      "node": "x-9",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": "durum-1",
+                  "name": "Pafta ",
+                  "nodes": [
+                    {
+                      "node": "kadastro",
+                      "visible": true,
+                      "locked": false,
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "parsel",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "#E5484D",
+                        "lineType": "continuous",
+                        "lineWeight": 0.35
+                      },
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "bina",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      },
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "yol",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      },
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "gizli",
+                      "visible": false,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      },
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "silinmis",
+                      "visible": true
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "state": "",
+              "changed": true,
+              "visible": 0,
+              "locked": 0,
+              "styles": 0,
+              "frozen": 0,
+              "plot": 0,
+              "missing": 0,
+              "added": 1,
+              "skipped": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "layerStates": [
+                {
+                  "id": "durum-1",
+                  "name": "Pafta",
+                  "nodes": [
+                    {
+                      "node": "kadastro",
+                      "visible": true,
+                      "locked": false,
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "parsel",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "#E5484D",
+                        "lineType": "continuous",
+                        "lineWeight": 0.35
+                      },
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "bina",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      },
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "yol",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      },
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "gizli",
+                      "visible": false,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      },
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "silinmis",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": "durum-2",
+                  "name": "Ofis",
+                  "nodes": [
+                    {
+                      "node": "parsel",
+                      "visible": false,
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "yol",
+                      "visible": true,
+                      "frozen": true,
+                      "plot": false
+                    },
+                    {
+                      "node": "x-9",
+                      "visible": true
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "İçe aktar: replace aynı adlının üzerine yazar, kimliği kalır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Katman ağacı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "layerStates": [
+            {
+              "id": "durum-2",
+              "name": "Soğuk",
+              "nodes": [
+                {
+                  "node": "kadastro",
+                  "visible": true,
+                  "locked": false,
+                  "frozen": false,
+                  "plot": true
+                },
+                {
+                  "node": "parsel",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "#E5484D",
+                    "lineType": "continuous",
+                    "lineWeight": 0.35
+                  },
+                  "frozen": true,
+                  "plot": true
+                },
+                {
+                  "node": "bina",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  },
+                  "frozen": false,
+                  "plot": false
+                },
+                {
+                  "node": "yol",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  },
+                  "frozen": true,
+                  "plot": true
+                },
+                {
+                  "node": "gizli",
+                  "visible": false,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  },
+                  "frozen": true,
+                  "plot": true
+                },
+                {
+                  "node": "silinmis",
+                  "visible": true
+                }
+              ]
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "kadastro",
+            "name": "Kadastro",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "parsel",
+                "name": "Parsel",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#0090FF",
+                  "lineType": "continuous",
+                  "lineWeight": 0.35
+                },
+                "children": []
+              },
+              {
+                "id": "bina",
+                "name": "Bina",
+                "type": "layer",
+                "visible": true,
+                "locked": true,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "yol",
+            "name": "Yol",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "parsel",
+        "entities": [
+          {
+            "kind": "polygon",
+            "id": 1,
+            "layerId": "parsel",
+            "color": "#E5484D",
+            "attrs": {
+              "Ada": "101",
+              "Nitelik": "Arsa"
+            },
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400000
+              },
+              {
+                "x": 500040,
+                "y": 4400000
+              },
+              {
+                "x": 500040,
+                "y": 4400030
+              },
+              {
+                "x": 500000,
+                "y": 4400030
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 2,
+            "layerId": "parsel",
+            "attrs": {
+              "Ada": "102"
+            },
+            "pts": [
+              {
+                "x": 500040,
+                "y": 4400000
+              },
+              {
+                "x": 500060,
+                "y": 4400000
+              },
+              {
+                "x": 500060,
+                "y": 4400020
+              },
+              {
+                "x": 500040,
+                "y": 4400020
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 3,
+            "layerId": "bina",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500005,
+                "y": 4400005
+              },
+              {
+                "x": 500015,
+                "y": 4400005
+              },
+              {
+                "x": 500015,
+                "y": 4400015
+              },
+              {
+                "x": 500005,
+                "y": 4400015
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yol",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400040
+            },
+            "b": {
+              "x": 500120,
+              "y": 4400040
+            }
+          },
+          {
+            "kind": "insert",
+            "id": 5,
+            "layerId": "yol",
+            "attrs": {
+              "NO": "A-1"
+            },
+            "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+            "p": {
+              "x": 500050,
+              "y": 4400045
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "point",
+            "id": 6,
+            "layerId": "gizli",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400060
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+            "name": "Ağaç",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "circle",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "c": {
+                  "x": 0,
+                  "y": 0
+                },
+                "r": 1.5
+              }
+            ]
+          },
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2102",
+            "name": "Lamba",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "circle",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "c": {
+                  "x": 0,
+                  "y": 0
+                },
+                "r": 0.25
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "import",
+            "replace": true,
+            "file": {
+              "format": "kentos.layer-states",
+              "version": 1,
+              "states": [
+                {
+                  "id": "durum-9",
+                  "name": "Soğuk",
+                  "nodes": [
+                    {
+                      "node": "kadastro",
+                      "visible": true,
+                      "locked": false,
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "parsel",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "#E5484D",
+                        "lineType": "continuous",
+                        "lineWeight": 0.35
+                      },
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "bina",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      },
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "yol",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      },
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "gizli",
+                      "visible": false,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      },
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "silinmis",
+                      "visible": true
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "state": "",
+              "changed": true,
+              "visible": 0,
+              "locked": 0,
+              "styles": 0,
+              "frozen": 0,
+              "plot": 0,
+              "missing": 0,
+              "replaced": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "layerStates": [
+                {
+                  "id": "durum-2",
+                  "name": "Soğuk",
+                  "nodes": [
+                    {
+                      "node": "kadastro",
+                      "visible": true,
+                      "locked": false,
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "parsel",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "#E5484D",
+                        "lineType": "continuous",
+                        "lineWeight": 0.35
+                      },
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "bina",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      },
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "yol",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      },
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "gizli",
+                      "visible": false,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      },
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "silinmis",
+                      "visible": true
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "İçe aktar: dosyasız",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "import"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_file",
+              "message": "İçe aktarılacak katman durumlarının dosyasını verin (file).",
+              "path": "file"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#0090FF",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": true,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "İçe aktar: başka biçim",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "import",
+            "file": {
+              "format": "kentos.document",
+              "version": 1,
+              "states": []
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_states",
+              "message": "Katman durumları dosyası okunamadı: dosya kentos.layer-states sürüm 1 değil (“kentos.document” sürüm 1).",
+              "path": "file"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#0090FF",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": true,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "İçe aktar: aynı adlı iki durum",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "import",
+            "file": {
+              "format": "kentos.layer-states",
+              "version": 1,
+              "states": [
+                {
+                  "id": "durum-1",
+                  "name": "Ofis",
+                  "nodes": [
+                    {
+                      "node": "x-1",
+                      "path": "KADASTRO / parsel",
+                      "visible": false,
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "x-2",
+                      "path": "Yol",
+                      "visible": true,
+                      "frozen": true,
+                      "plot": false
+                    },
+                    {
+                      "node": "",
+                      "path": "Yok olan",
+                      "visible": true
+                    },
+                    {
+                      "node": "x-9",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": "durum-5",
+                  "name": "Ofis",
+                  "nodes": [
+                    {
+                      "node": "x-1",
+                      "path": "KADASTRO / parsel",
+                      "visible": false,
+                      "frozen": false,
+                      "plot": true
+                    },
+                    {
+                      "node": "x-2",
+                      "path": "Yol",
+                      "visible": true,
+                      "frozen": true,
+                      "plot": false
+                    },
+                    {
+                      "node": "",
+                      "path": "Yok olan",
+                      "visible": true
+                    },
+                    {
+                      "node": "x-9",
+                      "visible": true
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_states",
+              "message": "Katman durumları dosyası okunamadı: “Ofis” adlı durum dosyada iki kez var.",
+              "path": "file"
+            }
           },
           "expect": {
             "ids": [
@@ -2344,6 +5377,8 @@
               "visible": 0,
               "locked": 0,
               "styles": 0,
+              "frozen": 0,
+              "plot": 0,
               "missing": 0,
               "revision": "$current"
             },
@@ -2380,7 +5415,9 @@
                     {
                       "node": "kadastro",
                       "visible": true,
-                      "locked": false
+                      "locked": false,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "parsel",
@@ -2390,7 +5427,9 @@
                         "color": "#E5484D",
                         "lineType": "continuous",
                         "lineWeight": 0.35
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "bina",
@@ -2400,7 +5439,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "yol",
@@ -2410,7 +5451,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "gizli",
@@ -2420,7 +5463,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "silinmis",
@@ -2434,7 +5479,9 @@
                   "nodes": [
                     {
                       "node": "kadastro",
-                      "visible": true
+                      "visible": true,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "parsel",
@@ -2443,7 +5490,9 @@
                         "color": "#0090FF",
                         "lineType": "continuous",
                         "lineWeight": 0.35
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "bina",
@@ -2452,7 +5501,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "yol",
@@ -2461,7 +5512,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "gizli",
@@ -2470,7 +5523,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     }
                   ]
                 }
@@ -2503,7 +5558,9 @@
                 {
                   "node": "kadastro",
                   "visible": true,
-                  "locked": false
+                  "locked": false,
+                  "frozen": false,
+                  "plot": true
                 },
                 {
                   "node": "parsel",
@@ -2513,7 +5570,9 @@
                     "color": "#E5484D",
                     "lineType": "continuous",
                     "lineWeight": 0.35
-                  }
+                  },
+                  "frozen": false,
+                  "plot": true
                 },
                 {
                   "node": "bina",
@@ -2523,7 +5582,9 @@
                     "color": "fg",
                     "lineType": "continuous",
                     "lineWeight": 0.25
-                  }
+                  },
+                  "frozen": false,
+                  "plot": true
                 },
                 {
                   "node": "yol",
@@ -2533,7 +5594,9 @@
                     "color": "fg",
                     "lineType": "continuous",
                     "lineWeight": 0.25
-                  }
+                  },
+                  "frozen": false,
+                  "plot": true
                 },
                 {
                   "node": "gizli",
@@ -2543,7 +5606,9 @@
                     "color": "fg",
                     "lineType": "continuous",
                     "lineWeight": 0.25
-                  }
+                  },
+                  "frozen": false,
+                  "plot": true
                 },
                 {
                   "node": "silinmis",
@@ -2557,23 +5622,33 @@
               "nodes": [
                 {
                   "node": "kadastro",
-                  "visible": true
+                  "visible": true,
+                  "frozen": false,
+                  "plot": true
                 },
                 {
                   "node": "parsel",
-                  "visible": true
+                  "visible": true,
+                  "frozen": false,
+                  "plot": true
                 },
                 {
                   "node": "bina",
-                  "visible": true
+                  "visible": true,
+                  "frozen": false,
+                  "plot": true
                 },
                 {
                   "node": "yol",
-                  "visible": false
+                  "visible": false,
+                  "frozen": false,
+                  "plot": true
                 },
                 {
                   "node": "gizli",
-                  "visible": true
+                  "visible": true,
+                  "frozen": false,
+                  "plot": true
                 }
               ]
             }
@@ -2839,6 +5914,8 @@
               "visible": 0,
               "locked": 0,
               "styles": 0,
+              "frozen": 0,
+              "plot": 0,
               "missing": 0,
               "revision": "$current"
             },
@@ -2865,7 +5942,9 @@
                     {
                       "node": "kadastro",
                       "visible": true,
-                      "locked": false
+                      "locked": false,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "parsel",
@@ -2875,7 +5954,9 @@
                         "color": "#E5484D",
                         "lineType": "continuous",
                         "lineWeight": 0.35
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "bina",
@@ -2885,7 +5966,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "yol",
@@ -2895,7 +5978,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "gizli",
@@ -2905,7 +5990,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "silinmis",
@@ -2919,23 +6006,33 @@
                   "nodes": [
                     {
                       "node": "kadastro",
-                      "visible": true
+                      "visible": true,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "parsel",
-                      "visible": true
+                      "visible": true,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "bina",
-                      "visible": true
+                      "visible": true,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "yol",
-                      "visible": false
+                      "visible": false,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "gizli",
-                      "visible": true
+                      "visible": true,
+                      "frozen": false,
+                      "plot": true
                     }
                   ]
                 },
@@ -2945,7 +6042,9 @@
                   "nodes": [
                     {
                       "node": "kadastro",
-                      "visible": true
+                      "visible": true,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "parsel",
@@ -2954,7 +6053,9 @@
                         "color": "#0090FF",
                         "lineType": "continuous",
                         "lineWeight": 0.35
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "bina",
@@ -2963,7 +6064,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "yol",
@@ -2972,7 +6075,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "gizli",
@@ -2981,7 +6086,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     }
                   ]
                 }
@@ -3014,7 +6121,9 @@
                 {
                   "node": "kadastro",
                   "visible": true,
-                  "locked": false
+                  "locked": false,
+                  "frozen": false,
+                  "plot": true
                 },
                 {
                   "node": "parsel",
@@ -3024,7 +6133,9 @@
                     "color": "#E5484D",
                     "lineType": "continuous",
                     "lineWeight": 0.35
-                  }
+                  },
+                  "frozen": false,
+                  "plot": true
                 },
                 {
                   "node": "bina",
@@ -3034,7 +6145,9 @@
                     "color": "fg",
                     "lineType": "continuous",
                     "lineWeight": 0.25
-                  }
+                  },
+                  "frozen": false,
+                  "plot": true
                 },
                 {
                   "node": "yol",
@@ -3044,7 +6157,9 @@
                     "color": "fg",
                     "lineType": "continuous",
                     "lineWeight": 0.25
-                  }
+                  },
+                  "frozen": false,
+                  "plot": true
                 },
                 {
                   "node": "gizli",
@@ -3054,7 +6169,9 @@
                     "color": "fg",
                     "lineType": "continuous",
                     "lineWeight": 0.25
-                  }
+                  },
+                  "frozen": false,
+                  "plot": true
                 },
                 {
                   "node": "silinmis",
@@ -3068,23 +6185,33 @@
               "nodes": [
                 {
                   "node": "kadastro",
-                  "visible": true
+                  "visible": true,
+                  "frozen": false,
+                  "plot": true
                 },
                 {
                   "node": "parsel",
-                  "visible": true
+                  "visible": true,
+                  "frozen": false,
+                  "plot": true
                 },
                 {
                   "node": "bina",
-                  "visible": true
+                  "visible": true,
+                  "frozen": false,
+                  "plot": true
                 },
                 {
                   "node": "yol",
-                  "visible": false
+                  "visible": false,
+                  "frozen": false,
+                  "plot": true
                 },
                 {
                   "node": "gizli",
-                  "visible": true
+                  "visible": true,
+                  "frozen": false,
+                  "plot": true
                 }
               ]
             }
@@ -3447,7 +6574,9 @@
                     {
                       "node": "kadastro",
                       "visible": true,
-                      "locked": false
+                      "locked": false,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "parsel",
@@ -3457,7 +6586,9 @@
                         "color": "#E5484D",
                         "lineType": "continuous",
                         "lineWeight": 0.35
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "bina",
@@ -3467,7 +6598,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "yol",
@@ -3477,7 +6610,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "gizli",
@@ -3487,7 +6622,9 @@
                         "color": "fg",
                         "lineType": "continuous",
                         "lineWeight": 0.25
-                      }
+                      },
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "silinmis",
@@ -3501,23 +6638,33 @@
                   "nodes": [
                     {
                       "node": "kadastro",
-                      "visible": true
+                      "visible": true,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "parsel",
-                      "visible": true
+                      "visible": true,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "bina",
-                      "visible": true
+                      "visible": true,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "yol",
-                      "visible": false
+                      "visible": false,
+                      "frozen": false,
+                      "plot": true
                     },
                     {
                       "node": "gizli",
-                      "visible": true
+                      "visible": true,
+                      "frozen": false,
+                      "plot": true
                     }
                   ]
                 }

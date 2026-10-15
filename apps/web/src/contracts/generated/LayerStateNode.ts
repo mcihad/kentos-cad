@@ -16,4 +16,16 @@ locked?: boolean,
 /**
  * A layer's style, when the state keeps styles; a group has none.
  */
-style?: LayerStyle, };
+style?: LayerStyle, 
+/**
+ * Its own freeze and printing (docs/adr/0311 §3): every state saved
+ * since schema 55 keeps both; absent in an older state, applying it
+ * leaves them as they are.
+ */
+frozen?: boolean, plot?: boolean, 
+/**
+ * The node's names from the top of the tree (“Kadastro / Parsel”), only
+ * in a file of exported states (docs/adr/0311 §3): importing finds the
+ * node by it in another drawing. A project's own states never keep it.
+ */
+path?: string, };

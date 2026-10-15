@@ -922,8 +922,8 @@ impl App {
                 // The open tree as flat rows, built only as they scroll into view
                 // (the web's VirtualRows): a DXF can bring hundreds of layers.
                 // Katman ara keeps what it finds (layer_tree.rs).
-                let query = crate::layer_tree::query(&self.layer_query);
-                let rows = crate::layer_tree::open_rows(doc.layers(), &query);
+                let search = self.layer_search_state();
+                let rows = crate::layer_tree::open_rows(doc.layers(), &search);
                 // The selection's one layer is brought into view (layering.rs);
                 // else the row the tree's keys chose (layer_tree.rs).
                 let reveal = if self.layers_follow {
@@ -936,7 +936,7 @@ impl App {
                         .as_ref()
                         .and_then(|id| rows.iter().position(|row| row.node.id == *id))
                 };
-                let empty = if query.is_empty() {
+                let empty = if self.layer_query.trim().is_empty() && !self.layer_props_on() {
                     "Katman yok."
                 } else {
                     "Aramayla eşleşen katman yok."
@@ -1022,6 +1022,18 @@ impl App {
                 iced::widget::tooltip::Position::Top,
             ));
         }
+        // Dondurulmuş (docs/adr/0311 §1): its own freeze marked; under a frozen group it is faint.
+        if node.frozen == Some(true) {
+            badges.push(kentos_ui::widget::tip(
+                kentos_ui::icon::icon(crate::icons::from_web(Some("freeze")))
+                    .size(12.0)
+                    .tone(kentos_ui::icon::Tone::Accent),
+                kentos_ui::widget::Tip::new(
+                    "Dondurulmuş: çizilmez, seçilmez, kenetlenmez, Tümünü göster saymaz.\nÇözmek için sağ tık › Çöz.",
+                ),
+                iced::widget::tooltip::Position::Top,
+            ));
+        }
         if let Some(t) = node
             .time
             .as_ref()
@@ -1065,7 +1077,7 @@ impl App {
             .selected(self.layer_row_selected(&node.id))
             .active(active)
             // Hidden of its own or under a hidden group, faint (the web's `data-hidden`).
-            .muted(!parent_visible || !node.visible)
+            .muted(!parent_visible || !node.visible || doc.model.layers().is_frozen(&node.id))
             .toggle(Toggle::visible(
                 node.visible,
                 Message::LayerVisible(node.id.clone()),
@@ -1727,6 +1739,7 @@ impl App {
             Asking::AttributeValues => self.attribute_values_view(),
             Asking::FindReplace => self.find_replace_view(),
             Asking::LayerMerge => self.layer_merge_view(),
+            Asking::LayerTranslate => self.layer_translate_view(),
             Asking::LayerFields => self.layer_fields_view(),
             Asking::LayerFilter => self.layer_filter_view(),
             Asking::Attachment => self.attachment_form_view(),

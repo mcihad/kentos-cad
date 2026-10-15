@@ -544,14 +544,26 @@ impl<'d> Encoder<'d> {
 
     fn layer_state_node(&mut self, n: &'d LayerStateNode) -> Result<(), KcadError> {
         self.open(
-            2 + usize::from(n.style.is_some()) + usize::from(n.locked.is_some()),
+            2 + usize::from(n.style.is_some())
+                + usize::from(n.locked.is_some())
+                + usize::from(n.frozen.is_some())
+                + usize::from(n.plot.is_some()),
             true,
         )?;
         self.key("node");
         self.text(&n.node)?;
+        // Schema 55 (docs/adr/0311 §3): its freeze and printing.
+        if let Some(plot) = n.plot {
+            self.key("plot");
+            self.w.bool(plot);
+        }
         if let Some(style) = &n.style {
             self.key("style");
             self.at(Seg::Name("style"), |e| e.layer_style(style))?;
+        }
+        if let Some(frozen) = n.frozen {
+            self.key("frozen");
+            self.w.bool(frozen);
         }
         if let Some(locked) = n.locked {
             self.key("locked");
@@ -760,7 +772,8 @@ impl<'d> Encoder<'d> {
                 + usize::from(!n.actions.is_empty())
                 + usize::from(n.card.is_some())
                 + usize::from(compose.is_some())
-                + usize::from(n.plot == Some(false)),
+                + usize::from(n.plot == Some(false))
+                + usize::from(n.frozen == Some(true)),
             true,
         )?;
         // id (2), card feed name plot snap time type (4), style (5), fields filter locked (6),
@@ -819,6 +832,20 @@ impl<'d> Encoder<'d> {
         if let Some(filter) = &n.filter {
             self.key("filter");
             self.at(Seg::Name("filter"), |e| e.layer_filter(n.kind, filter))?;
+        }
+        // Dondur (docs/adr/0311 §1): only `true` is written.
+        match n.frozen {
+            Some(true) => {
+                self.key("frozen");
+                self.w.bool(true);
+            }
+            Some(false) => {
+                return Err(self.fail(
+                    Code::BadValue,
+                    "frozen yalnız true yazılır; çözülmüş katmanda alan yoktur",
+                ));
+            }
+            None => {}
         }
         self.key("locked");
         self.w.bool(n.locked);
@@ -1161,6 +1188,22 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
+    }
+    // Schema 55 (docs/adr/0311): a frozen node, or a layer state keeping freezes and printing.
+    fn frozen(nodes: &[LayerNode]) -> bool {
+        nodes
+            .iter()
+            .any(|n| n.frozen == Some(true) || frozen(&n.children))
+    }
+    if frozen(&doc.layers)
+        || doc
+            .settings
+            .layer_states
+            .iter()
+            .flat_map(|s| &s.nodes)
+            .any(|n| n.frozen.is_some() || n.plot.is_some())
+    {
+        return crate::SCHEMA_WITH_FROZEN;
     }
     // Schema 54 (docs/adr/0310): an area's mask, a block definition's too.
     let masks = |list: &[Entity]| list.iter().any(|e| e.base().look.wipeout.is_some());

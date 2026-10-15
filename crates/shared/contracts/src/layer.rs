@@ -453,6 +453,14 @@ pub struct LayerNode {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub plot: Option<bool>,
+    /// Dondur (AutoCAD's freeze, DXF's 70 bit 1; docs/adr/0311 §1): absent,
+    /// thawed; `true`, frozen: neither drawn, picked, snapped to nor counted
+    /// in the drawing's extent, and Hepsini göster leaves it frozen; the
+    /// active layer is never frozen. A group's covers what it holds. Only
+    /// `true` is written.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub frozen: Option<bool>,
 }
 
 /// The snap kinds a layer can keep to (the settings' `snap.<kind>` and the
@@ -560,6 +568,21 @@ pub struct LayerStateNode {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub style: Option<LayerStyle>,
+    /// Its own freeze and printing (docs/adr/0311 §3): every state saved
+    /// since schema 55 keeps both; absent in an older state, applying it
+    /// leaves them as they are.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub frozen: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub plot: Option<bool>,
+    /// The node's names from the top of the tree (“Kadastro / Parsel”), only
+    /// in a file of exported states (docs/adr/0311 §3): importing finds the
+    /// node by it in another drawing. A project's own states never keep it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub path: Option<String>,
 }
 
 /// What is wrong with a project's layer states, in the words the project
@@ -583,6 +606,12 @@ pub fn layer_states_problem(states: &[LayerState]) -> Option<String> {
         for (j, n) in s.nodes.iter().enumerate() {
             if n.node.is_empty() {
                 return Some(format!("“{name}” durumunda düğüm kimliği boş"));
+            }
+            if n.path.is_some() {
+                return Some(format!(
+                    "“{name}” durumunda “{}” düğümünün yolu var; yol yalnız dışa aktarılan dosyada olur",
+                    n.node
+                ));
             }
             if s.nodes[..j].iter().any(|m| m.node == n.node) {
                 return Some(format!(
@@ -609,8 +638,9 @@ pub fn sanitized_layer_states(states: Vec<LayerState>) -> Vec<LayerState> {
             continue;
         }
         let mut nodes: Vec<LayerStateNode> = Vec::with_capacity(s.nodes.len());
-        for n in s.nodes {
+        for mut n in s.nodes {
             if !n.node.is_empty() && !nodes.iter().any(|m| m.node == n.node) {
+                n.path = None;
                 nodes.push(n);
             }
         }

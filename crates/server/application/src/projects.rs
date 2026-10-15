@@ -738,6 +738,7 @@ mod tests {
         children: Vec<LayerNode>,
     ) -> LayerNode {
         LayerNode {
+            frozen: None,
             plot: None,
             id: id.to_owned(),
             name: id.to_owned(),

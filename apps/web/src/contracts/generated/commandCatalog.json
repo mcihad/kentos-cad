@@ -5000,6 +5000,13 @@
                 ],
                 "description": "The layer's filter (docs/adr/0211 §2): only the objects that pass it\nare shown, picked and given to its tools. Only a layer has it, never a\ngroup or a layer drawn from a service."
               },
+              "frozen": {
+                "description": "Dondur (AutoCAD's freeze, DXF's 70 bit 1; docs/adr/0311 §1): absent,\nthawed; `true`, frozen: neither drawn, picked, snapped to nor counted\nin the drawing's extent, and Hepsini göster leaves it frozen; the\nactive layer is never frozen. A group's covers what it holds. Only\n`true` is written.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
               "id": {
                 "type": "string"
               },
@@ -5145,6 +5152,13 @@
           "LayerStateNode": {
             "description": "A node of a layer state: a layer's or a group's id and what was kept of it.",
             "properties": {
+              "frozen": {
+                "description": "Its own freeze and printing (docs/adr/0311 §3): every state saved\nsince schema 55 keeps both; absent in an older state, applying it\nleaves them as they are.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
               "locked": {
                 "description": "Its own lock, when the state keeps locks.",
                 "type": [
@@ -5155,6 +5169,19 @@
               "node": {
                 "description": "The node's id; a node the tree no longer has is passed over.",
                 "type": "string"
+              },
+              "path": {
+                "description": "The node's names from the top of the tree (“Kadastro / Parsel”), only\nin a file of exported states (docs/adr/0311 §3): importing finds the\nnode by it in another drawing. A project's own states never keep it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "plot": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
               },
               "style": {
                 "anyOf": [
@@ -12827,6 +12854,13 @@
                 ],
                 "description": "The layer's filter (docs/adr/0211 §2): only the objects that pass it\nare shown, picked and given to its tools. Only a layer has it, never a\ngroup or a layer drawn from a service."
               },
+              "frozen": {
+                "description": "Dondur (AutoCAD's freeze, DXF's 70 bit 1; docs/adr/0311 §1): absent,\nthawed; `true`, frozen: neither drawn, picked, snapped to nor counted\nin the drawing's extent, and Hepsini göster leaves it frozen; the\nactive layer is never frozen. A group's covers what it holds. Only\n`true` is written.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
               "id": {
                 "type": "string"
               },
@@ -12972,6 +13006,13 @@
           "LayerStateNode": {
             "description": "A node of a layer state: a layer's or a group's id and what was kept of it.",
             "properties": {
+              "frozen": {
+                "description": "Its own freeze and printing (docs/adr/0311 §3): every state saved\nsince schema 55 keeps both; absent in an older state, applying it\nleaves them as they are.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
               "locked": {
                 "description": "Its own lock, when the state keeps locks.",
                 "type": [
@@ -12982,6 +13023,19 @@
               "node": {
                 "description": "The node's id; a node the tree no longer has is passed over.",
                 "type": "string"
+              },
+              "path": {
+                "description": "The node's names from the top of the tree (“Kadastro / Parsel”), only\nin a file of exported states (docs/adr/0311 §3): importing finds the\nnode by it in another drawing. A project's own states never keep it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "plot": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
               },
               "style": {
                 "anyOf": [
@@ -19862,6 +19916,13 @@
                 ],
                 "description": "The layer's filter (docs/adr/0211 §2): only the objects that pass it\nare shown, picked and given to its tools. Only a layer has it, never a\ngroup or a layer drawn from a service."
               },
+              "frozen": {
+                "description": "Dondur (AutoCAD's freeze, DXF's 70 bit 1; docs/adr/0311 §1): absent,\nthawed; `true`, frozen: neither drawn, picked, snapped to nor counted\nin the drawing's extent, and Hepsini göster leaves it frozen; the\nactive layer is never frozen. A group's covers what it holds. Only\n`true` is written.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
               "id": {
                 "type": "string"
               },
@@ -20007,6 +20068,13 @@
           "LayerStateNode": {
             "description": "A node of a layer state: a layer's or a group's id and what was kept of it.",
             "properties": {
+              "frozen": {
+                "description": "Its own freeze and printing (docs/adr/0311 §3): every state saved\nsince schema 55 keeps both; absent in an older state, applying it\nleaves them as they are.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
               "locked": {
                 "description": "Its own lock, when the state keeps locks.",
                 "type": [
@@ -20017,6 +20085,19 @@
               "node": {
                 "description": "The node's id; a node the tree no longer has is passed over.",
                 "type": "string"
+              },
+              "path": {
+                "description": "The node's names from the top of the tree (“Kadastro / Parsel”), only\nin a file of exported states (docs/adr/0311 §3): importing finds the\nnode by it in another drawing. A project's own states never keep it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "plot": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
               },
               "style": {
                 "anyOf": [
@@ -118496,6 +118577,13 @@
                 ],
                 "description": "The layer's filter (docs/adr/0211 §2): only the objects that pass it\nare shown, picked and given to its tools. Only a layer has it, never a\ngroup or a layer drawn from a service."
               },
+              "frozen": {
+                "description": "Dondur (AutoCAD's freeze, DXF's 70 bit 1; docs/adr/0311 §1): absent,\nthawed; `true`, frozen: neither drawn, picked, snapped to nor counted\nin the drawing's extent, and Hepsini göster leaves it frozen; the\nactive layer is never frozen. A group's covers what it holds. Only\n`true` is written.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
               "id": {
                 "type": "string"
               },
@@ -126186,6 +126274,13 @@
                   }
                 ],
                 "description": "The layer's filter (docs/adr/0211 §2): only the objects that pass it\nare shown, picked and given to its tools. Only a layer has it, never a\ngroup or a layer drawn from a service."
+              },
+              "frozen": {
+                "description": "Dondur (AutoCAD's freeze, DXF's 70 bit 1; docs/adr/0311 §1): absent,\nthawed; `true`, frozen: neither drawn, picked, snapped to nor counted\nin the drawing's extent, and Hepsini göster leaves it frozen; the\nactive layer is never frozen. A group's covers what it holds. Only\n`true` is written.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
               },
               "id": {
                 "type": "string"
@@ -134000,6 +134095,13 @@
                   }
                 ],
                 "description": "The layer's filter (docs/adr/0211 §2): only the objects that pass it\nare shown, picked and given to its tools. Only a layer has it, never a\ngroup or a layer drawn from a service."
+              },
+              "frozen": {
+                "description": "Dondur (AutoCAD's freeze, DXF's 70 bit 1; docs/adr/0311 §1): absent,\nthawed; `true`, frozen: neither drawn, picked, snapped to nor counted\nin the drawing's extent, and Hepsini göster leaves it frozen; the\nactive layer is never frozen. A group's covers what it holds. Only\n`true` is written.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
               },
               "id": {
                 "type": "string"
@@ -270421,6 +270523,13 @@
                 ],
                 "description": "The layer's filter (docs/adr/0211 §2): only the objects that pass it\nare shown, picked and given to its tools. Only a layer has it, never a\ngroup or a layer drawn from a service."
               },
+              "frozen": {
+                "description": "Dondur (AutoCAD's freeze, DXF's 70 bit 1; docs/adr/0311 §1): absent,\nthawed; `true`, frozen: neither drawn, picked, snapped to nor counted\nin the drawing's extent, and Hepsini göster leaves it frozen; the\nactive layer is never frozen. A group's covers what it holds. Only\n`true` is written.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
               "id": {
                 "type": "string"
               },
@@ -274363,6 +274472,13 @@
                 ],
                 "description": "The layer's filter (docs/adr/0211 §2): only the objects that pass it\nare shown, picked and given to its tools. Only a layer has it, never a\ngroup or a layer drawn from a service."
               },
+              "frozen": {
+                "description": "Dondur (AutoCAD's freeze, DXF's 70 bit 1; docs/adr/0311 §1): absent,\nthawed; `true`, frozen: neither drawn, picked, snapped to nor counted\nin the drawing's extent, and Hepsini göster leaves it frozen; the\nactive layer is never frozen. A group's covers what it holds. Only\n`true` is written.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
               "id": {
                 "type": "string"
               },
@@ -276687,6 +276803,13 @@
                 ],
                 "description": "The layer's filter (docs/adr/0211 §2): only the objects that pass it\nare shown, picked and given to its tools. Only a layer has it, never a\ngroup or a layer drawn from a service."
               },
+              "frozen": {
+                "description": "Dondur (AutoCAD's freeze, DXF's 70 bit 1; docs/adr/0311 §1): absent,\nthawed; `true`, frozen: neither drawn, picked, snapped to nor counted\nin the drawing's extent, and Hepsini göster leaves it frozen; the\nactive layer is never frozen. A group's covers what it holds. Only\n`true` is written.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
               "id": {
                 "type": "string"
               },
@@ -278772,6 +278895,13 @@
                 ],
                 "description": "The layer's filter (docs/adr/0211 §2): only the objects that pass it\nare shown, picked and given to its tools. Only a layer has it, never a\ngroup or a layer drawn from a service."
               },
+              "frozen": {
+                "description": "Dondur (AutoCAD's freeze, DXF's 70 bit 1; docs/adr/0311 §1): absent,\nthawed; `true`, frozen: neither drawn, picked, snapped to nor counted\nin the drawing's extent, and Hepsini göster leaves it frozen; the\nactive layer is never frozen. A group's covers what it holds. Only\n`true` is written.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
               "id": {
                 "type": "string"
               },
@@ -280831,6 +280961,13 @@
                   }
                 ],
                 "description": "The layer's filter (docs/adr/0211 §2): only the objects that pass it\nare shown, picked and given to its tools. Only a layer has it, never a\ngroup or a layer drawn from a service."
+              },
+              "frozen": {
+                "description": "Dondur (AutoCAD's freeze, DXF's 70 bit 1; docs/adr/0311 §1): absent,\nthawed; `true`, frozen: neither drawn, picked, snapped to nor counted\nin the drawing's extent, and Hepsini göster leaves it frozen; the\nactive layer is never frozen. A group's covers what it holds. Only\n`true` is written.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
               },
               "id": {
                 "type": "string"
@@ -283668,6 +283805,13 @@
                 ],
                 "description": "The layer's filter (docs/adr/0211 §2): only the objects that pass it\nare shown, picked and given to its tools. Only a layer has it, never a\ngroup or a layer drawn from a service."
               },
+              "frozen": {
+                "description": "Dondur (AutoCAD's freeze, DXF's 70 bit 1; docs/adr/0311 §1): absent,\nthawed; `true`, frozen: neither drawn, picked, snapped to nor counted\nin the drawing's extent, and Hepsini göster leaves it frozen; the\nactive layer is never frozen. A group's covers what it holds. Only\n`true` is written.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
               "id": {
                 "type": "string"
               },
@@ -286041,6 +286185,13 @@
                 ],
                 "description": "The layer's filter (docs/adr/0211 §2): only the objects that pass it\nare shown, picked and given to its tools. Only a layer has it, never a\ngroup or a layer drawn from a service."
               },
+              "frozen": {
+                "description": "Dondur (AutoCAD's freeze, DXF's 70 bit 1; docs/adr/0311 §1): absent,\nthawed; `true`, frozen: neither drawn, picked, snapped to nor counted\nin the drawing's extent, and Hepsini göster leaves it frozen; the\nactive layer is never frozen. A group's covers what it holds. Only\n`true` is written.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
               "id": {
                 "type": "string"
               },
@@ -287352,7 +287503,7 @@
       "id": "cad.layers.set",
       "version": 1,
       "title": "Katman ağacı",
-      "summary": "Katmanlar panelinin göz, kilit, ad ve etkin katman değişikliklerini yapar (operation): rename (layer, name), visible ve locked (layer, value; grubun gizliliği ve kilidi altındakilerin hepsine geçer), active (layer: nesne alan bir katman; grup ve servis katmanı olmaz), isolate (layers: bu düğümler, üstlerindeki gruplar ve altlarındakiler görünür, gerisi gizlenir) ve showAll (hepsi görünür). Bunlar ağacın kendi değişiklikleridir: çizimi kirli yapar ve sürümü değiştirir ama geri alma adımı değildir; etkin katman dosyada saklanır ama düzenleme sayılmaz. Değişmeyen hiçbir şey yazmaz (changed false). expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Katmanlar panelinin göz, kilit, ad ve etkin katman değişikliklerini yapar (operation): rename (layer, name), visible ve locked (layer, value; grubun gizliliği ve kilidi altındakilerin hepsine geçer), active (layer: nesne alan, dondurulmamış bir katman; grup ve servis katmanı olmaz), isolate (layers: bu düğümler, üstlerindeki gruplar ve altlarındakiler görünür, gerisi gizlenir; gizlediklerini çizim oturum boyunca hatırlar), unisolate (isolate'in gizledikleri, hâlâ gizliyse yeniden görünür), showAll (hepsi görünür; dondurulmuş düğüm dondurulmuş kalır), plot (layer, value: yazdırılır mı), frozen (layer, value: dondurulmuş düğüm çizilmez, seçilmez, kenetlenmez, kapsama sayılmaz; etkin katman dondurulamaz) ve thawAll (hepsi çözülür). Bunlar ağacın kendi değişiklikleridir: çizimi kirli yapar ve sürümü değiştirir ama geri alma adımı değildir; etkin katman dosyada saklanır ama düzenleme sayılmaz; yalnız isolate'in hatırladıkları oturumundur. Değişmeyen hiçbir şey yazmaz (changed false). expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -287385,12 +287536,27 @@
                 "const": "plot",
                 "description": "Yazdır (docs/adr/0260 §4): whether the node is printed.",
                 "type": "string"
+              },
+              {
+                "const": "frozen",
+                "description": "Dondur / Çöz (docs/adr/0311 §1): whether the node is frozen.",
+                "type": "string"
+              },
+              {
+                "const": "thawAll",
+                "description": "Bütün katmanları çöz: every node thawed.",
+                "type": "string"
+              },
+              {
+                "const": "unisolate",
+                "description": "Yalıtımı kaldır: the nodes the last `isolate` hid, still hidden, shown again.",
+                "type": "string"
               }
             ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.layers.set` v1: one of the tree's own changes, as the eye,\nthe lock and the name in the Katmanlar panel make it. Each is an edit of\nthe drawing (it gets dirty, its revision moves) but no undo step\n(docs/adr/0020); making a layer active is kept in the file but is no\nedit (the revision stays).\n\n- `rename`: `layer`, `name` (trimmed);\n- `plot`: `layer`, `value` (docs/adr/0260 §4): a node not printed is drawn\n  on screen but not on a sheet, its PDF or a print; a group's covers\n  everything under it;\n- `visible`, `locked`: `layer`, `value`; a group's lock holds for\n  everything under it, a hidden group hides everything under it;\n- `active`: `layer`, a layer holding objects;\n- `isolate`: `layers`: these nodes, the groups above them and everything\n  under them shown, the rest hidden;\n- `showAll`: every node shown.\n\nRefusals (`CommandError.code`), checked in this order: `no_layer`\n(rename, visible, locked, plot, active without `layer`), `no_layers` (isolate\nwithout a node), `empty_name` (rename with a name empty or only white\nspace), `no_value` (visible, locked, plot without `value`); then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`layer_not_found` (`layer`, `layers[i]`), `not_a_layer` (active: a\ngroup), `service_layer` (active: a layer drawn from a map service holds\nno objects). A change that changes nothing answers `changed` false.",
+        "description": "Input of `cad.layers.set` v1: one of the tree's own changes, as the eye,\nthe lock and the name in the Katmanlar panel make it. Each is an edit of\nthe drawing (it gets dirty, its revision moves) but no undo step\n(docs/adr/0020); making a layer active is kept in the file but is no\nedit (the revision stays).\n\n- `rename`: `layer`, `name` (trimmed);\n- `plot`: `layer`, `value` (docs/adr/0260 §4): a node not printed is drawn\n  on screen but not on a sheet, its PDF or a print; a group's covers\n  everything under it;\n- `visible`, `locked`: `layer`, `value`; a group's lock holds for\n  everything under it, a hidden group hides everything under it;\n- `active`: `layer`, a layer holding objects;\n- `isolate`: `layers`: these nodes, the groups above them and everything\n  under them shown, the rest hidden; the drawing remembers the nodes it\n  hid (for this session, not in the file);\n- `unisolate`: the nodes the last `isolate` hid that are still hidden\n  shown again; those shown by hand meanwhile stay as they are; nothing\n  remembered changes nothing;\n- `showAll`: every node shown; a frozen node stays frozen;\n- `frozen`: `layer`, `value` (docs/adr/0311 §1): a frozen node is neither\n  drawn, picked, snapped to nor counted in the extent; a group's covers\n  everything under it;\n- `thawAll`: every node thawed.\n\nThe eye, the lock, the freeze, printing, the name and the active layer\nare the project's (kept in the file); only what `isolate` hid is the\nsession's (docs/adr/0311 §2).\n\nRefusals (`CommandError.code`), checked in this order: `no_layer`\n(rename, visible, locked, plot, frozen, active without `layer`),\n`no_layers` (isolate without a node), `empty_name` (rename with a name\nempty or only white space), `no_value` (visible, locked, plot, frozen\nwithout `value`); then `invalid_revision`, `revision_conflict` (status\n`conflict`); `layer_not_found` (`layer`, `layers[i]`), `not_a_layer`\n(active: a group), `service_layer` (active: a layer drawn from a map\nservice holds no objects), `layer_frozen` (active: a frozen layer, or one\nin a frozen group), `active_frozen` (frozen: the active layer, or a group\nholding it). A change that changes nothing answers `changed` false.",
         "properties": {
           "expectedRevision": {
             "description": "The document revision the input was prepared against, as decimal text.",
@@ -287498,6 +287664,8 @@
           "service_layer",
           "empty_name",
           "no_value",
+          "layer_frozen",
+          "active_frozen",
           "invalid_revision",
           "revision_conflict"
         ]
@@ -287531,7 +287699,7 @@
       "id": "cad.layers.states",
       "version": 1,
       "title": "Katman durumları",
-      "summary": "Projenin adlı katman durumlarını yönetir (operation): save ağacın şimdiki görünürlüğünü, istenirse kilitlerini (locks) ve katmanların stillerini (styles, verilmezse açık) yeni bir durum olarak kaydeder (name verilmezse “Durum n”); update durumu (state) şimdiki ağaçtan yeniden kaydeder; rename durumu yeniden adlandırır; remove siler; apply durumu uygular: adını verdiği ve ağaçta hâlâ olan düğümlerin görünürlüğü ve (saklandıysa) kilidi ağacın kendi değişikliği olarak, katmanların stilleri tek geri alma adımında (“Katman durumu: <ad>”) yazılır; ağaçta olmayan düğümler missing'de sayılır. Durumlar proje ayarıdır: kaydetmek, güncellemek, adlandırmak ve silmek çizimi kirli yapar, geri alma adımı değildir. Adlar baştaki ve sondaki boşluklar sayılmadan bir kez kullanılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Projenin adlı katman durumlarını yönetir (operation): save ağacın şimdiki görünürlüğünü, istenirse kilitlerini (locks) ve katmanların stillerini (styles, verilmezse açık) yeni bir durum olarak kaydeder (name verilmezse “Durum n”); update durumu (state) şimdiki ağaçtan yeniden kaydeder; rename durumu yeniden adlandırır; remove siler; apply durumu uygular: adını verdiği ve ağaçta hâlâ olan düğümlerin görünürlüğü ve (saklandıysa) kilidi ağacın kendi değişikliği olarak, katmanların stilleri tek geri alma adımında (“Katman durumu: <ad>”) yazılır, saklandıysa dondurma ve yazdırma görünürlük gibi; ağaçta olmayan düğümler missing'de sayılır. export durumları (states, verilmezse hepsi) düğümlerinin yollarıyla bir dosya olarak verir (file; kentos.layer-states sürüm 1), çizimi değiştirmez; import dosyanın (file) durumlarını ekler: düğüm kimliğiyle, yoksa yoluyla (adlar büyük küçük harf ve Türkçe harfler katlanarak) bulunur; projede adı olan durum atlanır ya da replace ile üzerine yazılır (kimliği kalır), yenisi ilk boş durum-n kimliğini alır. Durumlar proje ayarıdır: kaydetmek, güncellemek, adlandırmak, silmek ve içe aktarmak çizimi kirli yapar, geri alma adımı değildir. Adlar baştaki ve sondaki boşluklar sayılmadan bir kez kullanılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -287546,20 +287714,1069 @@
       "cost": "instant",
       "input": {
         "$defs": {
-          "LayerStatesOperation": {
-            "description": "What `cad.layers.states` does.",
+          "AreaLabelMode": {
+            "description": "Where an area's label goes.",
+            "oneOf": [
+              {
+                "const": "horizontal",
+                "description": "Level, inside, away from the edges.",
+                "type": "string"
+              },
+              {
+                "const": "free",
+                "description": "Level when it fits, else along the area's long side.",
+                "type": "string"
+              },
+              {
+                "const": "perimeter",
+                "description": "Along its outline.",
+                "type": "string"
+              },
+              {
+                "const": "boundary",
+                "description": "Along its outline, inside, repeated (Maplex's boundary labels).",
+                "type": "string"
+              },
+              {
+                "const": "parcel",
+                "description": "Inside only: level, then along the long side, then fitted (Maplex's land parcels).",
+                "type": "string"
+              },
+              {
+                "const": "corner",
+                "description": "By its box's top left corner (a sheet's frame).",
+                "type": "string"
+              }
+            ]
+          },
+          "CalloutKind": {
+            "description": "A callout's line.",
+            "oneOf": [
+              {
+                "enum": [
+                  "straight"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "manhattan",
+                "description": "Level, then upright.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelAbbreviate": {
+            "description": "Shortening a label's words (kısaltma).",
+            "properties": {
+              "always": {
+                "description": "Always; absent, only when the label does not fit.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "words": {
+                "items": {
+                  "$ref": "#/$defs/LabelWord"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "words"
+            ],
+            "type": "object"
+          },
+          "LabelAlign": {
+            "description": "How a label's lines line up.",
             "enum": [
-              "save",
-              "update",
-              "rename",
-              "remove",
-              "apply"
+              "left",
+              "center",
+              "right"
             ],
             "type": "string"
+          },
+          "LabelBackground": {
+            "description": "A shape behind a label.",
+            "properties": {
+              "fill": {
+                "description": "Hex or a theme name (`paper`: the drawing area's colour, a mask); absent, not filled.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "padding": {
+                "description": "CSS px round the letters; absent, 2.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "shape": {
+                "$ref": "#/$defs/LabelShape"
+              },
+              "stroke": {
+                "description": "Its outline's colour; absent, none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "shape"
+            ],
+            "type": "object"
+          },
+          "LabelCallout": {
+            "description": "The line from a label placed away from its object to the object.",
+            "properties": {
+              "color": {
+                "description": "Absent, the label's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/CalloutKind"
+              },
+              "minLength": {
+                "description": "A shorter one is not drawn, CSS px; absent, 6.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "width": {
+                "description": "CSS px; absent, 1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LabelClass": {
+            "description": "One class of a rule-based labelling: its name, the condition its objects\nmeet and its labels' style.",
+            "properties": {
+              "name": {
+                "description": "One of its kind on the layer; a pin names it.",
+                "type": "string"
+              },
+              "style": {
+                "$ref": "#/$defs/LabelStyle"
+              },
+              "when": {
+                "description": "İfadeyle seç's language; absent, every object.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "style"
+            ],
+            "type": "object"
+          },
+          "LabelHalo": {
+            "description": "The halo round a label's letters.",
+            "properties": {
+              "color": {
+                "description": "Hex or a theme name; absent, the drawing area's colour.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "CSS px; 0 none.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              }
+            },
+            "required": [
+              "width"
+            ],
+            "type": "object"
+          },
+          "LabelInk": {
+            "enum": [
+              "fg",
+              "fg-dim",
+              "label"
+            ],
+            "type": "string"
+          },
+          "LabelObstacle": {
+            "description": "A layer's objects as obstacles to every label.",
+            "properties": {
+              "kind": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ObstacleKind"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "An area's inside (absent) or its outline."
+              },
+              "weight": {
+                "description": "1 to 10: a label of a lower priority cannot cover them; another may, at a cost.",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "weight"
+            ],
+            "type": "object"
+          },
+          "LabelOverlap": {
+            "description": "Whether a label may cover another (QGIS's three).",
+            "oneOf": [
+              {
+                "const": "never",
+                "description": "Never: a label with no free place is not drawn.",
+                "type": "string"
+              },
+              {
+                "const": "ifNeeded",
+                "description": "When no free place is left, at its best one.",
+                "type": "string"
+              },
+              {
+                "const": "always",
+                "description": "Always at its best place.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelPlacement": {
+            "enum": [
+              "center",
+              "corner",
+              "beside",
+              "along"
+            ],
+            "type": "string"
+          },
+          "LabelPosition": {
+            "description": "A line label's side of its line; on an area's outline `above` is inside\nand `below` outside.",
+            "oneOf": [
+              {
+                "enum": [
+                  "on",
+                  "above",
+                  "below"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "sides",
+                "description": "Above, else below.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelShadow": {
+            "description": "A label's shadow: the label again under it, moved.",
+            "properties": {
+              "color": {
+                "description": "Absent, black.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dx": {
+                "description": "CSS px right.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "dy": {
+                "description": "CSS px up.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "opacity": {
+                "description": "0 to 1; absent, 0.5.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "dx",
+              "dy"
+            ],
+            "type": "object"
+          },
+          "LabelShape": {
+            "description": "A label's background's shape.",
+            "oneOf": [
+              {
+                "enum": [
+                  "rect",
+                  "ellipse"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "round",
+                "description": "A rectangle with round corners.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelStack": {
+            "description": "Cutting a label into lines (yığma).",
+            "properties": {
+              "at": {
+                "description": "The letters a line may end at; absent, the space.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "chars": {
+                "description": "The most letters a line holds (a longer word stays whole).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "mode": {
+                "$ref": "#/$defs/StackMode"
+              }
+            },
+            "required": [
+              "mode",
+              "chars"
+            ],
+            "type": "object"
+          },
+          "LabelStyle": {
+            "description": "How entity labels on a layer are drawn; sizes in CSS px.",
+            "properties": {
+              "abbreviate": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelAbbreviate"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Shortening its words."
+              },
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "How a label's lines line up; absent, centred."
+              },
+              "area": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/AreaLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where an area's label goes; absent, by `placement`."
+              },
+              "background": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelBackground"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A shape behind the label."
+              },
+              "callout": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelCallout"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The line to the object from a label placed away from it."
+              },
+              "color": {
+                "description": "The letters' colour (hex or a theme name): instead of `ink`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "curved": {
+                "description": "An outline's label (perimeter, boundary) letter by letter.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "distance": {
+                "description": "CSS px between a label and its object; absent, 2.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "duplicates": {
+                "description": "CSS px within which the same text is labelled once.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "grow": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "halo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelHalo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The halo round the letters; absent, 1.5 px of the drawing area's colour."
+              },
+              "ink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelInk"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "inside": {
+                "description": "An area's label only where it fits inside.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "italic": {
+                "description": "Leaning letters.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "line": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where a line's label goes; absent, by `placement`."
+              },
+              "maxAngle": {
+                "description": "Degrees two neighbouring letters of a curved label may turn; absent, 25.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "deg"
+              },
+              "maxScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px/length"
+              },
+              "maxSize": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "mergeLines": {
+                "description": "Lines meeting end to end with the same text labelled once.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "minFeaturePx": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "minScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px/length"
+              },
+              "outside": {
+                "description": "An area's label that fits nowhere inside, outside with a callout.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "overlap": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelOverlap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Whether it may cover another label; absent, never."
+              },
+              "placement": {
+                "$ref": "#/$defs/LabelPlacement"
+              },
+              "point": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PointLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where a point's label goes; absent, by `placement`."
+              },
+              "position": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelPosition"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A line label's side of its line (on an outline, `above` inside)."
+              },
+              "priority": {
+                "description": "0 to 10; absent, 5: higher first.",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "repeat": {
+                "description": "CSS px between a line's repeated labels.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "shadow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelShadow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The label's shadow."
+              },
+              "shrink": {
+                "description": "The smallest size a label is made when it does not fit, a factor 0.5–1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "size": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "stack": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelStack"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Cutting the label into lines."
+              },
+              "template": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The text as an expression (İfadeyle seç's language, docs/adr/0212 §2): instead of the template.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "weight": {
+                "description": "400, 500 or 600.",
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "placement",
+              "size"
+            ],
+            "type": "object"
+          },
+          "LabelWord": {
+            "description": "One word of an abbreviation dictionary.",
+            "properties": {
+              "short": {
+                "type": "string"
+              },
+              "word": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "word",
+              "short"
+            ],
+            "type": "object"
+          },
+          "LabelsMode": {
+            "description": "How a layer is labelled.",
+            "oneOf": [
+              {
+                "const": "single",
+                "description": "One label: the style's `label`, else its kind's default.",
+                "type": "string"
+              },
+              {
+                "const": "rules",
+                "description": "The classes, in order: each whose condition holds labels an object.",
+                "type": "string"
+              },
+              {
+                "const": "off",
+                "description": "None (its objects may still be obstacles).",
+                "type": "string"
+              }
+            ]
+          },
+          "LayerLabels": {
+            "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
+            "properties": {
+              "classes": {
+                "description": "The rules' classes, in order; only with `rules`.",
+                "items": {
+                  "$ref": "#/$defs/LabelClass"
+                },
+                "type": "array"
+              },
+              "mode": {
+                "$ref": "#/$defs/LabelsMode"
+              },
+              "obstacle": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelObstacle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "mode"
+            ],
+            "type": "object"
+          },
+          "LayerState": {
+            "description": "A named layer state (docs/adr/0177 §4; QGIS's map themes, AutoCAD's\nlayer states): the tree's nodes as they were when it was saved, their\nvisibility and, when it was saved with them, their locks and the layers'\nstyles. The project keeps them (`ProjectSettings::layer_states`).",
+            "properties": {
+              "id": {
+                "description": "One of its kind among the project's states.",
+                "type": "string"
+              },
+              "name": {
+                "description": "Its name as the menu lists it: not empty, one of its kind (as written,\nspaces at its ends aside).",
+                "type": "string"
+              },
+              "nodes": {
+                "description": "The nodes, in the tree's order when it was saved.",
+                "items": {
+                  "$ref": "#/$defs/LayerStateNode"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "nodes"
+            ],
+            "type": "object"
+          },
+          "LayerStateNode": {
+            "description": "A node of a layer state: a layer's or a group's id and what was kept of it.",
+            "properties": {
+              "frozen": {
+                "description": "Its own freeze and printing (docs/adr/0311 §3): every state saved\nsince schema 55 keeps both; absent in an older state, applying it\nleaves them as they are.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "locked": {
+                "description": "Its own lock, when the state keeps locks.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "node": {
+                "description": "The node's id; a node the tree no longer has is passed over.",
+                "type": "string"
+              },
+              "path": {
+                "description": "The node's names from the top of the tree (“Kadastro / Parsel”), only\nin a file of exported states (docs/adr/0311 §3): importing finds the\nnode by it in another drawing. A project's own states never keep it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "plot": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "style": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A layer's style, when the state keeps styles; a group has none."
+              },
+              "visible": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "node",
+              "visible"
+            ],
+            "type": "object"
+          },
+          "LayerStatesFile": {
+            "description": "A file of exported layer states (docs/adr/0311 §3): each node with its\npath, so another drawing finds it by its names.",
+            "properties": {
+              "format": {
+                "description": "Always `kentos.layer-states`.",
+                "type": "string"
+              },
+              "states": {
+                "items": {
+                  "$ref": "#/$defs/LayerState"
+                },
+                "type": "array"
+              },
+              "version": {
+                "description": "Always 1.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "format",
+              "version",
+              "states"
+            ],
+            "type": "object"
+          },
+          "LayerStatesOperation": {
+            "description": "What `cad.layers.states` does.",
+            "oneOf": [
+              {
+                "enum": [
+                  "save",
+                  "update",
+                  "rename",
+                  "remove",
+                  "apply"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "export",
+                "description": "The states as a file (docs/adr/0311 §3).",
+                "type": "string"
+              },
+              {
+                "const": "import",
+                "description": "A file's states added to the project's (docs/adr/0311 §3).",
+                "type": "string"
+              }
+            ]
+          },
+          "LayerStyle": {
+            "description": "A layer's look. `renderer` (the style engine, docs/STYLE.md) is opaque JSON in v1.",
+            "properties": {
+              "color": {
+                "description": "Hex colour or a theme token (fg, fg-dim, ink, paper).",
+                "type": "string"
+              },
+              "fill": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "labels": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerLabels"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "How the layer is labelled (docs/adr/0212 §2): rule-based classes,\nnone, its objects as obstacles; absent, by `label` (one label)."
+              },
+              "lineType": {
+                "$ref": "#/$defs/LineType"
+              },
+              "lineWeight": {
+                "description": "Plot line weight in mm.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "paper-mm"
+              },
+              "pickInterior": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "point": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PointStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "renderer": true
+            },
+            "required": [
+              "color",
+              "lineType",
+              "lineWeight"
+            ],
+            "type": "object"
+          },
+          "LineLabelMode": {
+            "description": "Where a line's label goes.",
+            "oneOf": [
+              {
+                "const": "parallel",
+                "description": "Straight, along the line.",
+                "type": "string"
+              },
+              {
+                "const": "curved",
+                "description": "Letter by letter, following the line.",
+                "type": "string"
+              },
+              {
+                "const": "horizontal",
+                "description": "Level, on the line.",
+                "type": "string"
+              },
+              {
+                "const": "contour",
+                "description": "A contour's height: curved on the line, its top uphill.",
+                "type": "string"
+              }
+            ]
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
+          },
+          "ObstacleKind": {
+            "description": "What of an obstacle area a label avoids.",
+            "oneOf": [
+              {
+                "const": "interior",
+                "description": "Its inside: a label covering any of it.",
+                "type": "string"
+              },
+              {
+                "const": "boundary",
+                "description": "Its outline: a label crossing an edge.",
+                "type": "string"
+              }
+            ]
+          },
+          "PointLabelMode": {
+            "description": "Where a point's label goes (docs/adr/0212 §3.3).",
+            "oneOf": [
+              {
+                "const": "around",
+                "description": "Around it, QGIS's cartographic order (top right first).",
+                "type": "string"
+              },
+              {
+                "const": "center",
+                "description": "On it.",
+                "type": "string"
+              }
+            ]
+          },
+          "PointStyle": {
+            "properties": {
+              "size": {
+                "description": "Diameter in CSS px.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "symbol": {
+                "$ref": "#/$defs/PointSymbol"
+              }
+            },
+            "required": [
+              "symbol",
+              "size"
+            ],
+            "type": "object"
+          },
+          "PointSymbol": {
+            "enum": [
+              "ring",
+              "cross",
+              "triangle"
+            ],
+            "type": "string"
+          },
+          "StackMode": {
+            "description": "When a label is cut into lines.",
+            "oneOf": [
+              {
+                "enum": [
+                  "always"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ifNeeded",
+                "description": "Only when it does not fit on one line.",
+                "type": "string"
+              }
+            ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.layers.states` v1 (docs/adr/0177 §4).\n\n- `save`: the tree as it is, as a new state: `name` (absent: the first\n  free “Durum n”), `locks` (absent: false), `styles` (absent: true); its\n  id the first free `durum-n`;\n- `update`: `state` saved again from the tree as it is, keeping `locks`\n  and `styles` (absent: what it kept);\n- `rename`: `state`, `name` (trimmed);\n- `remove`: `state`;\n- `apply`: `state`: the visibility and the locks (when kept) of the\n  nodes it names that the tree still has become what it kept (the tree's\n  own changes, no undo step), their styles (when kept) in one undo step\n  “Katman durumu: <ad>”.\n\nThe states are the project's settings: saving, updating, renaming and\nremoving make the drawing dirty and are no undo step.\n\nRefusals (`CommandError.code`), checked in this order: `no_state`\n(update, rename, remove, apply without `state`), `empty_name` (rename,\nor save with a name, empty or only white space); then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`state_not_found`, `duplicate_name` (another state has the name, spaces\nat its ends aside).",
+        "description": "Input of `cad.layers.states` v1 (docs/adr/0177 §4).\n\n- `save`: the tree as it is, as a new state: `name` (absent: the first\n  free “Durum n”), `locks` (absent: false), `styles` (absent: true); its\n  id the first free `durum-n`;\n- `update`: `state` saved again from the tree as it is, keeping `locks`\n  and `styles` (absent: what it kept);\n- `rename`: `state`, `name` (trimmed);\n- `remove`: `state`;\n- `apply`: `state`: the visibility and the locks (when kept) of the\n  nodes it names that the tree still has become what it kept (the tree's\n  own changes, no undo step), their styles (when kept) in one undo step\n  “Katman durumu: <ad>”; their freeze and printing (when the state keeps\n  them, docs/adr/0311 §3) as the visibility;\n- `export`: the states named in `states` (absent: every one) as a file\n  (`file` in the answer), each node with its path; nothing written;\n- `import`: `file`'s states added: a node is found by its id, else by its\n  path (the names from the top, case and Turkish letters folded), else\n  kept as it is and counted `missing` when applied; a state whose name\n  the project has is skipped, or with `replace` written over it (its id\n  kept); a new one gets the next free `durum-n`.\n\nThe states are the project's settings: saving, updating, renaming and\nremoving make the drawing dirty and are no undo step.\n\nRefusals (`CommandError.code`), checked in this order: `no_state`\n(update, rename, remove, apply without `state`), `empty_name` (rename,\nor save with a name, empty or only white space); then\n`no_file` (import without `file`), `invalid_states` (a file against its\nrules, `layer_states_file_problem`); then `invalid_revision`,\n`revision_conflict` (status `conflict`); `state_not_found` (`state`,\nexport's `states[i]`), `duplicate_name` (another state has the name,\nspaces at its ends aside).",
         "properties": {
           "expectedRevision": {
             "description": "The document revision the input was prepared against, as decimal text.",
@@ -287568,6 +288785,17 @@
               "string",
               "null"
             ]
+          },
+          "file": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LayerStatesFile"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Import's file."
           },
           "locks": {
             "type": [
@@ -287584,10 +288812,27 @@
           "operation": {
             "$ref": "#/$defs/LayerStatesOperation"
           },
+          "replace": {
+            "description": "Import: a state whose name the project has written over (absent: skipped).",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
           "state": {
             "description": "The state's id.",
             "type": [
               "string",
+              "null"
+            ]
+          },
+          "states": {
+            "description": "Export's states, by id; absent, every one.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
               "null"
             ]
           },
@@ -287605,12 +288850,1075 @@
         "type": "object"
       },
       "output": {
+        "$defs": {
+          "AreaLabelMode": {
+            "description": "Where an area's label goes.",
+            "oneOf": [
+              {
+                "const": "horizontal",
+                "description": "Level, inside, away from the edges.",
+                "type": "string"
+              },
+              {
+                "const": "free",
+                "description": "Level when it fits, else along the area's long side.",
+                "type": "string"
+              },
+              {
+                "const": "perimeter",
+                "description": "Along its outline.",
+                "type": "string"
+              },
+              {
+                "const": "boundary",
+                "description": "Along its outline, inside, repeated (Maplex's boundary labels).",
+                "type": "string"
+              },
+              {
+                "const": "parcel",
+                "description": "Inside only: level, then along the long side, then fitted (Maplex's land parcels).",
+                "type": "string"
+              },
+              {
+                "const": "corner",
+                "description": "By its box's top left corner (a sheet's frame).",
+                "type": "string"
+              }
+            ]
+          },
+          "CalloutKind": {
+            "description": "A callout's line.",
+            "oneOf": [
+              {
+                "enum": [
+                  "straight"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "manhattan",
+                "description": "Level, then upright.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelAbbreviate": {
+            "description": "Shortening a label's words (kısaltma).",
+            "properties": {
+              "always": {
+                "description": "Always; absent, only when the label does not fit.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "words": {
+                "items": {
+                  "$ref": "#/$defs/LabelWord"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "words"
+            ],
+            "type": "object"
+          },
+          "LabelAlign": {
+            "description": "How a label's lines line up.",
+            "enum": [
+              "left",
+              "center",
+              "right"
+            ],
+            "type": "string"
+          },
+          "LabelBackground": {
+            "description": "A shape behind a label.",
+            "properties": {
+              "fill": {
+                "description": "Hex or a theme name (`paper`: the drawing area's colour, a mask); absent, not filled.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "padding": {
+                "description": "CSS px round the letters; absent, 2.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "shape": {
+                "$ref": "#/$defs/LabelShape"
+              },
+              "stroke": {
+                "description": "Its outline's colour; absent, none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "shape"
+            ],
+            "type": "object"
+          },
+          "LabelCallout": {
+            "description": "The line from a label placed away from its object to the object.",
+            "properties": {
+              "color": {
+                "description": "Absent, the label's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/CalloutKind"
+              },
+              "minLength": {
+                "description": "A shorter one is not drawn, CSS px; absent, 6.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "width": {
+                "description": "CSS px; absent, 1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LabelClass": {
+            "description": "One class of a rule-based labelling: its name, the condition its objects\nmeet and its labels' style.",
+            "properties": {
+              "name": {
+                "description": "One of its kind on the layer; a pin names it.",
+                "type": "string"
+              },
+              "style": {
+                "$ref": "#/$defs/LabelStyle"
+              },
+              "when": {
+                "description": "İfadeyle seç's language; absent, every object.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "style"
+            ],
+            "type": "object"
+          },
+          "LabelHalo": {
+            "description": "The halo round a label's letters.",
+            "properties": {
+              "color": {
+                "description": "Hex or a theme name; absent, the drawing area's colour.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "CSS px; 0 none.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              }
+            },
+            "required": [
+              "width"
+            ],
+            "type": "object"
+          },
+          "LabelInk": {
+            "enum": [
+              "fg",
+              "fg-dim",
+              "label"
+            ],
+            "type": "string"
+          },
+          "LabelObstacle": {
+            "description": "A layer's objects as obstacles to every label.",
+            "properties": {
+              "kind": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ObstacleKind"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "An area's inside (absent) or its outline."
+              },
+              "weight": {
+                "description": "1 to 10: a label of a lower priority cannot cover them; another may, at a cost.",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "weight"
+            ],
+            "type": "object"
+          },
+          "LabelOverlap": {
+            "description": "Whether a label may cover another (QGIS's three).",
+            "oneOf": [
+              {
+                "const": "never",
+                "description": "Never: a label with no free place is not drawn.",
+                "type": "string"
+              },
+              {
+                "const": "ifNeeded",
+                "description": "When no free place is left, at its best one.",
+                "type": "string"
+              },
+              {
+                "const": "always",
+                "description": "Always at its best place.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelPlacement": {
+            "enum": [
+              "center",
+              "corner",
+              "beside",
+              "along"
+            ],
+            "type": "string"
+          },
+          "LabelPosition": {
+            "description": "A line label's side of its line; on an area's outline `above` is inside\nand `below` outside.",
+            "oneOf": [
+              {
+                "enum": [
+                  "on",
+                  "above",
+                  "below"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "sides",
+                "description": "Above, else below.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelShadow": {
+            "description": "A label's shadow: the label again under it, moved.",
+            "properties": {
+              "color": {
+                "description": "Absent, black.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dx": {
+                "description": "CSS px right.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "dy": {
+                "description": "CSS px up.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "opacity": {
+                "description": "0 to 1; absent, 0.5.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "dx",
+              "dy"
+            ],
+            "type": "object"
+          },
+          "LabelShape": {
+            "description": "A label's background's shape.",
+            "oneOf": [
+              {
+                "enum": [
+                  "rect",
+                  "ellipse"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "round",
+                "description": "A rectangle with round corners.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelStack": {
+            "description": "Cutting a label into lines (yığma).",
+            "properties": {
+              "at": {
+                "description": "The letters a line may end at; absent, the space.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "chars": {
+                "description": "The most letters a line holds (a longer word stays whole).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "mode": {
+                "$ref": "#/$defs/StackMode"
+              }
+            },
+            "required": [
+              "mode",
+              "chars"
+            ],
+            "type": "object"
+          },
+          "LabelStyle": {
+            "description": "How entity labels on a layer are drawn; sizes in CSS px.",
+            "properties": {
+              "abbreviate": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelAbbreviate"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Shortening its words."
+              },
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "How a label's lines line up; absent, centred."
+              },
+              "area": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/AreaLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where an area's label goes; absent, by `placement`."
+              },
+              "background": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelBackground"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A shape behind the label."
+              },
+              "callout": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelCallout"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The line to the object from a label placed away from it."
+              },
+              "color": {
+                "description": "The letters' colour (hex or a theme name): instead of `ink`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "curved": {
+                "description": "An outline's label (perimeter, boundary) letter by letter.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "distance": {
+                "description": "CSS px between a label and its object; absent, 2.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "duplicates": {
+                "description": "CSS px within which the same text is labelled once.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "grow": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "halo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelHalo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The halo round the letters; absent, 1.5 px of the drawing area's colour."
+              },
+              "ink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelInk"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "inside": {
+                "description": "An area's label only where it fits inside.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "italic": {
+                "description": "Leaning letters.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "line": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where a line's label goes; absent, by `placement`."
+              },
+              "maxAngle": {
+                "description": "Degrees two neighbouring letters of a curved label may turn; absent, 25.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "deg"
+              },
+              "maxScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px/length"
+              },
+              "maxSize": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "mergeLines": {
+                "description": "Lines meeting end to end with the same text labelled once.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "minFeaturePx": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "minScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px/length"
+              },
+              "outside": {
+                "description": "An area's label that fits nowhere inside, outside with a callout.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "overlap": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelOverlap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Whether it may cover another label; absent, never."
+              },
+              "placement": {
+                "$ref": "#/$defs/LabelPlacement"
+              },
+              "point": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PointLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where a point's label goes; absent, by `placement`."
+              },
+              "position": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelPosition"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A line label's side of its line (on an outline, `above` inside)."
+              },
+              "priority": {
+                "description": "0 to 10; absent, 5: higher first.",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "repeat": {
+                "description": "CSS px between a line's repeated labels.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "shadow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelShadow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The label's shadow."
+              },
+              "shrink": {
+                "description": "The smallest size a label is made when it does not fit, a factor 0.5–1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "size": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "stack": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelStack"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Cutting the label into lines."
+              },
+              "template": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The text as an expression (İfadeyle seç's language, docs/adr/0212 §2): instead of the template.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "weight": {
+                "description": "400, 500 or 600.",
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "placement",
+              "size"
+            ],
+            "type": "object"
+          },
+          "LabelWord": {
+            "description": "One word of an abbreviation dictionary.",
+            "properties": {
+              "short": {
+                "type": "string"
+              },
+              "word": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "word",
+              "short"
+            ],
+            "type": "object"
+          },
+          "LabelsMode": {
+            "description": "How a layer is labelled.",
+            "oneOf": [
+              {
+                "const": "single",
+                "description": "One label: the style's `label`, else its kind's default.",
+                "type": "string"
+              },
+              {
+                "const": "rules",
+                "description": "The classes, in order: each whose condition holds labels an object.",
+                "type": "string"
+              },
+              {
+                "const": "off",
+                "description": "None (its objects may still be obstacles).",
+                "type": "string"
+              }
+            ]
+          },
+          "LayerLabels": {
+            "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
+            "properties": {
+              "classes": {
+                "description": "The rules' classes, in order; only with `rules`.",
+                "items": {
+                  "$ref": "#/$defs/LabelClass"
+                },
+                "type": "array"
+              },
+              "mode": {
+                "$ref": "#/$defs/LabelsMode"
+              },
+              "obstacle": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelObstacle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "mode"
+            ],
+            "type": "object"
+          },
+          "LayerState": {
+            "description": "A named layer state (docs/adr/0177 §4; QGIS's map themes, AutoCAD's\nlayer states): the tree's nodes as they were when it was saved, their\nvisibility and, when it was saved with them, their locks and the layers'\nstyles. The project keeps them (`ProjectSettings::layer_states`).",
+            "properties": {
+              "id": {
+                "description": "One of its kind among the project's states.",
+                "type": "string"
+              },
+              "name": {
+                "description": "Its name as the menu lists it: not empty, one of its kind (as written,\nspaces at its ends aside).",
+                "type": "string"
+              },
+              "nodes": {
+                "description": "The nodes, in the tree's order when it was saved.",
+                "items": {
+                  "$ref": "#/$defs/LayerStateNode"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "nodes"
+            ],
+            "type": "object"
+          },
+          "LayerStateNode": {
+            "description": "A node of a layer state: a layer's or a group's id and what was kept of it.",
+            "properties": {
+              "frozen": {
+                "description": "Its own freeze and printing (docs/adr/0311 §3): every state saved\nsince schema 55 keeps both; absent in an older state, applying it\nleaves them as they are.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "locked": {
+                "description": "Its own lock, when the state keeps locks.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "node": {
+                "description": "The node's id; a node the tree no longer has is passed over.",
+                "type": "string"
+              },
+              "path": {
+                "description": "The node's names from the top of the tree (“Kadastro / Parsel”), only\nin a file of exported states (docs/adr/0311 §3): importing finds the\nnode by it in another drawing. A project's own states never keep it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "plot": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "style": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A layer's style, when the state keeps styles; a group has none."
+              },
+              "visible": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "node",
+              "visible"
+            ],
+            "type": "object"
+          },
+          "LayerStatesFile": {
+            "description": "A file of exported layer states (docs/adr/0311 §3): each node with its\npath, so another drawing finds it by its names.",
+            "properties": {
+              "format": {
+                "description": "Always `kentos.layer-states`.",
+                "type": "string"
+              },
+              "states": {
+                "items": {
+                  "$ref": "#/$defs/LayerState"
+                },
+                "type": "array"
+              },
+              "version": {
+                "description": "Always 1.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "format",
+              "version",
+              "states"
+            ],
+            "type": "object"
+          },
+          "LayerStyle": {
+            "description": "A layer's look. `renderer` (the style engine, docs/STYLE.md) is opaque JSON in v1.",
+            "properties": {
+              "color": {
+                "description": "Hex colour or a theme token (fg, fg-dim, ink, paper).",
+                "type": "string"
+              },
+              "fill": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "labels": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerLabels"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "How the layer is labelled (docs/adr/0212 §2): rule-based classes,\nnone, its objects as obstacles; absent, by `label` (one label)."
+              },
+              "lineType": {
+                "$ref": "#/$defs/LineType"
+              },
+              "lineWeight": {
+                "description": "Plot line weight in mm.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "paper-mm"
+              },
+              "pickInterior": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "point": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PointStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "renderer": true
+            },
+            "required": [
+              "color",
+              "lineType",
+              "lineWeight"
+            ],
+            "type": "object"
+          },
+          "LineLabelMode": {
+            "description": "Where a line's label goes.",
+            "oneOf": [
+              {
+                "const": "parallel",
+                "description": "Straight, along the line.",
+                "type": "string"
+              },
+              {
+                "const": "curved",
+                "description": "Letter by letter, following the line.",
+                "type": "string"
+              },
+              {
+                "const": "horizontal",
+                "description": "Level, on the line.",
+                "type": "string"
+              },
+              {
+                "const": "contour",
+                "description": "A contour's height: curved on the line, its top uphill.",
+                "type": "string"
+              }
+            ]
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
+          },
+          "ObstacleKind": {
+            "description": "What of an obstacle area a label avoids.",
+            "oneOf": [
+              {
+                "const": "interior",
+                "description": "Its inside: a label covering any of it.",
+                "type": "string"
+              },
+              {
+                "const": "boundary",
+                "description": "Its outline: a label crossing an edge.",
+                "type": "string"
+              }
+            ]
+          },
+          "PointLabelMode": {
+            "description": "Where a point's label goes (docs/adr/0212 §3.3).",
+            "oneOf": [
+              {
+                "const": "around",
+                "description": "Around it, QGIS's cartographic order (top right first).",
+                "type": "string"
+              },
+              {
+                "const": "center",
+                "description": "On it.",
+                "type": "string"
+              }
+            ]
+          },
+          "PointStyle": {
+            "properties": {
+              "size": {
+                "description": "Diameter in CSS px.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "symbol": {
+                "$ref": "#/$defs/PointSymbol"
+              }
+            },
+            "required": [
+              "symbol",
+              "size"
+            ],
+            "type": "object"
+          },
+          "PointSymbol": {
+            "enum": [
+              "ring",
+              "cross",
+              "triangle"
+            ],
+            "type": "string"
+          },
+          "StackMode": {
+            "description": "When a label is cut into lines.",
+            "oneOf": [
+              {
+                "enum": [
+                  "always"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ifNeeded",
+                "description": "Only when it does not fit on one line.",
+                "type": "string"
+              }
+            ]
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.layers.states` v1, and what plan says it would do.",
         "properties": {
+          "added": {
+            "description": "Import's states added, written over and skipped (their name the\nproject's, without `replace`).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "changed": {
             "description": "Whether anything changed.",
             "type": "boolean"
+          },
+          "file": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LayerStatesFile"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Export's file."
+          },
+          "frozen": {
+            "default": 0,
+            "description": "Apply's nodes frozen or thawed, and printed or not (docs/adr/0311 §3).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           },
           "locked": {
             "format": "uint32",
@@ -287625,10 +289933,29 @@
             "type": "integer",
             "x-unit": "count"
           },
+          "plot": {
+            "default": 0,
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "replaced": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "revision": {
             "description": "The document's revision afterwards (plan: the one it was made\nagainst), as decimal text.",
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
+          },
+          "skipped": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           },
           "state": {
             "description": "The state saved, updated, renamed, removed or applied.",
@@ -287661,12 +289988,1075 @@
         "type": "object"
       },
       "plan": {
+        "$defs": {
+          "AreaLabelMode": {
+            "description": "Where an area's label goes.",
+            "oneOf": [
+              {
+                "const": "horizontal",
+                "description": "Level, inside, away from the edges.",
+                "type": "string"
+              },
+              {
+                "const": "free",
+                "description": "Level when it fits, else along the area's long side.",
+                "type": "string"
+              },
+              {
+                "const": "perimeter",
+                "description": "Along its outline.",
+                "type": "string"
+              },
+              {
+                "const": "boundary",
+                "description": "Along its outline, inside, repeated (Maplex's boundary labels).",
+                "type": "string"
+              },
+              {
+                "const": "parcel",
+                "description": "Inside only: level, then along the long side, then fitted (Maplex's land parcels).",
+                "type": "string"
+              },
+              {
+                "const": "corner",
+                "description": "By its box's top left corner (a sheet's frame).",
+                "type": "string"
+              }
+            ]
+          },
+          "CalloutKind": {
+            "description": "A callout's line.",
+            "oneOf": [
+              {
+                "enum": [
+                  "straight"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "manhattan",
+                "description": "Level, then upright.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelAbbreviate": {
+            "description": "Shortening a label's words (kısaltma).",
+            "properties": {
+              "always": {
+                "description": "Always; absent, only when the label does not fit.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "words": {
+                "items": {
+                  "$ref": "#/$defs/LabelWord"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "words"
+            ],
+            "type": "object"
+          },
+          "LabelAlign": {
+            "description": "How a label's lines line up.",
+            "enum": [
+              "left",
+              "center",
+              "right"
+            ],
+            "type": "string"
+          },
+          "LabelBackground": {
+            "description": "A shape behind a label.",
+            "properties": {
+              "fill": {
+                "description": "Hex or a theme name (`paper`: the drawing area's colour, a mask); absent, not filled.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "padding": {
+                "description": "CSS px round the letters; absent, 2.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "shape": {
+                "$ref": "#/$defs/LabelShape"
+              },
+              "stroke": {
+                "description": "Its outline's colour; absent, none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "shape"
+            ],
+            "type": "object"
+          },
+          "LabelCallout": {
+            "description": "The line from a label placed away from its object to the object.",
+            "properties": {
+              "color": {
+                "description": "Absent, the label's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/CalloutKind"
+              },
+              "minLength": {
+                "description": "A shorter one is not drawn, CSS px; absent, 6.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "width": {
+                "description": "CSS px; absent, 1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LabelClass": {
+            "description": "One class of a rule-based labelling: its name, the condition its objects\nmeet and its labels' style.",
+            "properties": {
+              "name": {
+                "description": "One of its kind on the layer; a pin names it.",
+                "type": "string"
+              },
+              "style": {
+                "$ref": "#/$defs/LabelStyle"
+              },
+              "when": {
+                "description": "İfadeyle seç's language; absent, every object.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "style"
+            ],
+            "type": "object"
+          },
+          "LabelHalo": {
+            "description": "The halo round a label's letters.",
+            "properties": {
+              "color": {
+                "description": "Hex or a theme name; absent, the drawing area's colour.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "CSS px; 0 none.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              }
+            },
+            "required": [
+              "width"
+            ],
+            "type": "object"
+          },
+          "LabelInk": {
+            "enum": [
+              "fg",
+              "fg-dim",
+              "label"
+            ],
+            "type": "string"
+          },
+          "LabelObstacle": {
+            "description": "A layer's objects as obstacles to every label.",
+            "properties": {
+              "kind": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ObstacleKind"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "An area's inside (absent) or its outline."
+              },
+              "weight": {
+                "description": "1 to 10: a label of a lower priority cannot cover them; another may, at a cost.",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "weight"
+            ],
+            "type": "object"
+          },
+          "LabelOverlap": {
+            "description": "Whether a label may cover another (QGIS's three).",
+            "oneOf": [
+              {
+                "const": "never",
+                "description": "Never: a label with no free place is not drawn.",
+                "type": "string"
+              },
+              {
+                "const": "ifNeeded",
+                "description": "When no free place is left, at its best one.",
+                "type": "string"
+              },
+              {
+                "const": "always",
+                "description": "Always at its best place.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelPlacement": {
+            "enum": [
+              "center",
+              "corner",
+              "beside",
+              "along"
+            ],
+            "type": "string"
+          },
+          "LabelPosition": {
+            "description": "A line label's side of its line; on an area's outline `above` is inside\nand `below` outside.",
+            "oneOf": [
+              {
+                "enum": [
+                  "on",
+                  "above",
+                  "below"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "sides",
+                "description": "Above, else below.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelShadow": {
+            "description": "A label's shadow: the label again under it, moved.",
+            "properties": {
+              "color": {
+                "description": "Absent, black.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dx": {
+                "description": "CSS px right.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "dy": {
+                "description": "CSS px up.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "opacity": {
+                "description": "0 to 1; absent, 0.5.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "dx",
+              "dy"
+            ],
+            "type": "object"
+          },
+          "LabelShape": {
+            "description": "A label's background's shape.",
+            "oneOf": [
+              {
+                "enum": [
+                  "rect",
+                  "ellipse"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "round",
+                "description": "A rectangle with round corners.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelStack": {
+            "description": "Cutting a label into lines (yığma).",
+            "properties": {
+              "at": {
+                "description": "The letters a line may end at; absent, the space.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "chars": {
+                "description": "The most letters a line holds (a longer word stays whole).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "mode": {
+                "$ref": "#/$defs/StackMode"
+              }
+            },
+            "required": [
+              "mode",
+              "chars"
+            ],
+            "type": "object"
+          },
+          "LabelStyle": {
+            "description": "How entity labels on a layer are drawn; sizes in CSS px.",
+            "properties": {
+              "abbreviate": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelAbbreviate"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Shortening its words."
+              },
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "How a label's lines line up; absent, centred."
+              },
+              "area": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/AreaLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where an area's label goes; absent, by `placement`."
+              },
+              "background": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelBackground"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A shape behind the label."
+              },
+              "callout": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelCallout"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The line to the object from a label placed away from it."
+              },
+              "color": {
+                "description": "The letters' colour (hex or a theme name): instead of `ink`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "curved": {
+                "description": "An outline's label (perimeter, boundary) letter by letter.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "distance": {
+                "description": "CSS px between a label and its object; absent, 2.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "duplicates": {
+                "description": "CSS px within which the same text is labelled once.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "grow": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "halo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelHalo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The halo round the letters; absent, 1.5 px of the drawing area's colour."
+              },
+              "ink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelInk"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "inside": {
+                "description": "An area's label only where it fits inside.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "italic": {
+                "description": "Leaning letters.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "line": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where a line's label goes; absent, by `placement`."
+              },
+              "maxAngle": {
+                "description": "Degrees two neighbouring letters of a curved label may turn; absent, 25.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "deg"
+              },
+              "maxScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px/length"
+              },
+              "maxSize": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "mergeLines": {
+                "description": "Lines meeting end to end with the same text labelled once.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "minFeaturePx": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "minScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px/length"
+              },
+              "outside": {
+                "description": "An area's label that fits nowhere inside, outside with a callout.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "overlap": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelOverlap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Whether it may cover another label; absent, never."
+              },
+              "placement": {
+                "$ref": "#/$defs/LabelPlacement"
+              },
+              "point": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PointLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where a point's label goes; absent, by `placement`."
+              },
+              "position": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelPosition"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A line label's side of its line (on an outline, `above` inside)."
+              },
+              "priority": {
+                "description": "0 to 10; absent, 5: higher first.",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "repeat": {
+                "description": "CSS px between a line's repeated labels.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "shadow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelShadow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The label's shadow."
+              },
+              "shrink": {
+                "description": "The smallest size a label is made when it does not fit, a factor 0.5–1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "size": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "stack": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelStack"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Cutting the label into lines."
+              },
+              "template": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The text as an expression (İfadeyle seç's language, docs/adr/0212 §2): instead of the template.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "weight": {
+                "description": "400, 500 or 600.",
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "placement",
+              "size"
+            ],
+            "type": "object"
+          },
+          "LabelWord": {
+            "description": "One word of an abbreviation dictionary.",
+            "properties": {
+              "short": {
+                "type": "string"
+              },
+              "word": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "word",
+              "short"
+            ],
+            "type": "object"
+          },
+          "LabelsMode": {
+            "description": "How a layer is labelled.",
+            "oneOf": [
+              {
+                "const": "single",
+                "description": "One label: the style's `label`, else its kind's default.",
+                "type": "string"
+              },
+              {
+                "const": "rules",
+                "description": "The classes, in order: each whose condition holds labels an object.",
+                "type": "string"
+              },
+              {
+                "const": "off",
+                "description": "None (its objects may still be obstacles).",
+                "type": "string"
+              }
+            ]
+          },
+          "LayerLabels": {
+            "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
+            "properties": {
+              "classes": {
+                "description": "The rules' classes, in order; only with `rules`.",
+                "items": {
+                  "$ref": "#/$defs/LabelClass"
+                },
+                "type": "array"
+              },
+              "mode": {
+                "$ref": "#/$defs/LabelsMode"
+              },
+              "obstacle": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelObstacle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "mode"
+            ],
+            "type": "object"
+          },
+          "LayerState": {
+            "description": "A named layer state (docs/adr/0177 §4; QGIS's map themes, AutoCAD's\nlayer states): the tree's nodes as they were when it was saved, their\nvisibility and, when it was saved with them, their locks and the layers'\nstyles. The project keeps them (`ProjectSettings::layer_states`).",
+            "properties": {
+              "id": {
+                "description": "One of its kind among the project's states.",
+                "type": "string"
+              },
+              "name": {
+                "description": "Its name as the menu lists it: not empty, one of its kind (as written,\nspaces at its ends aside).",
+                "type": "string"
+              },
+              "nodes": {
+                "description": "The nodes, in the tree's order when it was saved.",
+                "items": {
+                  "$ref": "#/$defs/LayerStateNode"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "nodes"
+            ],
+            "type": "object"
+          },
+          "LayerStateNode": {
+            "description": "A node of a layer state: a layer's or a group's id and what was kept of it.",
+            "properties": {
+              "frozen": {
+                "description": "Its own freeze and printing (docs/adr/0311 §3): every state saved\nsince schema 55 keeps both; absent in an older state, applying it\nleaves them as they are.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "locked": {
+                "description": "Its own lock, when the state keeps locks.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "node": {
+                "description": "The node's id; a node the tree no longer has is passed over.",
+                "type": "string"
+              },
+              "path": {
+                "description": "The node's names from the top of the tree (“Kadastro / Parsel”), only\nin a file of exported states (docs/adr/0311 §3): importing finds the\nnode by it in another drawing. A project's own states never keep it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "plot": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "style": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A layer's style, when the state keeps styles; a group has none."
+              },
+              "visible": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "node",
+              "visible"
+            ],
+            "type": "object"
+          },
+          "LayerStatesFile": {
+            "description": "A file of exported layer states (docs/adr/0311 §3): each node with its\npath, so another drawing finds it by its names.",
+            "properties": {
+              "format": {
+                "description": "Always `kentos.layer-states`.",
+                "type": "string"
+              },
+              "states": {
+                "items": {
+                  "$ref": "#/$defs/LayerState"
+                },
+                "type": "array"
+              },
+              "version": {
+                "description": "Always 1.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "format",
+              "version",
+              "states"
+            ],
+            "type": "object"
+          },
+          "LayerStyle": {
+            "description": "A layer's look. `renderer` (the style engine, docs/STYLE.md) is opaque JSON in v1.",
+            "properties": {
+              "color": {
+                "description": "Hex colour or a theme token (fg, fg-dim, ink, paper).",
+                "type": "string"
+              },
+              "fill": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "labels": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerLabels"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "How the layer is labelled (docs/adr/0212 §2): rule-based classes,\nnone, its objects as obstacles; absent, by `label` (one label)."
+              },
+              "lineType": {
+                "$ref": "#/$defs/LineType"
+              },
+              "lineWeight": {
+                "description": "Plot line weight in mm.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "paper-mm"
+              },
+              "pickInterior": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "point": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PointStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "renderer": true
+            },
+            "required": [
+              "color",
+              "lineType",
+              "lineWeight"
+            ],
+            "type": "object"
+          },
+          "LineLabelMode": {
+            "description": "Where a line's label goes.",
+            "oneOf": [
+              {
+                "const": "parallel",
+                "description": "Straight, along the line.",
+                "type": "string"
+              },
+              {
+                "const": "curved",
+                "description": "Letter by letter, following the line.",
+                "type": "string"
+              },
+              {
+                "const": "horizontal",
+                "description": "Level, on the line.",
+                "type": "string"
+              },
+              {
+                "const": "contour",
+                "description": "A contour's height: curved on the line, its top uphill.",
+                "type": "string"
+              }
+            ]
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
+          },
+          "ObstacleKind": {
+            "description": "What of an obstacle area a label avoids.",
+            "oneOf": [
+              {
+                "const": "interior",
+                "description": "Its inside: a label covering any of it.",
+                "type": "string"
+              },
+              {
+                "const": "boundary",
+                "description": "Its outline: a label crossing an edge.",
+                "type": "string"
+              }
+            ]
+          },
+          "PointLabelMode": {
+            "description": "Where a point's label goes (docs/adr/0212 §3.3).",
+            "oneOf": [
+              {
+                "const": "around",
+                "description": "Around it, QGIS's cartographic order (top right first).",
+                "type": "string"
+              },
+              {
+                "const": "center",
+                "description": "On it.",
+                "type": "string"
+              }
+            ]
+          },
+          "PointStyle": {
+            "properties": {
+              "size": {
+                "description": "Diameter in CSS px.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "symbol": {
+                "$ref": "#/$defs/PointSymbol"
+              }
+            },
+            "required": [
+              "symbol",
+              "size"
+            ],
+            "type": "object"
+          },
+          "PointSymbol": {
+            "enum": [
+              "ring",
+              "cross",
+              "triangle"
+            ],
+            "type": "string"
+          },
+          "StackMode": {
+            "description": "When a label is cut into lines.",
+            "oneOf": [
+              {
+                "enum": [
+                  "always"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ifNeeded",
+                "description": "Only when it does not fit on one line.",
+                "type": "string"
+              }
+            ]
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.layers.states` v1, and what plan says it would do.",
         "properties": {
+          "added": {
+            "description": "Import's states added, written over and skipped (their name the\nproject's, without `replace`).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "changed": {
             "description": "Whether anything changed.",
             "type": "boolean"
+          },
+          "file": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LayerStatesFile"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Export's file."
+          },
+          "frozen": {
+            "default": 0,
+            "description": "Apply's nodes frozen or thawed, and printed or not (docs/adr/0311 §3).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           },
           "locked": {
             "format": "uint32",
@@ -287681,10 +291071,29 @@
             "type": "integer",
             "x-unit": "count"
           },
+          "plot": {
+            "default": 0,
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "replaced": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "revision": {
             "description": "The document's revision afterwards (plan: the one it was made\nagainst), as decimal text.",
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
+          },
+          "skipped": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           },
           "state": {
             "description": "The state saved, updated, renamed, removed or applied.",
@@ -287722,6 +291131,8 @@
           "state_not_found",
           "empty_name",
           "duplicate_name",
+          "no_file",
+          "invalid_states",
           "invalid_revision",
           "revision_conflict"
         ]
@@ -287736,8 +291147,10 @@
           },
           "output": {
             "changed": true,
+            "frozen": 0,
             "locked": 0,
             "missing": 0,
+            "plot": 0,
             "revision": "15",
             "state": "durum-1",
             "styles": 0,
@@ -287749,6 +291162,683 @@
           "input": {
             "operation": "apply",
             "state": "durum-1"
+          }
+        },
+        {
+          "title": "Ofisin durumlarını başka bir çizimden al; aynı adlıların üzerine yaz",
+          "input": {
+            "file": {
+              "format": "kentos.layer-states",
+              "states": [
+                {
+                  "id": "durum-1",
+                  "name": "Pafta",
+                  "nodes": [
+                    {
+                      "frozen": false,
+                      "node": "layer-4",
+                      "path": "Mimari / A-DUVAR",
+                      "plot": true,
+                      "visible": true
+                    }
+                  ]
+                }
+              ],
+              "version": 1
+            },
+            "operation": "import",
+            "replace": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.layers.find",
+      "version": 1,
+      "title": "Katmanları bul",
+      "summary": "Katmanları adlarının örüntüsüyle ve özellikleriyle bulur (AutoCAD'in katman süzgeçleri): name AutoCAD'in wcmatch örüntüsüdür (* herhangi bir dizi, ? bir karakter, # rakam, @ harf, . ikisi de değil, [..] ve [~..] kümeler, ` kaçış, virgülle seçenekler, başta ~ değili; harfler Türkçe katlanır); group yalnız o grubun altındakiler; color, lineType, lineWeight katmanın kendi stili; on görünür (gözü ve üstündeki grupların gözü açık), frozen ve locked kendisi ya da üstündeki bir grup, plot üstündekilerle birlikte yazdırılıyor, empty nesnesiz (servis katmanı boş sayılmaz). Yalnız katmanlar bulunur, ağacın sırasıyla, yolları, nesne sayıları ve özellikleriyle. Çizimi değiştirmez; plan aynı cevabı verir.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.layers.find` v1 (docs/adr/0311 §4): what a layer must be,\nevery condition given (absent: any). Only layers are found, never groups;\na group's eye, freeze, lock and printing count for what it holds.\n\n- `name`: a pattern (`pattern_matches`) over the layer's own name;\n- `group`: only the layers under this group (or this layer itself);\n- `color` (`#rrggbb`, compared without case, or a theme token),\n  `lineType`, `lineWeight` (mm): the layer's own style;\n- `on`: shown (its eye and every group's above it open);\n- `frozen`, `locked`: by itself or a group above; `plot`: printed with\n  every group above;\n- `empty`: holding no objects (a layer drawn from a service is never empty).\n\nRefusals (`CommandError.code`): `invalid_pattern` (`name`),\n`invalid_color`, `invalid_line_weight`, `layer_not_found` (`group`).",
+        "properties": {
+          "color": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "empty": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "frozen": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lineType": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LineType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lineWeight": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "paper-mm"
+          },
+          "locked": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "on": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "plot": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "title": "LayersFind",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "LayerFound": {
+            "description": "A layer found, as the Katmanlar panel shows it.",
+            "properties": {
+              "color": {
+                "type": "string"
+              },
+              "frozen": {
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string"
+              },
+              "lineType": {
+                "$ref": "#/$defs/LineType"
+              },
+              "lineWeight": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "paper-mm"
+              },
+              "locked": {
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "on": {
+                "type": "boolean"
+              },
+              "path": {
+                "description": "Its names from the top of the tree, “Kadastro / Parsel”.",
+                "type": "string"
+              },
+              "plot": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "path",
+              "objects",
+              "color",
+              "lineType",
+              "lineWeight",
+              "on",
+              "frozen",
+              "locked",
+              "plot"
+            ],
+            "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.find` v1: the layers found, in the tree's order.",
+        "properties": {
+          "layers": {
+            "items": {
+              "$ref": "#/$defs/LayerFound"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layers",
+          "revision"
+        ],
+        "title": "LayersFound",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "LayerFound": {
+            "description": "A layer found, as the Katmanlar panel shows it.",
+            "properties": {
+              "color": {
+                "type": "string"
+              },
+              "frozen": {
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string"
+              },
+              "lineType": {
+                "$ref": "#/$defs/LineType"
+              },
+              "lineWeight": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "paper-mm"
+              },
+              "locked": {
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "on": {
+                "type": "boolean"
+              },
+              "path": {
+                "description": "Its names from the top of the tree, “Kadastro / Parsel”.",
+                "type": "string"
+              },
+              "plot": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "path",
+              "objects",
+              "color",
+              "lineType",
+              "lineWeight",
+              "on",
+              "frozen",
+              "locked",
+              "plot"
+            ],
+            "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.find` v1: the layers found, in the tree's order.",
+        "properties": {
+          "layers": {
+            "items": {
+              "$ref": "#/$defs/LayerFound"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layers",
+          "revision"
+        ],
+        "title": "LayersFound",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_pattern",
+          "invalid_color",
+          "invalid_line_weight",
+          "layer_not_found"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Adı A- ile başlayan, nesnesiz katmanlar",
+          "input": {
+            "empty": true,
+            "name": "A-*"
+          }
+        },
+        {
+          "title": "Dondurulmuş ya da yazdırılmayan duvar katmanları",
+          "input": {
+            "frozen": true,
+            "name": "*duvar*"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.layers.translate",
+      "version": 1,
+      "title": "Katmanları çevir",
+      "summary": "Katmanları kurallarla bir çizim standardının katmanlarına birleştirir (AutoCAD'in LAYTRANS'ı): nesne tutan her katman adına uyan ilk kuralı alır (from bir ad örüntüsüdür; adı kuralın to'su olan katman standart katmanın kendisidir); kuralın standart katmanı to adlı ilk katmandır, yoksa ve kuralı bir katman alırsa parent grubunun sonuna (verilmezse en üste) kuralın stiliyle (verilmeyen alanlar ilk kaynağınki) eklenir; var olanı kuralın verilen stilini alır. Kaynakların nesneleri standart katmana taşınır, kaynaklar silinir; etkin katman kaynaksa standart katman etkin olur; hepsi tek geri alma adımı (“Katmanları çevir”). Kilitli bir kaynak ya da standart katman hiçbir şeyi yazdırmaz (layer_locked). plan önizlemedir: neyin nereye gideceği, nesne sayıları, eklenecek ve stili değişecek katmanlar. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [
+        "laytrans"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
+          },
+          "TranslateRule": {
+            "description": "One rule: the layers whose names match `from` go to the layer named `to`,\nwhich takes the given style.",
+            "properties": {
+              "color": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "from": {
+                "description": "A name pattern (`pattern_matches`).",
+                "type": "string"
+              },
+              "lineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "lineWeight": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "paper-mm"
+              },
+              "to": {
+                "description": "The standard layer's name.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.layers.translate` v1 (docs/adr/0311 §5), AutoCAD's LAYTRANS:\n\n- every layer holding objects (not a group, not drawn from a service)\n  takes the first rule whose `from` matches its name, unless its name is\n  that rule's `to` (folded): it is the standard layer itself;\n- a rule's standard layer is the first layer holding objects named `to`\n  (folded); when there is none and a layer takes the rule, it is added\n  last in `parent` (absent: the top), named `to` as written, in the\n  rule's style over its first source's; an existing one takes the rule's\n  given style;\n- the sources' objects go to their standard layer, the sources are\n  removed; a source that is the active layer gives that to its standard\n  layer; all of it one undo step “Katmanları çevir”;\n- a rule no layer takes changes nothing; nothing taken writes nothing\n  (`changed` false). Its plan is the preview: what goes where, with\n  the objects' count, the layers to add and to restyle.\n\nRefusals (`CommandError.code`), checked in this order: `no_rules`,\n`empty_name` (`rules[i].to`), `invalid_pattern` (`rules[i].from`),\n`invalid_color`, `invalid_line_weight` (`rules[i]…`); then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`layer_not_found`, `not_a_group` (`parent`); `service_layer` (a rule's\n`to` names a layer drawn from a service); `layer_locked` (a source or a\nstandard layer taking part locked, by itself or a group above: nothing\nis written).",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "parent": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/$defs/TranslateRule"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "rules"
+        ],
+        "title": "LayersTranslate",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "LayerTranslation": {
+            "description": "A layer translated: where it went and how many objects with it.",
+            "properties": {
+              "layer": {
+                "description": "The source layer's id and name.",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "rule": {
+                "description": "The rule it took, by its place in `rules`.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "to": {
+                "description": "The standard layer's id and name.",
+                "type": "string"
+              },
+              "toName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "name",
+              "rule",
+              "to",
+              "toName",
+              "objects"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.translate` v1, and its plan (the preview).",
+        "properties": {
+          "changed": {
+            "type": "boolean"
+          },
+          "created": {
+            "description": "The standard layers added and restyled, by id.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "objects": {
+            "description": "The objects moved.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "restyled": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "translations": {
+            "description": "The sources in the tree's order.",
+            "items": {
+              "$ref": "#/$defs/LayerTranslation"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "changed",
+          "translations",
+          "created",
+          "restyled",
+          "objects",
+          "revision"
+        ],
+        "title": "LayersTranslated",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "LayerTranslation": {
+            "description": "A layer translated: where it went and how many objects with it.",
+            "properties": {
+              "layer": {
+                "description": "The source layer's id and name.",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "rule": {
+                "description": "The rule it took, by its place in `rules`.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "to": {
+                "description": "The standard layer's id and name.",
+                "type": "string"
+              },
+              "toName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "name",
+              "rule",
+              "to",
+              "toName",
+              "objects"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.translate` v1, and its plan (the preview).",
+        "properties": {
+          "changed": {
+            "type": "boolean"
+          },
+          "created": {
+            "description": "The standard layers added and restyled, by id.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "objects": {
+            "description": "The objects moved.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "restyled": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "translations": {
+            "description": "The sources in the tree's order.",
+            "items": {
+              "$ref": "#/$defs/LayerTranslation"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "changed",
+          "translations",
+          "created",
+          "restyled",
+          "objects",
+          "revision"
+        ],
+        "title": "LayersTranslated",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_rules",
+          "empty_name",
+          "invalid_pattern",
+          "invalid_color",
+          "invalid_line_weight",
+          "layer_not_found",
+          "not_a_group",
+          "service_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Eski duvar katmanlarını ofisin A-DUVAR'ına çevir",
+          "input": {
+            "rules": [
+              {
+                "color": "#E5484D",
+                "from": "duvar*,wall*",
+                "lineWeight": 0.5,
+                "to": "A-DUVAR"
+              }
+            ]
+          },
+          "output": {
+            "changed": true,
+            "created": [
+              "layer-9"
+            ],
+            "objects": 42,
+            "restyled": [],
+            "revision": "16",
+            "translations": [
+              {
+                "layer": "layer-3",
+                "name": "duvar",
+                "objects": 42,
+                "rule": 0,
+                "to": "layer-9",
+                "toName": "A-DUVAR"
+              }
+            ]
           }
         }
       ]
@@ -314269,6 +318359,42 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Bu ad başka bir durumun."
+    },
+    {
+      "code": "layer_frozen",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Katman ya da üstündeki bir grup dondurulmuş; etkin katman olamaz."
+    },
+    {
+      "code": "active_frozen",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Etkin katman dondurulamaz; önce başka bir katmanı etkin yapın."
+    },
+    {
+      "code": "no_file",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "İçe aktarılacak durumların dosyası verilmedi."
+    },
+    {
+      "code": "invalid_states",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Katman durumları dosyası kurallarına uymuyor."
+    },
+    {
+      "code": "invalid_pattern",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Katman adı örüntüsü okunmuyor: boş ya da kapanmayan küme."
+    },
+    {
+      "code": "no_rules",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çevirme kuralı verilmedi."
     },
     {
       "code": "no_definition",

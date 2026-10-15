@@ -32,7 +32,8 @@ fn walk<'a>(nodes: &'a [LayerNode], out: &mut Vec<&'a LayerNode>) {
 }
 
 /// The tree as a state keeps it: every node in its order with its own
-/// visibility; with `locks` its own lock, with `styles` a layer's style.
+/// visibility, freeze and printing (docs/adr/0311 §3); with `locks` its own
+/// lock, with `styles` a layer's style.
 pub fn capture(tree: &[LayerNode], id: &str, name: &str, parts: LayerStateParts) -> LayerState {
     let mut all = Vec::new();
     walk(tree, &mut all);
@@ -46,6 +47,9 @@ pub fn capture(tree: &[LayerNode], id: &str, name: &str, parts: LayerStateParts)
                 visible: n.visible,
                 locked: parts.locks.then_some(n.locked),
                 style: (parts.styles && n.kind == LayerNodeType::Layer).then(|| n.style.clone()),
+                frozen: Some(n.frozen == Some(true)),
+                plot: Some(n.plot != Some(false)),
+                path: None,
             })
             .collect(),
     }
@@ -58,23 +62,44 @@ pub struct StateChanges {
     pub visible: Vec<(String, bool)>,
     pub locked: Vec<(String, bool)>,
     pub styles: Vec<(String, LayerStyle)>,
+    pub frozen: Vec<(String, bool)>,
+    pub plot: Vec<(String, bool)>,
     pub missing: usize,
 }
 
 impl StateChanges {
     /// Whether applying it would change nothing.
     pub fn is_empty(&self) -> bool {
-        self.visible.is_empty() && self.locked.is_empty() && self.styles.is_empty()
+        self.visible.is_empty()
+            && self.locked.is_empty()
+            && self.styles.is_empty()
+            && self.frozen.is_empty()
+            && self.plot.is_empty()
     }
 }
 
 /// What applying `state` to the tree changes: the visibility and the lock
 /// (when kept) of the nodes it names that the tree still has, the style (when
-/// kept) of those that are layers; a node the tree lacks is counted, one the
-/// state does not name stays.
+/// kept) of those that are layers, their freeze and printing (when kept,
+/// docs/adr/0311 §3); a node the tree lacks is counted, one the state does
+/// not name stays. A freeze that would hold `active` (the active layer, or a
+/// group above it) is passed over: the active layer is never frozen.
 pub fn changes(tree: &[LayerNode], state: &LayerState) -> StateChanges {
+    changes_keeping(tree, state, None)
+}
+
+/// [`changes`], the active layer kept thawed.
+pub fn changes_keeping(
+    tree: &[LayerNode],
+    state: &LayerState,
+    active: Option<&str>,
+) -> StateChanges {
     let mut all = Vec::new();
     walk(tree, &mut all);
+    let holding_active: std::collections::HashSet<&str> = match active {
+        Some(active) => ancestors_of(tree, active),
+        None => std::collections::HashSet::new(),
+    };
     let by: HashMap<&str, &LayerNode> = all.into_iter().map(|n| (n.id.as_str(), n)).collect();
     let mut out = StateChanges::default();
     for e in &state.nodes {
@@ -96,6 +121,114 @@ pub fn changes(tree: &[LayerNode], state: &LayerState) -> StateChanges {
         {
             out.styles.push((e.node.clone(), style.clone()));
         }
+        if let Some(frozen) = e.frozen
+            && (n.frozen == Some(true)) != frozen
+            && !(frozen && holding_active.contains(n.id.as_str()))
+        {
+            out.frozen.push((e.node.clone(), frozen));
+        }
+        if let Some(plot) = e.plot
+            && (n.plot != Some(false)) != plot
+        {
+            out.plot.push((e.node.clone(), plot));
+        }
+    }
+    out
+}
+
+/// The node `id` and the groups above it, by id.
+fn ancestors_of<'a>(tree: &'a [LayerNode], id: &str) -> std::collections::HashSet<&'a str> {
+    fn find<'a>(nodes: &'a [LayerNode], id: &str, path: &mut Vec<&'a str>) -> bool {
+        for n in nodes {
+            path.push(n.id.as_str());
+            if n.id == id || find(&n.children, id, path) {
+                return true;
+            }
+            path.pop();
+        }
+        false
+    }
+    let mut path = Vec::new();
+    find(tree, id, &mut path);
+    path.into_iter().collect()
+}
+
+/// Every node's path, its names from the top joined by “ / ” (the tree's
+/// `path`), in the tree's order.
+fn paths_of(tree: &[LayerNode]) -> Vec<(String, String)> {
+    fn walk(nodes: &[LayerNode], above: &str, out: &mut Vec<(String, String)>) {
+        for n in nodes {
+            let path = if above.is_empty() {
+                n.name.clone()
+            } else {
+                format!("{above} / {}", n.name)
+            };
+            out.push((n.id.clone(), path.clone()));
+            walk(&n.children, &path, out);
+        }
+    }
+    let mut out = Vec::new();
+    walk(tree, "", &mut out);
+    out
+}
+
+/// The states as a file holds them (docs/adr/0311 §3): each node with its
+/// path, when the tree has it.
+pub fn exported(tree: &[LayerNode], states: &[LayerState]) -> Vec<LayerState> {
+    let paths: HashMap<String, String> = paths_of(tree).into_iter().collect();
+    states
+        .iter()
+        .map(|s| LayerState {
+            nodes: s
+                .nodes
+                .iter()
+                .map(|n| LayerStateNode {
+                    path: paths.get(&n.node).cloned(),
+                    ..n.clone()
+                })
+                .collect(),
+            ..s.clone()
+        })
+        .collect()
+}
+
+/// A file's state as this drawing keeps it (docs/adr/0311 §3): a node found
+/// by its id, else by its path (names folded, the first in the tree's order),
+/// else kept with its id (missing when applied), or left out without one;
+/// paths dropped; of a node found twice the first.
+pub fn imported(tree: &[LayerNode], state: &LayerState) -> Vec<LayerStateNode> {
+    let all = paths_of(tree);
+    let ids: std::collections::HashSet<&str> = all.iter().map(|(id, _)| id.as_str()).collect();
+    let mut by_path: HashMap<String, &str> = HashMap::new();
+    for (id, path) in &all {
+        by_path
+            .entry(kentos_contracts::fold_name(path))
+            .or_insert(id.as_str());
+    }
+    let mut out: Vec<LayerStateNode> = Vec::with_capacity(state.nodes.len());
+    for n in &state.nodes {
+        let node = if ids.contains(n.node.as_str()) {
+            n.node.clone()
+        } else if let Some(id) = n
+            .path
+            .as_deref()
+            .and_then(|p| by_path.get(&kentos_contracts::fold_name(p)))
+        {
+            (*id).to_owned()
+        } else if n.node.is_empty() {
+            // Neither its id nor its path: nothing to keep it by.
+            continue;
+        } else {
+            n.node.clone()
+        };
+        if out.iter().any(|m| m.node == node) {
+            continue;
+        }
+        out.push(LayerStateNode {
+            node,
+            path: None,
+            ..n.clone()
+        });
     }
     out
 }

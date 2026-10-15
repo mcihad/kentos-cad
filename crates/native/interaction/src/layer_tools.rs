@@ -4,8 +4,8 @@
 //! - Katmanı gizle and Katmanı kilitle go on, a layer a click; Katmanı etkin
 //!   yap leaves after its click; Katmanı yalıt gathers the clicked objects'
 //!   layers and isolates them on Enter or a quick right click (Ctrl+Z takes
-//!   back the newest, Esc all of them), remembering what it hid for Yalıtımı
-//!   kaldır ([`Context::isolated_layers`], the drawing's).
+//!   back the newest, Esc all of them); the drawing remembers what it hid
+//!   for Yalıtımı kaldır (`cad.layers.set`'s `unisolate`, docs/adr/0311 §2).
 //! - With objects selected when it starts, it acts on their layers at once
 //!   (Katmanı etkin yap on the first one's) and leaves.
 //! - These are the layer tree's own changes, as the Katmanlar panel's eye,
@@ -33,6 +33,8 @@ pub const ISOLATE_ID: &str = "layerIsolate";
 pub const LOCK_ID: &str = "layerLock";
 /// Katmanı etkin yap's id: its command is `tool.layerMakeActive`.
 pub const ACTIVE_ID: &str = "layerMakeActive";
+/// Katmanı dondur's id: its command is `tool.layerFreeze` (docs/adr/0311 §1).
+pub const FREEZE_ID: &str = "layerFreeze";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Action {
@@ -40,6 +42,7 @@ enum Action {
     Isolate,
     Lock,
     Active,
+    Freeze,
 }
 
 impl Action {
@@ -49,6 +52,7 @@ impl Action {
             Action::Isolate => ISOLATE_ID,
             Action::Lock => LOCK_ID,
             Action::Active => ACTIVE_ID,
+            Action::Freeze => FREEZE_ID,
         }
     }
 
@@ -58,6 +62,7 @@ impl Action {
             Action::Isolate => "Katmanı yalıt",
             Action::Lock => "Katmanı kilitle",
             Action::Active => "Katmanı etkin yap",
+            Action::Freeze => "Katmanı dondur",
         }
     }
 
@@ -67,6 +72,7 @@ impl Action {
             Action::Isolate => "yalıtılacak katmanların nesnelerine tıklayın",
             Action::Lock => "katmanı kilitlenecek nesneye tıklayın",
             Action::Active => "katmanı etkin yapılacak nesneye tıklayın",
+            Action::Freeze => "katmanı dondurulacak nesneye tıklayın",
         }
     }
 
@@ -77,6 +83,7 @@ impl Action {
             Action::Isolate => "Tıklayın: yalıt",
             Action::Lock => "Tıklayın: kilitle",
             Action::Active => "Tıklayın: etkin yap",
+            Action::Freeze => "Tıklayın: dondur",
         }
     }
 }
@@ -137,12 +144,17 @@ impl LayerTool {
         Self::with(Action::Active)
     }
 
+    pub fn freeze() -> Self {
+        Self::with(Action::Freeze)
+    }
+
     /// The action on these layers (ids, in order, each once).
     fn act(&self, ids: &[String], cx: &mut Context<'_>) {
         match self.action {
             Action::Off => hide(ids, cx),
             Action::Isolate => isolate(ids, cx),
             Action::Lock => lock(ids, cx),
+            Action::Freeze => freeze(ids, cx),
             Action::Active => {
                 if let Some(id) = ids.first() {
                     make_active(id, cx);
@@ -226,12 +238,6 @@ fn isolate(ids: &[String], cx: &mut Context<'_>) {
         .into_iter()
         .filter(|id| cx.doc.layers().get(id).is_some_and(|n| !n.visible))
         .collect();
-    // What isolations hid since the last Yalıtımı kaldır, in order: it shows them all again.
-    for id in &hidden {
-        if !cx.isolated_layers.contains(id) {
-            cx.isolated_layers.push(id.clone());
-        }
-    }
     drop_hidden(cx);
     let groups = hidden
         .iter()
@@ -268,6 +274,40 @@ fn lock(ids: &[String], cx: &mut Context<'_>) {
     cx.say(Level::Success, text);
 }
 
+/// Katmanı dondur (docs/adr/0311 §1): the clicked objects' layers frozen
+/// through `cad.layers.set`; the active layer is refused in the command's words.
+fn freeze(ids: &[String], cx: &mut Context<'_>) {
+    let thawed: Vec<String> = ids
+        .iter()
+        .filter(|id| !cx.doc.layers().is_frozen(id))
+        .cloned()
+        .collect();
+    if thawed.is_empty() {
+        let text = format!("{} zaten dondurulmuş.", list(cx, ids));
+        cx.say(Level::Info, text);
+        return;
+    }
+    let mut frozen = Vec::new();
+    for id in &thawed {
+        let mut input = LayersSet::new(LayerSetOperation::Frozen, Some(id.clone()));
+        input.value = Some(true);
+        match layers_set::execute(&mut ExecutionContext::new(cx.doc), input) {
+            CommandResult::Completed { .. } => frozen.push(id.clone()),
+            CommandResult::Failed { error } => cx.say(Level::Warn, error.message),
+            _ => {}
+        }
+    }
+    if frozen.is_empty() {
+        return;
+    }
+    drop_hidden(cx);
+    let text = format!(
+        "{} donduruldu: çizilmez, seçilmez, kenetlenmez. Çözmek için Katmanlar panelinde sağ tık › Çöz ya da Bütün katmanları çöz.",
+        list(cx, &frozen)
+    );
+    cx.say(Level::Success, text);
+}
+
 fn make_active(id: &str, cx: &mut Context<'_>) {
     let layer = name(cx, id);
     if cx.doc.layers().active() == id {
@@ -283,11 +323,11 @@ fn make_active(id: &str, cx: &mut Context<'_>) {
         );
         return;
     }
-    run(
-        cx.doc,
-        LayersSet::new(LayerSetOperation::Active, Some(id.to_owned())),
-    );
-    cx.say(Level::Success, format!("“{layer}” katmanı etkin yapıldı."));
+    let input = LayersSet::new(LayerSetOperation::Active, Some(id.to_owned()));
+    match layers_set::execute(&mut ExecutionContext::new(cx.doc), input) {
+        CommandResult::Failed { error } => cx.say(Level::Warn, error.message),
+        _ => cx.say(Level::Success, format!("“{layer}” katmanı etkin yapıldı.")),
+    }
 }
 
 /// `cad.layers.set` on the drawing, as the Katmanlar panel and Python write
@@ -334,11 +374,12 @@ fn drop_hidden(cx: &mut Context<'_>) {
     }
 }
 
-/// Yalıtımı kaldır (`layer.unisolate`, docs/adr/0177 §1): the layers and
-/// groups Katmanı yalıt hid since the last time, still hidden, shown again;
-/// those changed by hand meanwhile stay as they are. What to say, with its level.
-pub fn unisolate(doc: &mut kentos_domain::Document, isolated: &mut Vec<String>) -> (Level, String) {
-    let remembered = std::mem::take(isolated);
+/// Yalıtımı kaldır (`layer.unisolate`, docs/adr/0177 §1, 0311 §2): the
+/// layers and groups Katmanı yalıt hid since the last time, still hidden,
+/// shown again through `cad.layers.set`; those changed by hand meanwhile
+/// stay as they are. What to say, with its level.
+pub fn unisolate(doc: &mut kentos_domain::Document) -> (Level, String) {
+    let remembered = doc.layers().isolated().to_vec();
     if remembered.is_empty() {
         return (
             Level::Info,
@@ -349,14 +390,12 @@ pub fn unisolate(doc: &mut kentos_domain::Document, isolated: &mut Vec<String>) 
         .into_iter()
         .filter(|id| doc.layers().get(id).is_some_and(|n| !n.visible))
         .collect();
+    run(doc, LayersSet::new(LayerSetOperation::Unisolate, None));
     if back.is_empty() {
         return (
             Level::Info,
             "Katmanı yalıt’ın gizlediği katmanlar zaten görünüyor.".to_owned(),
         );
-    }
-    for id in &back {
-        set_flag(doc, LayerSetOperation::Visible, id, true);
     }
     let groups = back
         .iter()
@@ -410,7 +449,7 @@ impl Tool for LayerTool {
                 prompt.option("Uygula", "Enter")
             }
             Action::Active => prompt,
-            Action::Off | Action::Lock => prompt.option("Bitir", "Enter"),
+            Action::Off | Action::Lock | Action::Freeze => prompt.option("Bitir", "Enter"),
         }
     }
 

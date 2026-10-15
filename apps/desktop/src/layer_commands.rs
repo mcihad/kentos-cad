@@ -98,6 +98,27 @@ impl App {
         self.set_layers(input);
     }
 
+    /// Dondur / Çöz (docs/adr/0311 §1): the node's freeze turned over; the
+    /// active layer's refusal said in the command's words.
+    pub(crate) fn toggle_layer_frozen(&mut self, id: &str) {
+        let Some(frozen) = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.layers().get(id))
+            .map(|n| n.frozen == Some(true))
+        else {
+            return;
+        };
+        let mut input = LayersSet::new(LayerSetOperation::Frozen, Some(id.to_owned()));
+        input.value = Some(!frozen);
+        self.set_layers(input);
+    }
+
+    /// Bütün katmanları çöz (`layer.thawAll`, docs/adr/0311 §1).
+    pub(crate) fn thaw_all_layers(&mut self) {
+        self.set_layers(LayersSet::new(LayerSetOperation::ThawAll, None));
+    }
+
     /// Hepsini göster (`layer.showAll`).
     pub(crate) fn show_all_layers(&mut self) {
         self.set_layers(LayersSet::new(LayerSetOperation::ShowAll, None));

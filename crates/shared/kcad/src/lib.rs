@@ -418,11 +418,15 @@ pub const SCHEMA_WITH_ARRAYS: u32 = 53;
 /// Schema 54 (docs/adr/0310): an area's mask (`wipeout`: `{ frame }`), written only when an object of the drawing or
 /// of a block definition has one; older readers refuse the file instead of drawing the mask as a plain area.
 pub const SCHEMA_WITH_WIPEOUTS: u32 = 54;
+/// Schema 55 (docs/adr/0311 §1, §3): a layer's `frozen` (only `true`), and a layer state node's `frozen` and `plot`,
+/// written only when a node is frozen or a state keeps them; older readers refuse the file instead of drawing a frozen
+/// layer or applying a state without its freeze.
+pub const SCHEMA_WITH_FROZEN: u32 = 55;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 53] = [
+pub const SCHEMAS: [u32; 54] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -476,6 +480,7 @@ pub const SCHEMAS: [u32; 53] = [
     SCHEMA_WITH_VIEWS,
     SCHEMA_WITH_ARRAYS,
     SCHEMA_WITH_WIPEOUTS,
+    SCHEMA_WITH_FROZEN,
 ];
 
 /// The file a drawing is saved as.
