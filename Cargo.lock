@@ -2740,6 +2740,7 @@ dependencies = [
  "kentos-expression",
  "kentos-formats",
  "kentos-geometry-core",
+ "kentos-project",
  "kentos-sheet",
  "kentos-style-core",
  "serde",

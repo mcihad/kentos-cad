@@ -1,0 +1,2446 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.entities.explode",
+ "commandVersion": 1,
+ "title": "Patlat: yollar, alanlar, bloklar, ilişkili diziler, patlamayanlar ve retler",
+ "note": "ADR 0302. Bağımsız başvuru: scripts/fixtures/explode_command_cases.py.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Patlat",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 100,
+   "workspace": "cad"
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "agac",
+    "name": "Ağaç",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "polyline",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "color": "#ff0000",
+    "lineWeight": 0.5,
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 5
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "cizim",
+    "attrs": {
+     "Ada": "101"
+    },
+    "pts": [
+     {
+      "x": 20,
+      "y": 0
+     },
+     {
+      "x": 30,
+      "y": 0
+     },
+     {
+      "x": 30,
+      "y": 10
+     },
+     {
+      "x": 20,
+      "y": 10
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 22,
+        "y": 2
+       },
+       {
+        "x": 24,
+        "y": 2
+       },
+       {
+        "x": 24,
+        "y": 4
+       },
+       {
+        "x": 22,
+        "y": 4
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 3,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 40,
+     "y": 0
+    },
+    "b": {
+     "x": 45,
+     "y": 0
+    }
+   },
+   {
+    "kind": "circle",
+    "id": 4,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 50,
+     "y": 0
+    },
+    "r": 1
+   },
+   {
+    "kind": "polyline",
+    "id": 5,
+    "layerId": "kilitli",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0,
+      "y": 20
+     },
+     {
+      "x": 5,
+      "y": 20
+     },
+     {
+      "x": 5,
+      "y": 25
+     }
+    ]
+   },
+   {
+    "kind": "insert",
+    "id": 6,
+    "layerId": "cizim",
+    "attrs": {},
+    "color": "#0000ff",
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e01",
+    "p": {
+     "x": 60,
+     "y": 0
+    },
+    "scale": 2,
+    "rotation": 0
+   },
+   {
+    "kind": "polyline",
+    "id": 7,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0,
+      "y": 40
+     },
+     {
+      "x": 5,
+      "y": 40
+     }
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 0,
+        "y": 45
+       },
+       {
+        "x": 5,
+        "y": 45
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 8,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 70,
+      "y": 0
+     },
+     {
+      "x": 75,
+      "y": 0
+     },
+     {
+      "x": 75,
+      "y": 5
+     }
+    ],
+    "closed": true
+   },
+   {
+    "kind": "point",
+    "id": 9,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 80,
+     "y": 0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "blocks": [
+   {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e01",
+    "name": "Rögar",
+    "base": {
+     "x": 0,
+     "y": 0
+    },
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "",
+      "attrs": {},
+      "a": {
+       "x": 0,
+       "y": 0
+      },
+      "b": {
+       "x": 1,
+       "y": 0
+      }
+     },
+     {
+      "kind": "circle",
+      "id": 2,
+      "layerId": "agac",
+      "attrs": {},
+      "color": "#00ff00",
+      "lineWeight": 0.35,
+      "c": {
+       "x": 0,
+       "y": 1
+      },
+      "r": 0.5
+     }
+    ]
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "Açık çoklu çizgi iki çizgi olur; rengi ve kalınlığı geçer; geri alınır",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 1,
+     "as": "o1"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "removed": [
+        "$uid:o1"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "10": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "color": "#ff0000",
+        "lineWeight": 0.5,
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 10,
+         "y": 0
+        },
+        "id": 10
+       },
+       "11": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "color": "#ff0000",
+        "lineWeight": 0.5,
+        "a": {
+         "x": 10,
+         "y": 0
+        },
+        "b": {
+         "x": 10,
+         "y": 5
+        },
+        "id": 11
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Patlat",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "entities": {
+       "1": {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "color": "#ff0000",
+        "lineWeight": 0.5,
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 5
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Delikli alan kenarları ve deliğin kenarları; öznitelikler parçalara geçmez",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 2,
+     "as": "o2"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:12",
+        "$uidOf:13",
+        "$uidOf:14",
+        "$uidOf:15",
+        "$uidOf:16",
+        "$uidOf:17"
+       ],
+       "removed": [
+        "$uid:o2"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17
+      ],
+      "entities": {
+       "10": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 20,
+         "y": 0
+        },
+        "b": {
+         "x": 30,
+         "y": 0
+        },
+        "id": 10
+       },
+       "11": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 30,
+         "y": 0
+        },
+        "b": {
+         "x": 30,
+         "y": 10
+        },
+        "id": 11
+       },
+       "12": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 30,
+         "y": 10
+        },
+        "b": {
+         "x": 20,
+         "y": 10
+        },
+        "id": 12
+       },
+       "13": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 20,
+         "y": 10
+        },
+        "b": {
+         "x": 20,
+         "y": 0
+        },
+        "id": 13
+       },
+       "14": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 22,
+         "y": 2
+        },
+        "b": {
+         "x": 24,
+         "y": 2
+        },
+        "id": 14
+       },
+       "15": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 24,
+         "y": 2
+        },
+        "b": {
+         "x": 24,
+         "y": 4
+        },
+        "id": 15
+       },
+       "16": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 24,
+         "y": 4
+        },
+        "b": {
+         "x": 22,
+         "y": 4
+        },
+        "id": 16
+       },
+       "17": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 22,
+         "y": 4
+        },
+        "b": {
+         "x": 22,
+         "y": 2
+        },
+        "id": 17
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapalı çoklu çizginin kapanış kenarı da çizgi olur",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 8,
+     "as": "o8"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:8"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:12"
+       ],
+       "removed": [
+        "$uid:o8"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       9,
+       10,
+       11,
+       12
+      ],
+      "entities": {
+       "10": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 70,
+         "y": 0
+        },
+        "b": {
+         "x": 75,
+         "y": 0
+        },
+        "id": 10
+       },
+       "11": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 75,
+         "y": 0
+        },
+        "b": {
+         "x": 75,
+         "y": 5
+        },
+        "id": 11
+       },
+       "12": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 75,
+         "y": 5
+        },
+        "b": {
+         "x": 70,
+         "y": 0
+        },
+        "id": 12
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çok parçalı çoklu çizginin öbür parçası da",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 7,
+     "as": "o7"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:7"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "removed": [
+        "$uid:o7"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "10": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 40
+        },
+        "b": {
+         "x": 5,
+         "y": 40
+        },
+        "id": 10
+       },
+       "11": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 45
+        },
+        "b": {
+         "x": 5,
+         "y": 45
+        },
+        "id": 11
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bloğun yerleştirmesi tanımın nesnelerine açılır: ölçekli, katmanı ya da yerleştirmeninki, rengi ya da yerleştirmeninki",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 6,
+     "as": "o6"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:6"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "removed": [
+        "$uid:o6"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "10": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "color": "#0000ff",
+        "a": {
+         "x": 60,
+         "y": 0
+        },
+        "b": {
+         "x": 62,
+         "y": 0
+        },
+        "id": 10
+       },
+       "11": {
+        "kind": "circle",
+        "layerId": "agac",
+        "attrs": {},
+        "color": "#00ff00",
+        "lineWeight": 0.35,
+        "c": {
+         "x": 60,
+         "y": 2
+        },
+        "r": 1,
+        "id": 11
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Patlat",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "color": "#0000ff",
+        "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e01",
+        "p": {
+         "x": 60,
+         "y": 0
+        },
+        "scale": 2,
+        "rotation": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki nesne birlikte, verildikleri sırayla: silme ve parçaları",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 1,
+     "as": "o1"
+    },
+    {
+     "op": "captureUid",
+     "id": 2,
+     "as": "o2"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:2"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:12",
+        "$uidOf:13",
+        "$uidOf:14",
+        "$uidOf:15",
+        "$uidOf:16",
+        "$uidOf:17",
+        "$uidOf:18",
+        "$uidOf:19"
+       ],
+       "removed": [
+        "$uid:o1",
+        "$uid:o2"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19
+      ],
+      "entities": {
+       "10": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "color": "#ff0000",
+        "lineWeight": 0.5,
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 10,
+         "y": 0
+        },
+        "id": 10
+       },
+       "11": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "color": "#ff0000",
+        "lineWeight": 0.5,
+        "a": {
+         "x": 10,
+         "y": 0
+        },
+        "b": {
+         "x": 10,
+         "y": 5
+        },
+        "id": 11
+       },
+       "12": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 20,
+         "y": 0
+        },
+        "b": {
+         "x": 30,
+         "y": 0
+        },
+        "id": 12
+       },
+       "13": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 30,
+         "y": 0
+        },
+        "b": {
+         "x": 30,
+         "y": 10
+        },
+        "id": 13
+       },
+       "14": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 30,
+         "y": 10
+        },
+        "b": {
+         "x": 20,
+         "y": 10
+        },
+        "id": 14
+       },
+       "15": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 20,
+         "y": 10
+        },
+        "b": {
+         "x": 20,
+         "y": 0
+        },
+        "id": 15
+       },
+       "16": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 22,
+         "y": 2
+        },
+        "b": {
+         "x": 24,
+         "y": 2
+        },
+        "id": 16
+       },
+       "17": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 24,
+         "y": 2
+        },
+        "b": {
+         "x": 24,
+         "y": 4
+        },
+        "id": 17
+       },
+       "18": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 24,
+         "y": 4
+        },
+        "b": {
+         "x": 22,
+         "y": 4
+        },
+        "id": 18
+       },
+       "19": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 22,
+         "y": 4
+        },
+        "b": {
+         "x": 22,
+         "y": 2
+        },
+        "id": 19
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı kimlik iki kez: bir kez patlar",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 1,
+     "as": "o1"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "removed": [
+        "$uid:o1"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "10": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "color": "#ff0000",
+        "lineWeight": 0.5,
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 10,
+         "y": 0
+        },
+        "id": 10
+       },
+       "11": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "color": "#ff0000",
+        "lineWeight": 0.5,
+        "a": {
+         "x": 10,
+         "y": 0
+        },
+        "b": {
+         "x": 10,
+         "y": 5
+        },
+        "id": 11
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizgi ile çoklu çizgi: çizgi uyarıyla atlanır",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 1,
+     "as": "o1"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3",
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "not_explodable",
+        "message": "1 nesne patlatılamadığı için atlandı: Bu nesne zaten temel bir nesne; patlatılacak bir şey yok.",
+        "path": "uids"
+       }
+      ],
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "removed": [
+        "$uid:o1"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "10": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "color": "#ff0000",
+        "lineWeight": 0.5,
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 10,
+         "y": 0
+        },
+        "id": 10
+       },
+       "11": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "color": "#ff0000",
+        "lineWeight": 0.5,
+        "a": {
+         "x": 10,
+         "y": 0
+        },
+        "b": {
+         "x": 10,
+         "y": 5
+        },
+        "id": 11
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli katmandaki ile açık olan: kilitli uyarıyla atlanır",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 1,
+     "as": "o1"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:5",
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "layer_locked",
+        "path": "uids",
+        "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın."
+       }
+      ],
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "removed": [
+        "$uid:o1"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "10": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "color": "#ff0000",
+        "lineWeight": 0.5,
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 10,
+         "y": 0
+        },
+        "id": 10
+       },
+       "11": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "color": "#ff0000",
+        "lineWeight": 0.5,
+        "a": {
+         "x": 10,
+         "y": 0
+        },
+        "b": {
+         "x": 10,
+         "y": 5
+        },
+        "id": 11
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli, patlamayan ve patlayan: iki uyarı, kilitli önce",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 2,
+     "as": "o2"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:5",
+       "$uidOf:4",
+       "$uidOf:2"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "layer_locked",
+        "path": "uids",
+        "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın."
+       },
+       {
+        "code": "not_explodable",
+        "message": "1 nesne patlatılamadığı için atlandı: Daire patlatılamaz; parçalamak için Kır (B) kullanın.",
+        "path": "uids"
+       }
+      ],
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:12",
+        "$uidOf:13",
+        "$uidOf:14",
+        "$uidOf:15",
+        "$uidOf:16",
+        "$uidOf:17"
+       ],
+       "removed": [
+        "$uid:o2"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17
+      ],
+      "entities": {
+       "10": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 20,
+         "y": 0
+        },
+        "b": {
+         "x": 30,
+         "y": 0
+        },
+        "id": 10
+       },
+       "11": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 30,
+         "y": 0
+        },
+        "b": {
+         "x": 30,
+         "y": 10
+        },
+        "id": 11
+       },
+       "12": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 30,
+         "y": 10
+        },
+        "b": {
+         "x": 20,
+         "y": 10
+        },
+        "id": 12
+       },
+       "13": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 20,
+         "y": 10
+        },
+        "b": {
+         "x": 20,
+         "y": 0
+        },
+        "id": 13
+       },
+       "14": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 22,
+         "y": 2
+        },
+        "b": {
+         "x": 24,
+         "y": 2
+        },
+        "id": 14
+       },
+       "15": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 24,
+         "y": 2
+        },
+        "b": {
+         "x": 24,
+         "y": 4
+        },
+        "id": 15
+       },
+       "16": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 24,
+         "y": 4
+        },
+        "b": {
+         "x": 22,
+         "y": 4
+        },
+        "id": 16
+       },
+       "17": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 22,
+         "y": 4
+        },
+        "b": {
+         "x": 22,
+         "y": 2
+        },
+        "id": 17
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yalnız çizgi: not_explodable",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_explodable",
+       "message": "Bu nesne zaten temel bir nesne; patlatılacak bir şey yok.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yalnız daire: not_explodable, dairenin sözüyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:4"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_explodable",
+       "message": "Daire patlatılamaz; parçalamak için Kır (B) kullanın.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Nokta ve çizgi: not_explodable, ilkinin sözüyle ve yeriyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9",
+       "$uidOf:3"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_explodable",
+       "message": "Bu nesne zaten temel bir nesne; patlatılacak bir şey yok.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yalnız kilitli: layer_locked",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:5"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Boş liste: no_entities",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": []
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_entities",
+       "message": "Patlatılacak nesne verilmedi. En az bir nesnenin kalıcı kimliğini verin.",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kimlik UUID değil: invalid_uid",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "on iki"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“on iki” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan nesne: entity_not_found",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5a2-0000-7000-8000-00000000ffff"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5a2-0000-7000-8000-00000000ffff” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm sayı değil: invalid_revision",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "expectedRevision": "on iki"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm geçmişte kaldıysa conflict, hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "captureRevision",
+     "as": "old"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 1,
+       "dy": 0
+      }
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "expectedRevision": "$old"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "path": "expectedRevision",
+       "revision": "$current",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın."
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan parçaları gösterir; hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 2,
+     "as": "o2"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [],
+       "created": [
+        {
+         "kind": "line",
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 20,
+          "y": 0
+         },
+         "b": {
+          "x": 30,
+          "y": 0
+         },
+         "id": 0
+        },
+        {
+         "kind": "line",
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 30,
+          "y": 0
+         },
+         "b": {
+          "x": 30,
+          "y": 10
+         },
+         "id": 0
+        },
+        {
+         "kind": "line",
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 30,
+          "y": 10
+         },
+         "b": {
+          "x": 20,
+          "y": 10
+         },
+         "id": 0
+        },
+        {
+         "kind": "line",
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 20,
+          "y": 10
+         },
+         "b": {
+          "x": 20,
+          "y": 0
+         },
+         "id": 0
+        },
+        {
+         "kind": "line",
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 22,
+          "y": 2
+         },
+         "b": {
+          "x": 24,
+          "y": 2
+         },
+         "id": 0
+        },
+        {
+         "kind": "line",
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 24,
+          "y": 2
+         },
+         "b": {
+          "x": 24,
+          "y": 4
+         },
+         "id": 0
+        },
+        {
+         "kind": "line",
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 24,
+          "y": 4
+         },
+         "b": {
+          "x": 22,
+          "y": 4
+         },
+         "id": 0
+        },
+        {
+         "kind": "line",
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 22,
+          "y": 4
+         },
+         "b": {
+          "x": 22,
+          "y": 2
+         },
+         "id": 0
+        }
+       ],
+       "removed": [
+        "$uid:o2"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İlişkili dizinin bir öğesi bütün diziyi patlatır: öğeler bloğun nesnelerine açılır, dizi gider; geri alınınca döner",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.array",
+     "input": {
+      "uids": [
+       "$uidOf:4"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 1,
+       "cols": 3,
+       "dx": 5,
+       "dy": 0
+      },
+      "associative": true
+     },
+     "result": "$any",
+     "expect": {
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 50,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 1,
+         "cols": 3,
+         "dx": 5,
+         "dy": 0
+        },
+        "items": [
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         },
+         {
+          "uid": "$uidOf:12"
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "op": "captureUid",
+     "id": 10,
+     "as": "o10"
+    },
+    {
+     "op": "captureUid",
+     "id": 11,
+     "as": "o11"
+    },
+    {
+     "op": "captureUid",
+     "id": 12,
+     "as": "o12"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:11"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:13",
+        "$uidOf:14",
+        "$uidOf:15"
+       ],
+       "removed": [
+        "$uid:o11",
+        "$uid:o10",
+        "$uid:o12"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       5,
+       6,
+       7,
+       8,
+       9,
+       13,
+       14,
+       15
+      ],
+      "entities": {
+       "13": {
+        "kind": "circle",
+        "id": 13,
+        "layerId": "cizim",
+        "attrs": {},
+        "c": {
+         "x": 55,
+         "y": 0
+        },
+        "r": 1
+       },
+       "14": {
+        "kind": "circle",
+        "id": 14,
+        "layerId": "cizim",
+        "attrs": {},
+        "c": {
+         "x": 50,
+         "y": 0
+        },
+        "r": 1
+       },
+       "15": {
+        "kind": "circle",
+        "id": 15,
+        "layerId": "cizim",
+        "attrs": {},
+        "c": {
+         "x": 60,
+         "y": 0
+        },
+        "r": 1
+       }
+      },
+      "arrays": []
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Patlat",
+     "expect": {
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 50,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 1,
+         "cols": 3,
+         "dx": 5,
+         "dy": 0
+        },
+        "items": [
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         },
+         {
+          "uid": "$uidOf:12"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı dizinin iki öğesi: dizi bir kez patlar",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.array",
+     "input": {
+      "uids": [
+       "$uidOf:4"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 1,
+       "cols": 3,
+       "dx": 5,
+       "dy": 0
+      },
+      "associative": true
+     },
+     "result": "$any",
+     "expect": {
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 50,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 1,
+         "cols": 3,
+         "dx": 5,
+         "dy": 0
+        },
+        "items": [
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         },
+         {
+          "uid": "$uidOf:12"
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "op": "captureUid",
+     "id": 10,
+     "as": "o10"
+    },
+    {
+     "op": "captureUid",
+     "id": 11,
+     "as": "o11"
+    },
+    {
+     "op": "captureUid",
+     "id": 12,
+     "as": "o12"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:12",
+       "$uidOf:10"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [],
+       "created": "$any",
+       "removed": [
+        "$uid:o12",
+        "$uid:o10",
+        "$uid:o11"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       5,
+       6,
+       7,
+       8,
+       9,
+       13,
+       14,
+       15
+      ],
+      "arrays": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizinin öğesiyle başka bir nesne: ikisi de patlar, dizi gider",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.array",
+     "input": {
+      "uids": [
+       "$uidOf:4"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 1,
+       "cols": 3,
+       "dx": 5,
+       "dy": 0
+      },
+      "associative": true
+     },
+     "result": "$any",
+     "expect": {
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 50,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 1,
+         "cols": 3,
+         "dx": 5,
+         "dy": 0
+        },
+        "items": [
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         },
+         {
+          "uid": "$uidOf:12"
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "op": "captureUid",
+     "id": 10,
+     "as": "o10"
+    },
+    {
+     "op": "captureUid",
+     "id": 11,
+     "as": "o11"
+    },
+    {
+     "op": "captureUid",
+     "id": 12,
+     "as": "o12"
+    },
+    {
+     "op": "captureUid",
+     "id": 1,
+     "as": "o1"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:10"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [],
+       "created": "$any",
+       "removed": [
+        "$uid:o1",
+        "$uid:o10",
+        "$uid:o11",
+        "$uid:o12"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "arrays": []
+     }
+    }
+   ]
+  }
+ ]
+}

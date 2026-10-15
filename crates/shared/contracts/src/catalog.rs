@@ -1460,6 +1460,35 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Patlat by its meaning (docs/adr/0302), held together by fixtures/commands/v1/cad.entities.explode.json.
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_EXPLODE.into(),
+            version: crate::CAD_ENTITIES_EXPLODE_VERSION,
+            title: "Nesneleri patlat".into(),
+            summary: "Kalıcı kimlikleriyle verilen nesneleri bir düzey parçalar (AutoCAD'in EXPLODE'u); tek geri alma adımı “Patlat”. \
+                      Çoklu çizgi ve alan kenarlarına (çizgi ve yay; delikler ve parçalar da), eğri bir çoklu çizgiye, ölçü çizgilerine, oklarına ve yazısına, desenli tarama çizgilerine, kılavuz çizgisine, okuna ve notuna, tablo çizgilerine ve yazılarına, bloğun yerleştirmesi tanımın nesnelerine açılır. \
+                      Parça nesnenin katmanını, rengini ve kalınlığını alır; bloğun nesnesi çizimde varsa kendi katmanını, rengini, kalınlığını, özniteliklerini ve etiketini (yoksa yerleştirmeninkini) alır. \
+                      İlişkili dizinin (cad.entities.array'in associative'i) bir öğesi bütün diziyi patlatır: her öğe açılır, dizi aynı adımda kalkar. \
+                      Patlamayan nesne (çizgi, daire, nokta, yazı, dolu tarama …) ve kilitli katmandaki nesne uyarıyla atlanır; hiçbiri patlamazsa not_explodable, hepsi kilitliyse layer_locked. Çıktı ve plan cad.entities.edit'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesExplode>(),
+            output: schema::<crate::EntitiesEdited>(),
+            plan: Some(schema::<crate::EntitiesEditPlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir parsel alanını kenar çizgilerine ayır".into(),
+                input: json!({ "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"] }),
+                output: Some(json!({ "changed": [], "created": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4101", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4102", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4103", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4104"], "removed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"], "revision": "67" })),
+            }],
+        },
         // Ötele's semantic command (docs/adr/0246), held together by
         // fixtures/commands/v1/cad.entities.offset.json. The web is paused
         // (docs/adr/0228): the desktop's host alone runs it for now.
@@ -4116,6 +4145,9 @@ mod tests {
                     crate::CAD_ARRAYS_EDIT => {
                         serde_json::from_value::<crate::ArraysEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ENTITIES_EXPLODE => {
+                        serde_json::from_value::<crate::EntitiesExplode>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_NURBS_CREATE => {
                         serde_json::from_value::<crate::NurbsCreate>(e.input.clone()).map(|_| ())
                     }
@@ -4358,6 +4390,7 @@ mod tests {
                         }
                         crate::CAD_ENTITIES_BREAK
                         | crate::CAD_ARRAYS_EDIT
+                        | crate::CAD_ENTITIES_EXPLODE
                         | crate::CAD_ENTITIES_JOIN
                         | crate::CAD_ENTITIES_REVERSE
                         | crate::CAD_ENTITIES_LENGTHEN => {

@@ -70,7 +70,7 @@ fn the_copies_show_along_the_path_and_enter_writes_them() {
     b.click(10.0, 0.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Yol boyunca dizi: adedi yazın (Enter: 5 adet) [Aralık (A) / Hizala (H): evet / Uygula (Enter)]"
+        "Yol boyunca dizi: adedi yazın (Enter: 5 adet) [Aralık (A) / Hizala (H): evet / İlişkili (İ): hayır / Uygula (Enter)]"
     );
     b.move_to(12.0, 6.0);
     let p = preview(&b);
@@ -118,7 +118,7 @@ fn a_typed_count_is_kept_and_a_typed_spacing_fills_the_path() {
     assert!(b.type_text("A"));
     assert_eq!(
         b.session.prompt().text(),
-        "Yol boyunca dizi: aralığı yazın (Enter: 10.000 m) [Adet (N) / Hizala (H): evet / Uygula (Enter)]"
+        "Yol boyunca dizi: aralığı yazın (Enter: 10.000 m) [Adet (N) / Hizala (H): evet / İlişkili (İ): hayır / Uygula (Enter)]"
     );
     assert!(b.type_text("6"));
     assert_eq!(b.memory.path_spacing, 6.0);

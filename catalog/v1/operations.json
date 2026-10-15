@@ -1316,13 +1316,16 @@
       }
     },
     "array": {
-      "level": "semantic"
+      "level": "semantic",
+      "note": "İlişkili (İ) açıkken nesneler komutun associative'iyle ilişkili dizi olur (ADR 0300, 0302)."
     },
     "arrayPolar": {
-      "level": "semantic"
+      "level": "semantic",
+      "note": "İlişkili (İ) açıkken nesneler komutun associative'iyle ilişkili dizi olur (ADR 0300, 0302)."
     },
     "arrayPath": {
-      "level": "semantic"
+      "level": "semantic",
+      "note": "İlişkili (İ) açıkken nesneler komutun associative'iyle ilişkili dizi olur (ADR 0300, 0302)."
     },
     "erase": {
       "level": "semantic"
@@ -1432,8 +1435,12 @@
       "note": "Nesneler ya da Zincir'in tohumu ve görünüm komuta verilir; aynı doğrudakiler çizgi, aynı dairedekiler yay ya da daire olur, birleşmeyen ve ayrışan öznitelik söylenir (ADR 0254 §4, 0296)."
     },
     "explode": {
-      "level": "geometry",
-      "operation": "explode"
+      "level": "semantic",
+      "via": [
+        "cad.entities.explode"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesneler komuta verilir; parçalar çekirdekten, bloğun nesneleri kendi katman ve görünüşleriyle; ilişkili dizinin öğesi bütün diziyi patlatır (ADR 0302)."
     },
     "lengthen": {
       "level": "semantic",

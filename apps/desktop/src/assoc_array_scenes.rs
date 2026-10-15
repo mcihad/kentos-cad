@@ -18,6 +18,13 @@
 //! KENTOS_SHOTS_ONLY=dizi-duzenle,dizi-duzenle-adet,dizi-duzenle-taban cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
+//! And docs/adr/0302: Yol boyunca dizi with İlişkili on, the light's three objects along the road; one light of the
+//! array selected and Patlat: every light comes apart into its objects, the array is gone:
+//!
+//! ```text
+//! KENTOS_SHOTS_ONLY=dizi-iliskili-secenek,dizi-patlat cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! ```
+//!
 //! Test code only.
 
 use kentos_contracts::{ArrayLayout, CommandResult, EntitiesArray, Entity, Vec2};
@@ -200,6 +207,39 @@ fn edit_base(app: &mut App) {
     hover(app, [26.0, 4.0]);
 }
 
+/// Yol boyunca dizi on the light's objects, the road picked, İlişkili turned on: the copies shown along it.
+fn path_associative(app: &mut App) {
+    open(app, ground());
+    make_cad(app);
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 4.0,
+            min_y: N - 8.0,
+            max_x: E + 74.0,
+            max_y: N + 50.0,
+        },
+        24.0,
+    );
+    app.selection.set([Slot(2), Slot(3), Slot(4)]);
+    run(app, "tool.arrayPath");
+    click(app, [20.0, 0.0]);
+    typed(app, "İ");
+    typed(app, "8");
+    hover(app, [64.0, 4.0]);
+}
+
+/// The road's lights, one selected, exploded: the whole array comes apart.
+fn exploded(app: &mut App) {
+    let items = arrayed(app);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let fourth = doc
+        .slot_of(items[3].parse().expect("an id"))
+        .expect("an item");
+    app.selection.set([fourth]);
+    run(app, "tool.explode");
+    hover(app, [64.0, 4.0]);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("dizi-iliskili", made),
@@ -207,5 +247,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("dizi-duzenle", edit_picked),
         ("dizi-duzenle-adet", edit_count),
         ("dizi-duzenle-taban", edit_base),
+        ("dizi-iliskili-secenek", path_associative),
+        ("dizi-patlat", exploded),
     ]
 }

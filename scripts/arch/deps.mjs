@@ -40,7 +40,9 @@ const GROUPS = [
   // The native product commands (docs/adr/0022): typed, versioned operations over the document.
   // Pure like the document: no interface, GPU, runtime or browser; the web runs its own
   // TypeScript handlers. Listed before `native`, whose path contains it.
-  { name: 'application', path: 'crates/native/application/', targets: [HOST], uses: ['shared', 'domain'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  // Patlat's command writes a dimension's value as the project shows it (project's Format, docs/adr/0302): project is
+  // a pure model over shared and domain, so the direction stays one way.
+  { name: 'application', path: 'crates/native/application/', targets: [HOST], uses: ['shared', 'domain', 'project'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The native tool session (docs/adr/0021): tools, prompts and typed input over the document;
   // a finished object goes through the product commands. Pure like the document: no Iced,
   // window system or GPU (the desktop feeds it input and draws its preview), no runtime, no
@@ -54,7 +56,8 @@ const GROUPS = [
   // The desktop's style engine page (docs/adr/0090): the style library, a layer's program for the
   // style core and the core's batches with their colours and images. Pure like the tool session:
   // no Iced, window system or GPU (the renderer draws what it gives). Listed before `native`.
-  { name: 'style', path: 'crates/native/style/', targets: [HOST], uses: ['shared', 'domain', 'application'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  // Through application (docs/adr/0302): project is a pure model over shared and domain.
+  { name: 'style', path: 'crates/native/style/', targets: [HOST], uses: ['shared', 'domain', 'application', 'project'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // A drawing on paper (docs/adr/0252): the sheet book's maps as vectors through the style
   // engine, the sheets' tables and legends, the PDF's faces; what the desktop's sheet PDF and the
   // headless host's share. Pure like the style engine it draws with. Listed before `native`.
@@ -85,7 +88,8 @@ const GROUPS = [
   // The native renderer (docs/adr/0019): wgpu on the host's device, fed by the shared core.
   // No Iced or window system (the desktop app plugs it into Iced), no runtime, no browser.
   // It draws the style crate's batches (docs/adr/0090).
-  { name: 'render', path: 'crates/render/', targets: [HOST], uses: ['shared', 'domain', 'application', 'style'], forbid: [...RUNTIMES, ...BROWSER, 'iced*', 'winit', 'pyo3*'] },
+  // Through application (docs/adr/0302): project is a pure model over shared and domain.
+  { name: 'render', path: 'crates/render/', targets: [HOST], uses: ['shared', 'domain', 'application', 'project', 'style'], forbid: [...RUNTIMES, ...BROWSER, 'iced*', 'winit', 'pyo3*'] },
   // Desktop programs: Iced's executor may be tokio; no server framework, no browser bindings.
   // The desktop's Python console (docs/adr/0132) answers its script's requests through the
   // headless host's `rpc`; the Python itself runs in a process of its own, never in the app.

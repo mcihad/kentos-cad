@@ -28,6 +28,7 @@ COMMANDS: dict[str, Any] = {
     "cad.entities.delete": entities.delete,
     "cad.entities.divide": entities.divide,
     "cad.entities.edit": entities.edit,
+    "cad.entities.explode": entities.explode,
     "cad.entities.extend": entities.extend,
     "cad.entities.fillet": entities.fillet,
     "cad.entities.hatch": entities.hatch,

@@ -44,7 +44,8 @@ use kentos_native_application::{
 };
 use kentos_native_application::{
     arrays_edit, changeset, create, dimensions_create, divide, entities_boundary, entities_break,
-    entities_hatch, entities_join, entities_lengthen, entities_reverse, file_import, stretch,
+    entities_explode, entities_hatch, entities_join, entities_lengthen, entities_reverse,
+    file_import, stretch,
 };
 use serde_json::{Value, json};
 
@@ -878,6 +879,13 @@ impl Input for kentos_domain::contracts::EntitiesLengthen {
 
 impl Input for kentos_domain::contracts::EntitiesReverse {
     fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::EntitiesExplode {
+    /// Ids only: no number.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
@@ -1810,6 +1818,9 @@ fn run_op(
         kentos_domain::contracts::CAD_ENTITIES_DIVIDE => run!(divide, EntitiesDivide),
         kentos_domain::contracts::CAD_ARRAYS_EDIT => {
             run!(arrays_edit, kentos_domain::contracts::ArraysEdit)
+        }
+        kentos_domain::contracts::CAD_ENTITIES_EXPLODE => {
+            run!(entities_explode, kentos_domain::contracts::EntitiesExplode)
         }
         kentos_domain::contracts::CAD_ENTITIES_BOUNDARY => {
             run!(entities_boundary, EntitiesBoundary)

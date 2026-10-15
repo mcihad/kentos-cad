@@ -258,6 +258,7 @@ __all__ = [
     "EntitiesEdit",
     "EntitiesEditPlan",
     "EntitiesEdited",
+    "EntitiesExplode",
     "EntitiesFillet",
     "EntitiesHatch",
     "EntitiesJoin",

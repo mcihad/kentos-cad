@@ -24,7 +24,7 @@ use kentos_geometry_core::tools::point_text::js_trim;
 use crate::Vec2;
 use crate::format::js_number;
 use crate::log::Level;
-use crate::modify::{Modify, Stages, array_selection};
+use crate::modify::{Modify, Stages, array_selection, associative_option, associative_typed};
 use crate::prompt::Prompt;
 use crate::tool::{Context, Flow, Memory};
 
@@ -76,7 +76,8 @@ impl Array {
             dx,
             dy,
         };
-        let Some(n) = array_selection(layout, cx) else {
+        let associative = cx.memory.array_associative;
+        let Some(n) = array_selection(layout, associative, cx) else {
             return Flow::Stay;
         };
         let memory = &mut *cx.memory;
@@ -84,10 +85,17 @@ impl Array {
         memory.array_cols = self.cols;
         memory.array_dx = dx;
         memory.array_dy = dy;
-        let line = format!(
-            "{} × {} dizi oluşturuldu: {n} yeni nesne.",
-            self.rows, self.cols
-        );
+        let line = if associative {
+            format!(
+                "{} × {} ilişkili dizi oluşturuldu: {n} öğe.",
+                self.rows, self.cols
+            )
+        } else {
+            format!(
+                "{} × {} dizi oluşturuldu: {n} yeni nesne.",
+                self.rows, self.cols
+            )
+        };
         cx.say(Level::Success, line);
         Flow::Exit
     }
@@ -184,7 +192,7 @@ impl Stages for Array {
                 js_number(l.array_dy)
             ),
         };
-        Prompt::new(LABEL, step)
+        associative_option(Prompt::new(LABEL, step).then(), l)
     }
 
     fn point(&mut self, p: Vec2, cx: &mut Context<'_>) -> Flow {
@@ -199,6 +207,10 @@ impl Stages for Array {
     }
 
     fn typed(&mut self, text: &str, cx: &mut Context<'_>) -> Option<Flow> {
+        if associative_typed(text, cx) {
+            self.last = *cx.memory;
+            return Some(Flow::Stay);
+        }
         if self.stage == Stage::Spacing {
             // Spacings are typed in the project's unit (docs/adr/0165 §2), or with their own (docs/adr/0266).
             let (a, b) = kentos_geometry_core::tools::point_text::parse_length_pair(text)?;

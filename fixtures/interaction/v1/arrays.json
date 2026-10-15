@@ -12,7 +12,7 @@
   "clickTolerance": 0.125,
   "steps": [
     { "click": [-16, -12], "note": "1. çizgi seçilir.", "expect": { "tool": "select", "selected": [1] } },
-    { "run": "tool.array", "expect": { "tool": "array", "options": [] } },
+    { "run": "tool.array", "expect": { "tool": "array", "options": ["İ"] } },
     { "key": "Enter", "note": "Son satır ve sütun sayısı: 2 × 3. Sıra aralıkta.", "expect": { "tool": "array", "entities": 7 } },
     { "move": [-24, -12], "expect": { "snap": "endpoint" } },
     { "click": [-24, -12], "note": "Aralığın ilk noktası." },
@@ -38,12 +38,12 @@
     { "click": [8, 10], "note": "3. çizgi seçilir.", "expect": { "selected": [3] } },
     { "run": "tool.arrayPolar", "expect": { "tool": "arrayPolar", "options": [] } },
     { "text": "487000,4420000" },
-    { "key": "Enter", "note": "Merkez yazılır: (0, 0). Kopyalar görünür.", "expect": { "options": ["N", "A", "D"] } },
+    { "key": "Enter", "note": "Merkez yazılır: (0, 0). Kopyalar görünür.", "expect": { "options": ["N", "A", "D", "İ"] } },
     { "key": "N", "expect": { "options": [] } },
     { "text": "1" },
     { "key": "Enter", "note": "Adet en az 2: uyarılır, adet yine sorulur.", "expect": { "log": "warn", "options": [] } },
     { "text": "4" },
-    { "key": "Enter", "note": "Toplam 4 öğe.", "expect": { "options": ["N", "A", "D"] } },
+    { "key": "Enter", "note": "Toplam 4 öğe.", "expect": { "options": ["N", "A", "D", "İ"] } },
     { "rightClick": [20, -16], "note": "Tam turda 90° arayla üç kopya, merkez etrafında dönerek; adım Kutupsal dizi.", "expect": { "tool": "select", "entities": 10, "log": "success", "newest": { "kind": "line", "points": [[16, 0], [4, -16]] } } },
     { "key": "Ctrl+Z", "expect": { "entities": 7 } },
     { "run": "tool.arrayPolar" },
@@ -51,7 +51,7 @@
     { "key": "Enter" },
     { "key": "A", "expect": { "options": [] } },
     { "text": "180" },
-    { "key": "Enter", "expect": { "options": ["N", "A", "D"] } },
+    { "key": "Enter", "expect": { "options": ["N", "A", "D", "İ"] } },
     { "key": "D", "note": "Nesneler dönmez." },
     { "key": "N" },
     { "text": "3" },
@@ -67,7 +67,7 @@
     { "key": "A" },
     { "text": "360" },
     { "key": "Enter" },
-    { "key": "D", "note": "Değerler izin başındaki gibi: 6 öğe, 360°, dönerek.", "expect": { "options": ["N", "A", "D"] } },
+    { "key": "D", "note": "Değerler izin başındaki gibi: 6 öğe, 360°, dönerek.", "expect": { "options": ["N", "A", "D", "İ"] } },
     { "key": "Esc", "note": "Çıkılır; hiçbir şey yazılmaz.", "expect": { "tool": "select", "entities": 7 } }
   ]
 }

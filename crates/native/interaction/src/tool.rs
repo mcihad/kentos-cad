@@ -565,6 +565,9 @@ pub struct Memory {
     pub array_cols: u32,
     pub array_dx: f64,
     pub array_dy: f64,
+    /// The array tools' İlişkili (docs/adr/0302): an associative array instead of independent copies; off at start,
+    /// as the copies were.
+    pub array_associative: bool,
     /// Kutupsal dizi's count, fill angle in degrees and whether the copies
     /// turn (`PolarArrayTool.last`).
     pub polar_count: u32,
@@ -983,6 +986,7 @@ impl Default for Memory {
             array_cols: 3,
             array_dx: 10.0,
             array_dy: 10.0,
+            array_associative: false,
             polar_count: 6,
             polar_fill: 360.0,
             polar_rotate: true,

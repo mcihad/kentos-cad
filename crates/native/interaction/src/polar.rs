@@ -25,7 +25,7 @@ use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 use crate::Vec2;
 use crate::format::{Format, js_number};
 use crate::log::Level;
-use crate::modify::{Modify, Stages, array_selection};
+use crate::modify::{Modify, Stages, array_selection, associative_option, associative_typed};
 use crate::points::wire;
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Context, Flow, Memory};
@@ -126,14 +126,17 @@ impl Stages for Polar {
                 LABEL,
                 "doldurma açısını derece olarak yazın (360 tam tur; eksi saat yönünde)",
             ),
-            (Some(_), None) => Prompt::new(LABEL, "uygulamak için sağ tıklayın")
-                .option_with("Adet", "N", l.polar_count.to_string())
-                .option_with("Açı", "A", format!("{}°", js_number(l.polar_fill)))
-                .option_with(
-                    "Nesneleri döndür",
-                    "D",
-                    if l.polar_rotate { "evet" } else { "hayır" },
-                ),
+            (Some(_), None) => associative_option(
+                Prompt::new(LABEL, "uygulamak için sağ tıklayın")
+                    .option_with("Adet", "N", l.polar_count.to_string())
+                    .option_with("Açı", "A", format!("{}°", js_number(l.polar_fill)))
+                    .option_with(
+                        "Nesneleri döndür",
+                        "D",
+                        if l.polar_rotate { "evet" } else { "hayır" },
+                    ),
+                l,
+            ),
         }
     }
 
@@ -148,6 +151,9 @@ impl Stages for Polar {
         self.centre?;
         let t = upper_tr(js_trim(text));
         match t.as_str() {
+            "İ" if self.ask.is_none() => {
+                associative_typed(text, cx);
+            }
             "N" => self.ask = Some(Ask::Count),
             "A" => self.ask = Some(Ask::Fill),
             "D" => cx.memory.polar_rotate = !cx.memory.polar_rotate,
@@ -203,10 +209,13 @@ impl Stages for Polar {
             fill,
             rotate,
         };
-        if let Some(n) = array_selection(layout, cx) {
+        let associative = cx.memory.array_associative;
+        if let Some(n) = array_selection(layout, associative, cx) {
             let line = format!(
-                "Kutupsal dizi: {count} adet, {}° içinde, {n} yeni nesne.",
-                js_number(fill)
+                "Kutupsal {}dizi: {count} adet, {}° içinde, {n} {}.",
+                if associative { "ilişkili " } else { "" },
+                js_number(fill),
+                if associative { "öğe" } else { "yeni nesne" }
             );
             cx.say(Level::Success, line);
         }

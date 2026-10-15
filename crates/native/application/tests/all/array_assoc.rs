@@ -194,3 +194,50 @@ fn edit_timing() {
         "within budget"
     );
 }
+
+/// `cargo test --release -p kentos-native-application --test all array_assoc::explode_timing -- --ignored --nocapture`:
+/// Patlat (docs/adr/0302) on one item of a 100 × 100 associative array of a three-line symbol: 30 000 pieces.
+#[test]
+#[ignore = "a timing, run on purpose"]
+fn explode_timing() {
+    use kentos_domain::contracts::EntitiesExplode;
+    use kentos_native_application::entities_explode;
+    use std::time::Instant;
+    let mut doc = drawing();
+    let grid = input(
+        &doc,
+        ArrayLayout::Grid {
+            rows: 100,
+            cols: 100,
+            dx: 3.0,
+            dy: 4.0,
+        },
+    );
+    let CommandResult::Completed { output, .. } =
+        array::execute(&mut ExecutionContext::new(&mut doc), grid)
+    else {
+        panic!("not completed")
+    };
+    let one = EntitiesExplode {
+        uids: vec![output.created[5_000].clone()],
+        expected_revision: None,
+    };
+    let t = Instant::now();
+    let CommandResult::Completed { output, .. } =
+        entities_explode::execute(&mut ExecutionContext::new(&mut doc), one)
+    else {
+        panic!("not completed")
+    };
+    let exploded = t.elapsed().as_secs_f64() * 1e3;
+    assert_eq!(output.removed.len(), 10_000);
+    assert_eq!(output.created.len(), 30_000);
+    assert!(doc.arrays().is_empty());
+    let t = Instant::now();
+    assert_eq!(doc.undo().as_deref(), Some("Patlat"));
+    let undone = t.elapsed().as_secs_f64() * 1e3;
+    assert_eq!(doc.arrays().len(), 1);
+    println!(
+        "100 × 100 ilişkili dizinin bir öğesinden: bütün dizinin patlatılması (30 000 parça) {exploded:.2} ms, geri alınması {undone:.2} ms"
+    );
+    assert!(exploded < 1000.0 && undone < 300.0, "within budget");
+}

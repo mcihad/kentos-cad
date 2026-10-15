@@ -17,8 +17,8 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 49 | 111 | 38 | 38 | 236 |
-| geometry | 19 | 65 | 0 | 8 | 92 |
+| semantic | 49 | 112 | 38 | 38 | 237 |
+| geometry | 19 | 64 | 0 | 8 | 91 |
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 20 | 0 | 6 | 26 |
 | query | 0 | 21 | 1 | 4 | 26 |
@@ -31,9 +31,9 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 495 satırdan 135'i: geometry 84, none 20, processing 13, query 18.
+CBS'ye özgü olmayan 495 satırdan 134'i: geometry 83, none 20, processing 13, query 18.
 
-### Sonucu çağıran hesaplar (geometry) — 84
+### Sonucu çağıran hesaplar (geometry) — 83
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -65,7 +65,6 @@ CBS'ye özgü olmayan 495 satırdan 135'i: geometry 84, none 20, processing 13, 
 | `tool.dimContinue` | Zincir ölçü | cad | cad.entities.create `dimensionChain` |  |
 | `tool.donut` | Halka | cad | cad.entities.create |  |
 | `tool.edgeShift` | Paralel kaydır | shared | cad.entities.edit `edgeShift` |  |
-| `tool.explode` | Patlat | shared | cad.entities.edit `explode` |  |
 | `tool.fourthCorner` | Dördüncü köşe | shared | cad.entities.create `fourthCorner` |  |
 | `tool.holeAdd` | Delik ekle | shared | cad.entities.edit `holeAdd` |  |
 | `tool.holeFill` | Deliği doldur | shared | cad.entities.edit `holeFill` |  |

@@ -6848,7 +6848,7 @@
    "operation": null,
    "python": "kentos.cad.entities.array",
    "mcp": "cad.entities.array",
-   "note": null,
+   "note": "İlişkili (İ) açıkken nesneler komutun associative'iyle ilişkili dizi olur (ADR 0300, 0302).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 2
@@ -6880,7 +6880,7 @@
    "operation": null,
    "python": "kentos.cad.entities.array",
    "mcp": "cad.entities.array",
-   "note": null,
+   "note": "İlişkili (İ) açıkken nesneler komutun associative'iyle ilişkili dizi olur (ADR 0300, 0302).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -6896,7 +6896,7 @@
    "operation": null,
    "python": "kentos.cad.entities.array",
    "mcp": "cad.entities.array",
-   "note": null,
+   "note": "İlişkili (İ) açıkken nesneler komutun associative'iyle ilişkili dizi olur (ADR 0300, 0302).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 2
@@ -7617,14 +7617,14 @@
    "id": "tool.explode",
    "kind": "tool",
    "title": "Patlat",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.entities.explode"
    ],
-   "operation": "explode",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.entities.explode",
+   "mcp": "cad.entities.explode",
+   "note": "Nesneler komuta verilir; parçalar çekirdekten, bloğun nesneleri kendi katman ve görünüşleriyle; ilişkili dizinin öğesi bütün diziyi patlatır (ADR 0302).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 8

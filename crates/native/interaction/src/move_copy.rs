@@ -87,7 +87,8 @@ impl Move {
         }) = self.array
         {
             let layout = ArrayLayout::Line { count, dx, dy, fit };
-            if let Some(n) = array_selection(layout, cx) {
+            // Kopyala's Dizi stays independent copies, as AutoCAD's COPY Array (docs/adr/0302).
+            if let Some(n) = array_selection(layout, false, cx) {
                 cx.memory.last_displacement = Some([dx, dy]);
                 let line = format!(
                     "{n} kopya diziye yerleştirildi: {count} yer, ΔY {}  ΔX {}{}",

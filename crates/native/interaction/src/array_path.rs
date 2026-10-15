@@ -30,7 +30,7 @@ use crate::Vec2;
 use crate::edge::{self, Outline};
 use crate::format::Format;
 use crate::log::Level;
-use crate::modify::{Modify, Stages, array_selection};
+use crate::modify::{Modify, Stages, array_selection, associative_option, associative_typed};
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Context, Flow, Marker, MarkerShape, Memory, Pointer, Preview, Tone};
 
@@ -238,9 +238,7 @@ impl Stages for ArrayPath {
                 .then()
                 .option("Aralık", "A")
         };
-        prompt
-            .option_with("Hizala", "H", align)
-            .option("Uygula", "Enter")
+        associative_option(prompt.option_with("Hizala", "H", align), l).option("Uygula", "Enter")
     }
 
     /// A click picks the path (or another); a move lights the object it would pick.
@@ -265,6 +263,9 @@ impl Stages for ArrayPath {
             "N" => cx.memory.path_by_spacing = false,
             "A" => cx.memory.path_by_spacing = true,
             "H" => cx.memory.path_align = !cx.memory.path_align,
+            "İ" => {
+                associative_typed(text, cx);
+            }
             _ => {
                 let (n, metres) = crate::points::plain_value(text, cx)
                     .or_else(|| parse_number(text).map(|n| (n, cx.format().to_metres(n))))?;
@@ -309,12 +310,19 @@ impl Stages for ArrayPath {
             spacing,
             align: cx.memory.path_align,
         };
-        let Some(n) = array_selection(layout, cx) else {
+        let associative = cx.memory.array_associative;
+        let Some(n) = array_selection(layout, associative, cx) else {
             return Flow::Stay;
         };
+        let what = if associative {
+            "ilişkili dizi"
+        } else {
+            "dizi"
+        };
+        let made = if associative { "öğe" } else { "yeni nesne" };
         cx.say(
             Level::Success,
-            format!("Yol boyunca dizi: {count} adet, {n} yeni nesne."),
+            format!("Yol boyunca {what}: {count} adet, {n} {made}."),
         );
         Flow::Exit
     }

@@ -20,7 +20,8 @@
 //!   patterned hatch into lines; the pieces are new objects from it (its
 //!   layer and colour) and become the selection. A block's insert opens into
 //!   its definition's objects, one level, each with its own layer, colour
-//!   and data (docs/adr/0144).
+//!   and data (docs/adr/0144); an item of an associative array explodes its
+//!   whole array, which is gone (docs/adr/0302).
 //!
 //! - Okunur yap (docs/adr/0145 §6): the texts that read upside down (turned
 //!   more than 90° and at most 270°) turn half round about their box's
@@ -30,24 +31,21 @@
 //!
 //! Birleştir writes through its product command `cad.entities.join`
 //! (docs/adr/0254 §4), the chains found there by the shared core
-//! (`join_entities`, `chain`); Patlat and Okunur yap write one undo step
-//! through `cad.entities.edit`, the pieces and the turn the core's
-//! (`explode_entity`, `TextPlace::readable`).
+//! (`join_entities`, `chain`); Patlat through its own, `cad.entities.explode`
+//! (docs/adr/0302), the pieces the core's (`explode_entity`); Okunur yap
+//! writes one undo step through `cad.entities.edit`, the turn the core's
+//! (`TextPlace::readable`).
 
 use kentos_contracts::{
-    CommandResult, EditOperation, EntitiesJoin, Entity, EntityEdit, TextEntity, TrimBoundaries,
+    CommandResult, EditOperation, EntitiesExplode, EntitiesJoin, Entity, EntityEdit, TextEntity,
+    TrimBoundaries,
 };
 use kentos_domain::Slot;
-use kentos_geometry_core::api::json::Json;
-use kentos_geometry_core::entity::{Entity as CoreEntity, Shape, TextPlace, dimension_geom};
+use kentos_geometry_core::entity::{Shape, TextPlace};
 use kentos_geometry_core::geom::affine::Affine;
-use kentos_geometry_core::geom::dimension::layout_dimension;
-use kentos_geometry_core::ops::curve_cuts::Cut;
-use kentos_geometry_core::ops::explode::explode_entity;
 use kentos_geometry_core::tools::point_text::js_trim;
-use kentos_native_application::blocks::core_entity;
 use kentos_native_application::geometry::{drawing_font, edit_geometry, shape};
-use kentos_native_application::{ExecutionContext, entities_join};
+use kentos_native_application::{ExecutionContext, entities_explode, entities_join};
 
 use crate::Vec2;
 use crate::edge;
@@ -313,68 +311,26 @@ impl ObjectAction {
         true
     }
 
-    /// A dimension's measured value as the drawing shows it, in project
-    /// units: what its exploded text says when it has none of its own.
-    fn value_text(e: &Entity, f: &Format) -> String {
-        let Entity::Dimension(d) = e else {
-            return String::new();
-        };
-        if d.text.as_deref().is_some_and(|t| !t.is_empty()) {
-            return String::new();
-        }
-        let s = shape(e);
-        let Some(l) = dimension_geom(&s).and_then(|g| layout_dimension(&g)) else {
-            return String::new();
-        };
-        f.dimension(l.prefix, l.unit, l.value)
-    }
-
-    /// Patlat (the web's `ExplodeTool.run`).
+    /// Patlat (the web's `ExplodeTool.run`) through `cad.entities.explode` (docs/adr/0302): the pieces are the
+    /// command's; an item of an associative array explodes its whole array.
     fn run_explode(targets: &[Slot], cx: &mut Context<'_>) {
-        let f = cx.format();
-        let font = drawing_font(cx.doc.settings().drawing_font);
-        let mut changes = Vec::new();
-        let mut exploded = 0;
-        let mut first_error: Option<String> = None;
-        for slot in targets {
-            let Some(e) = cx.doc.get(*slot) else { continue };
-            // A block's insert opens into its definition's objects, one level
-            // (docs/adr/0144): each keeps its own layer, colour, line weight
-            // and data; what it lacks is the insert's.
-            let cut = if let Entity::Insert(_) = e {
-                cx.spatial.store().blocks().explode(&core_entity(e))
-            } else {
-                explode_entity(&shape(e), &Self::value_text(e, &f), font)
-            };
-            let insert = matches!(e, Entity::Insert(_));
-            match cut {
-                Cut::Error(error) => {
-                    first_error.get_or_insert(error);
-                }
-                Cut::Pieces(pieces) => {
-                    let uid = edge::uid(cx.doc, *slot);
-                    exploded += 1;
-                    changes.push(EntityEdit::Remove { uid: uid.clone() });
-                    for piece in pieces {
-                        let Some(geometry) = edge::geometry(&piece.shape) else {
-                            continue;
-                        };
-                        changes.push(if insert {
-                            block_piece(cx.doc, &uid, geometry, &piece)
-                        } else {
-                            EntityEdit::add(uid.clone(), geometry, None)
-                        });
-                    }
-                }
-            }
-        }
-        if exploded == 0 {
-            if let Some(error) = first_error {
-                cx.say(Level::Warn, error);
-            }
+        let uids: Vec<String> = targets
+            .iter()
+            .filter_map(|s| cx.doc.uid(*s))
+            .map(|u| u.to_string())
+            .collect();
+        if uids.is_empty() {
             return;
         }
-        let Some(out) = edge::write(EditOperation::Explode, changes, cx) else {
+        let input = EntitiesExplode {
+            uids,
+            expected_revision: None,
+        };
+        let result = entities_explode::execute(
+            &mut ExecutionContext::with_store(cx.doc, cx.spatial.store()),
+            input,
+        );
+        let Some(out) = points::written(result, cx) else {
             return;
         };
         let created: Vec<Slot> = out
@@ -385,61 +341,10 @@ impl ObjectAction {
             .collect();
         let n = created.len();
         cx.selection.set(created);
-        let skipped = first_error
-            .map(|e| format!(" Bazı nesneler atlandı: {e}"))
-            .unwrap_or_default();
         cx.say(
             Level::Success,
-            format!("{exploded} nesne patlatıldı: {n} parça.{skipped}"),
+            format!("{} nesne patlatıldı: {n} parça.", out.removed.len()),
         );
-    }
-}
-
-/// A block's object exploded from the insert `from` (docs/adr/0144): an
-/// `add` with the object's own layer when the drawing has it as a layer (else
-/// the insert's), its colour and line weight (the insert's when it has none:
-/// the core gives them), its attributes and label.
-fn block_piece(
-    doc: &kentos_domain::Document,
-    from: &str,
-    geometry: kentos_contracts::EntityGeometry,
-    piece: &CoreEntity,
-) -> EntityEdit {
-    let field = |name: &str| piece.rest.iter().find(|(k, _)| k == name).map(|(_, v)| v);
-    let text = |name: &str| match field(name) {
-        Some(Json::Str(s)) => Some(s.clone()),
-        _ => None,
-    };
-    let layer_id = text("layerId").filter(|id| {
-        doc.layers()
-            .get(id)
-            .is_some_and(|n| n.kind == kentos_contracts::LayerNodeType::Layer)
-    });
-    let line_weight = match field("lineWeight") {
-        Some(Json::Num(w)) => Some(*w),
-        _ => None,
-    };
-    let attrs = match field("attrs") {
-        Some(Json::Obj(fields)) => Some(
-            fields
-                .iter()
-                .filter_map(|(k, v)| match v {
-                    Json::Str(s) => Some((k.clone(), s.clone())),
-                    _ => None,
-                })
-                .collect(),
-        ),
-        _ => None,
-    };
-    EntityEdit::Add {
-        from: from.to_owned(),
-        geometry,
-        keep_data: None,
-        layer_id,
-        color: text("color"),
-        line_weight,
-        attrs,
-        label: text("label"),
     }
 }
 

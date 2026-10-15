@@ -6632,6 +6632,40 @@ class EntitiesEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class EntitiesExplode(_Model):
+    """Input of `cad.entities.explode` v1: the objects `uids` exploded one level, as one undo step “Patlat”. Each object
+    is replaced by its pieces: a piece keeps the object's layer, look and data, a block's object its own layer when
+    the drawing has it, colour, line weight, data and label (the insert's when it has none). An object on a locked
+    layer is left out with a warning (`layer_locked`); one that does not explode (a line, a circle, a point, a text,
+    a solid hatch …) too (`not_explodable`), with the first one's words.
+
+    Refusals (`CommandError.code`), checked in this order: `no_entities`, `invalid_uid`, `invalid_revision`,
+    `revision_conflict` (status `conflict`), `entity_not_found`, `layer_locked` (every object locked),
+    `not_explodable` (none explodes), `slots_exhausted`.
+    Attributes:
+        uids: The objects' persistent ids (lowercase UUID text with hyphens), at least one.
+        expected_revision: The document revision the input was prepared against, as decimal text. When given and the document is no
+            longer at it, nothing is written and the answer is `conflict`.
+    """
+    uids: list[str]
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesExplode:
+        return cls(
+            uids=list(data["uids"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class EntitiesFillet(_Model):
     """Input of `cad.entities.fillet` v1: the corner rounded with `radius`, as
     one undo step “Köşe yuvarla”. With Kırp (`trim`, the default) the sides
@@ -22440,6 +22474,7 @@ __all__ = [
     "EntitiesEdit",
     "EntitiesEditPlan",
     "EntitiesEdited",
+    "EntitiesExplode",
     "EntitiesFillet",
     "EntitiesHatch",
     "EntitiesJoin",

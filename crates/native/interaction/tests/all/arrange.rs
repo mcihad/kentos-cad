@@ -235,7 +235,7 @@ fn the_array_reads_its_counts_and_spacing_as_the_web_does() {
     b.start("array");
     assert_eq!(
         b.session.prompt().text(),
-        "Dizi: satır ve sütun sayısını yazın, ör. 2,3 (Enter: 2,3)"
+        "Dizi: satır ve sütun sayısını yazın, ör. 2,3 (Enter: 2,3) [İlişkili (İ): hayır]"
     );
     // Clicks mean nothing before the spacing; a typed point is not read.
     b.click(-24.0, -12.0);
@@ -250,7 +250,7 @@ fn the_array_reads_its_counts_and_spacing_as_the_web_does() {
     assert!(b.type_text("1.6;2.4"));
     assert_eq!(
         b.session.prompt().text(),
-        "Dizi: sütun ve satır aralığını yazın dY,dX (Enter: 10,10) ya da iki nokta gösterin"
+        "Dizi: sütun ve satır aralığını yazın dY,dX (Enter: 10,10) ya da iki nokta gösterin [İlişkili (İ): hayır]"
     );
     // A typed point is not a spacing either.
     assert!(!b.type_text("@4,4"));
@@ -313,7 +313,7 @@ fn the_polar_array_asks_its_options_and_checks_them() {
     b.click(0.0, 0.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Kutupsal dizi: uygulamak için sağ tıklayın [Adet (N): 6 / Açı (A): 360° / Nesneleri döndür (D): evet]"
+        "Kutupsal dizi: uygulamak için sağ tıklayın [Adet (N): 6 / Açı (A): 360° / Nesneleri döndür (D): evet / İlişkili (İ): hayır]"
     );
     // The copies show: five ghosts.
     let preview = b.session.preview(&Default::default()).expect("a preview");
@@ -461,4 +461,22 @@ fn a_locked_object_is_not_aligned() {
         )
     );
     assert!(!b.doc.can_undo());
+}
+
+#[test]
+fn the_array_with_ilişkili_makes_an_associative_array() {
+    let mut b = bench(&[1]);
+    b.start("array");
+    assert!(b.type_text("İ"));
+    assert!(b.session.prompt().text().ends_with("[İlişkili (İ): evet]"));
+    assert!(b.type_text("2,2"));
+    assert!(b.type_text("5,5"));
+    assert_eq!(
+        b.last_text(),
+        Some("2 × 2 ilişkili dizi oluşturuldu: 4 öğe.")
+    );
+    assert_eq!(b.doc.arrays().len(), 1);
+    assert_eq!(b.doc.arrays()[0].items.len(), 4);
+    assert_eq!(b.doc.undo().as_deref(), Some("Dizi"));
+    assert!(b.doc.arrays().is_empty());
 }

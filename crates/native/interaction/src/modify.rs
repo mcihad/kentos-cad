@@ -31,11 +31,12 @@ use kentos_native_application::{ExecutionContext, array, transform};
 
 use crate::Vec2;
 use crate::format::Format;
+use crate::js_trim;
 use crate::outlines;
 use crate::points;
-use crate::prompt::Prompt;
+use crate::prompt::{Prompt, upper_tr};
 use crate::select::SelectBox;
-use crate::tool::{Context, Flow, Pointer, Preview, Stroke, Tag, Tool};
+use crate::tool::{Context, Flow, Memory, Pointer, Preview, Stroke, Tag, Tool};
 
 /// Ghosts drawn at most (the web's `MAX_GHOSTS`): one more is drawn, then the rest are left out.
 pub(crate) const MAX_GHOSTS: usize = 400;
@@ -586,11 +587,39 @@ pub(crate) fn transform_selection(
 /// command `cad.entities.array` (docs/adr/0047): the selected objects'
 /// persistent ids, one undo step named after the tool. The command's refusal
 /// or warning is said as the tool's; how many copies were made, or `None`.
-pub(crate) fn array_selection(layout: ArrayLayout, cx: &mut Context<'_>) -> Option<usize> {
+/// With `associative` the objects become one associative array of a block's
+/// inserts (docs/adr/0300, 0302).
+/// The array tools' İlişkili option (docs/adr/0302), its value.
+pub(crate) fn associative_option(prompt: Prompt, m: &Memory) -> Prompt {
+    prompt.option_with(
+        "İlişkili",
+        "İ",
+        if m.array_associative {
+            "evet"
+        } else {
+            "hayır"
+        },
+    )
+}
+
+/// İ turns the array tools' İlişkili on or off; whether `text` was it.
+pub(crate) fn associative_typed(text: &str, cx: &mut Context<'_>) -> bool {
+    if upper_tr(js_trim(text)) != "İ" {
+        return false;
+    }
+    cx.memory.array_associative = !cx.memory.array_associative;
+    true
+}
+
+pub(crate) fn array_selection(
+    layout: ArrayLayout,
+    associative: bool,
+    cx: &mut Context<'_>,
+) -> Option<usize> {
     let input = EntitiesArray {
         uids: selected_uids(cx),
         layout,
-        associative: false,
+        associative,
         expected_revision: None,
     };
     let result = array::execute(&mut ExecutionContext::new(cx.doc), input);
