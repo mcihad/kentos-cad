@@ -52,6 +52,8 @@ mod curve_scenes;
 mod data_compare;
 #[cfg(test)]
 mod dimension_scenes;
+#[cfg(test)]
+mod divide_scenes;
 mod document;
 mod draw_order;
 mod drawing_exchange;

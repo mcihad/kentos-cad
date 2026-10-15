@@ -7,6 +7,7 @@ mod capabilities;
 mod catalog;
 mod create;
 mod delete;
+mod divide;
 mod edit;
 mod fixtures;
 mod info_templates;

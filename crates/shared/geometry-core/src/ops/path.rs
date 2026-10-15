@@ -7,9 +7,12 @@ use crate::api::json::{FromJson, Json, read_field};
 use crate::entity::{Entity, Shape, ellipse_geom, is_multi_part};
 use crate::geom::arc::norm_angle;
 use crate::geom::bulge::{bulge_of_sweep, clean_bulge_path};
-use crate::geom::ellipse::{closest_param, ellipse_point, is_full_ellipse};
+use crate::geom::ellipse::{
+    EllipseGeom, closest_param, ellipse_derivative, ellipse_length, ellipse_point, ellipse_sweep,
+    is_full_ellipse,
+};
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, point_at};
-use crate::jsmath::{js_cmp, js_floor, js_hypot, js_max, js_min, js_sign, or, stable_sort};
+use crate::jsmath::{atan2, js_cmp, js_floor, js_hypot, js_max, js_min, js_sign, or, stable_sort};
 use crate::op;
 use crate::ops::edges::{edge_length, entity_edges};
 use crate::vec2::Vec2;
@@ -281,6 +284,146 @@ pub fn division_points(e: &Shape, opts: &Division, from_end: bool) -> Vec<Vec2> 
         }
         _ => params.into_iter().map(at).collect(),
     }
+}
+
+/// Which of an open path's own ends Böl and Ölç also mark (docs/adr/0299 §2): its start, its end or both.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum DivisionEnds {
+    #[default]
+    None,
+    Start,
+    End,
+    Both,
+}
+
+/// One place of a division: the point and the object's direction there (radians counter-clockwise from east,
+/// the way the path runs from its start to its end).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct DivisionPlace {
+    pub at: Vec2,
+    pub direction: f64,
+}
+
+/// Böl's and Ölç's places (docs/adr/0299 §1, §2): [`division_params`] with the step's first place at `start`
+/// (none: at the step), measured from the end when `from_end`, and an open path's own ends when `ends` asks and
+/// no place is already there (within 1e-9 · max(1, L)). In order: the measuring start's end, the division's
+/// places, the measuring finish's end. A closed path's ends are its start, already among the parts' places.
+pub fn division_places(
+    e: &Shape,
+    opts: &Division,
+    from_end: bool,
+    start: Option<f64>,
+    ends: DivisionEnds,
+) -> Vec<DivisionPlace> {
+    let Some(path) = path_of(e) else {
+        return Vec::new();
+    };
+    let ellipse = match *e {
+        Shape::Ellipse {
+            c,
+            major,
+            ratio,
+            t0,
+            t1,
+        } => Some(ellipse_geom(c, major, ratio, t0, t1)),
+        _ => None,
+    };
+    // An elliptical arc's places are measured along the true curve, not the path's fine chords.
+    let l = ellipse.as_ref().map_or(path.length, ellipse_length);
+    let eps = 1e-9 * js_max(1.0, l);
+    let mut ss = match (opts, start) {
+        (Division::Step(step), Some(first)) => {
+            let mut out = Vec::new();
+            if *step > 0.0 {
+                let mut s = first;
+                while s < l - eps {
+                    out.push(s);
+                    s += step;
+                }
+            }
+            out
+        }
+        _ => division_params(
+            &Path {
+                length: l,
+                ..path.clone()
+            },
+            opts,
+        ),
+    };
+    if !path.closed {
+        // The measuring start's end is the object's end when measuring from the end.
+        let (head, tail) = match (ends, from_end) {
+            (DivisionEnds::None, _) => (false, false),
+            (DivisionEnds::Both, _) => (true, true),
+            (DivisionEnds::Start, false) | (DivisionEnds::End, true) => (true, false),
+            (DivisionEnds::End, false) | (DivisionEnds::Start, true) => (false, true),
+        };
+        if head && ss.first().is_none_or(|s| *s > eps) {
+            ss.insert(0, 0.0);
+        }
+        if tail && ss.last().is_none_or(|s| *s < l - eps) {
+            ss.push(l);
+        }
+    }
+    ss.into_iter()
+        .map(|s| {
+            let s = if from_end { l - s } else { s };
+            match &ellipse {
+                Some(g) => {
+                    let t = ellipse_param_at(g, &path, l, s);
+                    let d = ellipse_derivative(g, t);
+                    DivisionPlace {
+                        at: ellipse_point(g, t),
+                        direction: direction_of(d),
+                    }
+                }
+                None => {
+                    let d = tangent_at_s(&path, s);
+                    DivisionPlace {
+                        at: point_at_s(&path, s),
+                        direction: direction_of(d),
+                    }
+                }
+            }
+        })
+        .collect()
+}
+
+/// The parameter of the elliptical arc `g` (`l` long) whose length along it from its start is `s`: the fine
+/// chords' estimate, then Newton's steps on the true length (f′ is the speed |C′(t)|).
+fn ellipse_param_at(g: &EllipseGeom, path: &Path, l: f64, s: f64) -> f64 {
+    let end = g.t0 + ellipse_sweep(g);
+    if s <= 0.0 {
+        return g.t0;
+    }
+    if s >= l {
+        return end;
+    }
+    let mut t = closest_param(g, point_at_s(path, s * path.length / l));
+    for _ in 0..8 {
+        let run = if t <= g.t0 {
+            0.0
+        } else {
+            ellipse_length(&EllipseGeom { t1: t, ..*g })
+        };
+        let d = ellipse_derivative(g, t);
+        let speed = js_hypot(d.x, d.y);
+        if !(speed > 0.0) {
+            break;
+        }
+        let step = (run - s) / speed;
+        t = (t - step).clamp(g.t0, end);
+        if step.abs() <= 1e-15 * js_max(1.0, t.abs()) {
+            break;
+        }
+    }
+    t
+}
+
+/// A tangent's direction in atan2's (−π, π]: a zero component's sign does not turn west into −π.
+fn direction_of(d: Vec2) -> f64 {
+    atan2(d.y + 0.0, d.x + 0.0)
 }
 
 pub(crate) static OPS: &[Op] = &[

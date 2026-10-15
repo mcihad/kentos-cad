@@ -1,0 +1,3191 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.entities.divide",
+ "commandVersion": 1,
+ "title": "Böl ve Ölç: blok, hizalama, başlangıç ve uçlar",
+ "note": "ADR 0299. Bağımsız başvuru: scripts/fixtures/divide_place_cases.py (elips yayı mpmath'le 40 basamakta).",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Böl ve Ölç",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 100,
+   "workspace": "cad"
+  },
+  "origin": {
+   "x": 40,
+   "y": 20
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "nokta",
+    "name": "Nokta",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "line",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 10,
+     "y": 0
+    }
+   },
+   {
+    "kind": "polyline",
+    "id": 2,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0,
+      "y": 10
+     },
+     {
+      "x": 6,
+      "y": 10
+     },
+     {
+      "x": 6,
+      "y": 14
+     }
+    ]
+   },
+   {
+    "kind": "arc",
+    "id": 3,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 30,
+     "y": 0
+    },
+    "r": 4,
+    "a0": 0,
+    "a1": 1.5707963267948966
+   },
+   {
+    "kind": "circle",
+    "id": 4,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 30,
+     "y": 20
+    },
+    "r": 2
+   },
+   {
+    "kind": "ellipse",
+    "id": 5,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 50,
+     "y": 0
+    },
+    "major": {
+     "x": 4,
+     "y": 0
+    },
+    "ratio": 0.5,
+    "t0": 0,
+    "t1": 3.141592653589793
+   },
+   {
+    "kind": "polygon",
+    "id": 6,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 40,
+      "y": 20
+     },
+     {
+      "x": 44,
+      "y": 20
+     },
+     {
+      "x": 44,
+      "y": 24
+     },
+     {
+      "x": 40,
+      "y": 24
+     }
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 7,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 90,
+     "y": 0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "blocks": [
+   {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+    "name": "Direk",
+    "base": {
+     "x": 0,
+     "y": 0
+    },
+    "entities": [
+     {
+      "kind": "circle",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "c": {
+       "x": 0,
+       "y": 0
+      },
+      "r": 0.3
+     },
+     {
+      "kind": "line",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+       "x": 0,
+       "y": 0
+      },
+      "b": {
+       "x": 1,
+       "y": 0
+      }
+     }
+    ]
+   },
+   {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002",
+    "name": "Ağaç",
+    "base": {
+     "x": 0,
+     "y": 0
+    },
+    "entities": [
+     {
+      "kind": "circle",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "c": {
+       "x": 0,
+       "y": 0
+      },
+      "r": 0.8
+     }
+    ]
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "Blok: çizgi dört parçaya, aralarına üç Direk; çizginin doğrultusunda; adım “Böl”",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "parts",
+       "count": 4
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Direk"
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "entities": [
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 2.5,
+          "y": 0
+         },
+         "scale": 1,
+         "rotation": 0
+        },
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 5,
+          "y": 0
+         },
+         "scale": 1,
+         "rotation": 0
+        },
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 7.5,
+          "y": 0
+         },
+         "scale": 1,
+         "rotation": 0
+        }
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "parts",
+       "count": 4
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Direk"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10"
+       ],
+       "ids": [
+        8,
+        9,
+        10
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "nokta",
+        "attrs": {},
+        "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+        "p": {
+         "x": 2.5,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "nokta",
+        "attrs": {},
+        "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+        "p": {
+         "x": 5,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "nokta",
+        "attrs": {},
+        "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+        "p": {
+         "x": 7.5,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Böl",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Blok hizalı: köşeli çoklu çizgide her yerleştirme kendi kenarının doğrultusunda",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:2",
+      "division": {
+       "kind": "parts",
+       "count": 4
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Direk"
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "entities": [
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 2.5,
+          "y": 10
+         },
+         "scale": 1,
+         "rotation": 0
+        },
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 5,
+          "y": 10
+         },
+         "scale": 1,
+         "rotation": 0
+        },
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 6,
+          "y": 11.5
+         },
+         "scale": 1,
+         "rotation": 1.5707963267948966
+        }
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:2",
+      "division": {
+       "kind": "parts",
+       "count": 4
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Direk"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10"
+       ],
+       "ids": [
+        8,
+        9,
+        10
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Blok hizasız: yerleştirmeler bloğun kendi dönüşüyle",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:2",
+      "division": {
+       "kind": "parts",
+       "count": 4
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Direk",
+       "align": false
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "entities": [
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 2.5,
+          "y": 10
+         },
+         "scale": 1,
+         "rotation": 0
+        },
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 5,
+          "y": 10
+         },
+         "scale": 1,
+         "rotation": 0
+        },
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 6,
+          "y": 11.5
+         },
+         "scale": 1,
+         "rotation": 0
+        }
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:2",
+      "division": {
+       "kind": "parts",
+       "count": 4
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Direk",
+       "align": false
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10"
+       ],
+       "ids": [
+        8,
+        9,
+        10
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "nokta",
+        "attrs": {},
+        "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+        "p": {
+         "x": 2.5,
+         "y": 10
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "nokta",
+        "attrs": {},
+        "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+        "p": {
+         "x": 5,
+         "y": 10
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "nokta",
+        "attrs": {},
+        "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+        "p": {
+         "x": 6,
+         "y": 11.5
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Blok hizalı ve 45° dönük: dönüş doğrultuya eklenir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:2",
+      "division": {
+       "kind": "parts",
+       "count": 4
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Direk",
+       "rotation": 0.7853981633974483
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "entities": [
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 2.5,
+          "y": 10
+         },
+         "scale": 1,
+         "rotation": 0.7853981633974483
+        },
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 5,
+          "y": 10
+         },
+         "scale": 1,
+         "rotation": 0.7853981633974483
+        },
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 6,
+          "y": 11.5
+         },
+         "scale": 1,
+         "rotation": 2.356194490192345
+        }
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:2",
+      "division": {
+       "kind": "parts",
+       "count": 4
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Direk",
+       "rotation": 0.7853981633974483
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10"
+       ],
+       "ids": [
+        8,
+        9,
+        10
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Blok ölçekli: 2 kat",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "parts",
+       "count": 2
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Ağaç",
+       "scale": 2
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "entities": [
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002",
+         "p": {
+          "x": 5,
+          "y": 0
+         },
+         "scale": 2,
+         "rotation": 0
+        }
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "parts",
+       "count": 2
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Ağaç",
+       "scale": 2
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:8"
+       ],
+       "ids": [
+        8
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "nokta",
+        "attrs": {},
+        "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002",
+        "p": {
+         "x": 5,
+         "y": 0
+        },
+        "scale": 2,
+        "rotation": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yay üç parçaya: Direkler yayın teğetinde",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:3",
+      "division": {
+       "kind": "parts",
+       "count": 3
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Direk"
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "entities": [
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 33.46410161513776,
+          "y": 1.9999999999999998
+         },
+         "scale": 1,
+         "rotation": 2.0943951023931953
+        },
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 32,
+          "y": 3.4641016151377544
+         },
+         "scale": 1,
+         "rotation": 2.6179938779914944
+        }
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:3",
+      "division": {
+       "kind": "parts",
+       "count": 3
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Direk"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "ids": [
+        8,
+        9
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Daire dört parçaya: başlangıç dahil dört Direk, saat yönü tersine teğette",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:4",
+      "division": {
+       "kind": "parts",
+       "count": 4
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Direk"
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "entities": [
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 32,
+          "y": 20
+         },
+         "scale": 1,
+         "rotation": 1.5707963267948966
+        },
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 30,
+          "y": 22
+         },
+         "scale": 1,
+         "rotation": 3.141592653589793
+        },
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 28,
+          "y": 20
+         },
+         "scale": 1,
+         "rotation": -1.5707963267948968
+        },
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 30,
+          "y": 18
+         },
+         "scale": 1,
+         "rotation": -1.8369701987210297e-16
+        }
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:4",
+      "division": {
+       "kind": "parts",
+       "count": 4
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Direk"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "ids": [
+        8,
+        9,
+        10,
+        11
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Elips yayı üç parçaya: Direkler elipsin teğetinde, yay uzunluğuyla eşit aralıkta",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:5",
+      "division": {
+       "kind": "parts",
+       "count": 3
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Direk"
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "entities": [
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 51.602928435402895,
+          "y": 1.8323905445467152
+         },
+         "scale": 1,
+         "rotation": 2.9262887664133226
+        },
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 48.397071564597105,
+          "y": 1.8323905445467155
+         },
+         "scale": 1,
+         "rotation": -2.9262887664133226
+        }
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:5",
+      "division": {
+       "kind": "parts",
+       "count": 3
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Direk"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "ids": [
+        8,
+        9
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sondan ölçmek: Direkler yine nesnenin doğrultusunda",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "step",
+       "length": 4
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Direk"
+      },
+      "fromEnd": true
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "entities": [
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 6,
+          "y": 0
+         },
+         "scale": 1,
+         "rotation": 0
+        },
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 2,
+          "y": 0
+         },
+         "scale": 1,
+         "rotation": 0
+        }
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "step",
+       "length": 4
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Direk"
+      },
+      "fromEnd": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "ids": [
+        8,
+        9
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aralık 3, başlangıç 1: noktalar 1, 4 ve 7'de",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "step",
+       "length": 3
+      },
+      "layerId": "nokta",
+      "start": 1
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "entities": [
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 1,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 4,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 7,
+          "y": 0
+         }
+        }
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "step",
+       "length": 3
+      },
+      "layerId": "nokta",
+      "start": 1
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10"
+       ],
+       "ids": [
+        8,
+        9,
+        10
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "8": {
+        "kind": "point",
+        "id": 8,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 1,
+         "y": 0
+        }
+       },
+       "9": {
+        "kind": "point",
+        "id": 9,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 4,
+         "y": 0
+        }
+       },
+       "10": {
+        "kind": "point",
+        "id": 10,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 7,
+         "y": 0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aralık 3, başlangıç 0: başta da bir nokta",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "step",
+       "length": 3
+      },
+      "layerId": "nokta",
+      "start": 0
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "entities": [
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 0,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 3,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 6,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 9,
+          "y": 0
+         }
+        }
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "step",
+       "length": 3
+      },
+      "layerId": "nokta",
+      "start": 0
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "ids": [
+        8,
+        9,
+        10,
+        11
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "8": {
+        "kind": "point",
+        "id": 8,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 0,
+         "y": 0
+        }
+       },
+       "9": {
+        "kind": "point",
+        "id": 9,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 3,
+         "y": 0
+        }
+       },
+       "10": {
+        "kind": "point",
+        "id": 10,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 6,
+         "y": 0
+        }
+       },
+       "11": {
+        "kind": "point",
+        "id": 11,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 9,
+         "y": 0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Uçlar son: aralığın kısa kalanından sonra sona da bir nokta",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "step",
+       "length": 3
+      },
+      "layerId": "nokta",
+      "ends": "end"
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "entities": [
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 3,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 6,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 9,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 10,
+          "y": 0
+         }
+        }
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "step",
+       "length": 3
+      },
+      "layerId": "nokta",
+      "ends": "end"
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "ids": [
+        8,
+        9,
+        10,
+        11
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "8": {
+        "kind": "point",
+        "id": 8,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 3,
+         "y": 0
+        }
+       },
+       "9": {
+        "kind": "point",
+        "id": 9,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 6,
+         "y": 0
+        }
+       },
+       "10": {
+        "kind": "point",
+        "id": 10,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 9,
+         "y": 0
+        }
+       },
+       "11": {
+        "kind": "point",
+        "id": 11,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 10,
+         "y": 0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Uçlar ikisi: başa ve sona da",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "step",
+       "length": 3
+      },
+      "layerId": "nokta",
+      "ends": "both"
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "entities": [
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 0,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 3,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 6,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 9,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 10,
+          "y": 0
+         }
+        }
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "step",
+       "length": 3
+      },
+      "layerId": "nokta",
+      "ends": "both"
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:12"
+       ],
+       "ids": [
+        8,
+        9,
+        10,
+        11,
+        12
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "8": {
+        "kind": "point",
+        "id": 8,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 0,
+         "y": 0
+        }
+       },
+       "9": {
+        "kind": "point",
+        "id": 9,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 3,
+         "y": 0
+        }
+       },
+       "10": {
+        "kind": "point",
+        "id": 10,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 6,
+         "y": 0
+        }
+       },
+       "11": {
+        "kind": "point",
+        "id": 11,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 9,
+         "y": 0
+        }
+       },
+       "12": {
+        "kind": "point",
+        "id": 12,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 10,
+         "y": 0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Uçlar ikisi ve aralık tam bölüyor: uçta yinelenen nokta yok",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "step",
+       "length": 2.5
+      },
+      "layerId": "nokta",
+      "ends": "both",
+      "start": 0
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "entities": [
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 0,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 2.5,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 5,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 7.5,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 10,
+          "y": 0
+         }
+        }
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "step",
+       "length": 2.5
+      },
+      "layerId": "nokta",
+      "ends": "both",
+      "start": 0
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:12"
+       ],
+       "ids": [
+        8,
+        9,
+        10,
+        11,
+        12
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Parça sayısı ve uçlar ikisi: beş nokta, uçlar dahil",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "parts",
+       "count": 4
+      },
+      "layerId": "nokta",
+      "ends": "both"
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "entities": [
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 0,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 2.5,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 5,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 7.5,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 10,
+          "y": 0
+         }
+        }
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "parts",
+       "count": 4
+      },
+      "layerId": "nokta",
+      "ends": "both"
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:12"
+       ],
+       "ids": [
+        8,
+        9,
+        10,
+        11,
+        12
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "8": {
+        "kind": "point",
+        "id": 8,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 0,
+         "y": 0
+        }
+       },
+       "9": {
+        "kind": "point",
+        "id": 9,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 2.5,
+         "y": 0
+        }
+       },
+       "10": {
+        "kind": "point",
+        "id": 10,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 5,
+         "y": 0
+        }
+       },
+       "11": {
+        "kind": "point",
+        "id": 11,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 7.5,
+         "y": 0
+        }
+       },
+       "12": {
+        "kind": "point",
+        "id": 12,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 10,
+         "y": 0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapalı alanda uçlar: başlangıç zaten parçaların noktası, eklenmez",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:6",
+      "division": {
+       "kind": "parts",
+       "count": 4
+      },
+      "layerId": "nokta",
+      "ends": "both"
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "entities": [
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 40,
+          "y": 20
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 44,
+          "y": 20
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 44,
+          "y": 24
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 40,
+          "y": 24
+         }
+        }
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:6",
+      "division": {
+       "kind": "parts",
+       "count": 4
+      },
+      "layerId": "nokta",
+      "ends": "both"
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "ids": [
+        8,
+        9,
+        10,
+        11
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "8": {
+        "kind": "point",
+        "id": 8,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 40,
+         "y": 20
+        }
+       },
+       "9": {
+        "kind": "point",
+        "id": 9,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 44,
+         "y": 20
+        }
+       },
+       "10": {
+        "kind": "point",
+        "id": 10,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 44,
+         "y": 24
+        }
+       },
+       "11": {
+        "kind": "point",
+        "id": 11,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 40,
+         "y": 24
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sondan ölçmek ve uçlar baş: nesnenin başı en sonda yazılır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "step",
+       "length": 4
+      },
+      "layerId": "nokta",
+      "fromEnd": true,
+      "ends": "start"
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "entities": [
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 6,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 2,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 0,
+          "y": 0
+         }
+        }
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "step",
+       "length": 4
+      },
+      "layerId": "nokta",
+      "fromEnd": true,
+      "ends": "start"
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10"
+       ],
+       "ids": [
+        8,
+        9,
+        10
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "8": {
+        "kind": "point",
+        "id": 8,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 6,
+         "y": 0
+        }
+       },
+       "9": {
+        "kind": "point",
+        "id": 9,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 2,
+         "y": 0
+        }
+       },
+       "10": {
+        "kind": "point",
+        "id": 10,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 0,
+         "y": 0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aralık nesneden uzun ama uçlar ikisi: yalnız iki uç",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "step",
+       "length": 12
+      },
+      "layerId": "nokta",
+      "ends": "both"
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "entities": [
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 0,
+          "y": 0
+         }
+        },
+        {
+         "kind": "point",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "p": {
+          "x": 10,
+          "y": 0
+         }
+        }
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "step",
+       "length": 12
+      },
+      "layerId": "nokta",
+      "ends": "both"
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "ids": [
+        8,
+        9
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "8": {
+        "kind": "point",
+        "id": 8,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 0,
+         "y": 0
+        }
+       },
+       "9": {
+        "kind": "point",
+        "id": 9,
+        "layerId": "nokta",
+        "attrs": {},
+        "p": {
+         "x": 10,
+         "y": 0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Blok ve uçlar ikisi: köşeli yolun uçlarında da hizalı Direk",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:2",
+      "division": {
+       "kind": "step",
+       "length": 4
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Direk"
+      },
+      "ends": "both"
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "entities": [
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 0,
+          "y": 10
+         },
+         "scale": 1,
+         "rotation": 0
+        },
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 4,
+          "y": 10
+         },
+         "scale": 1,
+         "rotation": 0
+        },
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 6,
+          "y": 12
+         },
+         "scale": 1,
+         "rotation": 1.5707963267948966
+        },
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "nokta",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+         "p": {
+          "x": 6,
+          "y": 14
+         },
+         "scale": 1,
+         "rotation": 1.5707963267948966
+        }
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:2",
+      "division": {
+       "kind": "step",
+       "length": 4
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Direk"
+      },
+      "ends": "both"
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "ids": [
+        8,
+        9,
+        10,
+        11
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Başlangıç parça sayısıyla verilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "parts",
+       "count": 4
+      },
+      "layerId": "nokta",
+      "start": 1
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "start_needs_step",
+       "message": "Başlangıç yalnız aralıkla bölmede verilir; parça sayısıyla bölmede kaldırın.",
+       "path": "start"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Başlangıç eksi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "step",
+       "length": 3
+      },
+      "layerId": "nokta",
+      "start": -1
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_distance",
+       "message": "Başlangıç sıfır ya da sıfırdan büyük sonlu bir uzunluk (metre) olmalı.",
+       "path": "start"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Başlangıç sonlu değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "step",
+       "length": 3
+      },
+      "layerId": "nokta",
+      "start": 1
+     },
+     "nonFinite": {
+      "start": "NaN"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Başlangıç sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir uzunluk verin.",
+       "path": "start"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Başlangıç nesnenin boyundan uzun",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "step",
+       "length": 3
+      },
+      "layerId": "nokta",
+      "start": 12
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_points",
+       "message": "Başlangıç nesnenin boyundan uzun; nokta konmadı. Daha kısa bir başlangıç verin.",
+       "path": "start"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Adı bilinmeyen blok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "parts",
+       "count": 4
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Yok"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_block",
+       "message": "“Yok” adlı blok çizimde tanımlı değil. Blok oluştur ile tanımlayın ya da var olan bir bloğun adını verin.",
+       "path": "block.name"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Blok ölçeği sıfır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "parts",
+       "count": 4
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Direk",
+       "scale": 0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_scale",
+       "message": "Bloğun ölçeği sıfırdan büyük olmalı.",
+       "path": "block.scale"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Blok dönüşü sonlu değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "division": {
+       "kind": "parts",
+       "count": 4
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Direk",
+       "rotation": 0
+      }
+     },
+     "nonFinite": {
+      "block.rotation": "Infinity"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Bloğun dönüşü sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir açı verin.",
+       "path": "block.rotation"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Nokta bölünmez (eski kural)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:7",
+      "division": {
+       "kind": "parts",
+       "count": 4
+      },
+      "layerId": "nokta",
+      "block": {
+       "name": "Direk"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_divisible",
+       "message": "Bu türdeki nesne bölünmez: çizgi, çoklu çizgi, alan, yay, daire, elips ya da eğri olmalı.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

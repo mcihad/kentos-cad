@@ -591,6 +591,12 @@ pub struct Memory {
     pub divide_parts: u32,
     pub divide_step: f64,
     pub divide_by_step: bool,
+    /// Böl's block (none: points), whether its inserts turn with the object, the open object's ends that also
+    /// get a place, and a step's first distance in metres (none: at the step; docs/adr/0299).
+    pub divide_block: Option<kentos_contracts::BlockId>,
+    pub divide_align: bool,
+    pub divide_ends: kentos_contracts::DivideEnds,
+    pub divide_start: Option<f64>,
     /// The annotation tools' Yükseklik typed in this drawing, paper mm, by
     /// kind (docs/adr/0205 §2; the web's `tools/annotationHeights.ts`): none
     /// is the project's height of the kind. Another drawing opened forgets
@@ -993,6 +999,10 @@ impl Default for Memory {
             divide_parts: 4,
             divide_step: 10.0,
             divide_by_step: false,
+            divide_block: None,
+            divide_align: true,
+            divide_ends: kentos_contracts::DivideEnds::None,
+            divide_start: None,
             heights: Heights::default(),
             text_angle: 0.0,
             text_align: None,

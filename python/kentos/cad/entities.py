@@ -16,6 +16,9 @@ from .types import (  # noqa: F401
     CornerPick,
     CreateOperation,
     CreateOperationName,
+    DivideBlock,
+    DivideEnds,
+    DivideEndsName,
     Division,
     EditOperation,
     EditOperationName,
@@ -1029,7 +1032,12 @@ class _EntitiesDivide(LocalCommand[EntitiesDivide, EntitiesCreated, EntitiesCrea
     cad.entities.create'in kurallarıyla yazılır. Tek geri alma adımı “Böl”. Çizgi, çoklu
     çizgi, alan, yay, daire, elips ve eğri bölünür; öbürleri not_divisible. Aralık
     nesneden uzunsa no_points, 10 000'den çok nokta too_many_points. Noktaların yerini
-    paylaşılan geometri çekirdeği bulur (elipsinkiler eğrinin üstünde). color,
+    paylaşılan geometri çekirdeği bulur (elipsinkiler eğrinin üstünde, gerçek yay
+    uzunluğuyla). block verilirse noktalar yerine bloğun adıyla yerleştirmeleri konur
+    (align varsayılan açık: nesnenin oradaki doğrultusunda, rotation radyan eklenir;
+    scale); bilinmeyen ad unknown_block. start aralıkla bölmede ilk noktanın ölçülen
+    uçtan uzaklığıdır (0: uçta; parça sayısıyla start_needs_step); ends açık nesnenin
+    kendi başını, sonunu ya da ikisini de işaretler (orada nokta yoksa). color,
     lineWeight, attrs, label ve symbol noktaların görünüşü ve taşıdıklarıdır. Çıktı ve
     plan cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde
     değilse hiçbir şey yazılmaz, sonuç conflict olur.
@@ -1052,11 +1060,14 @@ class _EntitiesDivide(LocalCommand[EntitiesDivide, EntitiesCreated, EntitiesCrea
         division: Division,
         layer_id: str,
         attrs: Mapping[str, str] | None | Unset = UNSET,
+        block: DivideBlock | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
+        ends: DivideEnds | DivideEndsName | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         from_end: bool | Unset = UNSET,
         label: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        start: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -1067,7 +1078,12 @@ class _EntitiesDivide(LocalCommand[EntitiesDivide, EntitiesCreated, EntitiesCrea
         yazılır. Tek geri alma adımı “Böl”. Çizgi, çoklu çizgi, alan, yay, daire, elips ve
         eğri bölünür; öbürleri not_divisible. Aralık nesneden uzunsa no_points, 10 000'den
         çok nokta too_many_points. Noktaların yerini paylaşılan geometri çekirdeği bulur
-        (elipsinkiler eğrinin üstünde). color, lineWeight, attrs, label ve symbol noktaların
+        (elipsinkiler eğrinin üstünde, gerçek yay uzunluğuyla). block verilirse noktalar
+        yerine bloğun adıyla yerleştirmeleri konur (align varsayılan açık: nesnenin oradaki
+        doğrultusunda, rotation radyan eklenir; scale); bilinmeyen ad unknown_block. start
+        aralıkla bölmede ilk noktanın ölçülen uçtan uzaklığıdır (0: uçta; parça sayısıyla
+        start_needs_step); ends açık nesnenin kendi başını, sonunu ya da ikisini de
+        işaretler (orada nokta yoksa). color, lineWeight, attrs, label ve symbol noktaların
         görünüşü ve taşıdıklarıdır. Çıktı ve plan cad.entities.create'inkidir.
         expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
         conflict olur.
@@ -1078,7 +1094,9 @@ class _EntitiesDivide(LocalCommand[EntitiesDivide, EntitiesCreated, EntitiesCrea
             division: Into parts, or at a step.
             layer_id: The layer the points go to.
             attrs: GIS attributes, text in v1. Absent: none.
+            block: A block's inserts instead of points.
             color: Colour override, `#RRGGBB`. Absent: the layer's colour (katmana göre).
+            ends: The open object's own ends that also get a place.
             expected_revision: The document revision the input was prepared against, as decimal
                 text. When given and the document is no longer at it, nothing is
                 written and the answer is `conflict`.
@@ -1087,6 +1105,7 @@ class _EntitiesDivide(LocalCommand[EntitiesDivide, EntitiesCreated, EntitiesCrea
             label: The text shown beside it. Absent: none.
             line_weight: Its own line weight, paper mm (0 the thinnest, at most 100), for what
                 is drawn with lines. Absent: the layer's. Unit: paper-mm.
+            start: A step's first place, metres from the measuring end (0 and above); absent: at the step. Unit: length.
             symbol: Its own symbol, a library item's id. Absent: the layer's style.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -1105,11 +1124,14 @@ class _EntitiesDivide(LocalCommand[EntitiesDivide, EntitiesCreated, EntitiesCrea
             division=division,
             layer_id=layer_id,
             attrs=_opt(attrs, lambda x: dict(x)),
+            block=block,
             color=color,
+            ends=ends,
             expected_revision=expected_revision,
             from_end=from_end,
             label=label,
             line_weight=line_weight,
+            start=start,
             symbol=symbol,
         ), request_id=request_id, expected=expected)
 
@@ -1122,11 +1144,14 @@ class _EntitiesDivide(LocalCommand[EntitiesDivide, EntitiesCreated, EntitiesCrea
         division: Division,
         layer_id: str,
         attrs: Mapping[str, str] | None | Unset = UNSET,
+        block: DivideBlock | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
+        ends: DivideEnds | DivideEndsName | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         from_end: bool | Unset = UNSET,
         label: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        start: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
     ) -> EntitiesCreatePlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -1137,11 +1162,14 @@ class _EntitiesDivide(LocalCommand[EntitiesDivide, EntitiesCreated, EntitiesCrea
             division=division,
             layer_id=layer_id,
             attrs=_opt(attrs, lambda x: dict(x)),
+            block=block,
             color=color,
+            ends=ends,
             expected_revision=expected_revision,
             from_end=from_end,
             label=label,
             line_weight=line_weight,
+            start=start,
             symbol=symbol,
         ))
 
@@ -1154,11 +1182,14 @@ class _EntitiesDivide(LocalCommand[EntitiesDivide, EntitiesCreated, EntitiesCrea
         division: Division,
         layer_id: str,
         attrs: Mapping[str, str] | None | Unset = UNSET,
+        block: DivideBlock | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
+        ends: DivideEnds | DivideEndsName | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         from_end: bool | Unset = UNSET,
         label: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        start: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -1169,11 +1200,14 @@ class _EntitiesDivide(LocalCommand[EntitiesDivide, EntitiesCreated, EntitiesCrea
             division=division,
             layer_id=layer_id,
             attrs=_opt(attrs, lambda x: dict(x)),
+            block=block,
             color=color,
+            ends=ends,
             expected_revision=expected_revision,
             from_end=from_end,
             label=label,
             line_weight=line_weight,
+            start=start,
             symbol=symbol,
         ))
 
@@ -1186,11 +1220,14 @@ class _EntitiesDivide(LocalCommand[EntitiesDivide, EntitiesCreated, EntitiesCrea
         division: Division,
         layer_id: str,
         attrs: Mapping[str, str] | None | Unset = UNSET,
+        block: DivideBlock | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
+        ends: DivideEnds | DivideEndsName | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         from_end: bool | Unset = UNSET,
         label: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        start: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -1206,11 +1243,14 @@ class _EntitiesDivide(LocalCommand[EntitiesDivide, EntitiesCreated, EntitiesCrea
             division=division,
             layer_id=layer_id,
             attrs=_opt(attrs, lambda x: dict(x)),
+            block=block,
             color=color,
+            ends=ends,
             expected_revision=expected_revision,
             from_end=from_end,
             label=label,
             line_weight=line_weight,
+            start=start,
             symbol=symbol,
         ), op=op, request_id=request_id, expected=expected)
 

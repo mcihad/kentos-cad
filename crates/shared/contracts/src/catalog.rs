@@ -2020,7 +2020,9 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_ENTITIES_DIVIDE_VERSION,
             title: "Nesneyi böl".into(),
             summary: "Kalıcı kimliğiyle verilen nesnenin üstüne noktalar koyar: division eşit parçalar (parts, 2–10 000) ya da aralık (step, metre). Noktalar nesnenin başından, fromEnd ile sonundan ölçülür; layerId'ye cad.entities.create'in kurallarıyla yazılır. Tek geri alma adımı “Böl”. \
-                      Çizgi, çoklu çizgi, alan, yay, daire, elips ve eğri bölünür; öbürleri not_divisible. Aralık nesneden uzunsa no_points, 10 000'den çok nokta too_many_points. Noktaların yerini paylaşılan geometri çekirdeği bulur (elipsinkiler eğrinin üstünde). \
+                      Çizgi, çoklu çizgi, alan, yay, daire, elips ve eğri bölünür; öbürleri not_divisible. Aralık nesneden uzunsa no_points, 10 000'den çok nokta too_many_points. Noktaların yerini paylaşılan geometri çekirdeği bulur (elipsinkiler eğrinin üstünde, gerçek yay uzunluğuyla). \
+                      block verilirse noktalar yerine bloğun adıyla yerleştirmeleri konur (align varsayılan açık: nesnenin oradaki doğrultusunda, rotation radyan eklenir; scale); bilinmeyen ad unknown_block. \
+                      start aralıkla bölmede ilk noktanın ölçülen uçtan uzaklığıdır (0: uçta; parça sayısıyla start_needs_step); ends açık nesnenin kendi başını, sonunu ya da ikisini de işaretler (orada nokta yoksa). \
                       color, lineWeight, attrs, label ve symbol noktaların görünüşü ve taşıdıklarıdır. Çıktı ve plan cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
             aliases: vec![],
@@ -2044,6 +2046,11 @@ pub fn catalog() -> CommandCatalog {
                 CommandExample {
                     title: "Sondan başlayarak her 20 metrede bir nokta".into(),
                     input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "division": { "kind": "step", "length": 20.0 }, "fromEnd": true, "layerId": "nokta" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Yol boyunca her 30 metrede, 5 metreden başlayarak, uçlara da yola hizalı direk bloğu".into(),
+                    input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "division": { "kind": "step", "length": 30.0 }, "start": 5.0, "ends": "both", "block": { "name": "Direk" }, "layerId": "aydinlatma" }),
                     output: None,
                 },
             ],

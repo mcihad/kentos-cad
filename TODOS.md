@@ -170,6 +170,10 @@ Liste:
   uyarıları komutun sözleri; paralel iki doğruya TTY, saat yönünde verilen yaydan Devam; araç durumları
   `fixtures/curve-methods/v1/tools.json`. Web'in donmuş çağrı kayıtları eski `arcStartCenterEnd` ve `arcStartCenterAngle`'ı (tam tur)
   tutar; geri dönüşte komutun kuralına getirilir.
+- [ ] `CAD-EDIT-13` (ADR 0299, 15 Ekim): web'de gerekenler: `cad.entities.divide`'ın `block`, `start` ve `ends`'i (TS işleyicisi;
+  sözleşme türleri `DivideBlock`, `DivideEnds` üretildi) ve Böl aracının Blok, Nokta, Hizala, Uçlar ve İlk seçenekleri, plandan
+  önizleme; ortak durumlar `cad.entities.divide.places.json`. Çekirdeğin `division_places`'i WASM'a bağlanmadı (web `divisionPoints`
+  kullanıyor; elips yayında gerçek uzunluk için ona geçmeli).
 - [ ] `CAD-EDIT-12` (ADR 0298, 15 Ekim): web'de gerekenler: `cad.entities.lengthen` komutunun TS işleyicisi (katalog ve
   sözleşme türleri üretildi) ve Uzat-kısalt aracının komutla önizleyip yazması, Fark ve Toplam'da `<açı`; ortak durumlar
   `cad.entities.lengthen.json`. Elips yayı ve yeni ret iletileri çekirdekten WASM'la gelir; kayıtlı çağrı `calls-p6-path-editing.json`

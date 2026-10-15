@@ -497,6 +497,24 @@ DimensionTextPlaceName = Literal["centre"]
 """The names of :class:`DimensionTextPlace`, for a plain string."""
 
 
+class DivideEnds(_StrEnum):
+    """Which of an open object's own ends also get a place (docs/adr/0299 §2).
+
+    - ``none``: Neither (AutoCAD's DIVIDE and MEASURE).
+    - ``start``: The object's start.
+    - ``end``: The object's end.
+    - ``both``: Both.
+    """
+    NONE = "none"
+    START = "start"
+    END = "end"
+    BOTH = "both"
+
+
+DivideEndsName = Literal["none", "start", "end", "both"]
+"""The names of :class:`DivideEnds`, for a plain string."""
+
+
 class DrawingFont(_StrEnum):
     """The typeface of the text that is part of the drawing (text objects,
     dimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with
@@ -5213,6 +5231,42 @@ class DimensionsReassociated(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class DivideBlock(_Model):
+    """A block's inserts at the places instead of points (AutoCAD's Block option, docs/adr/0299 §3).
+    Attributes:
+        name: The block's name in the drawing.
+        align: Each insert turned by the object's direction at its place (the way the object runs from its start), on
+            top of `rotation`; true by default.
+        rotation: The inserts' own turn, radians counter-clockwise; 0 by default. Unit: rad.
+        scale: The inserts' scale (above zero); 1 by default. Unit: 1.
+    """
+    name: str
+    align: bool | Unset = UNSET
+    rotation: float | Unset = UNSET
+    scale: float | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.align is not UNSET:
+            out["align"] = self.align
+        if self.rotation is not UNSET:
+            out["rotation"] = float(self.rotation)
+        if self.scale is not UNSET:
+            out["scale"] = float(self.scale)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DivideBlock:
+        return cls(
+            name=data["name"],
+            align=data.get("align", UNSET),
+            rotation=float(data["rotation"]) if "rotation" in data else UNSET,
+            scale=float(data["scale"]) if "scale" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DoorSource(_Model):
     """The doors' layer and which of its attributes say what.
     Attributes:
@@ -6188,12 +6242,19 @@ class EntitiesDivide(_Model):
     `division`, measured from its start (or its end, `fromEnd`), on
     `layerId`, as one undo step “Böl” written by `cad.entities.create`'s
     rules. Lines, polylines, areas, arcs, circles, ellipses and splines divide.
+    With `block` the places get the block's inserts (aligned to the object
+    by default); with `start` a step's first place is that far from the
+    measuring end (0: at it); `ends` also marks the open object's own start or
+    end where no place is already.
 
     Refusals (`CommandError.code`), checked in this order: `invalid_uid`,
     `invalid_count` (parts out of 2 to 10 000), `invalid_distance` (a step
-    not over 0 or not finite), `invalid_revision`, `revision_conflict`
-    (status `conflict`), `entity_not_found`, `not_divisible` (another kind),
-    `no_points` (a step longer than the object), `too_many_points` (over
+    not over 0 or not finite), `not_finite`, `invalid_distance` and
+    `start_needs_step` for `start` (below 0; with parts), `not_finite` and
+    `invalid_scale` for the block's numbers, `invalid_revision`,
+    `revision_conflict` (status `conflict`), `entity_not_found`,
+    `not_divisible` (another kind), `unknown_block`, `no_points` (a step or
+    first distance longer than the object), `too_many_points` (over
     10 000), then the layer's and the look's as `cad.entities.create` checks
     them (`layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_line_weight`);
     a hidden layer gives a `layer_hidden` warning; on the desktop also
@@ -6203,7 +6264,9 @@ class EntitiesDivide(_Model):
         division: Into parts, or at a step.
         layer_id: The layer the points go to.
         attrs: GIS attributes, text in v1. Absent: none.
+        block: A block's inserts instead of points.
         color: Colour override, `#RRGGBB`. Absent: the layer's colour (katmana göre).
+        ends: The open object's own ends that also get a place.
         expected_revision: The document revision the input was prepared against, as decimal
             text. When given and the document is no longer at it, nothing is
             written and the answer is `conflict`.
@@ -6212,17 +6275,21 @@ class EntitiesDivide(_Model):
         label: The text shown beside it. Absent: none.
         line_weight: Its own line weight, paper mm (0 the thinnest, at most 100), for what
             is drawn with lines. Absent: the layer's. Unit: paper-mm.
+        start: A step's first place, metres from the measuring end (0 and above); absent: at the step. Unit: length.
         symbol: Its own symbol, a library item's id. Absent: the layer's style.
     """
     uid: str
     division: Division
     layer_id: str
     attrs: dict[str, str] | None | Unset = UNSET
+    block: DivideBlock | None | Unset = UNSET
     color: str | None | Unset = UNSET
+    ends: DivideEnds | DivideEndsName | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     from_end: bool | Unset = UNSET
     label: str | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    start: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -6232,8 +6299,12 @@ class EntitiesDivide(_Model):
         out["layerId"] = self.layer_id
         if self.attrs is not UNSET:
             out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.block is not UNSET:
+            out["block"] = None if self.block is None else self.block.to_json()
         if self.color is not UNSET:
             out["color"] = self.color
+        if self.ends is not UNSET:
+            out["ends"] = _enum_out(self.ends)
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.from_end is not UNSET:
@@ -6242,6 +6313,8 @@ class EntitiesDivide(_Model):
             out["label"] = self.label
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.start is not UNSET:
+            out["start"] = None if self.start is None else float(self.start)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         return out
@@ -6253,11 +6326,14 @@ class EntitiesDivide(_Model):
             division=Division.from_json(data["division"]),
             layer_id=data["layerId"],
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            block=UNSET if "block" not in data else None if data["block"] is None else DivideBlock.from_json(data["block"]),
             color=data.get("color", UNSET),
+            ends=_enum_in(DivideEnds, data["ends"]) if "ends" in data else UNSET,
             expected_revision=data.get("expectedRevision", UNSET),
             from_end=data.get("fromEnd", UNSET),
             label=data.get("label", UNSET),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            start=UNSET if "start" not in data else None if data["start"] is None else float(data["start"]),
             symbol=data.get("symbol", UNSET),
         )
 
@@ -22013,6 +22089,9 @@ __all__ = [
     "DimensionsReassociatePlan",
     "DimensionsReassociated",
     "DistanceOffsetBy",
+    "DivideBlock",
+    "DivideEnds",
+    "DivideEndsName",
     "Division",
     "DoorSource",
     "DrawingFont",

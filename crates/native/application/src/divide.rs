@@ -1,19 +1,22 @@
-//! `cad.entities.divide` v1 (docs/adr/0254 §5): points along an object at
-//! equal parts or at a step, as one undo step “Böl”. The desktop's handler
+//! `cad.entities.divide` v1 (docs/adr/0254 §5, 0299): points or a block's
+//! inserts along an object at equal parts or at a step, the step's first
+//! place and the object's own ends as asked, as one undo step “Böl”. The desktop's handler
 //! over the native document, run by the Böl tool (its preview is
 //! [`plan_in`], its Enter [`execute`]), the headless server, Python and MCP.
 //! The shared cases are `fixtures/commands/v1/cad.entities.divide.json`.
 //!
-//! Where the points fall is the shared core's (`division_points`); they are
-//! written through `cad.entities.create`'s `divide` operation
-//! ([`crate::creating`]).
+//! Where the places fall and the object's direction there are the shared
+//! core's (`division_places`); the points or inserts are written through
+//! `cad.entities.create`'s `divide` operation ([`crate::creating`]).
 
 use kentos_contracts::{
-    CommandResult, CreateOperation, Division, EntitiesCreatePlan, EntitiesCreated, EntitiesDivide,
-    Entity, EntityGeometry, MAX_DIVISION_POINTS, Vec2 as Point,
+    CommandResult, CreateOperation, DivideEnds, Division, EntitiesCreatePlan, EntitiesCreated,
+    EntitiesDivide, Entity, EntityGeometry, MAX_DIVISION_POINTS, Vec2 as Point,
 };
 use kentos_domain::{Document, Uuid};
-use kentos_geometry_core::ops::path::{Division as CoreDivision, division_points};
+use kentos_geometry_core::ops::path::{
+    Division as CoreDivision, DivisionEnds, DivisionPlace, division_places,
+};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error, is_uid_text};
@@ -36,15 +39,36 @@ pub fn divisible(e: &Entity) -> bool {
     )
 }
 
-/// The points of `e` at `division`, from its start or its end (the core's).
-pub fn points_of(e: &Entity, division: Division, from_end: bool) -> Vec<Point> {
+/// The places of `e` at `division`, from its start or its end, with the
+/// step's first place and the ends as asked (the core's).
+pub fn places_of(
+    e: &Entity,
+    division: Division,
+    from_end: bool,
+    start: Option<f64>,
+    ends: DivideEnds,
+) -> Vec<DivisionPlace> {
     let by = match division {
         Division::Parts { count } => CoreDivision::Parts(f64::from(count)),
         Division::Step { length } => CoreDivision::Step(length),
     };
-    division_points(&shape(e), &by, from_end)
+    let ends = match ends {
+        DivideEnds::None => DivisionEnds::None,
+        DivideEnds::Start => DivisionEnds::Start,
+        DivideEnds::End => DivisionEnds::End,
+        DivideEnds::Both => DivisionEnds::Both,
+    };
+    division_places(&shape(e), &by, from_end, start, ends)
+}
+
+/// The points of `e` at `division`, from its start or its end (the core's).
+pub fn points_of(e: &Entity, division: Division, from_end: bool) -> Vec<Point> {
+    places_of(e, division, from_end, None, DivideEnds::None)
         .into_iter()
-        .map(|p| Point { x: p.x, y: p.y })
+        .map(|p| Point {
+            x: p.at.x,
+            y: p.at.y,
+        })
         .collect()
 }
 
@@ -81,6 +105,45 @@ fn check(doc: &Document, input: &EntitiesDivide) -> Result<kentos_contracts::Ent
         }
         _ => {}
     }
+    if let Some(start) = input.start {
+        checks::finite(start, "Başlangıç", "Sonlu bir uzunluk verin.", "start")?;
+        if start < 0.0 {
+            return Err(refuse(
+                codes::INVALID_DISTANCE,
+                "Başlangıç sıfır ya da sıfırdan büyük sonlu bir uzunluk (metre) olmalı.".into(),
+                "start",
+            ));
+        }
+        if matches!(input.division, Division::Parts { .. }) {
+            return Err(refuse(
+                codes::START_NEEDS_STEP,
+                "Başlangıç yalnız aralıkla bölmede verilir; parça sayısıyla bölmede kaldırın."
+                    .into(),
+                "start",
+            ));
+        }
+    }
+    if let Some(block) = &input.block {
+        checks::finite(
+            block.scale,
+            "Bloğun ölçeği",
+            "Sonlu bir sayı verin.",
+            "block.scale",
+        )?;
+        if block.scale <= 0.0 {
+            return Err(refuse(
+                codes::INVALID_SCALE,
+                "Bloğun ölçeği sıfırdan büyük olmalı.".into(),
+                "block.scale",
+            ));
+        }
+        checks::finite(
+            block.rotation,
+            "Bloğun dönüşü",
+            "Sonlu bir açı verin.",
+            "block.rotation",
+        )?;
+    }
     checks::revision(doc, input.expected_revision.as_deref())?;
     let Some(e) = Uuid::parse_str(&input.uid)
         .ok()
@@ -103,27 +166,67 @@ fn check(doc: &Document, input: &EntitiesDivide) -> Result<kentos_contracts::Ent
             "uid",
         ));
     }
-    let points = points_of(e, input.division, input.from_end);
-    if points.is_empty() {
-        return Err(refuse(
-            codes::NO_POINTS,
-            "Aralık nesnenin boyundan uzun; nokta konmadı. Daha kısa bir aralık verin.".into(),
-            "division.length",
-        ));
+    let block = match &input.block {
+        Some(b) => {
+            let Some(def) = doc.block_named(&b.name) else {
+                return Err(refuse(
+                    codes::UNKNOWN_BLOCK,
+                    format!(
+                        "“{}” adlı blok çizimde tanımlı değil. Blok oluştur ile tanımlayın ya da var olan bir bloğun adını verin.",
+                        b.name
+                    ),
+                    "block.name",
+                ));
+            };
+            Some((def.id, b))
+        }
+        None => None,
+    };
+    let places = places_of(e, input.division, input.from_end, input.start, input.ends);
+    if places.is_empty() {
+        return Err(if input.start.is_some() {
+            refuse(
+                codes::NO_POINTS,
+                "Başlangıç nesnenin boyundan uzun; nokta konmadı. Daha kısa bir başlangıç verin."
+                    .into(),
+                "start",
+            )
+        } else {
+            refuse(
+                codes::NO_POINTS,
+                "Aralık nesnenin boyundan uzun; nokta konmadı. Daha kısa bir aralık verin.".into(),
+                "division.length",
+            )
+        });
     }
-    if points.len() > MAX_DIVISION_POINTS as usize {
+    if places.len() > MAX_DIVISION_POINTS as usize {
         return Err(refuse(
             codes::TOO_MANY_POINTS,
             "10 000'den çok nokta olurdu; daha büyük bir aralık verin.".into(),
             "division",
         ));
     }
-    let geometries = points
+    let geometries = places
         .into_iter()
-        .map(|p| EntityGeometry::Point {
-            p,
-            z: None,
-            parts: None,
+        .map(|place| {
+            let p = Point {
+                x: place.at.x,
+                y: place.at.y,
+            };
+            match block {
+                Some((id, b)) => EntityGeometry::Insert {
+                    block: id,
+                    p,
+                    scale: b.scale,
+                    rotation: b.rotation + if b.align { place.direction } else { 0.0 },
+                    mirror: false,
+                },
+                None => EntityGeometry::Point {
+                    p,
+                    z: None,
+                    parts: None,
+                },
+            }
         })
         .collect();
     Ok(creating::input(

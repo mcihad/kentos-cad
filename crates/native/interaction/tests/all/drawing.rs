@@ -425,3 +425,70 @@ fn divide_is_one_step_and_the_locked_active_layer_says_why() {
     b.confirm();
     assert_eq!(b.said(before), vec![(Level::Warn, LOCKED)]);
 }
+
+/// The tools' drawing with a block “Direk” (docs/adr/0299).
+fn with_a_block() -> String {
+    let mut drawing: serde_json::Value = serde_json::from_str(TOOLS).expect("the drawing");
+    drawing["blocks"] = serde_json::json!([{
+        "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001", "name": "Direk", "base": { "x": 0, "y": 0 },
+        "entities": [{ "kind": "line", "id": 1, "layerId": "0", "attrs": {}, "a": { "x": 0, "y": 0 }, "b": { "x": 1, "y": 0 } }]
+    }]);
+    drawing.to_string()
+}
+
+#[test]
+fn divide_places_blocks_aligned_the_ends_and_a_first_distance() {
+    let drawing = with_a_block();
+    let mut b = on(&drawing, "cizim", "divide");
+    // The 20 m line along y = 10, its start at x = -20 (the drawing's east and north from the origin).
+    assert!(b.type_text("B"));
+    assert!(
+        b.session.prompt().text().contains("Blok (B): Direk"),
+        "{}",
+        b.session.prompt().text()
+    );
+    assert!(b.session.prompt().text().contains("Hizala (H): açık"));
+    assert!(b.type_text("U"));
+    assert!(b.type_text("U"));
+    assert!(b.type_text("U"), "Uçlar: iki uç");
+    assert!(b.session.prompt().text().contains("Uçlar (U): iki uç"));
+    b.click(-18.0, 10.0);
+    // The plan's inserts are drawn before the write.
+    let preview = b.session.preview(&Default::default()).expect("a preview");
+    assert!(
+        preview.strokes.len() > 1,
+        "the line and the inserts' outlines"
+    );
+    assert!(b.type_text("4"));
+    assert_eq!(b.last_text(), Some("5 blok kondu."));
+    let inserts: Vec<_> = (0..b.doc.len() as u32 + 8)
+        .filter_map(|s| match b.doc.get(kentos_domain::Slot(s)) {
+            Some(kentos_contracts::Entity::Insert(i)) => Some(i.clone()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(inserts.len(), 5);
+    assert!(
+        inserts.iter().all(|i| i.rotation.abs() < 1e-12),
+        "aligned with the line, which runs east"
+    );
+    assert_eq!(b.doc.undo().as_deref(), Some("Böl"));
+    // Points again, a step of 6 m from 1 m: 1, 7, 13, 19 and both ends.
+    assert!(b.type_text("N"));
+    assert!(b.type_text("A"));
+    assert!(b.type_text("İ"));
+    assert!(b.type_text("1"));
+    assert!(
+        b.session.prompt().text().contains("İlk (İ): 1.000 m"),
+        "{}",
+        b.session.prompt().text()
+    );
+    b.click(-18.0, 10.0);
+    assert!(b.type_text("6"));
+    assert_eq!(b.last_text(), Some("6 nokta kondu."));
+    assert_eq!(b.doc.undo().as_deref(), Some("Böl"));
+    // İlk, then Enter alone: at the step again.
+    assert!(b.type_text("İ"));
+    b.confirm();
+    assert!(b.session.prompt().text().contains("İlk (İ): aralıkta"));
+}

@@ -7476,7 +7476,7 @@
    "operation": null,
    "python": "kentos.cad.entities.divide",
    "mcp": "cad.entities.divide",
-   "note": "Nesne, parça sayısı ya da aralık ve başlangıç ucu komuta verilir (ADR 0254 §5).",
+   "note": "Nesne, parça sayısı ya da aralık, başlangıç ucu, ilk uzaklık, uçlar ve hizalı blok komuta verilir (ADR 0254 §5, 0299).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2

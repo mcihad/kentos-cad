@@ -434,6 +434,8 @@ codes! {
     NO_POINTS = "no_points", Failed, false, "Aralık nesnenin boyundan uzun; nokta konmaz.";
     /// More points than a division places (Böl).
     TOO_MANY_POINTS = "too_many_points", Failed, false, "10 000'den çok nokta olurdu; daha büyük bir aralık verin.";
+    /// A first distance given with a number of parts (Böl, docs/adr/0299).
+    START_NEEDS_STEP = "start_needs_step", Failed, false, "Başlangıç yalnız aralıkla bölmede verilir.";
     /// No closed region around the point (Alan oluştur, Tarama).
     NOT_ENCLOSED = "not_enclosed", Failed, false, "Nokta kapalı bir bölgenin içinde değil.";
     /// An object of Çoklu tara that is not closed: left out, or the refusal when none is.

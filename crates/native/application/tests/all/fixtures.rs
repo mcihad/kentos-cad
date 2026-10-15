@@ -871,10 +871,13 @@ impl Input for kentos_domain::contracts::EntitiesReverse {
 }
 
 impl Input for EntitiesDivide {
-    /// `division.length`, `lineWeight` (which the step's input must give).
+    /// `division.length`, `start`, `block.rotation`, `block.scale`, `lineWeight` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match (path, &mut self.division) {
             ("division.length", Division::Step { length }) => Some(length),
+            ("start", _) => self.start.as_mut(),
+            ("block.rotation", _) => self.block.as_mut().map(|b| &mut b.rotation),
+            ("block.scale", _) => self.block.as_mut().map(|b| &mut b.scale),
             ("lineWeight", _) => self.look.line_weight.as_mut(),
             _ => None,
         }
