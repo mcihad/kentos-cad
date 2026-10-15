@@ -195,6 +195,12 @@ codes! {
     INVALID_TRANSPARENCY = "invalid_transparency", Failed, false, "Saydamlık 0 ile 0,9 (%0–90) arasında olmalı.";
     /// A layer's drawing orders at the 32-bit bound: nothing can go further front or back (docs/adr/0260 §5).
     ORDER_LIMIT = "order_limit", Failed, false, "Katmanın çizim sırası sınıra geldi; öbür nesneleri ters yöne taşıyarak yer açın.";
+    /// Above or under without a reference, front or back with one, or the reference among the objects moved (docs/adr/0310 §3).
+    INVALID_REFERENCE = "invalid_reference", Failed, false, "Nesnenin üstüne ve altına bir başvuru nesnesi ister, öne ve arkaya istemez; başvuru taşınan nesnelerden biri olamaz.";
+    /// An object on another layer than the reference's: the drawing order is a layer's (docs/adr/0310 §3).
+    NOT_SAME_LAYER = "not_same_layer", Failed, false, "Nesne başvurunun katmanında değil; çizim sırası katmanın içindedir. Katmanların sırasını Katmanlar panelinde değiştirin.";
+    /// A mask on another kind than an area (docs/adr/0310 §1).
+    INVALID_WIPEOUT = "invalid_wipeout", Failed, false, "Maske yalnız alanda olur; çizgi, yay ya da başka bir nesne maskelenemez.";
     /// Two points in a row at one place where a curve passes each once (docs/adr/0259).
     COINCIDENT_POINTS = "coincident_points", Failed, false, "Ardışık iki geçiş noktası aynı yerde; eğri her noktadan bir kez geçer. Yinelenen noktayı çıkarın.";
     /// A feet-and-inches length style for a metric drawing (docs/adr/0262 §2).

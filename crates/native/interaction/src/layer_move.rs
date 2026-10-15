@@ -160,6 +160,7 @@ fn move_to(objects: &[Slot], layer: &str, name: &str, cx: &mut Context<'_>) {
         line_type: None,
         line_type_scale: None,
         transparency: None,
+        wipeout: None,
         uids: objects
             .iter()
             .filter_map(|s| cx.doc.uid(*s))

@@ -21,6 +21,8 @@ pub fn kind_name(e: &Entity) -> &'static str {
         Entity::Point(_) => "Nokta",
         Entity::Line(_) => "Çizgi",
         Entity::Polyline(_) => "Çoklu çizgi",
+        // An area's mask (docs/adr/0310).
+        Entity::Polygon(p) if p.base.look.wipeout.is_some() => "Maske",
         Entity::Polygon(_) => "Kapalı alan",
         Entity::Circle(_) => "Daire",
         Entity::Arc(_) => "Yay",

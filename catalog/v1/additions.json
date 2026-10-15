@@ -442,6 +442,76 @@
       ],
       "category": "Pano",
       "status": "implemented"
+    },
+    {
+      "id": "tool.wipeout",
+      "title": "Maske",
+      "icon": "wipeout",
+      "description": "Kendinden önce çizilenleri örten bir alan çizer (AutoCAD'in WIPEOUT'u): alan çizim zemininin rengiyle dolar; çerçevesi gösterilir ya da gizlenir (Ç). Nesne (N) açıkken tıklanan kapalı alan maske olur. Örtme katmanın çizim sırasıyla ve katmanların sırasıyla olur; yazılar ve etiketler her zaman üstte kalır. Maske yalnız sınırından seçilir.",
+      "aliases": [
+        "WIPEOUT",
+        "MASKE",
+        "ORTU"
+      ],
+      "shortcuts": [],
+      "category": "Çizim",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.drawOrderAbove",
+      "title": "Nesnenin üstüne",
+      "short": "Üstüne",
+      "icon": "drawOrderAbove",
+      "description": "Seçili nesneleri tıklanan nesnenin hemen üstünde çizer (AutoCAD'in DRAWORDER'ının Üstüne'si). Nesneler başvurunun katmanında olmalı; kendi aralarındaki sıra korunur. cad.entities.order ile tek geri alma adımı.",
+      "aliases": [
+        "USTUNE",
+        "NESNEUSTUNE"
+      ],
+      "shortcuts": [],
+      "category": "Değiştir",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.drawOrderUnder",
+      "title": "Nesnenin altına",
+      "short": "Altına",
+      "icon": "drawOrderUnder",
+      "description": "Seçili nesneleri tıklanan nesnenin hemen altında çizer (AutoCAD'in DRAWORDER'ının Altına'sı). Nesneler başvurunun katmanında olmalı; kendi aralarındaki sıra korunur. cad.entities.order ile tek geri alma adımı.",
+      "aliases": [
+        "ALTINA",
+        "NESNEALTINA"
+      ],
+      "shortcuts": [],
+      "category": "Değiştir",
+      "status": "implemented"
+    },
+    {
+      "id": "edit.textsToFront",
+      "title": "Yazıları öne getir",
+      "short": "Yazılar öne",
+      "icon": "textsToFront",
+      "description": "Çizimde görünen bütün yazıları, ölçüleri, kılavuzları ve tabloları kendi katmanlarının çizim sırasında öne alır (AutoCAD'in TEXTTOFRONT'u). Kilitli katmandakiler atlanır ve sayılır. cad.entities.select ve cad.entities.order ile tek geri alma adımı.",
+      "aliases": [
+        "TEXTTOFRONT",
+        "YAZILARIONE"
+      ],
+      "shortcuts": [],
+      "category": "Değiştir",
+      "status": "implemented"
+    },
+    {
+      "id": "edit.hatchesToBack",
+      "title": "Taramaları arkaya gönder",
+      "short": "Taramalar arkaya",
+      "icon": "hatchesToBack",
+      "description": "Çizimde görünen bütün taramaları kendi katmanlarının çizim sırasında arkaya gönderir (AutoCAD'in HATCHTOBACK'i): çizgiler ve yazılar taramaların üstünde kalır. Kilitli katmandakiler atlanır ve sayılır. cad.entities.select ve cad.entities.order ile tek geri alma adımı.",
+      "aliases": [
+        "HATCHTOBACK",
+        "TARAMALARIARKAYA"
+      ],
+      "shortcuts": [],
+      "category": "Değiştir",
+      "status": "implemented"
     }
   ],
   "icons": {
@@ -499,7 +569,12 @@
     "curveEdit": "<path d=\"M2.5 13.5C4 7 6.5 3.5 9 5.5s3 4 6.5 1\"/><circle cx=\"2.5\" cy=\"13.5\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"9\" cy=\"5.5\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"15.5\" cy=\"6.5\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M10.6 17.6l.7-2.7 5.5-5.5a1.5 1.5 0 0 1 2.1 2.1l-5.5 5.5z\"/>",
     "audit": "<path d=\"M10 17.5H4.5v-15h7l4 4v3\"/><path d=\"M11.5 2.5v4h4\"/><circle cx=\"13.5\" cy=\"13.5\" r=\"3\"/><path d=\"m15.7 15.7 2.8 2.8\"/><path d=\"M7 8.5h2.5M7 11.5h2\"/>",
     "copyBase": "<rect x=\"5.5\" y=\"7.5\" width=\"9\" height=\"9\" rx=\"1\"/><path d=\"M9.5 7.5v-4h7v7h-2\"/><path d=\"M2.5 16.5h6M5.5 13.5v6\"/><circle cx=\"5.5\" cy=\"16.5\" r=\"1.3\"/>",
-    "pasteBlock": "<rect x=\"3\" y=\"4\" width=\"9.5\" height=\"13.5\" rx=\"1\"/><path d=\"M5.8 4V2.8h4V4M5.8 8.5h4\"/><rect x=\"10.5\" y=\"10\" width=\"7.5\" height=\"7.5\" rx=\"1.2\"/><circle cx=\"14.25\" cy=\"13.75\" r=\"1.7\"/>"
+    "pasteBlock": "<rect x=\"3\" y=\"4\" width=\"9.5\" height=\"13.5\" rx=\"1\"/><path d=\"M5.8 4V2.8h4V4M5.8 8.5h4\"/><rect x=\"10.5\" y=\"10\" width=\"7.5\" height=\"7.5\" rx=\"1.2\"/><circle cx=\"14.25\" cy=\"13.75\" r=\"1.7\"/>",
+    "wipeout": "<path d=\"M2.5 6.5h5M2.5 10h5M2.5 13.5h5\" stroke-width=\"1.1\"/><rect x=\"7.5\" y=\"3.5\" width=\"10\" height=\"13\" rx=\"1\"/>",
+    "drawOrderAbove": "<rect x=\"2.5\" y=\"9.5\" width=\"8\" height=\"8\" rx=\"1\" stroke-dasharray=\"1.6 1.2\" stroke-width=\"1.1\"/><rect x=\"5.5\" y=\"6\" width=\"8\" height=\"8\" rx=\"1\"/><rect x=\"9.5\" y=\"2.5\" width=\"8\" height=\"8\" rx=\"1\" fill=\"currentColor\" fill-opacity=\"0.35\"/>",
+    "drawOrderUnder": "<rect x=\"9.5\" y=\"2.5\" width=\"8\" height=\"8\" rx=\"1\" stroke-dasharray=\"1.6 1.2\" stroke-width=\"1.1\"/><rect x=\"2.5\" y=\"9.5\" width=\"8\" height=\"8\" rx=\"1\" fill=\"currentColor\" fill-opacity=\"0.35\"/><rect x=\"5.5\" y=\"6\" width=\"8\" height=\"8\" rx=\"1\"/>",
+    "textsToFront": "<path d=\"M2.5 9.5l7-7M2.5 15.5l13-13M8.5 17.5l9-9\" stroke-width=\"1\" stroke-opacity=\"0.55\"/><path d=\"M5.5 16.5L10 4.5l4.5 12M7.2 12.5h5.6\" stroke-width=\"1.7\"/>",
+    "hatchesToBack": "<rect x=\"2.5\" y=\"2.5\" width=\"10\" height=\"10\" rx=\"1\"/><path d=\"M2.5 8l5.5-5.5M3.5 12.5l9-9M8 12.5l4.5-4.5\" stroke-width=\"1\"/><path d=\"M16 9v8.5m-1.6-1.6L16 17.5l1.6-1.6\" stroke-width=\"1.2\"/>"
   },
   "ribbon": [
     {
@@ -848,6 +923,65 @@
           "command": "edit.pasteBlock",
           "size": "small"
         }
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "home",
+      "into": "Çizim",
+      "items": [
+        {
+          "command": "tool.wipeout",
+          "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "home",
+      "into": "Değiştir",
+      "items": [
+        {
+          "command": "tool.drawOrderAbove",
+          "size": "small"
+        },
+        {
+          "command": "tool.drawOrderUnder",
+          "size": "small"
+        }
+      ],
+      "overflow": [
+        "edit.textsToFront",
+        "edit.hatchesToBack"
+      ]
+    },
+    {
+      "modes": [
+        "gis"
+      ],
+      "tab": "edit",
+      "into": "Nesne",
+      "items": [
+        {
+          "command": "tool.wipeout",
+          "size": "small"
+        },
+        {
+          "command": "tool.drawOrderAbove",
+          "size": "small"
+        },
+        {
+          "command": "tool.drawOrderUnder",
+          "size": "small"
+        }
+      ],
+      "overflow": [
+        "edit.textsToFront",
+        "edit.hatchesToBack"
       ]
     }
   ],

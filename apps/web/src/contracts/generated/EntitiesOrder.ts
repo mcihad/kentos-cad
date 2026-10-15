@@ -11,12 +11,22 @@ import type { OrderTo } from "./OrderTo";
  * nothing changes, nothing is written. The command reads no selection
  * (TODOS.md CMD-07): Sırala ▾ gives the selection's ids.
  *
+ * Above and under (docs/adr/0310 §3) take the `reference` object, on the
+ * objects' layer: the objects take the orders right after (before) the
+ * reference's, in their own drawing order; the layer's objects drawn after
+ * (before) the reference move together by the same step when there is no
+ * room, so every other pair keeps its order. Objects already right above
+ * (under) it do not change.
+ *
  * Refusals (`CommandError.code`), checked in this order: `no_entities`,
- * `invalid_uid`, `invalid_revision`, `revision_conflict` (status
- * `conflict`), `entity_not_found`, `layer_locked` (every object on a locked
- * layer: the first one's, in the input's order; when only some are, they are
- * left out with the warning `layer_locked`, docs/adr/0278), `order_limit` (a
- * layer's orders at the 32-bit bound, −2³¹ or 2³¹ − 1: no room past them).
+ * `invalid_uid`, `invalid_reference` (no reference for above or under, one
+ * for front or back, or the reference among the objects), `invalid_revision`,
+ * `revision_conflict` (status `conflict`), `entity_not_found` (an object or
+ * the reference), `layer_locked` (every object on a locked layer: the first
+ * one's, in the input's order; when only some are, they are left out with the
+ * warning `layer_locked`, docs/adr/0278), `not_same_layer` (an object on
+ * another layer than the reference's), `order_limit` (a layer's orders at the
+ * 32-bit bound, −2³¹ or 2³¹ − 1: no room past them).
  */
 export type EntitiesOrder = { 
 /**
@@ -24,9 +34,13 @@ export type EntitiesOrder = {
  */
 uids: Array<string>, 
 /**
- * To the front or the back.
+ * To the front or the back, above or under the reference.
  */
 to: OrderTo, 
+/**
+ * The object the others go right above or under (its persistent id); only with `above` and `under`.
+ */
+reference?: string, 
 /**
  * The document revision the input was prepared against, as decimal text.
  */

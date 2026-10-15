@@ -5,6 +5,7 @@ import type { LeaderArrow } from "./LeaderArrow";
 import type { LineType } from "./LineType";
 import type { LookPart } from "./LookPart";
 import type { Vec2 } from "./Vec2";
+import type { Wipeout } from "./Wipeout";
 
 /**
  * A leader (docs/adr/0146): an arrowhead at its first vertex, a line
@@ -96,4 +97,9 @@ order?: number,
  * follow the object's layer instead of the insert; in order, once each,
  * never one with a value of its own.
  */
-byLayer?: Array<LookPart>, };
+byLayer?: Array<LookPart>, 
+/**
+ * An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+ * what is drawn before it; only an area has it.
+ */
+wipeout?: Wipeout, };

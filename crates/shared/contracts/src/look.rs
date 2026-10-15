@@ -89,6 +89,22 @@ pub struct ObjectLook {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<LookPart>>", optional))]
     pub by_layer: Vec<LookPart>,
+    /// An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+    /// what is drawn before it; only an area has it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub wipeout: Option<Wipeout>,
+}
+
+/// An area's mask (docs/adr/0310 §1).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct Wipeout {
+    /// Whether its boundary is drawn (AutoCAD's WIPEOUTFRAME, per mask).
+    pub frame: bool,
 }
 
 impl ObjectLook {
@@ -96,6 +112,14 @@ impl ObjectLook {
     pub fn is_empty(&self) -> bool {
         *self == Self::default()
     }
+}
+
+/// What is wrong with a mask on an object of `kind` (its name in the contract, `polygon` …), said so a reader can
+/// fix it; none: it is right (docs/adr/0310 §1). Only an area masks.
+pub fn wipeout_problem(look: &ObjectLook, kind: &str) -> Option<String> {
+    (look.wipeout.is_some() && kind != "polygon").then(|| {
+        format!("Maske yalnız alanda olur; bu nesne bir {kind}. Kapalı alanı maske yapın ya da Maske aracıyla çizin.")
+    })
 }
 
 /// What is wrong with an object's look, said so a reader can fix it; none:
@@ -166,8 +190,17 @@ mod tests {
             transparency: Some(0.5),
             order: Some(-3),
             by_layer: vec![],
+            wipeout: None,
         };
         assert_eq!(look_problem(&ok, false, false, false), None);
+        // A mask is an area's only (docs/adr/0310).
+        let mask = ObjectLook {
+            wipeout: Some(Wipeout { frame: true }),
+            ..ObjectLook::default()
+        };
+        assert_eq!(wipeout_problem(&mask, "polygon"), None);
+        assert!(wipeout_problem(&mask, "polyline").is_some());
+        assert_eq!(wipeout_problem(&ObjectLook::default(), "line"), None);
         let scale = ObjectLook {
             line_type_scale: Some(0.0),
             ..ObjectLook::default()

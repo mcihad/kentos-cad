@@ -1550,6 +1550,8 @@ def look_rule(e, in_block):
     assert "byLayer" not in e or parts, "boş liste yazılmaz"
     assert all(p in LOOK_PARTS for p in parts) and [LOOK_PARTS.index(p) for p in parts] == sorted(set(LOOK_PARTS.index(p) for p in parts)), "sırayla ve birer kez"
     assert all(p not in e for p in parts), "kendi değeri olan parça katmana göre olamaz"
+    # Schema 54 (docs/adr/0310): an area's mask; only an area has it.
+    assert "wipeout" not in e or (e["kind"] == "polygon" and set(e["wipeout"]) == {"frame"} and type(e["wipeout"]["frame"]) is bool), "maske yalnız alanda, { frame }"
 
 
 def entity(e, uid, index):
@@ -1577,6 +1579,8 @@ def entity(e, uid, index):
         "transparency": (f64, False),
         "order": (integer, False),
         "byLayer": (lambda ps: array([text(p) for p in ps]), False),
+        # Schema 54 (docs/adr/0310): an area's mask.
+        "wipeout": (lambda w: cmap({"frame": boolean(w["frame"])}), False),
         **KINDS[kind],
     }
     look_rule(e, uid is None)
@@ -1855,6 +1859,10 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def composed(nodes):
         return any("compose" in n or composed(n["children"]) for n in nodes)
 
+    # Schema 54 (docs/adr/0310): an area's mask, a block definition's too.
+    masked = lambda es: any("wipeout" in e for e in es)  # noqa: E731
+    if masked(entities) or any(masked(b["entities"]) for b in blocks or []):
+        return 54
     # Schema 53 (docs/adr/0300): an associative array.
     if has_arrays:
         return 53
@@ -2177,7 +2185,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-54.kcad"] = container(root(cmap(parts), version=uint(54)))
+    files["schema-version-55.kcad"] = container(root(cmap(parts), version=uint(55)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2504,6 +2512,11 @@ def broken(minimal_content, minimal_file):
     files["look-transparency-high.kcad"] = in_schema(48, line(transparency=f64(0.95)))
     files["look-order-float.kcad"] = in_schema(48, line(order=f64(1.5)))
     files["look-by-layer-in-drawing.kcad"] = in_schema(48, line(byLayer=array([text("color")])))
+    # An area's mask is schema 54's (docs/adr/0310 §1): only an area's, `{ frame }` with frame a boolean and nothing else.
+    files["wipeout-on-a-line.kcad"] = in_schema(54, line(wipeout=cmap({"frame": boolean(True)})))
+    files["wipeout-without-frame.kcad"] = in_schema(54, path("polygon", 3, wipeout=cmap({})))
+    files["wipeout-frame-not-bool.kcad"] = in_schema(54, path("polygon", 3, wipeout=cmap({"frame": uint(1)})))
+    files["wipeout-unknown-field.kcad"] = in_schema(54, path("polygon", 3, wipeout=cmap({"fill": boolean(True), "frame": boolean(True)})))
     files["plot-true.kcad"] = container(root(cmap({**parts, "layers": array([cmap({**layer_entries(m["layers"][0]), "plot": boolean(True)})])}), version=uint(48)))
     # The UCS settings are schema 49's (docs/adr/0261 §1): in schema 48 unknown fields; the world's never written as the
     # current one, an angle in [0, 2π), an origin within 10 000 km, names that hold and are unique, an empty list refused.
@@ -3433,6 +3446,10 @@ def build():
     out["broken/arrays-item-twice.kcad"] = arrays_broken(lambda d: d["arrays"][0]["items"][2].update(uid=d["arrays"][0]["items"][0]["uid"]))
     out["broken/arrays-item-missing.kcad"] = arrays_broken(lambda d: d["arrays"][0]["items"][2].update(uid="0192f5a2-2222-7000-8000-0000000000ff"))
     out["broken/arrays-scale-zero.kcad"] = arrays_broken(lambda d: d["arrays"][1].update(scale=0.0))
+    out["wipeouts.kcad"] = container(document(load("wipeouts.json")))
+    payload = document(load("wipeouts.json"))
+    assert payload.count(b"\x67version\x18\x36") == 1
+    out["broken/wipeouts-in-schema-53.kcad"] = container(payload.replace(b"\x67version\x18\x36", b"\x67version\x18\x35"))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

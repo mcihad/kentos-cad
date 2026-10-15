@@ -18,6 +18,7 @@ mod fixtures;
 mod info_templates;
 mod lengthen;
 mod match_props;
+mod order_cmd;
 mod polygon;
 mod protocol;
 mod protocol_cases;

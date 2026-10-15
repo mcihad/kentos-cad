@@ -150,7 +150,9 @@ use crate::layer::LineType;
 /// 63 (docs/adr/0300): associative arrays: `.kcad` document schema 53, the document's `arrays` (a
 ///    block, its first place, the array command's layout and one item per place: its insert's id,
 ///    none when removed, `kept` when changed by hand). The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 63;
+/// 64 (docs/adr/0310): an area's mask: `.kcad` document schema 54, the look's `wipeout` (`{ frame }`), in the
+///    typed columns the look's bits 32 and 64. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 64;
 
 // ── Every import ────────────────────────────────────────────────────────
 

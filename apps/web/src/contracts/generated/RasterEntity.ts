@@ -6,6 +6,7 @@ import type { LookPart } from "./LookPart";
 import type { RasterDataset } from "./RasterDataset";
 import type { RasterSample } from "./RasterSample";
 import type { RasterStyle } from "./RasterStyle";
+import type { Wipeout } from "./Wipeout";
 
 /**
  * A raster (docs/adr/0204 §2).
@@ -63,6 +64,11 @@ order?: number,
  * never one with a value of its own.
  */
 byLayer?: Array<LookPart>, 
+/**
+ * An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+ * what is drawn before it; only an area has it.
+ */
+wipeout?: Wipeout, 
 /**
  * `[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the
  * upper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's

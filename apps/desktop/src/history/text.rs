@@ -164,6 +164,7 @@ fn field_name(key: &str) -> Option<&'static str> {
         "plotScale" => "Çizim ölçeği",
         "points" | "pts" => "Noktalar",
         "r" | "radius" => "Yarıçap",
+        "reference" => "Başvuru",
         "region" => "Bölge",
         "renderer" => "Stil",
         "scale" => "Ölçek",
@@ -187,6 +188,7 @@ fn field_name(key: &str) -> Option<&'static str> {
         "visible" => "Görünür",
         "widths" => "Genişlikler",
         "window" => "Pencere",
+        "wipeout" => "Maske",
         "z" => "Kot",
         _ => return None,
     })

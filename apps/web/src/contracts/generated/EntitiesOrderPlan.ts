@@ -7,7 +7,7 @@ import type { Entity } from "./Entity";
 export type EntitiesOrderPlan = { 
 /**
  * The objects that would change, each as execute would write it, with
- * its own slot (`id`), in the input's order.
+ * its own slot (`id`), in the input's order; then the others moved to make room.
  */
 changed: Array<Entity>, 
 /**

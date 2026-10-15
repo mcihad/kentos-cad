@@ -286,6 +286,7 @@ impl App {
             line_type: None,
             line_type_scale: None,
             transparency: None,
+            wipeout: None,
             uids,
             layer_id: layer_ids.into_iter().next(),
             color: text("color"),

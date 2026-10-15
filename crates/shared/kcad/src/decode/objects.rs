@@ -200,6 +200,8 @@ pub(super) struct Features {
     nurbs: bool,
     /// Schema 51: a reference's `along` place and block `path` (docs/adr/0263).
     subref_extras: bool,
+    /// Schema 54: an object's `wipeout` (docs/adr/0310).
+    wipeouts: bool,
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
     pub(super) look: bool,
@@ -268,6 +270,7 @@ impl Features {
             ucs: schema >= crate::SCHEMA_WITH_UCS,
             views: schema >= crate::SCHEMA_WITH_VIEWS,
             arrays: schema >= crate::SCHEMA_WITH_ARRAYS,
+            wipeouts: schema >= crate::SCHEMA_WITH_WIPEOUTS,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,
@@ -301,6 +304,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
         || (has.look && matches!(key, "lineType" | "lineTypeScale" | "transparency"))
         || (has.look && has.uids && key == "order")
         || (has.look && !has.uids && key == "byLayer")
+        || (has.wipeouts && key == "wipeout")
         || match kind {
             Kind::Point => matches!(key, "p" | "z") || (has.line_parts && key == "parts"),
             Kind::Line => {
@@ -758,6 +762,7 @@ pub(super) fn object(
             "lineTypeScale" => f.object_look.line_type_scale = Some(r.float()?),
             "transparency" => f.object_look.transparency = Some(r.float()?),
             "order" => f.object_look.order = Some(r.int(crate::MAX_ORDER)? as i32),
+            "wipeout" => f.object_look.wipeout = Some(wipeout(r)?),
             "byLayer" => {
                 f.object_look.by_layer = list(r, |r, _| {
                     super::named(r, &kentos_contracts::LookPart::ALL.map(|p| (p.name(), p)))
@@ -1359,6 +1364,15 @@ fn build(
         f.uid.is_none(),
     ) {
         return Err(r.fail(Code::BadValue, &problem));
+    }
+    if look.wipeout.is_some() && !matches!(kind, Kind::Polygon) {
+        let name = KINDS
+            .iter()
+            .find(|(_, k)| *k == kind)
+            .map_or("?", |(n, _)| n);
+        if let Some(problem) = kentos_contracts::wipeout_problem(&look, name) {
+            return Err(r.fail(Code::BadValue, &problem));
+        }
     }
     let base = EntityBase {
         look,
@@ -2355,6 +2369,21 @@ fn hatch_gradient(r: &mut Reader<'_>) -> Result<HatchGradient, KcadError> {
 
 /// The objects a hatch's region follows (docs/adr/0186 §6): its closed
 /// object, islands and cutouts by their persistent ids, and its seed.
+/// An area's mask (docs/adr/0310): `{ frame }`.
+fn wipeout(r: &mut Reader<'_>) -> Result<kentos_contracts::Wipeout, KcadError> {
+    let mut frame = None;
+    map(r, |r, key| {
+        match key {
+            "frame" => frame = Some(r.bool()?),
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    Ok(kentos_contracts::Wipeout {
+        frame: required(r, frame, "frame")?,
+    })
+}
+
 fn hatch_assoc(r: &mut Reader<'_>) -> Result<HatchAssoc, KcadError> {
     let at = r.position();
     let (mut seed, mut outer, mut islands, mut cutouts) = (None, None, Vec::new(), Vec::new());

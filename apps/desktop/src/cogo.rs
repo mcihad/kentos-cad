@@ -317,6 +317,7 @@ impl App {
                         line_type: None,
                         line_type_scale: None,
                         transparency: None,
+                        wipeout: None,
                         uids: vec![uid.to_string()],
                         layer_id: None,
                         color: None,

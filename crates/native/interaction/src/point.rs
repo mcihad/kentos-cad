@@ -317,6 +317,7 @@ impl Point {
                     line_type: None,
                     line_type_scale: None,
                     transparency: None,
+                    wipeout: None,
                     uids: vec![uid.clone()],
                     layer_id: None,
                     color: None,

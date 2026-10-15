@@ -1305,12 +1305,16 @@ class OrderTo(_StrEnum):
 
     - ``front``: Öne getir: drawn after every other object of their layer. “Öne getir”.
     - ``back``: Arkaya gönder: drawn before every other object of their layer. “Arkaya gönder”.
+    - ``above``: Nesnenin üstüne: drawn right after the `reference` object (AutoCAD's DRAWORDER Above). “Nesnenin üstüne”.
+    - ``under``: Nesnenin altına: drawn right before the `reference` object (AutoCAD's DRAWORDER Under). “Nesnenin altına”.
     """
     FRONT = "front"
     BACK = "back"
+    ABOVE = "above"
+    UNDER = "under"
 
 
-OrderToName = Literal["front", "back"]
+OrderToName = Literal["front", "back", "above", "under"]
 """The names of :class:`OrderTo`, for a plain string."""
 
 
@@ -1501,6 +1505,7 @@ class PropertiesOperation(_StrEnum):
     - ``lineType``: Çizgi tipi ▾ (docs/adr/0260 §2): their own line type, or their
     - ``lineTypeScale``: Çizgi tipi ölçeği (docs/adr/0260 §2). “Çizgi tipi ölçeği”.
     - ``transparency``: Saydamlık (docs/adr/0260 §3): their own, or their source's.
+    - ``wipeout``: Maske (docs/adr/0310 §1): areas made masks, their frames shown or
     """
     LAYER = "layer"
     COLOR = "color"
@@ -1514,9 +1519,10 @@ class PropertiesOperation(_StrEnum):
     LINE_TYPE = "lineType"
     LINE_TYPE_SCALE = "lineTypeScale"
     TRANSPARENCY = "transparency"
+    WIPEOUT = "wipeout"
 
 
-PropertiesOperationName = Literal["layer", "color", "lineWeight", "symbol", "attributes", "label", "unlink", "template", "attachments", "lineType", "lineTypeScale", "transparency"]
+PropertiesOperationName = Literal["layer", "color", "lineWeight", "symbol", "attributes", "label", "unlink", "template", "attachments", "lineType", "lineTypeScale", "transparency", "wipeout"]
 """The names of :class:`PropertiesOperation`, for a plain string."""
 
 
@@ -2266,6 +2272,7 @@ class Entity(_Union):
         order: int | None | Unset
         symbol: str | None | Unset
         transparency: float | None | Unset
+        wipeout: Wipeout | None | Unset
 
     @property
     def kind(self) -> str:
@@ -3150,6 +3157,8 @@ class ArcEntity(Entity):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "arc"
     id: int
@@ -3170,6 +3179,7 @@ class ArcEntity(Entity):
     order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "arc"}
@@ -3202,6 +3212,8 @@ class ArcEntity(Entity):
             out["symbol"] = self.symbol
         if self.transparency is not UNSET:
             out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         return out
 
     @classmethod
@@ -3225,6 +3237,7 @@ class ArcEntity(Entity):
             order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
         )
 
 
@@ -4480,6 +4493,8 @@ class CircleEntity(Entity):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "circle"
     id: int
@@ -4498,6 +4513,7 @@ class CircleEntity(Entity):
     order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "circle"}
@@ -4528,6 +4544,8 @@ class CircleEntity(Entity):
             out["symbol"] = self.symbol
         if self.transparency is not UNSET:
             out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         return out
 
     @classmethod
@@ -4549,6 +4567,7 @@ class CircleEntity(Entity):
             order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
         )
 
 
@@ -4785,6 +4804,8 @@ class ConstructionEntity(_Model):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
     """
     id: int
     layer_id: str
@@ -4802,6 +4823,7 @@ class ConstructionEntity(_Model):
     order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -4832,6 +4854,8 @@ class ConstructionEntity(_Model):
             out["symbol"] = self.symbol
         if self.transparency is not UNSET:
             out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         return out
 
     @classmethod
@@ -4853,6 +4877,7 @@ class ConstructionEntity(_Model):
             order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
         )
 
 
@@ -5153,6 +5178,8 @@ class DimensionEntity(Entity):
         text_place: Where the value stands; absent: over the line.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         unit: The unit lengths and coordinates are written in; absent: the project's.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
         za: Slope: the two points' elevations, metres (docs/adr/0147). Unit: elevation.
         zb: Unit: elevation.
     """
@@ -5200,6 +5227,7 @@ class DimensionEntity(Entity):
     text_place: DimensionTextPlace | DimensionTextPlaceName | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
     unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
     za: float | None | Unset = UNSET
     zb: float | None | Unset = UNSET
 
@@ -5284,6 +5312,8 @@ class DimensionEntity(Entity):
             out["transparency"] = None if self.transparency is None else float(self.transparency)
         if self.unit is not UNSET:
             out["unit"] = None if self.unit is None else _enum_out(self.unit)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         if self.za is not UNSET:
             out["za"] = None if self.za is None else float(self.za)
         if self.zb is not UNSET:
@@ -5336,6 +5366,7 @@ class DimensionEntity(Entity):
             text_place=UNSET if "textPlace" not in data else None if data["textPlace"] is None else _enum_in(DimensionTextPlace, data["textPlace"]),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(DrawingUnit, data["unit"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
             za=UNSET if "za" not in data else None if data["za"] is None else float(data["za"]),
             zb=UNSET if "zb" not in data else None if data["zb"] is None else float(data["zb"]),
         )
@@ -6033,6 +6064,8 @@ class EllipseEntity(Entity):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "ellipse"
     id: int
@@ -6054,6 +6087,7 @@ class EllipseEntity(Entity):
     order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "ellipse"}
@@ -6087,6 +6121,8 @@ class EllipseEntity(Entity):
             out["symbol"] = self.symbol
         if self.transparency is not UNSET:
             out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         return out
 
     @classmethod
@@ -6111,6 +6147,7 @@ class EllipseEntity(Entity):
             order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
         )
 
 
@@ -7681,20 +7718,32 @@ class EntitiesOrder(_Model):
     nothing changes, nothing is written. The command reads no selection
     (TODOS.md CMD-07): Sırala ▾ gives the selection's ids.
 
+    Above and under (docs/adr/0310 §3) take the `reference` object, on the
+    objects' layer: the objects take the orders right after (before) the
+    reference's, in their own drawing order; the layer's objects drawn after
+    (before) the reference move together by the same step when there is no
+    room, so every other pair keeps its order. Objects already right above
+    (under) it do not change.
+
     Refusals (`CommandError.code`), checked in this order: `no_entities`,
-    `invalid_uid`, `invalid_revision`, `revision_conflict` (status
-    `conflict`), `entity_not_found`, `layer_locked` (every object on a locked
-    layer: the first one's, in the input's order; when only some are, they are
-    left out with the warning `layer_locked`, docs/adr/0278), `order_limit` (a
-    layer's orders at the 32-bit bound, −2³¹ or 2³¹ − 1: no room past them).
+    `invalid_uid`, `invalid_reference` (no reference for above or under, one
+    for front or back, or the reference among the objects), `invalid_revision`,
+    `revision_conflict` (status `conflict`), `entity_not_found` (an object or
+    the reference), `layer_locked` (every object on a locked layer: the first
+    one's, in the input's order; when only some are, they are left out with the
+    warning `layer_locked`, docs/adr/0278), `not_same_layer` (an object on
+    another layer than the reference's), `order_limit` (a layer's orders at the
+    32-bit bound, −2³¹ or 2³¹ − 1: no room past them).
     Attributes:
         uids: The objects' persistent ids, at least one; a repeated one counts once.
-        to: To the front or the back.
+        to: To the front or the back, above or under the reference.
         expected_revision: The document revision the input was prepared against, as decimal text.
+        reference: The object the others go right above or under (its persistent id); only with `above` and `under`.
     """
     uids: list[str]
     to: OrderTo | OrderToName
     expected_revision: str | None | Unset = UNSET
+    reference: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -7702,6 +7751,8 @@ class EntitiesOrder(_Model):
         out["to"] = _enum_out(self.to)
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.reference is not UNSET:
+            out["reference"] = self.reference
         return out
 
     @classmethod
@@ -7710,6 +7761,7 @@ class EntitiesOrder(_Model):
             uids=list(data["uids"]),
             to=_enum_in(OrderTo, data["to"]),
             expected_revision=data.get("expectedRevision", UNSET),
+            reference=data.get("reference", UNSET),
         )
 
 
@@ -7718,7 +7770,7 @@ class EntitiesOrderPlan(_Model):
     """What `cad.entities.order` would write (plan mode); nothing is written.
     Attributes:
         changed: The objects that would change, each as execute would write it, with
-            its own slot (`id`), in the input's order.
+            its own slot (`id`), in the input's order; then the others moved to make room.
         revision: The document revision the plan was made against.
     """
     changed: list[Entity]
@@ -7742,7 +7794,8 @@ class EntitiesOrderPlan(_Model):
 class EntitiesOrdered(_Model):
     """Output of `cad.entities.order` v1.
     Attributes:
-        changed: The objects whose order changed, in the input's order.
+        changed: The objects whose order changed, in the input's order; then the layer's others moved to make room
+            (above and under), in their drawing order.
         ids: Their slots in the open document (`Entity.id`), in the same order. Unit: id.
         revision: The document's revision after the write (the same when nothing changed; in a plan, now).
     """
@@ -8103,7 +8156,9 @@ class EntitiesSetProperties(_Model):
     `invalid_transparency` (a transparency not from 0 to 0.9),
     `invalid_attachments` (`attachments_problem`, docs/adr/0225 §1), then
     `invalid_revision`, `revision_conflict` (status `conflict`),
-    `entity_not_found` (each id in order), `unknown_asset` (an embedded
+    `entity_not_found` (each id in order), `invalid_wipeout` (a mask given to
+    an object not an area, the first in the input's order; docs/adr/0310 §1),
+    `unknown_asset` (an embedded
     photo whose asset is not an image of the project's library, in the
     attachments' order), `layer_not_found` and
     `not_a_layer` (the `layerId` given), `layer_locked` (every object on a
@@ -8151,6 +8206,7 @@ class EntitiesSetProperties(_Model):
             among them that write an object's label (`TextEntity.label_of` and
             `label_scale` removed); they stay where and as they are and follow
             nothing. Other objects are left alone. Absent or false: unchanged.
+        wipeout: Their mask (Maske, docs/adr/0310 §1), an area's only; null: an ordinary area again. Absent: unchanged.
     """
     uids: list[str]
     operation: PropertiesOperation | PropertiesOperationName
@@ -8166,6 +8222,7 @@ class EntitiesSetProperties(_Model):
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
     unlink: bool | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -8195,6 +8252,8 @@ class EntitiesSetProperties(_Model):
             out["transparency"] = None if self.transparency is None else float(self.transparency)
         if self.unlink is not UNSET:
             out["unlink"] = self.unlink
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         return out
 
     @classmethod
@@ -8214,6 +8273,7 @@ class EntitiesSetProperties(_Model):
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             unlink=data.get("unlink", UNSET),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
         )
 
 
@@ -9202,6 +9262,8 @@ class HatchEntity(Entity):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "hatch"
     id: int
@@ -9222,6 +9284,7 @@ class HatchEntity(Entity):
     order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "hatch"}
@@ -9256,6 +9319,8 @@ class HatchEntity(Entity):
             out["symbol"] = self.symbol
         if self.transparency is not UNSET:
             out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         return out
 
     @classmethod
@@ -9279,6 +9344,7 @@ class HatchEntity(Entity):
             order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
         )
 
 
@@ -9472,6 +9538,8 @@ class ImageEntity(Entity):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "image"
     id: int
@@ -9497,6 +9565,7 @@ class ImageEntity(Entity):
     order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "image"}
@@ -9539,6 +9608,8 @@ class ImageEntity(Entity):
             out["symbol"] = self.symbol
         if self.transparency is not UNSET:
             out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         return out
 
     @classmethod
@@ -9567,6 +9638,7 @@ class ImageEntity(Entity):
             order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
         )
 
 
@@ -9796,6 +9868,8 @@ class InsertEntity(Entity):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "insert"
     id: int
@@ -9817,6 +9891,7 @@ class InsertEntity(Entity):
     order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "insert"}
@@ -9851,6 +9926,8 @@ class InsertEntity(Entity):
             out["symbol"] = self.symbol
         if self.transparency is not UNSET:
             out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         return out
 
     @classmethod
@@ -9875,6 +9952,7 @@ class InsertEntity(Entity):
             order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
         )
 
 
@@ -12238,6 +12316,8 @@ class LeaderEntity(Entity):
         text: The note, one line; absent: the arrow alone, no landing and no note.
             Never empty: no note is the field's absence.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "leader"
     id: int
@@ -12261,6 +12341,7 @@ class LeaderEntity(Entity):
     symbol: str | None | Unset = UNSET
     text: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "leader"}
@@ -12300,6 +12381,8 @@ class LeaderEntity(Entity):
             out["text"] = self.text
         if self.transparency is not UNSET:
             out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         return out
 
     @classmethod
@@ -12326,6 +12409,7 @@ class LeaderEntity(Entity):
             symbol=data.get("symbol", UNSET),
             text=data.get("text", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
         )
 
 
@@ -12474,6 +12558,8 @@ class LineEntity(Entity):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
         za: The start's elevation, m; absent = none (docs/adr/0142). Unit: elevation.
         zb: The end's elevation, m; absent = none. Unit: elevation.
     """
@@ -12496,6 +12582,7 @@ class LineEntity(Entity):
     order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
     za: float | None | Unset = UNSET
     zb: float | None | Unset = UNSET
 
@@ -12532,6 +12619,8 @@ class LineEntity(Entity):
             out["symbol"] = self.symbol
         if self.transparency is not UNSET:
             out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         if self.za is not UNSET:
             out["za"] = None if self.za is None else float(self.za)
         if self.zb is not UNSET:
@@ -12559,6 +12648,7 @@ class LineEntity(Entity):
             order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
             za=UNSET if "za" not in data else None if data["za"] is None else float(data["za"]),
             zb=UNSET if "zb" not in data else None if data["zb"] is None else float(data["zb"]),
         )
@@ -13084,6 +13174,8 @@ class NurbsEntity(Entity):
         tangents: The fit points' start and end tangent directions; null where none was given. Unit: 1.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         weights: Each control point's weight, above 0; absent: all 1 (not rational). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "nurbs"
     id: int
@@ -13109,6 +13201,7 @@ class NurbsEntity(Entity):
     tangents: list[Vec2 | None] | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
     weights: list[float] | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "nurbs"}
@@ -13152,6 +13245,8 @@ class NurbsEntity(Entity):
             out["transparency"] = None if self.transparency is None else float(self.transparency)
         if self.weights is not UNSET:
             out["weights"] = None if self.weights is None else [float(e0) for e0 in self.weights]
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         return out
 
     @classmethod
@@ -13180,6 +13275,7 @@ class NurbsEntity(Entity):
             tangents=UNSET if "tangents" not in data else None if data["tangents"] is None else [None if e0 is None else Vec2.from_json(e0) for e0 in data["tangents"]],
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             weights=UNSET if "weights" not in data else None if data["weights"] is None else [float(e0) for e0 in data["weights"]],
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
         )
 
 
@@ -13313,6 +13409,8 @@ class PathEntity(_Model):
             on an open polyline), in the drawing's length, not the paper's line
             weight (docs/adr/0258 §2). Absent: none, the line is drawn with its
             line weight. One part only. Unit: length.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
         zs: Each vertex's elevation, m, as many as `pts`; `null` for a vertex
             without one (not 0); absent when no vertex has one (docs/adr/0142). Unit: elevation.
     """
@@ -13337,6 +13435,7 @@ class PathEntity(_Model):
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
     widths: list[list[float]] | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
     zs: list[float | None] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -13379,6 +13478,8 @@ class PathEntity(_Model):
             out["transparency"] = None if self.transparency is None else float(self.transparency)
         if self.widths is not UNSET:
             out["widths"] = None if self.widths is None else [[float(e1) for e1 in e0] for e0 in self.widths]
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         if self.zs is not UNSET:
             out["zs"] = None if self.zs is None else [None if e0 is None else float(e0) for e0 in self.zs]
         return out
@@ -13407,6 +13508,7 @@ class PathEntity(_Model):
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             widths=UNSET if "widths" not in data else None if data["widths"] is None else [[float(e1) for e1 in e0] for e0 in data["widths"]],
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
             zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
         )
 
@@ -13620,6 +13722,8 @@ class PointCloudEntity(_Model):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
     """
     id: int
     layer_id: str
@@ -13641,6 +13745,7 @@ class PointCloudEntity(_Model):
     order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -13676,6 +13781,8 @@ class PointCloudEntity(_Model):
             out["symbol"] = self.symbol
         if self.transparency is not UNSET:
             out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         return out
 
     @classmethod
@@ -13701,6 +13808,7 @@ class PointCloudEntity(_Model):
             order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
         )
 
 
@@ -13934,6 +14042,8 @@ class PointEntity(Entity):
             fields above; absent for one point (docs/adr/0174).
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
         z: Unit: elevation.
     """
     TAG_VALUE: ClassVar[str] = "point"
@@ -13953,6 +14063,7 @@ class PointEntity(Entity):
     parts: list[PointPart] | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
     z: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -13985,6 +14096,8 @@ class PointEntity(Entity):
             out["symbol"] = self.symbol
         if self.transparency is not UNSET:
             out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         if self.z is not UNSET:
             out["z"] = None if self.z is None else float(self.z)
         return out
@@ -14008,6 +14121,7 @@ class PointEntity(Entity):
             parts=UNSET if "parts" not in data else None if data["parts"] is None else [PointPart.from_json(e0) for e0 in data["parts"]],
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
             z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
         )
 
@@ -14171,6 +14285,8 @@ class PolygonCreate(_Model):
             instead of its layer's style: an object template's (docs/adr/0176).
             The id is not looked up: the libraries are the host's. Absent: the
             layer's style.
+        wipeout: An area's mask (Maske, AutoCAD's WIPEOUT; docs/adr/0310 §1): it fills with the drawing's background and covers
+            what is drawn before it, its frame drawn or not. Absent: an ordinary area.
     """
     layer_id: str
     pts: list[Vec2]
@@ -14183,6 +14299,7 @@ class PolygonCreate(_Model):
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -14206,6 +14323,8 @@ class PolygonCreate(_Model):
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         return out
 
     @classmethod
@@ -14222,6 +14341,7 @@ class PolygonCreate(_Model):
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
         )
 
 
@@ -15634,6 +15754,8 @@ class RasterEntity(Entity):
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         url: An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "raster"
     id: int
@@ -15662,6 +15784,7 @@ class RasterEntity(Entity):
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
     url: str | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "raster"}
@@ -15707,6 +15830,8 @@ class RasterEntity(Entity):
             out["transparency"] = None if self.transparency is None else float(self.transparency)
         if self.url is not UNSET:
             out["url"] = self.url
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         return out
 
     @classmethod
@@ -15738,6 +15863,7 @@ class RasterEntity(Entity):
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             url=data.get("url", UNSET),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
         )
 
 
@@ -16948,6 +17074,8 @@ class SplineEntity(Entity):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "spline"
     id: int
@@ -16966,6 +17094,7 @@ class SplineEntity(Entity):
     order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "spline"}
@@ -16996,6 +17125,8 @@ class SplineEntity(Entity):
             out["symbol"] = self.symbol
         if self.transparency is not UNSET:
             out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         return out
 
     @classmethod
@@ -17017,6 +17148,7 @@ class SplineEntity(Entity):
             order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
         )
 
 
@@ -17416,6 +17548,8 @@ class TableEntity(Entity):
         symbol: Library symbol overriding the layer's style.
         text_style: The project's text style it follows, by its id; absent: Standart.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "table"
     id: int
@@ -17449,6 +17583,7 @@ class TableEntity(Entity):
     symbol: str | None | Unset = UNSET
     text_style: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "table"}
@@ -17505,6 +17640,8 @@ class TableEntity(Entity):
             out["textStyle"] = self.text_style
         if self.transparency is not UNSET:
             out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         return out
 
     @classmethod
@@ -17541,6 +17678,7 @@ class TableEntity(Entity):
             symbol=data.get("symbol", UNSET),
             text_style=data.get("textStyle", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
         )
 
 
@@ -17598,6 +17736,8 @@ class TextEntity(Entity):
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         width_factor: The letters' width times this, the height kept (Netcad's “sıkışma”,
             DXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`. Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
     """
     TAG_VALUE: ClassVar[str] = "text"
     id: int
@@ -17632,6 +17772,7 @@ class TextEntity(Entity):
     text_style: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
     width_factor: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "text"}
@@ -17692,6 +17833,8 @@ class TextEntity(Entity):
             out["transparency"] = None if self.transparency is None else float(self.transparency)
         if self.width_factor is not UNSET:
             out["widthFactor"] = None if self.width_factor is None else float(self.width_factor)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         return out
 
     @classmethod
@@ -17729,6 +17872,7 @@ class TextEntity(Entity):
             text_style=data.get("textStyle", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             width_factor=UNSET if "widthFactor" not in data else None if data["widthFactor"] is None else float(data["widthFactor"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
         )
 
 
@@ -18514,6 +18658,26 @@ class ViewsEdited(_Model):
             changed=data["changed"],
             revision=data["revision"],
             view=UNSET if "view" not in data else None if data["view"] is None else NamedView.from_json(data["view"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class Wipeout(_Model):
+    """An area's mask (docs/adr/0310 §1).
+    Attributes:
+        frame: Whether its boundary is drawn (AutoCAD's WIPEOUTFRAME, per mask).
+    """
+    frame: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["frame"] = self.frame
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> Wipeout:
+        return cls(
+            frame=data["frame"],
         )
 
 
@@ -24146,6 +24310,7 @@ __all__ = [
     "ViewsOp",
     "WeightCurveEdit",
     "WindowSelectRegion",
+    "Wipeout",
     "Workspace",
     "WorkspaceName",
     "WorldUcsTo",

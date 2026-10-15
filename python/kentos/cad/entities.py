@@ -115,6 +115,7 @@ from .types import (  # noqa: F401
     Vec2Like,
     VertexAction,
     VertexActionName,
+    Wipeout,
 )
 
 if TYPE_CHECKING:
@@ -3062,6 +3063,7 @@ class _EntitiesOrder(LocalCommand[EntitiesOrder, EntitiesOrdered, EntitiesOrderP
         uids: Sequence[str],
         to: OrderTo | OrderToName,
         expected_revision: str | None | Unset = UNSET,
+        reference: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> EntitiesOrdered:
@@ -3078,8 +3080,9 @@ class _EntitiesOrder(LocalCommand[EntitiesOrder, EntitiesOrdered, EntitiesOrderP
         Args:
             doc: The drawing it works on.
             uids: The objects' persistent ids, at least one; a repeated one counts once.
-            to: To the front or the back.
+            to: To the front or the back, above or under the reference.
             expected_revision: The document revision the input was prepared against, as decimal text.
+            reference: The object the others go right above or under (its persistent id); only with `above` and `under`.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -3096,6 +3099,7 @@ class _EntitiesOrder(LocalCommand[EntitiesOrder, EntitiesOrdered, EntitiesOrderP
             uids=list(uids),
             to=to,
             expected_revision=expected_revision,
+            reference=reference,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -3106,6 +3110,7 @@ class _EntitiesOrder(LocalCommand[EntitiesOrder, EntitiesOrdered, EntitiesOrderP
         uids: Sequence[str],
         to: OrderTo | OrderToName,
         expected_revision: str | None | Unset = UNSET,
+        reference: str | None | Unset = UNSET,
     ) -> EntitiesOrderPlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -3114,6 +3119,7 @@ class _EntitiesOrder(LocalCommand[EntitiesOrder, EntitiesOrdered, EntitiesOrderP
             uids=list(uids),
             to=to,
             expected_revision=expected_revision,
+            reference=reference,
         ))
 
     def validate(
@@ -3124,6 +3130,7 @@ class _EntitiesOrder(LocalCommand[EntitiesOrder, EntitiesOrdered, EntitiesOrderP
         uids: Sequence[str],
         to: OrderTo | OrderToName,
         expected_revision: str | None | Unset = UNSET,
+        reference: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -3132,6 +3139,7 @@ class _EntitiesOrder(LocalCommand[EntitiesOrder, EntitiesOrdered, EntitiesOrderP
             uids=list(uids),
             to=to,
             expected_revision=expected_revision,
+            reference=reference,
         ))
 
     def answer(
@@ -3142,6 +3150,7 @@ class _EntitiesOrder(LocalCommand[EntitiesOrder, EntitiesOrdered, EntitiesOrderP
         uids: Sequence[str],
         to: OrderTo | OrderToName,
         expected_revision: str | None | Unset = UNSET,
+        reference: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -3155,6 +3164,7 @@ class _EntitiesOrder(LocalCommand[EntitiesOrder, EntitiesOrdered, EntitiesOrderP
             uids=list(uids),
             to=to,
             expected_revision=expected_revision,
+            reference=reference,
         ), op=op, request_id=request_id, expected=expected)
 
 
@@ -3727,6 +3737,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         symbol: str | None | Unset = UNSET,
         transparency: float | None | Unset = UNSET,
         unlink: bool | Unset = UNSET,
+        wipeout: Wipeout | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> EntitiesPropertiesSet:
@@ -3777,6 +3788,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
                 among them that write an object's label (`TextEntity.label_of` and
                 `label_scale` removed); they stay where and as they are and follow
                 nothing. Other objects are left alone. Absent or false: unchanged.
+            wipeout: Their mask (Maske, docs/adr/0310 §1), an area's only; null: an ordinary area again. Absent: unchanged.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -3804,6 +3816,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
             symbol=symbol,
             transparency=transparency,
             unlink=unlink,
+            wipeout=wipeout,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -3825,6 +3838,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         symbol: str | None | Unset = UNSET,
         transparency: float | None | Unset = UNSET,
         unlink: bool | Unset = UNSET,
+        wipeout: Wipeout | None | Unset = UNSET,
     ) -> EntitiesSetPropertiesPlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -3844,6 +3858,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
             symbol=symbol,
             transparency=transparency,
             unlink=unlink,
+            wipeout=wipeout,
         ))
 
     def validate(
@@ -3865,6 +3880,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         symbol: str | None | Unset = UNSET,
         transparency: float | None | Unset = UNSET,
         unlink: bool | Unset = UNSET,
+        wipeout: Wipeout | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -3884,6 +3900,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
             symbol=symbol,
             transparency=transparency,
             unlink=unlink,
+            wipeout=wipeout,
         ))
 
     def answer(
@@ -3905,6 +3922,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         symbol: str | None | Unset = UNSET,
         transparency: float | None | Unset = UNSET,
         unlink: bool | Unset = UNSET,
+        wipeout: Wipeout | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -3929,6 +3947,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
             symbol=symbol,
             transparency=transparency,
             unlink=unlink,
+            wipeout=wipeout,
         ), op=op, request_id=request_id, expected=expected)
 
 

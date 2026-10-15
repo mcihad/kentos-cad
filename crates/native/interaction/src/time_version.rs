@@ -210,6 +210,7 @@ impl TimeVersion {
                 line_type: None,
                 line_type_scale: None,
                 transparency: None,
+                wipeout: None,
                 uids: slots
                     .iter()
                     .filter_map(|s| cx.doc.uid(*s))

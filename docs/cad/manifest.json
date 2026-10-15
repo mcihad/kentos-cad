@@ -1656,6 +1656,23 @@
    "tests": 0
   },
   {
+   "id": "edit.hatchesToBack",
+   "kind": "command",
+   "title": "Taramaları arkaya gönder",
+   "level": "semantic",
+   "via": [
+    "cad.entities.select",
+    "cad.entities.order"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.select, kentos.cad.entities.order",
+   "mcp": "cad.entities.select, cad.entities.order",
+   "note": "Taramalar seçilir, sonra arkaya (ADR 0310).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "edit.invertSelection",
    "kind": "command",
    "title": "Seçimi ters çevir",
@@ -2057,6 +2074,23 @@
    "python": "kentos.cad.entities.order",
    "mcp": "cad.entities.order",
    "note": "Seçimin kalıcı kimlikleri ve yön komuta verilir (ADR 0260 §5).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "edit.textsToFront",
+   "kind": "command",
+   "title": "Yazıları öne getir",
+   "level": "semantic",
+   "via": [
+    "cad.entities.select",
+    "cad.entities.order"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.select, kentos.cad.entities.order",
+   "mcp": "cad.entities.select, cad.entities.order",
+   "note": "Türlere göre seçim, sonra öne (ADR 0310).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -7581,6 +7615,38 @@
    "tests": 3
   },
   {
+   "id": "tool.drawOrderAbove",
+   "kind": "command",
+   "title": "Nesnenin üstüne",
+   "level": "semantic",
+   "via": [
+    "cad.entities.order"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.order",
+   "mcp": "cad.entities.order",
+   "note": "Başvuru tıklanan nesne, girdinin reference'ı (ADR 0310).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.drawOrderUnder",
+   "kind": "command",
+   "title": "Nesnenin altına",
+   "level": "semantic",
+   "via": [
+    "cad.entities.order"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.order",
+   "mcp": "cad.entities.order",
+   "note": "Başvuru tıklanan nesne, girdinin reference'ı (ADR 0310).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.edgeShift",
    "kind": "tool",
    "title": "Paralel kaydır",
@@ -9737,6 +9803,23 @@
    "python": null,
    "mcp": null,
    "note": "Görünümün dönüşü oturumun kamerasıdır; çizim değişmez. Adlı görünümün dönüşü cad.views.edit ile saklanır (ADR 0285 §2).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.wipeout",
+   "kind": "command",
+   "title": "Maske",
+   "level": "semantic",
+   "via": [
+    "cad.polygon.create",
+    "cad.entities.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.polygon.create, kentos.cad.entities.set",
+   "mcp": "cad.polygon.create, cad.entities.set",
+   "note": "Yeni maske cad.polygon.create'in wipeout'uyla, Nesne'nin alanı cad.entities.set'in wipeout'uyla (ADR 0310).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0

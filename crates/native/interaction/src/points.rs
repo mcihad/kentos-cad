@@ -227,6 +227,7 @@ pub(crate) fn write_ring(
     use kentos_native_application::{ExecutionContext, polygon};
     let input = kentos_contracts::PolygonCreate {
         line_type: cx.draft.line_type,
+        wipeout: None,
         layer_id: cx.doc.layers().active().to_owned(),
         pts: pts.iter().map(|p| wire(*p)).collect(),
         bulges,

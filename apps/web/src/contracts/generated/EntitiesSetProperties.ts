@@ -2,6 +2,7 @@
 import type { Attachment } from "./Attachment";
 import type { LineType } from "./LineType";
 import type { PropertiesOperation } from "./PropertiesOperation";
+import type { Wipeout } from "./Wipeout";
 
 /**
  * Input of `cad.entities.set` v1: properties set for objects named by their
@@ -32,7 +33,9 @@ import type { PropertiesOperation } from "./PropertiesOperation";
  * `invalid_transparency` (a transparency not from 0 to 0.9),
  * `invalid_attachments` (`attachments_problem`, docs/adr/0225 §1), then
  * `invalid_revision`, `revision_conflict` (status `conflict`),
- * `entity_not_found` (each id in order), `unknown_asset` (an embedded
+ * `entity_not_found` (each id in order), `invalid_wipeout` (a mask given to
+ * an object not an area, the first in the input's order; docs/adr/0310 §1),
+ * `unknown_asset` (an embedded
  * photo whose asset is not an image of the project's library, in the
  * attachments' order), `layer_not_found` and
  * `not_a_layer` (the `layerId` given), `layer_locked` (every object on a
@@ -85,6 +88,10 @@ lineTypeScale?: number | null,
  * source's. Absent: unchanged.
  */
 transparency?: number | null, 
+/**
+ * Their mask (Maske, docs/adr/0310 §1), an area's only; null: an ordinary area again. Absent: unchanged.
+ */
+wipeout?: Wipeout | null, 
 /**
  * Their own symbol, a library item's id (`EntityBase.symbol`), drawn
  * instead of their layer's style; null: the layer's style. The id is

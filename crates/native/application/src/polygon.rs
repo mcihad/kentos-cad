@@ -219,6 +219,7 @@ fn polygon(input: PolygonCreate, id: u32) -> Entity {
         base: EntityBase {
             look: kentos_contracts::ObjectLook {
                 line_type: input.line_type,
+                wipeout: input.wipeout,
                 ..Default::default()
             },
             id,

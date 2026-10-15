@@ -138,6 +138,8 @@ pub fn label(input: &EntitiesSetProperties) -> &'static str {
         PropertiesOperation::LineType => "Çizgi tipi değiştir",
         PropertiesOperation::LineTypeScale => "Çizgi tipi ölçeği",
         PropertiesOperation::Transparency => "Saydamlık değiştir",
+        // An area's mask (docs/adr/0310 §1).
+        PropertiesOperation::Wipeout => "Maske",
     }
 }
 
@@ -201,6 +203,9 @@ fn changed(
     if let Some(x) = input.transparency {
         base.look.transparency = x;
     }
+    if let Some(w) = input.wipeout {
+        base.look.wipeout = w;
+    }
     if let Some(symbol) = &input.symbol {
         base.symbol.clone_from(symbol);
     }
@@ -233,6 +238,7 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
         && input.line_type.is_none()
         && input.line_type_scale.is_none()
         && input.transparency.is_none()
+        && input.wipeout.is_none()
         && input.symbol.is_none()
         && attrs.is_none()
         && input.label.is_none()
@@ -284,6 +290,22 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
     let found = checks::named(doc, &input.uids)?;
+    // A mask is an area's only (docs/adr/0310 §1).
+    if input.wipeout.is_some_and(|w| w.is_some())
+        && let Some((i, _, e, _)) = found
+            .iter()
+            .find(|(_, _, e, _)| !matches!(e, Entity::Polygon(_)))
+    {
+        return Err(Stop::failed(error(
+            codes::INVALID_WIPEOUT,
+            format!(
+                "Maske yalnız alanda olur; {}. nesne ({}) alan değil. Yalnız kapalı alanları seçin ya da çizgiyi önce Alana çevir ile alan yapın.",
+                i + 1,
+                e.kind()
+            ),
+            Some(format!("uids[{i}]")),
+        )));
+    }
     // An embedded photo is an image of the project's library (docs/adr/0225 §1).
     for (k, a) in input.attachments.iter().flatten().enumerate() {
         if let Some(asset) = &a.asset

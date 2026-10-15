@@ -10,6 +10,7 @@ import type { LabelPin } from "./LabelPin";
 import type { LineType } from "./LineType";
 import type { LookPart } from "./LookPart";
 import type { Vec2 } from "./Vec2";
+import type { Wipeout } from "./Wipeout";
 
 export type DimensionEntity = { a: Vec2, b: Vec2, offset: number, height: number, text?: string, style?: DimensionStyle, 
 /**
@@ -86,6 +87,11 @@ order?: number,
  * never one with a value of its own.
  */
 byLayer?: Array<LookPart>, 
+/**
+ * An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+ * what is drawn before it; only an area has it.
+ */
+wipeout?: Wipeout, 
 /**
  * The project's dimension style it follows, by its id; absent: Standart.
  */

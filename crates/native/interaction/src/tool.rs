@@ -779,6 +779,10 @@ pub struct Memory {
     pub explode_count: u32,
     pub explode_step: f64,
     pub explode_deviation: f64,
+    /// Maske's options (docs/adr/0310 §5), kept for the session: its frame hidden (AutoCAD's WIPEOUTFRAME 0; shown
+    /// at first), and Nesne: an area clicked becomes a mask.
+    pub wipeout_no_frame: bool,
+    pub wipeout_object: bool,
     /// Denetle's options (docs/adr/0306), kept for the session: repair, remove the unused text and dimension styles.
     pub audit_fix: bool,
     pub audit_purge_text: bool,
@@ -1113,6 +1117,8 @@ impl Default for Memory {
             cleanup_straight: true,
             cleanup_ignore_look: false,
             explode_way: 0,
+            wipeout_no_frame: false,
+            wipeout_object: false,
             explode_count: 24,
             explode_step: 1.0,
             explode_deviation: kentos_contracts::EXPLODE_DEVIATION,

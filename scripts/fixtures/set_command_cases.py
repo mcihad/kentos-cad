@@ -930,6 +930,47 @@ cases.append({
     ],
 })
 
+# ── Maske (docs/adr/0310 §1) ───────────────────────────────────────────
+
+
+def NOT_AN_AREA(n, kind):
+    return f"Maske yalnız alanda olur; {n}. nesne ({kind}) alan değil. Yalnız kapalı alanları seçin ya da çizgiyi önce Alana çevir ile alan yapın."
+
+
+cases.append({
+    "name": "Maske: alan maske olur (çerçeveli), çerçevesi kapanır, null sıradan alana döndürür; aynısı değişiklik değildir; adım “Maske”",
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(2), "wipeout": {"frame": True}, "operation": "wipeout"}, "result": done([2]),
+         "expect": {"entities": {"2": looked(2, wipeout={"frame": True})}, "canUndo": True, "dirty": True, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": uids(2), "wipeout": {"frame": True}, "operation": "wipeout"}, "result": done([]),
+         "note": "Zaten öyle: adım yazılmaz.", "expect": {"revision": "same"}},
+        {"op": "execute", "input": {"uids": uids(2), "wipeout": {"frame": False}, "operation": "wipeout"}, "result": done([2]),
+         "expect": {"entities": {"2": looked(2, wipeout={"frame": False})}, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": uids(2), "wipeout": None, "operation": "wipeout"}, "result": done([2]),
+         "expect": {"entities": {"2": E(2)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Maske", "note": "Öznitelikler'in Maske satırının adımı.", "expect": {"entities": {"2": looked(2, wipeout={"frame": False})}}},
+    ],
+})
+
+cases.append({
+    "name": "maske yalnız alanda olur: alan olmayan nesne invalid_wipeout (yolu sırasıyla), hiçbir şey yazılmaz; null alan olmayanda değişiklik değildir",
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(2, 1), "wipeout": {"frame": True}, "operation": "wipeout"},
+         "result": failed("invalid_wipeout", NOT_AN_AREA(2, "line"), "uids[1]"), "expect": NOTHING},
+        {"op": "execute", "input": {"uids": uids(8), "wipeout": {"frame": False}, "operation": "wipeout"},
+         "result": failed("invalid_wipeout", NOT_AN_AREA(1, "circle"), "uids[0]"), "expect": NOTHING},
+        {"op": "execute", "input": {"uids": uids(1), "wipeout": None, "operation": "wipeout"}, "result": done([]), "expect": NOTHING},
+    ],
+})
+
+cases.append({
+    "name": "maskenin denetimi nesnelerin bulunmasından sonra gelir: çizimde olmayan kimlik önce entity_not_found",
+    "steps": [
+        {"op": "execute", "input": {"uids": [uid(1), MISSING], "wipeout": {"frame": True}, "operation": "wipeout"},
+         "result": failed("entity_not_found", MISSING_MESSAGE, "uids[1]"), "expect": NOTHING},
+    ],
+})
+
 write(
     "cad.entities.set",
     "Nesnelerin özelliklerini değiştir: doğrulama, plan, yazma, geri alma",

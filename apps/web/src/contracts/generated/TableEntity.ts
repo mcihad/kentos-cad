@@ -9,6 +9,7 @@ import type { TableAlign } from "./TableAlign";
 import type { TableGrid } from "./TableGrid";
 import type { TableSource } from "./TableSource";
 import type { Vec2 } from "./Vec2";
+import type { Wipeout } from "./Wipeout";
 
 /**
  * A table (docs/adr/0184 §1).
@@ -116,6 +117,11 @@ order?: number,
  * never one with a value of its own.
  */
 byLayer?: Array<LookPart>, 
+/**
+ * An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+ * what is drawn before it; only an area has it.
+ */
+wipeout?: Wipeout, 
 /**
  * The project's text style it follows, by its id; absent: Standart.
  */

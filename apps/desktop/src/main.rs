@@ -313,6 +313,8 @@ mod viewport;
 mod views;
 #[cfg(test)]
 mod window_layers_tests;
+#[cfg(test)]
+mod wipeout_scenes;
 
 use kentos_ui::theme::typography;
 

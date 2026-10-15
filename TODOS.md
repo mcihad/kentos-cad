@@ -170,6 +170,12 @@ Liste:
   uyarıları komutun sözleri; paralel iki doğruya TTY, saat yönünde verilen yaydan Devam; araç durumları
   `fixtures/curve-methods/v1/tools.json`. Web'in donmuş çağrı kayıtları eski `arcStartCenterEnd` ve `arcStartCenterAngle`'ı (tam tur)
   tutar; geri dönüşte komutun kuralına getirilir.
+- [ ] `CAD-EDIT-23` çizim sırası ve maske (ADR 0310, 15 Ekim): web'de gerekenler: `cad.entities.order`'ın `above`, `under` ve
+  `reference`'ı, `cad.polygon.create`'in ve `cad.entities.set`'in `wipeout`'u TS işleyicilerinde; web'in çizim hatlarında maskenin
+  dolgusu (zemin rengi, renk kiplerinde değişmez) ve maskeli katmanın bantları; `.kcad` şema 54'ün ve sütunların 32 ve 64 bitlerinin
+  okunması (`io/columns.ts`, web'in kopyası 53'te); Maske, Nesnenin üstüne ve altına, Yazıları öne getir ve Taramaları arkaya gönder
+  araçları; deponun `set_masks`'ı. Ayrıca iki platformda: DXF'in WIPEOUT'u (kırpma sınırının kuralı AutoCAD'in bir örneğiyle ya da
+  ezdxf'le bağımsız denetlenince) ve maskenin yazıları ve etiketleri örtmesi (yazı katmanının çizim sırasını bilmesi).
 - [ ] `CAD-EDIT-22` pano komutları (ADR 0309, 15 Ekim): web'de gerekenler: `cad.entities.copy` ve `.paste`'in TS işleyicileri
   (sözleşme türleri `Clip`, `EntitiesCopy`, `EntitiesPaste` … üretildi; ortak durumlar `cad.entities.{copy,paste}.json`), web'in
   panosunun kopyayı tutması (katman yolları, bloklar, stiller, birim), Yapıştır'ın komutla yazması (kilitli katmanın reddi), Taban

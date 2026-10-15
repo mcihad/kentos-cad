@@ -103,6 +103,25 @@ pub fn symbols_of_layer_style(
     })
 }
 
+/// An area's mask (docs/adr/0310 §2): its layer's symbols, but its fill the drawing's ground (`paper`, opaque) and its
+/// outline only when its frame is drawn, continuous in its own colour and weight.
+pub fn symbols_of_wipeout(
+    style: &LayerStyle,
+    color: &str,
+    weight: f64,
+    hairlines: bool,
+    frame: bool,
+) -> Value {
+    let mut symbols = symbols_of_layer_style(style, color, weight, hairlines);
+    let weight = if hairlines { 0.0 } else { weight };
+    let mut layers = vec![json!({ "id": "w", "type": "simpleFill", "color": "paper" })];
+    if frame {
+        layers.push(line_layer("o", color, LineType::Continuous, weight));
+    }
+    symbols["fill"] = json!({ "type": "fill", "layers": layers });
+    symbols
+}
+
 /// An object's own stroke (docs/adr/0260 §2, §3): its line type over its
 /// layer's, its pattern's scale and its opacity (1 − its transparency).
 #[derive(Clone, Copy, Debug, PartialEq)]

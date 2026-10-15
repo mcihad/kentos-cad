@@ -135,6 +135,12 @@ impl Spatial {
         self.blocks = doc.blocks().to_vec();
         self.store.set_blocks(core_blocks(&self.blocks));
         self.store.put_many(doc.entities().map(record));
+        // The masks are picked by their boundary only (docs/adr/0310 §4).
+        self.store.set_masks(
+            doc.entities()
+                .filter(|e| e.base().look.wipeout.is_some())
+                .map(|e| (f64::from(e.base().id), true)),
+        );
         self.text_labelled.clear();
         self.sync_text_labelled(doc);
         self.mark = doc.change_mark();
@@ -210,6 +216,11 @@ impl Spatial {
                 };
                 self.store.remove(&gone);
                 self.store.put_many(changed.iter().copied().map(record));
+                self.store.set_masks(
+                    changed
+                        .iter()
+                        .map(|e| (f64::from(e.base().id), e.base().look.wipeout.is_some())),
+                );
                 self.sync_text_labelled(doc);
                 self.mark = mark;
                 self.revision = Some(doc.revision());

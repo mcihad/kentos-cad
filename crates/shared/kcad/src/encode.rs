@@ -1162,6 +1162,11 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 54 (docs/adr/0310): an area's mask, a block definition's too.
+    let masks = |list: &[Entity]| list.iter().any(|e| e.base().look.wipeout.is_some());
+    if masks(&doc.entities) || doc.blocks.iter().any(|b| masks(&b.entities)) {
+        return crate::SCHEMA_WITH_WIPEOUTS;
+    }
     // Schema 53 (docs/adr/0300): an associative array.
     if !doc.arrays.is_empty() {
         return SCHEMA_WITH_ARRAYS;

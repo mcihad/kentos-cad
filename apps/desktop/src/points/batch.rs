@@ -248,6 +248,7 @@ fn input(uids: Vec<String>, label: Option<String>, layer: Option<String>) -> Ent
         line_type: None,
         line_type_scale: None,
         transparency: None,
+        wipeout: None,
         operation: if layer.is_some() {
             PropertiesOperation::Layer
         } else {

@@ -3,8 +3,8 @@
   "version": 1,
   "command": "cad.entities.order",
   "commandVersion": 1,
-  "title": "Öne getir ve Arkaya gönder",
-  "note": "ADR 0260 §5: bir katmanın nesneleri (order, belgedeki yer) anahtarıyla çizilir. Öne getir taşınanlara, çizildikleri sırayla, katmanın öbür nesnelerinin en büyük sırasından sonraki sıraları, Arkaya gönder en küçüğünden önceki sıraları verir; zaten en önde ya da en arkadaysalar, ya da katmanın öbür nesnesi yoksa bir şey değişmez. Kural ve beklenenler scripts/fixtures/order_command_cases.py'de KentOS kodu olmadan yazılmıştır.",
+  "title": "Öne getir, Arkaya gönder, Nesnenin üstüne ve altına",
+  "note": "ADR 0260 §5, 0310 §3: bir katmanın nesneleri (order, belgedeki yer) anahtarıyla çizilir. Öne getir taşınanlara, çizildikleri sırayla, katmanın öbür nesnelerinin en büyük sırasından sonraki sıraları, Arkaya gönder en küçüğünden önceki sıraları verir; zaten en önde ya da en arkadaysalar, ya da katmanın öbür nesnesi yoksa bir şey değişmez. Nesnenin üstüne (altına) başvurunun hemen sonraki (önceki) sıralarını verir; başvurunun öbür yanındakiler yer kalmayınca aynı adımla kayar. Kural ve beklenenler scripts/fixtures/order_command_cases.py'de KentOS kodu olmadan yazılmıştır.",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -137,6 +137,78 @@
       "steps": [
         {"op": "execute", "input": {"uids": ["$uidOf:4"], "to": "front"}, "result": {"status": "failed", "error": {"code": "order_limit", "message": "“Yol” katmanında çizim sırası sınıra geldi; nesne daha öne alınamaz. Öndeki nesneleri arkaya göndererek yer açın.", "path": "to"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
         {"op": "execute", "input": {"uids": ["$uidOf:1", "$uidOf:2"], "to": "back"}, "result": {"status": "failed", "error": {"code": "order_limit", "message": "“Yapı” katmanında çizim sırası sınıra geldi; nesne daha arkaya gönderilemez. Arkadaki nesneleri öne getirerek yer açın.", "path": "to"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Nesnenin üstüne: nesne başvurunun hemen üstünde çizilir (1); başvurudan sonra çizilenlere yer açılır, hepsi aynı adımla (2) kayar, aralarındaki sıra korunur; tek adım, geri alınır",
+      "note": "Yapı 1, 2, 3, 7 diye çizilir (hepsinin sırası 0). 1, 2'nin üstüne: 2, 1, 3, 7.",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "to": "above", "reference": "$uidOf:2"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1", "$uidOf:3", "$uidOf:7"], "ids": [1, 3, 7], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}, "order": 1}, "3": {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}, "order": 2}, "7": {"kind": "text", "id": 7, "layerId": "yapi", "attrs": {}, "p": {"x": 487000, "y": 4420010}, "text": "Not", "height": 2.5, "rotation": 0, "order": 2}, "2": {"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Parsel": "7"}, "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}]}}, "canUndo": true, "dirty": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Nesnenin üstüne", "expect": {"entities": {"1": {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}, "3": {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}}, "7": {"kind": "text", "id": 7, "layerId": "yapi", "attrs": {}, "p": {"x": 487000, "y": 4420010}, "text": "Not", "height": 2.5, "rotation": 0}}, "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Nesnenin altına: nesne başvurunun hemen altında çizilir (−1); başvurudan önce çizilenler yer açmak için arkaya kayar (−2)",
+      "note": "7, 2'nin altına: 1, 7, 2, 3.",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:7"], "to": "under", "reference": "$uidOf:2"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:7", "$uidOf:1"], "ids": [7, 1], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"7": {"kind": "text", "id": 7, "layerId": "yapi", "attrs": {}, "p": {"x": 487000, "y": 4420010}, "text": "Not", "height": 2.5, "rotation": 0, "order": -1}, "1": {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}, "order": -2}, "2": {"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Parsel": "7"}, "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}]}, "3": {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Nesnenin altına", "expect": {"entities": {"1": {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}, "7": {"kind": "text", "id": 7, "layerId": "yapi", "attrs": {}, "p": {"x": 487000, "y": 4420010}, "text": "Not", "height": 2.5, "rotation": 0}}}}
+      ]
+    },
+    {
+      "name": "yer varken öbürleri kaymaz: Yol'da 9 (−1), 4'ün (0) üstüne 1 alır; dairenin sırası (2) zaten büyük",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:9"], "to": "above", "reference": "$uidOf:4"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:9"], "ids": [9], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"9": {"kind": "line", "id": 9, "layerId": "yol", "attrs": {}, "a": {"x": 487000, "y": 4420032}, "b": {"x": 487020, "y": 4420032}, "order": 1}, "4": {"kind": "line", "id": 4, "layerId": "yol", "attrs": {}, "a": {"x": 487000, "y": 4420030}, "b": {"x": 487020, "y": 4420030}}, "8": {"kind": "circle", "id": 8, "layerId": "yol", "attrs": {}, "c": {"x": 487070, "y": 4420030}, "r": 3, "order": 2}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "zaten başvurunun hemen üstünde ya da altında olan değişmez; hiçbir şey yazılmaz",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2"], "to": "above", "reference": "$uidOf:1"}, "result": {"status": "completed", "output": {"changed": [], "ids": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "to": "under", "reference": "$uidOf:2"}, "result": {"status": "completed", "output": {"changed": [], "ids": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "birden çok nesne başvurunun üstüne kendi aralarındaki çizim sırasıyla gelir; en öndeki başvurunun üstü öne getirmekle aynıdır",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:3", "$uidOf:1"], "to": "above", "reference": "$uidOf:7"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:3", "$uidOf:1"], "ids": [3, 1], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"3": {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}, "order": 2}, "1": {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}, "order": 1}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "kilitli katmandaki nesne atlanır ve sayılır; öbürü başvurunun üstüne gider",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2", "$uidOf:5"], "to": "above", "reference": "$uidOf:3"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2", "$uidOf:7"], "ids": [2, 7], "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"entities": {"2": {"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Parsel": "7"}, "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}], "order": 1}, "7": {"kind": "text", "id": 7, "layerId": "yapi", "attrs": {}, "p": {"x": 487000, "y": 4420010}, "text": "Not", "height": 2.5, "rotation": 0, "order": 2}, "5": {"kind": "line", "id": 5, "layerId": "kilitli", "attrs": {}, "a": {"x": 487000, "y": 4420035}, "b": {"x": 487020, "y": 4420035}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "plan yazılacakları (taşınanlar, sonra yer açmak için kayanlar) yuvalarıyla gösterir; doğrulama yazmaz",
+      "steps": [
+        {"op": "validate", "input": {"uids": ["$uidOf:2"], "to": "under", "reference": "$uidOf:1"}, "result": {"status": "completed", "output": null, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "plan", "input": {"uids": ["$uidOf:2"], "to": "under", "reference": "$uidOf:1"}, "result": {"status": "completed", "output": {"changed": [{"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Parsel": "7"}, "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}], "order": -1}], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:2"], "to": "under", "reference": "$uidOf:1"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2"], "ids": [2], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Parsel": "7"}, "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}], "order": -1}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "başvurunun sırası sınırdaysa üstüne yer yoktur: order_limit; hiçbir şey yazılmaz",
+      "setup": {"format": "kentos.document", "version": 1, "name": "Ürün komutu", "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "cad", "drawingFont": "barlow"}, "origin": {"x": 487000, "y": 4420000}, "layers": [{"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}, {"id": "yol", "name": "Yol", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}, {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}, {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}, {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}], "activeLayer": "yapi", "entities": [{"kind": "line", "id": 1, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}, {"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Parsel": "7"}, "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}]}, {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}}, {"kind": "line", "id": 4, "layerId": "yol", "attrs": {}, "a": {"x": 487000, "y": 4420030}, "b": {"x": 487020, "y": 4420030}}, {"kind": "line", "id": 5, "layerId": "kilitli", "attrs": {}, "a": {"x": 487000, "y": 4420035}, "b": {"x": 487020, "y": 4420035}}, {"kind": "line", "id": 6, "layerId": "eski", "attrs": {}, "a": {"x": 487000, "y": 4420040}, "b": {"x": 487020, "y": 4420040}}, {"kind": "text", "id": 7, "layerId": "yapi", "attrs": {}, "p": {"x": 487000, "y": 4420010}, "text": "Not", "height": 2.5, "rotation": 0}, {"kind": "circle", "id": 8, "layerId": "yol", "attrs": {}, "c": {"x": 487070, "y": 4420030}, "r": 3, "order": 2}, {"kind": "line", "id": 9, "layerId": "yol", "attrs": {}, "a": {"x": 487000, "y": 4420032}, "b": {"x": 487020, "y": 4420032}, "order": -1}, {"kind": "line", "id": 10, "layerId": "gizli", "attrs": {}, "a": {"x": 487000, "y": 4420045}, "b": {"x": 487020, "y": 4420045}}, {"kind": "line", "id": 11, "layerId": "yol", "attrs": {}, "a": {"x": 487000, "y": 4420034}, "b": {"x": 487020, "y": 4420034}, "order": 2147483647}], "styles": {"items": [], "categories": []}},
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:9"], "to": "above", "reference": "$uidOf:11"}, "result": {"status": "failed", "error": {"code": "order_limit", "message": "“Yol” katmanında çizim sırası sınıra geldi; nesne daha öne alınamaz. Öndeki nesneleri arkaya göndererek yer açın.", "path": "to"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "başvurunun kuralı: üstüne ve altına başvuru ister, öne ve arkaya istemez, başvuru taşınanlardan biri olamaz: invalid_reference; biçimi bozuk başvuru invalid_uid",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "to": "above"}, "result": {"status": "failed", "error": {"code": "invalid_reference", "message": "Nesnenin üstüne ve altına bir başvuru nesnesi ister; üstüne ya da altına konacak nesnenin kimliğini verin.", "path": "reference"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "to": "front", "reference": "$uidOf:2"}, "result": {"status": "failed", "error": {"code": "invalid_reference", "message": "Öne getir ve Arkaya gönder başvuru nesnesi almaz; başvuruyu kaldırın ya da Nesnenin üstüne ya da altına'yı seçin.", "path": "reference"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1", "$uidOf:2"], "to": "under", "reference": "$uidOf:2"}, "result": {"status": "failed", "error": {"code": "invalid_reference", "message": "Başvuru nesnesi taşınan nesnelerden biri olamaz; başka bir nesnenin üstüne ya da altına koyun.", "path": "reference"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "to": "under", "reference": "duvar"}, "result": {"status": "failed", "error": {"code": "invalid_uid", "message": "Başvuru “duvar” kalıcı kimlik değil: küçük harfli, tireli UUID metni verin.", "path": "reference"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "çizimde olmayan başvuru: entity_not_found (yeri reference); başka katmandaki nesne: not_same_layer; hiçbir şey yazılmaz",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "to": "above", "reference": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"}, "result": {"status": "failed", "error": {"code": "entity_not_found", "message": "Başvuru “01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.", "path": "reference"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1", "$uidOf:4"], "to": "above", "reference": "$uidOf:2"}, "result": {"status": "failed", "error": {"code": "not_same_layer", "message": "Nesne “Yol” katmanında, başvuru “Yapı” katmanında; çizim sırası katmanın içindedir. Nesneyi başvurunun katmanına taşıyın ya da katmanların sırasını Katmanlar panelinde değiştirin.", "path": "uids[1]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
       ]
     },
     {

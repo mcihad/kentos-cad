@@ -2,6 +2,7 @@
 import type { LineType } from "./LineType";
 import type { RingGeometry } from "./RingGeometry";
 import type { Vec2 } from "./Vec2";
+import type { Wipeout } from "./Wipeout";
 
 /**
  * Input of `cad.polygon.create` v1: one closed area on a named layer, written
@@ -52,6 +53,11 @@ lineWeight?: number,
  * from the current line type. Absent: its layer's (katmana göre).
  */
 lineType?: LineType, 
+/**
+ * An area's mask (Maske, AutoCAD's WIPEOUT; docs/adr/0310 §1): it fills with the drawing's background and covers
+ * what is drawn before it, its frame drawn or not. Absent: an ordinary area.
+ */
+wipeout?: Wipeout, 
 /**
  * GIS attributes, text in v1. Absent: none.
  */

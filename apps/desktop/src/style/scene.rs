@@ -481,7 +481,9 @@ impl StyledCache {
                     _ => count >= PARTS_FROM,
                 }
                 // A layer with a drawing order of its own is drawn in that order, whole (docs/adr/0260 §5).
-                && !doc.by_layer(&node.id).any(|e| e.base().look.order.is_some());
+                && !doc
+                    .by_layer(&node.id)
+                    .any(|e| e.base().look.order.is_some() || e.base().look.wipeout.is_some());
             // A view-dependent one built for another view is built again.
             let for_view = needs.scale
                 || needs.frame == Some(kentos_native_style::renderer::ViewFrameKind::Heat);

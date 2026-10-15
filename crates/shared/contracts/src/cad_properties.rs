@@ -65,6 +65,9 @@ pub enum PropertiesOperation {
     /// Saydamlık (docs/adr/0260 §3): their own, or their source's.
     /// “Saydamlık değiştir”.
     Transparency,
+    /// Maske (docs/adr/0310 §1): areas made masks, their frames shown or
+    /// hidden, or ordinary areas again. “Maske”.
+    Wipeout,
 }
 
 /// Input of `cad.entities.set` v1: properties set for objects named by their
@@ -95,7 +98,9 @@ pub enum PropertiesOperation {
 /// `invalid_transparency` (a transparency not from 0 to 0.9),
 /// `invalid_attachments` (`attachments_problem`, docs/adr/0225 §1), then
 /// `invalid_revision`, `revision_conflict` (status `conflict`),
-/// `entity_not_found` (each id in order), `unknown_asset` (an embedded
+/// `entity_not_found` (each id in order), `invalid_wipeout` (a mask given to
+/// an object not an area, the first in the input's order; docs/adr/0310 §1),
+/// `unknown_asset` (an embedded
 /// photo whose asset is not an image of the project's library, in the
 /// attachments' order), `layer_not_found` and
 /// `not_a_layer` (the `layerId` given), `layer_locked` (every object on a
@@ -168,6 +173,14 @@ pub struct EntitiesSetProperties {
     )]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub transparency: Option<Option<f64>>,
+    /// Their mask (Maske, docs/adr/0310 §1), an area's only; null: an ordinary area again. Absent: unchanged.
+    #[serde(default, with = "nullable", skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Option<crate::look::Wipeout>>", optional)
+    )]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<crate::look::Wipeout>"))]
+    pub wipeout: Option<Option<crate::look::Wipeout>>,
     /// Their own symbol, a library item's id (`EntityBase.symbol`), drawn
     /// instead of their layer's style; null: the layer's style. The id is
     /// not looked up: the libraries are the host's. Absent: unchanged.

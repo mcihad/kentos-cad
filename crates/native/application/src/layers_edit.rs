@@ -568,6 +568,7 @@ fn merge(doc: &mut Document, target: &str, from: &[String]) -> CommandResult<Lay
             line_type: None,
             line_type_scale: None,
             transparency: None,
+            wipeout: None,
             uids,
             layer_id: Some(target.to_owned()),
             color: None,

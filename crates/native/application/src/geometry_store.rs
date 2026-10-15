@@ -58,6 +58,12 @@ pub fn store_of(doc: &Document) -> Store {
     store.set_font(drawing_font(doc.settings().drawing_font));
     store.set_blocks(core_blocks(doc.blocks()));
     store.put_many(doc.entities().map(record));
+    // The masks are picked by their boundary only (docs/adr/0310 §4).
+    store.set_masks(
+        doc.entities()
+            .filter(|e| e.base().look.wipeout.is_some())
+            .map(|e| (f64::from(e.base().id), true)),
+    );
     let rows = layer_rows(doc.layers());
     store.set_layers(rows.iter().map(|(id, flags)| (id.as_str(), *flags)));
     let out = left_out(doc);

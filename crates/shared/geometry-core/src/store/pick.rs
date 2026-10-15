@@ -136,7 +136,8 @@ impl Store {
     /// layer picks interiors. An insert by its pieces (docs/adr/0144), each
     /// as an object of its own would be.
     fn score(&self, it: &Item, p: Vec2, tol: f64) -> Score {
-        let interior = self.flags(it).pick_interior;
+        // A mask is picked by its boundary only (docs/adr/0310 §4).
+        let interior = self.flags(it).pick_interior && !self.is_mask(it.id);
         let mut out = Score {
             edge: None,
             area: None,

@@ -599,11 +599,12 @@ struct Looks<'a> {
 impl Looks<'_> {
     /// A colour as the view draws it (Görünüm kipleri's mode, docs/adr/0195 §1).
     fn rgba(&self, color: &str, opacity: f64) -> [f64; 4] {
-        view_rgba(
-            rgba(color, opacity, self.o.palette),
-            self.o.view.mode,
-            self.o.palette,
-        )
+        let c = rgba(color, opacity, self.o.palette);
+        // The ground's colour (a mask's fill, docs/adr/0310 §2) stays the ground in every mode.
+        if color == "paper" {
+            return c;
+        }
+        view_rgba(c, self.o.view.mode, self.o.palette)
     }
 
     /// A batch's effects as the style core wrote them (`EffectSpec::write_json`), colours as the view shows them.

@@ -5,7 +5,8 @@
  */
 export type EntitiesOrdered = { 
 /**
- * The objects whose order changed, in the input's order.
+ * The objects whose order changed, in the input's order; then the layer's others moved to make room
+ * (above and under), in their drawing order.
  */
 changed: Array<string>, 
 /**

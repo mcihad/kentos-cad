@@ -1,6 +1,6 @@
 //! The drawing order command of the product command catalog (docs/adr/0260
-//! §5): Öne getir and Arkaya gönder for objects named by their persistent
-//! ids, as one undo step. An object's place in its layer's drawing order is
+//! §5, 0310 §3): Öne getir, Arkaya gönder, Nesnenin üstüne and Nesnenin altına
+//! for objects named by their persistent ids, as one undo step. An object's place in its layer's drawing order is
 //! its `order` (absent 0), equals in the document's order; the command gives
 //! the objects orders past every other object of their layer, keeping their
 //! own order among themselves. The drawing order never crosses a layer.
@@ -27,6 +27,10 @@ pub enum OrderTo {
     Front,
     /// Arkaya gönder: drawn before every other object of their layer. “Arkaya gönder”.
     Back,
+    /// Nesnenin üstüne: drawn right after the `reference` object (AutoCAD's DRAWORDER Above). “Nesnenin üstüne”.
+    Above,
+    /// Nesnenin altına: drawn right before the `reference` object (AutoCAD's DRAWORDER Under). “Nesnenin altına”.
+    Under,
 }
 
 /// Input of `cad.entities.order` v1: the objects' persistent ids and where
@@ -38,12 +42,22 @@ pub enum OrderTo {
 /// nothing changes, nothing is written. The command reads no selection
 /// (TODOS.md CMD-07): Sırala ▾ gives the selection's ids.
 ///
+/// Above and under (docs/adr/0310 §3) take the `reference` object, on the
+/// objects' layer: the objects take the orders right after (before) the
+/// reference's, in their own drawing order; the layer's objects drawn after
+/// (before) the reference move together by the same step when there is no
+/// room, so every other pair keeps its order. Objects already right above
+/// (under) it do not change.
+///
 /// Refusals (`CommandError.code`), checked in this order: `no_entities`,
-/// `invalid_uid`, `invalid_revision`, `revision_conflict` (status
-/// `conflict`), `entity_not_found`, `layer_locked` (every object on a locked
-/// layer: the first one's, in the input's order; when only some are, they are
-/// left out with the warning `layer_locked`, docs/adr/0278), `order_limit` (a
-/// layer's orders at the 32-bit bound, −2³¹ or 2³¹ − 1: no room past them).
+/// `invalid_uid`, `invalid_reference` (no reference for above or under, one
+/// for front or back, or the reference among the objects), `invalid_revision`,
+/// `revision_conflict` (status `conflict`), `entity_not_found` (an object or
+/// the reference), `layer_locked` (every object on a locked layer: the first
+/// one's, in the input's order; when only some are, they are left out with the
+/// warning `layer_locked`, docs/adr/0278), `not_same_layer` (an object on
+/// another layer than the reference's), `order_limit` (a layer's orders at the
+/// 32-bit bound, −2³¹ or 2³¹ − 1: no room past them).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -53,8 +67,13 @@ pub struct EntitiesOrder {
     /// The objects' persistent ids, at least one; a repeated one counts once.
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub uids: Vec<String>,
-    /// To the front or the back.
+    /// To the front or the back, above or under the reference.
     pub to: OrderTo,
+    /// The object the others go right above or under (its persistent id); only with `above` and `under`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+    pub reference: Option<String>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -69,7 +88,8 @@ pub struct EntitiesOrder {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesOrdered {
-    /// The objects whose order changed, in the input's order.
+    /// The objects whose order changed, in the input's order; then the layer's others moved to make room
+    /// (above and under), in their drawing order.
     pub changed: Vec<String>,
     /// Their slots in the open document (`Entity.id`), in the same order.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
@@ -87,7 +107,7 @@ pub struct EntitiesOrdered {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesOrderPlan {
     /// The objects that would change, each as execute would write it, with
-    /// its own slot (`id`), in the input's order.
+    /// its own slot (`id`), in the input's order; then the others moved to make room.
     pub changed: Vec<crate::entity::Entity>,
     /// The document revision the plan was made against.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

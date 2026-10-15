@@ -34,7 +34,7 @@ pub const PROJECTION_TOLERANCE: f64 = 0.001;
 /// Coordinates and sizes beyond this are refused as garbage (TM coordinates reach 4.5·10⁶ m).
 const MAX_ABS: f64 = 1e9;
 const MAX_POINTS: usize = 1_000_000;
-const BASE_KEYS: [&str; 14] = [
+const BASE_KEYS: [&str; 15] = [
     "kind",
     "id",
     "layerId",
@@ -49,10 +49,17 @@ const BASE_KEYS: [&str; 14] = [
     "lineTypeScale",
     "transparency",
     "order",
+    "wipeout",
 ];
 
-/// An object's look's keys (docs/adr/0260): a column of their own, `look`.
-const LOOK_KEYS: [&str; 4] = ["lineType", "lineTypeScale", "transparency", "order"];
+/// An object's look's keys (docs/adr/0260, an area's mask docs/adr/0310): a column of their own, `look`.
+const LOOK_KEYS: [&str; 5] = [
+    "lineType",
+    "lineTypeScale",
+    "transparency",
+    "order",
+    "wipeout",
+];
 
 /// A feature row's content (without ids, versions and audit columns).
 #[derive(Clone, Debug, PartialEq)]
@@ -190,6 +197,9 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
         base.line_weight.is_some(),
         in_block,
     ) {
+        return Err(problem);
+    }
+    if let Some(problem) = kentos_contracts::wipeout_problem(&base.look, e.kind()) {
         return Err(problem);
     }
     // Photos and documents (docs/adr/0225 §1): the drawing's objects only, by the contract's rules.

@@ -133,6 +133,7 @@ pub mod dimension_chain;
 pub mod dimension_reassociate;
 pub mod divide;
 pub mod donut;
+pub mod draw_order;
 pub mod drawing_extras;
 mod edge;
 pub mod edge_shift;

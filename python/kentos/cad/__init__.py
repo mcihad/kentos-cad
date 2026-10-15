@@ -834,6 +834,7 @@ __all__ = [
     "WORLD_UCS",
     "WeightCurveEdit",
     "WindowSelectRegion",
+    "Wipeout",
     "Workspace",
     "WorkspaceName",
     "WorldUcsTo",

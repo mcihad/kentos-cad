@@ -62,16 +62,18 @@ use crate::vertex::{self, Vertex};
 use crate::{
     adjoin, angle, area, between, block_define, block_insert, boundary, cleanup, cloud_query,
     construction, continuation, coordinate, coordinate_labels, copy_base, dimension,
-    dimension_chain, divide, donut, ellipse, hatch, hatch_selected, holes, labels_to_text,
-    layer_move, layer_tools, leader, match_properties, meeting, paragraph, parallel, polygonize,
-    quick_dimension, reshape_by, revcloud, sector, select_circle, select_containing, select_fence,
-    select_polygon, select_similar, set_elevation, spline, split, station_offset, text, text_file,
-    topology, vertex_points,
+    dimension_chain, divide, donut, draw_order, ellipse, hatch, hatch_selected, holes,
+    labels_to_text, layer_move, layer_tools, leader, match_properties, meeting, paragraph,
+    parallel, polygonize, quick_dimension, reshape_by, revcloud, sector, select_circle,
+    select_containing, select_fence, select_polygon, select_similar, set_elevation, spline, split,
+    station_offset, text, text_file, topology, vertex_points,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
 pub const TOOLS: &[&str] = &[
     path::POLYGON_ID,
+    // Maske (docs/adr/0310 §5).
+    path::WIPEOUT_ID,
     line::ID,
     path::POLYLINE_ID,
     // Mesafe ölç, Alan hesapla and Parsel oluştur: the path tool's other shapes (docs/adr/0067).
@@ -153,6 +155,9 @@ pub const TOOLS: &[&str] = &[
     block_insert::ID,
     // Taban noktasıyla kopyala (docs/adr/0309).
     copy_base::ID,
+    // Nesnenin üstüne ve altına (docs/adr/0310).
+    draw_order::ABOVE_ID,
+    draw_order::UNDER_ID,
     // Alan işlemleri (docs/adr/0065).
     area::UNION_ID,
     area::INTERSECT_ID,
@@ -397,6 +402,7 @@ impl Session {
     fn make(id: &str) -> Option<Box<dyn Tool>> {
         let tool: Box<dyn Tool> = match id {
             path::POLYGON_ID => Box::new(Path::polygon()),
+            path::WIPEOUT_ID => Box::new(Path::wipeout()),
             path::POLYLINE_ID => Box::new(Path::polyline()),
             path::MEASURE_ID => Box::new(Path::new(path::Shape::MeasureLength)),
             path::AREA_ID => Box::new(Path::new(path::Shape::MeasureArea)),
@@ -474,6 +480,8 @@ impl Session {
             hatch_selected::ID => Box::new(crate::hatch_selected::HatchSelected::tool()),
             block_define::ID => Box::new(crate::block_define::BlockDefine::tool()),
             copy_base::ID => Box::new(crate::copy_base::CopyBase::tool()),
+            draw_order::ABOVE_ID => Box::new(crate::draw_order::DrawOrder::above()),
+            draw_order::UNDER_ID => Box::new(crate::draw_order::DrawOrder::under()),
             block_insert::ID => Box::new(crate::block_insert::BlockInsert::new()),
             area::UNION_ID => Box::new(crate::area::AreaAction::union()),
             area::INTERSECT_ID => Box::new(crate::area::AreaAction::intersect()),

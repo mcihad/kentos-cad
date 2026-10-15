@@ -189,6 +189,7 @@ fn write(
                 line_type_scale: has(MatchProperty::LineTypeScale)
                     .then_some(base.look.line_type_scale),
                 transparency: has(MatchProperty::Transparency).then_some(base.look.transparency),
+                wipeout: None,
                 symbol: has(MatchProperty::Symbol).then(|| base.symbol.clone()),
                 attrs: None,
                 label: None,

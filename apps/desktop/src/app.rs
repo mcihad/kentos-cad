@@ -2317,6 +2317,16 @@ impl App {
             // Sırala (draw_order.rs, docs/adr/0260 §5).
             "edit.bringToFront" => self.order_selection(kentos_contracts::OrderTo::Front),
             "edit.sendToBack" => self.order_selection(kentos_contracts::OrderTo::Back),
+            "edit.textsToFront" => self.order_kinds(
+                &crate::draw_order::WORDS,
+                kentos_contracts::OrderTo::Front,
+                "Yazıları öne getir",
+            ),
+            "edit.hatchesToBack" => self.order_kinds(
+                &[kentos_contracts::SelectKind::Hatch],
+                kentos_contracts::OrderTo::Back,
+                "Taramaları arkaya gönder",
+            ),
             // Zaman and Senaryo (temporal/, docs/adr/0210 §10).
             "time.slider" => self.time_toggle(),
             "time.layer" => self.open_time_layer(None),

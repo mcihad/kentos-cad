@@ -196,6 +196,8 @@ pub struct Store {
     time_window: Option<crate::time::Window>,
     /// The objects their layer's filter leaves out (`set_filtered`, docs/adr/0211 §3).
     filtered: IdSet,
+    /// The areas that are masks (`set_masks`, docs/adr/0310 §4): picked by their boundary only.
+    masks: IdSet,
     /// What the label engine reads (docs/adr/0212 §3.1): the layers' labelling, the kinds' defaults, the
     /// objects' texts and pins.
     labelling: placing::Labels,
@@ -339,6 +341,7 @@ impl Store {
         for id in ids {
             self.times.remove(&id.to_bits());
             self.filtered.remove(&id.to_bits());
+            self.masks.remove(&id.to_bits());
             self.labelling.objects.remove(&id.to_bits());
             self.labelling.pins.remove(&id.to_bits());
             if let Some(s) = self.by_id.remove(&id.to_bits()) {
@@ -521,6 +524,23 @@ impl Store {
                 self.filtered.remove(&id.to_bits());
             }
         }
+    }
+
+    /// Marks areas as masks or not (docs/adr/0310 §4): a mask is picked by its boundary, not its inside, as an
+    /// image (docs/adr/0192), so what it covers stays reachable. `clear` and `remove` forget the marks.
+    pub fn set_masks(&mut self, entries: impl IntoIterator<Item = (f64, bool)>) {
+        for (id, mask) in entries {
+            if mask {
+                self.masks.insert(id.to_bits());
+            } else {
+                self.masks.remove(&id.to_bits());
+            }
+        }
+    }
+
+    /// Whether the object is a mask.
+    pub fn is_mask(&self, id: f64) -> bool {
+        !self.masks.is_empty() && self.masks.contains(&id.to_bits())
     }
 
     /// Lets every object in again (the drawing reloaded, or its last filter gone).

@@ -49,6 +49,7 @@ impl App {
                 line_type: None,
                 line_type_scale: None,
                 transparency: None,
+                wipeout: None,
                 uids: kentos_interaction::properties::uids_of(model, &slots),
                 layer_id: None,
                 color: None,

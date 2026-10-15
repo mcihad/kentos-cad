@@ -1,5 +1,6 @@
-"""The shared cases of the product command cad.entities.order: Öne getir and
-Arkaya gönder, an object's draw order within its layer (docs/adr/0260 §5).
+"""The shared cases of the product command cad.entities.order: Öne getir,
+Arkaya gönder, Nesnenin üstüne and Nesnenin altına, an object's draw order
+within its layer (docs/adr/0260 §5, 0310 §3).
 
     python3 scripts/fixtures/order_command_cases.py           # writes the file
     python3 scripts/fixtures/order_command_cases.py --check   # writes nothing; compares
@@ -10,7 +11,11 @@ from the ADR, without KentOS code: a layer draws its objects by the key
 order they are drawn, the orders after the largest of the layer's other
 objects', Arkaya gönder the orders before the smallest; when they are
 already the first or the last that the layer draws, or the layer has no
-other object, nothing changes. The checks, their order, codes, paths and
+other object, nothing changes. Above (under) gives the objects the orders
+right after (before) the reference's; the layer's other objects drawn after
+(before) the reference move together by the smallest step that leaves them
+room, so every other pair keeps its order; objects already right above
+(under) it do not change. The checks, their order, codes, paths and
 messages are written by hand from the contract
 (crates/shared/contracts/src/cad_order.rs).
 
@@ -119,6 +124,36 @@ class Drawing:
                 out[e["id"]] = start + k
         return out
 
+    def place(self, ids, to, ref):
+        """The new orders of `ids` right above or under `ref`, and of the others moved to make room; {} when nothing changes."""
+        moved = [self.by_id(i) for i in dict.fromkeys(ids)]
+        r = self.by_id(ref)
+        drawn = [e for e in sorted(self.entities, key=self.key) if e["layerId"] == r["layerId"]]
+        mine = [e for e in drawn if e in moved]
+        n, ri, ro = len(mine), drawn.index(r), r.get("order", 0)
+        at = [drawn.index(e) for e in mine]
+        if to == "above":
+            if at == list(range(ri + 1, ri + 1 + n)):
+                return {}
+            far = [e for e in drawn[ri + 1:] if e not in moved]
+            start, need = ro + 1, ro + n + 1
+            step = max(0, need - min((e.get("order", 0) for e in far), default=need))
+        else:
+            if at == list(range(ri - n, ri)):
+                return {}
+            far = [e for e in drawn[:ri] if e not in moved]
+            start, need = ro - n, ro - n - 1
+            step = min(0, need - max((e.get("order", 0) for e in far), default=need))
+        news = {e["id"]: start + k for k, e in enumerate(mine)}
+        if step:
+            news.update({e["id"]: e.get("order", 0) + step for e in far})
+        if any(not I32_MIN <= o <= I32_MAX for o in news.values()):
+            raise OverflowError(r["layerId"])
+        # In the input's order the objects moved, then the others in their drawing order; only what changes.
+        first = [i for i in dict.fromkeys(ids) if news[i] != self.by_id(i).get("order", 0)]
+        rest = [e["id"] for e in far if e["id"] in news and news[e["id"]] != e.get("order", 0)]
+        return {i: news[i] for i in first + rest}
+
     def apply(self, orders):
         for i, order in orders.items():
             e = self.by_id(i)
@@ -175,11 +210,14 @@ UID_MESSAGE = "“{}” geçerli bir nesne kimliği değil; kimlik küçük harf
 MISSING = "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
 MISSING_MESSAGE = f"“{MISSING}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin."
 CONFLICT = "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın."
-STEP = {"front": "Öne getir", "back": "Arkaya gönder"}
+STEP = {"front": "Öne getir", "back": "Arkaya gönder", "above": "Nesnenin üstüne", "under": "Nesnenin altına"}
+NO_REFERENCE = "Nesnenin üstüne ve altına bir başvuru nesnesi ister; üstüne ya da altına konacak nesnenin kimliğini verin."
+NEEDLESS_REFERENCE = "Öne getir ve Arkaya gönder başvuru nesnesi almaz; başvuruyu kaldırın ya da Nesnenin üstüne ya da altına'yı seçin."
+REFERENCE_MOVED = "Başvuru nesnesi taşınan nesnelerden biri olamaz; başka bir nesnenin üstüne ya da altına koyun."
 
 
 def limit(name, to):
-    way = "daha öne alınamaz. Öndeki nesneleri arkaya göndererek" if to == "front" else "daha arkaya gönderilemez. Arkadaki nesneleri öne getirerek"
+    way = "daha öne alınamaz. Öndeki nesneleri arkaya göndererek" if to in ("front", "above") else "daha arkaya gönderilemez. Arkadaki nesneleri öne getirerek"
     return failed("order_limit", f"“{name}” katmanında çizim sırası sınıra geldi; nesne {way} yer açın.", "to")
 
 
@@ -192,6 +230,17 @@ def moved(ids, to, entities=ENTITIES):
     d = Drawing(entities)
     orders = d.move(ids, to)
     return {str(i): with_order(i, o, entities) for i, o in orders.items()}, list(orders)
+
+
+def placed(ids, to, ref, entities=ENTITIES):
+    """The written objects of an above or under from `entities`, by the rule, and their ids in the output's order."""
+    d = Drawing(entities)
+    orders = d.place(ids, to, ref)
+    return {str(i): with_order(i, o, entities) for i, o in orders.items()}, list(orders)
+
+
+def other_layer(a, b, i):
+    return failed("not_same_layer", f"Nesne “{a}” katmanında, başvuru “{b}” katmanında; çizim sırası katmanın içindedir. Nesneyi başvurunun katmanına taşıyın ya da katmanların sırasını Katmanlar panelinde değiştirin.", f"uids[{i}]")
 
 
 cases = []
@@ -353,6 +402,116 @@ cases.append({
     ],
 })
 
+# ── Above and under (docs/adr/0310 §3) ────────────────────────────────
+
+written, changed = placed([1], "above", 2)
+assert changed == [1, 3, 7] and written["1"]["order"] == 1 and written["3"]["order"] == 2 and written["7"]["order"] == 2
+cases.append({
+    "name": "Nesnenin üstüne: nesne başvurunun hemen üstünde çizilir (1); başvurudan sonra çizilenlere yer açılır, hepsi aynı adımla (2) kayar, aralarındaki sıra korunur; tek adım, geri alınır",
+    "note": "Yapı 1, 2, 3, 7 diye çizilir (hepsinin sırası 0). 1, 2'nin üstüne: 2, 1, 3, 7.",
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(1), "to": "above", "reference": uid(2)}, "result": done(changed),
+         "expect": {"entities": {**written, "2": E(2)}, "canUndo": True, "dirty": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Nesnenin üstüne", "expect": {"entities": {"1": E(1), "3": E(3), "7": E(7)}, "canUndo": False}},
+    ],
+})
+
+written, changed = placed([7], "under", 2)
+assert changed == [7, 1] and written["7"]["order"] == -1 and written["1"]["order"] == -2
+cases.append({
+    "name": "Nesnenin altına: nesne başvurunun hemen altında çizilir (−1); başvurudan önce çizilenler yer açmak için arkaya kayar (−2)",
+    "note": "7, 2'nin altına: 1, 7, 2, 3.",
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(7), "to": "under", "reference": uid(2)}, "result": done(changed),
+         "expect": {"entities": {**written, "2": E(2), "3": E(3)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Nesnenin altına", "expect": {"entities": {"1": E(1), "7": E(7)}}},
+    ],
+})
+
+written, changed = placed([9], "above", 4)
+assert changed == [9] and written["9"]["order"] == 1
+cases.append({
+    "name": "yer varken öbürleri kaymaz: Yol'da 9 (−1), 4'ün (0) üstüne 1 alır; dairenin sırası (2) zaten büyük",
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(9), "to": "above", "reference": uid(4)}, "result": done(changed),
+         "expect": {"entities": {**written, "4": E(4), "8": E(8)}, "revision": "changed"}},
+    ],
+})
+
+assert placed([2], "above", 1)[1] == [] and placed([1], "under", 2)[1] == []
+cases.append({
+    "name": "zaten başvurunun hemen üstünde ya da altında olan değişmez; hiçbir şey yazılmaz",
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(2), "to": "above", "reference": uid(1)}, "result": done([]), "expect": NOTHING},
+        {"op": "execute", "input": {"uids": uids(1), "to": "under", "reference": uid(2)}, "result": done([]), "expect": NOTHING},
+    ],
+})
+
+written, changed = placed([3, 1], "above", 7)
+assert changed == [3, 1] and written["1"]["order"] == 1 and written["3"]["order"] == 2
+cases.append({
+    "name": "birden çok nesne başvurunun üstüne kendi aralarındaki çizim sırasıyla gelir; en öndeki başvurunun üstü öne getirmekle aynıdır",
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(3, 1), "to": "above", "reference": uid(7)}, "result": done(changed),
+         "expect": {"entities": written, "revision": "changed"}},
+    ],
+})
+
+written, changed = placed([2], "above", 3)
+cases.append({
+    "name": "kilitli katmandaki nesne atlanır ve sayılır; öbürü başvurunun üstüne gider",
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(2, 5), "to": "above", "reference": uid(3)}, "result": done(changed, [LOCKED_SKIPPED(1)]),
+         "expect": {"entities": {**written, "5": E(5)}, "revision": "changed"}},
+    ],
+})
+
+written, changed = placed([2], "under", 1)
+assert changed == [2] and written["2"]["order"] == -1, "nothing is before the reference: no room to make"
+cases.append({
+    "name": "plan yazılacakları (taşınanlar, sonra yer açmak için kayanlar) yuvalarıyla gösterir; doğrulama yazmaz",
+    "steps": [
+        {"op": "validate", "input": {"uids": uids(2), "to": "under", "reference": uid(1)}, "result": {"status": "completed", "output": None, "warnings": []}, "expect": NOTHING},
+        {"op": "plan", "input": {"uids": uids(2), "to": "under", "reference": uid(1)},
+         "result": {"status": "completed", "output": {"changed": [written[str(i)] for i in changed], "revision": "$current"}, "warnings": []}, "expect": NOTHING},
+        {"op": "execute", "input": {"uids": uids(2), "to": "under", "reference": uid(1)}, "result": done(changed), "expect": {"entities": written, "revision": "changed"}},
+    ],
+})
+
+M_ENTITIES = ENTITIES + [line(11, "yol", 34, order=I32_MAX)]
+try:
+    placed([9], "above", 11, M_ENTITIES)
+    raise AssertionError("the bound is not reached")
+except OverflowError as e:
+    assert str(e) == "yol"
+cases.append({
+    "name": "başvurunun sırası sınırdaysa üstüne yer yoktur: order_limit; hiçbir şey yazılmaz",
+    "setup": setup(M_ENTITIES),
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(9), "to": "above", "reference": uid(11)}, "result": limit("Yol", "above"), "expect": {**NOTHING, "ids": [e["id"] for e in M_ENTITIES]}},
+    ],
+})
+
+cases.append({
+    "name": "başvurunun kuralı: üstüne ve altına başvuru ister, öne ve arkaya istemez, başvuru taşınanlardan biri olamaz: invalid_reference; biçimi bozuk başvuru invalid_uid",
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(1), "to": "above"}, "result": failed("invalid_reference", NO_REFERENCE, "reference"), "expect": NOTHING},
+        {"op": "execute", "input": {"uids": uids(1), "to": "front", "reference": uid(2)}, "result": failed("invalid_reference", NEEDLESS_REFERENCE, "reference"), "expect": NOTHING},
+        {"op": "execute", "input": {"uids": uids(1, 2), "to": "under", "reference": uid(2)}, "result": failed("invalid_reference", REFERENCE_MOVED, "reference"), "expect": NOTHING},
+        {"op": "execute", "input": {"uids": uids(1), "to": "under", "reference": "duvar"},
+         "result": failed("invalid_uid", "Başvuru “duvar” kalıcı kimlik değil: küçük harfli, tireli UUID metni verin.", "reference"), "expect": NOTHING},
+    ],
+})
+
+cases.append({
+    "name": "çizimde olmayan başvuru: entity_not_found (yeri reference); başka katmandaki nesne: not_same_layer; hiçbir şey yazılmaz",
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(1), "to": "above", "reference": MISSING},
+         "result": failed("entity_not_found", f"Başvuru “{MISSING}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.", "reference"), "expect": NOTHING},
+        {"op": "execute", "input": {"uids": uids(1, 4), "to": "above", "reference": uid(2)}, "result": other_layer("Yol", "Yapı", 1), "expect": NOTHING},
+    ],
+})
+
 # ── Refusals ───────────────────────────────────────────────────────────
 
 cases.append({
@@ -490,11 +649,12 @@ def write(command, title, note, cases):
 
 write(
     "cad.entities.order",
-    "Öne getir ve Arkaya gönder",
-    "ADR 0260 §5: bir katmanın nesneleri (order, belgedeki yer) anahtarıyla çizilir. Öne getir taşınanlara, çizildikleri sırayla, "
+    "Öne getir, Arkaya gönder, Nesnenin üstüne ve altına",
+    "ADR 0260 §5, 0310 §3: bir katmanın nesneleri (order, belgedeki yer) anahtarıyla çizilir. Öne getir taşınanlara, çizildikleri sırayla, "
     "katmanın öbür nesnelerinin en büyük sırasından sonraki sıraları, Arkaya gönder en küçüğünden önceki sıraları verir; zaten en önde ya "
-    "da en arkadaysalar, ya da katmanın öbür nesnesi yoksa bir şey değişmez. Kural ve beklenenler scripts/fixtures/order_command_cases.py'de "
-    "KentOS kodu olmadan yazılmıştır.",
+    "da en arkadaysalar, ya da katmanın öbür nesnesi yoksa bir şey değişmez. Nesnenin üstüne (altına) başvurunun hemen sonraki (önceki) "
+    "sıralarını verir; başvurunun öbür yanındakiler yer kalmayınca aynı adımla kayar. Kural ve beklenenler "
+    "scripts/fixtures/order_command_cases.py'de KentOS kodu olmadan yazılmıştır.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

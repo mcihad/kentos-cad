@@ -21,6 +21,7 @@ from .types import (  # noqa: F401
     RingGeometry,
     Vec2,
     Vec2Like,
+    Wipeout,
 )
 
 if TYPE_CHECKING:
@@ -60,6 +61,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
+        wipeout: Wipeout | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> PolygonCreated:
@@ -94,6 +96,8 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
                 instead of its layer's style: an object template's (docs/adr/0176).
                 The id is not looked up: the libraries are the host's. Absent: the
                 layer's style.
+            wipeout: An area's mask (Maske, AutoCAD's WIPEOUT; docs/adr/0310 §1): it fills with the drawing's background and covers
+                what is drawn before it, its frame drawn or not. Absent: an ordinary area.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -118,6 +122,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
             line_type=line_type,
             line_weight=line_weight,
             symbol=symbol,
+            wipeout=wipeout,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -136,6 +141,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
+        wipeout: Wipeout | None | Unset = UNSET,
     ) -> PolygonPlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -152,6 +158,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
             line_type=line_type,
             line_weight=line_weight,
             symbol=symbol,
+            wipeout=wipeout,
         ))
 
     def validate(
@@ -170,6 +177,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
+        wipeout: Wipeout | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -186,6 +194,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
             line_type=line_type,
             line_weight=line_weight,
             symbol=symbol,
+            wipeout=wipeout,
         ))
 
     def answer(
@@ -204,6 +213,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
         line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
+        wipeout: Wipeout | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -225,6 +235,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
             line_type=line_type,
             line_weight=line_weight,
             symbol=symbol,
+            wipeout=wipeout,
         ), op=op, request_id=request_id, expected=expected)
 
 

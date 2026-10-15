@@ -630,6 +630,20 @@
       "steps": [
         { "op": "execute", "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }], "lineType": "dashed" }, "result": { "status": "completed", "output": { "uid": "$uid", "id": 10, "revision": "$current" }, "warnings": [] }, "expect": { "ids": [4, 9, 10], "entities": { "10": { "kind": "polygon", "id": 10, "layerId": "yapi", "attrs": {}, "lineType": "dashed", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] } }, "revision": "changed" } }
       ]
+    },
+    {
+      "name": "maske olarak yazılır (ADR 0310 §1): wipeout'u çerçevesiyle; alan çizim zemininin rengiyle dolar, kendinden önce çizilenleri örter; tek adım",
+      "steps": [
+        { "op": "execute", "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }], "wipeout": { "frame": true } }, "result": { "status": "completed", "output": { "uid": "$uid", "id": 10, "revision": "$current" }, "warnings": [] }, "expect": { "ids": [4, 9, 10], "entities": { "10": { "kind": "polygon", "id": 10, "layerId": "yapi", "attrs": {}, "wipeout": { "frame": true }, "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] } }, "revision": "changed" } },
+        { "op": "undo", "returns": "Ekle", "expect": { "ids": [4, 9] } }
+      ]
+    },
+    {
+      "name": "çerçevesiz maske (ADR 0310 §1): frame false; sınırı çizilmez, seçmek için yine sınırına tıklanır",
+      "steps": [
+        { "op": "execute", "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }], "wipeout": { "frame": false } }, "result": { "status": "completed", "output": { "uid": "$uid", "id": 10, "revision": "$current" }, "warnings": [] }, "expect": { "ids": [4, 9, 10], "entities": { "10": { "kind": "polygon", "id": 10, "layerId": "yapi", "attrs": {}, "wipeout": { "frame": false }, "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] } }, "revision": "changed" } },
+        { "op": "undo", "returns": "Ekle", "expect": { "ids": [4, 9] } }
+      ]
     }
   ]
 }

@@ -84,7 +84,7 @@ Belge her adımın sonunda (ilişkili ölçüler ve taramalar gibi, `follow_into
 yerleştirmelere çevirmez.
 
 ADR 0265'in altı adımı uygulandı: örnek dosya `arrays.kcad`, bağımsız Python okuyucu ve yazıcısı, altı bozuk örnek ve
-`schema-version-54`.
+`schema-version-55`.
 
 ### 5. Bulut
 

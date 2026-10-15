@@ -616,6 +616,32 @@ fn transparency_row(ids: &[Slot], current: Option<Option<f64>>) -> Row {
     }))
 }
 
+/// Maske ▾ of areas (docs/adr/0310 §5): none, framed or frameless; `current` none when they differ.
+fn wipeout_row(ids: &[Slot], current: Option<Option<kentos_contracts::Wipeout>>) -> Row {
+    use kentos_contracts::Wipeout;
+    let name = |w: Option<Wipeout>| match w {
+        None => "Yok",
+        Some(Wipeout { frame: true }) => "Çerçeveli",
+        Some(Wipeout { frame: false }) => "Çerçevesiz",
+    };
+    let text = current.map_or("Çeşitli", name).to_owned();
+    let set = |w| Message::Properties(Event::Wipeout(ids.to_vec(), w));
+    let items = [
+        None,
+        Some(Wipeout { frame: true }),
+        Some(Wipeout { frame: false }),
+    ]
+    .into_iter()
+    .map(|w| pick(name(w).into(), current == Some(w), set(w)))
+    .collect();
+    Row::text("Maske", text.clone()).editor(Some(Editor::Select {
+        text,
+        swatch: None,
+        icon: None,
+        items,
+    }))
+}
+
 /// A number as the panel writes a factor: no trailing zeros (`2.5`, `10`).
 pub(crate) fn plain_number(x: f64) -> String {
     let s = format!("{x:.4}");
@@ -872,6 +898,10 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         general.push(line_type_scale_row(&ids, Some(base.look.line_type_scale)).editor_if(!locked));
     }
     general.push(transparency_row(&ids, Some(base.look.transparency)).editor_if(!locked));
+    // An area's mask (docs/adr/0310 §5).
+    if matches!(e, Entity::Polygon(_)) {
+        general.push(wipeout_row(&ids, Some(base.look.wipeout)).editor_if(!locked));
+    }
     if takes_symbol(e) {
         general.push(
             Row::text("Sembol", symbol_text(doc, symbol)).editor(edit(symbol_editor(doc, symbol))),
@@ -2111,6 +2141,14 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
             .all(|e| e.base().look.transparency == objects[0].base().look.transparency)
             .then(|| objects[0].base().look.transparency);
         rows.push(transparency_row(&all, t).editor_if(!any_locked));
+        // Areas' masks (docs/adr/0310 §5): when every object is an area.
+        if objects.iter().all(|e| matches!(e, Entity::Polygon(_))) {
+            let w = objects
+                .iter()
+                .all(|e| e.base().look.wipeout == objects[0].base().look.wipeout)
+                .then(|| objects[0].base().look.wipeout);
+            rows.push(wipeout_row(&all, w).editor_if(!any_locked));
+        }
     }
     rows.push(
         Row::text("Sembol", symbol_text(doc, symbol)).editor(edit(symbol_editor(doc, symbol))),

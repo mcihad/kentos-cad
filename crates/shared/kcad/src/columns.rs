@@ -216,13 +216,16 @@ const ATT_URL: u32 = 4;
 const ATT_NOTE: u32 = 8;
 /// An object's look (docs/adr/0260): after the attachments, its bits (`LOOK_TYPE` …), then its line type
 /// (its place in `LineType::ALL`), scale, transparency and order (floats) and its by-layer parts (a mask in
-/// `LookPart::ALL`'s order) as it has them.
+/// `LookPart::ALL`'s order) as it has them. An area's mask (docs/adr/0310) is two bits alone: `LOOK_WIPEOUT` and,
+/// with its frame drawn, `LOOK_FRAME`.
 const LOOK: u32 = 64;
 const LOOK_TYPE: u32 = 1;
 const LOOK_SCALE: u32 = 2;
 const LOOK_TRANSPARENCY: u32 = 4;
 const LOOK_ORDER: u32 = 8;
 const LOOK_BY_LAYER: u32 = 16;
+const LOOK_WIPEOUT: u32 = 32;
+const LOOK_FRAME: u32 = 64;
 /// A kind's optional fields, in the order the module's table names them.
 const OPT: [u32; 19] = [
     1 << 8,
@@ -566,6 +569,8 @@ impl Packer {
                 (LOOK_TRANSPARENCY, look.transparency.is_some()),
                 (LOOK_ORDER, look.order.is_some()),
                 (LOOK_BY_LAYER, !look.by_layer.is_empty()),
+                (LOOK_WIPEOUT, look.wipeout.is_some()),
+                (LOOK_FRAME, look.wipeout.is_some_and(|w| w.frame)),
             ]
             .iter()
             .filter(|(_, on)| *on)
@@ -1854,7 +1859,14 @@ fn object(c: &mut Cursor<'_>, table: &[String], i: usize, k: u8) -> Result<Entit
     let mut look = kentos_contracts::ObjectLook::default();
     if flags & LOOK != 0 {
         let bits = c.int()?;
-        if bits & !(LOOK_TYPE | LOOK_SCALE | LOOK_TRANSPARENCY | LOOK_ORDER | LOOK_BY_LAYER) != 0 {
+        let known = LOOK_TYPE
+            | LOOK_SCALE
+            | LOOK_TRANSPARENCY
+            | LOOK_ORDER
+            | LOOK_BY_LAYER
+            | LOOK_WIPEOUT
+            | LOOK_FRAME;
+        if bits & !known != 0 || (bits & LOOK_FRAME != 0 && bits & LOOK_WIPEOUT == 0) {
             return Err(broken(&format!(
                 "{}. nesnenin görünüşünün bayrakları {bits:#x}",
                 i + 1
@@ -1868,6 +1880,9 @@ fn object(c: &mut Cursor<'_>, table: &[String], i: usize, k: u8) -> Result<Entit
                     .ok_or_else(|| broken(&format!("{}. nesnenin çizgi tipi {at}", i + 1)))?,
             );
         }
+        look.wipeout = (bits & LOOK_WIPEOUT != 0).then_some(kentos_contracts::Wipeout {
+            frame: bits & LOOK_FRAME != 0,
+        });
         look.line_type_scale = (bits & LOOK_SCALE != 0).then(|| c.float()).transpose()?;
         look.transparency = (bits & LOOK_TRANSPARENCY != 0)
             .then(|| c.float())

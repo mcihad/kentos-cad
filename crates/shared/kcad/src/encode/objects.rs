@@ -71,6 +71,8 @@ pub(super) enum Val<'d> {
     Int(i64),
     /// A block's object's parts that follow its layer (docs/adr/0260 §1).
     LookParts(&'d [kentos_contracts::LookPart]),
+    /// An area's mask (docs/adr/0310): `{ frame }`.
+    Wipeout(kentos_contracts::Wipeout),
     /// A text's curve (§6.6, docs/adr/0196): its vertices and bulges.
     TextPath(&'d kentos_contracts::TextPath),
     /// A table's cells, row by row (§6.6, docs/adr/0184).
@@ -263,6 +265,10 @@ impl<'d> Encoder<'d> {
             self.path.push(Seg::Name(kind));
             return Err(self.fail(Code::BadValue, &problem));
         }
+        if let Some(problem) = kentos_contracts::wipeout_problem(look, kind) {
+            self.path.push(Seg::Name(kind));
+            return Err(self.fail(Code::BadValue, &problem));
+        }
         if let Some(t) = look.line_type {
             f.push(("lineType", Val::Name(t.name())));
         }
@@ -277,6 +283,9 @@ impl<'d> Encoder<'d> {
         }
         if !look.by_layer.is_empty() {
             f.push(("byLayer", Val::LookParts(&look.by_layer)));
+        }
+        if let Some(w) = look.wipeout {
+            f.push(("wipeout", Val::Wipeout(w)));
         }
         match entity {
             Entity::Point(e) => {
@@ -1166,6 +1175,13 @@ impl<'d> Encoder<'d> {
             }
             Val::Bool(b) => {
                 self.w.bool(b);
+                Ok(())
+            }
+            Val::Wipeout(w) => {
+                self.open(1, true)?;
+                self.key("frame");
+                self.w.bool(w.frame);
+                self.close();
                 Ok(())
             }
             Val::Uid(id) => self.id(&id.0),

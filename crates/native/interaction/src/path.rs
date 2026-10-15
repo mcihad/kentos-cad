@@ -125,6 +125,9 @@ pub const PARCEL_LABEL: &str = "Parsel";
 pub const PARCEL_LAYER: &str = "parsel";
 /// Alan olarak çiz's undo step (docs/adr/0141).
 pub const DRAW_AREA_LABEL: &str = "Alan olarak çiz";
+/// Maske's id: its command is `tool.wipeout` (docs/adr/0310 §5).
+pub const WIPEOUT_ID: &str = "wipeout";
+pub const WIPEOUT_LABEL: &str = "Maske";
 
 /// Dik kapat with the first and the last edge parallel (docs/adr/0166 §4).
 pub const NO_SQUARE_CLOSE: &str = "Dik kapatılamıyor: ilk kenar ile son kenar paralel.";
@@ -150,6 +153,8 @@ pub enum Shape {
     Continue,
     /// Biçim değiştir: a line of straight edges that reshapes an area or a path (docs/adr/0173 §2–§3).
     Reshape,
+    /// Maske: an area that covers what is drawn before it (AutoCAD's WIPEOUT, docs/adr/0310 §5).
+    Wipeout,
 }
 
 impl Shape {
@@ -164,6 +169,7 @@ impl Shape {
             Shape::Hole => holes::ADD_ID,
             Shape::Continue => continuation::ID,
             Shape::Reshape => reshape_by::ID,
+            Shape::Wipeout => WIPEOUT_ID,
         }
     }
 
@@ -178,6 +184,7 @@ impl Shape {
             Shape::Hole => holes::ADD_LABEL,
             Shape::Continue => continuation::LABEL,
             Shape::Reshape => reshape_by::LABEL,
+            Shape::Wipeout => WIPEOUT_LABEL,
         }
     }
 
@@ -185,7 +192,7 @@ impl Shape {
     fn closed(self) -> bool {
         matches!(
             self,
-            Shape::Closed | Shape::MeasureArea | Shape::Parcel | Shape::Hole
+            Shape::Closed | Shape::MeasureArea | Shape::Parcel | Shape::Hole | Shape::Wipeout
         )
     }
 
@@ -352,6 +359,11 @@ impl Path {
     }
 
     /// The closed-area tool (`tool.polygon`).
+    /// Maske (docs/adr/0310 §5).
+    pub fn wipeout() -> Self {
+        Self::new(Shape::Wipeout)
+    }
+
     pub fn polygon() -> Self {
         Self::new(Shape::Closed)
     }
@@ -482,6 +494,11 @@ impl Path {
     }
 
     fn accept(&mut self, p: Vec2, cx: &mut Context<'_>) {
+        // Maske's Nesne: the area clicked becomes a mask (docs/adr/0310 §5).
+        if self.shape == Shape::Wipeout && self.memory.wipeout_object && self.pts.is_empty() {
+            self.mask_area_at(p, cx);
+            return;
+        }
         points::echo(p, cx);
         // A point given while the width is asked leaves the width as it was.
         self.ask_width = false;
@@ -914,6 +931,17 @@ impl Path {
             (Shape::MeasureArea, "A") if self.pts.is_empty() && self.measured.is_some() => {
                 self.draw_measured(cx);
             }
+            // Maske's frame and Nesne (docs/adr/0310 §5); the frame at any point, Nesne before the first.
+            (Shape::Wipeout, "Ç" | "C") => {
+                cx.memory.wipeout_no_frame = !cx.memory.wipeout_no_frame;
+                self.memory.wipeout_no_frame = cx.memory.wipeout_no_frame;
+                return true;
+            }
+            (Shape::Wipeout, "N") if self.pts.is_empty() => {
+                cx.memory.wipeout_object = !cx.memory.wipeout_object;
+                self.memory.wipeout_object = cx.memory.wipeout_object;
+                return true;
+            }
             _ => return false,
         }
         self.see(cx);
@@ -959,6 +987,7 @@ impl Path {
             let area = &areas[0];
             let input = PolygonCreate {
                 line_type: cx.draft.line_type,
+                wipeout: None,
                 layer_id: layer,
                 pts: wire_all(&area.outer.pts),
                 bulges: area.outer.bulges.clone(),
@@ -1199,6 +1228,7 @@ impl Path {
                 });
             }
             Shape::Parcel => self.create_parcel(&pts, bulges, cx),
+            Shape::Wipeout => self.create_wipeout(&pts, bulges, cx),
             Shape::Closed => {
                 if let Some(area) = self.create_polygon(&pts, bulges, cx) {
                     let text = format!("Kapalı alan eklendi: {}", cx.format().area(area));
@@ -1228,6 +1258,76 @@ impl Path {
             Shape::Adjoin | Shape::Reshape => {}
         }
         self.reset();
+    }
+
+    /// Maske (docs/adr/0310 §5): the ring written through `cad.polygon.create` as a mask on the active layer, its
+    /// frame as the session's option, one undo step. A mask is not cut by Çakışma nor joined by Topoloji: it covers.
+    fn create_wipeout(&self, pts: &[Vec2], bulges: Option<Vec<f64>>, cx: &mut Context<'_>) {
+        let input = PolygonCreate {
+            layer_id: cx.doc.layers().active().to_owned(),
+            pts: pts.iter().copied().map(wire).collect(),
+            bulges,
+            holes: None,
+            color: cx.draft.color_text(),
+            line_weight: cx.draft.line_weight,
+            line_type: None,
+            wipeout: Some(kentos_contracts::Wipeout {
+                frame: !cx.memory.wipeout_no_frame,
+            }),
+            attrs: None,
+            label: None,
+            symbol: None,
+            expected_revision: None,
+        };
+        let result = polygon::execute(&mut ExecutionContext::new(cx.doc), input);
+        if points::written(result, cx).is_some() {
+            cx.say(Level::Success, "Maske eklendi.");
+        }
+    }
+
+    /// Maske's Nesne (docs/adr/0310 §5): the area at `p` becomes a mask through `cad.entities.set`, its frame as the
+    /// session's option; what is not an area is said and the tool waits.
+    fn mask_area_at(&mut self, p: Vec2, cx: &mut Context<'_>) {
+        let hit = cx.spatial.pick(p, cx.pick_tolerance());
+        let Some((slot, uid)) = hit.and_then(|s| Some((s, cx.doc.uid(s)?))) else {
+            cx.say(Level::Warn, "Maske yapılacak kapalı alana tıklayın.");
+            return;
+        };
+        if !matches!(cx.doc.get(slot), Some(kentos_contracts::Entity::Polygon(_))) {
+            cx.say(
+                Level::Warn,
+                "Yalnız kapalı alan maske olur; çizgiyi önce Alana çevir ile alan yapın.",
+            );
+            return;
+        }
+        let input = kentos_contracts::EntitiesSetProperties {
+            uids: vec![uid.to_string()],
+            layer_id: None,
+            color: None,
+            line_weight: None,
+            line_type: None,
+            line_type_scale: None,
+            transparency: None,
+            wipeout: Some(Some(kentos_contracts::Wipeout {
+                frame: !cx.memory.wipeout_no_frame,
+            })),
+            symbol: None,
+            attrs: None,
+            label: None,
+            attachments: None,
+            unlink: false,
+            operation: kentos_contracts::PropertiesOperation::Wipeout,
+            expected_revision: None,
+        };
+        let result =
+            kentos_native_application::set::execute(&mut ExecutionContext::new(cx.doc), input);
+        if let Some(out) = points::written(result, cx) {
+            if out.changed.is_empty() {
+                cx.say(Level::Info, "Alan zaten böyle bir maske.");
+            } else {
+                cx.say(Level::Success, "Alan maske oldu.");
+            }
+        }
     }
 
     /// Bulges of the finished shape: one per point, the last for the closing
@@ -1283,6 +1383,7 @@ impl Path {
             let ring = &areas[0].outer;
             let input = PolygonCreate {
                 line_type: cx.draft.line_type,
+                wipeout: None,
                 layer_id: layer,
                 pts: ring.pts.iter().copied().map(wire).collect(),
                 bulges: ring.bulges.clone(),
@@ -1626,6 +1727,10 @@ impl Path {
             }
             // Çoklu çizgi's width can be set before its first point (docs/adr/0258 §2).
             Shape::Open => prompt.option_with("Genişlik", "E", self.width_text()),
+            // Maske's frame and Nesne (docs/adr/0310 §5).
+            Shape::Wipeout => prompt
+                .toggle("Çerçeve", "Ç", !self.memory.wipeout_no_frame)
+                .toggle("Nesne", "N", self.memory.wipeout_object),
             _ => prompt,
         }
     }
@@ -1821,6 +1926,12 @@ impl Tool for Path {
                 "ilk noktayı komşu alanın içinde ya da sınırında belirtin",
             );
         }
+        if n == 0 && self.shape == Shape::Wipeout && self.memory.wipeout_object {
+            return self.first_chips(Prompt::new(label, "maske yapılacak kapalı alana tıklayın"));
+        }
+        if n == 0 && self.shape == Shape::Wipeout {
+            return self.first_chips(Prompt::new(label, "maskenin ilk köşesini belirtin"));
+        }
         if n == 0 && self.shape == Shape::Hole {
             return Prompt::new(label, "deliğin ilk köşesini alanın içinde belirtin");
         }
@@ -1892,6 +2003,9 @@ impl Tool for Path {
             // Dik kapat once a ring has three corners (docs/adr/0166 §4).
             if self.shape.closed() && n >= 3 {
                 prompt = prompt.option("Dik kapat", "D");
+            }
+            if self.shape == Shape::Wipeout {
+                prompt = prompt.toggle("Çerçeve", "Ç", !self.memory.wipeout_no_frame);
             }
             // Çoklu çizgi's width and Kapat (docs/adr/0258).
             if self.shape == Shape::Open {

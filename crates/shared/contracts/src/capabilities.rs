@@ -586,6 +586,7 @@ const ENTRIES: &[Entry] = &[
                 "invalid_line_weight",
                 "invalid_line_type_scale",
                 "invalid_transparency",
+                "invalid_wipeout",
                 "invalid_attribute",
                 "attribute_required",
                 "invalid_attachments",
@@ -694,7 +695,11 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.entities.order",
-        refusals: &[OBJECTS, &["order_limit"], REVISION],
+        refusals: &[
+            OBJECTS,
+            &["order_limit", "invalid_reference", "not_same_layer"],
+            REVISION,
+        ],
         warnings: &["layer_locked"],
         targets: || vec![target(None, &["*"], &[], None, None)],
     },

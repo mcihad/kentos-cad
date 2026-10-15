@@ -5,6 +5,7 @@ import type { LabelPin } from "./LabelPin";
 import type { LineType } from "./LineType";
 import type { LookPart } from "./LookPart";
 import type { PointCloudStyle } from "./PointCloudStyle";
+import type { Wipeout } from "./Wipeout";
 
 /**
  * A point cloud (docs/adr/0207 §3).
@@ -61,7 +62,12 @@ order?: number,
  * follow the object's layer instead of the insert; in order, once each,
  * never one with a value of its own.
  */
-byLayer?: Array<LookPart>, sources: Array<CloudSource>, 
+byLayer?: Array<LookPart>, 
+/**
+ * An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+ * what is drawn before it; only an area has it.
+ */
+wipeout?: Wipeout, sources: Array<CloudSource>, 
 /**
  * The members' bounds together.
  */

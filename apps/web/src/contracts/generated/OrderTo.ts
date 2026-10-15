@@ -3,4 +3,4 @@
 /**
  * Where the objects go.
  */
-export type OrderTo = "front" | "back";
+export type OrderTo = "front" | "back" | "above" | "under";

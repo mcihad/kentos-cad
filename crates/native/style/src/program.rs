@@ -252,6 +252,26 @@ impl Interned {
         s
     }
 
+    /// A mask's set (docs/adr/0310 §2), made once for a colour, weight and frame.
+    fn wipeout(
+        &mut self,
+        style: &LayerStyle,
+        color: &str,
+        weight: f64,
+        hairlines: bool,
+        frame: bool,
+    ) -> i32 {
+        let key = (format!("wipeout:{frame}:{color}"), weight.to_bits());
+        if let Some(&s) = self.simple.get(&key) {
+            return s;
+        }
+        let s = self.set(crate::simple::symbols_of_wipeout(
+            style, color, weight, hairlines, frame,
+        ));
+        self.simple.insert(key, s);
+        s
+    }
+
     /// The simple look's set for an object with its own stroke, made once.
     fn stroked(
         &mut self,
@@ -281,6 +301,35 @@ impl Interned {
     }
 }
 
+/// A layer's bands with masks (docs/adr/0310 §2): the objects come in their drawing order, and within each order a
+/// mask is a band of its own between what is drawn before it and what after, so it covers the first (their lines
+/// too: a band's fills are not drawn before the lines of the band below) and not the second. The bands are the ranks
+/// of (order, place among the order's masks).
+fn mask_bands(entities: &[&Entity]) -> Vec<i32> {
+    let mut keys = Vec::with_capacity(entities.len());
+    let mut last: Option<i32> = None;
+    let mut sub = 0u32;
+    for e in entities {
+        let order = e.base().look.order.unwrap_or(0);
+        if last != Some(order) {
+            last = Some(order);
+            sub = 0;
+        }
+        if e.base().look.wipeout.is_some() {
+            keys.push((order, sub + 1));
+            sub += 2;
+        } else {
+            keys.push((order, sub));
+        }
+    }
+    let mut distinct = keys.clone();
+    distinct.sort_unstable();
+    distinct.dedup();
+    keys.iter()
+        .map(|k| distinct.binary_search(k).unwrap_or(0) as i32)
+        .collect()
+}
+
 /// The page's part of a layer build: the program, the objects' numbers and
 /// the value table; `store` holds the inserts' pieces.
 pub fn layer_call(
@@ -301,7 +350,13 @@ pub fn layer_call(
         let weight = base.line_weight.unwrap_or(style.line_weight);
         // Its own line type, pattern scale and transparency (docs/adr/0260).
         let stroke = Stroke::of(&base.look);
-        let (c, s) = if !stroke.plain() {
+        let (c, s) = if let Some(w) = base.look.wipeout {
+            // An area's mask (docs/adr/0310 §2): the ground's fill, its frame or none.
+            (
+                it.color(color),
+                it.wipeout(style, color, weight, opts.hairlines, w.frame),
+            )
+        } else if !stroke.plain() {
             (
                 it.color(color),
                 it.stroked(style, color, weight, opts.hairlines, stroke),
@@ -464,8 +519,10 @@ pub fn build_layer(
     call.reads_index = program.needs.index;
     call.table = expr_table(&program.fields, program.needs, entities, opts.layer_name);
     let ids: Vec<f64> = entities.iter().map(|e| f64::from(e.base().id)).collect();
-    // The draw order bands (docs/adr/0260 §3), only when an object has its own order.
-    let bands: Vec<i32> = if entities.iter().any(|e| e.base().look.order.is_some()) {
+    // The draw order bands (docs/adr/0260 §3), only when an object has its own order or is a mask.
+    let bands: Vec<i32> = if entities.iter().any(|e| e.base().look.wipeout.is_some()) {
+        mask_bands(entities)
+    } else if entities.iter().any(|e| e.base().look.order.is_some()) {
         entities
             .iter()
             .map(|e| e.base().look.order.unwrap_or(0))

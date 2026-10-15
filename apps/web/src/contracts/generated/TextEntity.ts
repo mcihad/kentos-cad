@@ -9,6 +9,7 @@ import type { TextAlign } from "./TextAlign";
 import type { TextPath } from "./TextPath";
 import type { TextRun } from "./TextRun";
 import type { Vec2 } from "./Vec2";
+import type { Wipeout } from "./Wipeout";
 
 export type TextEntity = { p: Vec2, text: string, 
 /**
@@ -101,6 +102,11 @@ order?: number,
  * never one with a value of its own.
  */
 byLayer?: Array<LookPart>, 
+/**
+ * An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+ * what is drawn before it; only an area has it.
+ */
+wipeout?: Wipeout, 
 /**
  * Metres, finite and over 0: the lines wrap word by word to this width.
  * Absent: they end only at line breaks.

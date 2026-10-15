@@ -70,6 +70,8 @@ pub enum Event {
     LineType(Vec<Slot>, Option<kentos_contracts::LineType>),
     LineTypeScale(Vec<Slot>, Option<f64>),
     Transparency(Vec<Slot>, Option<f64>),
+    /// Maske ▾ of areas (docs/adr/0310 §5): a mask with its frame or without, or an ordinary area.
+    Wipeout(Vec<Slot>, Option<kentos_contracts::Wipeout>),
     /// Desen ▾ of a hatch: one of Tarama's choices (docs/adr/0186 §7), its
     /// Ölçek and Açı carried over.
     Pattern(Slot, usize),
@@ -541,6 +543,11 @@ impl App {
                 input.transparency = Some(t);
                 properties::set_properties(model, input)
             }
+            Event::Wipeout(ids, w) => {
+                let mut input = set_input(model, &ids, PropertiesOperation::Wipeout);
+                input.wipeout = Some(w);
+                properties::set_properties(model, input)
+            }
             Event::Pattern(slot, choice) => match model.get(slot) {
                 Some(Entity::Hatch(h)) => {
                     let plot = model.settings().plot_scale;
@@ -701,6 +708,7 @@ fn set_input(
         line_type: None,
         line_type_scale: None,
         transparency: None,
+        wipeout: None,
         uids: properties::uids_of(model, slots),
         layer_id: None,
         color: None,

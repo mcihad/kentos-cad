@@ -902,6 +902,44 @@
       ],
       "note": "Komutun asBlock'u; blok ve yerleştirme tek adımda (ADR 0309)."
     },
+    "tool.wipeout": {
+      "level": "semantic",
+      "via": [
+        "cad.polygon.create",
+        "cad.entities.set"
+      ],
+      "note": "Yeni maske cad.polygon.create'in wipeout'uyla, Nesne'nin alanı cad.entities.set'in wipeout'uyla (ADR 0310)."
+    },
+    "tool.drawOrderAbove": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.order"
+      ],
+      "note": "Başvuru tıklanan nesne, girdinin reference'ı (ADR 0310)."
+    },
+    "tool.drawOrderUnder": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.order"
+      ],
+      "note": "Başvuru tıklanan nesne, girdinin reference'ı (ADR 0310)."
+    },
+    "edit.textsToFront": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.select",
+        "cad.entities.order"
+      ],
+      "note": "Türlere göre seçim, sonra öne (ADR 0310)."
+    },
+    "edit.hatchesToBack": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.select",
+        "cad.entities.order"
+      ],
+      "note": "Taramalar seçilir, sonra arkaya (ADR 0310)."
+    },
     "processing.run.address.geocode": {
       "level": "processing",
       "python": "kentos.address",

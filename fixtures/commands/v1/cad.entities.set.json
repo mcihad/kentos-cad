@@ -488,6 +488,30 @@
         {"op": "execute", "input": {"uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"], "lineTypeScale": 0, "transparency": 2, "operation": "lineTypeScale", "expectedRevision": "999"}, "result": {"status": "failed", "error": {"code": "invalid_line_type_scale", "message": "Çizgi tipi ölçeği 0'dan büyük, en çok 1000 olmalı. Bir ölçek yazın ya da 1'e döndürmek için null verin.", "path": "lineTypeScale"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
         {"op": "execute", "input": {"uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"], "transparency": 2, "operation": "transparency", "expectedRevision": "999"}, "result": {"status": "failed", "error": {"code": "invalid_transparency", "message": "Saydamlık 0 ile 0,9 arasında olmalı (%0–90). Bir saydamlık yazın ya da kaynağına döndürmek için null verin.", "path": "transparency"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
       ]
+    },
+    {
+      "name": "Maske: alan maske olur (çerçeveli), çerçevesi kapanır, null sıradan alana döndürür; aynısı değişiklik değildir; adım “Maske”",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2"], "wipeout": {"frame": true}, "operation": "wipeout"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2"], "ids": [2], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Ada": "101", "Parsel": "7"}, "label": "7", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}], "wipeout": {"frame": true}}}, "canUndo": true, "dirty": true, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:2"], "wipeout": {"frame": true}, "operation": "wipeout"}, "result": {"status": "completed", "output": {"changed": [], "ids": [], "revision": "$current"}, "warnings": []}, "note": "Zaten öyle: adım yazılmaz.", "expect": {"revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:2"], "wipeout": {"frame": false}, "operation": "wipeout"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2"], "ids": [2], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Ada": "101", "Parsel": "7"}, "label": "7", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}], "wipeout": {"frame": false}}}, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:2"], "wipeout": null, "operation": "wipeout"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2"], "ids": [2], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Ada": "101", "Parsel": "7"}, "label": "7", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}]}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Maske", "note": "Öznitelikler'in Maske satırının adımı.", "expect": {"entities": {"2": {"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Ada": "101", "Parsel": "7"}, "label": "7", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}], "wipeout": {"frame": false}}}}}
+      ]
+    },
+    {
+      "name": "maske yalnız alanda olur: alan olmayan nesne invalid_wipeout (yolu sırasıyla), hiçbir şey yazılmaz; null alan olmayanda değişiklik değildir",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2", "$uidOf:1"], "wipeout": {"frame": true}, "operation": "wipeout"}, "result": {"status": "failed", "error": {"code": "invalid_wipeout", "message": "Maske yalnız alanda olur; 2. nesne (line) alan değil. Yalnız kapalı alanları seçin ya da çizgiyi önce Alana çevir ile alan yapın.", "path": "uids[1]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:8"], "wipeout": {"frame": false}, "operation": "wipeout"}, "result": {"status": "failed", "error": {"code": "invalid_wipeout", "message": "Maske yalnız alanda olur; 1. nesne (circle) alan değil. Yalnız kapalı alanları seçin ya da çizgiyi önce Alana çevir ile alan yapın.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "wipeout": null, "operation": "wipeout"}, "result": {"status": "completed", "output": {"changed": [], "ids": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "maskenin denetimi nesnelerin bulunmasından sonra gelir: çizimde olmayan kimlik önce entity_not_found",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1", "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"], "wipeout": {"frame": true}, "operation": "wipeout"}, "result": {"status": "failed", "error": {"code": "entity_not_found", "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.", "path": "uids[1]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
     }
   ]
 }

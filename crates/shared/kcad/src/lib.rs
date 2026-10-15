@@ -415,11 +415,14 @@ pub const SCHEMA_WITH_VIEWS: u32 = 52;
 /// associative arrays (`arrays`), written only when the drawing has one;
 /// older readers refuse the file instead of losing the arrays.
 pub const SCHEMA_WITH_ARRAYS: u32 = 53;
+/// Schema 54 (docs/adr/0310): an area's mask (`wipeout`: `{ frame }`), written only when an object of the drawing or
+/// of a block definition has one; older readers refuse the file instead of drawing the mask as a plain area.
+pub const SCHEMA_WITH_WIPEOUTS: u32 = 54;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 52] = [
+pub const SCHEMAS: [u32; 53] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -472,6 +475,7 @@ pub const SCHEMAS: [u32; 52] = [
     SCHEMA_WITH_SUBREF_EXTRAS,
     SCHEMA_WITH_VIEWS,
     SCHEMA_WITH_ARRAYS,
+    SCHEMA_WITH_WIPEOUTS,
 ];
 
 /// The file a drawing is saved as.
