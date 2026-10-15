@@ -327,6 +327,12 @@ fn a_listed_kind_is_taken_and_another_is_refused_with_the_listed_code() {
             json!({ "measure": { "kind": "radius", "of": { "uid": u, "near": { "x": 0.0, "y": 0.0 } } },
                     "at": { "x": 1.0e9, "y": 1.0e9 }, "layerId": "yok" })
         }),
+        // Çoklu çizgiye çevir: a NURBS curve takes it, a polyline is refused for the edit (not its kind).
+        (
+            "cad.curves.edit",
+            None,
+            |u| json!({ "uid": u, "edit": { "kind": "toPolyline", "tolerance": 1.0 } }),
+        ),
         // Nesne: a kind that gives axes sets the UCS, another is refused for its kind.
         (
             "cad.ucs.set",

@@ -162,6 +162,7 @@ pub fn label(operation: EditOperation) -> &'static str {
         EditOperation::Join => "Birleştir",
         EditOperation::Explode => "Patlat",
         EditOperation::Lengthen => "Uzat-kısalt",
+        EditOperation::CurveEdit => "Eğriyi düzenle",
         EditOperation::VertexAdd => "Köşe ekle",
         EditOperation::VertexRemove => "Köşe sil",
         EditOperation::Stretch => "Esnet",

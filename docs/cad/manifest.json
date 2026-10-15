@@ -7258,6 +7258,22 @@
    "tests": 1
   },
   {
+   "id": "tool.curveEdit",
+   "kind": "command",
+   "title": "Eğriyi düzenle",
+   "level": "semantic",
+   "via": [
+    "cad.curves.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.curves.edit",
+   "mcp": "cad.curves.edit",
+   "note": "Eğrinin kimliği ve düzenleme (nokta numarası, yer, ağırlık, düğüm, tolerans) komuta verilir; eğriyi komut kurar, önizleme komutun planıdır (ADR 0303).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.dimBaseline",
    "kind": "tool",
    "title": "Baz ölçü",

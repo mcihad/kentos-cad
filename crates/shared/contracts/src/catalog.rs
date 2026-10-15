@@ -1489,6 +1489,42 @@ pub fn catalog() -> CommandCatalog {
                 output: Some(json!({ "changed": [], "created": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4101", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4102", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4103", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4104"], "removed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"], "revision": "67" })),
             }],
         },
+        // Eğriyi düzenle (docs/adr/0303), held together by fixtures/commands/v1/cad.curves.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_CURVES_EDIT.into(),
+            version: crate::CAD_CURVES_EDIT_VERSION,
+            title: "Eğriyi düzenle".into(),
+            summary: "Kalıcı kimliğiyle verilen çoklu çizgiyi ya da NURBS eğrisini değişecek olanla düzenler (AutoCAD'in PEDIT'i ve SPLINEDIT'i); tek geri alma adımı “Eğriyi düzenle”, nesne katmanını, görünüşünü ve verisini korur. \
+                      Çoklu çizgide close (Kapat), open (Aç: kapanış kenarının bükümü ve genişliği gider), decurve (Düzleştir: yaylar düz olur) ve toSpline (Eğriye çevir: köşelerden geçen ya da köşeleri denetim noktası olan NURBS eğrisi, derece yoksa 3). \
+                      Geçiş noktalı NURBS eğrisinde addFit, moveFit, removeFit ve tangents (uç teğetleri): eğri noktalardan yeniden kurulur, açık eğri teğetlerini korur. \
+                      Her NURBS eğrisinde moveControl ve weight (kapalı eğride sarılan kopya da; geçiş noktaları gider), removeControl, insertKnot (açık eğride, aralığın içinde, derece kereden az olan yere; eğri değişmez), close ve open, toPolyline (her kiriş eğriye tolerance'tan yakın çoklu çizgi). \
+                      Retler: not_a_curve (tür ya da düzenleme uymuyor), multi_part, no_fit_points, invalid_index, invalid_knot, invalid_weight, invalid_tolerance, too_few_points, coincident_points, invalid_nurbs. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CurvesEdit>(),
+            output: schema::<crate::EntitiesEdited>(),
+            plan: Some(schema::<crate::EntitiesEditPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Eğriye bir geçiş noktası ekle".into(),
+                    input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001", "edit": { "kind": "addFit", "index": 2, "at": { "x": 18, "y": 70 } } }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001"], "created": [], "removed": [], "revision": "68" })),
+                },
+                CommandExample {
+                    title: "Çoklu çizgiyi köşelerinden geçen kübik eğriye çevir".into(),
+                    input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002", "edit": { "kind": "toSpline", "through": true } }),
+                    output: None,
+                },
+            ],
+        },
         // Ötele's semantic command (docs/adr/0246), held together by
         // fixtures/commands/v1/cad.entities.offset.json. The web is paused
         // (docs/adr/0228): the desktop's host alone runs it for now.
@@ -4148,6 +4184,9 @@ mod tests {
                     crate::CAD_ENTITIES_EXPLODE => {
                         serde_json::from_value::<crate::EntitiesExplode>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_CURVES_EDIT => {
+                        serde_json::from_value::<crate::CurvesEdit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_NURBS_CREATE => {
                         serde_json::from_value::<crate::NurbsCreate>(e.input.clone()).map(|_| ())
                     }
@@ -4391,6 +4430,7 @@ mod tests {
                         crate::CAD_ENTITIES_BREAK
                         | crate::CAD_ARRAYS_EDIT
                         | crate::CAD_ENTITIES_EXPLODE
+                        | crate::CAD_CURVES_EDIT
                         | crate::CAD_ENTITIES_JOIN
                         | crate::CAD_ENTITIES_REVERSE
                         | crate::CAD_ENTITIES_LENGTHEN => {

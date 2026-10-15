@@ -124,6 +124,7 @@ pub mod continuation;
 pub mod coordinate;
 pub mod coordinate_labels;
 pub mod corner;
+pub mod curve_edit;
 pub mod data_search;
 pub mod dimension;
 pub mod dimension_chain;

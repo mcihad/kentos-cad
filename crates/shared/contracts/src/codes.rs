@@ -436,6 +436,20 @@ codes! {
     TOO_MANY_POINTS = "too_many_points", Failed, false, "10 000'den çok nokta olurdu; daha büyük bir aralık verin.";
     /// A first distance given with a number of parts (Böl, docs/adr/0299).
     START_NEEDS_STEP = "start_needs_step", Failed, false, "Başlangıç yalnız aralıkla bölmede verilir.";
+    /// An object that is neither a polyline nor a NURBS curve (Eğriyi düzenle, docs/adr/0303).
+    NOT_A_CURVE = "not_a_curve", Failed, false, "Eğriyi düzenle çoklu çizgide ve NURBS eğrisinde çalışır.";
+    /// An edit the other kind takes, or one the curve already is (Eğriyi düzenle: an open curve opened).
+    EDIT_NOT_APPLICABLE = "edit_not_applicable", Failed, false, "Bu düzenleme bu eğride yapılmaz: öbür türün düzenlemesi ya da eğri zaten öyle.";
+    /// A fit point edit on a curve drawn by its control points (Eğriyi düzenle).
+    NO_FIT_POINTS = "no_fit_points", Failed, false, "Eğrinin geçiş noktası yok: denetim noktalarıyla çizilmiş ya da denetim noktası düzenlenmiş.";
+    /// A point or control point number out of the curve's (Eğriyi düzenle).
+    INVALID_INDEX = "invalid_index", Failed, false, "Nokta numarası eğrinin noktalarının dışında.";
+    /// A knot outside the curve's domain, or one already as many times as the degree (Eğriyi düzenle).
+    INVALID_KNOT = "invalid_knot", Failed, false, "Düğüm eğrinin aralığının dışında ya da orada derece kadar düğüm var.";
+    /// A weight not above 0 (Eğriyi düzenle).
+    INVALID_WEIGHT = "invalid_weight", Failed, false, "Ağırlık sıfırdan büyük olmalı.";
+    /// A tolerance not above 0 (Eğriyi düzenle).
+    INVALID_TOLERANCE = "invalid_tolerance", Failed, false, "Tolerans sıfırdan büyük olmalı.";
     /// An object that does not explode: left out with a warning, the refusal when none explodes (Patlat, docs/adr/0302).
     NOT_EXPLODABLE = "not_explodable", FailedOrWarning, false, "Nesne patlatılamaz: zaten temel bir nesne (çizgi, daire, nokta, yazı …) ya da dolu tarama; bazılarında uyarı, hiçbirinde ret.";
     /// No associative array has the id (Diziyi düzenle, docs/adr/0301).

@@ -868,6 +868,13 @@
       ],
       "note": "Dizinin kimliği, yerleşimi, ilk yeri ya da öğe numaraları komuta verilir; yerleri komut hesaplar (ADR 0301)."
     },
+    "tool.curveEdit": {
+      "level": "semantic",
+      "via": [
+        "cad.curves.edit"
+      ],
+      "note": "Eğrinin kimliği ve düzenleme (nokta numarası, yer, ağırlık, düğüm, tolerans) komuta verilir; eğriyi komut kurar, önizleme komutun planıdır (ADR 0303)."
+    },
     "processing.run.address.geocode": {
       "level": "processing",
       "python": "kentos.address",

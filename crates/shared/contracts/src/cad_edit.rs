@@ -57,6 +57,8 @@ pub enum EditOperation {
     Explode,
     /// Uzat-kısalt: a new total length, changed at one end.
     Lengthen,
+    /// Eğriyi düzenle (docs/adr/0303): a polyline or a NURBS curve edited in place by `cad.curves.edit`.
+    CurveEdit,
     /// Köşe ekle: a vertex added on an edge.
     VertexAdd,
     /// Köşe sil: a vertex removed.

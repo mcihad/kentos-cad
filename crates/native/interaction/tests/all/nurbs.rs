@@ -129,3 +129,100 @@ fn the_preview_is_the_commands_plan() {
     assert!(preview.strokes.iter().any(|s| s.dash.is_some()));
     assert_eq!(b.options(), vec!["Y", "D", "K", "G", "Enter"]);
 }
+
+// ── Eğriyi düzenle (docs/adr/0303) ──────────────────────────────────────────
+
+/// What `cad.curves.edit` writes for `edit` on the curve at `slot` of a copy of the drawing.
+fn edited_by_command(
+    doc: &kentos_domain::Document,
+    slot: kentos_domain::Slot,
+    edit: kentos_contracts::CurveEdit,
+) -> Entity {
+    use kentos_native_application::curves_edit;
+    let mut doc = doc.clone();
+    let input = kentos_contracts::CurvesEdit {
+        uid: doc.uid(slot).expect("an id").to_string(),
+        edit,
+        expected_revision: None,
+    };
+    let result = curves_edit::execute(&mut ExecutionContext::new(&mut doc), input);
+    assert!(
+        matches!(result, CommandResult::Completed { .. }),
+        "{result:?}"
+    );
+    doc.get(slot).expect("there").clone()
+}
+
+#[test]
+fn a_polyline_becomes_a_curve_whose_points_are_edited_through_the_command() {
+    use kentos_contracts::CurveEdit;
+    let mut b = Bench::new("nurbs");
+    let layer = b.doc.layers().active().to_owned();
+    let slot = b.add_bulged(
+        &layer,
+        &[[0.0, 0.0], [10.0, 0.0], [20.0, 5.0], [30.0, 0.0]],
+        &[0.0, 0.4, 0.0, 0.0],
+    );
+    b.start("curveEdit");
+    assert_eq!(
+        b.session.prompt().text(),
+        "Eğriyi düzenle: düzenlenecek çoklu çizgiye ya da NURBS eğrisine tıklayın"
+    );
+    b.click(5.0, 0.0);
+    assert_eq!(b.options(), ["K", "D", "E", "N", "R"]);
+    // Düzleştir: the arc edge straight, one step.
+    assert!(b.type_text("D"));
+    assert_eq!(b.last_text(), Some("Yay kenarları düzleşti."));
+    assert_eq!(b.options(), ["K", "E", "N", "R"]);
+    // Eğriye çevir: exactly what the command writes.
+    let want = edited_by_command(
+        &b.doc,
+        slot,
+        CurveEdit::ToSpline {
+            degree: Some(3),
+            through: true,
+        },
+    );
+    assert!(b.type_text("E"));
+    assert_eq!(b.doc.get(slot), Some(&want));
+    assert_eq!(
+        b.options(),
+        ["K", "E", "T", "S", "G", "D", "L", "İ", "Ü", "Ç"]
+    );
+    // Noktayı taşı: the point clicked, then its place; the plan is drawn on the way.
+    assert!(b.type_text("T"));
+    b.click(10.2, 0.1);
+    assert!(
+        b.session.prompt().text().contains("nokta 2"),
+        "{}",
+        b.session.prompt().text()
+    );
+    b.move_to(12.0, 4.0);
+    let preview = b
+        .session
+        .preview(&kentos_interaction::Format::default())
+        .expect("a preview");
+    assert!(!preview.strokes.is_empty(), "the plan is drawn");
+    let want = edited_by_command(
+        &b.doc,
+        slot,
+        CurveEdit::MoveFit {
+            index: 1,
+            at: at([12.0, 4.0]),
+        },
+    );
+    b.click(12.0, 4.0);
+    assert_eq!(b.last_text(), Some("Geçiş noktası taşındı."));
+    assert_eq!(b.doc.get(slot), Some(&want));
+    // Çoklu çizgiye çevir with the tolerance typed.
+    assert!(b.type_text("Ç"));
+    assert!(b.type_text("0.05"));
+    assert_eq!(b.last_text(), Some("Eğri çoklu çizgi oldu."));
+    assert!(matches!(b.doc.get(slot), Some(Entity::Polyline(_))));
+    // Each edit its own step.
+    assert_eq!(b.doc.undo().as_deref(), Some("Eğriyi düzenle"));
+    assert_eq!(b.doc.get(slot), Some(&want));
+    // Enter lets the curve go, then leaves.
+    b.confirm();
+    assert!(b.session.prompt().text().contains("tıklayın"));
+}

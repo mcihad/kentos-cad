@@ -1,0 +1,5844 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.curves.edit",
+ "commandVersion": 1,
+ "title": "Eğriyi düzenle: çoklu çizginin ve NURBS eğrisinin düzenlemeleri, retler",
+ "note": "ADR 0303. Bağımsız başvuru: scripts/fixtures/curve_edit_cases.py (yapıların IEEE çift duyarlıklı ikizi, 50 basamaklı mpmath denetimiyle).",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Eğriyi düzenle",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 100,
+   "workspace": "cad"
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "polyline",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 20,
+      "y": 5
+     },
+     {
+      "x": 30,
+      "y": 0
+     }
+    ],
+    "bulges": [
+     0,
+     0.4,
+     0,
+     0
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 2,
+    "layerId": "cizim",
+    "attrs": {},
+    "color": "#ff0000",
+    "pts": [
+     {
+      "x": 0,
+      "y": 20
+     },
+     {
+      "x": 10,
+      "y": 20
+     },
+     {
+      "x": 10,
+      "y": 30
+     },
+     {
+      "x": 0,
+      "y": 30
+     }
+    ],
+    "bulges": [
+     0,
+     0,
+     0,
+     -0.3
+    ],
+    "closed": true,
+    "widths": [
+     [
+      0.1,
+      0.1
+     ],
+     [
+      0.1,
+      0.2
+     ],
+     [
+      0.2,
+      0.2
+     ],
+     [
+      0.3,
+      0.3
+     ]
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 3,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0,
+      "y": 90
+     },
+     {
+      "x": 5,
+      "y": 90
+     }
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 0,
+        "y": 95
+       },
+       {
+        "x": 5,
+        "y": 95
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "nurbs",
+    "id": 4,
+    "layerId": "cizim",
+    "attrs": {
+     "Ad": "Dere"
+    },
+    "degree": 3,
+    "ctrl": [
+     {
+      "x": 0,
+      "y": 60
+     },
+     {
+      "x": 6.70113666498568,
+      "y": 76.88892258488961
+     },
+     {
+      "x": 27.609981197645304,
+      "y": 46.62575349161004
+     },
+     {
+      "x": 41.246204371287774,
+      "y": 82.19259647191127
+     },
+     {
+      "x": 52,
+      "y": 66.25
+     }
+    ],
+    "knots": [
+     0,
+     0,
+     0,
+     0,
+     0.4902046807508455,
+     1,
+     1,
+     1,
+     1
+    ],
+    "fit": [
+     {
+      "x": 0,
+      "y": 60
+     },
+     {
+      "x": 12,
+      "y": 67.5
+     },
+     {
+      "x": 25,
+      "y": 63
+     },
+     {
+      "x": 38,
+      "y": 71
+     },
+     {
+      "x": 52,
+      "y": 66.25
+     }
+    ]
+   },
+   {
+    "kind": "nurbs",
+    "id": 5,
+    "layerId": "cizim",
+    "attrs": {},
+    "degree": 3,
+    "ctrl": [
+     {
+      "x": 0,
+      "y": 40
+     },
+     {
+      "x": 8,
+      "y": 46
+     },
+     {
+      "x": 16,
+      "y": 38
+     },
+     {
+      "x": 24,
+      "y": 47
+     },
+     {
+      "x": 32,
+      "y": 41
+     },
+     {
+      "x": 40,
+      "y": 44
+     }
+    ],
+    "knots": [
+     0,
+     0,
+     0,
+     0,
+     1,
+     2,
+     3,
+     3,
+     3,
+     3
+    ]
+   },
+   {
+    "kind": "nurbs",
+    "id": 6,
+    "layerId": "cizim",
+    "attrs": {},
+    "degree": 2,
+    "ctrl": [
+     {
+      "x": 60,
+      "y": 40
+     },
+     {
+      "x": 70,
+      "y": 40
+     },
+     {
+      "x": 70,
+      "y": 50
+     },
+     {
+      "x": 60,
+      "y": 50
+     },
+     {
+      "x": 60,
+      "y": 40
+     },
+     {
+      "x": 70,
+      "y": 40
+     }
+    ],
+    "knots": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8
+    ],
+    "weights": [
+     1,
+     2,
+     1,
+     0.5,
+     1,
+     2
+    ],
+    "closed": true,
+    "periodic": true
+   },
+   {
+    "kind": "nurbs",
+    "id": 7,
+    "layerId": "cizim",
+    "attrs": {},
+    "degree": 3,
+    "ctrl": [
+     {
+      "x": 52.55449909895917,
+      "y": 24.522971804642115
+     },
+     {
+      "x": 59.63640076511353,
+      "y": 5.431098636980733
+     },
+     {
+      "x": 80.76226295598087,
+      "y": 2.974486624394693
+     },
+     {
+      "x": 90.6709396556448,
+      "y": 24.799816387010083
+     },
+     {
+      "x": 70.4799935116815,
+      "y": 32.972099764491176
+     },
+     {
+      "x": 52.55449909895917,
+      "y": 24.522971804642115
+     },
+     {
+      "x": 59.63640076511353,
+      "y": 5.431098636980733
+     },
+     {
+      "x": 80.76226295598087,
+      "y": 2.974486624394693
+     }
+    ],
+    "knots": [
+     -0.5690961905932658,
+     -0.35092583648105014,
+     -0.15426973684661793,
+     0,
+     0.24513844671833923,
+     0.43090380940673423,
+     0.6490741635189499,
+     0.8457302631533821,
+     1,
+     1.2451384467183393,
+     1.4309038094067343,
+     1.6490741635189499
+    ],
+    "closed": true,
+    "periodic": true,
+    "fit": [
+     {
+      "x": 60,
+      "y": 10
+     },
+     {
+      "x": 80,
+      "y": 8
+     },
+     {
+      "x": 86,
+      "y": 22
+     },
+     {
+      "x": 70,
+      "y": 30
+     },
+     {
+      "x": 56,
+      "y": 22
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 8,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 40,
+     "y": 80
+    },
+    "b": {
+     "x": 45,
+     "y": 80
+    }
+   },
+   {
+    "kind": "polyline",
+    "id": 9,
+    "layerId": "kilitli",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0,
+      "y": 100
+     },
+     {
+      "x": 5,
+      "y": 100
+     },
+     {
+      "x": 5,
+      "y": 105
+     }
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 10,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0,
+      "y": 80
+     },
+     {
+      "x": 5,
+      "y": 80
+     }
+    ]
+   },
+   {
+    "kind": "nurbs",
+    "id": 11,
+    "layerId": "cizim",
+    "attrs": {},
+    "degree": 2,
+    "ctrl": [
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "knots": [
+     0,
+     0,
+     0,
+     1,
+     1,
+     1
+    ],
+    "weights": [
+     1,
+     0.7071067811865476,
+     1
+    ]
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Kapat: açık çoklu çizgi kapanır; kapanış kenarı düz (son büküm 0); adım “Eğriyi düzenle”, geri alınır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "edit": {
+       "kind": "close"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "1": {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0
+         },
+         {
+          "x": 20,
+          "y": 5
+         },
+         {
+          "x": 30,
+          "y": 0
+         }
+        ],
+        "bulges": [
+         0,
+         0.4,
+         0,
+         0
+        ],
+        "closed": true
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Eğriyi düzenle",
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0
+         },
+         {
+          "x": 20,
+          "y": 5
+         },
+         {
+          "x": 30,
+          "y": 0
+         }
+        ],
+        "bulges": [
+         0,
+         0.4,
+         0,
+         0
+        ]
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aç: kapalı çoklu çizginin kapanış kenarının bükümü ve genişliği gider; rengi kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:2",
+      "edit": {
+       "kind": "open"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:2"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "2": {
+        "kind": "polyline",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "color": "#ff0000",
+        "pts": [
+         {
+          "x": 0,
+          "y": 20
+         },
+         {
+          "x": 10,
+          "y": 20
+         },
+         {
+          "x": 10,
+          "y": 30
+         },
+         {
+          "x": 0,
+          "y": 30
+         }
+        ],
+        "bulges": [
+         0,
+         0,
+         0,
+         0
+        ],
+        "widths": [
+         [
+          0.1,
+          0.1
+         ],
+         [
+          0.1,
+          0.2
+         ],
+         [
+          0.2,
+          0.2
+         ],
+         [
+          0,
+          0
+         ]
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Düzleştir: yay kenarları düz olur, bükümler gider",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "edit": {
+       "kind": "decurve"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "1": {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0
+         },
+         {
+          "x": 20,
+          "y": 5
+         },
+         {
+          "x": 30,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eğriye çevir (denetim): köşeler kübik eğrinin denetim noktaları olur, düğümler uçlara sıkıştırılmış ve eşit aralıklı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "edit": {
+       "kind": "toSpline",
+       "through": false
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "1": {
+        "kind": "nurbs",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0
+         },
+         {
+          "x": 20,
+          "y": 5
+         },
+         {
+          "x": 30,
+          "y": 0
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         0,
+         1,
+         1,
+         1,
+         1
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Eğriyi düzenle",
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0
+         },
+         {
+          "x": 20,
+          "y": 5
+         },
+         {
+          "x": 30,
+          "y": 0
+         }
+        ],
+        "bulges": [
+         0,
+         0.4,
+         0,
+         0
+        ]
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eğriye çevir (geçiş): ikinci dereceden eğri köşelerden geçer; köşeler geçiş noktalarıdır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "edit": {
+       "kind": "toSpline",
+       "degree": 2,
+       "through": true
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "1": {
+        "kind": "nurbs",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "degree": 2,
+        "ctrl": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 8.252635834481326,
+          "y": -2.4919927163552202
+         },
+         {
+          "x": 22.421387472226527,
+          "y": 8.463867443397687
+         },
+         {
+          "x": 30,
+          "y": 0
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         0.4817627457812106,
+         1,
+         1,
+         1
+        ],
+        "fit": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0
+         },
+         {
+          "x": 20,
+          "y": 5
+         },
+         {
+          "x": 30,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapalı çoklu çizgi kapalı ve periyodik eğri olur, köşelerden geçer; rengi kalır, genişliği uyarıyla gider",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:2",
+      "edit": {
+       "kind": "toSpline",
+       "through": true
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "widths_lost",
+        "message": "1 çoklu çizginin genişliği bu işlemde korunmadı.",
+        "path": "changes"
+       }
+      ],
+      "output": {
+       "changed": [
+        "$uidOf:2"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "2": {
+        "kind": "nurbs",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": -2.5000000000000004,
+          "y": 32.50000000000001
+         },
+         {
+          "x": -2.499999999999999,
+          "y": 17.499999999999996
+         },
+         {
+          "x": 12.5,
+          "y": 17.500000000000004
+         },
+         {
+          "x": 12.500000000000002,
+          "y": 32.5
+         },
+         {
+          "x": -2.5000000000000004,
+          "y": 32.50000000000001
+         },
+         {
+          "x": -2.499999999999999,
+          "y": 17.499999999999996
+         },
+         {
+          "x": 12.5,
+          "y": 17.500000000000004
+         }
+        ],
+        "knots": [
+         -0.75,
+         -0.5,
+         -0.25,
+         0,
+         0.25,
+         0.5,
+         0.75,
+         1,
+         1.25,
+         1.5,
+         1.75
+        ],
+        "closed": true,
+        "periodic": true,
+        "fit": [
+         {
+          "x": 0,
+          "y": 20
+         },
+         {
+          "x": 10,
+          "y": 20
+         },
+         {
+          "x": 10,
+          "y": 30
+         },
+         {
+          "x": 0,
+          "y": 30
+         }
+        ],
+        "color": "#ff0000"
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapalı çoklu çizgi denetim noktalarıyla: ilk derece kadar köşe sona sarılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:2",
+      "edit": {
+       "kind": "toSpline",
+       "degree": 2,
+       "through": false
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "widths_lost",
+        "message": "1 çoklu çizginin genişliği bu işlemde korunmadı.",
+        "path": "changes"
+       }
+      ],
+      "output": {
+       "changed": [
+        "$uidOf:2"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "2": {
+        "kind": "nurbs",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "degree": 2,
+        "ctrl": [
+         {
+          "x": 0,
+          "y": 20
+         },
+         {
+          "x": 10,
+          "y": 20
+         },
+         {
+          "x": 10,
+          "y": 30
+         },
+         {
+          "x": 0,
+          "y": 30
+         },
+         {
+          "x": 0,
+          "y": 20
+         },
+         {
+          "x": 10,
+          "y": 20
+         }
+        ],
+        "knots": [
+         0,
+         1,
+         2,
+         3,
+         4,
+         5,
+         6,
+         7,
+         8
+        ],
+        "closed": true,
+        "periodic": true,
+        "color": "#ff0000"
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geçiş noktası ekle: eğri yeni noktadan da geçer; öznitelikleri kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:4",
+      "edit": {
+       "kind": "addFit",
+       "index": 2,
+       "at": {
+        "x": 18,
+        "y": 70
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "4": {
+        "kind": "nurbs",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Dere"
+        },
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": 0,
+          "y": 60
+         },
+         {
+          "x": 4.052332480361839,
+          "y": 57.37611645561926
+         },
+         {
+          "x": 17.591066730300614,
+          "y": 79.54051709885634
+         },
+         {
+          "x": 29.049721899920574,
+          "y": 48.80182247424763
+         },
+         {
+          "x": 43.85922810765399,
+          "y": 88.49540334705493
+         },
+         {
+          "x": 52,
+          "y": 66.25
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         0,
+         0.3594821301845276,
+         0.5336544665501176,
+         1,
+         1,
+         1,
+         1
+        ],
+        "fit": [
+         {
+          "x": 0,
+          "y": 60
+         },
+         {
+          "x": 12,
+          "y": 67.5
+         },
+         {
+          "x": 18,
+          "y": 70
+         },
+         {
+          "x": 25,
+          "y": 63
+         },
+         {
+          "x": 38,
+          "y": 71
+         },
+         {
+          "x": 52,
+          "y": 66.25
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Eğriyi düzenle",
+     "expect": {
+      "entities": {
+       "4": {
+        "kind": "nurbs",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Dere"
+        },
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": 0,
+          "y": 60
+         },
+         {
+          "x": 6.70113666498568,
+          "y": 76.88892258488961
+         },
+         {
+          "x": 27.609981197645304,
+          "y": 46.62575349161004
+         },
+         {
+          "x": 41.246204371287774,
+          "y": 82.19259647191127
+         },
+         {
+          "x": 52,
+          "y": 66.25
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         0,
+         0.4902046807508455,
+         1,
+         1,
+         1,
+         1
+        ],
+        "fit": [
+         {
+          "x": 0,
+          "y": 60
+         },
+         {
+          "x": 12,
+          "y": 67.5
+         },
+         {
+          "x": 25,
+          "y": 63
+         },
+         {
+          "x": 38,
+          "y": 71
+         },
+         {
+          "x": 52,
+          "y": 66.25
+         }
+        ]
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geçiş noktasını taşı: eğri yeniden kurulur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:4",
+      "edit": {
+       "kind": "moveFit",
+       "index": 0,
+       "at": {
+        "x": -2,
+        "y": 58
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "4": {
+        "kind": "nurbs",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Dere"
+        },
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": -2,
+          "y": 58
+         },
+         {
+          "x": 4.721555325276123,
+          "y": 79.02811453007547
+         },
+         {
+          "x": 26.938357135319645,
+          "y": 45.46395817570734
+         },
+         {
+          "x": 41.252830704979566,
+          "y": 82.01790448488812
+         },
+         {
+          "x": 52.00000000000001,
+          "y": 66.25000000000001
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         0,
+         0.5134424571554046,
+         1,
+         1,
+         1,
+         1
+        ],
+        "fit": [
+         {
+          "x": -2,
+          "y": 58
+         },
+         {
+          "x": 12,
+          "y": 67.5
+         },
+         {
+          "x": 25,
+          "y": 63
+         },
+         {
+          "x": 38,
+          "y": 71
+         },
+         {
+          "x": 52,
+          "y": 66.25
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geçiş noktasını sil: eğri kalan dört noktadan geçer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:4",
+      "edit": {
+       "kind": "removeFit",
+       "index": 4
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "4": {
+        "kind": "nurbs",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Dere"
+        },
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": 0,
+          "y": 60
+         },
+         {
+          "x": 10.614751133405763,
+          "y": 81.78545018089096
+         },
+         {
+          "x": 27.438476575097113,
+          "y": 48.14887615224653
+         },
+         {
+          "x": 38,
+          "y": 71
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         0,
+         1,
+         1,
+         1,
+         1
+        ],
+        "fit": [
+         {
+          "x": 0,
+          "y": 60
+         },
+         {
+          "x": 12,
+          "y": 67.5
+         },
+         {
+          "x": 25,
+          "y": 63
+         },
+         {
+          "x": 38,
+          "y": 71
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Uç teğetleri: eğri doğrultularla başlar ve biter; teğetler saklanır, taşımada kalır, kaldırılınca gider",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:4",
+      "edit": {
+       "kind": "tangents",
+       "start": {
+        "x": 0,
+        "y": 1
+       },
+       "end": {
+        "x": 1,
+        "y": -1
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "4": {
+        "kind": "nurbs",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Dere"
+        },
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": 0,
+          "y": 60.000000000000014
+         },
+         {
+          "x": 0,
+          "y": 64.67319554315195
+         },
+         {
+          "x": 13.242170109341531,
+          "y": 71.42032489384376
+         },
+         {
+          "x": 25.71563138462275,
+          "y": 57.90122918357286
+         },
+         {
+          "x": 36.97074268775857,
+          "y": 75.28790540406447
+         },
+         {
+          "x": 48.47766098894262,
+          "y": 69.77233901105738
+         },
+         {
+          "x": 52,
+          "y": 66.25
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         0,
+         0.24190058355537958,
+         0.4902046807508455,
+         0.7421488261783041,
+         1,
+         1,
+         1,
+         1
+        ],
+        "fit": [
+         {
+          "x": 0,
+          "y": 60
+         },
+         {
+          "x": 12,
+          "y": 67.5
+         },
+         {
+          "x": 25,
+          "y": 63
+         },
+         {
+          "x": 38,
+          "y": 71
+         },
+         {
+          "x": 52,
+          "y": 66.25
+         }
+        ],
+        "tangents": [
+         {
+          "x": 0,
+          "y": 1
+         },
+         {
+          "x": 1,
+          "y": -1
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:4",
+      "edit": {
+       "kind": "moveFit",
+       "index": 2,
+       "at": {
+        "x": 25,
+        "y": 61
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "4": {
+        "kind": "nurbs",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Dere"
+        },
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": 0,
+          "y": 60
+         },
+         {
+          "x": 0,
+          "y": 64.75959836110205
+         },
+         {
+          "x": 13.971836862850502,
+          "y": 72.20581202086103
+         },
+         {
+          "x": 25.791974479909832,
+          "y": 54.46074710014201
+         },
+         {
+          "x": 36.22063532074967,
+          "y": 75.91892396747296
+         },
+         {
+          "x": 48.38833910757797,
+          "y": 69.86166089242204
+         },
+         {
+          "x": 52,
+          "y": 66.25
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         0,
+         0.23849469908215415,
+         0.48951781673516676,
+         0.7440645830609287,
+         1,
+         1,
+         1,
+         1
+        ],
+        "fit": [
+         {
+          "x": 0,
+          "y": 60
+         },
+         {
+          "x": 12,
+          "y": 67.5
+         },
+         {
+          "x": 25,
+          "y": 61
+         },
+         {
+          "x": 38,
+          "y": 71
+         },
+         {
+          "x": 52,
+          "y": 66.25
+         }
+        ],
+        "tangents": [
+         {
+          "x": 0,
+          "y": 1
+         },
+         {
+          "x": 1,
+          "y": -1
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:4",
+      "edit": {
+       "kind": "tangents"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "4": {
+        "kind": "nurbs",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Dere"
+        },
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": 0,
+          "y": 60
+         },
+         {
+          "x": 7.329906973220897,
+          "y": 78.89980357010501
+         },
+         {
+          "x": 27.86637205405891,
+          "y": 40.64208479653492
+         },
+         {
+          "x": 40.41154981683651,
+          "y": 84.11320760103214
+         },
+         {
+          "x": 52,
+          "y": 66.25
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         0,
+         0.48951781673516676,
+         1,
+         1,
+         1,
+         1
+        ],
+        "fit": [
+         {
+          "x": 0,
+          "y": 60
+         },
+         {
+          "x": 12,
+          "y": 67.5
+         },
+         {
+          "x": 25,
+          "y": 61
+         },
+         {
+          "x": 38,
+          "y": 71
+         },
+         {
+          "x": 52,
+          "y": 66.25
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yalnız başlangıç teğeti: bir denetim noktası eklenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:4",
+      "edit": {
+       "kind": "tangents",
+       "start": {
+        "x": 1,
+        "y": 2
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "4": {
+        "kind": "nurbs",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Dere"
+        },
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": 2.8646783736900683e-16,
+          "y": 60.00000000000002
+         },
+         {
+          "x": 2.089916581327356,
+          "y": 64.17983316265473
+         },
+         {
+          "x": 12.323655449800084,
+          "y": 71.49592722325922
+         },
+         {
+          "x": 30.495992722311527,
+          "y": 53.82082241359529
+         },
+         {
+          "x": 41.458105476531806,
+          "y": 82.91600567749332
+         },
+         {
+          "x": 52,
+          "y": 66.25
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         0,
+         0.24190058355537958,
+         0.4902046807508455,
+         1,
+         1,
+         1,
+         1
+        ],
+        "fit": [
+         {
+          "x": 0,
+          "y": 60
+         },
+         {
+          "x": 12,
+          "y": 67.5
+         },
+         {
+          "x": 25,
+          "y": 63
+         },
+         {
+          "x": 38,
+          "y": 71
+         },
+         {
+          "x": 52,
+          "y": 66.25
+         }
+        ],
+        "tangents": [
+         {
+          "x": 1,
+          "y": 2
+         },
+         null
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geçiş noktalı eğri kapanır (teğetler gider) ve yeniden açılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:4",
+      "edit": {
+       "kind": "tangents",
+       "end": {
+        "x": 1,
+        "y": 0
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "4": {
+        "kind": "nurbs",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Dere"
+        },
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": 0,
+          "y": 60
+         },
+         {
+          "x": 6.638584573507018,
+          "y": 77.99056549052555
+         },
+         {
+          "x": 22.347891657970415,
+          "y": 52.15230852845031
+         },
+         {
+          "x": 37.517859559393905,
+          "y": 76.75933219716347
+         },
+         {
+          "x": 47.01866039928681,
+          "y": 66.25
+         },
+         {
+          "x": 52,
+          "y": 66.25
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         0,
+         0.4902046807508455,
+         0.7421488261783041,
+         1,
+         1,
+         1,
+         1
+        ],
+        "fit": [
+         {
+          "x": 0,
+          "y": 60
+         },
+         {
+          "x": 12,
+          "y": 67.5
+         },
+         {
+          "x": 25,
+          "y": 63
+         },
+         {
+          "x": 38,
+          "y": 71
+         },
+         {
+          "x": 52,
+          "y": 66.25
+         }
+        ],
+        "tangents": [
+         null,
+         {
+          "x": 1,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:4",
+      "edit": {
+       "kind": "close"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "4": {
+        "kind": "nurbs",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Dere"
+        },
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": 75.40119963813709,
+          "y": 57.91757148161754
+         },
+         {
+          "x": -20.56552389705043,
+          "y": 46.37563695244069
+         },
+         {
+          "x": 12.55853495793784,
+          "y": 72.07051681937911
+         },
+         {
+          "x": 26.032192042322908,
+          "y": 57.62976746533489
+         },
+         {
+          "x": 35.930142519238736,
+          "y": 75.6641488449294
+         },
+         {
+          "x": 75.40119963813709,
+          "y": 57.91757148161754
+         },
+         {
+          "x": -20.56552389705043,
+          "y": 46.37563695244069
+         },
+         {
+          "x": 12.55853495793784,
+          "y": 72.07051681937911
+         }
+        ],
+        "knots": [
+         -0.7470522282851748,
+         -0.6087008785942969,
+         -0.47470443725344436,
+         0,
+         0.12826013778750475,
+         0.2529477717148252,
+         0.3912991214057031,
+         0.5252955627465556,
+         1,
+         1.1282601377875048,
+         1.2529477717148252,
+         1.391299121405703
+        ],
+        "closed": true,
+        "periodic": true,
+        "fit": [
+         {
+          "x": 0,
+          "y": 60
+         },
+         {
+          "x": 12,
+          "y": 67.5
+         },
+         {
+          "x": 25,
+          "y": 63
+         },
+         {
+          "x": 38,
+          "y": 71
+         },
+         {
+          "x": 52,
+          "y": 66.25
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:4",
+      "edit": {
+       "kind": "open"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "4": {
+        "kind": "nurbs",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Dere"
+        },
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": 0,
+          "y": 60
+         },
+         {
+          "x": 6.70113666498568,
+          "y": 76.88892258488961
+         },
+         {
+          "x": 27.609981197645304,
+          "y": 46.62575349161004
+         },
+         {
+          "x": 41.246204371287774,
+          "y": 82.19259647191127
+         },
+         {
+          "x": 52,
+          "y": 66.25
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         0,
+         0.4902046807508455,
+         1,
+         1,
+         1,
+         1
+        ],
+        "fit": [
+         {
+          "x": 0,
+          "y": 60
+         },
+         {
+          "x": 12,
+          "y": 67.5
+         },
+         {
+          "x": 25,
+          "y": 63
+         },
+         {
+          "x": 38,
+          "y": 71
+         },
+         {
+          "x": 52,
+          "y": 66.25
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapalı geçiş noktalı eğri açılır: aynı noktalardan geçen açık eğri",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:7",
+      "edit": {
+       "kind": "open"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:7"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "7": {
+        "kind": "nurbs",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": 60,
+          "y": 10
+         },
+         {
+          "x": 70.2083872317628,
+          "y": -6.196507893913663
+         },
+         {
+          "x": 107.6216995104267,
+          "y": 30.22617263896426
+         },
+         {
+          "x": 58.73502418958955,
+          "y": 33.26685751954741
+         },
+         {
+          "x": 56,
+          "y": 22
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         0,
+         0.5222770101281885,
+         1,
+         1,
+         1,
+         1
+        ],
+        "fit": [
+         {
+          "x": 60,
+          "y": 10
+         },
+         {
+          "x": 80,
+          "y": 8
+         },
+         {
+          "x": 86,
+          "y": 22
+         },
+         {
+          "x": 70,
+          "y": 30
+         },
+         {
+          "x": 56,
+          "y": 22
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapalı eğriye geçiş noktası: kapalı kalır, yeni noktadan da geçer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:7",
+      "edit": {
+       "kind": "addFit",
+       "index": 5,
+       "at": {
+        "x": 55,
+        "y": 12
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:7"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "7": {
+        "kind": "nurbs",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": 52.40015495479783,
+          "y": 11.619756293569305
+         },
+         {
+          "x": 65.38546519715992,
+          "y": 9.061744568809317
+         },
+         {
+          "x": 79.96430878784909,
+          "y": 1.8015346392517704
+         },
+         {
+          "x": 91.07334568265519,
+          "y": 25.201347152516686
+         },
+         {
+          "x": 69.58544012549238,
+          "y": 32.56031066640869
+         },
+         {
+          "x": 55.90518405926949,
+          "y": 25.91914617206644
+         },
+         {
+          "x": 52.40015495479783,
+          "y": 11.619756293569305
+         },
+         {
+          "x": 65.38546519715992,
+          "y": 9.061744568809317
+         },
+         {
+          "x": 79.96430878784909,
+          "y": 1.8015346392517704
+         }
+        ],
+        "knots": [
+         -0.37225501675649564,
+         -0.1820612193320732,
+         -0.06351973457071747,
+         0,
+         0.23708296952271138,
+         0.4167439097392071,
+         0.6277449832435044,
+         0.8179387806679268,
+         0.9364802654292825,
+         1,
+         1.2370829695227115,
+         1.4167439097392072,
+         1.6277449832435043
+        ],
+        "closed": true,
+        "periodic": true,
+        "fit": [
+         {
+          "x": 60,
+          "y": 10
+         },
+         {
+          "x": 80,
+          "y": 8
+         },
+         {
+          "x": 86,
+          "y": 22
+         },
+         {
+          "x": 70,
+          "y": 30
+         },
+         {
+          "x": 56,
+          "y": 22
+         },
+         {
+          "x": 55,
+          "y": 12
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Denetim noktasını taşı: düğümler kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:5",
+      "edit": {
+       "kind": "moveControl",
+       "index": 2,
+       "at": {
+        "x": 16,
+        "y": 34
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:5"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "5": {
+        "kind": "nurbs",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": 0,
+          "y": 40
+         },
+         {
+          "x": 8,
+          "y": 46
+         },
+         {
+          "x": 16,
+          "y": 34
+         },
+         {
+          "x": 24,
+          "y": 47
+         },
+         {
+          "x": 32,
+          "y": 41
+         },
+         {
+          "x": 40,
+          "y": 44
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         0,
+         1,
+         2,
+         3,
+         3,
+         3,
+         3
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapalı eğrinin denetim noktası: sona sarılan kopyası da taşınır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:6",
+      "edit": {
+       "kind": "moveControl",
+       "index": 0,
+       "at": {
+        "x": 58,
+        "y": 38
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:6"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "6": {
+        "kind": "nurbs",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "degree": 2,
+        "ctrl": [
+         {
+          "x": 58,
+          "y": 38
+         },
+         {
+          "x": 70,
+          "y": 40
+         },
+         {
+          "x": 70,
+          "y": 50
+         },
+         {
+          "x": 60,
+          "y": 50
+         },
+         {
+          "x": 58,
+          "y": 38
+         },
+         {
+          "x": 70,
+          "y": 40
+         }
+        ],
+        "knots": [
+         0,
+         1,
+         2,
+         3,
+         4,
+         5,
+         6,
+         7,
+         8
+        ],
+        "weights": [
+         1,
+         2,
+         1,
+         0.5,
+         1,
+         2
+        ],
+        "closed": true,
+        "periodic": true
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ağırlık: kapalı eğride kopyası da değişir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:6",
+      "edit": {
+       "kind": "weight",
+       "index": 1,
+       "weight": 3
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:6"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "6": {
+        "kind": "nurbs",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "degree": 2,
+        "ctrl": [
+         {
+          "x": 60,
+          "y": 40
+         },
+         {
+          "x": 70,
+          "y": 40
+         },
+         {
+          "x": 70,
+          "y": 50
+         },
+         {
+          "x": 60,
+          "y": 50
+         },
+         {
+          "x": 60,
+          "y": 40
+         },
+         {
+          "x": 70,
+          "y": 40
+         }
+        ],
+        "knots": [
+         0,
+         1,
+         2,
+         3,
+         4,
+         5,
+         6,
+         7,
+         8
+        ],
+        "closed": true,
+        "periodic": true,
+        "weights": [
+         1,
+         3,
+         1,
+         0.5,
+         1,
+         3
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ağırlık: hepsi 1 olunca ağırlıklar kalkar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:5",
+      "edit": {
+       "kind": "weight",
+       "index": 3,
+       "weight": 2
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:5"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "5": {
+        "kind": "nurbs",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": 0,
+          "y": 40
+         },
+         {
+          "x": 8,
+          "y": 46
+         },
+         {
+          "x": 16,
+          "y": 38
+         },
+         {
+          "x": 24,
+          "y": 47
+         },
+         {
+          "x": 32,
+          "y": 41
+         },
+         {
+          "x": 40,
+          "y": 44
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         0,
+         1,
+         2,
+         3,
+         3,
+         3,
+         3
+        ],
+        "weights": [
+         1,
+         1,
+         1,
+         2,
+         1,
+         1
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:5",
+      "edit": {
+       "kind": "weight",
+       "index": 3,
+       "weight": 1
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:5"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "5": {
+        "kind": "nurbs",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": 0,
+          "y": 40
+         },
+         {
+          "x": 8,
+          "y": 46
+         },
+         {
+          "x": 16,
+          "y": 38
+         },
+         {
+          "x": 24,
+          "y": 47
+         },
+         {
+          "x": 32,
+          "y": 41
+         },
+         {
+          "x": 40,
+          "y": 44
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         0,
+         1,
+         2,
+         3,
+         3,
+         3,
+         3
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geçiş noktalı eğride denetim noktası taşınınca geçiş noktaları ve teğetler gider",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:4",
+      "edit": {
+       "kind": "moveControl",
+       "index": 1,
+       "at": {
+        "x": 10,
+        "y": 70
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "4": {
+        "kind": "nurbs",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Dere"
+        },
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": 0,
+          "y": 60
+         },
+         {
+          "x": 10,
+          "y": 70
+         },
+         {
+          "x": 27.609981197645304,
+          "y": 46.62575349161004
+         },
+         {
+          "x": 41.246204371287774,
+          "y": 82.19259647191127
+         },
+         {
+          "x": 52,
+          "y": 66.25
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         0,
+         0.4902046807508455,
+         1,
+         1,
+         1,
+         1
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Denetim noktasını sil: kalanlarla uçlara sıkıştırılmış düğümler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:5",
+      "edit": {
+       "kind": "removeControl",
+       "index": 1
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:5"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "5": {
+        "kind": "nurbs",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": 0,
+          "y": 40
+         },
+         {
+          "x": 16,
+          "y": 38
+         },
+         {
+          "x": 24,
+          "y": 47
+         },
+         {
+          "x": 32,
+          "y": 41
+         },
+         {
+          "x": 40,
+          "y": 44
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         0,
+         1,
+         2,
+         2,
+         2,
+         2
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapalı ağırlıklı eğriden denetim noktası silinir: üç nokta kalır, sarılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:6",
+      "edit": {
+       "kind": "removeControl",
+       "index": 3
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:6"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "6": {
+        "kind": "nurbs",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "degree": 2,
+        "ctrl": [
+         {
+          "x": 60,
+          "y": 40
+         },
+         {
+          "x": 70,
+          "y": 40
+         },
+         {
+          "x": 70,
+          "y": 50
+         },
+         {
+          "x": 60,
+          "y": 40
+         },
+         {
+          "x": 70,
+          "y": 40
+         }
+        ],
+        "knots": [
+         0,
+         1,
+         2,
+         3,
+         4,
+         5,
+         6,
+         7
+        ],
+        "weights": [
+         1,
+         2,
+         1,
+         1,
+         2
+        ],
+        "closed": true,
+        "periodic": true
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Düğüm ekle: eğri değişmez, bir denetim noktası eklenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:5",
+      "edit": {
+       "kind": "insertKnot",
+       "at": 1.5
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:5"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "5": {
+        "kind": "nurbs",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": 0,
+          "y": 40
+         },
+         {
+          "x": 8,
+          "y": 46
+         },
+         {
+          "x": 14,
+          "y": 40
+         },
+         {
+          "x": 20,
+          "y": 42.5
+         },
+         {
+          "x": 26,
+          "y": 45.5
+         },
+         {
+          "x": 32,
+          "y": 41
+         },
+         {
+          "x": 40,
+          "y": 44
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         0,
+         1,
+         1.5,
+         2,
+         3,
+         3,
+         3,
+         3
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Eğriyi düzenle",
+     "expect": {
+      "entities": {
+       "5": {
+        "kind": "nurbs",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": 0,
+          "y": 40
+         },
+         {
+          "x": 8,
+          "y": 46
+         },
+         {
+          "x": 16,
+          "y": 38
+         },
+         {
+          "x": 24,
+          "y": 47
+         },
+         {
+          "x": 32,
+          "y": 41
+         },
+         {
+          "x": 40,
+          "y": 44
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         0,
+         1,
+         2,
+         3,
+         3,
+         3,
+         3
+        ]
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ağırlıklı eğriye düğüm: çeyrek daire aynı kalır, ağırlıklar homojen koordinatlarla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:11",
+      "edit": {
+       "kind": "insertKnot",
+       "at": 0.5
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:11"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "11": {
+        "kind": "nurbs",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "degree": 2,
+        "ctrl": [
+         {
+          "x": 10,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 4.142135623730951
+         },
+         {
+          "x": 4.142135623730951,
+          "y": 10
+         },
+         {
+          "x": 0,
+          "y": 10
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         0.5,
+         1,
+         1,
+         1
+        ],
+        "weights": [
+         1,
+         0.8535533905932737,
+         0.8535533905932737,
+         1
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Var olan bir düğüm bir kez daha",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:5",
+      "edit": {
+       "kind": "insertKnot",
+       "at": 1
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:5"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "5": {
+        "kind": "nurbs",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": 0,
+          "y": 40
+         },
+         {
+          "x": 8,
+          "y": 46
+         },
+         {
+          "x": 12,
+          "y": 42
+         },
+         {
+          "x": 18.666666666666668,
+          "y": 41
+         },
+         {
+          "x": 24,
+          "y": 47
+         },
+         {
+          "x": 32,
+          "y": 41
+         },
+         {
+          "x": 40,
+          "y": 44
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         0,
+         1,
+         1,
+         2,
+         3,
+         3,
+         3,
+         3
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Denetim noktalı açık eğri kapanır: ilk derece kadar nokta sarılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:5",
+      "edit": {
+       "kind": "close"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:5"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "5": {
+        "kind": "nurbs",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "degree": 3,
+        "ctrl": [
+         {
+          "x": 0,
+          "y": 40
+         },
+         {
+          "x": 8,
+          "y": 46
+         },
+         {
+          "x": 16,
+          "y": 38
+         },
+         {
+          "x": 24,
+          "y": 47
+         },
+         {
+          "x": 32,
+          "y": 41
+         },
+         {
+          "x": 40,
+          "y": 44
+         },
+         {
+          "x": 0,
+          "y": 40
+         },
+         {
+          "x": 8,
+          "y": 46
+         },
+         {
+          "x": 16,
+          "y": 38
+         }
+        ],
+        "knots": [
+         0,
+         1,
+         2,
+         3,
+         4,
+         5,
+         6,
+         7,
+         8,
+         9,
+         10,
+         11,
+         12
+        ],
+        "closed": true,
+        "periodic": true
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapalı denetim noktalı eğri açılır: uçlara sıkıştırılmış, ağırlıklar kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:6",
+      "edit": {
+       "kind": "open"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:6"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "6": {
+        "kind": "nurbs",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "degree": 2,
+        "ctrl": [
+         {
+          "x": 60,
+          "y": 40
+         },
+         {
+          "x": 70,
+          "y": 40
+         },
+         {
+          "x": 70,
+          "y": 50
+         },
+         {
+          "x": 60,
+          "y": 50
+         }
+        ],
+        "knots": [
+         0,
+         0,
+         0,
+         1,
+         2,
+         2,
+         2
+        ],
+        "weights": [
+         1,
+         2,
+         1,
+         0.5
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çoklu çizgiye çevir: her kiriş eğriye 1 cm'den yakın",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:5",
+      "edit": {
+       "kind": "toPolyline",
+       "tolerance": 0.01
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:5"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "5": {
+        "kind": "polyline",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0,
+          "y": 40
+         },
+         {
+          "x": 0.7383829752604167,
+          "y": 40.53361511230469
+         },
+         {
+          "x": 1.4539388020833335,
+          "y": 41.0111083984375
+         },
+         {
+          "x": 2.14727783203125,
+          "y": 41.43495178222656
+         },
+         {
+          "x": 2.819010416666667,
+          "y": 41.8076171875
+         },
+         {
+          "x": 3.469746907552083,
+          "y": 42.13157653808594
+         },
+         {
+          "x": 4.10009765625,
+          "y": 42.4093017578125
+         },
+         {
+          "x": 4.710673014322917,
+          "y": 42.64326477050781
+         },
+         {
+          "x": 5.302083333333333,
+          "y": 42.8359375
+         },
+         {
+          "x": 5.87493896484375,
+          "y": 42.98979187011719
+         },
+         {
+          "x": 6.429850260416667,
+          "y": 43.1072998046875
+         },
+         {
+          "x": 6.967427571614583,
+          "y": 43.19093322753906
+         },
+         {
+          "x": 7.48828125,
+          "y": 43.2431640625
+         },
+         {
+          "x": 7.993021647135417,
+          "y": 43.26646423339844
+         },
+         {
+          "x": 8.482259114583332,
+          "y": 43.2633056640625
+         },
+         {
+          "x": 8.95660400390625,
+          "y": 43.23616027832031
+         },
+         {
+          "x": 9.416666666666668,
+          "y": 43.1875
+         },
+         {
+          "x": 10.29638671875,
+          "y": 43.0355224609375
+         },
+         {
+          "x": 11.126302083333332,
+          "y": 42.8271484375
+         },
+         {
+          "x": 11.911295572916668,
+          "y": 42.5821533203125
+         },
+         {
+          "x": 12.65625,
+          "y": 42.3203125
+         },
+         {
+          "x": 14.045572916666666,
+          "y": 41.8251953125
+         },
+         {
+          "x": 14.69970703125,
+          "y": 41.6314697265625
+         },
+         {
+          "x": 15.333333333333334,
+          "y": 41.5
+         },
+         {
+          "x": 15.950846354166668,
+          "y": 41.4456787109375
+         },
+         {
+          "x": 16.5546875,
+          "y": 41.4638671875
+         },
+         {
+          "x": 17.146809895833336,
+          "y": 41.5450439453125
+         },
+         {
+          "x": 17.729166666666664,
+          "y": 41.6796875
+         },
+         {
+          "x": 18.3037109375,
+          "y": 41.8582763671875
+         },
+         {
+          "x": 18.872395833333336,
+          "y": 42.0712890625
+         },
+         {
+          "x": 20,
+          "y": 42.5625
+         },
+         {
+          "x": 21.127604166666664,
+          "y": 43.0771484375
+         },
+         {
+          "x": 21.6962890625,
+          "y": 43.3194580078125
+         },
+         {
+          "x": 22.270833333333336,
+          "y": 43.5390625
+         },
+         {
+          "x": 22.853190104166664,
+          "y": 43.7264404296875
+         },
+         {
+          "x": 23.4453125,
+          "y": 43.8720703125
+         },
+         {
+          "x": 24.049153645833336,
+          "y": 43.9664306640625
+         },
+         {
+          "x": 24.666666666666664,
+          "y": 44
+         },
+         {
+          "x": 25.30029296875,
+          "y": 43.967041015625
+         },
+         {
+          "x": 25.954427083333336,
+          "y": 43.876953125
+         },
+         {
+          "x": 26.633951822916664,
+          "y": 43.742919921875
+         },
+         {
+          "x": 27.34375,
+          "y": 43.578125
+         },
+         {
+          "x": 28.873697916666664,
+          "y": 43.208984375
+         },
+         {
+          "x": 29.70361328125,
+          "y": 43.031005859375
+         },
+         {
+          "x": 30.583333333333332,
+          "y": 42.875
+         },
+         {
+          "x": 31.517740885416664,
+          "y": 42.754150390625
+         },
+         {
+          "x": 32.51171875,
+          "y": 42.681640625
+         },
+         {
+          "x": 33.57014973958333,
+          "y": 42.670654296875
+         },
+         {
+          "x": 34.69791666666667,
+          "y": 42.734375
+         },
+         {
+          "x": 35.28932698567708,
+          "y": 42.798370361328125
+         },
+         {
+          "x": 35.89990234375,
+          "y": 42.885986328125
+         },
+         {
+          "x": 36.53025309244792,
+          "y": 42.998870849609375
+         },
+         {
+          "x": 37.18098958333333,
+          "y": 43.138671875
+         },
+         {
+          "x": 37.85272216796875,
+          "y": 43.307037353515625
+         },
+         {
+          "x": 38.54606119791667,
+          "y": 43.505615234375
+         },
+         {
+          "x": 39.26161702473958,
+          "y": 43.736053466796875
+         },
+         {
+          "x": 40,
+          "y": 44
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapalı eğri kapalı çoklu çizgi olur; son nokta (ilkiyle aynı) yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:6",
+      "edit": {
+       "kind": "toPolyline",
+       "tolerance": 0.05
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:6"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "6": {
+        "kind": "polyline",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 66.66666666666667,
+          "y": 40
+         },
+         {
+          "x": 67.62135922330097,
+          "y": 40.04854368932039
+         },
+         {
+          "x": 68.33333333333333,
+          "y": 40.18518518518518
+         },
+         {
+          "x": 68.87387387387388,
+          "y": 40.4054054054054
+         },
+         {
+          "x": 69.28571428571429,
+          "y": 40.714285714285715
+         },
+         {
+          "x": 69.5945945945946,
+          "y": 41.126126126126124
+         },
+         {
+          "x": 69.81481481481481,
+          "y": 41.666666666666664
+         },
+         {
+          "x": 69.95145631067962,
+          "y": 42.37864077669903
+         },
+         {
+          "x": 70,
+          "y": 43.333333333333336
+         },
+         {
+          "x": 69.87654320987654,
+          "y": 45.55555555555556
+         },
+         {
+          "x": 69.6969696969697,
+          "y": 46.63299663299664
+         },
+         {
+          "x": 69.41176470588235,
+          "y": 47.64705882352941
+         },
+         {
+          "x": 68.99598393574297,
+          "y": 48.554216867469876
+         },
+         {
+          "x": 68.42105263157895,
+          "y": 49.29824561403509
+         },
+         {
+          "x": 67.6555023923445,
+          "y": 49.80861244019139
+         },
+         {
+          "x": 67.19101123595506,
+          "y": 49.95006242197253
+         },
+         {
+          "x": 66.66666666666667,
+          "y": 50
+         },
+         {
+          "x": 65.50561797752809,
+          "y": 49.8876404494382
+         },
+         {
+          "x": 64.28571428571429,
+          "y": 49.523809523809526
+         },
+         {
+          "x": 63.08641975308642,
+          "y": 48.888888888888886
+         },
+         {
+          "x": 62,
+          "y": 48
+         },
+         {
+          "x": 61.111111111111114,
+          "y": 46.91358024691358
+         },
+         {
+          "x": 60.476190476190474,
+          "y": 45.714285714285715
+         },
+         {
+          "x": 60.1123595505618,
+          "y": 44.49438202247191
+         },
+         {
+          "x": 60,
+          "y": 43.333333333333336
+         },
+         {
+          "x": 60.04993757802747,
+          "y": 42.80898876404494
+         },
+         {
+          "x": 60.19138755980861,
+          "y": 42.344497607655505
+         },
+         {
+          "x": 60.70175438596491,
+          "y": 41.578947368421055
+         },
+         {
+          "x": 61.44578313253012,
+          "y": 41.00401606425703
+         },
+         {
+          "x": 62.35294117647059,
+          "y": 40.588235294117645
+         },
+         {
+          "x": 63.36700336700337,
+          "y": 40.303030303030305
+         },
+         {
+          "x": 64.44444444444444,
+          "y": 40.123456790123456
+         }
+        ],
+        "closed": true
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan düzenlenen eğriyi gösterir, doğrulama yazmanın cevabını verir; hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:4",
+      "edit": {
+       "kind": "addFit",
+       "index": 2,
+       "at": {
+        "x": 18,
+        "y": 70
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "nurbs",
+         "id": 4,
+         "layerId": "cizim",
+         "attrs": {
+          "Ad": "Dere"
+         },
+         "degree": 3,
+         "ctrl": [
+          {
+           "x": 0,
+           "y": 60
+          },
+          {
+           "x": 4.052332480361839,
+           "y": 57.37611645561926
+          },
+          {
+           "x": 17.591066730300614,
+           "y": 79.54051709885634
+          },
+          {
+           "x": 29.049721899920574,
+           "y": 48.80182247424763
+          },
+          {
+           "x": 43.85922810765399,
+           "y": 88.49540334705493
+          },
+          {
+           "x": 52,
+           "y": 66.25
+          }
+         ],
+         "knots": [
+          0,
+          0,
+          0,
+          0,
+          0.3594821301845276,
+          0.5336544665501176,
+          1,
+          1,
+          1,
+          1
+         ],
+         "fit": [
+          {
+           "x": 0,
+           "y": 60
+          },
+          {
+           "x": 12,
+           "y": 67.5
+          },
+          {
+           "x": 18,
+           "y": 70
+          },
+          {
+           "x": 25,
+           "y": 63
+          },
+          {
+           "x": 38,
+           "y": 71
+          },
+          {
+           "x": 52,
+           "y": 66.25
+          }
+         ]
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "validate",
+     "input": {
+      "uid": "$uidOf:5",
+      "edit": {
+       "kind": "insertKnot",
+       "at": 2.5
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "validate",
+     "input": {
+      "uid": "$uidOf:5",
+      "edit": {
+       "kind": "insertKnot",
+       "at": 3
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_knot",
+       "message": "Düğüm eğrinin aralığının içinde (0 ile 3 arasında) ve orada 3 kereden az olmalı.",
+       "path": "edit.at"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çoklu çizginin retleri: çok parçalı, zaten kapalı ve açık, iki köşe kapanmaz, düz olan düzleşmez, düğüm eklenmez, derece 0",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:3",
+      "edit": {
+       "kind": "close"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "multi_part",
+       "message": "Çok parçalı çoklu çizgi düzenlenmez; önce Parçalara ayır.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:2",
+      "edit": {
+       "kind": "close"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "edit_not_applicable",
+       "message": "Çoklu çizgi zaten kapalı.",
+       "path": "edit"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "edit": {
+       "kind": "open"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "edit_not_applicable",
+       "message": "Çoklu çizgi zaten açık.",
+       "path": "edit"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:10",
+      "edit": {
+       "kind": "close"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "too_few_points",
+       "message": "Kapanan çoklu çizginin en az üç köşesi olmalı.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:10",
+      "edit": {
+       "kind": "decurve"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "edit_not_applicable",
+       "message": "Çoklu çizginin yay kenarı yok; zaten düz.",
+       "path": "edit"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "edit": {
+       "kind": "insertKnot",
+       "at": 0.5
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "edit_not_applicable",
+       "message": "Çoklu çizgide Kapat, Aç, Düzleştir ve Eğriye çevir yapılır; nokta ve düğüm düzenlemeleri NURBS eğrisinindir.",
+       "path": "edit"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "edit": {
+       "kind": "toSpline",
+       "degree": 0,
+       "through": true
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_nurbs",
+       "message": "Derece 0; 1 ile 11 arasında olmalı.",
+       "path": "edit.degree"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eğrinin retleri: geçiş noktası yok, numara yok, kapalı eğrinin teğeti, düğüm aralık dışında ve kapalıda, çok az denetim noktası",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:5",
+      "edit": {
+       "kind": "addFit",
+       "index": 0,
+       "at": {
+        "x": 1,
+        "y": 1
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_fit_points",
+       "message": "Eğrinin geçiş noktası yok: denetim noktalarıyla çizilmiş ya da denetim noktası düzenlenmiş. Denetim noktası düzenlemelerini kullanın.",
+       "path": "edit"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:4",
+      "edit": {
+       "kind": "moveFit",
+       "index": 5,
+       "at": {
+        "x": 1,
+        "y": 1
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_index",
+       "message": "Eğrinin 5 geçiş noktası var; 5 numaralısı yok. 0 ile 4 arasında bir numara verin.",
+       "path": "edit.index"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:4",
+      "edit": {
+       "kind": "addFit",
+       "index": 6,
+       "at": {
+        "x": 1,
+        "y": 1
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_index",
+       "message": "Yeni geçiş noktası 0 ile 5 arasındaki bir yere eklenir; 6 numaralı yer yok.",
+       "path": "edit.index"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:6",
+      "edit": {
+       "kind": "moveControl",
+       "index": 4,
+       "at": {
+        "x": 1,
+        "y": 1
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_index",
+       "message": "Eğrinin 4 denetim noktası var; 4 numaralısı yok. 0 ile 3 arasında bir numara verin.",
+       "path": "edit.index"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:7",
+      "edit": {
+       "kind": "tangents",
+       "start": {
+        "x": 1,
+        "y": 0
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "edit_not_applicable",
+       "message": "Kapalı eğrinin uç teğeti olmaz; önce Aç.",
+       "path": "edit"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:5",
+      "edit": {
+       "kind": "insertKnot",
+       "at": 0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_knot",
+       "message": "Düğüm eğrinin aralığının içinde (0 ile 3 arasında) ve orada 3 kereden az olmalı.",
+       "path": "edit.at"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:6",
+      "edit": {
+       "kind": "insertKnot",
+       "at": 3
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_knot",
+       "message": "Kapalı eğriye düğüm eklenmez; önce Aç.",
+       "path": "edit.at"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:11",
+      "edit": {
+       "kind": "removeControl",
+       "index": 0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "too_few_points",
+       "message": "2. dereceden açık eğrinin en az 3 denetim noktası olmalı; silinirse 2 kalır.",
+       "path": "edit.index"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:7",
+      "edit": {
+       "kind": "close"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "edit_not_applicable",
+       "message": "Eğri zaten kapalı.",
+       "path": "edit"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:5",
+      "edit": {
+       "kind": "decurve"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "edit_not_applicable",
+       "message": "NURBS eğrisinde Düzleştir ve Eğriye çevir yapılmaz; onlar çoklu çizginin.",
+       "path": "edit"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yinelenen geçiş noktası ve doğrultusuz teğet",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:4",
+      "edit": {
+       "kind": "moveFit",
+       "index": 1,
+       "at": {
+        "x": 0,
+        "y": 60
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "coincident_points",
+       "message": "1. ve 2. nokta aynı yerde; eğri her noktadan bir kez geçer. Noktalardan birini taşıyın ya da çıkarın.",
+       "path": "edit.at"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:4",
+      "edit": {
+       "kind": "tangents",
+       "start": {
+        "x": 0,
+        "y": 0
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_nurbs",
+       "message": "Teğetin doğrultusu yok (sıfır uzunlukta); bir doğrultu verin ya da teğeti kaldırın.",
+       "path": "edit"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sayılar: NaN ya da sonsuz, sıfır ağırlık ve tolerans",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:5",
+      "edit": {
+       "kind": "moveControl",
+       "index": 0,
+       "at": {
+        "x": 1,
+        "y": 1
+       }
+      }
+     },
+     "nonFinite": {
+      "edit.at.y": "NaN"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Noktanın kuzey (X) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+       "path": "edit.at.y"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:5",
+      "edit": {
+       "kind": "weight",
+       "index": 0,
+       "weight": 2
+      }
+     },
+     "nonFinite": {
+      "edit.weight": "Infinity"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Ağırlık sonlu bir sayı değil (NaN ya da sonsuz). Ağırlığı sonlu bir sayıyla verin.",
+       "path": "edit.weight"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:5",
+      "edit": {
+       "kind": "weight",
+       "index": 0,
+       "weight": 0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_weight",
+       "message": "Ağırlık sıfırdan büyük olmalı. Başka bir ağırlık verin.",
+       "path": "edit.weight"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:5",
+      "edit": {
+       "kind": "insertKnot",
+       "at": 1
+      }
+     },
+     "nonFinite": {
+      "edit.at": "-Infinity"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Düğüm sonlu bir sayı değil (NaN ya da sonsuz). Düğümü sonlu bir sayıyla verin.",
+       "path": "edit.at"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:5",
+      "edit": {
+       "kind": "toPolyline",
+       "tolerance": 0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_tolerance",
+       "message": "Tolerans sıfırdan büyük olmalı. Başka bir tolerans verin.",
+       "path": "edit.tolerance"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:5",
+      "edit": {
+       "kind": "toPolyline",
+       "tolerance": 1
+      }
+     },
+     "nonFinite": {
+      "edit.tolerance": "NaN"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Tolerans sonlu bir sayı değil (NaN ya da sonsuz). Toleransı sonlu bir sayıyla verin.",
+       "path": "edit.tolerance"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Nesne: çizgi eğri değil, kilitli katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:8",
+      "edit": {
+       "kind": "close"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_curve",
+       "message": "Eğriyi düzenle çoklu çizgide ve NURBS eğrisinde çalışır. Bir çoklu çizgi ya da NURBS eğrisi verin.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:9",
+      "edit": {
+       "kind": "close"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kimlik UUID değil, nesne yok, sürüm sayı değil; retlerin sırası: kimlik, sayılar, sürüm, nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "on iki",
+      "edit": {
+       "kind": "close"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "path": "uid",
+       "message": "“on iki” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın."
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5a2-0000-7000-8000-00000000ffff",
+      "edit": {
+       "kind": "close"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "path": "uid",
+       "message": "“0192f5a2-0000-7000-8000-00000000ffff” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin."
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "edit": {
+       "kind": "close"
+      },
+      "expectedRevision": "on iki"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "path": "expectedRevision",
+       "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın."
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:5",
+      "edit": {
+       "kind": "weight",
+       "index": 9,
+       "weight": -1
+      },
+      "expectedRevision": "on iki"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_weight",
+       "path": "edit.weight",
+       "message": "Ağırlık sıfırdan büyük olmalı. Başka bir ağırlık verin."
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5a2-0000-7000-8000-00000000ffff",
+      "edit": {
+       "kind": "weight",
+       "index": 0,
+       "weight": 2
+      },
+      "expectedRevision": "on iki"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "path": "expectedRevision",
+       "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın."
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm geçmişte kaldıysa conflict, hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "captureRevision",
+     "as": "old"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:8"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 1,
+       "dy": 0
+      }
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "edit": {
+       "kind": "close"
+      },
+      "expectedRevision": "$old"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "path": "expectedRevision",
+       "revision": "$current",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın."
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -50,6 +50,8 @@ mod command_bar;
 mod coordinate_scenes;
 mod crs;
 #[cfg(test)]
+mod curve_edit_scenes;
+#[cfg(test)]
 mod curve_scenes;
 mod data_compare;
 #[cfg(test)]

@@ -761,6 +761,8 @@ pub struct Memory {
     /// (docs/adr/0259 §6), kept for the session as AutoCAD's SPLINE keeps them.
     pub nurbs_control: bool,
     pub nurbs_degree: u32,
+    /// Eğriyi düzenle's Çoklu çizgiye çevir tolerance, metres (docs/adr/0303), kept for the session.
+    pub curve_tolerance: f64,
     /// Blok ekle's block, scale, turn in degrees and mirror
     /// (`BlockInsertTool.block`, `.scale`, `.rotation`, `.mirror`; docs/adr/0144).
     pub block_insert: Option<kentos_contracts::BlockId>,
@@ -1083,6 +1085,7 @@ impl Default for Memory {
             trim_edge_mode: false,
             nurbs_control: false,
             nurbs_degree: 3,
+            curve_tolerance: 0.01,
             block_insert: None,
             block_scale: 1.0,
             block_rotation: 0.0,

@@ -272,6 +272,162 @@ fn through_open(q: &[Vec2], p: usize) -> OwnedNurbs {
     }
 }
 
+/// A curve through `pts` in order with its start and end tangent directions where given (docs/adr/0303 §3;
+/// Piegl and Tiller 9.2.2): an open curve only. Each given end adds a control point and an equation, the end's
+/// derivative its unit direction times the chord length of the whole; the knots are averaged over the
+/// parameters with each constrained end's repeated, and the degree lowered to one less than the control points.
+/// No tangent: [`through`].
+pub fn through_tangents(
+    pts: &[Vec2],
+    degree: usize,
+    start: Option<Vec2>,
+    end: Option<Vec2>,
+) -> Result<OwnedNurbs, BuildError> {
+    if start.is_none() && end.is_none() {
+        return through(pts, degree, false);
+    }
+    // The checks of an open curve through points first.
+    through(pts, degree, false)?;
+    let unit = |v: Vec2| {
+        let l = chord(Vec2::new(0.0, 0.0), v);
+        (l > 0.0 && l.is_finite()).then(|| Vec2::new(v.x / l, v.y / l))
+    };
+    let (s, e) = match (start.map(unit), end.map(unit)) {
+        (Some(None), _) | (_, Some(None)) => {
+            return Err(BuildError::Invalid(
+                "Teğetin doğrultusu yok (sıfır uzunlukta); bir doğrultu verin ya da teğeti kaldırın.".into(),
+            ));
+        }
+        (s, e) => (s.flatten(), e.flatten()),
+    };
+    Ok(through_open_tangents(pts, degree, s, e))
+}
+
+fn through_open_tangents(
+    q: &[Vec2],
+    degree: usize,
+    s: Option<Vec2>,
+    e: Option<Vec2>,
+) -> OwnedNurbs {
+    let n = q.len();
+    let d: Vec<f64> = (1..n).map(|k| chord(q[k - 1], q[k])).collect();
+    let mut total = 0.0;
+    for x in &d {
+        total += *x;
+    }
+    let mut t = vec![0.0; n];
+    for k in 1..n - 1 {
+        t[k] = t[k - 1] + d[k - 1] / total;
+    }
+    t[n - 1] = 1.0;
+    // The parameters with each constrained end's repeated: one per control point.
+    let mut ext = Vec::with_capacity(n + 2);
+    ext.push(t[0]);
+    if s.is_some() {
+        ext.push(t[0]);
+    }
+    ext.extend_from_slice(&t[1..n - 1]);
+    if e.is_some() {
+        ext.push(t[n - 1]);
+    }
+    ext.push(t[n - 1]);
+    let m = ext.len();
+    let p = fit_degree(degree, m);
+    let mut knots = vec![0.0; p + 1];
+    for j in 1..m - p {
+        let mut sum = 0.0;
+        for x in &ext[j..j + p] {
+            sum += *x;
+        }
+        knots.push(sum / p as f64);
+    }
+    knots.extend(std::iter::repeat_n(1.0, p + 1));
+    // The rows: the first point, the start's derivative, the inner points, the end's derivative, the last point.
+    let mut a = vec![0.0; m * m];
+    let mut bx = Vec::with_capacity(m);
+    let mut by = Vec::with_capacity(m);
+    let point_row = |a: &mut [f64], row: usize, k: usize| {
+        let span = find_span(m - 1, p, t[k], &knots);
+        let nb = basis(span, t[k], p, &knots);
+        for (r, v) in nb.iter().enumerate() {
+            a[row * m + span - p + r] = *v;
+        }
+    };
+    let mut row = 0;
+    point_row(&mut a, row, 0);
+    bx.push(q[0].x);
+    by.push(q[0].y);
+    row += 1;
+    if let Some(dir) = s {
+        let f = p as f64 / (knots[p + 1] - knots[1]);
+        a[row * m] = -f;
+        a[row * m + 1] = f;
+        bx.push(dir.x * total);
+        by.push(dir.y * total);
+        row += 1;
+    }
+    for k in 1..n - 1 {
+        point_row(&mut a, row, k);
+        bx.push(q[k].x);
+        by.push(q[k].y);
+        row += 1;
+    }
+    if let Some(dir) = e {
+        let f = p as f64 / (knots[m - 1 + p] - knots[m - 1]);
+        a[row * m + m - 2] = -f;
+        a[row * m + m - 1] = f;
+        bx.push(dir.x * total);
+        by.push(dir.y * total);
+        row += 1;
+    }
+    point_row(&mut a, row, n - 1);
+    bx.push(q[n - 1].x);
+    by.push(q[n - 1].y);
+    // Gaussian elimination with partial pivoting (the first largest).
+    for k in 0..m {
+        let mut best = k;
+        for i in k + 1..m {
+            if a[i * m + k].abs() > a[best * m + k].abs() {
+                best = i;
+            }
+        }
+        if best != k {
+            for j in 0..m {
+                a.swap(k * m + j, best * m + j);
+            }
+            bx.swap(k, best);
+            by.swap(k, best);
+        }
+        let piv = a[k * m + k];
+        for i in k + 1..m {
+            let f = a[i * m + k] / piv;
+            for j in k..m {
+                let v = a[k * m + j];
+                a[i * m + j] -= f * v;
+            }
+            bx[i] -= f * bx[k];
+            by[i] -= f * by[k];
+        }
+    }
+    let mut x = vec![0.0; m];
+    let mut y = vec![0.0; m];
+    for i in (0..m).rev() {
+        let (mut sx, mut sy) = (bx[i], by[i]);
+        for j in i + 1..m {
+            sx -= a[i * m + j] * x[j];
+            sy -= a[i * m + j] * y[j];
+        }
+        x[i] = sx / a[i * m + i];
+        y[i] = sy / a[i * m + i];
+    }
+    OwnedNurbs {
+        degree: p,
+        ctrl: (0..m).map(|i| Vec2::new(x[i], y[i])).collect(),
+        knots,
+        weights: None,
+    }
+}
+
 fn through_closed(q: &[Vec2], p: usize) -> OwnedNurbs {
     let n = q.len();
     let d: Vec<f64> = (0..n).map(|k| chord(q[k], q[(k + 1) % n])).collect();
@@ -361,6 +517,50 @@ fn through_closed(q: &[Vec2], p: usize) -> OwnedNurbs {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// docs/adr/0303 §3: the curve passes every point and leaves and arrives along the tangents given.
+    #[test]
+    fn a_curve_through_points_takes_its_end_tangents() {
+        let pts = [v(0.0, 0.0), v(10.0, 5.0), v(20.0, 0.0), v(30.0, 4.0)];
+        for (s, e) in [
+            (Some(v(0.0, 1.0)), None),
+            (None, Some(v(1.0, -1.0))),
+            (Some(v(1.0, 0.0)), Some(v(0.0, -2.0))),
+        ] {
+            let c = through_tangents(&pts, 3, s, e).expect("a curve");
+            assert_eq!(
+                c.ctrl.len(),
+                4 + usize::from(s.is_some()) + usize::from(e.is_some())
+            );
+            passes(&c, &pts);
+            let view = c.view();
+            let (u0, u1) = view.domain();
+            let dir = |d: Vec2| {
+                let l = (d.x * d.x + d.y * d.y).sqrt();
+                (d.x / l, d.y / l)
+            };
+            if let Some(want) = s {
+                let got = dir(view.derivs(u0, 1)[1]);
+                let w = dir(want);
+                assert!(
+                    (got.0 - w.0).abs() < 1e-9 && (got.1 - w.1).abs() < 1e-9,
+                    "{got:?}"
+                );
+            }
+            if let Some(want) = e {
+                let got = dir(view.derivs(u1, 1)[1]);
+                let w = dir(want);
+                assert!(
+                    (got.0 - w.0).abs() < 1e-9 && (got.1 - w.1).abs() < 1e-9,
+                    "{got:?}"
+                );
+            }
+        }
+        assert!(matches!(
+            through_tangents(&pts, 3, Some(v(0.0, 0.0)), None),
+            Err(BuildError::Invalid(_))
+        ));
+    }
 
     fn v(x: f64, y: f64) -> Vec2 {
         Vec2::new(x, y)

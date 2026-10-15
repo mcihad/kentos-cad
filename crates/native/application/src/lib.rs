@@ -56,6 +56,7 @@ mod context;
 pub mod corner;
 pub mod create;
 mod creating;
+pub mod curves_edit_cmd;
 pub mod delete;
 mod dimension;
 pub mod dimension_create;
@@ -74,6 +75,7 @@ pub mod labels_pin;
 pub mod lengthen;
 pub mod reverse;
 pub use break_join::{entities_break, entities_join};
+pub use curves_edit_cmd::curves_edit;
 pub use dimension_create::dimensions_create;
 pub use edge_commands::{entities_chamfer, entities_extend, entities_fillet, entities_trim};
 pub use explode::entities_explode;
@@ -365,6 +367,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_ENTITIES_EXPLODE,
         kentos_contracts::CAD_ENTITIES_EXPLODE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_CURVES_EDIT,
+        kentos_contracts::CAD_CURVES_EDIT_VERSION,
     ),
     (
         kentos_contracts::CAD_ENTITIES_DIVIDE,

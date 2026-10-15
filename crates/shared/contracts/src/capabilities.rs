@@ -421,6 +421,39 @@ const ENTRIES: &[Entry] = &[
         },
     },
     Entry {
+        id: "cad.curves.edit",
+        refusals: &[
+            &[
+                "invalid_uid",
+                "not_finite",
+                "invalid_weight",
+                "invalid_tolerance",
+                "entity_not_found",
+                "layer_locked",
+                "not_a_curve",
+                "multi_part",
+                "edit_not_applicable",
+                "no_fit_points",
+                "invalid_index",
+                "invalid_knot",
+                "too_few_points",
+                "coincident_points",
+                "invalid_nurbs",
+            ],
+            REVISION,
+        ],
+        warnings: &["widths_lost"],
+        targets: || {
+            vec![target(
+                None,
+                &["polyline", "nurbs"],
+                &[],
+                Some("not_a_curve"),
+                Some("Çoklu çizginin düzenlemeleri ile NURBS eğrisininkiler ayrı; öbürünün düzenlemesi edit_not_applicable."),
+            )]
+        },
+    },
+    Entry {
         id: "cad.arrays.edit",
         refusals: &[
             &[

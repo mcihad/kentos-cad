@@ -7,6 +7,7 @@ mod break_join_ties;
 mod capabilities;
 mod catalog;
 mod create;
+mod curves_edit;
 mod delete;
 mod divide;
 mod edit;

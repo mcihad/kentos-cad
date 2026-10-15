@@ -170,6 +170,9 @@ Liste:
   uyarıları komutun sözleri; paralel iki doğruya TTY, saat yönünde verilen yaydan Devam; araç durumları
   `fixtures/curve-methods/v1/tools.json`. Web'in donmuş çağrı kayıtları eski `arcStartCenterEnd` ve `arcStartCenterAngle`'ı (tam tur)
   tutar; geri dönüşte komutun kuralına getirilir.
+- [ ] `CAD-EDIT-17` (ADR 0303, 15 Ekim): web'de gerekenler: `cad.curves.edit`'in TS işleyicisi (sözleşme türleri `CurvesEdit`,
+  `CurveEdit` üretildi; ortak durumlar `cad.curves.edit.json`), çekirdeğin `through_tangents`'ının WASM'a açılması ve Eğriyi düzenle
+  aracı (tıklanan eğrinin noktaları, türe göre seçenekler, taşınan noktada plandan önizleme).
 - [ ] `CAD-EDIT-16` (ADR 0302, 15 Ekim): web'de gerekenler: `cad.entities.explode`'un TS işleyicisi (sözleşme türü `EntitiesExplode`
   üretildi; ortak durumlar `cad.entities.explode.json`) ve Patlat aracının komutla yazması (ilişkili dizinin öğesi bütün diziyi
   patlatır); Dizi, Kutupsal dizi ve Yol boyunca dizi'de İlişkili (İ).

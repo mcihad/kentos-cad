@@ -43,9 +43,9 @@ use kentos_native_application::{
     snap_find, styles_edit, transform, ucs_set, units_change, views_edit,
 };
 use kentos_native_application::{
-    arrays_edit, changeset, create, dimensions_create, divide, entities_boundary, entities_break,
-    entities_explode, entities_hatch, entities_join, entities_lengthen, entities_reverse,
-    file_import, stretch,
+    arrays_edit, changeset, create, curves_edit, dimensions_create, divide, entities_boundary,
+    entities_break, entities_explode, entities_hatch, entities_join, entities_lengthen,
+    entities_reverse, file_import, stretch,
 };
 use serde_json::{Value, json};
 
@@ -880,6 +880,27 @@ impl Input for kentos_domain::contracts::EntitiesLengthen {
 impl Input for kentos_domain::contracts::EntitiesReverse {
     fn number(&mut self, _: &str) -> Option<&mut f64> {
         None
+    }
+}
+
+impl Input for kentos_domain::contracts::CurvesEdit {
+    /// `edit.at.x`, `edit.at.y`, `edit.weight`, `edit.tolerance`, a knot's `edit.at`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_domain::contracts::CurveEdit as E;
+        match (&mut self.edit, path) {
+            (
+                E::AddFit { at, .. } | E::MoveFit { at, .. } | E::MoveControl { at, .. },
+                "edit.at.x",
+            ) => Some(&mut at.x),
+            (
+                E::AddFit { at, .. } | E::MoveFit { at, .. } | E::MoveControl { at, .. },
+                "edit.at.y",
+            ) => Some(&mut at.y),
+            (E::Weight { weight, .. }, "edit.weight") => Some(weight),
+            (E::ToPolyline { tolerance }, "edit.tolerance") => Some(tolerance),
+            (E::InsertKnot { at }, "edit.at") => Some(at),
+            _ => None,
+        }
     }
 }
 
@@ -1821,6 +1842,9 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_ENTITIES_EXPLODE => {
             run!(entities_explode, kentos_domain::contracts::EntitiesExplode)
+        }
+        kentos_domain::contracts::CAD_CURVES_EDIT => {
+            run!(curves_edit, kentos_domain::contracts::CurvesEdit)
         }
         kentos_domain::contracts::CAD_ENTITIES_BOUNDARY => {
             run!(entities_boundary, EntitiesBoundary)

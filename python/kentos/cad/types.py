@@ -569,6 +569,7 @@ class EditOperation(_StrEnum):
     - ``join``: Birleştir: chains of objects meeting end to end become one each.
     - ``explode``: Patlat: an object comes apart into simple ones.
     - ``lengthen``: Uzat-kısalt: a new total length, changed at one end.
+    - ``curveEdit``: Eğriyi düzenle (docs/adr/0303): a polyline or a NURBS curve edited in place by `cad.curves.edit`.
     - ``vertexAdd``: Köşe ekle: a vertex added on an edge.
     - ``vertexRemove``: Köşe sil: a vertex removed.
     - ``stretch``: Esnet: the vertices in a window move, the rest stay.
@@ -627,6 +628,7 @@ class EditOperation(_StrEnum):
     JOIN = "join"
     EXPLODE = "explode"
     LENGTHEN = "lengthen"
+    CURVE_EDIT = "curveEdit"
     VERTEX_ADD = "vertexAdd"
     VERTEX_REMOVE = "vertexRemove"
     STRETCH = "stretch"
@@ -677,7 +679,7 @@ class EditOperation(_StrEnum):
     EDGE_WIDTH = "edgeWidth"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose", "topologyFix", "networkAdjust", "levelAdjust", "rasterStyle", "rasterGeoref", "pointCloudStyle", "annotationScale", "edgeWidth"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "curveEdit", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose", "topologyFix", "networkAdjust", "levelAdjust", "rasterStyle", "rasterGeoref", "pointCloudStyle", "annotationScale", "edgeWidth"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 
@@ -2040,6 +2042,39 @@ class CurveConstruction(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> CurveConstruction:
         return _variant(_CURVE_CONSTRUCTION, "CurveConstruction", "kind", data).from_json(data)
+
+
+class CurveEdit(_Union):
+    """What changes (AutoCAD PEDIT's Close, Open, Decurve, Spline; SPLINEDIT's Close, Open, Fit data, Edit vertex,
+    Refine, convert to Polyline).
+
+    One of:
+
+    - :class:`CloseCurveEdit` (``kind: close``)
+    - :class:`OpenCurveEdit` (``kind: open``)
+    - :class:`DecurveCurveEdit` (``kind: decurve``)
+    - :class:`ToSplineCurveEdit` (``kind: toSpline``)
+    - :class:`AddFitCurveEdit` (``kind: addFit``)
+    - :class:`MoveFitCurveEdit` (``kind: moveFit``)
+    - :class:`RemoveFitCurveEdit` (``kind: removeFit``)
+    - :class:`TangentsCurveEdit` (``kind: tangents``)
+    - :class:`MoveControlCurveEdit` (``kind: moveControl``)
+    - :class:`WeightCurveEdit` (``kind: weight``)
+    - :class:`RemoveControlCurveEdit` (``kind: removeControl``)
+    - :class:`InsertKnotCurveEdit` (``kind: insertKnot``)
+    - :class:`ToPolylineCurveEdit` (``kind: toPolyline``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CurveEdit:
+        return _variant(_CURVE_EDIT, "CurveEdit", "kind", data).from_json(data)
 
 
 class DimensionMeasure(_Union):
@@ -4666,6 +4701,45 @@ class CurvesConstructed(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> CurvesConstructed:
         return cls(
             curves=[ConstructedCurve.from_json(e0) for e0 in data["curves"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CurvesEdit(_Model):
+    """Input of `cad.curves.edit` v1: the polyline or NURBS curve `uid` edited by `edit`, as one undo step “Eğriyi
+    düzenle”. The object keeps its layer, look and data; its kind changes with Eğriye çevir and Çoklu çizgiye
+    çevir. The answer is `cad.entities.edit`'s.
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_uid`, `not_finite` (a point, weight, knot or
+    tolerance), `invalid_weight` (not above 0), `invalid_tolerance` (not above 0), `invalid_revision`,
+    `revision_conflict` (status `conflict`), `entity_not_found`, `layer_locked`, `not_a_curve` (the edit is not
+    for this kind, or the curve is already so), `multi_part`, `no_fit_points` (a fit edit on a curve without
+    them), `invalid_index`, `invalid_knot` (outside the domain or a full knot), `coincident_points` and
+    `invalid_nurbs` (the curve the edit makes), `too_few_points`.
+    Attributes:
+        uid: The object's persistent id (lowercase UUID text with hyphens).
+        edit: What changes.
+        expected_revision: The document revision the input was prepared against, as decimal text. When given and the document is no
+            longer at it, nothing is written and the answer is `conflict`.
+    """
+    uid: str
+    edit: CurveEdit
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["edit"] = self.edit.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CurvesEdit:
+        return cls(
+            uid=data["uid"],
+            edit=CurveEdit.from_json(data["edit"]),
+            expected_revision=data.get("expectedRevision", UNSET),
         )
 
 
@@ -18731,6 +18805,295 @@ class EllipseCentreCurveConstruction(CurveConstruction):
 
 
 @dataclass(kw_only=True, slots=True)
+class CloseCurveEdit(CurveEdit):
+    """Kapat: a polyline's last vertex joins its first (its closing edge's bulge and widths as stored); a NURBS
+    curve closes smoothly: one with fit points drawn again through them, closed, one by control points with its
+    first `degree` control points wrapped (periodic). Its end tangents go.
+    """
+    TAG_VALUE: ClassVar[str] = "close"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "close"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CloseCurveEdit:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class OpenCurveEdit(CurveEdit):
+    """Aç: a closed polyline's closing edge goes; a closed NURBS curve opens: one with fit points drawn again
+    through them, open, one by control points clamped on its own control points (the wrapped copies dropped).
+    """
+    TAG_VALUE: ClassVar[str] = "open"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "open"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpenCurveEdit:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class DecurveCurveEdit(CurveEdit):
+    """Düzleştir: every arc edge of a polyline straight."""
+    TAG_VALUE: ClassVar[str] = "decurve"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "decurve"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DecurveCurveEdit:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class ToSplineCurveEdit(CurveEdit):
+    """Eğriye çevir: a polyline becomes a NURBS curve of `degree` (absent: 3; lowered to fit the points): by its
+    vertices as control points, or with `through` through them (its fit points). Arc edges are taken by their
+    vertices.
+    Attributes:
+        degree: Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "toSpline"
+    degree: int | None | Unset = UNSET
+    through: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "toSpline"}
+        if self.degree is not UNSET:
+            out["degree"] = self.degree
+        if self.through is not UNSET:
+            out["through"] = self.through
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ToSplineCurveEdit:
+        return cls(
+            degree=data.get("degree", UNSET),
+            through=data.get("through", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddFitCurveEdit(CurveEdit):
+    """A fit point added before `index` (its count: after the last); the curve drawn again through them.
+    Attributes:
+        index: Unit: id.
+        at: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "addFit"
+    index: int
+    at: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "addFit"}
+        out["index"] = self.index
+        out["at"] = _vec2_out(self.at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddFitCurveEdit:
+        return cls(
+            index=data["index"],
+            at=Vec2.from_json(data["at"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MoveFitCurveEdit(CurveEdit):
+    """The fit point `index` moved to `at`; the curve drawn again.
+    Attributes:
+        index: Unit: id.
+        at: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "moveFit"
+    index: int
+    at: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "moveFit"}
+        out["index"] = self.index
+        out["at"] = _vec2_out(self.at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MoveFitCurveEdit:
+        return cls(
+            index=data["index"],
+            at=Vec2.from_json(data["at"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveFitCurveEdit(CurveEdit):
+    """The fit point `index` removed; the curve drawn again.
+    Attributes:
+        index: Unit: id.
+    """
+    TAG_VALUE: ClassVar[str] = "removeFit"
+    index: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "removeFit"}
+        out["index"] = self.index
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveFitCurveEdit:
+        return cls(
+            index=data["index"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TangentsCurveEdit(CurveEdit):
+    """An open curve's start and end tangent directions through its fit points (absent: free); the curve drawn
+    again leaving and arriving along them.
+    Attributes:
+        end: Unit: 1.
+        start: Unit: 1.
+    """
+    TAG_VALUE: ClassVar[str] = "tangents"
+    end: Vec2 | None | Unset = UNSET
+    start: Vec2 | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "tangents"}
+        if self.end is not UNSET:
+            out["end"] = None if self.end is None else _vec2_out(self.end)
+        if self.start is not UNSET:
+            out["start"] = None if self.start is None else _vec2_out(self.start)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TangentsCurveEdit:
+        return cls(
+            end=UNSET if "end" not in data else None if data["end"] is None else Vec2.from_json(data["end"]),
+            start=UNSET if "start" not in data else None if data["start"] is None else Vec2.from_json(data["start"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MoveControlCurveEdit(CurveEdit):
+    """The control point `index` moved to `at`. The fit points go (the curve is its control points now).
+    Attributes:
+        index: Unit: id.
+        at: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "moveControl"
+    index: int
+    at: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "moveControl"}
+        out["index"] = self.index
+        out["at"] = _vec2_out(self.at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MoveControlCurveEdit:
+        return cls(
+            index=data["index"],
+            at=Vec2.from_json(data["at"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WeightCurveEdit(CurveEdit):
+    """The control point `index` weighs `weight` (above 0). The fit points go.
+    Attributes:
+        index: Unit: id.
+        weight: Unit: 1.
+    """
+    TAG_VALUE: ClassVar[str] = "weight"
+    index: int
+    weight: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "weight"}
+        out["index"] = self.index
+        out["weight"] = float(self.weight)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WeightCurveEdit:
+        return cls(
+            index=data["index"],
+            weight=float(data["weight"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveControlCurveEdit(CurveEdit):
+    """The control point `index` removed; the knots made uniform again (an open curve clamped). The fit points go.
+    Attributes:
+        index: Unit: id.
+    """
+    TAG_VALUE: ClassVar[str] = "removeControl"
+    index: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "removeControl"}
+        out["index"] = self.index
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveControlCurveEdit:
+        return cls(
+            index=data["index"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class InsertKnotCurveEdit(CurveEdit):
+    """A knot inserted at the parameter `at`, inside the curve's domain: one more control point, the curve itself
+    unchanged (Refine). The fit points go.
+    Attributes:
+        at: Unit: 1.
+    """
+    TAG_VALUE: ClassVar[str] = "insertKnot"
+    at: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "insertKnot"}
+        out["at"] = float(self.at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> InsertKnotCurveEdit:
+        return cls(
+            at=float(data["at"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ToPolylineCurveEdit(CurveEdit):
+    """Çoklu çizgiye çevir: a NURBS curve becomes a polyline whose every chord stays within `tolerance` of it (its
+    ends exact), closed when the curve is.
+    Attributes:
+        tolerance: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "toPolyline"
+    tolerance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "toPolyline"}
+        out["tolerance"] = float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ToPolylineCurveEdit:
+        return cls(
+            tolerance=float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AlignedDimensionMeasure(DimensionMeasure):
     """Hizalı: the distance from `a` to `b`."""
     TAG_VALUE: ClassVar[str] = "aligned"
@@ -22194,6 +22557,9 @@ _CRS_SYSTEM: dict[str, type[CrsSystem]] = {"tm": TmCrsSystem, "geographic": Geog
 _CURVE_CONSTRUCTION: dict[str, type[CurveConstruction]] = {"circleTwoPoints": CircleTwoPointsCurveConstruction, "circleThreePoints": CircleThreePointsCurveConstruction, "circleTangentTangentRadius": CircleTangentTangentRadiusCurveConstruction, "circleTangents": CircleTangentsCurveConstruction, "arcThreePoints": ArcThreePointsCurveConstruction, "arcStartCentreEnd": ArcStartCentreEndCurveConstruction, "arcStartCentreAngle": ArcStartCentreAngleCurveConstruction, "arcStartCentreChord": ArcStartCentreChordCurveConstruction, "arcStartEndAngle": ArcStartEndAngleCurveConstruction, "arcStartEndDirection": ArcStartEndDirectionCurveConstruction, "arcStartEndRadius": ArcStartEndRadiusCurveConstruction, "arcContinue": ArcContinueCurveConstruction, "ellipseAxis": EllipseAxisCurveConstruction, "ellipseCentre": EllipseCentreCurveConstruction}
 
 
+_CURVE_EDIT: dict[str, type[CurveEdit]] = {"close": CloseCurveEdit, "open": OpenCurveEdit, "decurve": DecurveCurveEdit, "toSpline": ToSplineCurveEdit, "addFit": AddFitCurveEdit, "moveFit": MoveFitCurveEdit, "removeFit": RemoveFitCurveEdit, "tangents": TangentsCurveEdit, "moveControl": MoveControlCurveEdit, "weight": WeightCurveEdit, "removeControl": RemoveControlCurveEdit, "insertKnot": InsertKnotCurveEdit, "toPolyline": ToPolylineCurveEdit}
+
+
 _DIMENSION_MEASURE: dict[str, type[DimensionMeasure]] = {"aligned": AlignedDimensionMeasure, "linear": LinearDimensionMeasure, "ordinate": OrdinateDimensionMeasure, "azimuth": AzimuthDimensionMeasure, "slope": SlopeDimensionMeasure, "angle": AngleDimensionMeasure, "angleVertex": AngleVertexDimensionMeasure, "angleArc": AngleArcDimensionMeasure, "radius": RadiusDimensionMeasure, "diameter": DiameterDimensionMeasure, "arcLength": ArcLengthDimensionMeasure, "jogged": JoggedDimensionMeasure}
 
 
@@ -22267,6 +22633,7 @@ __all__ = [
     "AccessSource",
     "AccessSourceName",
     "AddEntityEdit",
+    "AddFitCurveEdit",
     "AddressLocator",
     "AddressesDefine",
     "AddressesDefineOperation",
@@ -22374,6 +22741,7 @@ __all__ = [
     "CircleThreePointsCurveConstruction",
     "CircleTwoPointsCurveConstruction",
     "CircumscribedRegularFrame",
+    "CloseCurveEdit",
     "ClosedPolylines",
     "ClosedPolylinesName",
     "CloudFormat",
@@ -22401,11 +22769,14 @@ __all__ = [
     "CrsPlane",
     "CrsSystem",
     "CurveConstruction",
+    "CurveEdit",
     "CurvesConstruct",
     "CurvesConstructed",
+    "CurvesEdit",
     "CustomDatum",
     "DatasetDim",
     "DatumTransform",
+    "DecurveCurveEdit",
     "DeleteBlockChange",
     "DeleteFeatureChange",
     "DeleteUcsTo",
@@ -22557,6 +22928,7 @@ __all__ = [
     "InscribedRegularFrame",
     "InsertEntity",
     "InsertEntityGeometry",
+    "InsertKnotCurveEdit",
     "InvertSelectRegion",
     "InvitationChange",
     "InvitationRevoke",
@@ -22678,6 +23050,8 @@ __all__ = [
     "MirrorText",
     "MirrorTextName",
     "MirrorTransform",
+    "MoveControlCurveEdit",
+    "MoveFitCurveEdit",
     "MoveTransform",
     "NamedUcs",
     "NamedUcsTo",
@@ -22712,6 +23086,7 @@ __all__ = [
     "ObstacleKind",
     "ObstacleKindName",
     "OffsetBy",
+    "OpenCurveEdit",
     "OrderTo",
     "OrderToName",
     "OrdinateDimensionMeasure",
@@ -22833,7 +23208,9 @@ __all__ = [
     "RegularFrame",
     "RegularPolygonCreate",
     "RemoveArrayEdit",
+    "RemoveControlCurveEdit",
     "RemoveEntityEdit",
+    "RemoveFitCurveEdit",
     "RenameViewsOp",
     "RenamedBlock",
     "ReplaceArrayEdit",
@@ -22905,6 +23282,7 @@ __all__ = [
     "TableGrid",
     "TableGridName",
     "TableSource",
+    "TangentsCurveEdit",
     "TenantKind",
     "TenantKindName",
     "TextAlign",
@@ -22921,6 +23299,8 @@ __all__ = [
     "TileMatrix",
     "TmCrsSystem",
     "TmDefinition",
+    "ToPolylineCurveEdit",
+    "ToSplineCurveEdit",
     "TopologyException",
     "TopologyRule",
     "TopologyRuleKind",
@@ -22962,6 +23342,7 @@ __all__ = [
     "ViewsEdit",
     "ViewsEdited",
     "ViewsOp",
+    "WeightCurveEdit",
     "WindowSelectRegion",
     "Workspace",
     "WorkspaceName",
