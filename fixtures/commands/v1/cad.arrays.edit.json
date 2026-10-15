@@ -1,0 +1,8746 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.arrays.edit",
+ "commandVersion": 1,
+ "title": "Diziyi düzenle: yerleşim, ilk yer, öğeleri değiştirme, silme ve sıfırlama",
+ "note": "ADR 0301. Bağımsız başvuru: scripts/fixtures/array_edit_cases.py (dizinin kuruluşu array_assoc_cases.py, ADR 0300).",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "İlişkili diziler",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 100,
+   "workspace": "cad"
+  },
+  "origin": {
+   "x": 40,
+   "y": 20
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "circle",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 10,
+     "y": 0
+    },
+    "r": 1
+   },
+   {
+    "kind": "line",
+    "id": 2,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 20,
+     "y": 0
+    },
+    "b": {
+     "x": 22,
+     "y": 0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 3,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 30
+    },
+    "b": {
+     "x": 40,
+     "y": 30
+    }
+   },
+   {
+    "kind": "circle",
+    "id": 4,
+    "layerId": "kilitli",
+    "attrs": {},
+    "c": {
+     "x": 50,
+     "y": 50
+    },
+    "r": 1
+   },
+   {
+    "kind": "point",
+    "id": 5,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 80,
+     "y": 0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "blocks": [
+   {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3a01",
+    "name": "Ağaç",
+    "base": {
+     "x": 0,
+     "y": 0
+    },
+    "entities": [
+     {
+      "kind": "circle",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "c": {
+       "x": 0,
+       "y": 0
+      },
+      "r": 2
+     }
+    ]
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "Izgara 2×3'ten 3×4'e: öğeler satır ve sütunlarını korur, altı yeni yerleştirme; adım “Diziyi düzenle”, geri alınır ve yinelenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "layout",
+       "layout": {
+        "kind": "grid",
+        "rows": 3,
+        "cols": 4,
+        "dx": 5,
+        "dy": 4
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:12",
+        "$uidOf:13",
+        "$uidOf:14",
+        "$uidOf:15",
+        "$uidOf:16",
+        "$uidOf:17"
+       ],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 3,
+         "cols": 4,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:12"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         },
+         {
+          "uid": "$uidOf:13"
+         },
+         {
+          "uid": "$uidOf:14"
+         },
+         {
+          "uid": "$uidOf:15"
+         },
+         {
+          "uid": "$uidOf:16"
+         },
+         {
+          "uid": "$uidOf:17"
+         }
+        ]
+       }
+      ],
+      "entities": {
+       "12": {
+        "kind": "insert",
+        "id": 12,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 25,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "13": {
+        "kind": "insert",
+        "id": 13,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 25,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "14": {
+        "kind": "insert",
+        "id": 14,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 8
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "15": {
+        "kind": "insert",
+        "id": 15,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 8
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "16": {
+        "kind": "insert",
+        "id": 16,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 8
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "17": {
+        "kind": "insert",
+        "id": 17,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 25,
+         "y": 8
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      },
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Diziyi düzenle",
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "op": "redo",
+     "returns": "Diziyi düzenle",
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 3,
+         "cols": 4,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:12"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         },
+         {
+          "uid": "$uidOf:13"
+         },
+         {
+          "uid": "$uidOf:14"
+         },
+         {
+          "uid": "$uidOf:15"
+         },
+         {
+          "uid": "$uidOf:16"
+         },
+         {
+          "uid": "$uidOf:17"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Izgara 1×2'ye: kalkan yerlerin dört yerleştirmesi silinir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "captureUid",
+     "id": 8,
+     "as": "s8"
+    },
+    {
+     "op": "captureUid",
+     "id": 9,
+     "as": "s9"
+    },
+    {
+     "op": "captureUid",
+     "id": 10,
+     "as": "s10"
+    },
+    {
+     "op": "captureUid",
+     "id": 11,
+     "as": "s11"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "layout",
+       "layout": {
+        "kind": "grid",
+        "rows": 1,
+        "cols": 2,
+        "dx": 5,
+        "dy": 4
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [],
+       "created": [],
+       "removed": [
+        "$uid:s8",
+        "$uid:s9",
+        "$uid:s10",
+        "$uid:s11"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 1,
+         "cols": 2,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aralıklar 8 ve 6: ilk yer kalır, öbür beş öğe yerine gider",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "layout",
+       "layout": {
+        "kind": "grid",
+        "rows": 2,
+        "cols": 3,
+        "dx": 8,
+        "dy": 6
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 8,
+         "dy": 6
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 18,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 26,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 6
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 18,
+         "y": 6
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 26,
+         "y": 6
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Izgaradan dört yerli doğruya: öğeler numaralarını korur, fazla iki yerleştirme silinir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "captureUid",
+     "id": 10,
+     "as": "s10"
+    },
+    {
+     "op": "captureUid",
+     "id": 11,
+     "as": "s11"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "layout",
+       "layout": {
+        "kind": "line",
+        "count": 4,
+        "dx": 0,
+        "dy": 10
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "created": [],
+       "removed": [
+        "$uid:s10",
+        "$uid:s11"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "line",
+         "count": 4,
+         "dx": 0,
+         "dy": 10
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         }
+        ]
+       }
+      ],
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 10
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 20
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 30
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Elle taşınan öğe korunur: aralık değişince yerinde kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:10"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0,
+       "dy": 1
+      }
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "layout",
+       "layout": {
+        "kind": "grid",
+        "rows": 2,
+        "cols": 3,
+        "dx": 8,
+        "dy": 6
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:11"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 8,
+         "dy": 6
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10",
+          "kept": true
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 18,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 26,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 6
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 5
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 26,
+         "y": 6
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Elle silinen öğe silinmiş kalır: büyüyen ızgara onu geri getirmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "$uidOf:8"
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "layout",
+       "layout": {
+        "kind": "grid",
+        "rows": 3,
+        "cols": 4,
+        "dx": 5,
+        "dy": 4
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:12",
+        "$uidOf:13",
+        "$uidOf:14",
+        "$uidOf:15",
+        "$uidOf:16",
+        "$uidOf:17"
+       ],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 3,
+         "cols": 4,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {},
+         {
+          "uid": "$uidOf:12"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         },
+         {
+          "uid": "$uidOf:13"
+         },
+         {
+          "uid": "$uidOf:14"
+         },
+         {
+          "uid": "$uidOf:15"
+         },
+         {
+          "uid": "$uidOf:16"
+         },
+         {
+          "uid": "$uidOf:17"
+         }
+        ]
+       }
+      ],
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yol dizisinde adet 3'ten 5'e: öğeler yola yeniden eşit dağılır, iki yeni yerleştirme",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "path",
+       "path": "$uidOf:3",
+       "count": 3,
+       "align": false
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "path",
+         "path": "$uidOf:3",
+         "count": 3,
+         "align": false
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 30,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 50,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "layout",
+       "layout": {
+        "kind": "path",
+        "path": "$uidOf:3",
+        "count": 5,
+        "align": false
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:7",
+        "$uidOf:8"
+       ],
+       "created": [
+        "$uidOf:9",
+        "$uidOf:10"
+       ],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "path",
+         "path": "$uidOf:3",
+         "count": 5,
+         "align": false
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         }
+        ]
+       }
+      ],
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 30,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 40,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 50,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "İlk yer taşınınca bütün dizi izler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "placement",
+       "p": {
+        "x": 20,
+        "y": 1
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 20,
+         "y": 1
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 1
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 25,
+         "y": 1
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 30,
+         "y": 1
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 5
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 25,
+         "y": 5
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 30,
+         "y": 5
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ölçek, dönüş ve ayna öğelere geçer; aralıklar dönmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "placement",
+       "scale": 2,
+       "rotation": 0.5,
+       "mirror": true
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 2,
+        "rotation": 0.5,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ],
+        "mirror": true
+       }
+      ],
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 2,
+        "rotation": 0.5,
+        "mirror": true
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 2,
+        "rotation": 0.5,
+        "mirror": true
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 2,
+        "rotation": 0.5,
+        "mirror": true
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 2,
+        "rotation": 0.5,
+        "mirror": true
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 2,
+        "rotation": 0.5,
+        "mirror": true
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 2,
+        "rotation": 0.5,
+        "mirror": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi taşınınca elle taşınan öğe yerinde kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:7"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0,
+       "dy": 1
+      }
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "placement",
+       "p": {
+        "x": 10,
+        "y": 3
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:6",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 3
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7",
+          "kept": true
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "entities": {
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 1
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Değiştir: iki öğe Ağaç bloğunu yerleştirir ve korunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "replace",
+       "items": [
+        1,
+        4
+       ],
+       "block": "Ağaç"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:7",
+        "$uidOf:10"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7",
+          "kept": true
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10",
+          "kept": true
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "entities": {
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Ağaç",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Ağaç",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sil: iki öğenin yerleştirmesi gider, öğeler boş kalır; geri alınır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "captureUid",
+     "id": 7,
+     "as": "s7"
+    },
+    {
+     "op": "captureUid",
+     "id": 10,
+     "as": "s10"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "remove",
+       "items": [
+        4,
+        1
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [],
+       "created": [],
+       "removed": [
+        "$uid:s10",
+        "$uid:s7"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {},
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {},
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       8,
+       9,
+       11
+      ]
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Diziyi düzenle",
+     "expect": {
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sıfırla: silinen geri gelir, taşınan ve değiştirilen dizinin bloğuyla yerine döner",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "$uidOf:7"
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:10"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0,
+       "dy": 1
+      }
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "replace",
+       "items": [
+        5
+       ],
+       "block": "Ağaç"
+      }
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "reset"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "created": [
+        "$uidOf:12"
+       ],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:12"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "12": {
+        "kind": "insert",
+        "id": 12,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sıfırla yalnız öğe 1'i: öteki silinen boş kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "$uidOf:7",
+       "$uidOf:8"
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "reset",
+       "items": [
+        1
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:12"
+       ],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:12"
+         },
+         {},
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "entities": {
+       "12": {
+        "kind": "insert",
+        "id": 12,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Değişmemiş dizide Sıfırla hiçbir yerleştirmeyi değiştirmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "reset"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan yeni yerleştirmeleri gösterir; hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "layout",
+       "layout": {
+        "kind": "grid",
+        "rows": 3,
+        "cols": 4,
+        "dx": 5,
+        "dy": 4
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [],
+       "created": [
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "cizim",
+         "attrs": {},
+         "block": "$blockOf:Dizi 1",
+         "p": {
+          "x": 25,
+          "y": 0
+         },
+         "scale": 1,
+         "rotation": 0
+        },
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "cizim",
+         "attrs": {},
+         "block": "$blockOf:Dizi 1",
+         "p": {
+          "x": 25,
+          "y": 4
+         },
+         "scale": 1,
+         "rotation": 0
+        },
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "cizim",
+         "attrs": {},
+         "block": "$blockOf:Dizi 1",
+         "p": {
+          "x": 10,
+          "y": 8
+         },
+         "scale": 1,
+         "rotation": 0
+        },
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "cizim",
+         "attrs": {},
+         "block": "$blockOf:Dizi 1",
+         "p": {
+          "x": 15,
+          "y": 8
+         },
+         "scale": 1,
+         "rotation": 0
+        },
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "cizim",
+         "attrs": {},
+         "block": "$blockOf:Dizi 1",
+         "p": {
+          "x": 20,
+          "y": 8
+         },
+         "scale": 1,
+         "rotation": 0
+        },
+        {
+         "kind": "insert",
+         "id": 0,
+         "layerId": "cizim",
+         "attrs": {},
+         "block": "$blockOf:Dizi 1",
+         "p": {
+          "x": 25,
+          "y": 8
+         },
+         "scale": 1,
+         "rotation": 0
+        }
+       ],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi kimliği UUID değil: invalid_uid",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "dizi",
+      "edit": {
+       "kind": "reset"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“dizi” geçerli bir dizi kimliği değil; kimlik küçük harfli, tireli bir UUID'dir. Kimliği diziyi kuran komutun çıktısından (array) alın.",
+       "path": "array"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Böyle bir dizi yok: array_not_found",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "0192f5a3-3333-7000-8000-00000000ffff",
+      "edit": {
+       "kind": "reset"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "array_not_found",
+       "message": "“0192f5a3-3333-7000-8000-00000000ffff” kimlikli ilişkili dizi çizimde yok: kaldırılmış ya da başka bir çizimin olabilir.",
+       "path": "array"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Satır 0: invalid_count, yolu edit.layout.rows",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "layout",
+       "layout": {
+        "kind": "grid",
+        "rows": 0,
+        "cols": 3,
+        "dx": 5,
+        "dy": 4
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_count",
+       "message": "Satır × sütun 2 ile 10 000 arasında olmalı; satır ve sütun en az 1'dir. Başka bir satır ve sütun sayısı verin.",
+       "path": "edit.layout.rows"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ölçek 0: invalid_scale",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "placement",
+       "scale": 0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_scale",
+       "message": "Ölçek sıfırdan büyük olmalı. Başka bir ölçek verin.",
+       "path": "edit.scale"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Boş öğe listesi: invalid_item",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "remove",
+       "items": []
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_item",
+       "message": "Öğe numaralarını verin; her biri bir kez. Öğeler yerleşimin sırasıyla 0'dan numaralanır (ızgarada satır satır).",
+       "path": "edit.items"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki kez verilen öğe: invalid_item",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "remove",
+       "items": [
+        1,
+        1
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_item",
+       "message": "Öğe numaralarını verin; her biri bir kez. Öğeler yerleşimin sırasıyla 0'dan numaralanır (ızgarada satır satır).",
+       "path": "edit.items[1]"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yerlerin dışındaki öğe: invalid_item",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "replace",
+       "items": [
+        6
+       ],
+       "block": "Ağaç"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_item",
+       "message": "Dizinin 6 yeri var; öğe 6 yok. 0 ile 5 arasında bir numara verin.",
+       "path": "edit.items[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Elle silinmiş öğe Değiştir'de: item_removed",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "$uidOf:8"
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "replace",
+       "items": [
+        2
+       ],
+       "block": "Ağaç"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "item_removed",
+       "message": "Öğe 2 elle silinmiş; önce Sıfırla ile geri getirin.",
+       "path": "edit.items[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       9,
+       10,
+       11
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tanımsız blok: unknown_block",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "replace",
+       "items": [
+        0
+       ],
+       "block": "Rögar"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_block",
+       "message": "“Rögar” adlı blok çizimde tanımlı değil. Var olan bir bloğun adını verin.",
+       "path": "edit.block"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizinin katmanı kilitli: layer_locked, hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.set",
+     "input": {
+      "operation": "locked",
+      "layer": "cizim",
+      "value": true
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "reset"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "Dizinin ya da öğelerinden birinin katmanı kilitli; dizi düzenlenmedi. Katmanın kilidini Katmanlar panelinden açın.",
+       "path": "array"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yol dizisinin yolu olmayan nesne: entity_not_found",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "layout",
+       "layout": {
+        "kind": "path",
+        "path": "0192f5a2-0000-7000-8000-00000000ffff",
+        "count": 3,
+        "align": false
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5a2-0000-7000-8000-00000000ffff” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+       "path": "edit.layout.path"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sütunlar arası aralık 0: invalid_spacing",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "layout",
+       "layout": {
+        "kind": "grid",
+        "rows": 2,
+        "cols": 3,
+        "dx": 0,
+        "dy": 4
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_spacing",
+       "message": "Sütunlar arasındaki aralık (dY) sıfır; kopyalar üst üste düşer. Sıfırdan farklı bir aralık verin.",
+       "path": "edit.layout.dx"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kutupsal dizinin açısı 0: invalid_fill",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "layout",
+       "layout": {
+        "kind": "polar",
+        "center": {
+         "x": 10,
+         "y": 10
+        },
+        "count": 4,
+        "fill": 0,
+        "rotate": true
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_fill",
+       "message": "Doldurma açısı 0 ile ±360 derece arasında olmalı; 0 olamaz. Başka bir açı verin.",
+       "path": "edit.layout.fill"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yol bir nokta: invalid_path",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "layout",
+       "layout": {
+        "kind": "path",
+        "path": "$uidOf:5",
+        "count": 3,
+        "align": false
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_path",
+       "message": "Yol bir çizgi, yay, daire ya da çoklu çizgi olmalı ve bir uzunluğu olmalı. Başka bir nesneyi yol olarak seçin.",
+       "path": "edit.layout.path"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dönüş sonlu değil: not_finite",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "placement",
+       "rotation": 0
+      }
+     },
+     "nonFinite": {
+      "edit.rotation": "NaN"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Dönüş açısı sonlu bir sayı değil (NaN ya da sonsuz). Açıyı sonlu bir sayıyla verin.",
+       "path": "edit.rotation"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm sayı değil: invalid_revision",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "reset"
+      },
+      "expectedRevision": "on iki"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm geçmişte kaldıysa conflict, hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 5,
+       "dy": 4
+      },
+      "associative": true
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "created": [
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "array": "$any",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "arrays": [
+       {
+        "block": "$blockOf:Dizi 1",
+        "layerId": "cizim",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0,
+        "layout": {
+         "kind": "grid",
+         "rows": 2,
+         "cols": 3,
+         "dx": 5,
+         "dy": 4
+        },
+        "items": [
+         {
+          "uid": "$uidOf:6"
+         },
+         {
+          "uid": "$uidOf:7"
+         },
+         {
+          "uid": "$uidOf:8"
+         },
+         {
+          "uid": "$uidOf:9"
+         },
+         {
+          "uid": "$uidOf:10"
+         },
+         {
+          "uid": "$uidOf:11"
+         }
+        ]
+       }
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "6": {
+        "kind": "insert",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "7": {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "9": {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 10,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "10": {
+        "kind": "insert",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 15,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       },
+       "11": {
+        "kind": "insert",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Dizi 1",
+        "p": {
+         "x": 20,
+         "y": 4
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     },
+     "command": "cad.entities.array"
+    },
+    {
+     "op": "captureRevision",
+     "as": "old"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 1,
+       "dy": 0
+      }
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "array": "$array:0",
+      "edit": {
+       "kind": "reset"
+      },
+      "expectedRevision": "$old"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "path": "expectedRevision",
+       "revision": "$current",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın."
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

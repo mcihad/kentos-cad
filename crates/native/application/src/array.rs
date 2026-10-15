@@ -212,7 +212,7 @@ fn locked_message(n: usize) -> String {
 
 /// The layout's own checks, in its fields' order: finite numbers, then the
 /// counts, then the spacing or the fill.
-fn check_layout(layout: &ArrayLayout) -> Result<(), Stop> {
+pub(crate) fn check_layout(layout: &ArrayLayout) -> Result<(), Stop> {
     match *layout {
         ArrayLayout::Grid { rows, cols, dx, dy } => {
             let fix = "Aralığı sonlu bir sayıyla verin.";
@@ -336,7 +336,10 @@ fn check_layout(layout: &ArrayLayout) -> Result<(), Stop> {
 /// A path array's maps from its path in the document: `entity_not_found`,
 /// `invalid_path` and `invalid_spacing` (places past its end) as the
 /// contract orders them; None for the other layouts.
-fn path_maps(doc: &Document, layout: &ArrayLayout) -> Result<Option<Vec<[f64; 6]>>, Stop> {
+pub(crate) fn path_maps(
+    doc: &Document,
+    layout: &ArrayLayout,
+) -> Result<Option<Vec<[f64; 6]>>, Stop> {
     let ArrayLayout::Path {
         ref path,
         count,

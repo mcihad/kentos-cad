@@ -407,6 +407,31 @@ const ENTRIES: &[Entry] = &[
         },
     },
     Entry {
+        id: "cad.arrays.edit",
+        refusals: &[
+            &[
+                "invalid_uid",
+                "not_finite",
+                "invalid_count",
+                "invalid_spacing",
+                "invalid_fill",
+                "invalid_scale",
+                "invalid_item",
+                "array_not_found",
+                "layer_locked",
+                "item_removed",
+                "unknown_block",
+                "entity_not_found",
+                "invalid_path",
+                "slots_exhausted",
+                "block_refused",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.entities.create",
         refusals: &[
             &[

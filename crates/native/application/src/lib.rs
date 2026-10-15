@@ -42,6 +42,7 @@ pub mod annotation_follow;
 pub mod arc;
 pub mod array;
 mod array_assoc;
+pub mod arrays_edit;
 pub mod blocks;
 pub mod blocks_define;
 pub mod blocks_edit;
@@ -354,6 +355,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_ENTITIES_LENGTHEN,
         kentos_contracts::CAD_ENTITIES_LENGTHEN_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_ARRAYS_EDIT,
+        kentos_contracts::CAD_ARRAYS_EDIT_VERSION,
     ),
     (
         kentos_contracts::CAD_ENTITIES_DIVIDE,

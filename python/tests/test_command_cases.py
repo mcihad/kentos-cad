@@ -83,6 +83,12 @@ class Case:
                 record = self.slots().get(slot)
                 assert record is not None, f"{at}: no object in slot {slot}"
                 return record.uid
+            if value.startswith("$array:"):
+                # The drawing's associative array at this place now (docs/adr/0301).
+                k = int(value[len("$array:"):])
+                arrays = self.doc.arrays()
+                assert k < len(arrays), f"{at}: {value}: no array {k}"
+                return arrays[k]["id"]
             if "$uid:" in value:
                 return re.sub(r"\$uid:([A-Za-z0-9_-]+)", lambda m: self.uids[m.group(1)], value)
             if value.startswith("$layer:"):

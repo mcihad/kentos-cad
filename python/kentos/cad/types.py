@@ -1843,6 +1843,30 @@ WorkspaceName = Literal["cad", "gis", "plan3d", "disaster"]
 VariableValue = Union[bool, float, str, None]
 
 
+class ArrayEdit(_Union):
+    """What changes in the array (AutoCAD ARRAYEDIT's properties, Replace, Reset; an item's erase).
+
+    One of:
+
+    - :class:`LayoutArrayEdit` (``kind: layout``)
+    - :class:`PlacementArrayEdit` (``kind: placement``)
+    - :class:`ReplaceArrayEdit` (``kind: replace``)
+    - :class:`RemoveArrayEdit` (``kind: remove``)
+    - :class:`ResetArrayEdit` (``kind: reset``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArrayEdit:
+        return _variant(_ARRAY_EDIT, "ArrayEdit", "kind", data).from_json(data)
+
+
 class ArrayLayout(_Union):
     """How the copies are laid out. The originals take the first place and stay
     where they are. Coordinates are x east (Y), y north (X), in the
@@ -3175,6 +3199,45 @@ class ArrayItem(_Model):
         return cls(
             kept=data.get("kept", UNSET),
             uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArraysEdit(_Model):
+    """Input of `cad.arrays.edit` v1: the associative array `array` edited by `edit`, as one undo step “Diziyi
+    düzenle”. The array's layer and every insert the edit touches must be unlocked: all or nothing. The answer is
+    `cad.entities.edit`'s: the item inserts changed, created and removed.
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_uid` (the array's id), the edit's own numbers
+    (`not_finite`, `invalid_count`, `invalid_spacing`, `invalid_fill`, `invalid_uid` for a path; `invalid_scale`;
+    `invalid_item` for an empty or repeated list), `invalid_revision`, `revision_conflict` (status `conflict`),
+    `array_not_found`, `invalid_item` (a number past the places), `layer_locked`, `item_removed` (Değiştir or
+    Sil on a removed item), `unknown_block`, a path layout's `entity_not_found`, `invalid_path` and
+    `invalid_spacing`, `not_finite` (places past the largest float64), `slots_exhausted`.
+    Attributes:
+        array: The array's id (lowercase UUID text with hyphens).
+        edit: What changes.
+        expected_revision: The document revision the input was prepared against, as decimal text. When given and the document is no
+            longer at it, nothing is written and the answer is `conflict`.
+    """
+    array: str
+    edit: ArrayEdit
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["array"] = self.array
+        out["edit"] = self.edit.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArraysEdit:
+        return cls(
+            array=data["array"],
+            edit=ArrayEdit.from_json(data["edit"]),
+            expected_revision=data.get("expectedRevision", UNSET),
         )
 
 
@@ -17641,6 +17704,132 @@ class ViewsEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayoutArrayEdit(ArrayEdit):
+    """The rows, columns, count, spacing, fill or path: every item is laid out again. An item keeps its number
+    (a grid's its row and column); a removed one stays removed, a kept one where it is; the places that are new
+    get inserts, the ones that are gone take their inserts away. The kind may change too.
+    """
+    TAG_VALUE: ClassVar[str] = "layout"
+    layout: ArrayLayout
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "layout"}
+        out["layout"] = self.layout.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayoutArrayEdit:
+        return cls(
+            layout=ArrayLayout.from_json(data["layout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlacementArrayEdit(ArrayEdit):
+    """The first place: where the block's base point goes, its scale and turn, mirrored or not; the items that
+    are neither removed nor kept follow. Absent fields stay.
+    Attributes:
+        p: Unit: length.
+        rotation: Unit: rad.
+        scale: Unit: 1.
+    """
+    TAG_VALUE: ClassVar[str] = "placement"
+    mirror: bool | None | Unset = UNSET
+    p: Vec2 | None | Unset = UNSET
+    rotation: float | None | Unset = UNSET
+    scale: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "placement"}
+        if self.mirror is not UNSET:
+            out["mirror"] = self.mirror
+        if self.p is not UNSET:
+            out["p"] = None if self.p is None else _vec2_out(self.p)
+        if self.rotation is not UNSET:
+            out["rotation"] = None if self.rotation is None else float(self.rotation)
+        if self.scale is not UNSET:
+            out["scale"] = None if self.scale is None else float(self.scale)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlacementArrayEdit:
+        return cls(
+            mirror=data.get("mirror", UNSET),
+            p=UNSET if "p" not in data else None if data["p"] is None else Vec2.from_json(data["p"]),
+            rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReplaceArrayEdit(ArrayEdit):
+    """These items insert the block named `block` instead (Değiştir): each is kept from then on.
+    Attributes:
+        items: Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "replace"
+    items: list[int]
+    block: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "replace"}
+        out["items"] = list(self.items)
+        out["block"] = self.block
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReplaceArrayEdit:
+        return cls(
+            items=list(data["items"]),
+            block=data["block"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveArrayEdit(ArrayEdit):
+    """These items' inserts are deleted; the items stay removed until reset.
+    Attributes:
+        items: Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "remove"
+    items: list[int]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "remove"}
+        out["items"] = list(self.items)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveArrayEdit:
+        return cls(
+            items=list(data["items"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ResetArrayEdit(ArrayEdit):
+    """These items (none: every item) as the layout makes them: a removed one comes back, a kept one goes to its
+    place with the array's block (Sıfırla).
+    Attributes:
+        items: Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "reset"
+    items: list[int] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "reset"}
+        if self.items is not UNSET:
+            out["items"] = None if self.items is None else list(self.items)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ResetArrayEdit:
+        return cls(
+            items=UNSET if "items" not in data else None if data["items"] is None else list(data["items"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class GridArrayLayout(ArrayLayout):
     """Dizi: `rows` × `cols` places, 2 to 10 000 of them; the copy `j`
     columns and `i` rows from the originals moves `j·dx` east and `i·dy`
@@ -21947,6 +22136,9 @@ class DeleteViewsOp(ViewsOp):
         )
 
 
+_ARRAY_EDIT: dict[str, type[ArrayEdit]] = {"layout": LayoutArrayEdit, "placement": PlacementArrayEdit, "replace": ReplaceArrayEdit, "remove": RemoveArrayEdit, "reset": ResetArrayEdit}
+
+
 _ARRAY_LAYOUT: dict[str, type[ArrayLayout]] = {"grid": GridArrayLayout, "polar": PolarArrayLayout, "line": LineArrayLayout, "path": PathArrayLayout}
 
 
@@ -22092,8 +22284,10 @@ __all__ = [
     "ArrangeMode",
     "ArrangeModeName",
     "ArrangeTransform",
+    "ArrayEdit",
     "ArrayItem",
     "ArrayLayout",
+    "ArraysEdit",
     "AssocArray",
     "AtMeasuredPoint",
     "Attachment",
@@ -22417,6 +22611,7 @@ __all__ = [
     "LayersTime",
     "LayersTimePlan",
     "LayersTimed",
+    "LayoutArrayEdit",
     "LeaderArrow",
     "LeaderArrowName",
     "LeaderEntity",
@@ -22497,6 +22692,7 @@ __all__ = [
     "PinnedObject",
     "PlaceMeasuredPoint",
     "PlaceOn",
+    "PlacementArrayEdit",
     "PointBinding",
     "PointCloudEntity",
     "PointCloudFields",
@@ -22601,10 +22797,13 @@ __all__ = [
     "RegistryDatumName",
     "RegularFrame",
     "RegularPolygonCreate",
+    "RemoveArrayEdit",
     "RemoveEntityEdit",
     "RenameViewsOp",
     "RenamedBlock",
+    "ReplaceArrayEdit",
     "ReplaceEntityEdit",
+    "ResetArrayEdit",
     "RingGeometry",
     "RotateTransform",
     "RotateUcsTo",

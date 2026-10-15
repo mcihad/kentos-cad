@@ -1371,6 +1371,7 @@ pub fn catalog() -> CommandCatalog {
                       Kopyala'nın Dizi'si (line): yer değiştirme (dx, dy) boyunca adet kadar yer (2 ile 10 000 arası, asıllar ilk yerde), k'ıncı kopya k yer değiştirme ötede; fit ile son kopya yer değiştirmenin ucunda, öbürleri onu eşit paylaşır; adım Kopyala. \
                       Dizi, Kutupsal dizi ve Yol boyunca dizi araçları seçimi kimlik listesi olarak verip bu komutla yazar; adım aracın adını taşır. Yerleşim geometri çekirdeğindedir: her nesne türü aynı kuralla kopyalanır. \
                       Kopya aslının bütün alanlarını ve yeni bir kalıcı kimlik alır. Kilitli katmandaki nesnenin kopyası yapılmaz: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey yazılmaz. \
+                      associative ile (ilişkili dizi, docs/adr/0300) nesneler “Dizi n” bloğu olur ve her yere bloğun bir yerleştirmesi konur; dizi çizimde kalır (çıktının array'i) ve cad.arrays.edit ile düzenlenir. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
                       Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
                 .into(),
@@ -1418,6 +1419,43 @@ pub fn catalog() -> CommandCatalog {
                         },
                         "expectedRevision": "37"
                     }),
+                    output: None,
+                },
+            ],
+        },
+        // Diziyi düzenle (docs/adr/0301), held together by fixtures/commands/v1/cad.arrays.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_ARRAYS_EDIT.into(),
+            version: crate::CAD_ARRAYS_EDIT_VERSION,
+            title: "Diziyi düzenle".into(),
+            summary: "Kimliğiyle verilen ilişkili diziyi (cad.entities.array'in associative'i) düzenler (AutoCAD'in ARRAYEDIT'i); tek geri alma adımı “Diziyi düzenle”. \
+                      Öğeler yerleşimin sırasıyla 0'dan numaralanır (ızgarada satır satır: satır r, sütun c r × sütun + c). \
+                      edit layout: yeni satır, sütun, adet, aralık, açı ya da yol; her öğe yeniden yerleşir. Öğe numarasını (iki ızgarada satırını ve sütununu) korur; elle silinen silinmiş, elle değişen (kept) yerinde kalır; yeni yerlere yerleştirme eklenir, kalkan yerlerin yerleştirmeleri silinir. \
+                      edit placement: ilk yerin p, scale, rotation ve mirror'ı; silinmemiş ve değişmemiş öğeler izler. \
+                      edit replace: items öğeleri block adlı bloğu yerleştirir ve korunur. edit remove: items öğelerinin yerleştirmeleri silinir, öğeler boş kalır. edit reset: items (yoksa hepsi) yerleşimin verdiği gibi olur: silinen geri gelir, değişen dizinin bloğuyla yerine döner. \
+                      Dizinin katmanı ve dokunulan her yerleştirme kilitsiz olmalı: hepsi ya da hiçbiri. Çıktı ve plan cad.entities.edit'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ArraysEdit>(),
+            output: schema::<crate::EntitiesEdited>(),
+            plan: Some(schema::<crate::EntitiesEditPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Direk dizisini 3 satır × 6 sütuna çıkar".into(),
+                    input: json!({ "array": "0192f5a3-3333-7000-8000-000000000001", "edit": { "kind": "layout", "layout": { "kind": "grid", "rows": 3, "cols": 6, "dx": 30.0, "dy": 25.0 } } }),
+                    output: Some(json!({ "changed": [], "created": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4101"], "removed": [], "revision": "66" })),
+                },
+                CommandExample {
+                    title: "Elle silinen ve değiştirilen öğeleri yerine getir".into(),
+                    input: json!({ "array": "0192f5a3-3333-7000-8000-000000000001", "edit": { "kind": "reset" } }),
                     output: None,
                 },
             ],
@@ -4075,6 +4113,9 @@ mod tests {
                     crate::CAD_ENTITIES_ARRAY => {
                         serde_json::from_value::<crate::EntitiesArray>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ARRAYS_EDIT => {
+                        serde_json::from_value::<crate::ArraysEdit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_NURBS_CREATE => {
                         serde_json::from_value::<crate::NurbsCreate>(e.input.clone()).map(|_| ())
                     }
@@ -4316,6 +4357,7 @@ mod tests {
                                 .map(|_| ())
                         }
                         crate::CAD_ENTITIES_BREAK
+                        | crate::CAD_ARRAYS_EDIT
                         | crate::CAD_ENTITIES_JOIN
                         | crate::CAD_ENTITIES_REVERSE
                         | crate::CAD_ENTITIES_LENGTHEN => {

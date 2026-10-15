@@ -861,6 +861,13 @@
       ],
       "note": "Ölçü, nokta ve nesnenin yeri komuta verilir; nokta yerinden hesaplanır (ADR 0249)."
     },
+    "tool.arrayEdit": {
+      "level": "semantic",
+      "via": [
+        "cad.arrays.edit"
+      ],
+      "note": "Dizinin kimliği, yerleşimi, ilk yeri ya da öğe numaraları komuta verilir; yerleri komut hesaplar (ADR 0301)."
+    },
     "processing.run.address.geocode": {
       "level": "processing",
       "python": "kentos.address",

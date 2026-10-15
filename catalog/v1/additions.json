@@ -364,6 +364,20 @@
       "shortcuts": [],
       "category": "Görünüm",
       "status": "implemented"
+    },
+    {
+      "id": "tool.arrayEdit",
+      "title": "Diziyi düzenle",
+      "icon": "arrayEdit",
+      "description": "İlişkili dizinin bir öğesine tıklanır; satır, sütun, adet, aralık ya da açı yazılınca bütün öğeler yeniden yerleşir. Taban dizinin ilk yerini taşır, Değiştir tıklanan öğeye başka bir blok yerleştirir, Sil onu kaldırır, Sıfırla elle silinen ve değiştirilen öğeleri dizinin yerlerine döndürür.",
+      "aliases": [
+        "ARRAYEDIT",
+        "DIZIDUZENLE",
+        "DİZİDÜZENLE"
+      ],
+      "shortcuts": [],
+      "category": "Değiştir",
+      "status": "implemented"
     }
   ],
   "icons": {
@@ -416,7 +430,8 @@
     "xlineVertical": "<path d=\"M10 1.5v17\" stroke-dasharray=\"3.2 1.6\"/><rect x=\"8.5\" y=\"8.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "xlineAngle": "<path d=\"M1.5 16 18.5 4\" stroke-dasharray=\"3.2 1.6\"/><path d=\"M3 16h7\" stroke-width=\"1.1\"/><path d=\"M7.6 16a4.6 4.6 0 0 0-.6-2.3\" stroke-width=\"1.1\"/><rect x=\"8.5\" y=\"8.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "xlineBisect": "<path d=\"M3 16 17 16M3 16 13 3\" stroke-width=\"1.1\"/><path d=\"M3 16 18.5 8.6\" stroke-dasharray=\"3.2 1.6\"/><rect x=\"1.5\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
-    "xlineParallel": "<path d=\"M2 14.5 16 5.5\" stroke-width=\"1.1\"/><path d=\"M3.5 18 19 8\" stroke-dasharray=\"3.2 1.6\"/><path d=\"m10.5 9.5 1.7 2.6\" stroke-width=\"1\"/>"
+    "xlineParallel": "<path d=\"M2 14.5 16 5.5\" stroke-width=\"1.1\"/><path d=\"M3.5 18 19 8\" stroke-dasharray=\"3.2 1.6\"/><path d=\"m10.5 9.5 1.7 2.6\" stroke-width=\"1\"/>",
+    "arrayEdit": "<rect x=\"2.5\" y=\"2.5\" width=\"4.5\" height=\"4.5\" rx=\".6\"/><rect x=\"9.5\" y=\"2.5\" width=\"4.5\" height=\"4.5\" rx=\".6\"/><rect x=\"2.5\" y=\"9.5\" width=\"4.5\" height=\"4.5\" rx=\".6\"/><path d=\"M10.6 17.6l.7-2.7 5.5-5.5a1.5 1.5 0 0 1 2.1 2.1l-5.5 5.5z\"/>"
   },
   "ribbon": [
     {
@@ -669,6 +684,32 @@
         },
         {
           "command": "view.split",
+          "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "home",
+      "into": "Değiştir",
+      "items": [
+        {
+          "command": "tool.arrayEdit",
+          "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "gis"
+      ],
+      "tab": "edit",
+      "into": "Nesne",
+      "items": [
+        {
+          "command": "tool.arrayEdit",
           "size": "small"
         }
       ]

@@ -107,3 +107,90 @@ fn timing() {
         "within budget"
     );
 }
+
+/// `cargo test --release -p kentos-native-application --test all array_assoc::edit_timing -- --ignored --nocapture`:
+/// Diziyi düzenle (docs/adr/0301) on a 100 × 100 grid.
+#[test]
+#[ignore = "a timing, run on purpose"]
+fn edit_timing() {
+    use kentos_domain::contracts::{ArrayEdit, ArraysEdit};
+    use kentos_native_application::arrays_edit;
+    use std::time::Instant;
+    let mut doc = drawing();
+    let grid = |dx: f64| ArrayLayout::Grid {
+        rows: 100,
+        cols: 100,
+        dx,
+        dy: 4.0,
+    };
+    let made = input(&doc, grid(3.0));
+    let CommandResult::Completed { output, .. } =
+        array::execute(&mut ExecutionContext::new(&mut doc), made)
+    else {
+        panic!("not completed")
+    };
+    let id = output.array.expect("an array").to_text();
+    let edit = |e: ArrayEdit| ArraysEdit {
+        array: id.clone(),
+        edit: e,
+        expected_revision: None,
+    };
+    let spacing = edit(ArrayEdit::Layout { layout: grid(5.0) });
+    let t = Instant::now();
+    let CommandResult::Completed { output: plan, .. } = arrays_edit::plan_in(&doc, &spacing) else {
+        panic!("no plan")
+    };
+    let planned = t.elapsed().as_secs_f64() * 1e3;
+    assert_eq!(plan.changed.len(), 9_900);
+    let t = Instant::now();
+    let CommandResult::Completed { .. } =
+        arrays_edit::execute(&mut ExecutionContext::new(&mut doc), spacing)
+    else {
+        panic!("not completed")
+    };
+    let relaid = t.elapsed().as_secs_f64() * 1e3;
+    let t = Instant::now();
+    let CommandResult::Completed { .. } = arrays_edit::execute(
+        &mut ExecutionContext::new(&mut doc),
+        edit(ArrayEdit::Placement {
+            p: Some(Vec2 { x: 50.0, y: 50.0 }),
+            scale: None,
+            rotation: None,
+            mirror: None,
+        }),
+    ) else {
+        panic!("not completed")
+    };
+    let moved = t.elapsed().as_secs_f64() * 1e3;
+    let t = Instant::now();
+    let CommandResult::Completed { .. } = arrays_edit::execute(
+        &mut ExecutionContext::new(&mut doc),
+        edit(ArrayEdit::Layout {
+            layout: ArrayLayout::Grid {
+                rows: 50,
+                cols: 100,
+                dx: 5.0,
+                dy: 4.0,
+            },
+        }),
+    ) else {
+        panic!("not completed")
+    };
+    let shrunk = t.elapsed().as_secs_f64() * 1e3;
+    let t = Instant::now();
+    let CommandResult::Completed { .. } = arrays_edit::execute(
+        &mut ExecutionContext::new(&mut doc),
+        edit(ArrayEdit::Layout { layout: grid(5.0) }),
+    ) else {
+        panic!("not completed")
+    };
+    let grown = t.elapsed().as_secs_f64() * 1e3;
+    println!(
+        "100 × 100 ızgarada: aralık değişikliğinin planı {planned:.2} ms, yazılması {relaid:.2} ms, ilk yerin taşınması \
+         {moved:.2} ms, 50 satıra inmesi (5 000 silinen) {shrunk:.2} ms, 100 satıra çıkması (5 000 yeni) {grown:.2} ms"
+    );
+    assert!(
+        planned < 100.0 && relaid < 300.0 && moved < 300.0 && shrunk < 300.0 && grown < 300.0,
+        "within budget"
+    );
+}

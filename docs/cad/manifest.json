@@ -6854,6 +6854,22 @@
    "tests": 2
   },
   {
+   "id": "tool.arrayEdit",
+   "kind": "command",
+   "title": "Diziyi düzenle",
+   "level": "semantic",
+   "via": [
+    "cad.arrays.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.arrays.edit",
+   "mcp": "cad.arrays.edit",
+   "note": "Dizinin kimliği, yerleşimi, ilk yeri ya da öğe numaraları komuta verilir; yerleri komut hesaplar (ADR 0301).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.arrayPath",
    "kind": "tool",
    "title": "Yol boyunca dizi",

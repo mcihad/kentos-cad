@@ -43,7 +43,7 @@ use kentos_native_application::{
     snap_find, styles_edit, transform, ucs_set, units_change, views_edit,
 };
 use kentos_native_application::{
-    changeset, create, dimensions_create, divide, entities_boundary, entities_break,
+    arrays_edit, changeset, create, dimensions_create, divide, entities_boundary, entities_break,
     entities_hatch, entities_join, entities_lengthen, entities_reverse, file_import, stretch,
 };
 use serde_json::{Value, json};
@@ -136,7 +136,8 @@ fn expect_same(got: &Value, want: &Value, what: &str, at: &str) -> Outcome<()> {
 /// `$blockOf:Rögar`, the id of the drawing's block of that name now, and
 /// `$block:name`, one `captureBlock` took (docs/adr/0144); `$layer:2`, the
 /// second layer the last command that added any added or would add, by
-/// their numbers (docs/adr/0210 §11).
+/// their numbers (docs/adr/0210 §11); `$array:0`, the id of the drawing's
+/// first associative array now (docs/adr/0301).
 fn fill(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<Value> {
     Ok(match value {
         // “$$…” is the text “$…” itself (a change set's reference to a step, docs/adr/0253 §8).
@@ -168,6 +169,17 @@ fn fill(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<Value
                 .uid(Slot(slot))
                 .ok_or_else(|| format!("{at}: {slot} yuvasında nesne yok"))?;
             Value::String(uid.to_string())
+        }
+        // The drawing's associative array at this place now (docs/adr/0301).
+        Value::String(text) if text.starts_with("$array:") => {
+            let k = text["$array:".len()..]
+                .parse::<usize>()
+                .map_err(|_| format!("{at}: {text}: sıra bir sayı olmalı"))?;
+            let array = doc
+                .arrays()
+                .get(k)
+                .ok_or_else(|| format!("{at}: {text}: çizimde {k}. dizi yok"))?;
+            Value::String(array.id.to_text())
         }
         Value::String(text) if text.contains("$uid:") => Value::String(with_uids(text, state, at)?),
         Value::String(text) if text.starts_with("$layer:") => {
@@ -867,6 +879,32 @@ impl Input for kentos_domain::contracts::EntitiesLengthen {
 impl Input for kentos_domain::contracts::EntitiesReverse {
     fn number(&mut self, _: &str) -> Option<&mut f64> {
         None
+    }
+}
+
+impl Input for kentos_domain::contracts::ArraysEdit {
+    /// `edit.scale`, `edit.rotation`, `edit.p.x`, `edit.p.y`, a layout's `edit.layout.dx` and `edit.layout.dy`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_domain::contracts::{ArrayEdit as E, ArrayLayout as L};
+        match (&mut self.edit, path) {
+            (E::Placement { scale, .. }, "edit.scale") => scale.as_mut(),
+            (E::Placement { rotation, .. }, "edit.rotation") => rotation.as_mut(),
+            (E::Placement { p, .. }, "edit.p.x") => p.as_mut().map(|p| &mut p.x),
+            (E::Placement { p, .. }, "edit.p.y") => p.as_mut().map(|p| &mut p.y),
+            (
+                E::Layout {
+                    layout: L::Grid { dx, .. } | L::Line { dx, .. },
+                },
+                "edit.layout.dx",
+            ) => Some(dx),
+            (
+                E::Layout {
+                    layout: L::Grid { dy, .. } | L::Line { dy, .. },
+                },
+                "edit.layout.dy",
+            ) => Some(dy),
+            _ => None,
+        }
     }
 }
 
@@ -1770,6 +1808,9 @@ fn run_op(
             )
         }
         kentos_domain::contracts::CAD_ENTITIES_DIVIDE => run!(divide, EntitiesDivide),
+        kentos_domain::contracts::CAD_ARRAYS_EDIT => {
+            run!(arrays_edit, kentos_domain::contracts::ArraysEdit)
+        }
         kentos_domain::contracts::CAD_ENTITIES_BOUNDARY => {
             run!(entities_boundary, EntitiesBoundary)
         }

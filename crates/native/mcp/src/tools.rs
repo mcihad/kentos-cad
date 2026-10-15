@@ -517,6 +517,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.entities.lengthen"
             // An associative array replaces its source objects by a block's inserts (docs/adr/0300).
             | "cad.entities.array"
+            // It moves, replaces and deletes an array's items (docs/adr/0301).
+            | "cad.arrays.edit"
             // Keeping the numbers scales every object of the drawing (docs/adr/0256 §1).
             | "cad.units.change"
             // Its remove takes a service layer away (docs/adr/0208 §15).

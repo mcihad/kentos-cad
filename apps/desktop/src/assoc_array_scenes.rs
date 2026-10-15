@@ -11,6 +11,13 @@
 //! KENTOS_SHOTS_ONLY=dizi-iliskili,dizi-iliskili-izler cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
+//! And Diziyi düzenle (docs/adr/0301): the road's lights picked by one of them, the prompt with the array's options;
+//! Adet 12 written; a grid of trees whose first place follows the mouse after Taban (the command's plan drawn):
+//!
+//! ```text
+//! KENTOS_SHOTS_ONLY=dizi-duzenle,dizi-duzenle-adet,dizi-duzenle-taban cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! ```
+//!
 //! Test code only.
 
 use kentos_contracts::{ArrayLayout, CommandResult, EntitiesArray, Entity, Vec2};
@@ -19,7 +26,7 @@ use kentos_native_application::{ExecutionContext, array};
 
 use crate::app::App;
 use crate::files_testing::make_cad;
-use crate::tools_scenes::{E, N, Objects, click, hover, open};
+use crate::tools_scenes::{E, N, Objects, click, hover, open, run, typed};
 use crate::tools_screens::Scene;
 
 /// The road's centreline (1) and the light at its start: the pole (2), the arm (3), the lamp (4).
@@ -117,6 +124,88 @@ fn followed(app: &mut App) {
     hover(app, [64.0, 4.0]);
 }
 
+/// Where the insert of `items[k]` is, from the drawing's origin.
+fn item_at(app: &App, items: &[String], k: usize) -> [f64; 2] {
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    match doc
+        .slot_of(items[k].parse().expect("an id"))
+        .and_then(|s| doc.get(s).cloned())
+    {
+        Some(Entity::Insert(i)) => [i.p.x - E, i.p.y - N],
+        _ => panic!("an insert"),
+    }
+}
+
+/// Diziyi düzenle on the road's lights, the fourth picked: its pole's circle is the base point.
+fn edit_picked(app: &mut App) {
+    let items = arrayed(app);
+    run(app, "tool.arrayEdit");
+    let at = item_at(app, &items, 3);
+    click(app, [at[0] + 0.4, at[1]]);
+    hover(app, [64.0, 4.0]);
+}
+
+/// Adet 12: the lights spread again along the road, four more.
+fn edit_count(app: &mut App) {
+    edit_picked(app);
+    typed(app, "D");
+    typed(app, "12");
+    hover(app, [64.0, 4.0]);
+}
+
+/// A tree: a crown (a circle) over a trunk mark.
+fn trees() -> Objects {
+    let mut o = Objects::new();
+    o.circle("cizim", [10.0, 10.0], 2.0);
+    o.line("cizim", [9.0, 10.0], [11.0, 10.0]);
+    o.line("cizim", [10.0, 9.0], [10.0, 11.0]);
+    o
+}
+
+/// A 3 × 5 grid of trees, Taban asked: the first place at the mouse, the plan drawn.
+fn edit_base(app: &mut App) {
+    open(app, trees());
+    make_cad(app);
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 4.0,
+            min_y: N - 6.0,
+            max_x: E + 74.0,
+            max_y: N + 44.0,
+        },
+        24.0,
+    );
+    let doc = &mut app.document.as_mut().expect("a drawing").model;
+    let uid = |s: u32| doc.uid(Slot(s)).expect("an object").to_string();
+    let input = EntitiesArray {
+        uids: vec![uid(1), uid(2), uid(3)],
+        layout: ArrayLayout::Grid {
+            rows: 3,
+            cols: 5,
+            dx: 8.0,
+            dy: 8.0,
+        },
+        associative: true,
+        expected_revision: None,
+    };
+    let CommandResult::Completed { output, .. } =
+        array::execute(&mut ExecutionContext::new(doc), input)
+    else {
+        panic!("not written")
+    };
+    run(app, "tool.arrayEdit");
+    let at = item_at(app, &output.created, 7);
+    click(app, [at[0] + 2.0, at[1]]);
+    typed(app, "B");
+    hover(app, [26.0, 4.0]);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
-    vec![("dizi-iliskili", made), ("dizi-iliskili-izler", followed)]
+    vec![
+        ("dizi-iliskili", made),
+        ("dizi-iliskili-izler", followed),
+        ("dizi-duzenle", edit_picked),
+        ("dizi-duzenle-adet", edit_count),
+        ("dizi-duzenle-taban", edit_base),
+    ]
 }

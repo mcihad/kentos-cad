@@ -722,3 +722,86 @@ fn a_vertex_of_another_part_is_added_and_removed_there() {
         ]
     ));
 }
+
+// ── Diziyi düzenle ──────────────────────────────────────────────────────────
+
+/// A circle made a 2 × 2 associative array through the array command (docs/adr/0300).
+fn arrayed(b: &mut Bench) {
+    use kentos_contracts::{ArrayLayout, EntitiesArray};
+    use kentos_native_application::{ExecutionContext, array};
+    let c = b.add_circle("cizim", [-40.0, 20.0], 1.0);
+    let input = EntitiesArray {
+        uids: vec![b.doc.uid(c).expect("an id").to_string()],
+        layout: ArrayLayout::Grid {
+            rows: 2,
+            cols: 2,
+            dx: 5.0,
+            dy: 4.0,
+        },
+        associative: true,
+        expected_revision: None,
+    };
+    let result = array::execute(&mut ExecutionContext::new(&mut b.doc), input);
+    assert!(
+        matches!(result, kentos_contracts::CommandResult::Completed { .. }),
+        "{result:?}"
+    );
+}
+
+fn rows_and_items(b: &Bench) -> (u32, usize) {
+    let a = &b.doc.arrays()[0];
+    match a.layout {
+        kentos_contracts::ArrayLayout::Grid { rows, .. } => {
+            (rows, a.items.iter().filter(|i| i.uid.is_some()).count())
+        }
+        _ => panic!("a grid"),
+    }
+}
+
+#[test]
+fn an_associative_array_is_edited_through_one_of_its_items() {
+    let mut b = bench(&[]);
+    arrayed(&mut b);
+    b.start("arrayEdit");
+    assert_eq!(
+        b.session.prompt().text(),
+        "Diziyi düzenle: düzenlenecek ilişkili dizinin bir öğesine tıklayın"
+    );
+    // The second item's circle, east of the first.
+    b.click(-34.0, 20.0);
+    assert!(
+        b.session.prompt().text().contains("ızgara 2 × 2; öğe 1"),
+        "{}",
+        b.session.prompt().text()
+    );
+    assert_eq!(b.options(), ["S", "T", "A", "R", "B", "G", "L", "F"]);
+    // Satır 3: two more items, one step.
+    assert!(b.type_text("S"));
+    assert_eq!(
+        b.session.prompt().text(),
+        "Diziyi düzenle: satır sayısını yazın"
+    );
+    assert!(b.type_text("3"));
+    assert_eq!(b.last_text(), Some("Dizi düzenlendi: 2 öğe eklendi."));
+    assert_eq!(rows_and_items(&b), (3, 6));
+    // Sil takes the clicked item away, Sıfırla brings it back.
+    assert!(b.type_text("L"));
+    assert_eq!(b.last_text(), Some("Dizi düzenlendi: 1 öğe silindi."));
+    assert_eq!(rows_and_items(&b), (3, 5));
+    assert!(
+        !b.options().contains(&"L"),
+        "the removed item cannot be removed again"
+    );
+    assert!(b.type_text("F"));
+    assert_eq!(b.last_text(), Some("Dizi düzenlendi: 1 öğe eklendi."));
+    assert_eq!(rows_and_items(&b), (3, 6));
+    // A count that is not whole is said, nothing written.
+    assert!(b.type_text("T"));
+    assert!(b.type_text("2.5"));
+    assert_eq!(
+        b.last_text(),
+        Some("1 ile 10 000 arasında bir tam sayı yazın.")
+    );
+    assert_eq!(b.doc.undo().as_deref(), Some("Diziyi düzenle"));
+    assert_eq!(rows_and_items(&b), (3, 5));
+}

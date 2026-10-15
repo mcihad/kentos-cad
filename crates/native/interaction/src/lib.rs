@@ -104,6 +104,7 @@ pub use kentos_native_application::annotation_follow as annotation_scale;
 pub mod arc;
 pub mod area;
 pub mod array;
+pub mod array_edit;
 pub mod array_path;
 pub mod between;
 pub mod block_define;

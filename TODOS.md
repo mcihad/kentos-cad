@@ -170,6 +170,9 @@ Liste:
   uyarıları komutun sözleri; paralel iki doğruya TTY, saat yönünde verilen yaydan Devam; araç durumları
   `fixtures/curve-methods/v1/tools.json`. Web'in donmuş çağrı kayıtları eski `arcStartCenterEnd` ve `arcStartCenterAngle`'ı (tam tur)
   tutar; geri dönüşte komutun kuralına getirilir.
+- [ ] `CAD-EDIT-15` (ADR 0301, 15 Ekim): web'de gerekenler: `cad.arrays.edit`'in TS işleyicisi (sözleşme türleri `ArraysEdit`,
+  `ArrayEdit` üretildi; ortak durumlar `cad.arrays.edit.json`, çalıştırıcıda `$array:k`) ve Diziyi düzenle aracı (öğeye tıklama,
+  dizinin türüne göre seçenekler, Taban'da plandan önizleme).
 - [ ] `CAD-EDIT-14` (ADR 0300, 15 Ekim): web'de gerekenler: belgenin `arrays`'i (`model/document.ts`: ekleme, değiştirme,
   kaldırma, geri alma, adımın sonunda izleme: silinen öğe boş, değişen `kept`, yol dizisi yolu izler), `.kcad` şema 53'ün okunup
   yazılması (`io/kcad.ts`; sözleşme türleri `AssocArray`, `ArrayItem`, `ArrayId` üretildi), `cad.entities.array`'in `associative`'i

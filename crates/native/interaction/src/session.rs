@@ -240,6 +240,8 @@ pub const TOOLS: &[&str] = &[
     crate::edge_shift::ID,
     // docs/adr/0249 §3: Yeniden bağla.
     crate::dimension_reassociate::ID,
+    // docs/adr/0301: Diziyi düzenle.
+    crate::array_edit::ID,
     // docs/adr/0192: Resim ekle and Resmi kırp.
     crate::image_insert::ID,
     crate::image_clip::ID,
@@ -544,6 +546,7 @@ impl Session {
             crate::dimension_reassociate::ID => {
                 Box::new(crate::dimension_reassociate::DimensionReassociate::new())
             }
+            crate::array_edit::ID => Box::new(crate::array_edit::ArrayEdit::new()),
             crate::image_insert::ID => Box::new(crate::image_insert::ImageInsert::new()),
             crate::image_clip::ID => Box::new(crate::image_clip::ImageClip::new()),
             _ => return None,

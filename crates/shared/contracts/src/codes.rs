@@ -436,6 +436,12 @@ codes! {
     TOO_MANY_POINTS = "too_many_points", Failed, false, "10 000'den çok nokta olurdu; daha büyük bir aralık verin.";
     /// A first distance given with a number of parts (Böl, docs/adr/0299).
     START_NEEDS_STEP = "start_needs_step", Failed, false, "Başlangıç yalnız aralıkla bölmede verilir.";
+    /// No associative array has the id (Diziyi düzenle, docs/adr/0301).
+    ARRAY_NOT_FOUND = "array_not_found", Failed, false, "Kimliği verilen ilişkili dizi çizimde yok.";
+    /// An item number out of the array's places, given twice, or none given (Diziyi düzenle).
+    INVALID_ITEM = "invalid_item", Failed, false, "Öğe numarası dizinin yerlerinin dışında, iki kez verilmiş ya da hiç verilmemiş.";
+    /// An item removed by hand named for a change or a removal (Diziyi düzenle; Sıfırla brings it back).
+    ITEM_REMOVED = "item_removed", Failed, false, "Öğe elle silinmiş; önce Sıfırla ile geri getirin.";
     /// No closed region around the point (Alan oluştur, Tarama).
     NOT_ENCLOSED = "not_enclosed", Failed, false, "Nokta kapalı bir bölgenin içinde değil.";
     /// An object of Çoklu tara that is not closed: left out, or the refusal when none is.

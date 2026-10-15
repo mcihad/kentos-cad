@@ -126,9 +126,11 @@ class _EntitiesArray(LocalCommand[EntitiesArray, EntitiesArrayed, EntitiesArrayP
     taşır. Yerleşim geometri çekirdeğindedir: her nesne türü aynı kuralla kopyalanır.
     Kopya aslının bütün alanlarını ve yeni bir kalıcı kimlik alır. Kilitli katmandaki
     nesnenin kopyası yapılmaz: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey
-    yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
-    yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik
-    project.changes ile gider.
+    yazılmaz. associative ile (ilişkili dizi, docs/adr/0300) nesneler “Dizi n” bloğu
+    olur ve her yere bloğun bir yerleştirmesi konur; dizi çizimde kalır (çıktının
+    array'i) ve cad.arrays.edit ile düzenlenir. expectedRevision verilmişse ve çizim o
+    sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez;
+    bulut projesine değişiklik project.changes ile gider.
     """
     __slots__ = ()
     id = "cad.entities.array"
@@ -170,9 +172,11 @@ class _EntitiesArray(LocalCommand[EntitiesArray, EntitiesArrayed, EntitiesArrayP
         geometri çekirdeğindedir: her nesne türü aynı kuralla kopyalanır. Kopya aslının
         bütün alanlarını ve yeni bir kalıcı kimlik alır. Kilitli katmandaki nesnenin kopyası
         yapılmaz: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey yazılmaz.
-        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-        conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes
-        ile gider.
+        associative ile (ilişkili dizi, docs/adr/0300) nesneler “Dizi n” bloğu olur ve her
+        yere bloğun bir yerleştirmesi konur; dizi çizimde kalır (çıktının array'i) ve
+        cad.arrays.edit ile düzenlenir. expectedRevision verilmişse ve çizim o sürümde
+        değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut
+        projesine değişiklik project.changes ile gider.
 
         Args:
             doc: The drawing it works on.
