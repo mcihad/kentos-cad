@@ -765,6 +765,12 @@ pub struct Memory {
     pub curve_tolerance: f64,
     /// Özellik kopyala's switches turned off, one bit each (docs/adr/0304), kept for the session.
     pub match_off: u16,
+    /// Çizimi temizle's tolerance, metres, and options (docs/adr/0305), kept for the session.
+    pub cleanup_tolerance: f64,
+    pub cleanup_overlaps: bool,
+    pub cleanup_end_to_end: bool,
+    pub cleanup_straight: bool,
+    pub cleanup_ignore_look: bool,
     /// Blok ekle's block, scale, turn in degrees and mirror
     /// (`BlockInsertTool.block`, `.scale`, `.rotation`, `.mirror`; docs/adr/0144).
     pub block_insert: Option<kentos_contracts::BlockId>,
@@ -1089,6 +1095,11 @@ impl Default for Memory {
             nurbs_degree: 3,
             curve_tolerance: 0.01,
             match_off: 0,
+            cleanup_tolerance: kentos_contracts::CLEANUP_TOLERANCE,
+            cleanup_overlaps: true,
+            cleanup_end_to_end: false,
+            cleanup_straight: true,
+            cleanup_ignore_look: false,
             block_insert: None,
             block_scale: 1.0,
             block_rotation: 0.0,

@@ -25,6 +25,7 @@ COMMANDS: dict[str, Any] = {
     "cad.entities.boundary": entities.boundary,
     "cad.entities.break": entities.break_,
     "cad.entities.chamfer": entities.chamfer,
+    "cad.entities.cleanup": entities.cleanup,
     "cad.entities.create": entities.create,
     "cad.entities.delete": entities.delete,
     "cad.entities.divide": entities.divide,

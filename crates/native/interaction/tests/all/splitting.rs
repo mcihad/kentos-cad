@@ -327,33 +327,46 @@ fn cleanup_shows_what_it_found_then_cleans_in_one_step() {
     assert_eq!(
         b.last_text(),
         Some(
-            "Çizimi temizle: 1 yinelenen, 1 boş nesne, 1 tekrarlanan köşe. Enter ile temizleyin (bütün çizim, 5 nesne)."
+            "Çizimi temizle: 1 yinelenen, 1 boş nesne, 2 köşe. Enter ile temizleyin (bütün çizim)."
         )
     );
-    assert_eq!(
-        b.session.prompt().text(),
-        "Çizimi temizle: 1 yinelenen, 1 boş nesne, 1 tekrarlanan köşe [Temizle (Enter)]"
+    assert!(
+        b.session.prompt().text().starts_with(
+            "Çizimi temizle: 1 yinelenen, 1 boş nesne, 2 köşe [Temizle (Enter) / Tolerans (T): 0.000001 m"
+        ),
+        "{}",
+        b.session.prompt().text()
     );
-    // The repeat dashed in danger, a cross at the empty line and the repeated vertex.
+    assert_eq!(b.options(), ["Enter", "T", "Ö", "U", "K", "G"]);
+    // What goes dashed in danger, the path that changes in the accent.
     let p = preview(&b);
     assert!(
         p.strokes
             .iter()
             .any(|s| s.tone == Tone::Danger && s.dash.is_some())
     );
-    assert_eq!(p.markers.len(), 2);
+    assert!(p.strokes.iter().any(|s| s.tone == Tone::Accent));
+    // Köşeler off: only the repeated vertex goes.
+    assert!(b.type_text("K"));
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .starts_with("Çizimi temizle: 1 yinelenen, 1 boş nesne, 1 köşe [")
+    );
+    assert!(b.type_text("K"));
     assert_eq!(b.doc.len(), before, "nothing is written before the confirm");
     b.confirm();
     assert_eq!(
         b.last_text(),
-        Some("Çizimi temizle: 1 yinelenen, 1 boş nesne silindi; 1 tekrarlanan köşe atıldı.")
+        Some("Çizimi temizle: 1 yinelenen, 1 boş nesne silindi; 2 köşe atıldı.")
     );
     assert_eq!(b.session.tool_id(), "select");
     assert_eq!(b.doc.len(), before - 2);
     // The first of the repeats stays: slot 1. The path lost its repeated vertex.
     assert!(b.doc.get(Slot(1)).is_some());
     assert!(b.doc.get(Slot(2)).is_none());
-    assert_eq!(b.path_pts(Slot(5)).len(), 3);
+    assert_eq!(b.path_pts(Slot(5)).len(), 2);
     assert_eq!(b.doc.undo().as_deref(), Some("Çizimi temizle"));
     assert_eq!(b.doc.len(), before);
     assert_eq!(b.path_pts(Slot(5)).len(), 4);
@@ -383,12 +396,19 @@ fn a_clean_drawing_is_said_and_the_tool_leaves() {
     b.add_line("cizim", [0.0, 5.0], [10.0, 5.0]);
     let rev = b.doc.revision();
     b.start("cleanup");
-    assert_eq!(b.session.tool_id(), "select");
     assert_eq!(
         b.last_text(),
         Some(
-            "Çizimi temizle: yinelenen ya da boş nesne, tekrarlanan köşe bulunamadı; çizim temiz."
+            "Çizimi temizle: bu toleransla temizlenecek bir şey bulunamadı (bütün çizim). Toleransı ya da seçenekleri değiştirebilirsiniz."
         )
+    );
+    // The options stay open; Enter leaves.
+    assert_eq!(b.session.tool_id(), "cleanup");
+    b.confirm();
+    assert_eq!(b.session.tool_id(), "select");
+    assert_eq!(
+        b.last_text(),
+        Some("Çizimi temizle: temizlenecek bir şey bulunamadı; çizim temiz.")
     );
     assert_eq!(b.doc.revision(), rev);
 }
@@ -406,7 +426,7 @@ fn cleanup_leaves_a_locked_layer_alone_and_repeats_on_another_layer_are_not_repe
     assert_eq!(
         b.last_text(),
         Some(
-            "Çizimi temizle: yinelenen ya da boş nesne, tekrarlanan köşe bulunamadı; çizim temiz."
+            "Çizimi temizle: bu toleransla temizlenecek bir şey bulunamadı (bütün çizim). Toleransı ya da seçenekleri değiştirebilirsiniz."
         )
     );
     assert!(

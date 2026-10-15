@@ -170,6 +170,9 @@ Liste:
   uyarıları komutun sözleri; paralel iki doğruya TTY, saat yönünde verilen yaydan Devam; araç durumları
   `fixtures/curve-methods/v1/tools.json`. Web'in donmuş çağrı kayıtları eski `arcStartCenterEnd` ve `arcStartCenterAngle`'ı (tam tur)
   tutar; geri dönüşte komutun kuralına getirilir.
+- [ ] `CAD-EDIT-19` (ADR 0305, 15 Ekim): web'de gerekenler: `cad.entities.cleanup`'ın TS işleyicisi (sözleşme türleri `EntitiesCleanup`,
+  `CleanupIgnore`, `CleanupReport`, `EntitiesCleaned`, `EntitiesCleanupPlan` üretildi; ortak durumlar `cad.entities.cleanup.json`),
+  çekirdeğin `ops::overkill`'inin WASM'a açılması ve Çizimi temizle'nin komutun planıyla önizleyip yazması, beş seçeneği.
 - [ ] `CAD-EDIT-18` (ADR 0304, 15 Ekim): web'de gerekenler: `cad.entities.match`'in TS işleyicisi (sözleşme türleri `EntitiesMatch`,
   `MatchProperty` üretildi; ortak durumlar `cad.entities.match.json`) ve Özellik kopyala'nın komutla yazması, istemdeki on anahtar.
 - [ ] `CAD-EDIT-17` (ADR 0303, 15 Ekim): web'de gerekenler: `cad.curves.edit`'in TS işleyicisi (sözleşme türleri `CurvesEdit`,

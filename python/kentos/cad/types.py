@@ -284,6 +284,21 @@ CheckpointKindName = Literal["snapshot", "revision"]
 """The names of :class:`CheckpointKind`, for a plain string."""
 
 
+class CleanupIgnore(_StrEnum):
+    """A property two objects may differ in and still be the same (AutoCAD's OVERKILL “Ignore object property”)."""
+    LAYER = "layer"
+    COLOR = "color"
+    LINE_TYPE = "lineType"
+    LINE_TYPE_SCALE = "lineTypeScale"
+    LINE_WEIGHT = "lineWeight"
+    TRANSPARENCY = "transparency"
+    SYMBOL = "symbol"
+
+
+CleanupIgnoreName = Literal["layer", "color", "lineType", "lineTypeScale", "lineWeight", "transparency", "symbol"]
+"""The names of :class:`CleanupIgnore`, for a plain string."""
+
+
 class ClosedPolylines(_StrEnum):
     """What a file's closed polyline becomes (docs/adr/0258 §1).
 
@@ -4466,6 +4481,50 @@ class CirclePlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CleanupReport(_Model):
+    """What Çizimi temizle found.
+    Attributes:
+        empty: Empty objects removed. Unit: count.
+        duplicates: Duplicates removed. Unit: count.
+        merged: Lines merged into others (removed). Unit: count.
+        merging: Lines that took others (changed). Unit: count.
+        vertices: Vertices dropped from paths. Unit: count.
+        paths: Paths that lost vertices (changed). Unit: count.
+        loss: The farthest a point that went lies from what stays, metres: what the tolerance cost. Unit: length.
+    """
+    empty: int
+    duplicates: int
+    merged: int
+    merging: int
+    vertices: int
+    paths: int
+    loss: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["empty"] = self.empty
+        out["duplicates"] = self.duplicates
+        out["merged"] = self.merged
+        out["merging"] = self.merging
+        out["vertices"] = self.vertices
+        out["paths"] = self.paths
+        out["loss"] = float(self.loss)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CleanupReport:
+        return cls(
+            empty=data["empty"],
+            duplicates=data["duplicates"],
+            merged=data["merged"],
+            merging=data["merging"],
+            vertices=data["vertices"],
+            paths=data["paths"],
+            loss=float(data["loss"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CloudSource(_Model):
     """One file of a cloud.
     Attributes:
@@ -6190,6 +6249,134 @@ class EntitiesChamfer(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             second=UNSET if "second" not in data else None if data["second"] is None else float(data["second"]),
             trim=data.get("trim", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesCleaned(_Model):
+    """Output of `cad.entities.cleanup` v1.
+    Attributes:
+        changed: The objects changed (lines merged into, paths thinned), in the scope's order.
+        removed: The objects removed, in the scope's order.
+        revision: The document's revision after the write, as decimal text (the same when nothing changed).
+    """
+    changed: list[str]
+    removed: list[str]
+    report: CleanupReport
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = list(self.changed)
+        out["removed"] = list(self.removed)
+        out["report"] = self.report.to_json()
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesCleaned:
+        return cls(
+            changed=list(data["changed"]),
+            removed=list(data["removed"]),
+            report=CleanupReport.from_json(data["report"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesCleanup(_Model):
+    """Input of `cad.entities.cleanup` v1, one undo step “Çizimi temizle”. Within `tolerance` metres:
+
+    - an empty object goes: a line, a path or an arc no longer than it, a circle no wider, a text without words;
+    - a duplicate goes, the first stays: one of the same kind whose points (a point, a line's ends either way, a path's
+      vertices in order, reversed or, closed, from any start, its arcs alike; a circle's centre and radius; an arc's
+      centre, radius and ends) lie within it, its other fields equal, its own properties equal but the ones in
+      `ignore`, and its data (attributes, label, attachments) equal;
+    - with `overlaps`, lines of one such group that lie on one line and overlap go into the first (with `endToEnd`
+      also lines meeting end to end): it reaches the farthest ends; lines with an elevation or a measure stay;
+    - a path's vertices that add nothing go: a repeat, and with `straightVertices` one on the straight line between its
+      neighbours; a vertex with its own elevation or measure, or where the widths change, stays.
+
+    The scope is `uids`, or with none every object on a visible, unlocked layer; a named object on a locked layer is
+    left out with a warning. Refusals: `invalid_uid`, `invalid_tolerance`, `invalid_revision`, `revision_conflict`
+    (status `conflict`), `entity_not_found`, `layer_locked` (every named object locked).
+    Attributes:
+        end_to_end: Lines on one line that meet end to end merge too; absent: false.
+        expected_revision: The document revision the input was prepared against, as decimal text. When given and the document is no
+            longer at it, nothing is written and the answer is `conflict`.
+        ignore: Properties duplicates may differ in.
+        overlaps: Lines on one line that overlap merge; absent: true.
+        straight_vertices: A path's vertices on the straight line between their neighbours go; absent: true.
+        tolerance: How far points may lie apart and be one, metres, 0 to 10; absent: `CLEANUP_TOLERANCE`. Unit: length.
+        uids: The objects looked at: their persistent ids. Absent: every object on a visible, unlocked layer.
+    """
+    end_to_end: bool | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    ignore: list[CleanupIgnore | CleanupIgnoreName] | Unset = UNSET
+    overlaps: bool | None | Unset = UNSET
+    straight_vertices: bool | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.end_to_end is not UNSET:
+            out["endToEnd"] = self.end_to_end
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.ignore is not UNSET:
+            out["ignore"] = [_enum_out(e0) for e0 in self.ignore]
+        if self.overlaps is not UNSET:
+            out["overlaps"] = self.overlaps
+        if self.straight_vertices is not UNSET:
+            out["straightVertices"] = self.straight_vertices
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesCleanup:
+        return cls(
+            end_to_end=data.get("endToEnd", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            ignore=[_enum_in(CleanupIgnore, e0) for e0 in data["ignore"]] if "ignore" in data else UNSET,
+            overlaps=data.get("overlaps", UNSET),
+            straight_vertices=data.get("straightVertices", UNSET),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesCleanupPlan(_Model):
+    """What `cad.entities.cleanup` would write (plan mode); nothing is written.
+    Attributes:
+        changed: The objects that would change, as they would be written, in the scope's order.
+        removed: The objects that would go: their persistent ids, in the scope's order.
+        revision: The document revision the plan was made against.
+    """
+    changed: list[Entity]
+    removed: list[str]
+    report: CleanupReport
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = [e0.to_json() for e0 in self.changed]
+        out["removed"] = list(self.removed)
+        out["report"] = self.report.to_json()
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesCleanupPlan:
+        return cls(
+            changed=[Entity.from_json(e0) for e0 in data["changed"]],
+            removed=list(data["removed"]),
+            report=CleanupReport.from_json(data["report"]),
+            revision=data["revision"],
         )
 
 
@@ -22819,6 +23006,9 @@ __all__ = [
     "CircleThreePointsCurveConstruction",
     "CircleTwoPointsCurveConstruction",
     "CircumscribedRegularFrame",
+    "CleanupIgnore",
+    "CleanupIgnoreName",
+    "CleanupReport",
     "CloseCurveEdit",
     "ClosedPolylines",
     "ClosedPolylinesName",
@@ -22911,6 +23101,9 @@ __all__ = [
     "EntitiesBoundary",
     "EntitiesBreak",
     "EntitiesChamfer",
+    "EntitiesCleaned",
+    "EntitiesCleanup",
+    "EntitiesCleanupPlan",
     "EntitiesCornerPlan",
     "EntitiesCornered",
     "EntitiesCreate",

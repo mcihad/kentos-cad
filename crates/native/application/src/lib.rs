@@ -51,6 +51,7 @@ pub mod call;
 pub mod changeset;
 mod checks;
 pub mod circle;
+pub mod cleanup_cmd;
 pub mod codes;
 mod context;
 pub mod corner;
@@ -75,6 +76,7 @@ pub mod labels_pin;
 pub mod lengthen;
 pub mod reverse;
 pub use break_join::{entities_break, entities_join};
+pub use cleanup_cmd::entities_cleanup;
 pub use curves_edit_cmd::curves_edit;
 pub use dimension_create::dimensions_create;
 pub use edge_commands::{entities_chamfer, entities_extend, entities_fillet, entities_trim};
@@ -377,6 +379,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_ENTITIES_MATCH,
         kentos_contracts::CAD_ENTITIES_MATCH_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_ENTITIES_CLEANUP,
+        kentos_contracts::CAD_ENTITIES_CLEANUP_VERSION,
     ),
     (
         kentos_contracts::CAD_ENTITIES_DIVIDE,

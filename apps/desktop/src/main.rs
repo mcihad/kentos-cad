@@ -40,6 +40,8 @@ mod centerline_scenes;
 #[cfg(test)]
 mod chart_scenes;
 mod charts;
+#[cfg(test)]
+mod cleanup_scenes;
 mod clipboard;
 mod cloud;
 #[cfg(test)]

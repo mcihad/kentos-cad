@@ -1500,8 +1500,12 @@
       "operation": "simplify"
     },
     "cleanup": {
-      "level": "geometry",
-      "operation": "cleanup"
+      "level": "semantic",
+      "via": [
+        "cad.entities.cleanup"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Kapsam, tolerans ve seçenekler komuta verilir; yinelenenleri, eş doğrultulu çizgileri ve köşeleri komut bulur, raporu kaybıyla verir (ADR 0305)."
     },
     "setElevation": {
       "level": "geometry",

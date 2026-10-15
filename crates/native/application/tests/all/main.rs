@@ -6,6 +6,7 @@ mod array_assoc;
 mod break_join_ties;
 mod capabilities;
 mod catalog;
+mod cleanup_cmd;
 mod create;
 mod curves_edit;
 mod delete;

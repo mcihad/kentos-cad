@@ -17,8 +17,8 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 49 | 113 | 38 | 38 | 238 |
-| geometry | 19 | 64 | 0 | 8 | 91 |
+| semantic | 49 | 114 | 38 | 38 | 239 |
+| geometry | 19 | 63 | 0 | 8 | 90 |
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 20 | 0 | 6 | 26 |
 | query | 0 | 21 | 1 | 4 | 26 |
@@ -31,9 +31,9 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 496 satırdan 134'i: geometry 83, none 20, processing 13, query 18.
+CBS'ye özgü olmayan 496 satırdan 133'i: geometry 82, none 20, processing 13, query 18.
 
-### Sonucu çağıran hesaplar (geometry) — 83
+### Sonucu çağıran hesaplar (geometry) — 82
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -56,7 +56,6 @@ CBS'ye özgü olmayan 496 satırdan 134'i: geometry 83, none 20, processing 13, 
 | `tool.areaSubtract` | Alan çıkar | shared | cad.entities.edit `areaSubtract` |  |
 | `tool.areaUnion` | Alan birleştir | shared | cad.entities.edit `areaUnion` |  |
 | `tool.centerline` | Orta hat | shared | cad.entities.create `centerline` |  |
-| `tool.cleanup` | Çizimi temizle | shared | cad.entities.edit `cleanup` |  |
 | `tool.continue` | Sürdür | shared | cad.entities.edit `continue` |  |
 | `tool.coordinateLabel` | Koordinat yaz | cad | cad.entities.create `coordinates` |  |
 | `tool.coordinateVertices` | Köşelere koordinat yaz | cad | cad.entities.create `coordinates` |  |

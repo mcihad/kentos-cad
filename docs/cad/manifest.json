@@ -7150,14 +7150,14 @@
    "id": "tool.cleanup",
    "kind": "tool",
    "title": "Çizimi temizle",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.entities.cleanup"
    ],
-   "operation": "cleanup",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.entities.cleanup",
+   "mcp": "cad.entities.cleanup",
+   "note": "Kapsam, tolerans ve seçenekler komuta verilir; yinelenenleri, eş doğrultulu çizgileri ve köşeleri komut bulur, raporu kaybıyla verir (ADR 0305).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1

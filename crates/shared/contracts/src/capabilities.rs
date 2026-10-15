@@ -454,6 +454,22 @@ const ENTRIES: &[Entry] = &[
         },
     },
     Entry {
+        id: "cad.entities.cleanup",
+        refusals: &[
+            &[
+                "invalid_uid",
+                "no_entities",
+                "not_finite",
+                "invalid_tolerance",
+                "entity_not_found",
+                "layer_locked",
+            ],
+            REVISION,
+        ],
+        warnings: &["layer_locked"],
+        targets: none,
+    },
+    Entry {
         id: "cad.entities.match",
         refusals: &[
             &[

@@ -524,6 +524,7 @@ fn command_tool(c: &Value) -> Value {
             // It reshapes or replaces a polyline or a NURBS curve (docs/adr/0303).
             | "cad.curves.edit"
             | "cad.entities.match"
+            | "cad.entities.cleanup"
             // Keeping the numbers scales every object of the drawing (docs/adr/0256 §1).
             | "cad.units.change"
             // Its remove takes a service layer away (docs/adr/0208 §15).

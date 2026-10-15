@@ -1560,6 +1560,41 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Çizimi temizle (docs/adr/0305), held together by fixtures/commands/v1/cad.entities.cleanup.json.
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_CLEANUP.into(),
+            version: crate::CAD_ENTITIES_CLEANUP_VERSION,
+            title: "Çizimi temizle".into(),
+            summary: "Toleransla boş ve yinelenen nesneleri siler, aynı doğrudaki çizgileri birleştirir, yolların gereksiz köşelerini atar (AutoCAD'in OVERKILL'i); tek geri alma adımı “Çizimi temizle”. \
+                      Kapsam uids ya da verilmezse görünen ve kilitsiz katmanlardaki bütün nesneler. tolerance (metre, 0 ile 10; verilmezse 0,000001) içinde: boş nesne (çizgi, yol ve yay tolerans kadar kısa, daire tolerans kadar küçük, sözsüz yazı) gider; aynı türden, noktaları tolerans içinde, öbür alanları, ignore dışındaki kendi özellikleri ve verisi (öznitelik, etiket, ekler) eşit nesne yinelenendir ve gider, ilki kalır. \
+                      overlaps (varsayılan açık) aynı doğrudaki üst üste binen çizgileri ilkine katar, endToEnd uç uca olanları da; kotlu ya da ölçülü çizgi katılmaz. straightVertices (varsayılan açık) yolun komşularının arasındaki doğrudaki köşelerini, her zaman yinelenen köşelerini atar; kendi kotu ya da ölçüsü olan, genişliğin değiştiği köşe kalır. \
+                      Rapor sayıları ve kaybı verir (gidenin kalandan en uzak noktası). Retler: invalid_uid, no_entities, not_finite, invalid_tolerance, entity_not_found, layer_locked. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesCleanup>(),
+            output: schema::<crate::EntitiesCleaned>(),
+            plan: Some(schema::<crate::EntitiesCleanupPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bütün çizimi milimetre toleransla temizle".into(),
+                    input: json!({ "tolerance": 0.001 }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001"], "removed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7003"], "report": { "empty": 0, "duplicates": 1, "merged": 1, "merging": 1, "vertices": 0, "paths": 0, "loss": 0.0004 }, "revision": "70" })),
+                },
+                CommandExample {
+                    title: "Seçilenlerde rengi farklı yinelenenleri de sil".into(),
+                    input: json!({ "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7011", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7012"], "ignore": ["color"], "overlaps": false }),
+                    output: None,
+                },
+            ],
+        },
         // Ötele's semantic command (docs/adr/0246), held together by
         // fixtures/commands/v1/cad.entities.offset.json. The web is paused
         // (docs/adr/0228): the desktop's host alone runs it for now.
@@ -4225,6 +4260,9 @@ mod tests {
                     crate::CAD_ENTITIES_MATCH => {
                         serde_json::from_value::<crate::EntitiesMatch>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ENTITIES_CLEANUP => {
+                        serde_json::from_value::<crate::EntitiesCleanup>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_NURBS_CREATE => {
                         serde_json::from_value::<crate::NurbsCreate>(e.input.clone()).map(|_| ())
                     }
@@ -4474,6 +4512,10 @@ mod tests {
                         | crate::CAD_ENTITIES_REVERSE
                         | crate::CAD_ENTITIES_LENGTHEN => {
                             serde_json::from_value::<crate::EntitiesEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ENTITIES_CLEANUP => {
+                            serde_json::from_value::<crate::EntitiesCleaned>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ENTITIES_DIVIDE

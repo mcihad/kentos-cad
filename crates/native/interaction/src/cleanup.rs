@@ -1,85 +1,101 @@
-//! Çizimi temizle (docs/adr/0140): finds what the drawing carries twice or
-//! empty, shows it, and on a confirm removes it in one undo step.
+//! Çizimi temizle (docs/adr/0140, 0305; AutoCAD's OVERKILL): what the drawing carries twice, empty, on one line or
+//! with vertices that add nothing, shown first, cleaned on a confirm in one undo step.
 //!
-//! - **Scope:** the selection; with nothing selected, the whole drawing. Objects
-//!   on a locked layer are left out, and so, in the whole drawing, are those
-//!   on a hidden one (what is not seen is not cleaned).
-//! - **Found:** an object repeated exactly (the same kind and geometry to
-//!   1e-9 m on the same layer; the first stays), an object with no length or
-//!   no radius, and a vertex repeated in a row. Nothing is snapped and no
-//!   tolerance is widened (CLAUDE.md §23.3).
-//! - **Shown first:** the repeats dashed in the danger colour, a cross where an
-//!   empty object or a repeated vertex is, and the count on the command line.
-//!   Nothing to clean is said and the tool leaves. Enter, the Uygula button
-//!   or a quick right click cleans; Esc leaves.
+//! - **Scope:** the selection; with nothing selected, every object on a visible, unlocked layer. A selected object on
+//!   a locked layer is left out with a warning.
+//! - **Found** by `cad.entities.cleanup` within the tolerance: empty objects and duplicates go (the first stays),
+//!   lines on one line that overlap merge into the first, a path's repeated and straight vertices go. Duplicates with
+//!   other data (attributes, label, attachments) are not duplicates.
+//! - **Options** (kept for the session): Tolerans (T, typed next; 0.001 mm at first), Örtüşenler (Ö: lines that
+//!   overlap merge; on), Uç uca (U: lines meeting end to end merge too; off), Köşeler (K: straight vertices go; on),
+//!   Görünüş (G: duplicates may differ in colour, line type and its factor, weight, transparency and symbol; off).
+//! - **Shown first:** what goes dashed in the danger colour, what changes in the accent, the counts and the farthest
+//!   a point that goes lies from what stays on the command line. Enter, the Temizle button or a quick right click
+//!   cleans; with nothing found Enter leaves; Esc leaves.
 //!
-//! Written through `cad.entities.edit` (`cleanup`): repeats and empty objects
-//! removed, cleaned paths updated. The findings are the shared core's
-//! (`cleanup_findings`).
+//! The plan and the write are the command's: the tool gives it the scope and the options.
 
-use kentos_contracts::{EditOperation, Entity, EntityEdit};
-use kentos_domain::{Document, Slot};
-use kentos_geometry_core::api::json::Json;
-use kentos_geometry_core::entity::{Entity as CoreEntity, Shape};
-use kentos_geometry_core::ops::split::{Findings, cleanup_findings};
+use kentos_contracts::{
+    CleanupIgnore, CleanupReport, CommandResult, EntitiesCleanup, EntitiesCleanupPlan,
+};
+use kentos_domain::Uuid;
 use kentos_native_application::geometry::shape;
+use kentos_native_application::{ExecutionContext, entities_cleanup};
 
-use crate::Vec2;
-use crate::edge::{self, Outline};
+use crate::edge::Outline;
 use crate::format::Format;
 use crate::log::Level;
 use crate::modify::MAX_GHOSTS;
-use crate::prompt::Prompt;
-use crate::tool::{Context, Cursor, Flow, Marker, MarkerShape, Preview, Tone, Tool};
+use crate::points;
+use crate::prompt::{Prompt, upper_tr};
+use crate::tool::{Context, Cursor, Flow, Preview, Tone, Tool};
 
 /// Çizimi temizle's id: its command is `tool.cleanup`.
 pub const ID: &str = "cleanup";
 pub const LABEL: &str = "Çizimi temizle";
 
-/// Two points closer than this are the same point (the core's rule).
-const SAME: f64 = 1e-9;
+/// The look's properties Görünüş ignores.
+const LOOK: [CleanupIgnore; 6] = [
+    CleanupIgnore::Color,
+    CleanupIgnore::LineType,
+    CleanupIgnore::LineTypeScale,
+    CleanupIgnore::LineWeight,
+    CleanupIgnore::Transparency,
+    CleanupIgnore::Symbol,
+];
+
+/// What the report says: `2 yinelenen, 1 boş nesne, 1 çizgi 1 çizgiye katılır, 3 köşe`.
+fn counts(r: &CleanupReport) -> String {
+    let mut parts = Vec::new();
+    if r.duplicates > 0 {
+        parts.push(format!("{} yinelenen", r.duplicates));
+    }
+    if r.empty > 0 {
+        parts.push(format!("{} boş nesne", r.empty));
+    }
+    if r.merged > 0 {
+        parts.push(format!("{} çizgi {} çizgiye katılır", r.merged, r.merging));
+    }
+    if r.vertices > 0 {
+        parts.push(format!("{} köşe", r.vertices));
+    }
+    parts.join(", ")
+}
+
+/// What the write did: `1 yinelenen, 1 boş nesne silindi; 2 çizgi 1 çizgiye katıldı; 3 köşe atıldı`.
+fn done_text(r: &CleanupReport) -> String {
+    let mut gone = Vec::new();
+    if r.duplicates > 0 {
+        gone.push(format!("{} yinelenen", r.duplicates));
+    }
+    if r.empty > 0 {
+        gone.push(format!("{} boş nesne", r.empty));
+    }
+    let mut parts = Vec::new();
+    if !gone.is_empty() {
+        parts.push(format!("{} silindi", gone.join(", ")));
+    }
+    if r.merged > 0 {
+        parts.push(format!("{} çizgi {} çizgiye katıldı", r.merged, r.merging));
+    }
+    if r.vertices > 0 {
+        parts.push(format!("{} köşe atıldı", r.vertices));
+    }
+    parts.join("; ")
+}
 
 /// The tool.
 #[derive(Clone, Debug, Default)]
 pub struct Cleanup {
-    /// The objects it looks at, in the order it looked.
-    scope: Vec<Slot>,
-    /// Whether that is the whole drawing (else the selection).
-    whole: bool,
-    /// What it found, and how to draw it.
-    found: Option<Found>,
-    done: bool,
-}
-
-/// What Çizimi temizle found, as slots.
-#[derive(Clone, Debug, Default)]
-struct Found {
-    repeats: Vec<Slot>,
-    empty: Vec<Slot>,
-    cleaned: Vec<(Slot, Shape)>,
-    vertices: usize,
+    /// The selection's ids; none: the whole drawing.
+    uids: Option<Vec<String>>,
+    plan: Option<EntitiesCleanupPlan>,
     drawn: Preview,
-}
-
-impl Found {
-    fn is_empty(&self) -> bool {
-        self.repeats.is_empty() && self.empty.is_empty() && self.cleaned.is_empty()
-    }
-
-    /// `3 yinelenen, 1 boş nesne, 5 tekrarlanan köşe`.
-    fn text(&self) -> String {
-        let mut parts = Vec::new();
-        if !self.repeats.is_empty() {
-            parts.push(format!("{} yinelenen", self.repeats.len()));
-        }
-        if !self.empty.is_empty() {
-            parts.push(format!("{} boş nesne", self.empty.len()));
-        }
-        if self.vertices > 0 {
-            parts.push(format!("{} tekrarlanan köşe", self.vertices));
-        }
-        parts.join(", ")
-    }
+    /// Asking for the tolerance.
+    asking: bool,
+    /// What the prompt shows: the tolerance and the options as last seen.
+    seen: Option<(f64, [bool; 4])>,
+    done: bool,
 }
 
 impl Cleanup {
@@ -87,229 +103,96 @@ impl Cleanup {
         Self::default()
     }
 
-    /// The objects to look at: the selection, or the whole drawing when none
-    /// is selected. Locked layers are left out (said), and in the whole
-    /// drawing hidden ones too.
-    fn scope(&mut self, cx: &mut Context<'_>) {
-        let doc = &*cx.doc;
-        self.whole = cx.selection.is_empty();
-        let all: Vec<Slot> = if self.whole {
-            doc.entities().map(|e| Slot(e.base().id)).collect()
-        } else {
-            cx.selection
-                .ids()
-                .iter()
-                .copied()
-                .filter(|slot| doc.get(*slot).is_some())
-                .collect()
-        };
-        let layers = doc.layers();
-        let takes = |e: &Entity| {
-            let layer = &e.base().layer_id;
-            !layers.is_locked(layer) && (!self.whole || layers.is_visible(layer))
-        };
-        self.scope = all
-            .iter()
-            .copied()
-            .filter(|slot| doc.get(*slot).is_some_and(takes))
-            .collect();
-        let left = all.len() - self.scope.len();
-        if left > 0 {
-            let why = if self.whole {
-                "kilitli ya da gizli katmanda olduğu için dışarıda bırakıldı"
+    fn request(&self, cx: &Context<'_>) -> EntitiesCleanup {
+        let m = &*cx.memory;
+        EntitiesCleanup {
+            uids: self.uids.clone(),
+            tolerance: Some(m.cleanup_tolerance),
+            ignore: if m.cleanup_ignore_look {
+                LOOK.to_vec()
             } else {
-                "kilitli katmanda olduğu için atlandı"
-            };
-            cx.say(Level::Warn, format!("{left} nesne {why}."));
+                Vec::new()
+            },
+            overlaps: Some(m.cleanup_overlaps),
+            end_to_end: Some(m.cleanup_end_to_end),
+            straight_vertices: Some(m.cleanup_straight),
+            expected_revision: None,
         }
     }
 
-    /// The findings for the scope as the drawing is now.
-    fn find(&self, doc: &Document, draw: bool) -> Found {
-        // The core names each object by its `id` (the slot) and its layer.
-        let list: Vec<(Slot, CoreEntity)> = self
-            .scope
-            .iter()
-            .filter_map(|slot| {
-                let e = doc.get(*slot)?;
-                Some((
-                    *slot,
-                    CoreEntity {
-                        shape: shape(e),
-                        rest: vec![
-                            ("id".to_owned(), Json::Num(f64::from(slot.0))),
-                            ("layerId".to_owned(), Json::Str(e.base().layer_id.clone())),
-                        ],
-                    },
-                ))
-            })
-            .collect();
-        let entities: Vec<CoreEntity> = list.iter().map(|(_, e)| e.clone()).collect();
-        let Findings {
-            repeats,
-            empty,
-            cleaned,
-            vertices,
-        } = cleanup_findings(&entities);
-        let slot_of = |id: &Json| match id {
-            Json::Num(n) if *n >= 0.0 && n.fract() == 0.0 => Some(Slot(*n as u32)),
-            _ => None,
-        };
-        let shape_of = |slot: Slot| list.iter().find(|(s, _)| *s == slot).map(|(_, e)| &e.shape);
-        let repeats: Vec<Slot> = repeats.iter().filter_map(slot_of).collect();
-        let empty: Vec<Slot> = empty.iter().filter_map(slot_of).collect();
-        let cleaned: Vec<(Slot, Shape)> = cleaned
-            .into_iter()
-            .filter_map(|e| {
-                let slot = e
-                    .rest
-                    .iter()
-                    .find(|(k, _)| k == "id")
-                    .and_then(|(_, v)| slot_of(v))?;
-                Some((slot, e.shape))
-            })
-            .collect();
-        let mut found = Found {
-            repeats,
-            empty,
-            cleaned,
-            vertices,
-            drawn: Preview::default(),
-        };
-        if draw {
-            found.drawn = Self::drawn(&found, shape_of);
-        }
-        found
-    }
-
-    /// The repeats dashed in danger, a cross at each empty object and at each
-    /// vertex that repeats.
-    fn drawn<'a>(found: &Found, shape_of: impl Fn(Slot) -> Option<&'a Shape>) -> Preview {
-        let mut out = Outline::default();
-        let mut markers = Vec::new();
-        let cross = |at: Vec2| Marker {
-            at,
-            shape: MarkerShape::Cross(5.0),
-            tone: Tone::Danger,
-        };
-        for slot in found.repeats.iter().take(MAX_GHOSTS) {
-            if let Some(s) = shape_of(*slot) {
-                out = out.and(Outline::of(s, Some([5.0, 3.0]), 2.0, Tone::Danger));
+    /// The command's plan for the scope and the options, drawn.
+    fn replan(&mut self, cx: &mut Context<'_>) {
+        let m = &*cx.memory;
+        self.seen = Some((
+            m.cleanup_tolerance,
+            [
+                m.cleanup_overlaps,
+                m.cleanup_end_to_end,
+                m.cleanup_straight,
+                m.cleanup_ignore_look,
+            ],
+        ));
+        self.drawn = Preview::default();
+        self.plan = None;
+        let input = self.request(cx);
+        match entities_cleanup::plan_in(cx.doc, &input) {
+            CommandResult::Completed { output, .. } => {
+                let mut out = Outline::default();
+                for uid in output.removed.iter().take(MAX_GHOSTS) {
+                    if let Some(e) = Uuid::parse_str(uid)
+                        .ok()
+                        .and_then(|u| cx.doc.slot_of(u))
+                        .and_then(|s| cx.doc.get(s))
+                    {
+                        out = out.and(Outline::of(&shape(e), Some([5.0, 3.0]), 2.0, Tone::Danger));
+                    }
+                }
+                for e in output.changed.iter().take(MAX_GHOSTS) {
+                    out = out.and(Outline::of(&shape(e), None, 2.0, Tone::Accent));
+                }
+                self.drawn.strokes = out.strokes;
+                self.drawn.marks = out.marks;
+                self.plan = Some(output);
             }
-        }
-        for slot in found.empty.iter().take(MAX_GHOSTS) {
-            if let Some(at) = shape_of(*slot).and_then(anchor) {
-                markers.push(cross(at));
+            CommandResult::Failed { error } | CommandResult::Conflict { error } => {
+                cx.say(Level::Warn, error.message);
             }
-        }
-        for (slot, _) in found.cleaned.iter().take(MAX_GHOSTS) {
-            if let Some(s) = shape_of(*slot) {
-                markers.extend(repeated_vertices(s).into_iter().map(cross));
-            }
-        }
-        Preview {
-            strokes: out.strokes,
-            marks: out.marks,
-            markers,
-            ..Preview::default()
+            _ => {}
         }
     }
 
-    /// Writes the cleaning as one step: repeats and empty objects removed,
-    /// cleaned paths updated.
+    fn found(&self) -> Option<&EntitiesCleanupPlan> {
+        self.plan
+            .as_ref()
+            .filter(|p| !p.changed.is_empty() || !p.removed.is_empty())
+    }
+
+    /// Writes the cleaning through the command: one step.
     fn clean(&mut self, cx: &mut Context<'_>) -> Flow {
-        let found = self.find(cx.doc, false);
-        if found.is_empty() {
-            cx.say(Level::Info, "Çizimi temizle: temizlenecek bir şey kalmadı.");
+        if self.found().is_none() {
+            cx.say(
+                Level::Info,
+                "Çizimi temizle: temizlenecek bir şey bulunamadı; çizim temiz.",
+            );
             return Flow::Exit;
         }
-        let mut changes: Vec<EntityEdit> = found
-            .repeats
-            .iter()
-            .chain(&found.empty)
-            .map(|slot| EntityEdit::Remove {
-                uid: edge::uid(cx.doc, *slot),
-            })
-            .collect();
-        for (slot, shape) in &found.cleaned {
-            if let Some(geometry) = edge::geometry(shape) {
-                changes.push(EntityEdit::Update {
-                    uid: edge::uid(cx.doc, *slot),
-                    geometry,
-                });
-            }
-        }
-        if edge::write(EditOperation::Cleanup, changes, cx).is_none() {
+        let input = self.request(cx);
+        let result = entities_cleanup::execute(&mut ExecutionContext::new(cx.doc), input);
+        let Some(out) = points::written(result, cx) else {
             return Flow::Stay;
-        }
+        };
         let doc = &*cx.doc;
         cx.selection.retain(|slot| doc.get(slot).is_some());
-        let mut said = Vec::new();
-        if !found.repeats.is_empty() {
-            said.push(format!("{} yinelenen", found.repeats.len()));
+        let r = &out.report;
+        let mut text = format!("Çizimi temizle: {}", done_text(r));
+        if r.loss > 0.0 {
+            text.push_str(&format!("; en büyük kayma {} m", r.loss));
         }
-        if !found.empty.is_empty() {
-            said.push(format!("{} boş nesne", found.empty.len()));
-        }
-        let mut text = if said.is_empty() {
-            String::new()
-        } else {
-            format!("{} silindi", said.join(", "))
-        };
-        if found.vertices > 0 {
-            if !text.is_empty() {
-                text.push_str("; ");
-            }
-            text.push_str(&format!("{} tekrarlanan köşe atıldı", found.vertices));
-        }
-        cx.say(Level::Success, format!("Çizimi temizle: {text}."));
+        text.push('.');
+        cx.say(Level::Success, text);
         self.done = true;
         Flow::Exit
     }
-}
-
-/// A place to mark an empty object: where it is.
-fn anchor(s: &Shape) -> Option<Vec2> {
-    match s {
-        Shape::Line { a, .. } => Some(*a),
-        Shape::Circle { c, .. } | Shape::Arc { c, .. } => Some(*c),
-        Shape::Text { p, .. } => Some(*p),
-        Shape::Polyline { pts, .. } | Shape::Polygon { pts, .. } | Shape::Spline { pts, .. } => {
-            pts.first().copied()
-        }
-        _ => None,
-    }
-}
-
-/// The vertices of a path or an area that repeat the one before (a closed
-/// ring's last that repeats its first).
-fn repeated_vertices(s: &Shape) -> Vec<Vec2> {
-    let ring = |pts: &[Vec2], closed: bool, out: &mut Vec<Vec2>| {
-        let same = |a: Vec2, b: Vec2| (a.x - b.x).abs() <= SAME && (a.y - b.y).abs() <= SAME;
-        for w in pts.windows(2) {
-            if same(w[0], w[1]) {
-                out.push(w[1]);
-            }
-        }
-        if let (true, Some(first), Some(last)) = (closed, pts.first(), pts.last())
-            && pts.len() > 1
-            && same(*first, *last)
-        {
-            out.push(*last);
-        }
-    };
-    let mut out = Vec::new();
-    match s {
-        Shape::Polyline { pts, .. } => ring(pts, false, &mut out),
-        Shape::Polygon { pts, holes, .. } => {
-            ring(pts, true, &mut out);
-            for h in holes.iter().flatten() {
-                ring(&h.pts, true, &mut out);
-            }
-        }
-        _ => {}
-    }
-    out
 }
 
 impl Tool for Cleanup {
@@ -329,43 +212,85 @@ impl Tool for Cleanup {
         false
     }
 
-    /// Short: the bar it sits in is narrow at 1100 px, and the log line has the scope.
     fn prompt(&self) -> Prompt {
-        let step = match &self.found {
-            Some(found) => found.text(),
+        let (tol, [overlaps, end_to_end, straight, look]) = self.seen.unwrap_or((
+            kentos_contracts::CLEANUP_TOLERANCE,
+            [true, false, true, false],
+        ));
+        if self.asking {
+            return Prompt::new(LABEL, "toleransı yazın: bundan yakın noktalar bir sayılır")
+                .note(format!("şimdi: {tol} m"));
+        }
+        let step = match self.found() {
+            Some(p) => counts(&p.report),
             None => "temizlenecek bir şey yok".to_owned(),
         };
-        Prompt::new(LABEL, step).option("Temizle", "Enter")
+        let mut prompt = Prompt::new(LABEL, step);
+        if let Some(p) = self.found()
+            && p.report.loss > 0.0
+        {
+            prompt = prompt.note(format!("en büyük kayma {} m", p.report.loss));
+        }
+        let on = |b: bool| if b { "açık" } else { "kapalı" };
+        prompt
+            .then()
+            .option("Temizle", "Enter")
+            .option_with("Tolerans", "T", format!("{tol} m"))
+            .option_with("Örtüşenler", "Ö", on(overlaps))
+            .option_with("Uç uca", "U", on(end_to_end))
+            .option_with("Köşeler", "K", on(straight))
+            .option_with("Görünüş", "G", on(look))
     }
 
     fn point_count(&self) -> usize {
         0
     }
 
-    /// Looks and says what it found; nothing to clean: says so and leaves.
+    /// Takes the scope and says what the command found.
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
-        self.scope(cx);
-        let found = self.find(cx.doc, true);
-        if found.is_empty() {
-            cx.say(
-                Level::Info,
-                "Çizimi temizle: yinelenen ya da boş nesne, tekrarlanan köşe bulunamadı; çizim temiz.",
-            );
-            return Flow::Exit;
+        self.uids = (!cx.selection.is_empty()).then(|| {
+            cx.selection
+                .ids()
+                .iter()
+                .filter_map(|s| cx.doc.uid(*s))
+                .map(|u| u.to_string())
+                .collect()
+        });
+        if self.uids.is_none() {
+            // The whole drawing leaves out what is locked or not shown: said.
+            let layers = cx.doc.layers();
+            let left = cx
+                .doc
+                .entities()
+                .filter(|e| {
+                    let l = &e.base().layer_id;
+                    layers.is_locked(l) || !layers.is_visible(l)
+                })
+                .count();
+            if left > 0 {
+                cx.say(
+                    Level::Warn,
+                    format!(
+                        "{left} nesne kilitli ya da gizli katmanda olduğu için dışarıda bırakıldı."
+                    ),
+                );
+            }
         }
-        let scope = if self.whole {
-            format!("bütün çizim, {} nesne", self.scope.len())
-        } else {
-            format!("seçili {} nesne", self.scope.len())
+        self.replan(cx);
+        let scope = match &self.uids {
+            Some(u) => format!("seçili {} nesne", u.len()),
+            None => "bütün çizim".to_owned(),
         };
-        cx.say(
-            Level::Info,
-            format!(
+        let text = match self.found() {
+            Some(p) => format!(
                 "Çizimi temizle: {}. Enter ile temizleyin ({scope}).",
-                found.text()
+                counts(&p.report)
             ),
-        );
-        self.found = Some(found);
+            None => format!(
+                "Çizimi temizle: bu toleransla temizlenecek bir şey bulunamadı ({scope}). Toleransı ya da seçenekleri değiştirebilirsiniz."
+            ),
+        };
+        cx.say(Level::Info, text);
         Flow::Stay
     }
 
@@ -374,12 +299,51 @@ impl Tool for Cleanup {
     /// A click does nothing: Enter, the button or a quick right click clean.
     fn pointer_down(&mut self, _p: &crate::Pointer, _cx: &mut Context<'_>) {}
 
-    fn input(&mut self, _text: &str, _cx: &mut Context<'_>) -> bool {
-        false
+    /// An option's letter turns it on or off (Tolerans asks for a number); then the plan is made again.
+    fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
+        if self.asking {
+            let Some((_, metres)) = points::plain_value(text, cx) else {
+                return false;
+            };
+            if !(0.0..=kentos_contracts::MAX_CLEANUP_TOLERANCE).contains(&metres) {
+                cx.say(Level::Warn, "Tolerans 0 ile 10 m arasında olmalı.");
+                return true;
+            }
+            cx.memory.cleanup_tolerance = metres;
+            self.asking = false;
+            self.replan(cx);
+            return true;
+        }
+        let m = &mut *cx.memory;
+        match upper_tr(text.trim()).as_str() {
+            "T" => {
+                self.asking = true;
+                return true;
+            }
+            "Ö" => m.cleanup_overlaps = !m.cleanup_overlaps,
+            "U" => m.cleanup_end_to_end = !m.cleanup_end_to_end,
+            "K" => m.cleanup_straight = !m.cleanup_straight,
+            "G" => m.cleanup_ignore_look = !m.cleanup_ignore_look,
+            _ => return false,
+        }
+        self.replan(cx);
+        true
     }
 
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
+        if self.asking {
+            self.asking = false;
+            return Flow::Stay;
+        }
         self.clean(cx)
+    }
+
+    fn cancel(&mut self, _cx: &mut Context<'_>) -> bool {
+        if self.asking {
+            self.asking = false;
+            return true;
+        }
+        false
     }
 
     fn undo_step(&mut self, _cx: &mut Context<'_>) -> bool {
@@ -391,9 +355,6 @@ impl Tool for Cleanup {
     }
 
     fn preview(&self, _format: &Format) -> Preview {
-        self.found
-            .as_ref()
-            .map(|f| f.drawn.clone())
-            .unwrap_or_default()
+        self.drawn.clone()
     }
 }
