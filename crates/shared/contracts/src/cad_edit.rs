@@ -59,6 +59,8 @@ pub enum EditOperation {
     Lengthen,
     /// Eğriyi düzenle (docs/adr/0303): a polyline or a NURBS curve edited in place by `cad.curves.edit`.
     CurveEdit,
+    /// Özellik kopyala's kind properties (docs/adr/0304): a text's face, a dimension's look, a hatch's pattern.
+    MatchProperties,
     /// Köşe ekle: a vertex added on an edge.
     VertexAdd,
     /// Köşe sil: a vertex removed.

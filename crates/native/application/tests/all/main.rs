@@ -14,6 +14,7 @@ mod edit;
 mod fixtures;
 mod info_templates;
 mod lengthen;
+mod match_props;
 mod polygon;
 mod protocol;
 mod protocol_cases;

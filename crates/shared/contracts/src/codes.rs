@@ -451,6 +451,8 @@ codes! {
     /// A tolerance not above 0 (Eğriyi düzenle).
     INVALID_TOLERANCE = "invalid_tolerance", Failed, false, "Tolerans sıfırdan büyük olmalı.";
     /// An object that does not explode: left out with a warning, the refusal when none explodes (Patlat, docs/adr/0302).
+    /// An empty list of properties to give (Özellik kopyala, docs/adr/0304).
+    NO_PROPERTIES = "no_properties", Failed, false, "Kopyalanacak özellik seçilmedi.";
     NOT_EXPLODABLE = "not_explodable", FailedOrWarning, false, "Nesne patlatılamaz: zaten temel bir nesne (çizgi, daire, nokta, yazı …) ya da dolu tarama; bazılarında uyarı, hiçbirinde ret.";
     /// No associative array has the id (Diziyi düzenle, docs/adr/0301).
     ARRAY_NOT_FOUND = "array_not_found", Failed, false, "Kimliği verilen ilişkili dizi çizimde yok.";

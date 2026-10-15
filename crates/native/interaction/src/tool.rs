@@ -763,6 +763,8 @@ pub struct Memory {
     pub nurbs_degree: u32,
     /// Eğriyi düzenle's Çoklu çizgiye çevir tolerance, metres (docs/adr/0303), kept for the session.
     pub curve_tolerance: f64,
+    /// Özellik kopyala's switches turned off, one bit each (docs/adr/0304), kept for the session.
+    pub match_off: u16,
     /// Blok ekle's block, scale, turn in degrees and mirror
     /// (`BlockInsertTool.block`, `.scale`, `.rotation`, `.mirror`; docs/adr/0144).
     pub block_insert: Option<kentos_contracts::BlockId>,
@@ -1086,6 +1088,7 @@ impl Default for Memory {
             nurbs_control: false,
             nurbs_degree: 3,
             curve_tolerance: 0.01,
+            match_off: 0,
             block_insert: None,
             block_scale: 1.0,
             block_rotation: 0.0,

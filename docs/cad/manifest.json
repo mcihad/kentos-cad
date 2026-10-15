@@ -8161,12 +8161,12 @@
    "title": "Özellik kopyala",
    "level": "semantic",
    "via": [
-    "cad.entities.set"
+    "cad.entities.match"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.set",
-   "mcp": "cad.entities.set",
-   "note": null,
+   "python": "kentos.cad.entities.match",
+   "mcp": "cad.entities.match",
+   "note": "Kaynağın kimliği, hedefler ve istemdeki anahtarların seçtiği özellikler komuta verilir; değerleri komut okur (ADR 0304).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1

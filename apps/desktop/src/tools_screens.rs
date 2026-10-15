@@ -461,6 +461,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::polyline_scenes::scenes());
     all.extend(crate::nurbs_scenes::scenes());
     all.extend(crate::curve_edit_scenes::scenes());
+    all.extend(crate::match_scenes::scenes());
     all.extend(crate::look_scenes::scenes());
     all.extend(crate::ucs_scenes::scenes());
     all.extend(crate::imperial_scenes::scenes());

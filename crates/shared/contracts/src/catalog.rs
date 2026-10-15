@@ -1525,6 +1525,41 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Özellik kopyala (docs/adr/0304), held together by fixtures/commands/v1/cad.entities.match.json.
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_MATCH.into(),
+            version: crate::CAD_ENTITIES_MATCH_VERSION,
+            title: "Özellik kopyala".into(),
+            summary: "Kalıcı kimliğiyle verilen kaynak nesnenin seçilen özelliklerini öbür nesnelere verir (AutoCAD'in MATCHPROP'u); tek geri alma adımı “Özellik kopyala”. \
+                      Özellikler (properties; verilmezse hepsi): layer, color, lineType, lineTypeScale, lineWeight (yalnız çizgiyle çizilenler arasında), transparency, symbol; text (yazının yüzü, yüksekliği ve genişlik çarpanı, yazılara), dimension (ölçünün görünüşü, değer yüksekliği ve zemini, ölçülere), hatch (taramanın deseni, taramalara; bölgeleri kalır), leader (kılavuzun oku, ok boyu, not yüksekliği ve zemini, kılavuzlara). \
+                      Kaynakta olmayan değer (katmanın rengi, sembol yok) hedeftekini kaldırır. Kaynak hedeflerin arasındaysa atlanır, kilitli katmandaki hedef uyarıyla atlanır; katmana taşıma cad.entities.set'in kurallarıyla (kilitli, gizli, alanlar). \
+                      Retler: invalid_uid, no_entities, no_properties, entity_not_found, layer_locked. Çıktı ve plan cad.entities.edit'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesMatch>(),
+            output: schema::<crate::EntitiesEdited>(),
+            plan: Some(schema::<crate::EntitiesEditPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bir parselin katmanını ve rengini öbür parsellere ver".into(),
+                    input: json!({ "source": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6001", "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6002", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6003"], "properties": ["layer", "color"] }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6002", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6003"], "created": [], "removed": [], "revision": "69" })),
+                },
+                CommandExample {
+                    title: "Bir yazının yüzünü ve yüksekliğini başka yazılara ver".into(),
+                    input: json!({ "source": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6011", "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6012"], "properties": ["text"] }),
+                    output: None,
+                },
+            ],
+        },
         // Ötele's semantic command (docs/adr/0246), held together by
         // fixtures/commands/v1/cad.entities.offset.json. The web is paused
         // (docs/adr/0228): the desktop's host alone runs it for now.
@@ -4187,6 +4222,9 @@ mod tests {
                     crate::CAD_CURVES_EDIT => {
                         serde_json::from_value::<crate::CurvesEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ENTITIES_MATCH => {
+                        serde_json::from_value::<crate::EntitiesMatch>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_NURBS_CREATE => {
                         serde_json::from_value::<crate::NurbsCreate>(e.input.clone()).map(|_| ())
                     }
@@ -4431,6 +4469,7 @@ mod tests {
                         | crate::CAD_ARRAYS_EDIT
                         | crate::CAD_ENTITIES_EXPLODE
                         | crate::CAD_CURVES_EDIT
+                        | crate::CAD_ENTITIES_MATCH
                         | crate::CAD_ENTITIES_JOIN
                         | crate::CAD_ENTITIES_REVERSE
                         | crate::CAD_ENTITIES_LENGTHEN => {

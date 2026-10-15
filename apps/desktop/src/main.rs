@@ -128,6 +128,8 @@ mod log_plan_tests;
 mod look_scenes;
 mod map_marks;
 mod marks;
+#[cfg(test)]
+mod match_scenes;
 mod message_log;
 #[cfg(test)]
 mod message_log_tests;

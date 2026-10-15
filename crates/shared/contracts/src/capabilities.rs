@@ -454,6 +454,21 @@ const ENTRIES: &[Entry] = &[
         },
     },
     Entry {
+        id: "cad.entities.match",
+        refusals: &[
+            &[
+                "invalid_uid",
+                "no_entities",
+                "no_properties",
+                "entity_not_found",
+                "layer_locked",
+            ],
+            REVISION,
+        ],
+        warnings: &["layer_locked", "layer_hidden"],
+        targets: none,
+    },
+    Entry {
         id: "cad.arrays.edit",
         refusals: &[
             &[

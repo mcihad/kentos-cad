@@ -451,9 +451,13 @@ fn match_properties_gives_layer_colour_weight_and_symbol_not_the_data() {
     let mut b = bench();
     let source = styled(&mut b, [0.0, 40.0], [10.0, 40.0]);
     b.start("matchProperties");
-    assert_eq!(
-        b.session.prompt().text(),
-        "Özellik kopyala: özellikleri alınacak nesneye tıklayın"
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .starts_with("Özellik kopyala: özellikleri alınacak nesneye tıklayın [Katman (K): açık / Renk (R): açık"),
+        "{}",
+        b.session.prompt().text()
     );
     b.click(5.0, 40.0);
     assert_eq!(
@@ -462,9 +466,16 @@ fn match_properties_gives_layer_colour_weight_and_symbol_not_the_data() {
             "Kaynak: “Parsel” katmanındaki nesne. Özellikleri verilecek nesnelere tıklayın ya da pencereyle seçin."
         )
     );
+    assert!(
+        b.session.prompt().text().starts_with(
+            "Özellik kopyala: özellik verilecek nesnelere tıklayın ya da pencereyle seçin [kaynak: “Parsel” katmanı; Bitir (Enter)"
+        ),
+        "{}",
+        b.session.prompt().text()
+    );
     assert_eq!(
-        b.session.prompt().text(),
-        "Özellik kopyala: özellik verilecek nesnelere tıklayın ya da pencereyle seçin [kaynak: “Parsel” katmanı; Bitir (Enter)]"
+        b.options(),
+        ["Enter", "K", "R", "T", "L", "S", "M", "Y", "Ö", "A", "V"]
     );
     b.move_to(20.0, 40.0);
     let p = preview(&b);
@@ -473,7 +484,9 @@ fn match_properties_gives_layer_colour_weight_and_symbol_not_the_data() {
         [
             "Katman: Parsel",
             "Renk: #3E63DD",
+            "Çizgi tipi: katmana göre",
             "Kalınlık: 0.700 mm",
+            "Saydamlık: katmana göre",
             "Sembol: agac"
         ]
     );
@@ -485,7 +498,9 @@ fn match_properties_gives_layer_colour_weight_and_symbol_not_the_data() {
     b.click(-18.0, -18.0);
     assert_eq!(
         b.last_text(),
-        Some("Özellikler 1 nesneye kopyalandı: “Parsel” katmanı, renk, kalınlık, sembol.")
+        Some(
+            "Özellikler 1 nesneye kopyalandı: “Parsel” katmanı, renk, çizgi tipi, kalınlık, saydamlık, sembol, yazı, ölçü, tarama, kılavuz."
+        )
     );
     let Some(target) = b.doc.get(Slot(12)) else {
         panic!("the line");
@@ -505,7 +520,9 @@ fn match_properties_gives_layer_colour_weight_and_symbol_not_the_data() {
     b.drag([-30.0, 4.0], [-6.0, 20.0]);
     assert_eq!(
         b.last_text(),
-        Some("Özellikler 2 nesneye kopyalandı: “Parsel” katmanı, renk, kalınlık, sembol.")
+        Some(
+            "Özellikler 2 nesneye kopyalandı: “Parsel” katmanı, renk, çizgi tipi, kalınlık, saydamlık, sembol, yazı, ölçü, tarama, kılavuz."
+        )
     );
     for slot in [1, 2] {
         assert_eq!(
@@ -517,7 +534,7 @@ fn match_properties_gives_layer_colour_weight_and_symbol_not_the_data() {
     b.click(-18.0, -18.0);
     assert_eq!(
         b.last_text(),
-        Some("Nesneler zaten kaynağın katmanında, renginde, kalınlığında ve sembolünde.")
+        Some("Nesneler zaten kaynağın seçilen özelliklerinde.")
     );
     assert_eq!(b.doc.undo().as_deref(), Some("Özellik kopyala"));
     assert_eq!(
@@ -534,6 +551,26 @@ fn match_properties_gives_layer_colour_weight_and_symbol_not_the_data() {
         Some("cizim")
     );
     assert!(source.0 > 13);
+    // The switches: Katman and Renk off, the line 12 takes the weight and the symbol alone.
+    assert!(b.type_text("K"));
+    assert!(b.type_text("r"));
+    assert!(
+        b.session.prompt().text().contains("Katman (K): kapalı"),
+        "{}",
+        b.session.prompt().text()
+    );
+    b.click(-18.0, -18.0);
+    assert_eq!(
+        b.last_text(),
+        Some(
+            "Özellikler 1 nesneye kopyalandı: çizgi tipi, kalınlık, saydamlık, sembol, yazı, ölçü, tarama, kılavuz."
+        )
+    );
+    let base = b.doc.get(Slot(12)).expect("the line").base().clone();
+    assert_eq!(base.layer_id, "cizim", "the layer is not copied");
+    assert_eq!(base.line_weight, Some(0.7));
+    assert!(b.type_text("K"));
+    assert!(b.type_text("R"));
     // Enter ends the tool.
     b.confirm();
     assert_eq!(b.session.tool_id(), "select");
@@ -559,9 +596,13 @@ fn match_properties_refuses_a_locked_target_and_esc_goes_back_to_the_source() {
     assert_eq!(b.doc.revision(), rev);
     // Esc drops the source, the tool stays; the next Esc leaves.
     assert!(b.run(|s, cx| s.cancel(cx)));
-    assert_eq!(
-        b.session.prompt().text(),
-        "Özellik kopyala: özellikleri alınacak nesneye tıklayın"
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .starts_with("Özellik kopyala: özellikleri alınacak nesneye tıklayın [Katman (K): açık / Renk (R): açık"),
+        "{}",
+        b.session.prompt().text()
     );
     assert!(!b.run(|s, cx| s.cancel(cx)));
     assert_eq!(b.session.tool_id(), "select");

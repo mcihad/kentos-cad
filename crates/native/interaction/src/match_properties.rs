@@ -1,5 +1,4 @@
-//! Özellik kopyala (docs/adr/0140): one object's layer, colour, line weight
-//! and symbol given to others.
+//! Özellik kopyala (docs/adr/0140, 0304; AutoCAD's MATCHPROP): one object's properties given to others.
 //!
 //! - Click the source: any object, hovered as the pointer moves; it is
 //!   ringed in the snap colour and the tag beside the cursor says what will be
@@ -8,26 +7,27 @@
 //!   what the box wholly contains, right to left also what it touches). Each
 //!   click or window is one undo step, “Özellik kopyala”; a quick right click
 //!   or Enter ends the tool.
+//! - The prompt's switches choose what is copied (AutoCAD's Settings), kept for the session: Katman (K), Renk (R),
+//!   Çizgi tipi (T, its factor too), Kalınlık (L), Saydamlık (S), Sembol (M), and the kind's Yazı (Y), Ölçü (Ö),
+//!   Tarama (A), Kılavuz (V). Every one starts on.
 //! - Esc goes back to picking the source; with none picked, it leaves.
 //!
-//! Attributes and the label are not copied, and a line weight only goes to
-//! what is drawn with lines, and only when the source is (a point has none to
-//! give). Objects on a locked layer are left out of a window and refused when
-//! clicked; the command says so. Written through `cad.entities.set` (layer,
-//! colour, line weight and symbol in one input); the tool names the step.
+//! Attributes and the label are not copied. The tool gives the command `cad.entities.match` the source, the targets
+//! and the switches; the command reads the values (a line weight only between objects drawn with lines, the kind's
+//! only between objects of one kind) and writes, leaving locked objects out with a warning.
 
-use kentos_contracts::{EntitiesSetProperties, PropertiesOperation};
+use kentos_contracts::{EntitiesMatch, Entity, MatchProperty};
 use kentos_domain::Slot;
 use kentos_geometry_core::geometry::dist;
 use kentos_native_application::geometry::shape;
-use kentos_native_application::{ExecutionContext, set};
+use kentos_native_application::{ExecutionContext, entities_match};
 
 use crate::Vec2;
-use crate::edge::{self, Outline};
+use crate::edge::Outline;
 use crate::format::Format;
 use crate::log::Level;
 use crate::points;
-use crate::prompt::Prompt;
+use crate::prompt::{Prompt, upper_tr};
 use crate::select::SelectBox;
 use crate::tool::{Context, Cursor, Flow, Pointer, Preview, Tag, Tone, Tool};
 
@@ -38,17 +38,41 @@ pub const LABEL: &str = "Özellik kopyala";
 /// How far the pointer must move with the button down to draw a window, logical pixels.
 const DRAG_THRESHOLD: f64 = 4.0;
 
+/// The prompt's switches: their names, keys, the words of the message, and the properties each gives.
+const SWITCHES: [(&str, &str, &str, &[MatchProperty]); 10] = [
+    ("Katman", "K", "katman", &[MatchProperty::Layer]),
+    ("Renk", "R", "renk", &[MatchProperty::Color]),
+    (
+        "Çizgi tipi",
+        "T",
+        "çizgi tipi",
+        &[MatchProperty::LineType, MatchProperty::LineTypeScale],
+    ),
+    ("Kalınlık", "L", "kalınlık", &[MatchProperty::LineWeight]),
+    (
+        "Saydamlık",
+        "S",
+        "saydamlık",
+        &[MatchProperty::Transparency],
+    ),
+    ("Sembol", "M", "sembol", &[MatchProperty::Symbol]),
+    ("Yazı", "Y", "yazı", &[MatchProperty::Text]),
+    ("Ölçü", "Ö", "ölçü", &[MatchProperty::Dimension]),
+    ("Tarama", "A", "tarama", &[MatchProperty::Hatch]),
+    ("Kılavuz", "V", "kılavuz", &[MatchProperty::Leader]),
+];
+
+/// Whether switch `i` is on in the session's `off` bits.
+fn on(off: u16, i: usize) -> bool {
+    off & (1 << i) == 0
+}
+
 /// The object whose properties are copied, as they were when it was picked.
 #[derive(Clone, Debug, PartialEq)]
 struct Source {
     slot: Slot,
-    layer: String,
     layer_name: String,
-    color: Option<String>,
-    line_weight: Option<f64>,
-    symbol: Option<String>,
-    /// Whether it is drawn with lines, so its weight means something.
-    lines: bool,
+    entity: Entity,
 }
 
 /// A press on the drawing: where it began and where the pointer is.
@@ -71,6 +95,8 @@ pub struct MatchProperties {
     /// The source ringed, and what the tag says.
     drawn: Preview,
     lines: Vec<String>,
+    /// The session's switches turned off, as the prompt last saw them.
+    off: u16,
 }
 
 impl MatchProperties {
@@ -87,137 +113,169 @@ impl MatchProperties {
             .layers()
             .get(&base.layer_id)
             .map_or_else(|| base.layer_id.clone(), |n| n.name.clone());
-        let source = Source {
-            slot,
-            layer: base.layer_id.clone(),
-            layer_name,
-            color: base.color.clone(),
-            line_weight: base.line_weight,
-            symbol: base.symbol.clone(),
-            lines: e.draws_lines(),
-        };
         let outline = Outline::of(&shape(e), None, 2.5, Tone::Snap);
         self.drawn = Preview {
             strokes: outline.strokes,
             marks: outline.marks,
             ..Preview::default()
         };
-        self.lines = source.tag(&cx.format());
-        self.source = Some(source);
+        self.source = Some(Source {
+            slot,
+            layer_name,
+            entity: e.clone(),
+        });
+        self.retag(cx);
         cx.selection.set_hover(None);
-        let name = &self.source.as_ref().map_or("", |s| s.layer_name.as_str());
+        let name = self.source.as_ref().map_or("", |s| s.layer_name.as_str());
         let text = format!(
             "Kaynak: “{name}” katmanındaki nesne. Özellikleri verilecek nesnelere tıklayın ya da pencereyle seçin."
         );
         cx.say(Level::Info, text);
     }
 
-    /// Gives the source's properties to `slots` as one undo step.
+    fn retag(&mut self, cx: &Context<'_>) {
+        self.off = cx.memory.match_off;
+        self.lines = self
+            .source
+            .as_ref()
+            .map(|s| s.tag(&cx.format(), self.off))
+            .unwrap_or_default();
+    }
+
+    /// The properties the switches give; none when every one is on (the command's default).
+    fn properties(off: u16) -> Option<Vec<MatchProperty>> {
+        (off != 0).then(|| {
+            SWITCHES
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| on(off, *i))
+                .flat_map(|(_, s)| s.3.iter().copied())
+                .collect()
+        })
+    }
+
+    /// Gives the source's properties to `slots` through `cad.entities.match`: one undo step.
     fn give(&mut self, slots: Vec<Slot>, cx: &mut Context<'_>) {
         let Some(source) = self.source.clone() else {
             return;
         };
-        let doc = &*cx.doc;
-        let all: Vec<Slot> = slots
-            .into_iter()
-            .filter(|s| *s != source.slot && doc.get(*s).is_some())
-            .collect();
-        let unlocked: Vec<Slot> = all
-            .iter()
-            .copied()
-            .filter(|s| doc.get(*s).is_some_and(|e| edge::unlocked(e, doc)))
-            .collect();
-        if unlocked.len() < all.len() && all.len() > 1 {
+        let off = cx.memory.match_off;
+        if (0..SWITCHES.len()).all(|i| !on(off, i)) {
             cx.say(
                 Level::Warn,
-                format!(
-                    "{} nesne kilitli katmanda olduğu için atlandı.",
-                    all.len() - unlocked.len()
-                ),
+                "Bütün özellikler kapalı: istemden en az birini açın.",
             );
-        }
-        // A single click on a locked object goes to the command, which says why.
-        let targets = if all.len() == 1 { all } else { unlocked };
-        if targets.is_empty() {
             return;
         }
-        // A weight goes only to what is drawn with lines; the rest get the other three.
-        let (lined, plain): (Vec<Slot>, Vec<Slot>) = targets
-            .iter()
-            .partition(|s| cx.doc.get(**s).is_some_and(|e| e.draws_lines()));
-        let group = cx.doc.begin_group(LABEL);
-        let mut changed = 0;
-        let mut failed = false;
-        for (slots, weight) in [(lined, source.lines), (plain, false)] {
-            if slots.is_empty() {
-                continue;
-            }
-            let input = EntitiesSetProperties {
-                line_type: None,
-                line_type_scale: None,
-                transparency: None,
-                uids: slots
-                    .iter()
-                    .filter_map(|s| cx.doc.uid(*s))
-                    .map(|u| u.to_string())
-                    .collect(),
-                layer_id: Some(source.layer.clone()),
-                color: Some(source.color.clone()),
-                line_weight: weight.then_some(source.line_weight),
-                symbol: Some(source.symbol.clone()),
-                attrs: None,
-                label: None,
-                operation: PropertiesOperation::Layer,
-                expected_revision: None,
-                unlink: false,
-                attachments: None,
-            };
-            let result = set::execute(&mut ExecutionContext::new(cx.doc), input);
-            match points::written(result, cx) {
-                Some(out) => changed += out.changed.len(),
-                None => {
-                    failed = true;
-                    break;
-                }
-            }
-        }
-        if failed {
-            cx.doc.cancel_group(group);
+        let uids: Vec<String> = slots
+            .into_iter()
+            .filter(|s| *s != source.slot)
+            .filter_map(|s| cx.doc.uid(s))
+            .map(|u| u.to_string())
+            .collect();
+        if uids.is_empty() {
             return;
         }
-        cx.doc.end_group(group);
-        if changed == 0 {
+        let Some(from) = cx.doc.uid(source.slot) else {
+            return;
+        };
+        let input = EntitiesMatch {
+            source: from.to_string(),
+            uids,
+            properties: Self::properties(off),
+            expected_revision: None,
+        };
+        let result = entities_match::execute(&mut ExecutionContext::new(cx.doc), input);
+        let Some(out) = points::written(result, cx) else {
+            return;
+        };
+        if out.changed.is_empty() {
             cx.say(
                 Level::Info,
-                "Nesneler zaten kaynağın katmanında, renginde, kalınlığında ve sembolünde.",
+                "Nesneler zaten kaynağın seçilen özelliklerinde.",
             );
             return;
         }
+        let words: Vec<String> = SWITCHES
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| on(off, *i))
+            .map(|(i, s)| {
+                if i == 0 {
+                    format!("“{}” katmanı", source.layer_name)
+                } else {
+                    s.2.to_owned()
+                }
+            })
+            .collect();
         cx.say(
             Level::Success,
             format!(
-                "Özellikler {changed} nesneye kopyalandı: “{}” katmanı, renk, kalınlık, sembol.",
-                source.layer_name
+                "Özellikler {} nesneye kopyalandı: {}.",
+                out.changed.len(),
+                words.join(", ")
             ),
         );
     }
 }
 
 impl Source {
-    /// What the tag beside the cursor says the targets will get.
-    fn tag(&self, f: &Format) -> Vec<String> {
+    /// What the tag beside the cursor says the targets will get: the switches on.
+    fn tag(&self, f: &Format, off: u16) -> Vec<String> {
         let by_layer = "katmana göre";
-        let weight = match (self.lines, self.line_weight) {
-            (false, _) => "—".to_owned(),
-            (true, None) => by_layer.to_owned(),
-            (true, Some(w)) => format!("{} mm", f.length_bare(w)),
+        let base = self.entity.base();
+        let lines = self.entity.draws_lines();
+        let mut out = Vec::new();
+        if on(off, 0) {
+            out.push(format!("Katman: {}", self.layer_name));
+        }
+        if on(off, 1) {
+            out.push(format!(
+                "Renk: {}",
+                base.color.as_deref().unwrap_or(by_layer)
+            ));
+        }
+        if on(off, 2) {
+            let kind = base.look.line_type.map_or(by_layer, |t| match t {
+                kentos_contracts::LineType::Continuous => "sürekli",
+                kentos_contracts::LineType::Dashed => "kesikli",
+                kentos_contracts::LineType::Dashdot => "kesik noktalı",
+                kentos_contracts::LineType::Dotted => "noktalı",
+            });
+            out.push(format!("Çizgi tipi: {kind}"));
+        }
+        if on(off, 3) {
+            let weight = match (lines, base.line_weight) {
+                (false, _) => "—".to_owned(),
+                (true, None) => by_layer.to_owned(),
+                (true, Some(w)) => format!("{} mm", f.length_bare(w)),
+            };
+            out.push(format!("Kalınlık: {weight}"));
+        }
+        if on(off, 4) {
+            out.push(format!(
+                "Saydamlık: {}",
+                base.look.transparency.map_or_else(
+                    || by_layer.to_owned(),
+                    |t| format!("%{}", (t * 100.0).round())
+                )
+            ));
+        }
+        if on(off, 5) {
+            out.push(format!(
+                "Sembol: {}",
+                base.symbol.as_deref().unwrap_or(by_layer)
+            ));
+        }
+        let kind = match &self.entity {
+            Entity::Text(_) if on(off, 6) => Some("Yazı: yüz, yükseklik, genişlik"),
+            Entity::Dimension(_) if on(off, 7) => Some("Ölçü: görünüş, değer yüksekliği, zemin"),
+            Entity::Hatch(_) if on(off, 8) => Some("Tarama: desen"),
+            Entity::Leader(_) if on(off, 9) => Some("Kılavuz: ok, yükseklik, zemin"),
+            _ => None,
         };
-        vec![
-            format!("Katman: {}", self.layer_name),
-            format!("Renk: {}", self.color.as_deref().unwrap_or(by_layer)),
-            format!("Kalınlık: {weight}"),
-            format!("Sembol: {}", self.symbol.as_deref().unwrap_or(by_layer)),
-        ]
+        out.extend(kind.map(str::to_owned));
+        out
     }
 }
 
@@ -239,7 +297,7 @@ impl Tool for MatchProperties {
     }
 
     fn prompt(&self) -> Prompt {
-        match &self.source {
+        let mut prompt = match &self.source {
             None => Prompt::new(LABEL, "özellikleri alınacak nesneye tıklayın"),
             Some(s) => Prompt::new(
                 LABEL,
@@ -249,6 +307,17 @@ impl Tool for MatchProperties {
             .then()
             .option("Bitir", "Enter"),
         }
+        .then();
+        for (i, (label, key, _, _)) in SWITCHES.iter().enumerate() {
+            prompt =
+                prompt.option_with(label, key, if on(self.off, i) { "açık" } else { "kapalı" });
+        }
+        prompt
+    }
+
+    fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
+        self.off = cx.memory.match_off;
+        Flow::Stay
     }
 
     fn point_count(&self) -> usize {
@@ -327,8 +396,15 @@ impl Tool for MatchProperties {
         cx.selection.set_hover(None);
     }
 
-    fn input(&mut self, _text: &str, _cx: &mut Context<'_>) -> bool {
-        false
+    /// A switch's key turns it on or off for the session.
+    fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
+        let key = upper_tr(text.trim());
+        let Some(i) = SWITCHES.iter().position(|s| s.1 == key) else {
+            return false;
+        };
+        cx.memory.match_off ^= 1 << i;
+        self.retag(cx);
+        true
     }
 
     /// Enter and a quick right click end the tool.

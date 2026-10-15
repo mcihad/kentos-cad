@@ -1338,7 +1338,12 @@
       "level": "semantic"
     },
     "matchProperties": {
-      "level": "semantic"
+      "level": "semantic",
+      "via": [
+        "cad.entities.match"
+      ],
+      "was": "cad.entities.set",
+      "note": "Kaynağın kimliği, hedefler ve istemdeki anahtarların seçtiği özellikler komuta verilir; değerleri komut okur (ADR 0304)."
     },
     "layerMatch": {
       "level": "semantic"

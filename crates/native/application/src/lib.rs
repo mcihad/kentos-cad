@@ -80,6 +80,7 @@ pub use dimension_create::dimensions_create;
 pub use edge_commands::{entities_chamfer, entities_extend, entities_fillet, entities_trim};
 pub use explode::entities_explode;
 pub use lengthen::entities_lengthen;
+pub use match_props::entities_match;
 pub use region::{entities_boundary, entities_hatch};
 pub use reverse::entities_reverse;
 pub mod entities_order;
@@ -115,6 +116,7 @@ pub mod layers_set;
 pub mod layers_states;
 pub mod layers_time;
 pub mod line;
+pub mod match_props;
 pub mod network_define;
 pub mod nurbs;
 pub mod offset;
@@ -371,6 +373,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_CURVES_EDIT,
         kentos_contracts::CAD_CURVES_EDIT_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_ENTITIES_MATCH,
+        kentos_contracts::CAD_ENTITIES_MATCH_VERSION,
     ),
     (
         kentos_contracts::CAD_ENTITIES_DIVIDE,

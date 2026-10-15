@@ -570,6 +570,7 @@ class EditOperation(_StrEnum):
     - ``explode``: Patlat: an object comes apart into simple ones.
     - ``lengthen``: Uzat-kısalt: a new total length, changed at one end.
     - ``curveEdit``: Eğriyi düzenle (docs/adr/0303): a polyline or a NURBS curve edited in place by `cad.curves.edit`.
+    - ``matchProperties``: Özellik kopyala's kind properties (docs/adr/0304): a text's face, a dimension's look, a hatch's pattern.
     - ``vertexAdd``: Köşe ekle: a vertex added on an edge.
     - ``vertexRemove``: Köşe sil: a vertex removed.
     - ``stretch``: Esnet: the vertices in a window move, the rest stay.
@@ -629,6 +630,7 @@ class EditOperation(_StrEnum):
     EXPLODE = "explode"
     LENGTHEN = "lengthen"
     CURVE_EDIT = "curveEdit"
+    MATCH_PROPERTIES = "matchProperties"
     VERTEX_ADD = "vertexAdd"
     VERTEX_REMOVE = "vertexRemove"
     STRETCH = "stretch"
@@ -679,7 +681,7 @@ class EditOperation(_StrEnum):
     EDGE_WIDTH = "edgeWidth"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "curveEdit", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose", "topologyFix", "networkAdjust", "levelAdjust", "rasterStyle", "rasterGeoref", "pointCloudStyle", "annotationScale", "edgeWidth"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "curveEdit", "matchProperties", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose", "topologyFix", "networkAdjust", "levelAdjust", "rasterStyle", "rasterGeoref", "pointCloudStyle", "annotationScale", "edgeWidth"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 
@@ -1140,6 +1142,38 @@ class LookPart(_StrEnum):
 
 LookPartName = Literal["color", "lineType", "lineWeight", "transparency"]
 """The names of :class:`LookPart`, for a plain string."""
+
+
+class MatchProperty(_StrEnum):
+    """A property Özellik kopyala gives (AutoCAD's MATCHPROP settings).
+
+    - ``layer``: The layer the objects move to.
+    - ``color``: Their own colour, or their layer's.
+    - ``lineType``: Their own line type, or their layer's (`ObjectLook.line_type`).
+    - ``lineTypeScale``: Their line type's own factor.
+    - ``lineWeight``: Their own line weight, or their layer's: only between objects drawn with lines.
+    - ``transparency``: Their own transparency.
+    - ``symbol``: Their own symbol, or their layer's style.
+    - ``text``: A text's face (its style, font, bold, italic, slant), height and width factor, to texts.
+    - ``dimension``: A dimension's look (its style, arrowheads, sizes, value's writing), value height and background, to dimensions.
+    - ``hatch``: A hatch's pattern (its name, scale, angle, lines or gradient), to hatches; their regions stay.
+    - ``leader``: A leader's arrowhead, its size, the note's height and background, to leaders.
+    """
+    LAYER = "layer"
+    COLOR = "color"
+    LINE_TYPE = "lineType"
+    LINE_TYPE_SCALE = "lineTypeScale"
+    LINE_WEIGHT = "lineWeight"
+    TRANSPARENCY = "transparency"
+    SYMBOL = "symbol"
+    TEXT = "text"
+    DIMENSION = "dimension"
+    HATCH = "hatch"
+    LEADER = "leader"
+
+
+MatchPropertyName = Literal["layer", "color", "lineType", "lineTypeScale", "lineWeight", "transparency", "symbol", "text", "dimension", "hatch", "leader"]
+"""The names of :class:`MatchProperty`, for a plain string."""
 
 
 class MirrorText(_StrEnum):
@@ -6983,6 +7017,50 @@ class EntitiesLengthen(_Model):
             end=_enum_in(LengthenEnd, data["end"]),
             change=LengthenChange.from_json(data["change"]),
             expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesMatch(_Model):
+    """Input of `cad.entities.match` v1: the `properties` of the object `source` given to the objects `uids`, as one
+    undo step “Özellik kopyala”. A property the source has none of (its layer's colour, no symbol) clears the
+    target's own. A line weight goes only between objects drawn with lines; the kind's properties (`text`,
+    `dimension`, `hatch`, `leader`) only to objects of the source's kind; the rest to every object. The source among
+    the targets is left out. An object on a locked layer is left out with a warning (`layer_locked`).
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_uid` (the source, then the targets), `no_entities`,
+    `no_properties` (an empty list), `invalid_revision`, `revision_conflict` (status `conflict`), `entity_not_found`
+    (the source, then the targets), `no_entities` (the source alone), `layer_locked` (every target locked, then the
+    source's layer when the layer is given). Warning: `layer_hidden` (objects moved to a hidden layer).
+    Attributes:
+        source: The object whose properties are given: its persistent id.
+        uids: The objects that take them: their persistent ids, at least one.
+        expected_revision: The document revision the input was prepared against, as decimal text. When given and the document is no
+            longer at it, nothing is written and the answer is `conflict`.
+        properties: The properties given, each once; absent: every one (`MatchProperty::ALL`).
+    """
+    source: str
+    uids: list[str]
+    expected_revision: str | None | Unset = UNSET
+    properties: list[MatchProperty | MatchPropertyName] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = self.source
+        out["uids"] = list(self.uids)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.properties is not UNSET:
+            out["properties"] = None if self.properties is None else [_enum_out(e0) for e0 in self.properties]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesMatch:
+        return cls(
+            source=data["source"],
+            uids=list(data["uids"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            properties=UNSET if "properties" not in data else None if data["properties"] is None else [_enum_in(MatchProperty, e0) for e0 in data["properties"]],
         )
 
 
@@ -22850,6 +22928,7 @@ __all__ = [
     "EntitiesHatch",
     "EntitiesJoin",
     "EntitiesLengthen",
+    "EntitiesMatch",
     "EntitiesOffset",
     "EntitiesOffsetMade",
     "EntitiesOffsetPlan",
@@ -23044,6 +23123,8 @@ __all__ = [
     "LocalDefinition",
     "LookPart",
     "LookPartName",
+    "MatchProperty",
+    "MatchPropertyName",
     "MeasuredPoint",
     "MidPointConstruction",
     "MidSubPlace",

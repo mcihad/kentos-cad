@@ -163,6 +163,7 @@ pub fn label(operation: EditOperation) -> &'static str {
         EditOperation::Explode => "Patlat",
         EditOperation::Lengthen => "Uzat-kısalt",
         EditOperation::CurveEdit => "Eğriyi düzenle",
+        EditOperation::MatchProperties => "Özellik kopyala",
         EditOperation::VertexAdd => "Köşe ekle",
         EditOperation::VertexRemove => "Köşe sil",
         EditOperation::Stretch => "Esnet",
