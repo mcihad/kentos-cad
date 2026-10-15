@@ -112,6 +112,8 @@ mod layout_plan_tests;
 mod layout_tests;
 #[cfg(test)]
 mod leader_scenes;
+#[cfg(test)]
+mod lengthen_scenes;
 mod locks;
 mod log_plan;
 #[cfg(test)]

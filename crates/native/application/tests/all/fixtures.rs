@@ -44,7 +44,7 @@ use kentos_native_application::{
 };
 use kentos_native_application::{
     changeset, create, dimensions_create, divide, entities_boundary, entities_break,
-    entities_hatch, entities_join, entities_reverse, file_import, stretch,
+    entities_hatch, entities_join, entities_lengthen, entities_reverse, file_import, stretch,
 };
 use serde_json::{Value, json};
 
@@ -846,6 +846,21 @@ impl Input for EntitiesJoin {
             return self.tolerance.as_mut();
         }
         area_number(&mut self.chain, path.strip_prefix("chain.")?)
+    }
+}
+
+impl Input for kentos_domain::contracts::EntitiesLengthen {
+    /// `change.length`, `change.angle`, `change.percent`, `change.to.x` and `.y`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_domain::contracts::LengthenChange as C;
+        match (&mut self.change, path) {
+            (C::Delta { length, .. } | C::Total { length, .. }, "change.length") => length.as_mut(),
+            (C::Delta { angle, .. } | C::Total { angle, .. }, "change.angle") => angle.as_mut(),
+            (C::Percent { percent }, "change.percent") => Some(percent),
+            (C::Dynamic { to }, "change.to.x") => Some(&mut to.x),
+            (C::Dynamic { to }, "change.to.y") => Some(&mut to.y),
+            _ => None,
+        }
     }
 }
 
@@ -1744,6 +1759,12 @@ fn run_op(
         kentos_domain::contracts::CAD_ENTITIES_JOIN => run!(entities_join, EntitiesJoin),
         kentos_domain::contracts::CAD_ENTITIES_REVERSE => {
             run!(entities_reverse, kentos_domain::contracts::EntitiesReverse)
+        }
+        kentos_domain::contracts::CAD_ENTITIES_LENGTHEN => {
+            run!(
+                entities_lengthen,
+                kentos_domain::contracts::EntitiesLengthen
+            )
         }
         kentos_domain::contracts::CAD_ENTITIES_DIVIDE => run!(divide, EntitiesDivide),
         kentos_domain::contracts::CAD_ENTITIES_BOUNDARY => {

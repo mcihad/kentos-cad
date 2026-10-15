@@ -10,6 +10,7 @@ mod delete;
 mod edit;
 mod fixtures;
 mod info_templates;
+mod lengthen;
 mod polygon;
 mod protocol;
 mod protocol_cases;

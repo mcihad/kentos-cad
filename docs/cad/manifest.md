@@ -17,8 +17,8 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 48 | 110 | 38 | 38 | 234 |
-| geometry | 20 | 65 | 0 | 8 | 93 |
+| semantic | 49 | 110 | 38 | 38 | 235 |
+| geometry | 19 | 65 | 0 | 8 | 92 |
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 20 | 0 | 6 | 26 |
 | query | 0 | 21 | 1 | 4 | 26 |
@@ -31,9 +31,9 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 494 satırdan 136'i: geometry 85, none 20, processing 13, query 18.
+CBS'ye özgü olmayan 494 satırdan 135'i: geometry 84, none 20, processing 13, query 18.
 
-### Sonucu çağıran hesaplar (geometry) — 85
+### Sonucu çağıran hesaplar (geometry) — 84
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -76,7 +76,6 @@ CBS'ye özgü olmayan 494 satırdan 136'i: geometry 85, none 20, processing 13, 
 | `tool.intersectPoint#İki doğrultu` | Kesişim noktası: İki doğrultu | shared | cad.entities.create `intersectPoint` |  |
 | `tool.intersectPoint#İki uzaklık` | Kesişim noktası: İki uzaklık | shared | cad.entities.create `intersectPoint` |  |
 | `tool.labelsToText` | Etiketleri yazıya çevir | shared | cad.entities.create `labels` |  |
-| `tool.lengthen` | Uzat-kısalt | cad | cad.entities.edit `lengthen` |  |
 | `tool.medianClose` | Refüj kapat | shared | cad.entities.edit `medianClose` |  |
 | `tool.parallel` | Paralel çizgi | cad | cad.entities.create `parallel` |  |
 | `tool.partsJoin` | Parçaları birleştir | shared | cad.entities.edit `partsJoin` |  |

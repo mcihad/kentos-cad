@@ -1452,6 +1452,7 @@ impl Session {
         // `<45`: the next point's direction locked at that angle (docs/adr/0166 §6).
         if let Some(LockText::Angle(a)) = parse_lock_text(text)
             && (self.tool.is_some() || self.select.grip_active())
+            && !self.tool.as_ref().is_some_and(|t| t.takes_angle())
         {
             self.lock_toward(Toward::Angle(a), cx);
             return true;

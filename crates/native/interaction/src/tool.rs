@@ -556,6 +556,10 @@ pub struct Memory {
     pub lengthen_delta: f64,
     pub lengthen_percent: f64,
     pub lengthen_total: f64,
+    /// Fark's and Toplam's arc angle, radians, when one was typed (`<45`; docs/adr/0298): an arc then changes by
+    /// its included angle; a plain number typed drops it.
+    pub lengthen_delta_angle: Option<f64>,
+    pub lengthen_total_angle: Option<f64>,
     /// Dizi's last rows, columns and spacing, east and north (`ArrayTool.last`).
     pub array_rows: u32,
     pub array_cols: u32,
@@ -967,6 +971,8 @@ impl Default for Memory {
             lengthen_delta: 1.0,
             lengthen_percent: 100.0,
             lengthen_total: 10.0,
+            lengthen_delta_angle: None,
+            lengthen_total_angle: None,
             array_rows: 2,
             array_cols: 3,
             array_dx: 10.0,
@@ -1540,6 +1546,11 @@ pub trait Tool {
     /// Space types a space in the command line then, Enter alone confirms
     /// (the web's `Tool.takesWords`).
     fn takes_words(&self) -> bool {
+        false
+    }
+    /// Whether this step asks for an angle as `<45` (Uzat-kısalt's arc angle, docs/adr/0298): the session then
+    /// leaves `<` to the tool instead of locking the next point's direction (docs/adr/0166 §6).
+    fn takes_angle(&self) -> bool {
         false
     }
     /// The pointer's look over the drawing while it runs.

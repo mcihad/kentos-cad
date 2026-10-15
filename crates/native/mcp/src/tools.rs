@@ -513,6 +513,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.entities.join"
             // Yönü çevir turns the objects in place (docs/adr/0296).
             | "cad.entities.reverse"
+            // Uzat-kısalt moves an end or cuts the object back (docs/adr/0298).
+            | "cad.entities.lengthen"
             // Keeping the numbers scales every object of the drawing (docs/adr/0256 §1).
             | "cad.units.change"
             // Its remove takes a service layer away (docs/adr/0208 §15).

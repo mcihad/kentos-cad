@@ -1429,8 +1429,12 @@
       "operation": "explode"
     },
     "lengthen": {
-      "level": "geometry",
-      "operation": "lengthen"
+      "level": "semantic",
+      "via": [
+        "cad.entities.lengthen"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesnenin kimliği, ucu ve Fark, Yüzde, Toplam (yayda açıyla) ya da Dinamik'in noktası komuta verilir; elips yayı da, kotlar ve ölçüler (M) uç kenar boyunca sürer (ADR 0298)."
     },
     "vertex": {
       "level": "semantic",

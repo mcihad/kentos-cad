@@ -1067,6 +1067,20 @@ LengthStyleName = Literal["decimal", "architectural", "engineering", "fractional
 """The names of :class:`LengthStyle`, for a plain string."""
 
 
+class LengthenEnd(_StrEnum):
+    """Which end moves.
+
+    - ``start``: The first point: a line's `a`, an arc's start, a polyline's first vertex.
+    - ``end``: The last point.
+    """
+    START = "start"
+    END = "end"
+
+
+LengthenEndName = Literal["start", "end"]
+"""The names of :class:`LengthenEnd`, for a plain string."""
+
+
 class LineLabelMode(_StrEnum):
     """Where a line's label goes.
 
@@ -2209,6 +2223,29 @@ class HatchRegion(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> HatchRegion:
         return _variant(_HATCH_REGION, "HatchRegion", "kind", data).from_json(data)
+
+
+class LengthenChange(_Union):
+    """How the length changes (AutoCAD LENGTHEN's DElta, Percent, Total and DYnamic).
+
+    One of:
+
+    - :class:`DeltaLengthenChange` (``kind: delta``)
+    - :class:`PercentLengthenChange` (``kind: percent``)
+    - :class:`TotalLengthenChange` (``kind: total``)
+    - :class:`DynamicLengthenChange` (``kind: dynamic``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LengthenChange:
+        return _variant(_LENGTHEN_CHANGE, "LengthenChange", "kind", data).from_json(data)
 
 
 class MeasuredPoint(_Union):
@@ -6551,6 +6588,58 @@ class EntitiesJoin(_Model):
             chain=UNSET if "chain" not in data else None if data["chain"] is None else TrimBoundaries.from_json(data["chain"]),
             expected_revision=data.get("expectedRevision", UNSET),
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesLengthen(_Model):
+    """Input of `cad.entities.lengthen` v1: the object's length changed at `end`
+    by `change`, as one undo step “Uzat-kısalt”. A line, an arc, an
+    elliptical arc or an open single-part polyline; a closed polyline, an
+    area, a circle, a whole ellipse and a curve are refused
+    (`not_lengthenable`). Lengthening keeps every vertex and edge but the
+    moving end's: a polyline's edges keep their widths, and the moving end's
+    elevation and measure (M) run on along the end edge by length
+    (extrapolated from its two ends). Shortening cuts the path; the kept
+    vertices keep theirs, the new end takes the cut edge's by length. An
+    associative dimension's point on the object follows it.
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_uid`,
+    `not_finite` (the change's numbers), `invalid_change` (Fark or Toplam
+    with neither or both of `length` and `angle`), `invalid_revision`,
+    `revision_conflict` (status `conflict`), `entity_not_found`,
+    `layer_locked`, `not_lengthenable`, `multi_part`, `angle_needs_arc`
+    (an angle for other than an arc), `invalid_length` (the new length not
+    above zero), `arc_closes` (an arc or an arc edge would close on itself).
+    Attributes:
+        uid: The object's persistent id (lowercase UUID text with hyphens).
+        end: The end that moves.
+        change: How the length changes.
+        expected_revision: The document revision the input was prepared against, as decimal
+            text. When given and the document is no longer at it, nothing is
+            written and the answer is `conflict`.
+    """
+    uid: str
+    end: LengthenEnd | LengthenEndName
+    change: LengthenChange
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["end"] = _enum_out(self.end)
+        out["change"] = self.change.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesLengthen:
+        return cls(
+            uid=data["uid"],
+            end=_enum_in(LengthenEnd, data["end"]),
+            change=LengthenChange.from_json(data["change"]),
+            expected_revision=data.get("expectedRevision", UNSET),
         )
 
 
@@ -19823,6 +19912,106 @@ class ObjectsHatchRegion(HatchRegion):
 
 
 @dataclass(kw_only=True, slots=True)
+class DeltaLengthenChange(LengthenChange):
+    """Fark: the length changed by `length` (negative shortens), or an arc's
+    included angle by `angle` radians; exactly one of them.
+    Attributes:
+        angle: Unit: rad.
+        length: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "delta"
+    angle: float | None | Unset = UNSET
+    length: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "delta"}
+        if self.angle is not UNSET:
+            out["angle"] = None if self.angle is None else float(self.angle)
+        if self.length is not UNSET:
+            out["length"] = None if self.length is None else float(self.length)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeltaLengthenChange:
+        return cls(
+            angle=UNSET if "angle" not in data else None if data["angle"] is None else float(data["angle"]),
+            length=UNSET if "length" not in data else None if data["length"] is None else float(data["length"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PercentLengthenChange(LengthenChange):
+    """Yüzde: the new length as this percentage of the current one (above zero).
+    Attributes:
+        percent: Unit: percent.
+    """
+    TAG_VALUE: ClassVar[str] = "percent"
+    percent: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "percent"}
+        out["percent"] = float(self.percent)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PercentLengthenChange:
+        return cls(
+            percent=float(data["percent"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TotalLengthenChange(LengthenChange):
+    """Toplam: the new total `length`, or an arc's new included `angle`
+    radians; exactly one of them.
+    Attributes:
+        angle: Unit: rad.
+        length: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "total"
+    angle: float | None | Unset = UNSET
+    length: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "total"}
+        if self.angle is not UNSET:
+            out["angle"] = None if self.angle is None else float(self.angle)
+        if self.length is not UNSET:
+            out["length"] = None if self.length is None else float(self.length)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TotalLengthenChange:
+        return cls(
+            angle=UNSET if "angle" not in data else None if data["angle"] is None else float(data["angle"]),
+            length=UNSET if "length" not in data else None if data["length"] is None else float(data["length"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DynamicLengthenChange(LengthenChange):
+    """Dinamik: the moving end as near `to` as the object's own path lets it:
+    past the end along the end edge's line, circle or ellipse, before it
+    cut back to the nearest point.
+    Attributes:
+        to: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "dynamic"
+    to: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "dynamic"}
+        out["to"] = _vec2_out(self.to)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DynamicLengthenChange:
+        return cls(
+            to=Vec2.from_json(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AtMeasuredPoint(MeasuredPoint):
     """Coordinates: the point follows nothing.
     Attributes:
@@ -21612,6 +21801,9 @@ _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange
 _HATCH_REGION: dict[str, type[HatchRegion]] = {"point": PointHatchRegion, "objects": ObjectsHatchRegion}
 
 
+_LENGTHEN_CHANGE: dict[str, type[LengthenChange]] = {"delta": DeltaLengthenChange, "percent": PercentLengthenChange, "total": TotalLengthenChange, "dynamic": DynamicLengthenChange}
+
+
 _MEASURED_POINT: dict[str, type[MeasuredPoint]] = {"at": AtMeasuredPoint, "place": PlaceMeasuredPoint}
 
 
@@ -21800,6 +21992,7 @@ __all__ = [
     "DeleteFeatureChange",
     "DeleteUcsTo",
     "DeleteViewsOp",
+    "DeltaLengthenChange",
     "DiameterDimensionMeasure",
     "DigitizedNetworkDirection",
     "DimensionArrow",
@@ -21828,6 +22021,7 @@ __all__ = [
     "DrawingUnitName",
     "DxfExported",
     "DxfImported",
+    "DynamicLengthenChange",
     "EdgeNear",
     "EdgeRectangleFrame",
     "EdgeRegularFrame",
@@ -21862,6 +22056,7 @@ __all__ = [
     "EntitiesFillet",
     "EntitiesHatch",
     "EntitiesJoin",
+    "EntitiesLengthen",
     "EntitiesOffset",
     "EntitiesOffsetMade",
     "EntitiesOffsetPlan",
@@ -22035,6 +22230,9 @@ __all__ = [
     "LeaderEntityGeometry",
     "LengthStyle",
     "LengthStyleName",
+    "LengthenChange",
+    "LengthenEnd",
+    "LengthenEndName",
     "LineArrayLayout",
     "LineCreate",
     "LineCreated",
@@ -22101,6 +22299,7 @@ __all__ = [
     "PathEntity",
     "PatternLine",
     "PdfExported",
+    "PercentLengthenChange",
     "PickedEntity",
     "PinnedObject",
     "PlaceMeasuredPoint",
@@ -22300,6 +22499,7 @@ __all__ = [
     "TopologyRuleKind",
     "TopologyRuleKindName",
     "TopologySettings",
+    "TotalLengthenChange",
     "TrackPointConstruction",
     "Transform",
     "TrimBoundaries",

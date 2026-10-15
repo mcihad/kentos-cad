@@ -133,6 +133,22 @@ impl Objects {
         )
     }
 
+    /// An elliptical arc about `c`: its major axis, minor-to-major ratio and parameters (radians).
+    pub(crate) fn ellipse(
+        &mut self,
+        layer: &str,
+        c: [f64; 2],
+        major: [f64; 2],
+        ratio: f64,
+        t0: f64,
+        t1: f64,
+    ) -> u32 {
+        self.push(
+            layer,
+            json!({ "kind": "ellipse", "c": xy(c), "major": { "x": major[0], "y": major[1] }, "ratio": ratio, "t0": t0, "t1": t1 }),
+        )
+    }
+
     pub(crate) fn point(&mut self, layer: &str, at: [f64; 2], z: Option<f64>) -> u32 {
         let mut fields = json!({ "kind": "point", "p": xy(at) });
         if let Some(z) = z {

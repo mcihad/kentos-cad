@@ -1,0 +1,2746 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.entities.lengthen",
+ "commandVersion": 1,
+ "title": "Uzat-kısalt: Fark, Yüzde, Toplam ve Dinamik; yay açıyla",
+ "note": "ADR 0298. Bağımsız başvuru: scripts/fixtures/lengthen_command_cases.py (açılar ve elips yayının uzunlukları mpmath'le 40 basamakta).",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Uzat-kısalt",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 100,
+   "workspace": "cad"
+  },
+  "origin": {
+   "x": 40,
+   "y": 30
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "line",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 10,
+     "y": 0
+    },
+    "za": 1,
+    "zb": 3,
+    "ma": 0,
+    "mb": 10
+   },
+   {
+    "kind": "arc",
+    "id": 2,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 30,
+     "y": 0
+    },
+    "r": 5,
+    "a0": 0,
+    "a1": 1.5707963267948966
+   },
+   {
+    "kind": "polyline",
+    "id": 3,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0,
+      "y": 20
+     },
+     {
+      "x": 10,
+      "y": 20
+     },
+     {
+      "x": 10,
+      "y": 30
+     }
+    ],
+    "zs": [
+     1,
+     2,
+     3
+    ],
+    "ms": [
+     0,
+     10,
+     20
+    ],
+    "widths": [
+     [
+      0.2,
+      0.4
+     ],
+     [
+      0.4,
+      0.6
+     ],
+     [
+      0,
+      0
+     ]
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 4,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 20,
+      "y": 20
+     },
+     {
+      "x": 30,
+      "y": 20
+     },
+     {
+      "x": 40,
+      "y": 20
+     }
+    ],
+    "bulges": [
+     0,
+     0.41421356237309503,
+     0
+    ]
+   },
+   {
+    "kind": "ellipse",
+    "id": 5,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 60,
+     "y": 0
+    },
+    "major": {
+     "x": 6,
+     "y": 0
+    },
+    "ratio": 0.5,
+    "t0": 0,
+    "t1": 1.5707963267948966
+   },
+   {
+    "kind": "polyline",
+    "id": 6,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0,
+      "y": 50
+     },
+     {
+      "x": 10,
+      "y": 50
+     },
+     {
+      "x": 10,
+      "y": 60
+     }
+    ],
+    "closed": true
+   },
+   {
+    "kind": "circle",
+    "id": 7,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 30,
+     "y": 50
+    },
+    "r": 3
+   },
+   {
+    "kind": "polygon",
+    "id": 8,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 40,
+      "y": 50
+     },
+     {
+      "x": 50,
+      "y": 50
+     },
+     {
+      "x": 50,
+      "y": 60
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 9,
+    "layerId": "kilitli",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 70
+    },
+    "b": {
+     "x": 10,
+     "y": 70
+    }
+   },
+   {
+    "kind": "polyline",
+    "id": 10,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 20,
+      "y": 70
+     },
+     {
+      "x": 30,
+      "y": 70
+     }
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 20,
+        "y": 75
+       },
+       {
+        "x": 30,
+        "y": 75
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 11,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 40
+    },
+    "b": {
+     "x": 3,
+     "y": 44
+    }
+   },
+   {
+    "kind": "ellipse",
+    "id": 12,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 80,
+     "y": 0
+    },
+    "major": {
+     "x": 4,
+     "y": 0
+    },
+    "ratio": 0.5,
+    "t0": 0,
+    "t1": 6.283185307179586
+   },
+   {
+    "kind": "point",
+    "id": 13,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 90,
+     "y": 0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 14,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 5,
+     "y": 80
+    },
+    "b": {
+     "x": 5,
+     "y": 80
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Fark: çizginin ucu 2 m uzar; ucun kotu ve ölçüsü (M) uç kenar boyunca sürer; adım “Uzat-kısalt”",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:1",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 2
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 1,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 0,
+          "y": 0
+         },
+         "b": {
+          "x": 12,
+          "y": 0
+         },
+         "za": 1,
+         "zb": 3.4,
+         "ma": 0,
+         "mb": 12
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 2
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 12,
+         "y": 0
+        },
+        "za": 1,
+        "zb": 3.4,
+        "ma": 0,
+        "mb": 12
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Uzat-kısalt",
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 10,
+         "y": 0
+        },
+        "za": 1,
+        "zb": 3,
+        "ma": 0,
+        "mb": 10
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Fark eksi: çizginin başı 3 m kısalır; kalan uçların kotu yerinden",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:1",
+      "end": "start",
+      "change": {
+       "kind": "delta",
+       "length": -3
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 1,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 3,
+          "y": 0
+         },
+         "b": {
+          "x": 10,
+          "y": 0
+         },
+         "za": 1.6,
+         "zb": 3,
+         "ma": 3,
+         "mb": 10
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "end": "start",
+      "change": {
+       "kind": "delta",
+       "length": -3
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Fark: çizginin başı 5 m uzar; başın kotu geriye sürer",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:1",
+      "end": "start",
+      "change": {
+       "kind": "delta",
+       "length": 5
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 1,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": -5,
+          "y": 0
+         },
+         "b": {
+          "x": 10,
+          "y": 0
+         },
+         "za": 0,
+         "zb": 3,
+         "ma": -5,
+         "mb": 10
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "end": "start",
+      "change": {
+       "kind": "delta",
+       "length": 5
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": -5,
+         "y": 0
+        },
+        "b": {
+         "x": 10,
+         "y": 0
+        },
+        "za": 0,
+        "zb": 3,
+        "ma": -5,
+        "mb": 10
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Fark: yay ucundan kendi çemberinde uzar",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:2",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 2.5
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "arc",
+         "id": 2,
+         "layerId": "cizim",
+         "attrs": {},
+         "c": {
+          "x": 30,
+          "y": 0
+         },
+         "r": 5,
+         "a0": 0,
+         "a1": 2.0707963267948966
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:2",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 2.5
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:2"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Fark açıyla: yayın açısı 45° büyür, başı geriye",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:2",
+      "end": "start",
+      "change": {
+       "kind": "delta",
+       "angle": 0.7853981633974483
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "arc",
+         "id": 2,
+         "layerId": "cizim",
+         "attrs": {},
+         "c": {
+          "x": 30,
+          "y": 0
+         },
+         "r": 5,
+         "a0": 5.497787143782138,
+         "a1": 1.5707963267948966
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:2",
+      "end": "start",
+      "change": {
+       "kind": "delta",
+       "angle": 0.7853981633974483
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:2"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Toplam açıyla: yay yarım daire olur",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:2",
+      "end": "end",
+      "change": {
+       "kind": "total",
+       "angle": 3.141592653589793
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "arc",
+         "id": 2,
+         "layerId": "cizim",
+         "attrs": {},
+         "c": {
+          "x": 30,
+          "y": 0
+         },
+         "r": 5,
+         "a0": 0,
+         "a1": 3.141592653589793
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:2",
+      "end": "end",
+      "change": {
+       "kind": "total",
+       "angle": 3.141592653589793
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:2"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Toplam açı bir tam tur: yay kendini kapatır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:2",
+      "end": "end",
+      "change": {
+       "kind": "total",
+       "angle": 6.283185307179586
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "arc_closes",
+       "message": "Yay bu uzunlukta kendini kapatır; en çok bir tam daireden kısa olabilir. Daha kısa bir uzunluk ya da açı verin.",
+       "path": "change"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Açı yalnız yayda: çizgiye açı angle_needs_arc",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "angle": 0.5
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "angle_needs_arc",
+       "message": "Açıyla yalnız yay uzatılır ya da kısaltılır. Çizgiye, elips yayına ve çoklu çizgiye uzunluk verin.",
+       "path": "change.angle"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yüzde: çizgi %150",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:1",
+      "end": "end",
+      "change": {
+       "kind": "percent",
+       "percent": 150
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 1,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 0,
+          "y": 0
+         },
+         "b": {
+          "x": 15,
+          "y": 0
+         },
+         "za": 1,
+         "zb": 4,
+         "ma": 0,
+         "mb": 15
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "end": "end",
+      "change": {
+       "kind": "percent",
+       "percent": 150
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yüzde: çoklu çizgi %40 başından kısalır; kalan köşeler kotunu ve ölçüsünü korur, yeni baş kesilen kenarınkini alır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:3",
+      "end": "start",
+      "change": {
+       "kind": "percent",
+       "percent": 40
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "polyline",
+         "id": 3,
+         "layerId": "cizim",
+         "attrs": {},
+         "pts": [
+          {
+           "x": 10,
+           "y": 22
+          },
+          {
+           "x": 10,
+           "y": 30
+          }
+         ],
+         "zs": [
+          2.2,
+          3
+         ],
+         "ms": [
+          12,
+          20
+         ],
+         "widths": [
+          [
+           0.44,
+           0.6
+          ],
+          [
+           0,
+           0
+          ]
+         ]
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:3",
+      "end": "start",
+      "change": {
+       "kind": "percent",
+       "percent": 40
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:3"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yüzde sıfır: yeni uzunluk sıfırdan büyük değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "end": "end",
+      "change": {
+       "kind": "percent",
+       "percent": 0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_length",
+       "message": "Yeni uzunluk sıfırdan büyük olmalı. Daha küçük bir kısaltma ya da sıfırdan büyük bir uzunluk verin.",
+       "path": "change"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Toplam: çoklu çizgi 25 m'ye uzar; kenarlar genişliklerini korur, ucun kotu ve ölçüsü sürer",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:3",
+      "end": "end",
+      "change": {
+       "kind": "total",
+       "length": 25
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "polyline",
+         "id": 3,
+         "layerId": "cizim",
+         "attrs": {},
+         "pts": [
+          {
+           "x": 0,
+           "y": 20
+          },
+          {
+           "x": 10,
+           "y": 20
+          },
+          {
+           "x": 10,
+           "y": 35
+          }
+         ],
+         "zs": [
+          1,
+          2,
+          3.5
+         ],
+         "ms": [
+          0,
+          10,
+          25
+         ],
+         "widths": [
+          [
+           0.2,
+           0.4
+          ],
+          [
+           0.4,
+           0.6
+          ],
+          [
+           0,
+           0
+          ]
+         ]
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:3",
+      "end": "end",
+      "change": {
+       "kind": "total",
+       "length": 25
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:3"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Toplam: çoklu çizgi 15 m'ye kısalır; yeni uç kesilen kenarın kotunu, ölçüsünü ve genişliğini uzunlukla alır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:3",
+      "end": "end",
+      "change": {
+       "kind": "total",
+       "length": 15
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "polyline",
+         "id": 3,
+         "layerId": "cizim",
+         "attrs": {},
+         "pts": [
+          {
+           "x": 0,
+           "y": 20
+          },
+          {
+           "x": 10,
+           "y": 20
+          },
+          {
+           "x": 10,
+           "y": 25
+          }
+         ],
+         "zs": [
+          1,
+          2,
+          2.5
+         ],
+         "ms": [
+          0,
+          10,
+          15
+         ],
+         "widths": [
+          [
+           0.2,
+           0.4
+          ],
+          [
+           0.4,
+           0.5
+          ],
+          [
+           0,
+           0
+          ]
+         ]
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:3",
+      "end": "end",
+      "change": {
+       "kind": "total",
+       "length": 15
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:3"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Fark: çoklu çizginin yaylı uç kenarı kendi çemberinde uzar, bükümü yeni açısının",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:4",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 3
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "polyline",
+         "id": 4,
+         "layerId": "cizim",
+         "attrs": {},
+         "pts": [
+          {
+           "x": 20,
+           "y": 20
+          },
+          {
+           "x": 30,
+           "y": 20
+          },
+          {
+           "x": 41.614960671120144,
+           "y": 22.501541411283007
+          }
+         ],
+         "bulges": [
+          0,
+          0.5447001171065219,
+          0
+         ]
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:4",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 3
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Fark: elips yayı ucundan kendi elipsinde uzar",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:5",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 1
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "ellipse",
+         "id": 5,
+         "layerId": "cizim",
+         "attrs": {},
+         "c": {
+          "x": 60,
+          "y": 0
+         },
+         "major": {
+          "x": 6,
+          "y": 0
+         },
+         "ratio": 0.5,
+         "t0": 0,
+         "t1": 1.738046361831224
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:5",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 1
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:5"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Toplam: elips yayı başından kısalır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:5",
+      "end": "start",
+      "change": {
+       "kind": "total",
+       "length": 3
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "ellipse",
+         "id": 5,
+         "layerId": "cizim",
+         "attrs": {},
+         "c": {
+          "x": 60,
+          "y": 0
+         },
+         "major": {
+          "x": 6,
+          "y": 0
+         },
+         "ratio": 0.5,
+         "t0": 1.053947026352128,
+         "t1": 1.5707963267948966
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:5",
+      "end": "start",
+      "change": {
+       "kind": "total",
+       "length": 3
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:5"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Toplam sıfır: invalid_length",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "end": "end",
+      "change": {
+       "kind": "total",
+       "length": 0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_length",
+       "message": "Yeni uzunluk sıfırdan büyük olmalı. Daha küçük bir kısaltma ya da sıfırdan büyük bir uzunluk verin.",
+       "path": "change"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Fark çizgiden uzun eksi: invalid_length",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": -12
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_length",
+       "message": "Yeni uzunluk sıfırdan büyük olmalı. Daha küçük bir kısaltma ya da sıfırdan büyük bir uzunluk verin.",
+       "path": "change"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dinamik: imleç ucun ötesinde, çizgi doğrusunda uzar",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:1",
+      "end": "end",
+      "change": {
+       "kind": "dynamic",
+       "to": {
+        "x": 14,
+        "y": 3
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 1,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 0,
+          "y": 0
+         },
+         "b": {
+          "x": 14,
+          "y": 0
+         },
+         "za": 1,
+         "zb": 3.8,
+         "ma": 0,
+         "mb": 14
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "end": "end",
+      "change": {
+       "kind": "dynamic",
+       "to": {
+        "x": 14,
+        "y": 3
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dinamik: imleç çizginin üstünde, en yakın yerine kısalır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:1",
+      "end": "end",
+      "change": {
+       "kind": "dynamic",
+       "to": {
+        "x": 6,
+        "y": 1
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 1,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 0,
+          "y": 0
+         },
+         "b": {
+          "x": 6,
+          "y": 0
+         },
+         "za": 1,
+         "zb": 2.2,
+         "ma": 0,
+         "mb": 6
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "end": "end",
+      "change": {
+       "kind": "dynamic",
+       "to": {
+        "x": 6,
+        "y": 1
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dinamik: yayın ucu imlecin merkezden göründüğü açıya",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:2",
+      "end": "end",
+      "change": {
+       "kind": "dynamic",
+       "to": {
+        "x": 27.47576947700071,
+        "y": 4.316046833244369
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "arc",
+         "id": 2,
+         "layerId": "cizim",
+         "attrs": {},
+         "c": {
+          "x": 30,
+          "y": 0
+         },
+         "r": 5,
+         "a0": 0,
+         "a1": 2.1000000000000005
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:2",
+      "end": "end",
+      "change": {
+       "kind": "dynamic",
+       "to": {
+        "x": 27.47576947700071,
+        "y": 4.316046833244369
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:2"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizgi eğik: Toplam 10 m (3-4-5)",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:11",
+      "end": "end",
+      "change": {
+       "kind": "total",
+       "length": 10
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 11,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 0,
+          "y": 40
+         },
+         "b": {
+          "x": 6,
+          "y": 48
+         }
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:11",
+      "end": "end",
+      "change": {
+       "kind": "total",
+       "length": 10
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:11"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "entities": {
+       "11": {
+        "kind": "line",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 40
+        },
+        "b": {
+         "x": 6,
+         "y": 48
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapalı çoklu çizgi uzamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:6",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 1
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_lengthenable",
+       "message": "Uzat-kısalt çizgi, yay, elips yayı ve açık çoklu çizgide çalışır. Kapalı çoklu çizgiyi önce açın; daire ve bütün elips için Kır kullanın.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Daire uzamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:7",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 1
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_lengthenable",
+       "message": "Uzat-kısalt çizgi, yay, elips yayı ve açık çoklu çizgide çalışır. Kapalı çoklu çizgiyi önce açın; daire ve bütün elips için Kır kullanın.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alan uzamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:8",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 1
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_lengthenable",
+       "message": "Uzat-kısalt çizgi, yay, elips yayı ve açık çoklu çizgide çalışır. Kapalı çoklu çizgiyi önce açın; daire ve bütün elips için Kır kullanın.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bütün elips uzamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:12",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 1
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_lengthenable",
+       "message": "Uzat-kısalt çizgi, yay, elips yayı ve açık çoklu çizgide çalışır. Kapalı çoklu çizgiyi önce açın; daire ve bütün elips için Kır kullanın.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Nokta uzamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:13",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 1
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_lengthenable",
+       "message": "Uzat-kısalt çizgi, yay, elips yayı ve açık çoklu çizgide çalışır. Kapalı çoklu çizgiyi önce açın; daire ve bütün elips için Kır kullanın.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Uçları aynı yerde olan çizginin uzunluğu yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:14",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 1
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_lengthenable",
+       "message": "Nesnenin uzunluğu yok. Uzat-kısalt uzunluğu olan nesnenin ucunu taşır.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çok parçalı çoklu çizgi: multi_part",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:10",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 1
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "multi_part",
+       "message": "Bu işlem çok parçalı nesnede çalışmaz; önce Parçalara ayır ile parçalarına ayırın.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli katmandaki çizgi: layer_locked",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:9",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 1
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Fark'ta uzunluk da açı da: invalid_change",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:2",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 1,
+       "angle": 0.1
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_change",
+       "message": "Fark ve Toplam'da uzunluk (length) ya da açıdan (angle) yalnız birini verin.",
+       "path": "change"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Toplam'da ikisi de yok: invalid_change",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:2",
+      "end": "end",
+      "change": {
+       "kind": "total"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_change",
+       "message": "Fark ve Toplam'da uzunluk (length) ya da açıdan (angle) yalnız birini verin.",
+       "path": "change"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Fark sonlu değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 1
+      }
+     },
+     "nonFinite": {
+      "change.length": "NaN"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Uzunluk farkı sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+       "path": "change.length"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dinamik'in noktası sonlu değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "end": "end",
+      "change": {
+       "kind": "dynamic",
+       "to": {
+        "x": 1,
+        "y": 1
+       }
+      }
+     },
+     "nonFinite": {
+      "change.to.x": "Infinity"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Hedef noktanın doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+       "path": "change.to.x"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm sayı değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 1
+      },
+      "expectedRevision": "on iki"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm geçmişte kaldıysa conflict, hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "captureRevision",
+     "as": "old"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:11",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 1
+      }
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 1
+      },
+      "expectedRevision": "$old"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "path": "expectedRevision",
+       "revision": "$current",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın."
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kimlik UUID değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "on iki",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 1
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“on iki” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizimde olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+      "end": "end",
+      "change": {
+       "kind": "delta",
+       "length": 1
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

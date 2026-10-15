@@ -7,25 +7,29 @@
 //!   the end segment continues, inside the path it is cut back; object snaps
 //!   apply) until a click, or a typed number is the new total length;
 //! - Fark (F), Yüzde (Y), Toplam (T): the next number typed is the value,
-//!   and every end clicked changes at once by it (the preview shows it);
+//!   and every end clicked changes at once by it (the preview shows it); in
+//!   Fark and Toplam `<45` is an arc's included angle instead (docs/adr/0298);
 //! - the mode and the values stay for as long as the app lives
 //!   ([`crate::tool::Memory`]); Enter or Esc drops a picked end or a value
 //!   asked for; with neither, Enter leaves.
 //!
-//! The object takes its new geometry through `cad.entities.edit`:
-//! “Uzunluk 10.000 m → 12.000 m.” The lengths and the geometry are the
-//! shared core's (`length_of`, `near_end`, `length_toward`, `lengthen_entity`).
+//! The product command `cad.entities.lengthen` does the work (docs/adr/0298):
+//! its plan is the preview, its execute the write, as one undo step
+//! “Uzat-kısalt”: “Uzunluk 10.000 m → 12.000 m.” The tool asks only which end
+//! (the core's `near_end`) and how the length changes.
 
-use kentos_contracts::{EditOperation, Entity, EntityEdit};
+use kentos_contracts::{CommandResult, EntitiesLengthen, Entity, LengthenChange, LengthenEnd};
 use kentos_domain::{Document, Slot};
-use kentos_geometry_core::ops::curve_cuts::Geometry;
-use kentos_geometry_core::ops::lengthen::{length_of, length_toward, lengthen_entity, near_end};
+use kentos_geometry_core::ops::lengthen::{length_of, near_end};
 use kentos_geometry_core::tools::point_text::parse_number;
 use kentos_native_application::geometry::shape;
+use kentos_native_application::lengthen::lengths;
+use kentos_native_application::{ExecutionContext, entities_lengthen};
 
 use crate::edge::{self, Hover, Outline};
 use crate::format::Format;
 use crate::log::Level;
+use crate::points::{self, wire};
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Context, Cursor, Flow, LengthenMode, Memory, Pointer, Preview, Tag, Tone, Tool};
 use crate::{Vec2, js_trim};
@@ -52,6 +56,14 @@ fn mode_name(mode: LengthenMode) -> &'static str {
 /// A number as JavaScript writes it in a template: `100`, `12.5`.
 fn js_number(v: f64) -> String {
     format!("{v}")
+}
+
+/// A Fark or Toplam value in the prompt: its length, or `<` and an arc's angle.
+fn value_text(length: f64, angle: Option<f64>, f: &Format) -> String {
+    match angle {
+        Some(a) => format!("<{}", f.angle(a)),
+        None => f.length(length),
+    }
 }
 
 /// The lengthen tool.
@@ -81,55 +93,101 @@ impl Lengthen {
         self.seen.map(|(m, _)| m).unwrap_or_default()
     }
 
-    /// The new length an end clicked in Fark, Yüzde or Toplam gets.
-    fn length_for(m: &Memory, e: &Entity) -> f64 {
-        let l = length_of(&shape(e)).unwrap_or(0.0);
+    /// The change an end clicked in Fark, Yüzde or Toplam gets.
+    fn change_for(m: &Memory) -> LengthenChange {
         match m.lengthen_mode {
-            LengthenMode::Delta => l + m.lengthen_delta,
-            LengthenMode::Percent => (l * m.lengthen_percent) / 100.0,
-            _ => m.lengthen_total,
+            LengthenMode::Delta => match m.lengthen_delta_angle {
+                Some(a) => LengthenChange::Delta {
+                    length: None,
+                    angle: Some(a),
+                },
+                None => LengthenChange::Delta {
+                    length: Some(m.lengthen_delta),
+                    angle: None,
+                },
+            },
+            LengthenMode::Percent => LengthenChange::Percent {
+                percent: m.lengthen_percent,
+            },
+            _ => match m.lengthen_total_angle {
+                Some(a) => LengthenChange::Total {
+                    length: None,
+                    angle: Some(a),
+                },
+                None => LengthenChange::Total {
+                    length: Some(m.lengthen_total),
+                    angle: None,
+                },
+            },
         }
     }
 
-    /// Writes the new length through the edit command (the web's `apply`).
-    fn apply(&mut self, slot: Slot, at_end: bool, length: f64, cx: &mut Context<'_>) {
-        let Some(e) = cx.doc.get(slot) else { return };
-        let before = length_of(&shape(e)).unwrap_or(0.0);
-        match lengthen_entity(&edge::core(e), at_end, length) {
-            Geometry::Error(error) => cx.say(Level::Warn, error),
-            Geometry::Ok(g) => {
-                let uid = edge::uid(cx.doc, slot);
-                let written = edge::geometry(&g.shape).and_then(|geometry| {
-                    edge::write(
-                        EditOperation::Lengthen,
-                        vec![EntityEdit::Update { uid, geometry }],
-                        cx,
-                    )
-                });
-                if written.is_some() {
-                    let f = cx.format();
-                    let text = format!("Uzunluk {} → {}.", f.length(before), f.length(length));
-                    cx.say(Level::Success, text);
-                }
-                self.hover = None;
-            }
-        }
+    /// The command's input: `slot`'s end (or start) changed by `change`.
+    fn request(
+        slot: Slot,
+        at_end: bool,
+        change: LengthenChange,
+        doc: &Document,
+    ) -> Option<EntitiesLengthen> {
+        Some(EntitiesLengthen {
+            uid: doc.uid(slot)?.to_string(),
+            end: if at_end {
+                LengthenEnd::End
+            } else {
+                LengthenEnd::Start
+            },
+            change,
+            expected_revision: None,
+        })
     }
 
-    /// The result of `length` at the moving end, and the change beside `at`.
-    fn show(&mut self, e: &Entity, at_end: bool, length: Option<f64>, at: Vec2, f: &Format) {
-        let Some(length) = length else { return };
-        let Geometry::Ok(g) = lengthen_entity(&edge::core(e), at_end, length) else {
+    /// Writes the new length through the command.
+    fn apply(&mut self, slot: Slot, at_end: bool, change: LengthenChange, cx: &mut Context<'_>) {
+        let Some(input) = Self::request(slot, at_end, change, cx.doc) else {
             return;
         };
-        let out = Outline::of(&g.shape, None, 2.0, Tone::Accent);
-        let before = length_of(&shape(e)).unwrap_or(0.0);
+        let said = lengths(cx.doc, &input);
+        let result = entities_lengthen::execute(&mut ExecutionContext::new(cx.doc), input);
+        if points::written(result, cx).is_some() {
+            if let Some((before, after)) = said {
+                let f = cx.format();
+                cx.say(
+                    Level::Success,
+                    format!("Uzunluk {} → {}.", f.length(before), f.length(after)),
+                );
+            }
+            self.hover = None;
+        }
+    }
+
+    /// The command's plan of `change` at the moving end, and the change beside `at`.
+    fn show(
+        &mut self,
+        slot: Slot,
+        at_end: bool,
+        change: LengthenChange,
+        at: Vec2,
+        cx: &Context<'_>,
+    ) {
+        let Some(input) = Self::request(slot, at_end, change, cx.doc) else {
+            return;
+        };
+        let CommandResult::Completed { output, .. } = entities_lengthen::plan_in(cx.doc, &input)
+        else {
+            return;
+        };
+        let (Some(e), Some((before, after))) = (output.changed.first(), lengths(cx.doc, &input))
+        else {
+            return;
+        };
+        let f = cx.format();
+        let out = Outline::of(&shape(e), None, 2.0, Tone::Accent);
         self.drawn = Preview {
             strokes: out.strokes,
             marks: out.marks,
             tag: Some(Tag {
                 at,
-                lines: vec![format!("{} → {}", f.length(before), f.length(length))],
+                lines: vec![format!("{} → {}", f.length(before), f.length(after))],
             }),
             ..Preview::default()
         };
@@ -140,13 +198,9 @@ impl Lengthen {
     fn redraw(&mut self, cx: &Context<'_>) {
         self.drawn = Preview::default();
         let m = *cx.memory;
-        let f = cx.format();
         if let (Some((slot, at_end)), Some(mouse)) = (self.target, self.mouse) {
-            if let Some(e) = cx.doc.get(slot) {
-                let length = length_toward(&shape(e), at_end, mouse);
-                self.show(e, at_end, length, mouse, &f);
-            }
-            return;
+            let to = wire(mouse);
+            return self.show(slot, at_end, LengthenChange::Dynamic { to }, mouse, cx);
         }
         if self.target.is_none()
             && m.lengthen_mode != LengthenMode::Dynamic
@@ -154,8 +208,7 @@ impl Lengthen {
             && let Some(e) = cx.doc.get(h.slot)
         {
             let at_end = near_end(&shape(e), h.at);
-            let length = Self::length_for(&m, e);
-            self.show(e, at_end, Some(length), h.at, &f);
+            self.show(h.slot, at_end, Self::change_for(&m), h.at, cx);
         }
     }
 }
@@ -179,13 +232,13 @@ impl Tool for Lengthen {
         let f = self.seen.map(|(_, f)| f).unwrap_or_default();
         match (self.ask, self.target) {
             (Some(LengthenMode::Delta), _) => {
-                Prompt::new(LABEL, "uzunluk farkını yazın (eksi kısaltır)")
+                Prompt::new(LABEL, "uzunluk farkını yazın (eksi kısaltır; yayda <açı)")
             }
             (Some(LengthenMode::Percent), _) => Prompt::new(
                 LABEL,
                 "yeni uzunluğu eski uzunluğun yüzdesi olarak yazın (100 = aynı)",
             ),
-            (Some(_), _) => Prompt::new(LABEL, "yeni toplam uzunluğu yazın"),
+            (Some(_), _) => Prompt::new(LABEL, "yeni toplam uzunluğu yazın (yayda <açı)"),
             (None, Some(_)) => Prompt::new(
                 LABEL,
                 "yeni ucu fareyle gösterin ya da toplam uzunluğu yazın",
@@ -194,14 +247,27 @@ impl Tool for Lengthen {
                 .note(format!("kip: {}", mode_name(m.lengthen_mode)))
                 .then()
                 .option("Dinamik", "D")
-                .option_with("Fark", "F", f.length(m.lengthen_delta))
+                .option_with(
+                    "Fark",
+                    "F",
+                    value_text(m.lengthen_delta, m.lengthen_delta_angle, &f),
+                )
                 .option_with("Yüzde", "Y", js_number(m.lengthen_percent))
-                .option_with("Toplam", "T", f.length(m.lengthen_total)),
+                .option_with(
+                    "Toplam",
+                    "T",
+                    value_text(m.lengthen_total, m.lengthen_total_angle, &f),
+                ),
         }
     }
 
     fn point_count(&self) -> usize {
         0
+    }
+
+    /// Fark and Toplam take an arc's angle as `<45`.
+    fn takes_angle(&self) -> bool {
+        matches!(self.ask, Some(LengthenMode::Delta | LengthenMode::Total))
     }
 
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
@@ -226,20 +292,15 @@ impl Tool for Lengthen {
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.see(cx);
         if let Some((slot, at_end)) = self.target.take() {
-            let length = cx
-                .doc
-                .get(slot)
-                .and_then(|e| length_toward(&shape(e), at_end, p.world));
-            if let Some(length) = length {
-                self.apply(slot, at_end, length, cx);
-            }
+            let to = wire(p.world);
+            self.apply(slot, at_end, LengthenChange::Dynamic { to }, cx);
             self.drawn = Preview::default();
             return self.see(cx);
         }
         let Some(slot) = edge::pick_said(p, cx, editable) else {
             cx.say(
                 Level::Warn,
-                "Düzenlenebilir bir çizgiye, yaya ya da açık çoklu çizgiye tıklayın.",
+                "Düzenlenebilir bir çizgiye, yaya, elips yayına ya da açık çoklu çizgiye tıklayın.",
             );
             return;
         };
@@ -251,8 +312,7 @@ impl Tool for Lengthen {
             cx.selection.set_hover(None);
             return self.redraw(cx);
         }
-        let length = Self::length_for(&m, e);
-        self.apply(slot, at_end, length, cx);
+        self.apply(slot, at_end, Self::change_for(&m), cx);
         self.drawn = Preview::default();
         self.see(cx);
     }
@@ -277,6 +337,25 @@ impl Tool for Lengthen {
             self.redraw(cx);
             return true;
         }
+        // An arc's included angle after Fark or Toplam: `<45` in the project's angle unit.
+        if let Some(ask @ (LengthenMode::Delta | LengthenMode::Total)) = self.ask
+            && let Some(rest) = js_trim(text).strip_prefix('<')
+            && let Some(n) = parse_number(rest)
+        {
+            let a = cx.format().angle_from_typed(n);
+            if ask == LengthenMode::Delta {
+                cx.memory.lengthen_delta_angle = Some(a);
+            } else if a > 0.0 {
+                cx.memory.lengthen_total_angle = Some(a);
+            } else {
+                cx.say(Level::Warn, "Değer sıfırdan büyük olmalı.");
+                return true;
+            }
+            self.ask = None;
+            self.see(cx);
+            self.redraw(cx);
+            return true;
+        }
         let Some((n, length)) = crate::points::plain_value(text, cx)
             .or_else(|| parse_number(text).map(|n| (n, cx.format().to_metres(n))))
         else {
@@ -293,9 +372,15 @@ impl Tool for Lengthen {
             // Lengths are typed in the project's unit (docs/adr/0165 §2) or with their own (docs/adr/0266); a
             // percentage has none.
             match ask {
-                LengthenMode::Delta => cx.memory.lengthen_delta = length,
+                LengthenMode::Delta => {
+                    cx.memory.lengthen_delta = length;
+                    cx.memory.lengthen_delta_angle = None;
+                }
                 LengthenMode::Percent => cx.memory.lengthen_percent = n,
-                _ => cx.memory.lengthen_total = length,
+                _ => {
+                    cx.memory.lengthen_total = length;
+                    cx.memory.lengthen_total_angle = None;
+                }
             }
             self.ask = None;
             self.see(cx);
@@ -303,7 +388,11 @@ impl Tool for Lengthen {
             return true;
         }
         if let Some((slot, at_end)) = self.target.take() {
-            self.apply(slot, at_end, length, cx);
+            let change = LengthenChange::Total {
+                length: Some(length),
+                angle: None,
+            };
+            self.apply(slot, at_end, change, cx);
             self.drawn = Preview::default();
             self.see(cx);
             return true;

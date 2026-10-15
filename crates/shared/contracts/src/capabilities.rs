@@ -828,6 +828,36 @@ const ENTRIES: &[Entry] = &[
         },
     },
     Entry {
+        id: "cad.entities.lengthen",
+        refusals: &[
+            &[
+                "invalid_uid",
+                "not_finite",
+                "invalid_change",
+                "entity_not_found",
+                "layer_locked",
+                "not_lengthenable",
+                "multi_part",
+                "angle_needs_arc",
+                "invalid_length",
+                "arc_closes",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: || {
+            vec![target(
+                None,
+                &["line", "arc", "ellipse", "polyline"],
+                &[],
+                Some("not_lengthenable"),
+                Some(
+                    "Elipsin yalnız yayı, çoklu çizginin yalnız açık ve tek parçalısı uzar ya da kısalır.",
+                ),
+            )]
+        },
+    },
+    Entry {
         id: "cad.entities.divide",
         refusals: &[
             &[

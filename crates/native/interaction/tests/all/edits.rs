@@ -535,7 +535,7 @@ fn lengthen_follows_the_mouse_or_takes_a_typed_total() {
     assert!(b.type_text("T"));
     assert_eq!(
         b.session.prompt().text(),
-        "Uzat-kısalt: yeni toplam uzunluğu yazın"
+        "Uzat-kısalt: yeni toplam uzunluğu yazın (yayda <açı)"
     );
     assert!(b.type_text("15"));
     assert!(b.session.prompt().text().contains("kip: toplam"));
@@ -545,6 +545,54 @@ fn lengthen_follows_the_mouse_or_takes_a_typed_total() {
     assert!(b.type_text("Y"));
     assert!(b.type_text("0"));
     assert_eq!(b.last_text(), Some("Değer sıfırdan büyük olmalı."));
+    assert_eq!(b.doc.undo().as_deref(), Some("Uzat-kısalt"));
+}
+
+#[test]
+fn lengthen_takes_an_arcs_angle_in_fark_and_toplam() {
+    let mut b = bench(&[]);
+    let arc = b.add_arc(
+        "cizim",
+        [-20.0, -30.0],
+        5.0,
+        0.0,
+        std::f64::consts::FRAC_PI_2,
+    );
+    b.start("lengthen");
+    // Toplam <200 (the drawing's angles are grads): the arc becomes a half circle, its end moved.
+    assert!(b.type_text("T"));
+    assert!(b.type_text("<200"));
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .contains("Toplam (T): <200.0000 g"),
+        "{}",
+        b.session.prompt().text()
+    );
+    b.click(-20.0, -25.0);
+    let Some(Entity::Arc(a)) = b.doc.get(arc) else {
+        panic!("an arc");
+    };
+    assert!(
+        (a.a0 - 0.0).abs() < 1e-12 && (a.a1 - std::f64::consts::PI).abs() < 1e-9,
+        "{a:?}"
+    );
+    assert_eq!(b.last_text(), Some("Uzunluk 7.854 m → 15.708 m."));
+    // Fark with an angle on a line: the command's refusal, nothing written.
+    assert!(b.type_text("F"));
+    assert!(b.type_text("<10"));
+    b.click(-19.0, -12.0);
+    assert_eq!(
+        b.last_text(),
+        Some(
+            "Açıyla yalnız yay uzatılır ya da kısaltılır. Çizgiye, elips yayına ve çoklu çizgiye uzunluk verin."
+        )
+    );
+    // A plain number drops the angle.
+    assert!(b.type_text("F"));
+    assert!(b.type_text("2"));
+    assert!(b.session.prompt().text().contains("Fark (F): 2.000 m"));
     assert_eq!(b.doc.undo().as_deref(), Some("Uzat-kısalt"));
 }
 

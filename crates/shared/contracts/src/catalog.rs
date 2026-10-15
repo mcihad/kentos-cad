@@ -1980,6 +1980,41 @@ pub fn catalog() -> CommandCatalog {
                 output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"], "created": [], "removed": [], "revision": "64" })),
             }],
         },
+        // Uzat-kısalt by its meaning (docs/adr/0298), held together by fixtures/commands/v1/cad.entities.lengthen.json.
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_LENGTHEN.into(),
+            version: crate::CAD_ENTITIES_LENGTHEN_VERSION,
+            title: "Uzat-kısalt".into(),
+            summary: "Kalıcı kimliğiyle verilen nesnenin uzunluğunu bir ucunda (end: start ya da end) değiştirir (AutoCAD'in LENGTHEN'i); tek geri alma adımı “Uzat-kısalt”. \
+                      change: delta (length kadar uzar, eksiyle kısalır; yayda angle radyan kadar açısı değişir), percent (uzunluğun yüzdesi), total (yeni toplam length ya da yayın açısı angle), dynamic (uç to noktasına nesnenin kendi yolu boyunca en yakın yere gider). \
+                      Çizgi, yay, elips yayı ve tek parçalı açık çoklu çizgi uzar ya da kısalır; kapalı çoklu çizgi, alan, daire, bütün elips ve eğri not_lengthenable. Uzatma uç kenarı kendi doğrusunda, çemberinde ya da elipsinde sürdürür: kenarlar genişliklerini korur, taşınan ucun kotu ve ölçüsü (M) uç kenar boyunca uzunlukla sürer. Kısaltma yolu keser: kalan köşeler kendilerininkini, yeni uç kesilen kenarınkini uzunlukla alır. \
+                      Yeni uzunluk sıfırdan büyük değilse invalid_length, yay ya da yaylı kenar kendini kapatırsa arc_closes, açı yay dışında angle_needs_arc. Çıktı ve plan cad.entities.edit'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesLengthen>(),
+            output: schema::<crate::EntitiesEdited>(),
+            plan: Some(schema::<crate::EntitiesEditPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bir duvarın ucunu 1,5 m uzat".into(),
+                    input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "end": "end", "change": { "kind": "delta", "length": 1.5 } }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"], "created": [], "removed": [], "revision": "65" })),
+                },
+                CommandExample {
+                    title: "Yayın açısını 120°'ye getir".into(),
+                    input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002", "end": "end", "change": { "kind": "total", "angle": 2.0943951023931953 } }),
+                    output: None,
+                },
+            ],
+        },
         CommandDescriptor {
             id: crate::CAD_ENTITIES_DIVIDE.into(),
             version: crate::CAD_ENTITIES_DIVIDE_VERSION,
@@ -4074,6 +4109,10 @@ mod tests {
                         serde_json::from_value::<crate::EntitiesReverse>(e.input.clone())
                             .map(|_| ())
                     }
+                    crate::CAD_ENTITIES_LENGTHEN => {
+                        serde_json::from_value::<crate::EntitiesLengthen>(e.input.clone())
+                            .map(|_| ())
+                    }
                     crate::CAD_ENTITIES_DIVIDE => {
                         serde_json::from_value::<crate::EntitiesDivide>(e.input.clone()).map(|_| ())
                     }
@@ -4271,7 +4310,8 @@ mod tests {
                         }
                         crate::CAD_ENTITIES_BREAK
                         | crate::CAD_ENTITIES_JOIN
-                        | crate::CAD_ENTITIES_REVERSE => {
+                        | crate::CAD_ENTITIES_REVERSE
+                        | crate::CAD_ENTITIES_LENGTHEN => {
                             serde_json::from_value::<crate::EntitiesEdited>(output.clone())
                                 .map(|_| ())
                         }

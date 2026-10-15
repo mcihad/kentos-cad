@@ -407,6 +407,19 @@ codes! {
     DATA_CONFLICT = "data_conflict", Warning, false, "Birleşen nesnelerin öznitelikleri ayrışıyor; ilk nesnenin değerleri kaldı.";
     /// An object with no direction of its own (docs/adr/0296): Yönü çevir leaves it.
     NOT_REVERSIBLE = "not_reversible", FailedOrWarning, false, "Nesnenin kendi yönü yok: yay, daire ve elips hep saat yönünün tersine gider; nokta, yazı ve benzerleri yönsüz.";
+    // ── Uzat-kısalt (docs/adr/0298) ──────────────────────────────────────
+    /// Fark or Toplam given neither or both of a length and an angle.
+    INVALID_CHANGE = "invalid_change", Failed, false, "Fark ve Toplam'da uzunluk ya da açıdan yalnız biri verilir.";
+    /// An object Uzat-kısalt does not change: not a line, an arc, an elliptical arc or an open polyline.
+    NOT_LENGTHENABLE = "not_lengthenable", Failed, false, "Uzat-kısalt çizgi, yay, elips yayı ve açık çoklu çizgide çalışır.";
+    /// A multi-part polyline: which part's end would move is not known.
+    MULTI_PART = "multi_part", Failed, false, "Çok parçalı nesnede hangi parçanın ucunun taşınacağı bilinmez; önce Parçalara ayır.";
+    /// An included angle given for other than an arc.
+    ANGLE_NEEDS_ARC = "angle_needs_arc", Failed, false, "Açıyla yalnız yay uzatılır ya da kısaltılır.";
+    /// A new length not above zero.
+    INVALID_LENGTH = "invalid_length", Failed, false, "Yeni uzunluk sıfırdan büyük olmalı.";
+    /// An arc, an arc edge or an elliptical arc that would close on itself.
+    ARC_CLOSES = "arc_closes", Failed, false, "Yay bu uzunlukta kendini kapatır; en çok bir tam daireden kısa olabilir.";
     /// A chain's seed that is not a line, an arc or an open polyline (Zincir).
     NOT_JOINABLE = "not_joinable", Failed, false, "Zincir bir çizgiden, yaydan ya da açık çoklu çizgiden başlar.";
     /// No chain of two objects meeting end to end (Birleştir).

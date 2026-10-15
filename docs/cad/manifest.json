@@ -8095,14 +8095,14 @@
    "id": "tool.lengthen",
    "kind": "tool",
    "title": "Uzat-kısalt",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.entities.lengthen"
    ],
-   "operation": "lengthen",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.entities.lengthen",
+   "mcp": "cad.entities.lengthen",
+   "note": "Nesnenin kimliği, ucu ve Fark, Yüzde, Toplam (yayda açıyla) ya da Dinamik'in noktası komuta verilir; elips yayı da, kotlar ve ölçüler (M) uç kenar boyunca sürer (ADR 0298).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 1
