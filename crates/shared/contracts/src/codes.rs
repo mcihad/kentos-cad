@@ -388,6 +388,9 @@ codes! {
     LOCKED_SKIPPED = "locked_skipped", Warning, false, "Kilitli katmandaki nesneler dışarıda kaldı; kilitli katmandaki nesne değişmez.";
     /// A listed object without a vertex in the window (Esnet).
     OUTSIDE_WINDOW = "outside_window", Warning, false, "Nesnenin pencerede köşesi yok; esnemez.";
+    /// A listed object that follows the objects it is tied to: an associative hatch, a linked text, a
+    /// dimension whose points in the window are all tied (Esnet, docs/adr/0297 §2).
+    FOLLOWS_OBJECT = "follows_object", Warning, false, "Nesne bağlı olduğu nesneyi izler; kendisi esnemez.";
     /// No object left to stretch (Esnet).
     NOTHING_TO_STRETCH = "nothing_to_stretch", Failed, false, "Pencerede köşesi olan düzenlenebilir nesne yok.";
     /// A neighbour on a locked layer that could not follow (Topolojik düzenleme).

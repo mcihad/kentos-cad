@@ -1,0 +1,3471 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.entities.stretch",
+ "commandVersion": 1,
+ "title": "Esnet: yalnız penceredeki köşeler, yay ve izleyenler",
+ "note": "ADR 0297. Yayın köşeleri uçlarıdır, bir ucu taşınan yay kiriş yüksekliğini korur; bağlı olduğu nesneyi izleyen (ilişkili tarama, ölçünün bağlı noktası) kendisi esnemez, izler; planın dependents'ı. Bağımsız başvuru: scripts/fixtures/stretch_policy_cases.py.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Esnet ve izleyenler",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 100,
+   "workspace": "cad"
+  },
+  "origin": {
+   "x": 50,
+   "y": 20
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "olcu",
+    "name": "Ölçü",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "tarama",
+    "name": "Tarama",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "line",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 10,
+     "y": 0
+    }
+   },
+   {
+    "kind": "arc",
+    "id": 2,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 30,
+     "y": 0
+    },
+    "r": 5,
+    "a0": 0,
+    "a1": 3.141592653589793
+   },
+   {
+    "kind": "arc",
+    "id": 3,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 50,
+     "y": 0
+    },
+    "r": 5,
+    "a0": 0,
+    "a1": 1.5707963267948966
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 60,
+      "y": 0
+     },
+     {
+      "x": 70,
+      "y": 0
+     },
+     {
+      "x": 70,
+      "y": 10
+     },
+     {
+      "x": 60,
+      "y": 10
+     }
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 5,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0,
+      "y": 20
+     },
+     {
+      "x": 10,
+      "y": 20
+     },
+     {
+      "x": 10,
+      "y": 30
+     }
+    ],
+    "bulges": [
+     0.5,
+     0
+    ]
+   },
+   {
+    "kind": "circle",
+    "id": 6,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 80,
+     "y": 5
+    },
+    "r": 3
+   },
+   {
+    "kind": "dimension",
+    "id": 7,
+    "layerId": "olcu",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 10,
+     "y": 0
+    },
+    "offset": 1.5,
+    "height": 0.25
+   },
+   {
+    "kind": "dimension",
+    "id": 8,
+    "layerId": "olcu",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 40
+    },
+    "b": {
+     "x": 10,
+     "y": 40
+    },
+    "offset": 1.5,
+    "height": 0.25
+   },
+   {
+    "kind": "line",
+    "id": 9,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 20,
+     "y": 40
+    },
+    "b": {
+     "x": 30,
+     "y": 40
+    }
+   },
+   {
+    "kind": "dimension",
+    "id": 10,
+    "layerId": "olcu",
+    "attrs": {},
+    "a": {
+     "x": 20,
+     "y": 40
+    },
+    "b": {
+     "x": 30,
+     "y": 40
+    },
+    "offset": 1.5,
+    "height": 0.25
+   },
+   {
+    "kind": "ellipse",
+    "id": 11,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 100,
+     "y": 5
+    },
+    "major": {
+     "x": 4,
+     "y": 0
+    },
+    "ratio": 0.5,
+    "t0": 0,
+    "t1": 6.283185307179586
+   },
+   {
+    "kind": "text",
+    "id": 12,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 90,
+     "y": 20
+    },
+    "text": "Oda",
+    "height": 0.5,
+    "rotation": 0
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Yalnız ortası pencerede olan yay değişmez: köşeleri uçlarıdır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 29,
+        "y": 4
+       },
+       "max": {
+        "x": 31,
+        "y": 6
+       }
+      },
+      "dx": 2,
+      "dy": 0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_stretch",
+       "path": "window",
+       "message": "Pencerede köşesi olan düzenlenebilir nesne yok. Pencereyi taşınacak köşelerin üstüne verin."
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yalnız merkezi pencerede olan yay değişmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 29,
+        "y": -1
+       },
+       "max": {
+        "x": 31,
+        "y": 1
+       }
+      },
+      "dx": 0,
+      "dy": 2
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_stretch",
+       "path": "window",
+       "message": "Pencerede köşesi olan düzenlenebilir nesne yok. Pencereyi taşınacak köşelerin üstüne verin."
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bir ucu taşınan yay kiriş yüksekliğini korur (AutoCAD'in STRETCH'i), aynı yanda",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "window": {
+       "min": {
+        "x": 34,
+        "y": -1
+       },
+       "max": {
+        "x": 36,
+        "y": 1
+       }
+      },
+      "dx": 2,
+      "dy": 1
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        {
+         "kind": "arc",
+         "id": 2,
+         "layerId": "cizim",
+         "attrs": {},
+         "c": {
+          "x": 31.093426164835464,
+          "y": -0.6211139780254851
+         },
+         "r": 6.124999999999993,
+         "a0": 0.26786343457867384,
+         "a1": 3.040011682788002
+        }
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 34,
+        "y": -1
+       },
+       "max": {
+        "x": 36,
+        "y": 1
+       }
+      },
+      "dx": 2,
+      "dy": 1
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        "$uidOf:2"
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "entities": {},
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Öbür ucu taşınan yay da yüksekliğini korur: uç batıya ve aşağı",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "window": {
+       "min": {
+        "x": 24,
+        "y": -1
+       },
+       "max": {
+        "x": 26,
+        "y": 1
+       }
+      },
+      "dx": -3,
+      "dy": -2
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        {
+         "kind": "arc",
+         "id": 2,
+         "layerId": "cizim",
+         "attrs": {},
+         "c": {
+          "x": 28.777504361263443,
+          "y": -2.803778348212384
+         },
+         "r": 6.825000000000003,
+         "a0": 0.4233423300364944,
+         "a1": 3.023548980343829
+        }
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 24,
+        "y": -1
+       },
+       "max": {
+        "x": 26,
+        "y": 1
+       }
+      },
+      "dx": -3,
+      "dy": -2
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        "$uidOf:2"
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "entities": {},
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki ucu pencerede olan yay olduğu gibi taşınır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "window": {
+       "min": {
+        "x": 24,
+        "y": -1
+       },
+       "max": {
+        "x": 36,
+        "y": 6
+       }
+      },
+      "dx": 1,
+      "dy": 1
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        {
+         "kind": "arc",
+         "id": 2,
+         "layerId": "cizim",
+         "attrs": {},
+         "c": {
+          "x": 31.0,
+          "y": 1.0
+         },
+         "r": 5.0,
+         "a0": 0.0,
+         "a1": 3.141592653589793
+        }
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 24,
+        "y": -1
+       },
+       "max": {
+        "x": 36,
+        "y": 6
+       }
+      },
+      "dx": 1,
+      "dy": 1
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        "$uidOf:2"
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "entities": {},
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çeyrek yayın ucu kuzeye: yüksekliği korunur",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "window": {
+       "min": {
+        "x": 49,
+        "y": 4
+       },
+       "max": {
+        "x": 51,
+        "y": 6
+       }
+      },
+      "dx": 0,
+      "dy": 2
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        {
+         "kind": "arc",
+         "id": 3,
+         "layerId": "cizim",
+         "attrs": {},
+         "c": {
+          "x": 47.956061810025744,
+          "y": 0.25432986430400406
+         },
+         "r": 7.0485281374237765,
+         "a0": 6.247094781666502,
+         "a1": 1.276589497478745
+        }
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 49,
+        "y": 4
+       },
+       "max": {
+        "x": 51,
+        "y": 6
+       }
+      },
+      "dx": 0,
+      "dy": 2
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        "$uidOf:3"
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "entities": {},
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Seçilen yayın yalnız ortası pencerede: outside_window, esneyen yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 29,
+        "y": 4
+       },
+       "max": {
+        "x": 31,
+        "y": 6
+       }
+      },
+      "dx": 1,
+      "dy": 0,
+      "uids": [
+       "$uidOf:2"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_stretch",
+       "path": "window",
+       "message": "Pencerede köşesi olan düzenlenebilir nesne yok. Pencereyi taşınacak köşelerin üstüne verin."
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çoklu çizginin yay kenarı bükümünü korur, köşesi taşınır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "window": {
+       "min": {
+        "x": 9,
+        "y": 19
+       },
+       "max": {
+        "x": 11,
+        "y": 21
+       }
+      },
+      "dx": 1,
+      "dy": -1
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        {
+         "kind": "polyline",
+         "id": 5,
+         "layerId": "cizim",
+         "attrs": {},
+         "pts": [
+          {
+           "x": 0,
+           "y": 20
+          },
+          {
+           "x": 11,
+           "y": 19
+          },
+          {
+           "x": 10,
+           "y": 30
+          }
+         ],
+         "bulges": [
+          0.5,
+          0
+         ]
+        }
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 9,
+        "y": 19
+       },
+       "max": {
+        "x": 11,
+        "y": 21
+       }
+      },
+      "dx": 1,
+      "dy": -1
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        "$uidOf:5"
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "entities": {
+       "5": {
+        "kind": "polyline",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0,
+          "y": 20
+         },
+         {
+          "x": 11,
+          "y": 19
+         },
+         {
+          "x": 10,
+          "y": 30
+         }
+        ],
+        "bulges": [
+         0.5,
+         0
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dairenin yalnız çevresi pencerede: değişmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 82,
+        "y": 4
+       },
+       "max": {
+        "x": 84,
+        "y": 6
+       }
+      },
+      "dx": 1,
+      "dy": 0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_stretch",
+       "path": "window",
+       "message": "Pencerede köşesi olan düzenlenebilir nesne yok. Pencereyi taşınacak köşelerin üstüne verin."
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Pencere daireye değer ve merkezi içinde: daire taşınır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "window": {
+       "min": {
+        "x": 79,
+        "y": 4
+       },
+       "max": {
+        "x": 84,
+        "y": 6
+       }
+      },
+      "dx": 1,
+      "dy": 2
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        {
+         "kind": "circle",
+         "id": 6,
+         "layerId": "cizim",
+         "attrs": {},
+         "c": {
+          "x": 81,
+          "y": 7
+         },
+         "r": 3
+        }
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 79,
+        "y": 4
+       },
+       "max": {
+        "x": 84,
+        "y": 6
+       }
+      },
+      "dx": 1,
+      "dy": 2
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        "$uidOf:6"
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "entities": {
+       "6": {
+        "kind": "circle",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "c": {
+         "x": 81,
+         "y": 7
+        },
+        "r": 3
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Pencere yalnız dairenin içinde, çevresine değmiyor: daire seçilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 79,
+        "y": 4
+       },
+       "max": {
+        "x": 81,
+        "y": 6
+       }
+      },
+      "dx": 1,
+      "dy": 2
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_stretch",
+       "path": "window",
+       "message": "Pencerede köşesi olan düzenlenebilir nesne yok. Pencereyi taşınacak köşelerin üstüne verin."
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Pencere elipse değer ve merkezi içinde: elips taşınır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "window": {
+       "min": {
+        "x": 99,
+        "y": 4
+       },
+       "max": {
+        "x": 105,
+        "y": 6
+       }
+      },
+      "dx": -1,
+      "dy": 0
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        {
+         "kind": "ellipse",
+         "id": 11,
+         "layerId": "cizim",
+         "attrs": {},
+         "c": {
+          "x": 99,
+          "y": 5
+         },
+         "major": {
+          "x": 4,
+          "y": 0
+         },
+         "ratio": 0.5,
+         "t0": 0,
+         "t1": 6.283185307179586
+        }
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 99,
+        "y": 4
+       },
+       "max": {
+        "x": 105,
+        "y": 6
+       }
+      },
+      "dx": -1,
+      "dy": 0
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        "$uidOf:11"
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "entities": {
+       "11": {
+        "kind": "ellipse",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "c": {
+         "x": 99,
+         "y": 5
+        },
+        "major": {
+         "x": 4,
+         "y": 0
+        },
+        "ratio": 0.5,
+        "t0": 0,
+        "t1": 6.283185307179586
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yazının yeri pencerede: yazı taşınır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "window": {
+       "min": {
+        "x": 89,
+        "y": 19
+       },
+       "max": {
+        "x": 91,
+        "y": 21
+       }
+      },
+      "dx": 0,
+      "dy": 1
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        {
+         "kind": "text",
+         "id": 12,
+         "layerId": "cizim",
+         "attrs": {},
+         "p": {
+          "x": 90,
+          "y": 21
+         },
+         "text": "Oda",
+         "height": 0.5,
+         "rotation": 0
+        }
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 89,
+        "y": 19
+       },
+       "max": {
+        "x": 91,
+        "y": 21
+       }
+      },
+      "dx": 0,
+      "dy": 1
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        "$uidOf:12"
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "entities": {
+       "12": {
+        "kind": "text",
+        "id": 12,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 90,
+         "y": 21
+        },
+        "text": "Oda",
+        "height": 0.5,
+        "rotation": 0
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizginin ucu esner, bağlı ölçü izler: planda dependents, ölçünün noktası kendiliğinden taşınmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.dimensions.reassociate",
+     "input": {
+      "uid": "$uidOf:7",
+      "points": [
+       {
+        "point": "a",
+        "to": {
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "start"
+         }
+        }
+       },
+       {
+        "point": "b",
+        "to": {
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "end"
+         }
+        }
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "entities": {
+       "7": {
+        "kind": "dimension",
+        "id": 7,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 10,
+         "y": 0
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "$uidOf:1",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "$uidOf:1",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "window": {
+       "min": {
+        "x": 9,
+        "y": -1
+       },
+       "max": {
+        "x": 11,
+        "y": 1
+       }
+      },
+      "dx": 2,
+      "dy": 0
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        {
+         "kind": "line",
+         "id": 1,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 0,
+          "y": 0
+         },
+         "b": {
+          "x": 12,
+          "y": 0
+         }
+        }
+       ],
+       "followed": [],
+       "revision": "$current",
+       "dependents": [
+        {
+         "kind": "dimension",
+         "id": 7,
+         "layerId": "olcu",
+         "attrs": {},
+         "a": {
+          "x": 0,
+          "y": 0
+         },
+         "b": {
+          "x": 12,
+          "y": 0
+         },
+         "offset": 1.5,
+         "height": 0.25,
+         "refs": {
+          "a": {
+           "uid": "$uidOf:1",
+           "place": {
+            "kind": "start"
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "place": {
+            "kind": "end"
+           }
+          }
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 9,
+        "y": -1
+       },
+       "max": {
+        "x": 11,
+        "y": 1
+       }
+      },
+      "dx": 2,
+      "dy": 0
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        "$uidOf:1"
+       ],
+       "followed": [],
+       "revision": "$current",
+       "dependents": [
+        "$uidOf:7"
+       ]
+      }
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 12,
+         "y": 0
+        }
+       },
+       "7": {
+        "kind": "dimension",
+        "id": 7,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 12,
+         "y": 0
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "$uidOf:1",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "$uidOf:1",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Esnet",
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 10,
+         "y": 0
+        }
+       },
+       "7": {
+        "kind": "dimension",
+        "id": 7,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 10,
+         "y": 0
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "$uidOf:1",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "$uidOf:1",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Seçilen ölçünün penceredeki noktası bağlı: follows_object, esneyen yok",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.dimensions.reassociate",
+     "input": {
+      "uid": "$uidOf:7",
+      "points": [
+       {
+        "point": "a",
+        "to": {
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "start"
+         }
+        }
+       },
+       {
+        "point": "b",
+        "to": {
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "end"
+         }
+        }
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "entities": {
+       "7": {
+        "kind": "dimension",
+        "id": 7,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 10,
+         "y": 0
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "$uidOf:1",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "$uidOf:1",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 9,
+        "y": -1
+       },
+       "max": {
+        "x": 11,
+        "y": 1
+       }
+      },
+      "dx": 2,
+      "dy": 0,
+      "uids": [
+       "$uidOf:7"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_stretch",
+       "path": "window",
+       "message": "Pencerede köşesi olan düzenlenebilir nesne yok. Pencereyi taşınacak köşelerin üstüne verin."
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Pencere çizgiyi ve ölçüsünü bütünüyle alır: çizgi taşınır, ölçü onu izler",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.dimensions.reassociate",
+     "input": {
+      "uid": "$uidOf:7",
+      "points": [
+       {
+        "point": "a",
+        "to": {
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "start"
+         }
+        }
+       },
+       {
+        "point": "b",
+        "to": {
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "end"
+         }
+        }
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "entities": {
+       "7": {
+        "kind": "dimension",
+        "id": 7,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 10,
+         "y": 0
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "$uidOf:1",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "$uidOf:1",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "window": {
+       "min": {
+        "x": -1,
+        "y": -1
+       },
+       "max": {
+        "x": 11,
+        "y": 1
+       }
+      },
+      "dx": 0,
+      "dy": 3
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        {
+         "kind": "line",
+         "id": 1,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 0,
+          "y": 3
+         },
+         "b": {
+          "x": 10,
+          "y": 3
+         }
+        }
+       ],
+       "followed": [],
+       "revision": "$current",
+       "dependents": [
+        {
+         "kind": "dimension",
+         "id": 7,
+         "layerId": "olcu",
+         "attrs": {},
+         "a": {
+          "x": 0,
+          "y": 3
+         },
+         "b": {
+          "x": 10,
+          "y": 3
+         },
+         "offset": 1.5,
+         "height": 0.25,
+         "refs": {
+          "a": {
+           "uid": "$uidOf:1",
+           "place": {
+            "kind": "start"
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "place": {
+            "kind": "end"
+           }
+          }
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": -1,
+        "y": -1
+       },
+       "max": {
+        "x": 11,
+        "y": 1
+       }
+      },
+      "dx": 0,
+      "dy": 3
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        "$uidOf:1"
+       ],
+       "followed": [],
+       "revision": "$current",
+       "dependents": [
+        "$uidOf:7"
+       ]
+      }
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 3
+        },
+        "b": {
+         "x": 10,
+         "y": 3
+        }
+       },
+       "7": {
+        "kind": "dimension",
+        "id": 7,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 3
+        },
+        "b": {
+         "x": 10,
+         "y": 3
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "$uidOf:1",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "$uidOf:1",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bağsız ölçünün noktası pencerede: ölçü kendisi esner (bağ kurulmadan)",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "window": {
+       "min": {
+        "x": 9,
+        "y": -1
+       },
+       "max": {
+        "x": 11,
+        "y": 1
+       }
+      },
+      "dx": 2,
+      "dy": 0
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        {
+         "kind": "line",
+         "id": 1,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 0,
+          "y": 0
+         },
+         "b": {
+          "x": 12,
+          "y": 0
+         }
+        },
+        {
+         "kind": "dimension",
+         "id": 7,
+         "layerId": "olcu",
+         "attrs": {},
+         "a": {
+          "x": 0,
+          "y": 0
+         },
+         "b": {
+          "x": 12,
+          "y": 0
+         },
+         "offset": 1.5,
+         "height": 0.25
+        }
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 9,
+        "y": -1
+       },
+       "max": {
+        "x": 11,
+        "y": 1
+       }
+      },
+      "dx": 2,
+      "dy": 0
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        "$uidOf:1",
+        "$uidOf:7"
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 12,
+         "y": 0
+        }
+       },
+       "7": {
+        "kind": "dimension",
+        "id": 7,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 12,
+         "y": 0
+        },
+        "offset": 1.5,
+        "height": 0.25
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Serbest ölçünün noktası esner",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "window": {
+       "min": {
+        "x": 9,
+        "y": 39
+       },
+       "max": {
+        "x": 11,
+        "y": 41
+       }
+      },
+      "dx": 1,
+      "dy": 0
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        {
+         "kind": "dimension",
+         "id": 8,
+         "layerId": "olcu",
+         "attrs": {},
+         "a": {
+          "x": 0,
+          "y": 40
+         },
+         "b": {
+          "x": 11,
+          "y": 40
+         },
+         "offset": 1.5,
+         "height": 0.25
+        }
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 9,
+        "y": 39
+       },
+       "max": {
+        "x": 11,
+        "y": 41
+       }
+      },
+      "dx": 1,
+      "dy": 0
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        "$uidOf:8"
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "entities": {
+       "8": {
+        "kind": "dimension",
+        "id": 8,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 40
+        },
+        "b": {
+         "x": 11,
+         "y": 40
+        },
+        "offset": 1.5,
+        "height": 0.25
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ölçünün serbest noktası esner, bağlı noktası nesnesiyle kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.dimensions.reassociate",
+     "input": {
+      "uid": "$uidOf:10",
+      "points": [
+       {
+        "point": "a",
+        "to": {
+         "uid": "$uidOf:9",
+         "place": {
+          "kind": "start"
+         }
+        }
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "entities": {
+       "10": {
+        "kind": "dimension",
+        "id": 10,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+         "x": 20,
+         "y": 40
+        },
+        "b": {
+         "x": 30,
+         "y": 40
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "$uidOf:9",
+          "place": {
+           "kind": "start"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "window": {
+       "min": {
+        "x": 29,
+        "y": 39
+       },
+       "max": {
+        "x": 31,
+        "y": 41
+       }
+      },
+      "dx": 0,
+      "dy": 2
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        {
+         "kind": "line",
+         "id": 9,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 20,
+          "y": 40
+         },
+         "b": {
+          "x": 30,
+          "y": 42
+         }
+        },
+        {
+         "kind": "dimension",
+         "id": 10,
+         "layerId": "olcu",
+         "attrs": {},
+         "a": {
+          "x": 20,
+          "y": 40
+         },
+         "b": {
+          "x": 30,
+          "y": 42
+         },
+         "offset": 1.5,
+         "height": 0.25,
+         "refs": {
+          "a": {
+           "uid": "$uidOf:9",
+           "place": {
+            "kind": "start"
+           }
+          }
+         }
+        }
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 29,
+        "y": 39
+       },
+       "max": {
+        "x": 31,
+        "y": 41
+       }
+      },
+      "dx": 0,
+      "dy": 2
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        "$uidOf:9",
+        "$uidOf:10"
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "entities": {
+       "9": {
+        "kind": "line",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 20,
+         "y": 40
+        },
+        "b": {
+         "x": 30,
+         "y": 42
+        }
+       },
+       "10": {
+        "kind": "dimension",
+        "id": 10,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+         "x": 20,
+         "y": 40
+        },
+        "b": {
+         "x": 30,
+         "y": 42
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "$uidOf:9",
+          "place": {
+           "kind": "start"
+          }
+         }
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ölçünün penceredeki tek noktası bağlı: ölçü esnemez, çizginin başıyla izler",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.dimensions.reassociate",
+     "input": {
+      "uid": "$uidOf:10",
+      "points": [
+       {
+        "point": "a",
+        "to": {
+         "uid": "$uidOf:9",
+         "place": {
+          "kind": "start"
+         }
+        }
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "entities": {
+       "10": {
+        "kind": "dimension",
+        "id": 10,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+         "x": 20,
+         "y": 40
+        },
+        "b": {
+         "x": 30,
+         "y": 40
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "$uidOf:9",
+          "place": {
+           "kind": "start"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "window": {
+       "min": {
+        "x": 19,
+        "y": 39
+       },
+       "max": {
+        "x": 21,
+        "y": 41
+       }
+      },
+      "dx": 0,
+      "dy": 2
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        {
+         "kind": "line",
+         "id": 9,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 20,
+          "y": 42
+         },
+         "b": {
+          "x": 30,
+          "y": 40
+         }
+        }
+       ],
+       "followed": [],
+       "revision": "$current",
+       "dependents": [
+        {
+         "kind": "dimension",
+         "id": 10,
+         "layerId": "olcu",
+         "attrs": {},
+         "a": {
+          "x": 20,
+          "y": 42
+         },
+         "b": {
+          "x": 30,
+          "y": 40
+         },
+         "offset": 1.5,
+         "height": 0.25,
+         "refs": {
+          "a": {
+           "uid": "$uidOf:9",
+           "place": {
+            "kind": "start"
+           }
+          }
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 19,
+        "y": 39
+       },
+       "max": {
+        "x": 21,
+        "y": 41
+       }
+      },
+      "dx": 0,
+      "dy": 2
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        "$uidOf:9"
+       ],
+       "followed": [],
+       "revision": "$current",
+       "dependents": [
+        "$uidOf:10"
+       ]
+      }
+     },
+     "expect": {
+      "entities": {
+       "9": {
+        "kind": "line",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 20,
+         "y": 42
+        },
+        "b": {
+         "x": 30,
+         "y": 40
+        }
+       },
+       "10": {
+        "kind": "dimension",
+        "id": 10,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+         "x": 20,
+         "y": 42
+        },
+        "b": {
+         "x": 30,
+         "y": 40
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "$uidOf:9",
+          "place": {
+           "kind": "start"
+          }
+         }
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alanın köşesi esner, ilişkili tarama kendisi esnemez, alanı izler: planda yeni bölgesiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.hatch",
+     "input": {
+      "region": {
+       "kind": "point",
+       "at": {
+        "x": 65,
+        "y": 5
+       }
+      },
+      "pattern": {
+       "name": "Dolu"
+      },
+      "layerId": "tarama"
+     },
+     "result": "$any",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ]
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "window": {
+       "min": {
+        "x": 69,
+        "y": 9
+       },
+       "max": {
+        "x": 71,
+        "y": 11
+       }
+      },
+      "dx": 2,
+      "dy": 1
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        {
+         "kind": "polygon",
+         "id": 4,
+         "layerId": "cizim",
+         "attrs": {},
+         "pts": [
+          {
+           "x": 60,
+           "y": 0
+          },
+          {
+           "x": 70,
+           "y": 0
+          },
+          {
+           "x": 72,
+           "y": 11
+          },
+          {
+           "x": 60,
+           "y": 10
+          }
+         ]
+        }
+       ],
+       "followed": [],
+       "revision": "$current",
+       "dependents": [
+        {
+         "kind": "hatch",
+         "id": 13,
+         "layerId": "tarama",
+         "attrs": {},
+         "ring": [
+          {
+           "x": 60,
+           "y": 0
+          },
+          {
+           "x": 70,
+           "y": 0
+          },
+          {
+           "x": 72,
+           "y": 11
+          },
+          {
+           "x": 60,
+           "y": 10
+          }
+         ],
+         "pattern": {
+          "type": "solid",
+          "angle": 0,
+          "spacing": 1
+         },
+         "assoc": {
+          "outer": "$uidOf:4",
+          "seed": {
+           "x": 65,
+           "y": 5
+          }
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 69,
+        "y": 9
+       },
+       "max": {
+        "x": 71,
+        "y": 11
+       }
+      },
+      "dx": 2,
+      "dy": 1
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        "$uidOf:4"
+       ],
+       "followed": [],
+       "revision": "$current",
+       "dependents": [
+        "$uidOf:13"
+       ]
+      }
+     },
+     "expect": {
+      "entities": {
+       "4": {
+        "kind": "polygon",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 60,
+          "y": 0
+         },
+         {
+          "x": 70,
+          "y": 0
+         },
+         {
+          "x": 72,
+          "y": 11
+         },
+         {
+          "x": 60,
+          "y": 10
+         }
+        ]
+       },
+       "13": {
+        "kind": "hatch",
+        "id": 13,
+        "layerId": "tarama",
+        "attrs": {},
+        "ring": [
+         {
+          "x": 60,
+          "y": 0
+         },
+         {
+          "x": 70,
+          "y": 0
+         },
+         {
+          "x": 72,
+          "y": 11
+         },
+         {
+          "x": 60,
+          "y": 10
+         }
+        ],
+        "pattern": {
+         "type": "solid",
+         "angle": 0,
+         "spacing": 1
+        },
+        "assoc": {
+         "outer": "$uidOf:4",
+         "seed": {
+          "x": 65,
+          "y": 5
+         }
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Esnet",
+     "expect": {
+      "entities": {
+       "4": {
+        "kind": "polygon",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 60,
+          "y": 0
+         },
+         {
+          "x": 70,
+          "y": 0
+         },
+         {
+          "x": 70,
+          "y": 10
+         },
+         {
+          "x": 60,
+          "y": 10
+         }
+        ]
+       },
+       "13": {
+        "kind": "hatch",
+        "id": 13,
+        "layerId": "tarama",
+        "attrs": {},
+        "ring": [
+         {
+          "x": 60,
+          "y": 0
+         },
+         {
+          "x": 70,
+          "y": 0
+         },
+         {
+          "x": 70,
+          "y": 10
+         },
+         {
+          "x": 60,
+          "y": 10
+         }
+        ],
+        "pattern": {
+         "type": "solid",
+         "angle": 0,
+         "spacing": 1
+        },
+        "assoc": {
+         "outer": "$uidOf:4",
+         "seed": {
+          "x": 65,
+          "y": 5
+         }
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Seçilen ilişkili tarama: follows_object, esneyen yok",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.hatch",
+     "input": {
+      "region": {
+       "kind": "point",
+       "at": {
+        "x": 65,
+        "y": 5
+       }
+      },
+      "pattern": {
+       "name": "Dolu"
+      },
+      "layerId": "tarama"
+     },
+     "result": "$any",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 69,
+        "y": 9
+       },
+       "max": {
+        "x": 71,
+        "y": 11
+       }
+      },
+      "dx": 2,
+      "dy": 1,
+      "uids": [
+       "$uidOf:13"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_stretch",
+       "path": "window",
+       "message": "Pencerede köşesi olan düzenlenebilir nesne yok. Pencereyi taşınacak köşelerin üstüne verin."
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İlişkisiz tarama kendi köşesiyle esner",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.hatch",
+     "input": {
+      "region": {
+       "kind": "point",
+       "at": {
+        "x": 65,
+        "y": 5
+       },
+       "associative": false
+      },
+      "pattern": {
+       "name": "Dolu"
+      },
+      "layerId": "tarama"
+     },
+     "result": "$any",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ]
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "window": {
+       "min": {
+        "x": 69,
+        "y": 9
+       },
+       "max": {
+        "x": 71,
+        "y": 11
+       }
+      },
+      "dx": 2,
+      "dy": 1
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        {
+         "kind": "polygon",
+         "id": 4,
+         "layerId": "cizim",
+         "attrs": {},
+         "pts": [
+          {
+           "x": 60,
+           "y": 0
+          },
+          {
+           "x": 70,
+           "y": 0
+          },
+          {
+           "x": 72,
+           "y": 11
+          },
+          {
+           "x": 60,
+           "y": 10
+          }
+         ]
+        },
+        {
+         "kind": "hatch",
+         "id": 13,
+         "layerId": "tarama",
+         "attrs": {},
+         "ring": [
+          {
+           "x": 60,
+           "y": 0
+          },
+          {
+           "x": 70,
+           "y": 0
+          },
+          {
+           "x": 72,
+           "y": 11
+          },
+          {
+           "x": 60,
+           "y": 10
+          }
+         ],
+         "pattern": {
+          "type": "solid",
+          "angle": 0,
+          "spacing": 1
+         }
+        }
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 69,
+        "y": 9
+       },
+       "max": {
+        "x": 71,
+        "y": 11
+       }
+      },
+      "dx": 2,
+      "dy": 1
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [
+        "$uidOf:4",
+        "$uidOf:13"
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "entities": {
+       "4": {
+        "kind": "polygon",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 60,
+          "y": 0
+         },
+         {
+          "x": 70,
+          "y": 0
+         },
+         {
+          "x": 72,
+          "y": 11
+         },
+         {
+          "x": 60,
+          "y": 10
+         }
+        ]
+       },
+       "13": {
+        "kind": "hatch",
+        "id": 13,
+        "layerId": "tarama",
+        "attrs": {},
+        "ring": [
+         {
+          "x": 60,
+          "y": 0
+         },
+         {
+          "x": 70,
+          "y": 0
+         },
+         {
+          "x": 72,
+          "y": 11
+         },
+         {
+          "x": 60,
+          "y": 10
+         }
+        ],
+        "pattern": {
+         "type": "solid",
+         "angle": 0,
+         "spacing": 1
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yer değiştirme sıfır: hiçbir şey yazılmaz, izleyen de yok",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.hatch",
+     "input": {
+      "region": {
+       "kind": "point",
+       "at": {
+        "x": 65,
+        "y": 5
+       }
+      },
+      "pattern": {
+       "name": "Dolu"
+      },
+      "layerId": "tarama"
+     },
+     "result": "$any",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ]
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "window": {
+       "min": {
+        "x": 69,
+        "y": 9
+       },
+       "max": {
+        "x": 71,
+        "y": 11
+       }
+      },
+      "dx": 0,
+      "dy": 0
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "stretched": [],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Seçimde çizgi ve bağlı ölçüsü: ölçü follows_object uyarısıyla atlanır, çizgiyi izler",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.dimensions.reassociate",
+     "input": {
+      "uid": "$uidOf:7",
+      "points": [
+       {
+        "point": "a",
+        "to": {
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "start"
+         }
+        }
+       },
+       {
+        "point": "b",
+        "to": {
+         "uid": "$uidOf:1",
+         "place": {
+          "kind": "end"
+         }
+        }
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "entities": {
+       "7": {
+        "kind": "dimension",
+        "id": 7,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 10,
+         "y": 0
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "$uidOf:1",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "$uidOf:1",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "window": {
+       "min": {
+        "x": 9,
+        "y": -1
+       },
+       "max": {
+        "x": 11,
+        "y": 1
+       }
+      },
+      "dx": 2,
+      "dy": 0,
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:7"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "follows_object",
+        "message": "Nesne bağlı olduğu nesneyi izler; kendisi esnemedi.",
+        "path": "uids[1]"
+       }
+      ],
+      "output": {
+       "stretched": [
+        {
+         "kind": "line",
+         "id": 1,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 0,
+          "y": 0
+         },
+         "b": {
+          "x": 12,
+          "y": 0
+         }
+        }
+       ],
+       "followed": [],
+       "revision": "$current",
+       "dependents": [
+        {
+         "kind": "dimension",
+         "id": 7,
+         "layerId": "olcu",
+         "attrs": {},
+         "a": {
+          "x": 0,
+          "y": 0
+         },
+         "b": {
+          "x": 12,
+          "y": 0
+         },
+         "offset": 1.5,
+         "height": 0.25,
+         "refs": {
+          "a": {
+           "uid": "$uidOf:1",
+           "place": {
+            "kind": "start"
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "place": {
+            "kind": "end"
+           }
+          }
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 9,
+        "y": -1
+       },
+       "max": {
+        "x": 11,
+        "y": 1
+       }
+      },
+      "dx": 2,
+      "dy": 0,
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:7"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "follows_object",
+        "message": "Nesne bağlı olduğu nesneyi izler; kendisi esnemedi.",
+        "path": "uids[1]"
+       }
+      ],
+      "output": {
+       "stretched": [
+        "$uidOf:1"
+       ],
+       "followed": [],
+       "revision": "$current",
+       "dependents": [
+        "$uidOf:7"
+       ]
+      }
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 12,
+         "y": 0
+        }
+       },
+       "7": {
+        "kind": "dimension",
+        "id": 7,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 12,
+         "y": 0
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "$uidOf:1",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "$uidOf:1",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Seçimde iki yay, biri pencerede değil: outside_window",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "window": {
+       "min": {
+        "x": 34,
+        "y": -1
+       },
+       "max": {
+        "x": 36,
+        "y": 1
+       }
+      },
+      "dx": 1,
+      "dy": 0,
+      "uids": [
+       "$uidOf:2",
+       "$uidOf:3"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "outside_window",
+        "message": "Nesnenin pencerede köşesi yok; esnemedi.",
+        "path": "uids[1]"
+       }
+      ],
+      "output": {
+       "stretched": [
+        {
+         "kind": "arc",
+         "id": 2,
+         "layerId": "cizim",
+         "attrs": {},
+         "c": {
+          "x": 30.5,
+          "y": -0.525
+         },
+         "r": 5.525,
+         "a0": 0.09516620655396679,
+         "a1": 3.0464264470358264
+        }
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 34,
+        "y": -1
+       },
+       "max": {
+        "x": 36,
+        "y": 1
+       }
+      },
+      "dx": 1,
+      "dy": 0,
+      "uids": [
+       "$uidOf:2",
+       "$uidOf:3"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "outside_window",
+        "message": "Nesnenin pencerede köşesi yok; esnemedi.",
+        "path": "uids[1]"
+       }
+      ],
+      "output": {
+       "stretched": [
+        "$uidOf:2"
+       ],
+       "followed": [],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "entities": {},
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  }
+ ]
+}

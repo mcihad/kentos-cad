@@ -76,7 +76,7 @@ fn completed<T: std::fmt::Debug>(r: CommandResult<T>) {
 
 fn label_of(doc: &Document, s: u32) -> Option<EntityId> {
     match doc.get(Slot(s)) {
-        Some(Entity::Text(t)) => t.label_of.clone(),
+        Some(Entity::Text(t)) => t.label_of,
         other => panic!("not a text: {other:?}"),
     }
 }

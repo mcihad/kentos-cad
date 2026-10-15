@@ -196,6 +196,8 @@ mod settings_look;
 mod settings_look_tests;
 mod settings_sections;
 mod settings_view;
+#[cfg(test)]
+mod stretch_scenes;
 mod sub_object;
 #[cfg(test)]
 mod subref_scenes;

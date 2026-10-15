@@ -12,4 +12,9 @@ stretched: Array<Entity>,
 /**
  * The neighbours as they would be.
  */
-followed: Array<Entity>, revision: string, };
+followed: Array<Entity>, 
+/**
+ * The objects tied to them as they would follow (docs/adr/0297 §3): associative dimensions, associative
+ * hatches, linked texts; absent: none.
+ */
+dependents?: Array<Entity>, revision: string, };

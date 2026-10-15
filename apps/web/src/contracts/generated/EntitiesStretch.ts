@@ -7,9 +7,15 @@ import type { StretchWindow } from "./StretchWindow";
  * (`dx`, `dy`), the others stay, as one undo step “Esnet”.
  *
  * The objects: those of `uids` (the selection), each without a vertex in
- * the window left out with an `outside_window` warning at `uids[i]`; or,
+ * the window left out with an `outside_window` warning at `uids[i]`, each
+ * that follows the objects it is tied to (an associative hatch, a linked
+ * text, a dimension whose points in the window are all tied) with a
+ * `follows_object` one (docs/adr/0297 §2); or,
  * with no `uids`, every shown object meeting the window that has a vertex
- * in it. Those on a locked layer are left out with a `locked_skipped`
+ * in it, those that follow their objects left out unsaid. An arc's vertices
+ * are its ends; one moving keeps the arc's chord height. A dimension's tied
+ * points stay with their objects. The objects tied to the stretched ones
+ * follow at the step's end (`dependents`). Those on a locked layer are left out with a `locked_skipped`
  * warning (at `uids[i]` when listed). With `topology`, the shown objects
  * sharing a moved vertex follow; a locked one does not (`neighbour_locked`
  * warning), nor one it would leave invalid (`neighbour_invalid`). A zero

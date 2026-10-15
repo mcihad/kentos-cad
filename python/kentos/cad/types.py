@@ -7179,9 +7179,15 @@ class EntitiesStretch(_Model):
     (`dx`, `dy`), the others stay, as one undo step “Esnet”.
 
     The objects: those of `uids` (the selection), each without a vertex in
-    the window left out with an `outside_window` warning at `uids[i]`; or,
+    the window left out with an `outside_window` warning at `uids[i]`, each
+    that follows the objects it is tied to (an associative hatch, a linked
+    text, a dimension whose points in the window are all tied) with a
+    `follows_object` one (docs/adr/0297 §2); or,
     with no `uids`, every shown object meeting the window that has a vertex
-    in it. Those on a locked layer are left out with a `locked_skipped`
+    in it, those that follow their objects left out unsaid. An arc's vertices
+    are its ends; one moving keeps the arc's chord height. A dimension's tied
+    points stay with their objects. The objects tied to the stretched ones
+    follow at the step's end (`dependents`). Those on a locked layer are left out with a `locked_skipped`
     warning (at `uids[i]` when listed). With `topology`, the shown objects
     sharing a moved vertex follow; a locked one does not (`neighbour_locked`
     warning), nor one it would leave invalid (`neighbour_invalid`). A zero
@@ -7241,16 +7247,21 @@ class EntitiesStretchPlan(_Model):
     Attributes:
         stretched: The objects as they would be, with their slots.
         followed: The neighbours as they would be.
+        dependents: The objects tied to them as they would follow (docs/adr/0297 §3): associative dimensions, associative
+            hatches, linked texts; absent: none.
     """
     stretched: list[Entity]
     followed: list[Entity]
     revision: str
+    dependents: list[Entity] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["stretched"] = [e0.to_json() for e0 in self.stretched]
         out["followed"] = [e0.to_json() for e0 in self.followed]
         out["revision"] = self.revision
+        if self.dependents is not UNSET:
+            out["dependents"] = [e0.to_json() for e0 in self.dependents]
         return out
 
     @classmethod
@@ -7259,6 +7270,7 @@ class EntitiesStretchPlan(_Model):
             stretched=[Entity.from_json(e0) for e0 in data["stretched"]],
             followed=[Entity.from_json(e0) for e0 in data["followed"]],
             revision=data["revision"],
+            dependents=[Entity.from_json(e0) for e0 in data["dependents"]] if "dependents" in data else UNSET,
         )
 
 
@@ -7269,16 +7281,21 @@ class EntitiesStretched(_Model):
         stretched: The objects stretched, in the input's (or the drawing's) order.
         followed: The neighbours that followed them (Topolojik düzenleme).
         revision: The document's revision after the write, as decimal text.
+        dependents: The objects tied to them that followed at the step's end (docs/adr/0297 §3): associative dimensions,
+            associative hatches, linked texts; absent: none.
     """
     stretched: list[str]
     followed: list[str]
     revision: str
+    dependents: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["stretched"] = list(self.stretched)
         out["followed"] = list(self.followed)
         out["revision"] = self.revision
+        if self.dependents is not UNSET:
+            out["dependents"] = list(self.dependents)
         return out
 
     @classmethod
@@ -7287,6 +7304,7 @@ class EntitiesStretched(_Model):
             stretched=list(data["stretched"]),
             followed=list(data["followed"]),
             revision=data["revision"],
+            dependents=list(data["dependents"]) if "dependents" in data else UNSET,
         )
 
 

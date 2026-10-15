@@ -900,7 +900,7 @@ impl Document {
 /// into an area, keeps no parts it only inherited (web `updateOp`;
 /// docs/adr/0143, 0174); a polyline's own parts stay. A hatch keeps its
 /// islands, on the web too since docs/adr/0020's fix.
-fn changed(mut entity: Entity, slot: Slot, before: &Entity) -> Entity {
+pub(crate) fn changed(mut entity: Entity, slot: Slot, before: &Entity) -> Entity {
     base_mut(&mut entity).id = slot.0;
     match (&mut entity, before) {
         (Entity::Polyline(after), Entity::Polygon(was))

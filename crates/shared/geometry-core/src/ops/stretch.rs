@@ -1,17 +1,42 @@
 //! Stretch, "Esnet" (`apps/web/src/model/ops/stretch.ts`): vertices inside the
-//! crossing window move by (dx, dy), the rest stay; None when nothing of
-//! the entity lies in the window.
+//! crossing window move by (dx, dy), the rest stay; None when none of the
+//! entity's vertices lies in the window (an arc's are its ends: one moving
+//! keeps its chord height, docs/adr/0297 §1).
 
 use crate::api::Op;
 use crate::entity::{Entity, Part, Shape, entity_geometry};
 use crate::geom::arc::{ArcGeom, arc_end, arc_mid, arc_start, arc_through};
 use crate::geom::arrangement::Ring;
 use crate::geometry::Bounds;
+use crate::jsmath::js_hypot;
 use crate::op;
 use crate::vec2::Vec2;
 
 fn inside(p: Vec2, r: &Bounds) -> bool {
     p.x >= r.min_x && p.x <= r.max_x && p.y >= r.min_y && p.y <= r.max_y
+}
+
+/// The middle of the arc from `s2` to `f2` whose chord height and side are those of the arc from `s` through `m` to
+/// `f`; none when the new chord has no length.
+fn with_height(s: Vec2, m: Vec2, f: Vec2, s2: Vec2, f2: Vec2) -> Option<Vec2> {
+    let (cx, cy) = ((s.x + f.x) / 2.0, (s.y + f.y) / 2.0);
+    let height = js_hypot(m.x - cx, m.y - cy);
+    // Which side of the chord from s to f the middle is on: +1 its left.
+    let side = if (f.x - s.x) * (m.y - s.y) - (f.y - s.y) * (m.x - s.x) >= 0.0 {
+        1.0
+    } else {
+        -1.0
+    };
+    let (ux, uy) = (f2.x - s2.x, f2.y - s2.y);
+    let length = js_hypot(ux, uy);
+    if length == 0.0 {
+        return None;
+    }
+    let k = side * height / length;
+    Some(Vec2::new(
+        (s2.x + f2.x) / 2.0 - uy * k,
+        (s2.y + f2.y) / 2.0 + ux * k,
+    ))
 }
 
 pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity> {
@@ -298,17 +323,16 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
             let f = arc_end(&g);
             let in_s = inside(s, r);
             let in_f = inside(f, r);
-            if !in_s && !in_f && !inside(m, r) {
+            // Only the ends are the arc's vertices (docs/adr/0297 §1): a window over its middle alone leaves it.
+            if !in_s && !in_f {
                 return None;
             }
-            // One end moving drags the middle half-way, keeping the arc's bow.
-            let half = |p: Vec2| Vec2::new(p.x + dx / 2.0, p.y + dy / 2.0);
+            // Both ends: the arc moves. One end: the chord height (sagitta) stays, on the same side of the
+            // chord, as AutoCAD's STRETCH keeps it.
             let mid = if in_s && in_f {
                 mv(m)
-            } else if in_s != in_f {
-                half(m)
             } else {
-                mv(m)
+                with_height(s, m, f, mv(s), mv(f))?
             };
             let g2 = arc_through(mv(s), mid, mv(f))?;
             // A new arc object: the TypeScript builds `{ kind: 'arc', ...g2 }`.

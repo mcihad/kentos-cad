@@ -20,6 +20,11 @@
 //! With Topolojik düzenleme on, the objects sharing a moved vertex go with
 //! the stretched ones in the same step, selected or not, and are previewed
 //! with them (docs/adr/0160 §3; the command's `topology`).
+//!
+//! The objects tied to them (associative dimensions and hatches, linked
+//! texts) are previewed as they will follow, finely dotted in the snap
+//! colour (the plan's `dependents`, docs/adr/0297 §3); the document's copy
+//! the plan follows them on is kept while the drawing stays as it is.
 
 use kentos_contracts::{CommandResult, EntitiesStretch, StretchTopology, StretchWindow, codes};
 use kentos_domain::Slot;
@@ -47,6 +52,8 @@ pub const LABEL: &str = "Esnet";
 const DRAG_THRESHOLD: f64 = 4.0;
 /// The window's dash and gap once drawn, logical pixels (the web's `[5, 4]`).
 const WINDOW_DASH: [f32; 2] = [5.0, 4.0];
+/// The objects that follow: dotted, so they read apart from the stretched ones.
+const DEPENDENT_DASH: [f32; 2] = [2.0, 3.0];
 
 /// What the tool waits for.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -75,6 +82,8 @@ pub struct Stretch {
     /// The objects as they would be: outlines and point marks.
     ghosts: Vec<Stroke>,
     marks: Vec<Vec2>,
+    /// A copy of the drawing the plan follows the tied objects on, kept between moves (docs/adr/0297 §3).
+    scratch: Option<kentos_domain::Document>,
     done: bool,
 }
 
@@ -214,6 +223,15 @@ impl Stretch {
                 f.length_bare(dy)
             );
             cx.say(Level::Success, line);
+            if !out.dependents.is_empty() {
+                cx.say(
+                    Level::Info,
+                    format!(
+                        "{} bağlı nesne (ölçü, tarama ya da yazı) nesnesini izledi.",
+                        out.dependents.len()
+                    ),
+                );
+            }
             if !out.followed.is_empty() {
                 cx.say(
                     Level::Info,
@@ -226,6 +244,7 @@ impl Stretch {
             Self::say_warnings(warnings, cx);
         }
         self.done = true;
+        self.scratch = None;
     }
 
     /// The objects as the cursor would stretch them: the command's plan.
@@ -263,7 +282,7 @@ impl Stretch {
         }
         let input = Self::request(&window, dx, dy, cx);
         let CommandResult::Completed { output, .. } =
-            stretch::plan_in(cx.doc, Some(cx.spatial.store()), &input)
+            stretch::plan_with(cx.doc, Some(cx.spatial.store()), &input, &mut self.scratch)
         else {
             return;
         };
@@ -276,6 +295,10 @@ impl Stretch {
             let outline = Outline::of(&shape(e), Some(GHOST_DASH), 1.0, Tone::Accent);
             self.ghosts.extend(outline.strokes);
             self.marks.extend(outline.marks);
+        }
+        for e in output.dependents.iter().take(MAX_GHOSTS) {
+            let outline = Outline::of(&shape(e), Some(DEPENDENT_DASH), 1.0, Tone::Snap);
+            self.ghosts.extend(outline.strokes);
         }
     }
 }

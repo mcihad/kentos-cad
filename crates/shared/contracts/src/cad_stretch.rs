@@ -3,8 +3,8 @@
 //! window moved, the rest kept, named by the window and the displacement
 //! rather than the objects' new geometry.
 //!
-//! The objects' new shapes are the shared geometry core's (`stretch_entity`,
-//! the rule Esnet has always used: an arc keeps its bow), so the tool,
+//! The objects' new shapes are the shared geometry core's (`stretch_entity`:
+//! an arc's vertices are its ends, one moving keeps its chord height), so the tool,
 //! Python and an agent asking the same get the same shapes. Coordinates are
 //! metres on the wire, x east (Y), y north (X), whatever unit the project
 //! shows (docs/adr/0165 §2).
@@ -52,9 +52,15 @@ pub struct StretchTopology {
 /// (`dx`, `dy`), the others stay, as one undo step “Esnet”.
 ///
 /// The objects: those of `uids` (the selection), each without a vertex in
-/// the window left out with an `outside_window` warning at `uids[i]`; or,
+/// the window left out with an `outside_window` warning at `uids[i]`, each
+/// that follows the objects it is tied to (an associative hatch, a linked
+/// text, a dimension whose points in the window are all tied) with a
+/// `follows_object` one (docs/adr/0297 §2); or,
 /// with no `uids`, every shown object meeting the window that has a vertex
-/// in it. Those on a locked layer are left out with a `locked_skipped`
+/// in it, those that follow their objects left out unsaid. An arc's vertices
+/// are its ends; one moving keeps the arc's chord height. A dimension's tied
+/// points stay with their objects. The objects tied to the stretched ones
+/// follow at the step's end (`dependents`). Those on a locked layer are left out with a `locked_skipped`
 /// warning (at `uids[i]` when listed). With `topology`, the shown objects
 /// sharing a moved vertex follow; a locked one does not (`neighbour_locked`
 /// warning), nor one it would leave invalid (`neighbour_invalid`). A zero
@@ -109,6 +115,11 @@ pub struct EntitiesStretched {
     pub stretched: Vec<String>,
     /// The neighbours that followed them (Topolojik düzenleme).
     pub followed: Vec<String>,
+    /// The objects tied to them that followed at the step's end (docs/adr/0297 §3): associative dimensions,
+    /// associative hatches, linked texts; absent: none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub dependents: Vec<String>,
     /// The document's revision after the write, as decimal text.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
@@ -125,6 +136,11 @@ pub struct EntitiesStretchPlan {
     pub stretched: Vec<Entity>,
     /// The neighbours as they would be.
     pub followed: Vec<Entity>,
+    /// The objects tied to them as they would follow (docs/adr/0297 §3): associative dimensions, associative
+    /// hatches, linked texts; absent: none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
+    pub dependents: Vec<Entity>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

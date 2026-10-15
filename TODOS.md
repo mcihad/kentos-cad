@@ -170,6 +170,10 @@ Liste:
   uyarıları komutun sözleri; paralel iki doğruya TTY, saat yönünde verilen yaydan Devam; araç durumları
   `fixtures/curve-methods/v1/tools.json`. Web'in donmuş çağrı kayıtları eski `arcStartCenterEnd` ve `arcStartCenterAngle`'ı (tam tur)
   tutar; geri dönüşte komutun kuralına getirilir.
+- [ ] `CAD-EDIT-11` (ADR 0297, 15 Ekim): web'de gerekenler: `cad.entities.stretch`'in yeni kuralı (izleyen nesne kendisi esnemez:
+  ilişkili tarama, bağlı yazı, ölçünün bağlı noktası; `follows_object`), planın ve sonucun `dependents`'ı (belgenin izlemesini bir
+  kopyada çalıştıran `followers`'ın TS karşılığı) ve Esnet önizlemesinde izleyenler; ortak durumlar `cad.entities.stretch.policy.json`.
+  Çekirdeğin yay kuralı WASM'la kendiliğinden gelir; kayıtlı çağrı `calls-p5-entities.json`'ın yay beklentisi yeni kuralla yazıldı.
 - [ ] `CAD-EDIT-10` (ADR 0296, 14 Ekim): web'de gerekenler: `cad.entities.break`/`.join`'in taşınanlar ve ilişki politikası (ölçüler,
   bağlı yazılar, taramalar), Birleştir'in uyarıları, yeni `cad.entities.reverse` komutu ve Yönü çevir'in komutla yazması; ortak durumlar
   `cad.entities.{break,join}.policy.json`, `cad.entities.reverse.json`.

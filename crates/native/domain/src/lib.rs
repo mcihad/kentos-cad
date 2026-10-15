@@ -34,6 +34,7 @@ mod edit;
 pub mod etag;
 pub mod exchange;
 mod external;
+mod followers;
 pub mod fields;
 mod hash;
 mod hatch_ties;

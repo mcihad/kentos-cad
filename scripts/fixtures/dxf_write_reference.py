@@ -31,8 +31,10 @@ library and no KentOS code:
   follow (66 1) and is followed by an ATTRIB for each, owned by it, on its
   layer: the text it shows (its value, else the default, else nothing),
   placed as the insert places the definition (height times the scale; the
-  turn as a text's under the insert's similarity, a mirrored one turned a
-  half turn more to stay readable, within 1e-9), then a SEQEND of its own;
+  turn and alignment as a text's under the insert's similarity, a mirrored
+  one readable by docs/adr/0292's rule, `affine_reference.text_frame`:
+  its up or its baseline turned back, its alignment so, within 1e-9),
+  then a SEQEND of its own;
 - a text (a TEXT, an ATTRIB, an ATTDEF; docs/adr/0145 §7) without an
   alignment starts at its point (10) and has no 11, 72 or 73; an aligned one
   stands on its alignment point (11) exactly (an ATTRIB's where its insert
@@ -173,6 +175,9 @@ import math
 import sys
 import unicodedata
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from affine_reference import text_frame  # noqa: E402  (docs/adr/0292's rule, written without KentOS code)
 
 ROOT = Path(__file__).resolve().parents[2]
 DIR = ROOT / "fixtures" / "formats" / "v1" / "dxf-write"
@@ -953,16 +958,13 @@ def placed(e: dict, base: dict, q: dict) -> tuple[float, float]:
     return e["p"]["x"] + c * x - n * y, e["p"]["y"] + n * x + c * y
 
 
-def placed_turn(e: dict, degrees: float) -> float:
-    # A text's direction under the insert's similarity; mirrored, a half turn more (readable).
-    a = degrees * math.pi / 180.0
+def placed_frame(e: dict, degrees: float, align: str | None) -> tuple[float, str | None]:
+    """A text's turn and alignment under the insert's similarity; a mirrored insert's readable (docs/adr/0292)."""
+    s = float(e["scale"])
     flip = -1.0 if e.get("mirror") else 1.0
-    dx, dy = math.cos(a), flip * math.sin(a)
     c, n = math.cos(e["rotation"]), math.sin(e["rotation"])
-    turn = math.atan2(n * dx + c * dy, c * dx - n * dy) * 180.0 / math.pi
-    if e.get("mirror"):
-        turn += 180.0
-    return ((turn % 360.0) + 360.0) % 360.0
+    turn, align, _ = text_frame(degrees, align, [s * c, s * n, -s * n * flip, s * c * flip, 0.0, 0.0])
+    return turn, align
 
 
 def check_attributes(o: list[list[tuple[int, str]]], e: dict, b: dict, layer: str, own: str, where: str, widths: dict) -> None:
@@ -982,11 +984,11 @@ def check_attributes(o: list[list[tuple[int, str]]], e: dict, b: dict, layer: st
         ensure(group(r, 1) == value, f"{w}: shows {value!r}, not {group(r, 1)!r}")
         x, y = placed(e, b["base"], a["p"])
         ensure(close(float(group(r, 40)), a["height"] * float(e["scale"])), f"{w}: its height times the scale")
-        turn = placed_turn(e, a["rotation"])
+        turn, align = placed_frame(e, a["rotation"], a.get("align"))
         got = float(group(r, 50) or 0.0)
         ensure(close(got, turn) or (turn == 0.0 and group(r, 50) is None), f"{w}: turned {turn}°, not {got}°")
-        shown_at = {**a, "height": float(group(r, 40)), "rotation": got}
-        if a.get("align") is None:
+        shown_at = {**a, "height": float(group(r, 40)), "rotation": got, "align": align}
+        if align is None:
             ensure(close(float(group(r, 10)), x) and close(float(group(r, 20)), y), f"{w}: placed at {x}, {y}")
             ensure(group(r, 11) is None, f"{w}: not justified")
         else:

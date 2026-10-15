@@ -727,6 +727,7 @@ const ENTRIES: &[Entry] = &[
         ],
         warnings: &[
             "outside_window",
+            "follows_object",
             "locked_skipped",
             "neighbour_locked",
             "neighbour_invalid",
@@ -738,7 +739,7 @@ const ENTRIES: &[Entry] = &[
                 &["pointcloud"],
                 Some("nothing_to_stretch"),
                 Some(
-                    "Köşesi pencerede olan nesne esner; nokta bulutu esnemez. Listelenen nesne penceresinde köşesi yoksa outside_window uyarısıyla atlanır.",
+                    "Köşesi pencerede olan nesne esner; nokta bulutu esnemez. Listelenen nesne penceresinde köşesi yoksa outside_window, bağlı olduğu nesneyi izliyorsa (ilişkili tarama, bağlı yazı, bütün noktaları bağlı ölçü) follows_object uyarısıyla atlanır.",
                 ),
             )]
         },

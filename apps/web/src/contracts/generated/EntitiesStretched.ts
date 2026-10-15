@@ -13,6 +13,11 @@ stretched: Array<string>,
  */
 followed: Array<string>, 
 /**
+ * The objects tied to them that followed at the step's end (docs/adr/0297 §3): associative dimensions,
+ * associative hatches, linked texts; absent: none.
+ */
+dependents?: Array<string>, 
+/**
  * The document's revision after the write, as decimal text.
  */
 revision: string, };

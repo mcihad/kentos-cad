@@ -1851,8 +1851,11 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_ENTITIES_STRETCH.into(),
             version: crate::CAD_ENTITIES_STRETCH_VERSION,
             title: "Nesneleri esnet".into(),
-            summary: "Pencerenin (window) içindeki köşeleri dx, dy kadar taşır, öbürlerini bırakır; tek geri alma adımı “Esnet”. Yay bükümünü korur. \
-                      uids verilirse yalnız onlar (seçim); penceresinde köşesi olmayan outside_window uyarısıyla atlanır. Verilmezse pencereye değen görünen nesneler. Kilitli katmandakiler locked_skipped uyarısıyla atlanır; hiçbiri kalmazsa nothing_to_stretch. \
+            summary: "Pencerenin (window) içindeki köşeleri dx, dy kadar taşır, öbürlerini bırakır; tek geri alma adımı “Esnet”. Yayın köşeleri uçlarıdır: \
+                      yalnız ortası pencerede olan yay değişmez, bir ucu taşınan yay kiriş yüksekliğini korur; çoklu çizginin yay kenarı bükümünü korur. \
+                      Bağlı olduğu nesneyi izleyen nesne kendisi esnemez, nesnesiyle izler: ilişkili tarama, bağlı yazı ve ölçünün bağlı noktası; \
+                      izleyenler planın ve sonucun dependents'ındadır. \
+                      uids verilirse yalnız onlar (seçim); penceresinde köşesi olmayan outside_window, bağlı olduğu nesneyi izleyen follows_object uyarısıyla atlanır. Verilmezse pencereye değen görünen nesneler. Kilitli katmandakiler locked_skipped uyarısıyla atlanır; hiçbiri kalmazsa nothing_to_stretch. \
                       topology verilirse (Topolojik düzenleme) taşınan köşeleri paylaşan görünen komşular aynı adımda izler; points noktaları da köşe sayar. Kilitli ya da geçersiz kalacak komşu uyarıyla değişmez. \
                       Yer değiştirme sıfırsa hiçbir şey yazılmaz. Yeni şekilleri paylaşılan geometri çekirdeği bulur: Esnet aracı, Python ve ajan aynı isteğe aynı şekilleri alır. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
