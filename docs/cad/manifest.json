@@ -1598,12 +1598,14 @@
    "id": "edit.copy",
    "kind": "command",
    "title": "Panoya kopyala",
-   "level": "session",
-   "via": [],
+   "level": "semantic",
+   "via": [
+    "cad.entities.copy"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "Oturumun panosu.",
+   "python": "kentos.cad.entities.copy",
+   "mcp": "cad.entities.copy",
+   "note": "Kopya komutun cevabıdır: nesneler, katmanları, blokları, stilleri, birim ve taban noktası (ADR 0309); pano oturumundur.",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
@@ -1614,11 +1616,12 @@
    "title": "Kes",
    "level": "semantic",
    "via": [
+    "cad.entities.copy",
     "cad.entities.delete"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.delete",
-   "mcp": "cad.entities.delete",
+   "python": "kentos.cad.entities.copy, kentos.cad.entities.delete",
+   "mcp": "cad.entities.copy, cad.entities.delete",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",
@@ -1672,30 +1675,46 @@
    "id": "edit.paste",
    "kind": "command",
    "title": "Yapıştır",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.entities.paste"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "python": "kentos.cad.entities.paste",
+   "mcp": "cad.entities.paste",
+   "note": "Yer tıklanır; katman, blok ve stiller adlarıyla komutla gelir (ADR 0309).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
   },
   {
+   "id": "edit.pasteBlock",
+   "kind": "command",
+   "title": "Blok olarak yapıştır",
+   "level": "semantic",
+   "via": [
+    "cad.entities.paste"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.paste",
+   "mcp": "cad.entities.paste",
+   "note": "Komutun asBlock'u; blok ve yerleştirme tek adımda (ADR 0309).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "edit.pasteOriginal",
    "kind": "command",
    "title": "Özgün koordinatlara yapıştır",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.entities.paste"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "python": "kentos.cad.entities.paste",
+   "mcp": "cad.entities.paste",
+   "note": "Kopyanın kendi yerine (ADR 0309).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -7256,6 +7275,22 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
+  },
+  {
+   "id": "tool.copyBase",
+   "kind": "command",
+   "title": "Taban noktasıyla kopyala",
+   "level": "semantic",
+   "via": [
+    "cad.entities.copy"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.copy",
+   "mcp": "cad.entities.copy",
+   "note": "Taban noktası komutun girdisidir (ADR 0309).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.copyToLayer",

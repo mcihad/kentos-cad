@@ -1,17 +1,17 @@
-//! Yapıştır: the web's `PasteTool` (`apps/web/src/tools/editTools.ts`),
-//! step for step (docs/adr/0056). The clipboard's objects follow the cursor
-//! by their base point (the lower left corner of their box when they were
-//! put aside) until a click or a typed point places them: a coordinate,
-//! `@dY,dX` from the base point, a distance toward the cursor. They are
-//! pasted in one undo step “Yapıştır” ([`crate::clipboard::paste`]),
-//! selected, and the tool leaves. Enter and Esc leave without pasting.
+//! Yapıştır and Blok olarak yapıştır: the web's `PasteTool` (`apps/web/src/tools/editTools.ts`), step for step
+//! (docs/adr/0056), writing through `cad.entities.paste` (docs/adr/0309). The clipboard's objects follow the cursor
+//! by their base point (the lower left corner of their box, or the one Taban noktasıyla kopyala took) until a click
+//! or a typed point places them: a coordinate, `@dY,dX` from the base point, a distance toward the cursor. They are
+//! pasted in one undo step “Yapıştır” ([`crate::clipboard::paste`]), with the layers, blocks and styles they use,
+//! selected, and the tool leaves; as one new block when the tool pastes as a block. Enter and Esc leave without
+//! pasting.
 //!
 //! The tool is not in the catalog: `edit.paste` runs it with a copy of the
 //! clipboard ([`crate::Session::run`]), and repeating the last command does
 //! not bring it back. The ghosts are the web's: at most 400 objects' outlines,
 //! dashed, from a geometry store of the copies' own.
 
-use kentos_contracts::Entity;
+use kentos_contracts::Clip;
 use kentos_geometry_core::geom::affine::translation;
 use kentos_geometry_core::store::Store;
 
@@ -26,11 +26,17 @@ use crate::tool::{Context, Flow, Pointer, Preview, Stroke, Tool};
 /// Yapıştır's id (the web's `PasteTool.id`); no command starts it by this name.
 pub const ID: &str = "paste";
 pub const LABEL: &str = clipboard::PASTE_LABEL;
+/// Blok olarak yapıştır's name in the command line.
+pub const BLOCK_LABEL: &str = "Blok olarak yapıştır";
+/// The name a block pasted from the clipboard takes; a taken one is followed by “ (2)” ….
+pub const BLOCK_NAME: &str = "Pano";
 
-/// Yapıştır with the objects it places.
+/// Yapıştır with the copy it places.
 pub struct Paste {
-    items: Vec<Entity>,
+    clip: Clip,
     base: Vec2,
+    /// Pastes as one block (Blok olarak yapıştır).
+    as_block: bool,
     /// The cursor (snapped when a snap applies).
     hover: Option<Vec2>,
     /// The copies in a geometry store of their own, numbered 1…n: their
@@ -43,11 +49,13 @@ pub struct Paste {
 }
 
 impl Paste {
-    /// The tool with copies of the clipboard's objects and their base point.
-    pub fn new(items: Vec<Entity>, base: Vec2) -> Self {
+    /// The tool with a copy of the clipboard.
+    pub fn new(clip: Clip) -> Self {
+        let base = Vec2::new(clip.base.x, clip.base.y);
         Self {
-            items,
+            clip,
             base,
+            as_block: false,
             hover: None,
             store: None,
             ghosts: Vec::new(),
@@ -56,9 +64,18 @@ impl Paste {
         }
     }
 
+    /// The tool that pastes the copy as one block (Blok olarak yapıştır).
+    pub fn as_block(clip: Clip) -> Self {
+        Self {
+            as_block: true,
+            ..Self::new(clip)
+        }
+    }
+
     /// Places the objects with their base point at `at` and leaves.
     fn place(&mut self, at: Vec2, cx: &mut Context<'_>) {
-        let slots = clipboard::paste(&self.items, at.x - self.base.x, at.y - self.base.y, cx);
+        let name = self.as_block.then(|| BLOCK_NAME.to_string());
+        let slots = clipboard::paste(&self.clip, Some(at), name, cx);
         if !slots.is_empty() {
             cx.selection.set(slots);
         }
@@ -72,7 +89,7 @@ impl Paste {
         let Some(hover) = self.hover else {
             return;
         };
-        let items = &self.items;
+        let items = &self.clip.objects;
         let store = self.store.get_or_insert_with(|| {
             let mut store = Store::new();
             store.put_many(items.iter().enumerate().map(|(i, e)| {
@@ -104,12 +121,12 @@ impl Tool for Paste {
     }
 
     fn label(&self) -> &'static str {
-        LABEL
+        if self.as_block { BLOCK_LABEL } else { LABEL }
     }
 
     fn prompt(&self) -> Prompt {
         Prompt::new(
-            LABEL,
+            self.label(),
             "yerleştirme noktasını belirtin ya da koordinat yazın",
         )
     }

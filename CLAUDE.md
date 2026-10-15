@@ -436,6 +436,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   Patlat'ta eğriler: daire, yay, elips, eğri ve NURBS köşeleri üstünde, eşit uzunlukta bölümlü çoklu çizgi; `density` (count, step,
   deviation; varsayılan 0,01 m sapma), `invalid_density`; araç eğri seçilince açık kalır, Sayı (S), Aralık (A), Sapma (P), önizlemede
   köşeler; CAD ve CBS (ADR 0308);
+  pano komutları: `cad.entities.copy` (salt okunur kopya: nesneler çizim sırasıyla, katman yolları, bloklar, adı geçen stiller,
+  kitaplık, birim, taban noktası; aralarındaki bağlar kalır) ve `.paste` (katman yoluna, olmayan yol açılır; aynı adlı blok ve stil bu
+  çizimin; kilitli katman bütün yapıştırmayı reddeder, gizli ve başka birim söylenir; `asBlock` tek blok “Pano”), Taban noktasıyla
+  kopyala (`tool.copyBase`), Blok olarak yapıştır (`edit.pasteBlock`); `Document::to_snapshot_v2_of`, katman ve blok yazma
+  `exchange_write.rs`'te (ADR 0309);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);
@@ -962,6 +967,8 @@ KENTOS_SHOTS_ONLY=denetle-bulunan,denetle-stiller,denetle-yazildi cargo test -p 
 python3 scripts/fixtures/multipart_edit_cases.py --check   # Kır, Buda ve Uzat'ın çok parçalı çizgideki durumlarını (tıklanan parça, parçalar tek nesnede, kot ve ölçü, hızlı kip, çit, pencere, retler) KentOS kodu olmadan kesirlerle denetle; durumlar fixtures/commands/v1/cad.entities.{break,trim,extend}.parts.json (ADR 0307)
 python3 scripts/fixtures/explode_curve_cases.py --check   # Patlat'ın eğrilerdeki durumlarını (daire, yay, elips, eliptik yay, eğri; sayı, aralık, sapma, varsayılan; retler) KentOS kodu olmadan mpmath'le denetle; durumlar fixtures/commands/v1/cad.entities.explode.curves.json (ADR 0308)
 KENTOS_SHOTS_ONLY=patlat-egri,patlat-sayi,patlat-yazildi,patlat-cbs cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # Patlat'ın eğrilerdeki resimleri, .run/shots/arac-patlat-* (ADR 0308)
+python3 scripts/fixtures/clipboard_command_cases.py --check   # Panoya kopyala ve Yapıştır'ın durumlarını (kopyanın parçaları ve bağları, taban noktası, katman yolları, ad çakışmaları, blok olarak yapıştırma, birim, kilitli ve gizli katman, retler) KentOS kodu olmadan alışverişin bağımsız başvurusuyla denetle; durumlar fixtures/commands/v1/cad.entities.{copy,paste}.json (ADR 0309)
+KENTOS_SHOTS_ONLY=pano-tabanla,pano-baska-cizim,pano-katmanlar,pano-blok cargo test -p kentos-desktop tools_screens -- --ignored --nocapture; cargo test --release -p kentos-native-application --test all clipboard_cmd::timing -- --ignored --nocapture   # pano komutlarının resimleri (.run/shots/arac-pano-*) ve 100 000 nesnede kopyalama ve yapıştırma süreleri (ADR 0309)
 KENTOS_SHOTS_ONLY=parca-buda,parca-budandi,parca-kir cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # çok parçalı çizgide Buda ve Kır'ın resimleri, .run/shots/arac-parca-* (ADR 0307)
 python3 scripts/fixtures/array_edit_cases.py --check   # Diziyi düzenle'nin durumlarını (yerleşim, ilk yer, Değiştir, Sil, Sıfırla, plan, retler) KentOS kodu olmadan denetle; durumlar fixtures/commands/v1/cad.arrays.edit.json (ADR 0301)
 KENTOS_SHOTS_ONLY=dizi-duzenle,dizi-duzenle-adet,dizi-duzenle-taban cargo test -p kentos-desktop tools_screens -- --ignored --nocapture; cargo test --release -p kentos-native-application --test all array_assoc::edit_timing -- --ignored --nocapture   # Diziyi düzenle'nin resimleri (.run/shots/arac-dizi-duzenle-*) ve 100 × 100 ızgarada süreleri (ADR 0301)

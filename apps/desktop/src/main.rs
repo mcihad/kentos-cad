@@ -45,6 +45,8 @@ mod charts;
 #[cfg(test)]
 mod cleanup_scenes;
 mod clipboard;
+#[cfg(test)]
+mod clipboard_scenes;
 mod cloud;
 #[cfg(test)]
 mod cloud_scenes;

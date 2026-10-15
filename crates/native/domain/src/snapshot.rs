@@ -18,7 +18,7 @@ use kentos_contracts::{
 
 use crate::document::Document;
 use crate::history::History;
-use crate::identity::Uuid;
+use crate::identity::{Slot, Uuid};
 use crate::layers::LayerTree;
 use crate::store::{Store, Stored};
 
@@ -238,6 +238,37 @@ impl Document {
 }
 
 impl Document {
+    /// The drawing's head as a v2 snapshot: its name, settings, layers, blocks and library with only the objects for
+    /// which `keep` holds, in document order, and no sheet book, requests or arrays. What the exchange's rules read
+    /// of a drawing (docs/adr/0309 §6): a copy or a paste costs what it moves, not the whole drawing.
+    pub fn to_snapshot_v2_of(&self, keep: impl Fn(Slot) -> bool) -> DocumentSnapshotV2 {
+        let (entities, uids) = self
+            .store
+            .iter()
+            .filter(|stored| keep(Slot(stored.entity.base().id)))
+            .map(|stored| ((*stored.entity).clone(), EntityId(stored.uid.into_bytes())))
+            .unzip();
+        DocumentSnapshotV2 {
+            format: DOCUMENT_FORMAT.to_owned(),
+            version: DOCUMENT_VERSION_2,
+            name: self.name.clone(),
+            settings: self.settings.clone(),
+            origin: self.origin,
+            home_view: self.home_view,
+            layers: self.layers.nodes().to_vec(),
+            active_layer: self.layers.active().to_owned(),
+            entities,
+            uids,
+            styles: self.styles.clone(),
+            blocks: self.block_list(),
+            project_id: self.project_id.map(|p| ProjectId(p.into_bytes())),
+            migrated_from: self.migrated_from.clone(),
+            sheets: None,
+            requests: Vec::new(),
+            arrays: Vec::new(),
+        }
+    }
+
     /// Deep copies of the definitions, in order, for a snapshot.
     fn block_list(&self) -> Vec<BlockDefinition> {
         self.blocks.iter().map(|b| (**b).clone()).collect()

@@ -11,7 +11,7 @@ const INPUT_WIDTH: usize = 240;
 
 /// The product commands' Turkish titles, the catalog's (`commandCatalog.json`;
 /// a test holds them to it).
-pub(crate) const TITLES: [(&str, &str); 69] = [
+pub(crate) const TITLES: [(&str, &str); 71] = [
     ("cad.polygon.create", "Kapalı alan oluştur"),
     ("cad.line.create", "Çizgi oluştur"),
     ("cad.polyline.create", "Çoklu çizgi oluştur"),
@@ -27,6 +27,8 @@ pub(crate) const TITLES: [(&str, &str); 69] = [
     ("cad.curves.edit", "Eğriyi düzenle"),
     ("cad.entities.match", "Özellik kopyala"),
     ("cad.entities.cleanup", "Çizimi temizle"),
+    ("cad.entities.copy", "Panoya kopyala"),
+    ("cad.entities.paste", "Yapıştır"),
     ("cad.drawing.audit", "Denetle"),
     ("cad.entities.offset", "Nesneleri ötele"),
     ("cad.entities.order", "Çizim sırasını değiştir"),
@@ -101,6 +103,7 @@ fn field_name(key: &str) -> Option<&'static str> {
         "action" => "Eylem",
         "actions" => "Eylemler",
         "angle" => "Açı",
+        "asBlock" => "Blok olarak",
         "at" | "place" => "Yer",
         "attrs" | "attributes" => "Öznitelikler",
         "base" => "Taban noktası",
@@ -113,6 +116,7 @@ fn field_name(key: &str) -> Option<&'static str> {
         "by" => "Yöntem",
         "c" | "center" => "Merkez",
         "chain" => "Zincir",
+        "clip" => "Pano içeriği",
         "changes" => "Değişiklikler",
         "closed" => "Kapalı",
         "color" => "Renk",
@@ -122,6 +126,7 @@ fn field_name(key: &str) -> Option<&'static str> {
         "deleteSource" => "Kaynağı sil",
         "description" => "Açıklama",
         "dimension" | "measure" => "Ölçü",
+        "dimensionStyles" => "Ölçü stilleri",
         "distance" => "Uzaklık",
         "drawingUnit" => "Çizim birimi",
         "dx" => "Doğu farkı",
@@ -139,6 +144,7 @@ fn field_name(key: &str) -> Option<&'static str> {
         "label" => "Etiket",
         "layer" | "layerId" => "Katman",
         "layers" => "Katmanlar",
+        "library" => "Kitaplık",
         "lineType" => "Çizgi tipi",
         "lineTypeScale" => "Çizgi tipi ölçeği",
         "lineWeight" => "Kalınlık",
@@ -167,6 +173,7 @@ fn field_name(key: &str) -> Option<&'static str> {
         "style" => "Stil",
         "symbol" => "Sembol",
         "text" => "Yazı",
+        "textStyles" => "Yazı stilleri",
         "time" => "Zaman",
         "tolerance" => "Tolerans",
         "topology" => "Topoloji",
@@ -175,6 +182,7 @@ fn field_name(key: &str) -> Option<&'static str> {
         "trim" => "Kırp",
         "uid" => "Nesne",
         "uids" => "Nesneler",
+        "unit" => "Birim",
         "value" => "Değer",
         "visible" => "Görünür",
         "widths" => "Genişlikler",

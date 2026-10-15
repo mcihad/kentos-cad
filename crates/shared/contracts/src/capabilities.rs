@@ -407,6 +407,21 @@ const ENTRIES: &[Entry] = &[
         },
     },
     Entry {
+        id: "cad.entities.copy",
+        refusals: &[&["no_entities", "invalid_uid", "not_finite", "entity_not_found"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.entities.paste",
+        refusals: &[
+            &["no_entities", "invalid_clip", "not_finite", "empty_name", "not_a_layer", "layer_locked"],
+            REVISION,
+        ],
+        warnings: &["units_differ", "layer_hidden"],
+        targets: none,
+    },
+    Entry {
         id: "cad.entities.explode",
         refusals: &[OBJECTS, &["invalid_density", "not_explodable", "slots_exhausted"], REVISION],
         warnings: &["layer_locked", "not_explodable"],

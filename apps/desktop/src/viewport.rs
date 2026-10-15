@@ -940,14 +940,15 @@ impl Viewport {
             ViewChange::Pan { dx, dy } => self.camera.pan_by(dx, dy),
             ViewChange::Fit { bounds, padding } => self.camera.fit(&bounds, padding),
             // The app opens the text field (text_field.rs), its window again
-            // with the picked point (calc/), Blok oluştur's (blocks.rs), Blok
-            // ekle's values (attribute_values.rs), a text file's dialog
+            // with the picked point (calc/), Blok oluştur's (blocks.rs), the
+            // clipboard's copy (clipboard.rs), Blok ekle's values (attribute_values.rs), a text file's dialog
             // (text_file.rs) or Bilgi's card (info_card.rs); the camera stays.
             ViewChange::Text(_)
             | ViewChange::Paragraph(_)
             | ViewChange::Picked(_)
             | ViewChange::PickedObjects(_)
             | ViewChange::DefineBlock(_)
+            | ViewChange::Copied(_)
             | ViewChange::AttributeValues(_)
             | ViewChange::OpenTextFile
             | ViewChange::OpenImageFile

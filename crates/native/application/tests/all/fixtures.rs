@@ -44,8 +44,9 @@ use kentos_native_application::{
 };
 use kentos_native_application::{
     arrays_edit, changeset, create, curves_edit, dimensions_create, divide, drawing_audit,
-    entities_boundary, entities_break, entities_cleanup, entities_explode, entities_hatch,
-    entities_join, entities_lengthen, entities_match, entities_reverse, file_import, stretch,
+    entities_boundary, entities_break, entities_cleanup, entities_copy, entities_explode,
+    entities_hatch, entities_join, entities_lengthen, entities_match, entities_paste,
+    entities_reverse, file_import, stretch,
 };
 use serde_json::{Value, json};
 
@@ -880,6 +881,31 @@ impl Input for kentos_domain::contracts::EntitiesLengthen {
 impl Input for kentos_domain::contracts::EntitiesReverse {
     fn number(&mut self, _: &str) -> Option<&mut f64> {
         None
+    }
+}
+
+impl Input for kentos_domain::contracts::EntitiesCopy {
+    /// `base.x`, `base.y`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        let b = self.base.as_mut()?;
+        match path {
+            "base.x" => Some(&mut b.x),
+            "base.y" => Some(&mut b.y),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::EntitiesPaste {
+    /// `at.x`, `at.y`, `clip.base.x`, `clip.base.y`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "at.x" => self.at.as_mut().map(|a| &mut a.x),
+            "at.y" => self.at.as_mut().map(|a| &mut a.y),
+            "clip.base.x" => Some(&mut self.clip.base.x),
+            "clip.base.y" => Some(&mut self.clip.base.y),
+            _ => None,
+        }
     }
 }
 
@@ -1874,6 +1900,12 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_ENTITIES_CLEANUP => {
             run!(entities_cleanup, kentos_domain::contracts::EntitiesCleanup)
+        }
+        kentos_domain::contracts::CAD_ENTITIES_COPY => {
+            run!(entities_copy, kentos_domain::contracts::EntitiesCopy)
+        }
+        kentos_domain::contracts::CAD_ENTITIES_PASTE => {
+            run!(entities_paste, kentos_domain::contracts::EntitiesPaste)
         }
         kentos_domain::contracts::CAD_DRAWING_AUDIT => {
             run!(drawing_audit, kentos_domain::contracts::DrawingAudit)

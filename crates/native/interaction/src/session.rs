@@ -61,12 +61,12 @@ use crate::trim::{self, Boundary};
 use crate::vertex::{self, Vertex};
 use crate::{
     adjoin, angle, area, between, block_define, block_insert, boundary, cleanup, cloud_query,
-    construction, continuation, coordinate, coordinate_labels, dimension, dimension_chain, divide,
-    donut, ellipse, hatch, hatch_selected, holes, labels_to_text, layer_move, layer_tools, leader,
-    match_properties, meeting, paragraph, parallel, polygonize, quick_dimension, reshape_by,
-    revcloud, sector, select_circle, select_containing, select_fence, select_polygon,
-    select_similar, set_elevation, spline, split, station_offset, text, text_file, topology,
-    vertex_points,
+    construction, continuation, coordinate, coordinate_labels, copy_base, dimension,
+    dimension_chain, divide, donut, ellipse, hatch, hatch_selected, holes, labels_to_text,
+    layer_move, layer_tools, leader, match_properties, meeting, paragraph, parallel, polygonize,
+    quick_dimension, reshape_by, revcloud, sector, select_circle, select_containing, select_fence,
+    select_polygon, select_similar, set_elevation, spline, split, station_offset, text, text_file,
+    topology, vertex_points,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -151,6 +151,8 @@ pub const TOOLS: &[&str] = &[
     // Blocks (docs/adr/0144).
     block_define::ID,
     block_insert::ID,
+    // Taban noktasıyla kopyala (docs/adr/0309).
+    copy_base::ID,
     // Alan işlemleri (docs/adr/0065).
     area::UNION_ID,
     area::INTERSECT_ID,
@@ -471,6 +473,7 @@ impl Session {
             hatch::ID => Box::new(crate::hatch::Hatch::new()),
             hatch_selected::ID => Box::new(crate::hatch_selected::HatchSelected::tool()),
             block_define::ID => Box::new(crate::block_define::BlockDefine::tool()),
+            copy_base::ID => Box::new(crate::copy_base::CopyBase::tool()),
             block_insert::ID => Box::new(crate::block_insert::BlockInsert::new()),
             area::UNION_ID => Box::new(crate::area::AreaAction::union()),
             area::INTERSECT_ID => Box::new(crate::area::AreaAction::intersect()),

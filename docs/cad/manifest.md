@@ -17,23 +17,23 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 49 | 115 | 38 | 38 | 240 |
-| geometry | 19 | 63 | 0 | 8 | 90 |
+| semantic | 49 | 120 | 38 | 38 | 245 |
+| geometry | 19 | 61 | 0 | 8 | 88 |
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 20 | 0 | 6 | 26 |
 | query | 0 | 21 | 1 | 4 | 26 |
-| session | 0 | 81 | 48 | 5 | 134 |
+| session | 0 | 80 | 48 | 5 | 133 |
 | host | 0 | 15 | 14 | 4 | 33 |
-| **toplam** | 68 | 326 | 103 | 205 | 702 |
+| **toplam** | 68 | 328 | 103 | 205 | 704 |
 
 Kapsam: `cad` yalnız CAD şeridinde, `gis` yalnız CBS şeridinde, `shared` ikisinde, `none` hiçbir şeritte (kısayol, menü,
 komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 497 satırdan 133'i: geometry 82, none 20, processing 13, query 18.
+CBS'ye özgü olmayan 499 satırdan 131'i: geometry 80, none 20, processing 13, query 18.
 
-### Sonucu çağıran hesaplar (geometry) — 82
+### Sonucu çağıran hesaplar (geometry) — 80
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -45,8 +45,6 @@ CBS'ye özgü olmayan 497 satırdan 133'i: geometry 82, none 20, processing 13, 
 | `calc.resection` | Geriden kestirme… | shared | cad.entities.create `resection` |  |
 | `calc.traverse` | Poligon hesabı… | shared | cad.entities.create `traverse` |  |
 | `cogo.update` | Kayıtlı ölçüleri çizimden yaz | shared | cad.entities.set |  |
-| `edit.paste` | Yapıştır | shared | cad.entities.create |  |
-| `edit.pasteOriginal` | Özgün koordinatlara yapıştır | shared | cad.entities.create |  |
 | `raster.georef` | Raster oturt… | shared | cad.entities.edit `rasterGeoref` |  |
 | `table.update` | Tabloyu güncelle | cad | cad.entities.edit `tableUpdate` |  |
 | `text.findReplace` | Bul ve değiştir | shared | cad.entities.edit `replaceText` |  |

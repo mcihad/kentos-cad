@@ -454,6 +454,10 @@ codes! {
     /// An empty list of properties to give (Özellik kopyala, docs/adr/0304).
     NO_PROPERTIES = "no_properties", Failed, false, "Kopyalanacak özellik seçilmedi.";
     NOT_EXPLODABLE = "not_explodable", FailedOrWarning, false, "Nesne patlatılamaz: zaten temel bir nesne (çizgi, nokta, yazı …) ya da dolu tarama; bazılarında uyarı, hiçbirinde ret.";
+    /// A copy whose ids and objects do not match, or that names a layer or a block it lacks (Yapıştır, docs/adr/0309).
+    INVALID_CLIP = "invalid_clip", Failed, false, "Pano içeriği bozuk: nesneleri ve kimlikleri uyuşmuyor ya da adını verdiği bir katman veya blok içinde yok.";
+    /// A copy from a drawing of another unit: the objects keep their sizes (Yapıştır, docs/adr/0309).
+    UNITS_DIFFER = "units_differ", Warning, false, "Kaynak çizimin birimi bu çizimin biriminden başka; nesneler gerçek boylarıyla yapıştırıldı.";
     /// An exploded curve's density out of range (Patlat, docs/adr/0308).
     INVALID_DENSITY = "invalid_density", Failed, false, "Nokta sıklığı geçersiz: bölüm sayısı 1 ile 100 000 arasında, aralık ve sapma sıfırdan büyük olmalı.";
     /// No associative array has the id (Diziyi düzenle, docs/adr/0301).

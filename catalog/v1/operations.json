@@ -182,26 +182,32 @@
       "note": "Seçim oturumundur; aynı sorgu cad.entities.select (ADR 0275)."
     },
     "edit.copy": {
-      "level": "session",
-      "note": "Oturumun panosu."
+      "level": "semantic",
+      "via": [
+        "cad.entities.copy"
+      ],
+      "note": "Kopya komutun cevabıdır: nesneler, katmanları, blokları, stilleri, birim ve taban noktası (ADR 0309); pano oturumundur."
     },
     "edit.cut": {
       "level": "semantic",
       "via": [
+        "cad.entities.copy",
         "cad.entities.delete"
       ]
     },
     "edit.paste": {
-      "level": "geometry",
+      "level": "semantic",
       "via": [
-        "cad.entities.create"
-      ]
+        "cad.entities.paste"
+      ],
+      "note": "Yer tıklanır; katman, blok ve stiller adlarıyla komutla gelir (ADR 0309)."
     },
     "edit.pasteOriginal": {
-      "level": "geometry",
+      "level": "semantic",
       "via": [
-        "cad.entities.create"
-      ]
+        "cad.entities.paste"
+      ],
+      "note": "Kopyanın kendi yerine (ADR 0309)."
     },
     "edit.undo": {
       "level": "semantic",
@@ -881,6 +887,20 @@
         "cad.drawing.audit"
       ],
       "note": "Onarım ve temizlenecek stil türleri komuta verilir; bozuk ilişkileri, kayıp stilleri ve kullanılmayan kaynakları komut bulur, önizleme komutun planıdır (ADR 0306)."
+    },
+    "tool.copyBase": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.copy"
+      ],
+      "note": "Taban noktası komutun girdisidir (ADR 0309)."
+    },
+    "edit.pasteBlock": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.paste"
+      ],
+      "note": "Komutun asBlock'u; blok ve yerleştirme tek adımda (ADR 0309)."
     },
     "processing.run.address.geocode": {
       "level": "processing",

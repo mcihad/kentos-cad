@@ -162,6 +162,8 @@ impl App {
                 ViewChange::Paragraph(field) => self.open_paragraph(field),
                 // Blok oluştur's base point: the window that names the block (blocks.rs).
                 ViewChange::DefineBlock(base) => self.open_block_define(base),
+                // Taban noktasıyla kopyala's copy: the app's clipboard (clipboard.rs, docs/adr/0309).
+                ViewChange::Copied(clip) => self.clipboard.set(*clip),
                 // Blok ekle's point: the block's attribute values are asked (attribute_values.rs).
                 ViewChange::AttributeValues(block) => self.open_attribute_values(block),
                 // Metin dosyası yerleştir's file: the dialog opens after the update (text_file.rs).

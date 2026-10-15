@@ -1,7 +1,9 @@
-//! The clipboard's commands on the desktop (docs/adr/0056): Kes (Ctrl+X),
-//! Panoya kopyala (Ctrl+C), Yapıştır (Ctrl+V) and Özgün koordinatlara
-//! yapıştır (Ctrl+Shift+V), the web's (`apps/web/src/app/commands.ts`) over
-//! the session's clipboard (`kentos_interaction::clipboard`).
+//! The clipboard's commands on the desktop (docs/adr/0056, 0309): Kes (Ctrl+X),
+//! Panoya kopyala (Ctrl+C), Yapıştır (Ctrl+V), Özgün koordinatlara
+//! yapıştır (Ctrl+Shift+V), the web's (`apps/web/src/app/commands.ts`), and
+//! Blok olarak yapıştır, over the session's clipboard
+//! (`kentos_interaction::clipboard`); Taban noktasıyla kopyala is a tool
+//! (`tool.copyBase`, `kentos_interaction::copy_base`).
 //!
 //! The clipboard is the app's, not the drawing's: it outlives the drawing on
 //! screen and never reaches the system clipboard, as on the web. A command
@@ -17,7 +19,13 @@ use kentos_interaction::paste::{self, Paste};
 use crate::app::{App, Message};
 
 /// The web command ids this module runs.
-pub const COMMANDS: &[&str] = &["edit.cut", "edit.copy", "edit.paste", "edit.pasteOriginal"];
+pub const COMMANDS: &[&str] = &[
+    "edit.cut",
+    "edit.copy",
+    "edit.paste",
+    "edit.pasteOriginal",
+    "edit.pasteBlock",
+];
 
 impl App {
     /// Runs one of [`COMMANDS`].
@@ -25,7 +33,8 @@ impl App {
         match id {
             "edit.cut" => self.cut(),
             "edit.copy" => self.copy(),
-            "edit.paste" => return self.paste(),
+            "edit.paste" => return self.paste(false),
+            "edit.pasteBlock" => return self.paste(true),
             "edit.pasteOriginal" => self.paste_in_place(),
             _ => {}
         }
@@ -62,8 +71,9 @@ impl App {
     }
 
     /// Yapıştır: the paste tool with a copy of the clipboard, in place of
-    /// whatever ran (the web's `tools.run(new PasteTool(…), 'Yapıştır')`).
-    fn paste(&mut self) -> Task<Message> {
+    /// whatever ran (the web's `tools.run(new PasteTool(…), 'Yapıştır')`);
+    /// Blok olarak yapıştır with `as_block`.
+    fn paste(&mut self, as_block: bool) -> Task<Message> {
         if !self.clipboard_available("edit.paste") {
             return Task::none();
         }
@@ -72,10 +82,22 @@ impl App {
             return Task::none();
         }
         self.field = None;
-        let tool = Paste::new(self.clipboard.items().to_vec(), self.clipboard.base());
+        let Some(clip) = self.clipboard.clip().cloned() else {
+            return Task::none();
+        };
+        let tool = if as_block {
+            Paste::as_block(clip)
+        } else {
+            Paste::new(clip)
+        };
         self.session.run(Box::new(tool));
         // Named as the web's `tools.run(…, 'Yapıştır')`.
-        self.say(Level::Command, paste::LABEL);
+        let label = if as_block {
+            paste::BLOCK_LABEL
+        } else {
+            paste::LABEL
+        };
+        self.say(Level::Command, label);
         self.with_tool(|s, cx| s.activate(cx));
         Task::none()
     }

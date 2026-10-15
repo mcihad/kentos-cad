@@ -4622,6 +4622,66 @@ class CleanupReport(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class Clip(_Model):
+    """A copy of objects with all they use (docs/adr/0309 §1).
+    Attributes:
+        objects: The objects, numbered 1, 2 … in the drawing's order (so their drawing order is kept), whatever order they
+            were given in.
+        uids: Each object's persistent id where it was copied, in the order of `objects`: what links between them name.
+        layers: The layer tree the objects are on: their layers and the groups above them, with the source's looks.
+        base: Where the objects are placed from: the copy's base point. Unit: length.
+        blocks: The block definitions the objects place, and those these place.
+        dimension_styles: The dimension styles the objects name.
+        library: The library items (symbols, their images) the objects and their layers draw with; absent when they draw
+            with none.
+        text_styles: The text styles the objects name.
+        unit: The source drawing's unit (absent: metres). Lengths are metres in every drawing, so a paste keeps the
+            objects' sizes in another unit (docs/adr/0309 §2).
+    """
+    objects: list[Entity]
+    uids: list[str]
+    layers: list[LayerNode]
+    base: Vec2
+    blocks: list[BlockDefinition] | Unset = UNSET
+    dimension_styles: list[DimensionStyleDef] | Unset = UNSET
+    library: ProjectStyles | None | Unset = UNSET
+    text_styles: list[TextStyleDef] | Unset = UNSET
+    unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["objects"] = [e0.to_json() for e0 in self.objects]
+        out["uids"] = list(self.uids)
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        out["base"] = _vec2_out(self.base)
+        if self.blocks is not UNSET:
+            out["blocks"] = [e0.to_json() for e0 in self.blocks]
+        if self.dimension_styles is not UNSET:
+            out["dimensionStyles"] = [e0.to_json() for e0 in self.dimension_styles]
+        if self.library is not UNSET:
+            out["library"] = None if self.library is None else self.library.to_json()
+        if self.text_styles is not UNSET:
+            out["textStyles"] = [e0.to_json() for e0 in self.text_styles]
+        if self.unit is not UNSET:
+            out["unit"] = None if self.unit is None else _enum_out(self.unit)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> Clip:
+        return cls(
+            objects=[Entity.from_json(e0) for e0 in data["objects"]],
+            uids=list(data["uids"]),
+            layers=[LayerNode.from_json(e0) for e0 in data["layers"]],
+            base=Vec2.from_json(data["base"]),
+            blocks=[BlockDefinition.from_json(e0) for e0 in data["blocks"]] if "blocks" in data else UNSET,
+            dimension_styles=[DimensionStyleDef.from_json(e0) for e0 in data["dimensionStyles"]] if "dimensionStyles" in data else UNSET,
+            library=UNSET if "library" not in data else None if data["library"] is None else ProjectStyles.from_json(data["library"]),
+            text_styles=[TextStyleDef.from_json(e0) for e0 in data["textStyles"]] if "textStyles" in data else UNSET,
+            unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(DrawingUnit, data["unit"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CloudSource(_Model):
     """One file of a cloud.
     Attributes:
@@ -6550,6 +6610,36 @@ class EntitiesCleanupPlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class EntitiesCopy(_Model):
+    """Input of `cad.entities.copy` v1 (Panoya kopyala, Taban noktasıyla kopyala): the objects `uids` copied with all
+    they use; the drawing does not change. The base point is `base`, or the lower left corner of the objects' box.
+    Links between the copied objects stay in the copy; links to others drop.
+
+    Refusals (`CommandError.code`), checked in this order: `no_entities`, `invalid_uid`, `not_finite` (the base),
+    `entity_not_found`.
+    Attributes:
+        uids: The objects' persistent ids (lowercase UUID text with hyphens), at least one.
+        base: The base point; absent: the lower left corner of the objects' box. Unit: length.
+    """
+    uids: list[str]
+    base: Vec2 | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        if self.base is not UNSET:
+            out["base"] = None if self.base is None else _vec2_out(self.base)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesCopy:
+        return cls(
+            uids=list(data["uids"]),
+            base=UNSET if "base" not in data else None if data["base"] is None else Vec2.from_json(data["base"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class EntitiesCornerPlan(_Model):
     """What `cad.entities.fillet` or `.chamfer` would write (plan mode); nothing
     is written. Execute against the plan's revision writes exactly this.
@@ -7672,6 +7762,112 @@ class EntitiesOrdered(_Model):
         return cls(
             changed=list(data["changed"]),
             ids=list(data["ids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesPaste(_Model):
+    """Input of `cad.entities.paste` v1 (Yapıştır, Özgün koordinatlara yapıştır, Blok olarak yapıştır): the copy
+    `clip` pasted as one undo step “Yapıştır”, its base point at `at` (absent: where it was copied).
+
+    - The layers: each object goes to the layer of this drawing at its layer's path (names compared case and
+      Turkish letters aside); a path this drawing lacks is made, with the source's look and its groups.
+    - The blocks: a definition of a name this drawing has is this drawing's (its own definition is used); the others
+      are added.
+    - The styles: a style of a name this drawing has is this drawing's; the others are added (a project setting).
+    - The objects take new persistent ids. Their links drop, as when a layer is taken from another drawing: a linked
+      label is pasted as a plain text, an associative hatch as a plain hatch, a schedule without its source.
+    - With `asBlock` the objects become one new block named after it (a free name: “Ad (2)” …), its base the
+      copy's base point, placed at `at` on the active layer.
+
+    Refusals (`CommandError.code`), checked in this order: `no_entities` (an empty copy), `invalid_clip` (its ids and
+    objects do not match, a layer or a block it names is not in it), `not_finite`, `empty_name` (`asBlock`
+    blank), `invalid_revision`, `revision_conflict` (status `conflict`), `layer_locked` (a layer an object would go
+    to). Warnings: `units_differ` (the source's unit is not this drawing's: sizes kept), `layer_hidden`.
+    Attributes:
+        clip: The copy, as `cad.entities.copy` gave it.
+        as_block: Paste as one block of this name (Blok olarak yapıştır).
+        at: Where the copy's base point goes; absent: where it was copied (Özgün koordinatlara yapıştır). Unit: length.
+        expected_revision: The document revision the input was prepared against, as decimal text. When given and the document is no
+            longer at it, nothing is written and the answer is `conflict`.
+    """
+    clip: Clip
+    as_block: str | None | Unset = UNSET
+    at: Vec2 | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["clip"] = self.clip.to_json()
+        if self.as_block is not UNSET:
+            out["asBlock"] = self.as_block
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else _vec2_out(self.at)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesPaste:
+        return cls(
+            clip=Clip.from_json(data["clip"]),
+            as_block=data.get("asBlock", UNSET),
+            at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesPastePlan(_Model):
+    """Plan of `cad.entities.paste` v1: what it would write.
+    Attributes:
+        created: The new objects as they would be written (their `id` 0).
+        revision: The document's revision the plan was made at.
+    """
+    created: list[Entity]
+    report: PasteReport
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["created"] = [e0.to_json() for e0 in self.created]
+        out["report"] = self.report.to_json()
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesPastePlan:
+        return cls(
+            created=[Entity.from_json(e0) for e0 in data["created"]],
+            report=PasteReport.from_json(data["report"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesPasted(_Model):
+    """Output of `cad.entities.paste` v1.
+    Attributes:
+        created: The new objects' persistent ids, in the copy's order (one insert with `asBlock`).
+        revision: The document's revision after the write.
+    """
+    created: list[str]
+    report: PasteReport
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["created"] = list(self.created)
+        out["report"] = self.report.to_json()
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesPasted:
+        return cls(
+            created=list(data["created"]),
+            report=PasteReport.from_json(data["report"]),
             revision=data["revision"],
         )
 
@@ -13037,6 +13233,43 @@ class ObjectEnd(_Model):
             uid=data["uid"],
             place=SubPlace.from_json(data["place"]),
             path=list(data["path"]) if "path" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PasteReport(_Model):
+    """What a paste brought in besides its objects (docs/adr/0309 §3).
+    Attributes:
+        layers: The layers and groups made, by their paths (“Kadastro / Bina”).
+        blocks: The block definitions added, by name.
+        kept: The copy's block names this drawing has: its own definitions are used.
+        styles: The text and dimension styles added, by name.
+        block: The block the copy became (Blok olarak yapıştır): its name.
+    """
+    layers: list[str]
+    blocks: list[str]
+    kept: list[str]
+    styles: list[str]
+    block: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layers"] = list(self.layers)
+        out["blocks"] = list(self.blocks)
+        out["kept"] = list(self.kept)
+        out["styles"] = list(self.styles)
+        if self.block is not UNSET:
+            out["block"] = self.block
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PasteReport:
+        return cls(
+            layers=list(data["layers"]),
+            blocks=list(data["blocks"]),
+            kept=list(data["kept"]),
+            styles=list(data["styles"]),
+            block=data.get("block", UNSET),
         )
 
 
@@ -23289,6 +23522,7 @@ __all__ = [
     "CleanupIgnore",
     "CleanupIgnoreName",
     "CleanupReport",
+    "Clip",
     "CloseCurveEdit",
     "ClosedPolylines",
     "ClosedPolylinesName",
@@ -23388,6 +23622,7 @@ __all__ = [
     "EntitiesCleaned",
     "EntitiesCleanup",
     "EntitiesCleanupPlan",
+    "EntitiesCopy",
     "EntitiesCornerPlan",
     "EntitiesCornered",
     "EntitiesCreate",
@@ -23412,6 +23647,9 @@ __all__ = [
     "EntitiesOrder",
     "EntitiesOrderPlan",
     "EntitiesOrdered",
+    "EntitiesPaste",
+    "EntitiesPastePlan",
+    "EntitiesPasted",
     "EntitiesPick",
     "EntitiesPicked",
     "EntitiesPropertiesSet",
@@ -23652,6 +23890,7 @@ __all__ = [
     "OriginUcsTo",
     "ParallelPointConstruction",
     "PartsDivision",
+    "PasteReport",
     "PathArrayLayout",
     "PathEntity",
     "PatternLine",

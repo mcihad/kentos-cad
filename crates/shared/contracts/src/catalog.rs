@@ -1600,6 +1600,74 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Panoya kopyala and Taban noktasıyla kopyala (docs/adr/0309), held together by
+        // fixtures/commands/v1/cad.entities.copy.json.
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_COPY.into(),
+            version: crate::CAD_ENTITIES_COPY_VERSION,
+            title: "Panoya kopyala".into(),
+            summary: "Kalıcı kimlikleriyle verilen nesnelerin kopyasını kullandıklarıyla birlikte verir (AutoCAD'in COPYCLIP'i ve COPYBASE'i); çizim değişmez. \
+                      Kopya (Clip) nesneleri çizimdeki sıralarıyla, kaynaktaki kimliklerini, bulundukları katmanları gruplarıyla ve görünüşleriyle, yerleştirdikleri blokları (iç içe olanlar da), adını andıkları yazı ve ölçü stillerini, çizdikleri kitaplık öğelerini, kaynağın birimini ve taban noktasını taşır. \
+                      Taban noktası base'dir; verilmezse nesnelerin kutusunun sol alt köşesi. cad.entities.paste kopyayı aynı ya da başka bir çizime yapıştırır."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesCopy>(),
+            output: schema::<crate::Clip>(),
+            plan: Some(schema::<crate::Clip>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "İki nesneyi bir köşe noktasından kopyala".into(),
+                input: json!({ "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002"], "base": { "x": 100.0, "y": 200.0 } }),
+                output: None,
+            }],
+        },
+        // Yapıştır, Özgün koordinatlara yapıştır and Blok olarak yapıştır (docs/adr/0309), held together by
+        // fixtures/commands/v1/cad.entities.paste.json.
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_PASTE.into(),
+            version: crate::CAD_ENTITIES_PASTE_VERSION,
+            title: "Yapıştır".into(),
+            summary: "cad.entities.copy'nin verdiği kopyayı bu çizime yapıştırır (AutoCAD'in PASTECLIP, PASTEORIG ve PASTEBLOCK'u); tek geri alma adımı “Yapıştır”. \
+                      Kopyanın taban noktası at'a gelir; at verilmezse nesneler kopyalandıkları yerde kalır. \
+                      Her nesne bu çizimde kendi katmanının yolundaki katmana gider (adlar büyük küçük harf ve Türkçe harf farkı gözetmeden); olmayan yol kaynağın görünüşüyle ve gruplarıyla açılır. \
+                      Bu çizimde aynı adlı blok varsa bu çizimin tanımı kullanılır (report.kept), yoksa eklenir (report.blocks); stiller de adıyla, olmayanlar eklenir (proje ayarı). Nesneler yeni kimlik alır; kopyanın dışına bağlar düşer. \
+                      asBlock ile nesneler o adla (boş bir ad: “Ad (2)” …) tek blok olur, tabanı kopyanın taban noktası, etkin katmanda at'a yerleştirilir. \
+                      Uzunluklar her çizimde metre olduğundan başka birimli çizimden gelen nesneler boylarını korur (units_differ uyarısı). Retler: no_entities, invalid_clip, not_finite, empty_name, invalid_revision, revision_conflict, not_a_layer, layer_locked."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesPaste>(),
+            output: schema::<crate::EntitiesPasted>(),
+            plan: Some(schema::<crate::EntitiesPastePlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir çizgiyi başka bir noktaya yapıştır".into(),
+                input: json!({
+                    "clip": {
+                        "objects": [{ "kind": "line", "id": 1, "layerId": "cizim", "attrs": {}, "a": { "x": 0.0, "y": 0.0 }, "b": { "x": 10.0, "y": 0.0 } }],
+                        "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"],
+                        "layers": [{ "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true,
+                                     "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] }],
+                        "base": { "x": 0.0, "y": 0.0 }
+                    },
+                    "at": { "x": 50.0, "y": 20.0 }
+                }),
+                output: None,
+            }],
+        },
         // Denetle (docs/adr/0306), held together by fixtures/commands/v1/cad.drawing.audit.json.
         CommandDescriptor {
             id: crate::CAD_DRAWING_AUDIT.into(),
@@ -4307,6 +4375,12 @@ mod tests {
                     crate::CAD_DRAWING_AUDIT => {
                         serde_json::from_value::<crate::DrawingAudit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ENTITIES_COPY => {
+                        serde_json::from_value::<crate::EntitiesCopy>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ENTITIES_PASTE => {
+                        serde_json::from_value::<crate::EntitiesPaste>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_NURBS_CREATE => {
                         serde_json::from_value::<crate::NurbsCreate>(e.input.clone()).map(|_| ())
                     }
@@ -4564,6 +4638,13 @@ mod tests {
                         }
                         crate::CAD_DRAWING_AUDIT => {
                             serde_json::from_value::<crate::DrawingAudited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ENTITIES_COPY => {
+                            serde_json::from_value::<crate::Clip>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_ENTITIES_PASTE => {
+                            serde_json::from_value::<crate::EntitiesPasted>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ENTITIES_DIVIDE

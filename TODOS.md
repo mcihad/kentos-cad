@@ -170,6 +170,10 @@ Liste:
   uyarıları komutun sözleri; paralel iki doğruya TTY, saat yönünde verilen yaydan Devam; araç durumları
   `fixtures/curve-methods/v1/tools.json`. Web'in donmuş çağrı kayıtları eski `arcStartCenterEnd` ve `arcStartCenterAngle`'ı (tam tur)
   tutar; geri dönüşte komutun kuralına getirilir.
+- [ ] `CAD-EDIT-22` pano komutları (ADR 0309, 15 Ekim): web'de gerekenler: `cad.entities.copy` ve `.paste`'in TS işleyicileri
+  (sözleşme türleri `Clip`, `EntitiesCopy`, `EntitiesPaste` … üretildi; ortak durumlar `cad.entities.{copy,paste}.json`), web'in
+  panosunun kopyayı tutması (katman yolları, bloklar, stiller, birim), Yapıştır'ın komutla yazması (kilitli katmanın reddi), Taban
+  noktasıyla kopyala ve Blok olarak yapıştır araçları.
 - [ ] Patlat'ta eğriler (ADR 0308, 15 Ekim): web'de gerekenler: `cad.entities.explode`'un `density`'si TS işleyicisinde (sözleşme türü
   `ExplodeDensity` üretildi; ortak durumlar `cad.entities.explode.curves.json`), web'in Patlat aracında sıklık aşaması (Sayı, Aralık,
   Sapma; önizlemede köşeler).

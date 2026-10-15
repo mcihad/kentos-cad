@@ -1,50 +1,38 @@
-//! The clipboard (docs/adr/0056): what Kes and Panoya kopyala put aside for
-//! Yapıştır, as the web's `Clipboard` (`apps/web/src/app/clipboard.ts`) and
-//! its commands (`app/commands.ts`: `edit.cut`, `edit.copy`,
-//! `edit.pasteOriginal`; `tools/editTools.ts`: `pasteEntities`) do it.
+//! The clipboard (docs/adr/0056, 0309): what Kes, Panoya kopyala and Taban noktasıyla kopyala put aside for
+//! Yapıştır, Özgün koordinatlara yapıştır and Blok olarak yapıştır.
 //!
-//! - It is the session's (CLAUDE.md §4.4), not the drawing's: it outlives
-//!   the drawing on screen, so objects go from one drawing to another, and it
-//!   stays in the app. The system clipboard is not used, as on the web.
-//! - It holds copies of the objects without their ids, in the order they
-//!   were selected, and a base point: the lower left corner of their box.
-//! - Kes deletes through the product command `cad.entities.delete`
-//!   (docs/adr/0029) inside one undo step “Kes”, as the web's command does
-//!   since f860b5f. Yapıştır writes through `cad.entities.create` and
-//!   `cad.entities.set` (for the symbols) in one undo step “Yapıştır”, as
-//!   the web's since 7a5ca22; what either refuses takes all of it back and
-//!   is said. Objects on locked layers are not cut. Pasted objects are new
-//!   ones with new persistent ids (docs/adr/0014), however often they are
-//!   pasted; each keeps its layer when the drawing has it (a layer, not a
-//!   group) unlocked, else goes to the active layer; a hidden layer that
-//!   takes some is said once.
+//! - It is the session's (CLAUDE.md §4.4), not the drawing's: it outlives the drawing on screen, so objects go from
+//!   one drawing to another, and it stays in the app. The system clipboard is not used, as on the web.
+//! - It holds a copy (`cad.entities.copy`'s [`Clip`]): the objects with the layers, blocks, styles and library items
+//!   they use, the source's unit and a base point (the lower left corner of their box, or the one given).
+//! - Kes deletes through `cad.entities.delete` (docs/adr/0029) inside one undo step “Kes”; objects on locked layers
+//!   are not cut. The pastes write through `cad.entities.paste` (docs/adr/0309) in one undo step “Yapıştır”: each
+//!   object to the layer at its layer's path (the missing made), the blocks and styles by name; a locked layer
+//!   refuses all of it, a hidden one and another unit are said.
 
+use std::collections::HashSet;
 use std::convert::Infallible;
 
 use kentos_contracts::{
-    CommandResult, EntitiesCreate, EntitiesDelete, EntitiesSetProperties, Entity, EntityGeometry,
-    LayerNodeType, NewObject, PropertiesOperation,
+    Clip, CommandResult, EntitiesCopy, EntitiesDelete, EntitiesPaste, Entity, LayerNode,
+    LayerNodeType, PasteReport,
 };
 use kentos_domain::Slot;
-use kentos_geometry_core::geom::affine::translation;
-use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::ops::transform::transform_shape;
-use kentos_native_application::geometry::{edit_geometry, shape, with_shape};
-use kentos_native_application::{ExecutionContext, codes, create, delete, set};
+use kentos_native_application::{ExecutionContext, delete, entities_copy, entities_paste};
 
 use crate::Vec2;
 use crate::log::Level;
+use crate::points::wire;
 use crate::tool::Context;
 
 /// The undo steps' names (the web's).
 pub const CUT_LABEL: &str = "Kes";
 pub const PASTE_LABEL: &str = "Yapıştır";
 
-/// Copies of objects and their base point.
+/// The copy put aside.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Clipboard {
-    items: Vec<Entity>,
-    base: Vec2,
+    clip: Option<Clip>,
 }
 
 impl Clipboard {
@@ -52,40 +40,49 @@ impl Clipboard {
         Self::default()
     }
 
-    /// Puts copies of `entities` aside (what was there goes), with the lower
-    /// left corner of their box `extent` as the base point; the origin when
-    /// there is no box.
-    pub fn set(&mut self, entities: Vec<Entity>, extent: Option<Bounds>) {
-        self.base = match extent {
-            Some(b) if !entities.is_empty() => Vec2::new(b.min_x, b.min_y),
-            _ => Vec2::new(0.0, 0.0),
-        };
-        self.items = entities
-            .into_iter()
-            .map(|mut e| {
-                // A copy is nobody's: the document gives it a slot when it is pasted.
-                e.base_mut().id = 0;
-                e
-            })
-            .collect();
+    /// Puts `clip` aside; what was there goes.
+    pub fn set(&mut self, clip: Clip) {
+        self.clip = Some(clip);
+    }
+
+    pub fn clip(&self) -> Option<&Clip> {
+        self.clip.as_ref()
     }
 
     pub fn len(&self) -> usize {
-        self.items.len()
+        self.items().len()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.items.is_empty()
+        self.items().is_empty()
     }
 
-    /// The objects, in the order they were selected.
+    /// The objects, in the drawing's order.
     pub fn items(&self) -> &[Entity] {
-        &self.items
+        self.clip.as_ref().map_or(&[], |c| c.objects.as_slice())
     }
 
-    /// Where the objects are placed from: the lower left corner of their box.
+    /// Where the objects are placed from.
     pub fn base(&self) -> Vec2 {
-        self.base
+        self.clip
+            .as_ref()
+            .map_or(Vec2::new(0.0, 0.0), |c| Vec2::new(c.base.x, c.base.y))
+    }
+}
+
+/// The copy of `slots` from `cx`'s drawing, its base point `base` or their box's lower left corner.
+pub fn copy_of(slots: &[Slot], base: Option<Vec2>, cx: &Context<'_>) -> Option<Clip> {
+    let input = EntitiesCopy {
+        uids: slots
+            .iter()
+            .filter_map(|s| cx.doc.uid(*s))
+            .map(|u| u.to_string())
+            .collect(),
+        base: base.map(wire),
+    };
+    match entities_copy::answer(cx.doc, &input) {
+        CommandResult::Completed { output, .. } => Some(output),
+        _ => None,
     }
 }
 
@@ -98,41 +95,33 @@ fn selected(cx: &Context<'_>) -> Vec<(Slot, Entity)> {
         .collect()
 }
 
-/// The box around these objects, as the geometry store gives it (the web's `view.extent`).
-fn extent(cx: &Context<'_>, slots: &[Slot]) -> Option<Bounds> {
-    let ids: Vec<f64> = slots.iter().map(|s| f64::from(s.0)).collect();
-    cx.spatial.store().extent(Some(&ids))
-}
-
-/// Panoya kopyala (`edit.copy`): the selected objects go to the clipboard;
-/// the drawing does not change. How many; none, and nothing said, with no
-/// selection (the web's command is off then).
+/// Panoya kopyala (`edit.copy`): the selected objects go to the clipboard; the drawing does not change. How many;
+/// none, and nothing said, with no selection.
 pub fn copy(clipboard: &mut Clipboard, cx: &mut Context<'_>) -> usize {
-    let chosen = selected(cx);
-    if chosen.is_empty() {
+    let slots: Vec<Slot> = selected(cx).into_iter().map(|(s, _)| s).collect();
+    if slots.is_empty() {
         return 0;
     }
-    let slots: Vec<Slot> = chosen.iter().map(|(s, _)| *s).collect();
-    let n = chosen.len();
-    clipboard.set(
-        chosen.into_iter().map(|(_, e)| e).collect(),
-        extent(cx, &slots),
-    );
+    let Some(clip) = copy_of(&slots, None, cx) else {
+        return 0;
+    };
+    let n = clip.objects.len();
+    clipboard.set(clip);
     cx.say(Level::Success, format!("{n} nesne panoya kopyalandı."));
     n
 }
 
-/// Kes (`edit.cut`): the selected objects on unlocked layers go to the
-/// clipboard and leave the drawing in one undo step “Kes”. Those on locked
-/// layers stay, selected, and a warning counts them; when all are locked the
-/// clipboard keeps what it had. How many were cut.
+/// Kes (`edit.cut`): the selected objects on unlocked layers go to the clipboard and leave the drawing in one undo
+/// step “Kes”. Those on locked layers stay, selected, and a warning counts them; when all are locked the clipboard
+/// keeps what it had. How many were cut.
 pub fn cut(clipboard: &mut Clipboard, cx: &mut Context<'_>) -> usize {
     let chosen = selected(cx);
     let all = chosen.len();
     let layers = cx.doc.layers();
-    let editable: Vec<(Slot, Entity)> = chosen
+    let editable: Vec<Slot> = chosen
         .into_iter()
         .filter(|(_, e)| !layers.is_locked(&e.base().layer_id))
+        .map(|(s, _)| s)
         .collect();
     if editable.len() < all {
         cx.say(
@@ -146,12 +135,13 @@ pub fn cut(clipboard: &mut Clipboard, cx: &mut Context<'_>) -> usize {
     if editable.is_empty() {
         return 0;
     }
-    let slots: Vec<Slot> = editable.iter().map(|(s, _)| *s).collect();
+    let Some(clip) = copy_of(&editable, None, cx) else {
+        return 0;
+    };
     let n = editable.len();
-    let base = extent(cx, &slots);
     // Deleted through cad.entities.delete (docs/adr/0029), as Sil deletes; the step keeps the name “Kes”.
     let input = EntitiesDelete {
-        uids: slots
+        uids: editable
             .iter()
             .filter_map(|slot| cx.doc.uid(*slot))
             .map(|uid| uid.to_string())
@@ -164,166 +154,123 @@ pub fn cut(clipboard: &mut Clipboard, cx: &mut Context<'_>) -> usize {
     if crate::points::written(result, cx).is_none() {
         return 0;
     }
-    clipboard.set(editable.into_iter().map(|(_, e)| e).collect(), base);
+    clipboard.set(clip);
     let doc = &*cx.doc;
     cx.selection.retain(|slot| doc.get(slot).is_some());
     cx.say(Level::Success, format!("{n} nesne panoya kesildi."));
     n
 }
 
-/// Özgün koordinatlara yapıştır (`edit.pasteOriginal`): the clipboard's
-/// objects where they were copied, selected. The new slots.
+/// Özgün koordinatlara yapıştır (`edit.pasteOriginal`): the clipboard's objects where they were copied, selected.
+/// The new slots.
 pub fn paste_in_place(clipboard: &Clipboard, cx: &mut Context<'_>) -> Vec<Slot> {
-    let slots = paste(clipboard.items(), 0.0, 0.0, cx);
+    let Some(clip) = clipboard.clip() else {
+        return Vec::new();
+    };
+    let slots = paste(clip, None, None, cx);
     if !slots.is_empty() {
         cx.selection.set(slots.iter().copied());
     }
     slots
 }
 
-/// Adds copies of `items` moved by (`dx`, `dy`) in one undo step
-/// “Yapıştır” (the web's `pasteEntities`); returns their slots. Each keeps
-/// its layer when the drawing has it unlocked, else goes to the active
-/// layer; when that is locked and some object would go there, nothing is
-/// pasted and a warning says why. The geometry is the shared core's
-/// translation of each object (`transform_shape`), as the web's store moves
-/// its copies.
-pub fn paste(items: &[Entity], dx: f64, dy: f64, cx: &mut Context<'_>) -> Vec<Slot> {
-    let layers = cx.doc.layers();
-    let active = layers.active().to_owned();
-    // A layer (not a group) that is not locked (the web's since 7a5ca22).
-    let usable = |id: &str| {
-        layers
-            .get(id)
-            .is_some_and(|node| node.kind == LayerNodeType::Layer)
-            && !layers.is_locked(id)
-    };
-    if layers.is_locked(&active) && items.iter().any(|e| !usable(&e.base().layer_id)) {
-        let name = layers.get(&active).map_or("", |node| node.name.as_str());
-        let line = format!("“{name}” katmanı kilitli; yapıştırılamadı.");
-        cx.say(Level::Warn, line);
-        return Vec::new();
-    }
-    let m = translation(dx, dy);
-    // Each copy with its geometry as the commands take it.
-    let moved: Vec<(Entity, EntityGeometry)> = items
-        .iter()
-        .filter_map(|e| {
-            let mut copy = with_shape(e, transform_shape(&shape(e), &m))?;
-            if !usable(&e.base().layer_id) {
-                copy.base_mut().layer_id = active.clone();
-            }
-            let geometry = edit_geometry(shape(&copy))?;
-            Some((copy, geometry))
-        })
-        .collect();
-    let mut hidden: Vec<String> = Vec::new();
-    let written = cx.doc.transact(PASTE_LABEL, |doc| {
-        let mut out: Vec<Slot> = Vec::with_capacity(moved.len());
-        // One create for each run of objects going to the same layer, in
-        // their order, so their slots are in it too.
-        for run in moved.chunk_by(|(a, _), (b, _)| a.base().layer_id == b.base().layer_id) {
-            let layer = run[0].0.base().layer_id.clone();
-            let objects = run
-                .iter()
-                .map(|(e, geometry)| NewObject {
-                    line_type: None,
-                    geometry: geometry.clone(),
-                    color: e.base().color.clone(),
-                    line_weight: e.base().line_weight,
-                    attrs: Some(e.base().attrs.clone()),
-                    label: e.base().label.clone(),
-                    label_of: None,
-                    label_scale: None,
-                    symbol: None,
-                })
-                .collect();
-            let input = EntitiesCreate {
-                layer_id: layer.clone(),
-                objects,
-                operation: None,
-                expected_revision: None,
-            };
-            match create::execute(&mut ExecutionContext::new(doc), input) {
-                CommandResult::Completed { output, warnings } => {
-                    if warnings.iter().any(|w| w.code == codes::LAYER_HIDDEN)
-                        && !hidden.contains(&layer)
-                    {
-                        hidden.push(layer);
-                    }
-                    out.extend(output.ids.into_iter().map(Slot));
-                }
-                other => return Err(refusal(other)),
-            }
-        }
-        // A new object carries no symbol: one set for each symbol, in the order they come.
-        let mut symbols: Vec<(String, Vec<String>)> = Vec::new();
-        for ((e, _), &slot) in moved.iter().zip(&out) {
-            let (Some(symbol), Some(uid)) = (e.base().symbol.as_ref(), doc.uid(slot)) else {
-                continue;
-            };
-            match symbols.iter_mut().find(|(s, _)| s == symbol) {
-                Some((_, uids)) => uids.push(uid.to_string()),
-                None => symbols.push((symbol.clone(), vec![uid.to_string()])),
-            }
-        }
-        for (symbol, uids) in symbols {
-            let input = EntitiesSetProperties {
-                line_type: None,
-                line_type_scale: None,
-                transparency: None,
-                uids,
-                layer_id: None,
-                color: None,
-                line_weight: None,
-                symbol: Some(Some(symbol)),
-                attrs: None,
-                label: None,
-                operation: PropertiesOperation::Symbol,
-                expected_revision: None,
-                unlink: false,
-                attachments: None,
-            };
-            if let refused @ (CommandResult::Failed { .. }
-            | CommandResult::Conflict { .. }
-            | CommandResult::NeedsInput { .. }) =
-                set::execute(&mut ExecutionContext::new(doc), input)
-            {
-                return Err(refusal(refused));
-            }
-        }
-        Ok(out)
-    });
-    match written {
-        Ok(slots) => {
-            for id in &hidden {
-                let name = cx
-                    .doc
-                    .layers()
-                    .get(id)
-                    .map_or(id.as_str(), |n| n.name.as_str());
-                let line = format!("“{name}” katmanı gizli; yapıştırılan nesneler görünmeyecek.");
-                cx.say(Level::Warn, line);
-            }
-            cx.say(
-                Level::Success,
-                format!("{} nesne yapıştırıldı.", slots.len()),
-            );
-            slots
-        }
-        Err(message) => {
-            cx.say(Level::Warn, message);
-            Vec::new()
+/// The paths of `nodes`' groups (“Kadastro”, “Kadastro / Yapı”).
+fn group_paths(nodes: &[LayerNode], above: &str, out: &mut HashSet<String>) {
+    for n in nodes {
+        let here = if above.is_empty() {
+            n.name.clone()
+        } else {
+            format!("{above} / {}", n.name)
+        };
+        if n.kind == LayerNodeType::Group {
+            group_paths(&n.children, &here, out);
+            out.insert(here);
         }
     }
 }
 
-/// A command's refusal as the paste says it.
-fn refusal<T>(result: CommandResult<T>) -> String {
-    match result {
-        CommandResult::Failed { error }
-        | CommandResult::Conflict { error }
-        | CommandResult::NeedsInput { error } => error.message,
-        _ => "Yapıştırılamadı.".to_owned(),
+/// What a paste brought besides its objects, said after them: “Kadastro grubu ve 2 katman açıldı (…)” …; `groups`
+/// the drawing's group paths.
+fn brought(r: &PasteReport, groups: &HashSet<String>) -> Vec<String> {
+    let list = |v: &[String]| v.join(", ");
+    let mut out = Vec::new();
+    if let Some(b) = &r.block {
+        out.push(format!("“{b}” bloğu olarak"));
     }
+    let (made_groups, layers): (Vec<String>, Vec<String>) =
+        r.layers.iter().cloned().partition(|p| groups.contains(p));
+    let made = match (made_groups.len(), layers.len()) {
+        (0, 0) => None,
+        (0, n) => Some(format!("{n} katman")),
+        (1, 0) => Some(format!("“{}” grubu", made_groups[0])),
+        (g, 0) => Some(format!("{g} grup")),
+        (1, n) => Some(format!("“{}” grubu ve {n} katman", made_groups[0])),
+        (g, n) => Some(format!("{g} grup ve {n} katman")),
+    };
+    if let Some(made) = made {
+        if layers.is_empty() {
+            out.push(format!("{made} açıldı"));
+        } else {
+            out.push(format!("{made} açıldı ({})", list(&layers)));
+        }
+    }
+    if !r.blocks.is_empty() {
+        out.push(format!(
+            "{} blok eklendi ({})",
+            r.blocks.len(),
+            list(&r.blocks)
+        ));
+    }
+    if !r.kept.is_empty() {
+        out.push(format!(
+            "{} blok bu çizimin tanımıyla ({})",
+            r.kept.len(),
+            list(&r.kept)
+        ));
+    }
+    if !r.styles.is_empty() {
+        out.push(format!(
+            "{} stil eklendi ({})",
+            r.styles.len(),
+            list(&r.styles)
+        ));
+    }
+    out
+}
+
+/// Pastes `clip` through `cad.entities.paste` (docs/adr/0309): its base point at `at` (none: where it was copied),
+/// as one block named `as_block` when given. The new slots; a refusal is said and nothing is written.
+pub fn paste(
+    clip: &Clip,
+    at: Option<Vec2>,
+    as_block: Option<String>,
+    cx: &mut Context<'_>,
+) -> Vec<Slot> {
+    let input = EntitiesPaste {
+        clip: clip.clone(),
+        at: at.map(wire),
+        as_block,
+        expected_revision: None,
+    };
+    let result = entities_paste::execute(&mut ExecutionContext::new(cx.doc), input);
+    let Some(out) = crate::points::written(result, cx) else {
+        return Vec::new();
+    };
+    let slots: Vec<Slot> = out
+        .created
+        .iter()
+        .filter_map(|u| kentos_domain::Uuid::parse_str(u).ok())
+        .filter_map(|u| cx.doc.slot_of(u))
+        .collect();
+    let mut text = format!("{} nesne yapıştırıldı", clip.objects.len());
+    let mut groups = HashSet::new();
+    group_paths(cx.doc.layers().nodes(), "", &mut groups);
+    let extra = brought(&out.report, &groups);
+    if !extra.is_empty() {
+        text.push_str(": ");
+        text.push_str(&extra.join("; "));
+    }
+    text.push('.');
+    cx.say(Level::Success, text);
+    slots
 }

@@ -1,13 +1,14 @@
 //! The clipboard and the paste tool through the session, over the native
 //! document: the web's `Clipboard`, its commands and `PasteTool`, one rule
-//! per test (docs/adr/0056). The drawing is the traces' `objects.kcad`:
+//! per test (docs/adr/0056), writing through `cad.entities.copy` and
+//! `cad.entities.paste` (docs/adr/0309). The drawing is the traces' `objects.kcad`:
 //! lines 1–3, the closed area 4, the point 5, a line on a locked layer (6)
 //! and one on a hidden layer (7). Expected values are worked out by hand.
 
 use crate::common;
 
 use common::{Bench, E, N, rel};
-use kentos_contracts::{Entity, EntityBase, TextEntity};
+use kentos_contracts::{Clip, Entity};
 use kentos_domain::Slot;
 use kentos_interaction::clipboard::{self, Clipboard};
 use kentos_interaction::paste::Paste;
@@ -32,7 +33,7 @@ fn copy(b: &mut Bench) -> Clipboard {
 /// `edit.paste`: the paste tool with the clipboard's objects, as the desktop runs it.
 fn paste_tool(b: &mut Bench, board: &Clipboard) {
     b.session
-        .run(Box::new(Paste::new(board.items().to_vec(), board.base())));
+        .run(Box::new(Paste::new(board.clip().expect("a copy").clone())));
     b.run(|s, cx| s.activate(cx));
 }
 
@@ -60,14 +61,16 @@ fn copy_puts_the_selection_aside_in_its_order_with_its_lower_left_corner() {
     let order: Vec<&str> = board.items().iter().map(Entity::kind).collect();
     assert_eq!(
         order,
-        ["polygon", "line"],
-        "in the order they were selected"
+        ["line", "polygon"],
+        "in the drawing's order, whatever the selection's"
     );
     // Line 1 runs from (−24, −12); the area reaches up to 14: the box's lower left is (−24, −12).
     assert_eq!(board.base(), Vec2::new(E - 24.0, N - 12.0));
-    assert!(
-        board.items().iter().all(|e| e.base().id == 0),
-        "copies have no slot"
+    let numbers: Vec<u32> = board.items().iter().map(|e| e.base().id).collect();
+    assert_eq!(
+        numbers,
+        [1, 2],
+        "numbered in the copy, not slots of the drawing"
     );
     assert_eq!(b.last_text(), Some("2 nesne panoya kopyalandı."));
     assert_eq!(b.last_level(), Some(Level::Success));
@@ -205,45 +208,73 @@ fn enter_and_esc_leave_without_pasting() {
     assert_eq!(b.points(), 0);
 }
 
-#[test]
-fn objects_go_to_the_active_layer_when_theirs_is_locked_or_gone() {
-    // Copied from the locked line 6: its layer is locked, so the copy goes to the active one.
-    let mut b = bench(&[6]);
-    let board = copy(&mut b);
-    paste_tool(&mut b, &board);
-    b.click(0.0, 0.0);
-    let active = b.doc.layers().active().to_owned();
-    assert_eq!(
-        b.doc.get(Slot(8)).map(|e| e.base().layer_id.clone()),
-        Some(active.clone())
-    );
-    // A layer the drawing does not have (copied from another drawing): the active one too.
-    let mut other = board.items().to_vec();
-    other[0].base_mut().layer_id = "baska-cizimden".into();
-    let mut moved = Clipboard::new();
-    moved.set(other, None);
-    assert_eq!(moved.base(), Vec2::new(0.0, 0.0), "no box: the origin");
-    let slots = b.run(|_, cx| clipboard::paste(moved.items(), 0.0, 0.0, cx));
-    assert_eq!(slots, [Slot(9)]);
-    assert_eq!(
-        b.doc.get(Slot(9)).map(|e| e.base().layer_id.clone()),
-        Some(active)
-    );
+/// The copy with its first layer renamed, as if it came from another drawing.
+fn from_elsewhere(board: &Clipboard, name: &str) -> Clip {
+    let mut clip = board.clip().expect("a copy").clone();
+    let old = clip.layers[0].id.clone();
+    clip.layers[0].id = "baska-cizimden".into();
+    clip.layers[0].name = name.into();
+    clip.layers[0].locked = false;
+    for e in &mut clip.objects {
+        if e.base().layer_id == old {
+            e.base_mut().layer_id = "baska-cizimden".into();
+        }
+    }
+    clip
 }
 
 #[test]
-fn a_locked_active_layer_refuses_what_would_go_there() {
-    // Line 1 is on Çizim, the active layer; the area 4 on Parsel.
+fn an_object_goes_to_its_layers_path_and_a_missing_one_is_made() {
+    let mut b = bench(&[1]);
+    let board = copy(&mut b);
+    let clip = from_elsewhere(&board, "Yol ekseni");
+    let layers = b.doc.layers().leaves().len();
+    let before = b.log.len();
+    let slots = b.run(|_, cx| clipboard::paste(&clip, None, None, cx));
+    assert_eq!(slots, [Slot(8)]);
+    assert_eq!(
+        b.said(before),
+        [(
+            Level::Success,
+            "1 nesne yapıştırıldı: 1 katman açıldı (Yol ekseni)."
+        )]
+    );
+    assert_eq!(b.doc.layers().leaves().len(), layers + 1);
+    let layer = b
+        .doc
+        .get(Slot(8))
+        .map(|e| e.base().layer_id.clone())
+        .expect("pasted");
+    assert_eq!(b.doc.layers().path(&layer), "Yol ekseni");
+    // The same name again, in other letters: the layer made is the one used.
+    let again = from_elsewhere(&board, "YOL EKSENİ");
+    let slots = b.run(|_, cx| clipboard::paste(&again, None, None, cx));
+    assert_eq!(
+        b.doc.get(slots[0]).map(|e| e.base().layer_id.clone()),
+        Some(layer)
+    );
+    assert_eq!(b.doc.layers().leaves().len(), layers + 1);
+    // One step takes the object and its layer back.
+    assert_eq!(b.doc.undo().as_deref(), Some("Yapıştır"));
+    assert_eq!(b.doc.undo().as_deref(), Some("Yapıştır"));
+    assert_eq!(b.doc.layers().leaves().len(), layers);
+}
+
+#[test]
+fn a_locked_layer_refuses_the_whole_paste() {
+    // Line 1 is on Çizim; the area 4 on Parsel.
     let mut b = bench(&[1, 4]);
     let board = copy(&mut b);
-    assert_eq!(b.doc.layers().active(), "cizim");
     b.doc.toggle_layer_locked("cizim");
     paste_tool(&mut b, &board);
     let before = b.log.len();
     b.click(0.0, 0.0);
     assert_eq!(
         b.said(before),
-        [(Level::Warn, "“Çizim” katmanı kilitli; yapıştırılamadı.")]
+        [(
+            Level::Warn,
+            "“Çizim” katmanı kilitli; yapıştırılamadı. Kilidi Katmanlar panelinden açın."
+        )]
     );
     assert_eq!(b.doc.len(), 7, "nothing pasted, not even the area");
     assert_eq!(
@@ -252,10 +283,17 @@ fn a_locked_active_layer_refuses_what_would_go_there() {
         "the tool leaves all the same"
     );
     assert_eq!(b.selected(), [1, 4], "the selection stays");
-    // Objects whose own layers are open still go, onto them.
+    // A copy of the locked line 6: its layer is locked, so it is refused too.
+    let mut locked = bench(&[6]);
+    let board = copy(&mut locked);
+    let slots = locked.run(|_, cx| clipboard::paste(board.clip().expect("a copy"), None, None, cx));
+    assert!(slots.is_empty());
+    assert_eq!(locked.doc.len(), 7);
+    // Objects whose layers are open go, onto them, moved by the point given.
     b.selection.set([Slot(4)]);
     let board = copy(&mut b);
-    let slots = b.run(|_, cx| clipboard::paste(board.items(), 1.0, 0.0, cx));
+    let to = Vec2::new(board.base().x + 1.0, board.base().y);
+    let slots = b.run(|_, cx| clipboard::paste(board.clip().expect("a copy"), Some(to), None, cx));
     assert_eq!(slots, [Slot(8)]);
     assert_eq!(
         b.doc.get(Slot(8)).map(|e| e.base().layer_id.as_str()),
@@ -270,12 +308,12 @@ fn paste_in_place_puts_copies_where_the_objects_were() {
     let slots = b.run(|_, cx| clipboard::paste_in_place(&board, cx));
     assert_eq!(slots, [Slot(8), Slot(9)]);
     assert_eq!(b.selected(), [8, 9]);
-    // Every field the same but the slot: the point with its attributes, the line.
+    // Every field the same but the slot, in the drawing's order: the line, the point with its attributes.
+    assert_eq!(line(&b, 8), line(&b, 2));
+    assert_ne!(b.doc.uid(Slot(8)), b.doc.uid(Slot(2)));
     let mut point = b.doc.get(Slot(5)).cloned().expect("the point");
-    point.base_mut().id = 8;
-    assert_eq!(b.doc.get(Slot(8)), Some(&point));
-    assert_eq!(line(&b, 9), line(&b, 2));
-    assert_ne!(b.doc.uid(Slot(9)), b.doc.uid(Slot(2)));
+    point.base_mut().id = 9;
+    assert_eq!(b.doc.get(Slot(9)), Some(&point));
     assert_eq!(b.doc.undo().as_deref(), Some("Yapıştır"));
 }
 
@@ -285,10 +323,10 @@ fn a_pasted_object_keeps_its_own_line_weight() {
     let mut b = bench(&[2]);
     let board = copy(&mut b);
     for weight in [Some(0.7), Some(0.0), None] {
-        let mut item = board.items()[0].clone();
-        item.base_mut().line_weight = weight;
+        let mut clip = board.clip().expect("a copy").clone();
+        clip.objects[0].base_mut().line_weight = weight;
         let mut own = Clipboard::new();
-        own.set(vec![item], None);
+        own.set(clip);
         let slots = b.run(|_, cx| clipboard::paste_in_place(&own, cx));
         let pasted = b.doc.get(slots[0]).expect("pasted");
         assert_eq!(pasted.base().line_weight, weight);
@@ -309,13 +347,11 @@ fn the_paste_tool_is_not_repeated() {
     assert_eq!(p.world, Vec2::new(E - 8.0, N - 12.0), "line 1's end");
 }
 
-/// Yapıştır writes through `cad.entities.create` and `cad.entities.set` in
-/// one step “Yapıştır” (the web's 7a5ca22): each object keeps its layer
-/// when that is a layer and unlocked, else goes to the active one (a group's
-/// id too); a hidden layer that takes some is said once; what the commands
-/// refuse (a blank text) takes all of it back and is said.
+/// Yapıştır writes through `cad.entities.paste` in one step “Yapıştır”: a
+/// hidden layer that takes some is said once; a copy that does not hold
+/// together is refused and nothing is written.
 #[test]
-fn a_paste_goes_through_the_commands_in_one_step() {
+fn a_paste_goes_through_the_command_in_one_step() {
     let mut b = bench(&[1, 7]);
     let board = copy(&mut b);
     let count = b.doc.len();
@@ -336,58 +372,81 @@ fn a_paste_goes_through_the_commands_in_one_step() {
     assert_eq!(b.doc.undo().as_deref(), Some("Yapıştır"));
     assert_eq!(b.doc.len(), count);
 
-    // A group's id is no layer: the object goes to the active one.
-    let group = b
-        .doc
-        .add_layer(kentos_domain::NewLayer::group("Grup"), None, false)
-        .expect("a new group");
-    let mut item = board.items()[0].clone();
-    item.base_mut().layer_id = group;
-    let mut grouped = Clipboard::new();
-    grouped.set(vec![item], None);
-    let slots = b.run(|_, cx| clipboard::paste_in_place(&grouped, cx));
-    let pasted = b.doc.get(slots[0]).expect("pasted");
-    assert_eq!(pasted.base().layer_id, "cizim");
-
-    // A blank text: the create command refuses and nothing is written.
-    let text = Entity::Text(TextEntity {
-        base: EntityBase {
-            look: Default::default(),
-            id: 0,
-            layer_id: "cizim".to_owned(),
-            color: None,
-            attrs: Default::default(),
-            label: None,
-            symbol: None,
-            line_weight: None,
-            label_pins: Vec::new(),
-            attachments: Vec::new(),
-        },
-        p: kentos_contracts::Vec2 { x: E, y: N },
-        text: "   ".to_owned(),
-        height: 2.0,
-        rotation: 0.0,
-        align: None,
-        width_factor: None,
-        mask: false,
-        label_of: None,
-        label_scale: None,
-        paragraph: Default::default(),
-        face: Default::default(),
-        path: None,
-    });
-    let mut blank = Clipboard::new();
-    blank.set(vec![board.items()[0].clone(), text], None);
-    let count = b.doc.len();
+    // An object on a layer the copy does not hold: refused, nothing written.
+    let mut broken = board.clip().expect("a copy").clone();
+    broken.objects[0].base_mut().layer_id = "yok".into();
+    let mut held = Clipboard::new();
+    held.set(broken);
     let revision = b.doc.revision();
-    let slots = b.run(|_, cx| clipboard::paste_in_place(&blank, cx));
+    let slots = b.run(|_, cx| clipboard::paste_in_place(&held, cx));
     assert!(slots.is_empty());
     assert_eq!((b.doc.len(), b.doc.revision()), (count, revision));
     assert_eq!(b.last_level(), Some(Level::Warn));
+}
+
+#[test]
+fn a_paste_as_a_block_makes_one_block_and_places_it() {
+    let mut b = bench(&[1, 2]);
+    let board = copy(&mut b);
+    b.session.run(Box::new(Paste::as_block(
+        board.clip().expect("a copy").clone(),
+    )));
+    b.run(|s, cx| s.activate(cx));
     assert_eq!(
-        b.last_text(),
-        Some(
-            "Yazının metni boş olamaz; yalnız boşluktan oluşan metin de boştur. Yazıya bir metin verin."
-        )
+        b.session.prompt().text(),
+        "Blok olarak yapıştır: yerleştirme noktasını belirtin ya da koordinat yazın"
     );
+    let before = b.log.len();
+    b.click(-4.0, -18.0);
+    assert_eq!(
+        b.said(before),
+        [(Level::Success, "2 nesne yapıştırıldı: “Pano” bloğu olarak.")]
+    );
+    assert_eq!(ids(&b), [1, 2, 3, 4, 5, 6, 7, 8]);
+    let Some(Entity::Insert(insert)) = b.doc.get(Slot(8)) else {
+        panic!("one insert");
+    };
+    assert_eq!(at(Vec2::new(insert.p.x, insert.p.y)), [-4.0, -18.0]);
+    assert_eq!(b.doc.blocks().len(), 1);
+    assert_eq!(b.doc.blocks()[0].name, "Pano");
+    // A second time the name is taken.
+    b.session.run(Box::new(Paste::as_block(
+        board.clip().expect("a copy").clone(),
+    )));
+    b.run(|s, cx| s.activate(cx));
+    b.click(4.0, -18.0);
+    let names: Vec<&str> = b.doc.blocks().iter().map(|d| d.name.as_str()).collect();
+    assert_eq!(names, ["Pano", "Pano (2)"]);
+    assert_eq!(b.doc.undo().as_deref(), Some("Yapıştır"));
+    assert_eq!(b.doc.blocks().len(), 1, "the block goes with its insert");
+}
+
+#[test]
+fn copy_with_a_base_point_hands_the_copy_to_the_host() {
+    let mut b = bench(&[1]);
+    b.start("copyBase");
+    assert_eq!(
+        b.session.prompt().text(),
+        "Taban noktasıyla kopyala: taban noktasına tıklayın ya da Y,X yazın"
+    );
+    let revision = b.doc.revision();
+    b.click(-20.0, -12.0);
+    assert!(!b.session.is_running(), "the tool leaves");
+    assert_eq!(b.doc.revision(), revision, "the drawing does not change");
+    let clip = b
+        .views
+        .iter()
+        .find_map(|c| match c {
+            kentos_interaction::ViewChange::Copied(clip) => Some(clip.clone()),
+            _ => None,
+        })
+        .expect("the copy for the clipboard");
+    assert_eq!((clip.base.x - E, clip.base.y - N), (-20.0, -12.0));
+    assert_eq!(clip.objects.len(), 1);
+    // Pasted at (0, 0): the line moves by what the base point moves.
+    let mut board = Clipboard::new();
+    board.set(*clip);
+    paste_tool(&mut b, &board);
+    b.click(0.0, 0.0);
+    assert_eq!(line(&b, 8), [[-4.0, 0.0], [12.0, 0.0]]);
 }

@@ -118,6 +118,8 @@ pub enum ViewChange {
     /// Objects picked for a window's field ([`crate::pick_objects::PickObjects`],
     /// docs/adr/0088): kept (the selection holds them), or left (Esc).
     PickedObjects(bool),
+    /// A copy for the host's clipboard (Taban noktasıyla kopyala, [`crate::copy_base`], docs/adr/0309).
+    Copied(Box<kentos_contracts::Clip>),
     /// Blok oluştur's base point ([`crate::block_define`], docs/adr/0144): the
     /// host opens the window that names a block of the selected objects.
     DefineBlock(Vec2),

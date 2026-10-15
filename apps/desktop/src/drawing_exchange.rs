@@ -14,12 +14,11 @@ use std::sync::atomic::AtomicBool;
 use iced::futures::channel::mpsc;
 use iced::widget::{Column, button, container, row, scrollable, text};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{
-    BlockDefinition, BlockId, DocumentSnapshotV2, Entity, EntityId, LayerNode, LayerNodeType,
-};
+use kentos_contracts::{BlockId, DocumentSnapshotV2, EntityId};
+use kentos_domain::Uuid;
 use kentos_domain::exchange::{self, Picks, Same, TAKEN_SETTINGS};
-use kentos_domain::{NewLayer, Uuid};
 use kentos_interaction::Level;
+use kentos_native_application::exchange_write::{Counts, changes_tree, put_blocks, put_nodes};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::tree_view::{Check, check_box};
@@ -331,112 +330,6 @@ pub fn write_selection(
     ))
 }
 
-/// What went into the drawing as one undo step.
-#[derive(Debug, Default, PartialEq, Eq)]
-struct Counts {
-    layers: usize,
-    blocks: usize,
-    redefined: usize,
-}
-
-/// The layers of `nodes` the drawing has not, added under `parent`, and the
-/// looks of those it has, in the open group (the web's `putLayersAndBlocks`).
-fn put_nodes(
-    model: &mut kentos_domain::Document,
-    nodes: &[LayerNode],
-    parent: Option<&str>,
-    counts: &mut Counts,
-) -> Result<(), String> {
-    for n in nodes {
-        match model.layers().get(&n.id).map(|m| m.style.clone()) {
-            None => {
-                let new = NewLayer {
-                    plot: None,
-                    id: Some(n.id.clone()),
-                    name: n.name.clone(),
-                    kind: n.kind,
-                    visible: n.visible,
-                    locked: n.locked,
-                    style: n.style.clone(),
-                    snap: n.snap.clone(),
-                    fields: n.fields.clone(),
-                    service: n.service.clone(),
-                    feed: n.feed.clone(),
-                    // Its time setting comes along; a scenario's links name the other drawing's
-                    // layers, so the taken nodes are plain ones (docs/adr/0210 §2).
-                    time: n.time.clone(),
-                    scenario: None,
-                    replaces: None,
-                    // Its actions and card name only its own objects' values (docs/adr/0225 §4).
-                    actions: n.actions.clone(),
-                    card: n.card.clone(),
-                    compose: n.compose.clone(),
-                    filter: None,
-                };
-                model.add_layer(new, parent, false).map_err(|r| r.0)?;
-                counts.layers += 1;
-            }
-            Some(style) => {
-                if style != n.style {
-                    model.set_layer_style(&n.id, n.style.clone(), TAKE_TITLE);
-                }
-            }
-        }
-        let inside = if n.kind == LayerNodeType::Group {
-            Some(n.id.as_str())
-        } else {
-            parent
-        };
-        put_nodes(model, &n.children, inside, counts)?;
-    }
-    Ok(())
-}
-
-/// Whether `nodes` would add a node to the drawing's tree or change a node's look.
-fn changes_tree(model: &kentos_domain::Document, nodes: &[LayerNode]) -> bool {
-    nodes.iter().any(|n| match model.layers().get(&n.id) {
-        None => true,
-        Some(m) => m.style != n.style || changes_tree(model, &n.children),
-    })
-}
-
-/// The blocks of `blocks` the drawing has not, and the met ones redefined,
-/// each once the blocks it places are there (the web's `putLayersAndBlocks`).
-fn put_blocks(
-    model: &mut kentos_domain::Document,
-    blocks: &[BlockDefinition],
-    counts: &mut Counts,
-) -> Result<(), String> {
-    let mut pending: Vec<BlockDefinition> = blocks.to_vec();
-    let mut guard = pending.len() + 1;
-    while !pending.is_empty() && guard > 0 {
-        guard -= 1;
-        let mut i = 0;
-        while i < pending.len() {
-            let b = &pending[i];
-            // A definition may place only blocks the drawing has (docs/adr/0144): a redefinition waits too.
-            let ready = b.entities.iter().all(|e| match e {
-                Entity::Insert(ins) => ins.block == b.id || model.block(ins.block).is_some(),
-                _ => true,
-            });
-            if !ready {
-                i += 1;
-                continue;
-            }
-            let b = pending.remove(i);
-            if model.block(b.id).is_some() {
-                if model.update_block(b).map_err(|r| r.0)? {
-                    counts.redefined += 1;
-                }
-            } else {
-                model.add_block(b).map_err(|r| r.0)?;
-                counts.blocks += 1;
-            }
-        }
-    }
-    Ok(())
-}
-
 impl App {
     pub(crate) fn drawing_exchange_command(&mut self, id: &str) -> Task<Message> {
         if self.document.is_none() {
@@ -680,7 +573,7 @@ impl App {
         let model = &mut doc.model;
         let group = model.begin_group(TAKE_TITLE);
         let mut counts = Counts::default();
-        let done = put_nodes(model, &result.layers, None, &mut counts)
+        let done = put_nodes(model, &result.layers, None, &mut counts, TAKE_TITLE)
             .and_then(|()| put_blocks(model, &result.blocks, &mut counts));
         if let Err(why) = done {
             model.cancel_group(group);
@@ -776,7 +669,7 @@ impl App {
         let group = model.begin_group(TITLE);
         let mut counts = Counts::default();
         let objects = made.objects.len();
-        let done = put_nodes(model, &made.drawing.layers, None, &mut counts)
+        let done = put_nodes(model, &made.drawing.layers, None, &mut counts, TAKE_TITLE)
             .and_then(|()| put_blocks(model, &made.drawing.blocks, &mut counts))
             .and_then(|()| {
                 if made.objects.is_empty() {
@@ -837,7 +730,7 @@ impl App {
         let model = &mut doc.model;
         let group = model.begin_group(BLOCK_TITLE);
         let mut counts = Counts::default();
-        let done = put_nodes(model, &made.drawing.layers, None, &mut counts)
+        let done = put_nodes(model, &made.drawing.layers, None, &mut counts, TAKE_TITLE)
             .and_then(|()| put_blocks(model, &made.drawing.blocks, &mut counts));
         if let Err(why) = done {
             model.cancel_group(group);
@@ -1004,6 +897,7 @@ impl App {
 
 #[cfg(test)]
 mod tests {
+    use kentos_contracts::LayerNode;
     use kentos_domain::Slot;
 
     use super::*;
