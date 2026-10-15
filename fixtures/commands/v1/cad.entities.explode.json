@@ -1383,7 +1383,7 @@
      "input": {
       "uids": [
        "$uidOf:5",
-       "$uidOf:4",
+       "$uidOf:9",
        "$uidOf:2"
       ]
      },
@@ -1397,7 +1397,7 @@
        },
        {
         "code": "not_explodable",
-        "message": "1 nesne patlatılamadığı için atlandı: Daire patlatılamaz; parçalamak için Kır (B) kullanın.",
+        "message": "1 nesne patlatılamadığı için atlandı: Bu nesne zaten temel bir nesne; patlatılacak bir şey yok.",
         "path": "uids"
        }
       ],
@@ -1595,20 +1595,20 @@
    ]
   },
   {
-   "name": "Yalnız daire: not_explodable, dairenin sözüyle",
+   "name": "Yalnız nokta: not_explodable",
    "steps": [
     {
      "op": "execute",
      "input": {
       "uids": [
-       "$uidOf:4"
+       "$uidOf:9"
       ]
      },
      "result": {
       "status": "failed",
       "error": {
        "code": "not_explodable",
-       "message": "Daire patlatılamaz; parçalamak için Kır (B) kullanın.",
+       "message": "Bu nesne zaten temel bir nesne; patlatılacak bir şey yok.",
        "path": "uids[0]"
       }
      },

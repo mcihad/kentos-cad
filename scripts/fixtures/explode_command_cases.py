@@ -13,7 +13,8 @@ Writes fixtures/commands/v1/cad.entities.explode.json. The ADR's rules, computed
   its colour and line weight (else the insert's).
 - Objects are written in the input's order: each object's removal, then its pieces; the pieces get the next slots.
 - An item of an associative array (docs/adr/0300) brings every item of its array, which is gone in the same step.
-- A line, a circle or a point does not explode: left out with a warning naming the count and the first one's words,
+- A line or a point does not explode: left out with a warning naming the count and the first one's words (a circle
+  becomes a polyline, docs/adr/0308; its cases are explode_curve_cases.py's),
   the refusal when none explodes; an object on a locked layer the same with the locked words (docs/adr/0278).
 - The checks' order: no_entities, invalid_uid, the revision, entity_not_found, layer_locked, not_explodable.
 """
@@ -31,7 +32,6 @@ U = lambda i: f"$uidOf:{i}"  # noqa: E731
 LABEL = "Patlat"
 BLOCK = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e01"
 NOT_BASIC = "Bu nesne zaten temel bir nesne; patlatılacak bir şey yok."
-NOT_CIRCLE = "Daire patlatılamaz; parçalamak için Kır (B) kullanın."
 LOCKED = "“Kilitli” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın."
 
 
@@ -191,12 +191,12 @@ def cases():
         written("Kilitli katmandaki ile açık olan: kilitli uyarıyla atlanır", [1], input_ids=[5, 1],
                 warnings=[{"code": "layer_locked", "path": "uids",
                            "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın."}]),
-        written("Kilitli, patlamayan ve patlayan: iki uyarı, kilitli önce", [2], input_ids=[5, 4, 2],
+        written("Kilitli, patlamayan ve patlayan: iki uyarı, kilitli önce", [2], input_ids=[5, 9, 2],
                 warnings=[{"code": "layer_locked", "path": "uids",
                            "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın."},
-                          skipped(1, NOT_CIRCLE)]),
+                          skipped(1, NOT_BASIC)]),
         refused("Yalnız çizgi: not_explodable", {"uids": [U(3)]}, "not_explodable", NOT_BASIC, "uids[0]"),
-        refused("Yalnız daire: not_explodable, dairenin sözüyle", {"uids": [U(4)]}, "not_explodable", NOT_CIRCLE, "uids[0]"),
+        refused("Yalnız nokta: not_explodable", {"uids": [U(9)]}, "not_explodable", NOT_BASIC, "uids[0]"),
         refused("Nokta ve çizgi: not_explodable, ilkinin sözüyle ve yeriyle", {"uids": [U(9), U(3)]}, "not_explodable", NOT_BASIC, "uids[0]"),
         refused("Yalnız kilitli: layer_locked", {"uids": [U(5)]}, "layer_locked", LOCKED, "uids[0]"),
         refused("Boş liste: no_entities", {"uids": []}, "no_entities", "Patlatılacak nesne verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "uids"),

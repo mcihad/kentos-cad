@@ -433,6 +433,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   `kentos_domain::audit`, araç `tool.audit` (ADR 0306);
   delikli ve çok parçalı nesnelerde düzenlemeler: envanter; Kır, Buda ve Uzat çok parçalı çizgide tıklanan parçada, parçalar aynı
   nesnede kalır (`ops::parts::part_near`, `polyline_of_pieces`; Buda'nın parça başına “kesildi” bayrağı) (ADR 0307);
+  Patlat'ta eğriler: daire, yay, elips, eğri ve NURBS köşeleri üstünde, eşit uzunlukta bölümlü çoklu çizgi; `density` (count, step,
+  deviation; varsayılan 0,01 m sapma), `invalid_density`; araç eğri seçilince açık kalır, Sayı (S), Aralık (A), Sapma (P), önizlemede
+  köşeler; CAD ve CBS (ADR 0308);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);
@@ -957,6 +960,8 @@ KENTOS_SHOTS_ONLY=temizle-bulunan,temizle-milimetre,temizle-yazildi cargo test -
 python3 scripts/fixtures/audit_command_cases.py --check   # Denetle'nin durumlarını (bozuk bağlar ve kayıp stiller, onarım ve geri alma, kilitli katman, kullanılmayan katman, grup, blok ve stiller, stillerin temizliği, retler) KentOS kodu olmadan denetle; durumlar fixtures/commands/v1/cad.drawing.audit.json (ADR 0306)
 KENTOS_SHOTS_ONLY=denetle-bulunan,denetle-stiller,denetle-yazildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture; cargo test --release -p kentos-native-application --test all audit_cmd::timing -- --ignored --nocapture   # Denetle'nin resimleri (.run/shots/arac-denetle-*) ve 100 000 nesnede plan ve yazma süreleri (ADR 0306)
 python3 scripts/fixtures/multipart_edit_cases.py --check   # Kır, Buda ve Uzat'ın çok parçalı çizgideki durumlarını (tıklanan parça, parçalar tek nesnede, kot ve ölçü, hızlı kip, çit, pencere, retler) KentOS kodu olmadan kesirlerle denetle; durumlar fixtures/commands/v1/cad.entities.{break,trim,extend}.parts.json (ADR 0307)
+python3 scripts/fixtures/explode_curve_cases.py --check   # Patlat'ın eğrilerdeki durumlarını (daire, yay, elips, eliptik yay, eğri; sayı, aralık, sapma, varsayılan; retler) KentOS kodu olmadan mpmath'le denetle; durumlar fixtures/commands/v1/cad.entities.explode.curves.json (ADR 0308)
+KENTOS_SHOTS_ONLY=patlat-egri,patlat-sayi,patlat-yazildi,patlat-cbs cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # Patlat'ın eğrilerdeki resimleri, .run/shots/arac-patlat-* (ADR 0308)
 KENTOS_SHOTS_ONLY=parca-buda,parca-budandi,parca-kir cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # çok parçalı çizgide Buda ve Kır'ın resimleri, .run/shots/arac-parca-* (ADR 0307)
 python3 scripts/fixtures/array_edit_cases.py --check   # Diziyi düzenle'nin durumlarını (yerleşim, ilk yer, Değiştir, Sil, Sıfırla, plan, retler) KentOS kodu olmadan denetle; durumlar fixtures/commands/v1/cad.arrays.edit.json (ADR 0301)
 KENTOS_SHOTS_ONLY=dizi-duzenle,dizi-duzenle-adet,dizi-duzenle-taban cargo test -p kentos-desktop tools_screens -- --ignored --nocapture; cargo test --release -p kentos-native-application --test all array_assoc::edit_timing -- --ignored --nocapture   # Diziyi düzenle'nin resimleri (.run/shots/arac-dizi-duzenle-*) ve 100 × 100 ızgarada süreleri (ADR 0301)

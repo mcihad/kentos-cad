@@ -926,9 +926,14 @@ impl Input for kentos_domain::contracts::CurvesEdit {
 }
 
 impl Input for kentos_domain::contracts::EntitiesExplode {
-    /// Ids only: no number.
-    fn number(&mut self, _path: &str) -> Option<&mut f64> {
-        None
+    /// `density.length`, `density.tolerance`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_domain::contracts::ExplodeDensity as D;
+        match (self.density.as_mut()?, path) {
+            (D::Step { length }, "density.length") => Some(length),
+            (D::Deviation { tolerance }, "density.tolerance") => Some(tolerance),
+            _ => None,
+        }
     }
 }
 

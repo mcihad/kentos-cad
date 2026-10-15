@@ -453,7 +453,9 @@ codes! {
     /// An object that does not explode: left out with a warning, the refusal when none explodes (Patlat, docs/adr/0302).
     /// An empty list of properties to give (Özellik kopyala, docs/adr/0304).
     NO_PROPERTIES = "no_properties", Failed, false, "Kopyalanacak özellik seçilmedi.";
-    NOT_EXPLODABLE = "not_explodable", FailedOrWarning, false, "Nesne patlatılamaz: zaten temel bir nesne (çizgi, daire, nokta, yazı …) ya da dolu tarama; bazılarında uyarı, hiçbirinde ret.";
+    NOT_EXPLODABLE = "not_explodable", FailedOrWarning, false, "Nesne patlatılamaz: zaten temel bir nesne (çizgi, nokta, yazı …) ya da dolu tarama; bazılarında uyarı, hiçbirinde ret.";
+    /// An exploded curve's density out of range (Patlat, docs/adr/0308).
+    INVALID_DENSITY = "invalid_density", Failed, false, "Nokta sıklığı geçersiz: bölüm sayısı 1 ile 100 000 arasında, aralık ve sapma sıfırdan büyük olmalı.";
     /// No associative array has the id (Diziyi düzenle, docs/adr/0301).
     ARRAY_NOT_FOUND = "array_not_found", Failed, false, "Kimliği verilen ilişkili dizi çizimde yok.";
     /// An item number out of the array's places, given twice, or none given (Diziyi düzenle).

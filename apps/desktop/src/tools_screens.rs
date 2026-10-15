@@ -463,6 +463,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::curve_edit_scenes::scenes());
     all.extend(crate::audit_scenes::scenes());
     all.extend(crate::multipart_scenes::scenes());
+    all.extend(crate::explode_scenes::scenes());
     all.extend(crate::match_scenes::scenes());
     all.extend(crate::cleanup_scenes::scenes());
     all.extend(crate::look_scenes::scenes());

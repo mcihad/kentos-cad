@@ -170,6 +170,9 @@ Liste:
   uyarıları komutun sözleri; paralel iki doğruya TTY, saat yönünde verilen yaydan Devam; araç durumları
   `fixtures/curve-methods/v1/tools.json`. Web'in donmuş çağrı kayıtları eski `arcStartCenterEnd` ve `arcStartCenterAngle`'ı (tam tur)
   tutar; geri dönüşte komutun kuralına getirilir.
+- [ ] Patlat'ta eğriler (ADR 0308, 15 Ekim): web'de gerekenler: `cad.entities.explode`'un `density`'si TS işleyicisinde (sözleşme türü
+  `ExplodeDensity` üretildi; ortak durumlar `cad.entities.explode.curves.json`), web'in Patlat aracında sıklık aşaması (Sayı, Aralık,
+  Sapma; önizlemede köşeler).
 - [ ] `CAD-EDIT-21` (ADR 0307, 15 Ekim): web'de gerekenler: TS işleyicilerinde Kır, Buda ve Uzat çok parçalı çizgide tıklanan parçada
   (parçalar aynı nesnede; ortak durumlar `cad.entities.{break,trim,extend}.parts.json`).
 - [ ] `CAD-EDIT-20` (ADR 0306, 15 Ekim): web'de gerekenler: `cad.drawing.audit`'in TS işleyicisi (sözleşme türleri `DrawingAudit`,

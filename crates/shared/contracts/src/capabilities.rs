@@ -408,12 +408,15 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.entities.explode",
-        refusals: &[OBJECTS, &["not_explodable", "slots_exhausted"], REVISION],
+        refusals: &[OBJECTS, &["invalid_density", "not_explodable", "slots_exhausted"], REVISION],
         warnings: &["layer_locked", "not_explodable"],
         targets: || {
             vec![target(
                 None,
-                &["polyline", "polygon", "spline", "dimension", "hatch", "leader", "table", "insert", "point"],
+                &[
+                    "polyline", "polygon", "circle", "arc", "ellipse", "spline", "nurbs", "dimension", "hatch",
+                    "leader", "table", "insert", "point",
+                ],
                 &[],
                 Some("not_explodable"),
                 Some("Noktanın yalnız çok parçalısı; taramanın yalnız desenlisi patlar."),

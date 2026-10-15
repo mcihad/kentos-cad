@@ -2343,6 +2343,29 @@ class EntityGeometry(_Union):
         return _variant(_ENTITY_GEOMETRY, "EntityGeometry", "kind", data).from_json(data)
 
 
+class ExplodeDensity(_Union):
+    """How dense an exploded curve's vertices are (docs/adr/0308): its pieces equal in length along it, as many as
+    asked, none longer than a length, or as few as keep every chord within a distance of the curve.
+
+    One of:
+
+    - :class:`CountExplodeDensity` (``kind: count``)
+    - :class:`StepExplodeDensity` (``kind: step``)
+    - :class:`DeviationExplodeDensity` (``kind: deviation``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExplodeDensity:
+        return _variant(_EXPLODE_DENSITY, "ExplodeDensity", "kind", data).from_json(data)
+
+
 class FeatureChange(_Union):
     """One of:
 
@@ -7077,23 +7100,30 @@ class EntitiesExplode(_Model):
     """Input of `cad.entities.explode` v1: the objects `uids` exploded one level, as one undo step “Patlat”. Each object
     is replaced by its pieces: a piece keeps the object's layer, look and data, a block's object its own layer when
     the drawing has it, colour, line weight, data and label (the insert's when it has none). An object on a locked
-    layer is left out with a warning (`layer_locked`); one that does not explode (a line, a circle, a point, a text,
-    a solid hatch …) too (`not_explodable`), with the first one's words.
+    layer is left out with a warning (`layer_locked`); one that does not explode (a line, a point, a text, a solid
+    hatch …) too (`not_explodable`), with the first one's words. A curve becomes a polyline (docs/adr/0308).
 
-    Refusals (`CommandError.code`), checked in this order: `no_entities`, `invalid_uid`, `invalid_revision`,
+    Refusals (`CommandError.code`), checked in this order: `no_entities`, `invalid_uid`, `invalid_density` (a
+    count below 1 or above [`MAX_EXPLODE_VERTICES`], a length or a tolerance not above zero or not finite),
+    `invalid_revision`,
     `revision_conflict` (status `conflict`), `entity_not_found`, `layer_locked` (every object locked),
     `not_explodable` (none explodes), `slots_exhausted`.
     Attributes:
         uids: The objects' persistent ids (lowercase UUID text with hyphens), at least one.
+        density: How dense an exploded curve's vertices are; absent: a circle's, an arc's and an ellipse's chords within
+            [`EXPLODE_DEVIATION`], a spline's and a NURBS curve's within 0.1 mm (docs/adr/0308).
         expected_revision: The document revision the input was prepared against, as decimal text. When given and the document is no
             longer at it, nothing is written and the answer is `conflict`.
     """
     uids: list[str]
+    density: ExplodeDensity | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["uids"] = list(self.uids)
+        if self.density is not UNSET:
+            out["density"] = None if self.density is None else self.density.to_json()
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         return out
@@ -7102,6 +7132,7 @@ class EntitiesExplode(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> EntitiesExplode:
         return cls(
             uids=list(data["uids"]),
+            density=UNSET if "density" not in data else None if data["density"] is None else ExplodeDensity.from_json(data["density"]),
             expected_revision=data.get("expectedRevision", UNSET),
         )
 
@@ -20981,6 +21012,70 @@ class PointcloudEntityGeometry(PointCloudFields, EntityGeometry):
 
 
 @dataclass(kw_only=True, slots=True)
+class CountExplodeDensity(ExplodeDensity):
+    """This many equal pieces: an open curve `segments + 1` vertices, a closed one (a circle, an ellipse, a closed
+    curve) `segments`, at least 3.
+    Attributes:
+        segments: Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "count"
+    segments: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "count"}
+        out["segments"] = self.segments
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CountExplodeDensity:
+        return cls(
+            segments=data["segments"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StepExplodeDensity(ExplodeDensity):
+    """Equal pieces none longer than `length`, metres.
+    Attributes:
+        length: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "step"
+    length: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "step"}
+        out["length"] = float(self.length)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StepExplodeDensity:
+        return cls(
+            length=float(data["length"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeviationExplodeDensity(ExplodeDensity):
+    """Equal pieces whose chords lie within `tolerance` of the curve, metres.
+    Attributes:
+        tolerance: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "deviation"
+    tolerance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "deviation"}
+        out["tolerance"] = float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeviationExplodeDensity:
+        return cls(
+            tolerance=float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CreateFeatureChange(FeatureChange):
     """A new object; the client picks the UUID so a retry cannot create it twice."""
     TAG_VALUE: ClassVar[str] = "create"
@@ -23017,6 +23112,9 @@ _ENTITY_EDIT: dict[str, type[EntityEdit]] = {"update": UpdateEntityEdit, "replac
 _ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometry, "line": LineEntityGeometry, "polyline": PolylineEntityGeometry, "polygon": PolygonEntityGeometry, "circle": CircleEntityGeometry, "arc": ArcEntityGeometry, "ellipse": EllipseEntityGeometry, "spline": SplineEntityGeometry, "nurbs": NurbsEntityGeometry, "xline": XlineEntityGeometry, "ray": RayEntityGeometry, "text": TextEntityGeometry, "dimension": DimensionEntityGeometry, "hatch": HatchEntityGeometry, "insert": InsertEntityGeometry, "leader": LeaderEntityGeometry, "table": TableEntityGeometry, "image": ImageEntityGeometry, "raster": RasterEntityGeometry, "pointcloud": PointcloudEntityGeometry}
 
 
+_EXPLODE_DENSITY: dict[str, type[ExplodeDensity]] = {"count": CountExplodeDensity, "step": StepExplodeDensity, "deviation": DeviationExplodeDensity}
+
+
 _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange, "update": UpdateFeatureChange, "delete": DeleteFeatureChange}
 
 
@@ -23209,6 +23307,7 @@ __all__ = [
     "CoordinatesTableSource",
     "CornerPick",
     "CornersRectangleFrame",
+    "CountExplodeDensity",
     "CreateBlockChange",
     "CreateFeatureChange",
     "CreateOperation",
@@ -23232,6 +23331,7 @@ __all__ = [
     "DeleteUcsTo",
     "DeleteViewsOp",
     "DeltaLengthenChange",
+    "DeviationExplodeDensity",
     "DiameterDimensionMeasure",
     "DigitizedNetworkDirection",
     "DimensionArrow",
@@ -23335,6 +23435,7 @@ __all__ = [
     "Entity",
     "EntityEdit",
     "EntityGeometry",
+    "ExplodeDensity",
     "ExportDxf",
     "ExportPdf",
     "ExtensionPointConstruction",
@@ -23724,6 +23825,7 @@ __all__ = [
     "StackModeName",
     "StartSubPlace",
     "StepDivision",
+    "StepExplodeDensity",
     "StepWarning",
     "StreetSource",
     "StretchTopology",

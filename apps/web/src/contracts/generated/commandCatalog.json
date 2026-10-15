@@ -88943,7 +88943,7 @@
       "id": "cad.entities.explode",
       "version": 1,
       "title": "Nesneleri patlat",
-      "summary": "Kalıcı kimlikleriyle verilen nesneleri bir düzey parçalar (AutoCAD'in EXPLODE'u); tek geri alma adımı “Patlat”. Çoklu çizgi ve alan kenarlarına (çizgi ve yay; delikler ve parçalar da), eğri bir çoklu çizgiye, ölçü çizgilerine, oklarına ve yazısına, desenli tarama çizgilerine, kılavuz çizgisine, okuna ve notuna, tablo çizgilerine ve yazılarına, bloğun yerleştirmesi tanımın nesnelerine açılır. Parça nesnenin katmanını, rengini ve kalınlığını alır; bloğun nesnesi çizimde varsa kendi katmanını, rengini, kalınlığını, özniteliklerini ve etiketini (yoksa yerleştirmeninkini) alır. İlişkili dizinin (cad.entities.array'in associative'i) bir öğesi bütün diziyi patlatır: her öğe açılır, dizi aynı adımda kalkar. Patlamayan nesne (çizgi, daire, nokta, yazı, dolu tarama …) ve kilitli katmandaki nesne uyarıyla atlanır; hiçbiri patlamazsa not_explodable, hepsi kilitliyse layer_locked. Çıktı ve plan cad.entities.edit'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Kalıcı kimlikleriyle verilen nesneleri bir düzey parçalar (AutoCAD'in EXPLODE'u); tek geri alma adımı “Patlat”. Çoklu çizgi ve alan kenarlarına (çizgi ve yay; delikler ve parçalar da), daire, yay, elips, eliptik yay, eğri ve NURBS eğrisi köşeleri üstünde olan bir çoklu çizgiye (daire ve tam elips kapalı), ölçü çizgilerine, oklarına ve yazısına, desenli tarama çizgilerine, kılavuz çizgisine, okuna ve notuna, tablo çizgilerine ve yazılarına, bloğun yerleştirmesi tanımın nesnelerine açılır. Parça nesnenin katmanını, rengini ve kalınlığını alır; bloğun nesnesi çizimde varsa kendi katmanını, rengini, kalınlığını, özniteliklerini ve etiketini (yoksa yerleştirmeninkini) alır. İlişkili dizinin (cad.entities.array'in associative'i) bir öğesi bütün diziyi patlatır: her öğe açılır, dizi aynı adımda kalkar. Eğrinin nokta sıklığı density'dir: count (eşit bölüm sayısı), step (bölümün en büyük uzunluğu) ya da deviation (kirişlerin eğriden en büyük uzaklığı); verilmezse daire, yay ve elipste kirişler eğriye 0,01 m'den, eğri ve NURBS'te 0,1 mm'den yakın. Bölümler eğri boyunca eşit uzunluktadır; bir eğri en çok 100 000 köşe olur, ötesi invalid_density. Patlamayan nesne (çizgi, nokta, yazı, dolu tarama …) ve kilitli katmandaki nesne uyarıyla atlanır; hiçbiri patlamazsa not_explodable, hepsi kilitliyse layer_locked. Çıktı ve plan cad.entities.edit'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -88957,9 +88957,85 @@
       "undo": "step",
       "cost": "instant",
       "input": {
+        "$defs": {
+          "ExplodeDensity": {
+            "description": "How dense an exploded curve's vertices are (docs/adr/0308): its pieces equal in length along it, as many as\nasked, none longer than a length, or as few as keep every chord within a distance of the curve.",
+            "oneOf": [
+              {
+                "description": "This many equal pieces: an open curve `segments + 1` vertices, a closed one (a circle, an ellipse, a closed\ncurve) `segments`, at least 3.",
+                "properties": {
+                  "kind": {
+                    "const": "count",
+                    "type": "string"
+                  },
+                  "segments": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "count"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "segments"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Equal pieces none longer than `length`, metres.",
+                "properties": {
+                  "kind": {
+                    "const": "step",
+                    "type": "string"
+                  },
+                  "length": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "length"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Equal pieces whose chords lie within `tolerance` of the curve, metres.",
+                "properties": {
+                  "kind": {
+                    "const": "deviation",
+                    "type": "string"
+                  },
+                  "tolerance": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "tolerance"
+                ],
+                "type": "object"
+              }
+            ]
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.explode` v1: the objects `uids` exploded one level, as one undo step “Patlat”. Each object\nis replaced by its pieces: a piece keeps the object's layer, look and data, a block's object its own layer when\nthe drawing has it, colour, line weight, data and label (the insert's when it has none). An object on a locked\nlayer is left out with a warning (`layer_locked`); one that does not explode (a line, a circle, a point, a text,\na solid hatch …) too (`not_explodable`), with the first one's words.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`, `invalid_uid`, `invalid_revision`,\n`revision_conflict` (status `conflict`), `entity_not_found`, `layer_locked` (every object locked),\n`not_explodable` (none explodes), `slots_exhausted`.",
+        "description": "Input of `cad.entities.explode` v1: the objects `uids` exploded one level, as one undo step “Patlat”. Each object\nis replaced by its pieces: a piece keeps the object's layer, look and data, a block's object its own layer when\nthe drawing has it, colour, line weight, data and label (the insert's when it has none). An object on a locked\nlayer is left out with a warning (`layer_locked`); one that does not explode (a line, a point, a text, a solid\nhatch …) too (`not_explodable`), with the first one's words. A curve becomes a polyline (docs/adr/0308).\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`, `invalid_uid`, `invalid_density` (a\ncount below 1 or above [`MAX_EXPLODE_VERTICES`], a length or a tolerance not above zero or not finite),\n`invalid_revision`,\n`revision_conflict` (status `conflict`), `entity_not_found`, `layer_locked` (every object locked),\n`not_explodable` (none explodes), `slots_exhausted`.",
         "properties": {
+          "density": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ExplodeDensity"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How dense an exploded curve's vertices are; absent: a circle's, an arc's and an ellipse's chords within\n[`EXPLODE_DEVIATION`], a spline's and a NURBS curve's within 0.1 mm (docs/adr/0308)."
+          },
           "expectedRevision": {
             "description": "The document revision the input was prepared against, as decimal text. When given and the document is no\nlonger at it, nothing is written and the answer is `conflict`.",
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -94269,7 +94345,11 @@
             "kinds": [
               "polyline",
               "polygon",
+              "circle",
+              "arc",
+              "ellipse",
               "spline",
+              "nurbs",
               "dimension",
               "hatch",
               "leader",
@@ -94286,6 +94366,7 @@
           "invalid_uid",
           "entity_not_found",
           "layer_locked",
+          "invalid_density",
           "not_explodable",
           "slots_exhausted",
           "invalid_revision",
@@ -94316,6 +94397,28 @@
               "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"
             ],
             "revision": "67"
+          }
+        },
+        {
+          "title": "Bir daireyi 24 köşeli kapalı çoklu çizgiye çevir",
+          "input": {
+            "density": {
+              "kind": "count",
+              "segments": 24
+            },
+            "uids": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002"
+            ]
+          },
+          "output": {
+            "changed": [],
+            "created": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4105"
+            ],
+            "removed": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002"
+            ],
+            "revision": "68"
           }
         }
       ]
@@ -276343,7 +276446,13 @@
       "code": "not_explodable",
       "kind": "failedOrWarning",
       "retryable": false,
-      "meaning": "Nesne patlatılamaz: zaten temel bir nesne (çizgi, daire, nokta, yazı …) ya da dolu tarama; bazılarında uyarı, hiçbirinde ret."
+      "meaning": "Nesne patlatılamaz: zaten temel bir nesne (çizgi, nokta, yazı …) ya da dolu tarama; bazılarında uyarı, hiçbirinde ret."
+    },
+    {
+      "code": "invalid_density",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nokta sıklığı geçersiz: bölüm sayısı 1 ile 100 000 arasında, aralık ve sapma sıfırdan büyük olmalı."
     },
     {
       "code": "array_not_found",

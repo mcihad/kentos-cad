@@ -24,6 +24,7 @@ mod drawing_unit;
 mod edits;
 mod elevating;
 mod elevation_grips;
+mod explode_density;
 mod feature_export;
 mod fencing;
 mod find_replace;

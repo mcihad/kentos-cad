@@ -220,6 +220,7 @@ fn explode_timing() {
     };
     let one = EntitiesExplode {
         uids: vec![output.created[5_000].clone()],
+        density: None,
         expected_revision: None,
     };
     let t = Instant::now();

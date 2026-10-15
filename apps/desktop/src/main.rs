@@ -74,6 +74,8 @@ mod elevation_scenes;
 #[cfg(test)]
 mod elevation_tests;
 mod exchange;
+#[cfg(test)]
+mod explode_scenes;
 mod expression;
 mod features;
 #[cfg(test)]

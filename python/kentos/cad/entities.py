@@ -78,6 +78,7 @@ from .types import (  # noqa: F401
     EntitiesVertexPlan,
     EntitiesVertexed,
     EntityEdit,
+    ExplodeDensity,
     HatchPatternSpec,
     HatchRegion,
     LengthenChange,
@@ -1627,16 +1628,21 @@ edit = _EntitiesEdit()
 class _EntitiesExplode(LocalCommand[EntitiesExplode, EntitiesEdited, EntitiesEditPlan]):
     """``cad.entities.explode`` v1. Nesneleri patlat: Kalıcı kimlikleriyle verilen
     nesneleri bir düzey parçalar (AutoCAD'in EXPLODE'u); tek geri alma adımı “Patlat”.
-    Çoklu çizgi ve alan kenarlarına (çizgi ve yay; delikler ve parçalar da), eğri bir
-    çoklu çizgiye, ölçü çizgilerine, oklarına ve yazısına, desenli tarama çizgilerine,
-    kılavuz çizgisine, okuna ve notuna, tablo çizgilerine ve yazılarına, bloğun
-    yerleştirmesi tanımın nesnelerine açılır. Parça nesnenin katmanını, rengini ve
-    kalınlığını alır; bloğun nesnesi çizimde varsa kendi katmanını, rengini,
+    Çoklu çizgi ve alan kenarlarına (çizgi ve yay; delikler ve parçalar da), daire, yay,
+    elips, eliptik yay, eğri ve NURBS eğrisi köşeleri üstünde olan bir çoklu çizgiye
+    (daire ve tam elips kapalı), ölçü çizgilerine, oklarına ve yazısına, desenli tarama
+    çizgilerine, kılavuz çizgisine, okuna ve notuna, tablo çizgilerine ve yazılarına,
+    bloğun yerleştirmesi tanımın nesnelerine açılır. Parça nesnenin katmanını, rengini
+    ve kalınlığını alır; bloğun nesnesi çizimde varsa kendi katmanını, rengini,
     kalınlığını, özniteliklerini ve etiketini (yoksa yerleştirmeninkini) alır. İlişkili
     dizinin (cad.entities.array'in associative'i) bir öğesi bütün diziyi patlatır: her
-    öğe açılır, dizi aynı adımda kalkar. Patlamayan nesne (çizgi, daire, nokta, yazı,
-    dolu tarama …) ve kilitli katmandaki nesne uyarıyla atlanır; hiçbiri patlamazsa
-    not_explodable, hepsi kilitliyse layer_locked. Çıktı ve plan
+    öğe açılır, dizi aynı adımda kalkar. Eğrinin nokta sıklığı density'dir: count (eşit
+    bölüm sayısı), step (bölümün en büyük uzunluğu) ya da deviation (kirişlerin eğriden
+    en büyük uzaklığı); verilmezse daire, yay ve elipste kirişler eğriye 0,01 m'den,
+    eğri ve NURBS'te 0,1 mm'den yakın. Bölümler eğri boyunca eşit uzunluktadır; bir eğri
+    en çok 100 000 köşe olur, ötesi invalid_density. Patlamayan nesne (çizgi, nokta,
+    yazı, dolu tarama …) ve kilitli katmandaki nesne uyarıyla atlanır; hiçbiri
+    patlamazsa not_explodable, hepsi kilitliyse layer_locked. Çıktı ve plan
     cad.entities.edit'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse
     hiçbir şey yazılmaz, sonuç conflict olur.
     """
@@ -1655,27 +1661,36 @@ class _EntitiesExplode(LocalCommand[EntitiesExplode, EntitiesEdited, EntitiesEdi
         /,
         *,
         uids: Sequence[str],
+        density: ExplodeDensity | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> EntitiesEdited:
         """Nesneleri patlat: Kalıcı kimlikleriyle verilen nesneleri bir düzey parçalar
         (AutoCAD'in EXPLODE'u); tek geri alma adımı “Patlat”. Çoklu çizgi ve alan
-        kenarlarına (çizgi ve yay; delikler ve parçalar da), eğri bir çoklu çizgiye, ölçü
-        çizgilerine, oklarına ve yazısına, desenli tarama çizgilerine, kılavuz çizgisine,
-        okuna ve notuna, tablo çizgilerine ve yazılarına, bloğun yerleştirmesi tanımın
-        nesnelerine açılır. Parça nesnenin katmanını, rengini ve kalınlığını alır; bloğun
-        nesnesi çizimde varsa kendi katmanını, rengini, kalınlığını, özniteliklerini ve
-        etiketini (yoksa yerleştirmeninkini) alır. İlişkili dizinin (cad.entities.array'in
-        associative'i) bir öğesi bütün diziyi patlatır: her öğe açılır, dizi aynı adımda
-        kalkar. Patlamayan nesne (çizgi, daire, nokta, yazı, dolu tarama …) ve kilitli
-        katmandaki nesne uyarıyla atlanır; hiçbiri patlamazsa not_explodable, hepsi
-        kilitliyse layer_locked. Çıktı ve plan cad.entities.edit'inkidir. expectedRevision
-        verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        kenarlarına (çizgi ve yay; delikler ve parçalar da), daire, yay, elips, eliptik yay,
+        eğri ve NURBS eğrisi köşeleri üstünde olan bir çoklu çizgiye (daire ve tam elips
+        kapalı), ölçü çizgilerine, oklarına ve yazısına, desenli tarama çizgilerine, kılavuz
+        çizgisine, okuna ve notuna, tablo çizgilerine ve yazılarına, bloğun yerleştirmesi
+        tanımın nesnelerine açılır. Parça nesnenin katmanını, rengini ve kalınlığını alır;
+        bloğun nesnesi çizimde varsa kendi katmanını, rengini, kalınlığını, özniteliklerini
+        ve etiketini (yoksa yerleştirmeninkini) alır. İlişkili dizinin
+        (cad.entities.array'in associative'i) bir öğesi bütün diziyi patlatır: her öğe
+        açılır, dizi aynı adımda kalkar. Eğrinin nokta sıklığı density'dir: count (eşit
+        bölüm sayısı), step (bölümün en büyük uzunluğu) ya da deviation (kirişlerin eğriden
+        en büyük uzaklığı); verilmezse daire, yay ve elipste kirişler eğriye 0,01 m'den,
+        eğri ve NURBS'te 0,1 mm'den yakın. Bölümler eğri boyunca eşit uzunluktadır; bir eğri
+        en çok 100 000 köşe olur, ötesi invalid_density. Patlamayan nesne (çizgi, nokta,
+        yazı, dolu tarama …) ve kilitli katmandaki nesne uyarıyla atlanır; hiçbiri
+        patlamazsa not_explodable, hepsi kilitliyse layer_locked. Çıktı ve plan
+        cad.entities.edit'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse
+        hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.
             uids: The objects' persistent ids (lowercase UUID text with hyphens), at least one.
+            density: How dense an exploded curve's vertices are; absent: a circle's, an arc's and an ellipse's chords within
+                [`EXPLODE_DEVIATION`], a spline's and a NURBS curve's within 0.1 mm (docs/adr/0308).
             expected_revision: The document revision the input was prepared against, as decimal text. When given and the document is no
                 longer at it, nothing is written and the answer is `conflict`.
             request_id: Names this write: sent again with the same call it is answered as
@@ -1692,6 +1707,7 @@ class _EntitiesExplode(LocalCommand[EntitiesExplode, EntitiesEdited, EntitiesEdi
         """
         return self.execute_input(doc, EntitiesExplode(
             uids=list(uids),
+            density=density,
             expected_revision=expected_revision,
         ), request_id=request_id, expected=expected)
 
@@ -1701,6 +1717,7 @@ class _EntitiesExplode(LocalCommand[EntitiesExplode, EntitiesEdited, EntitiesEdi
         /,
         *,
         uids: Sequence[str],
+        density: ExplodeDensity | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
     ) -> EntitiesEditPlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -1708,6 +1725,7 @@ class _EntitiesExplode(LocalCommand[EntitiesExplode, EntitiesEdited, EntitiesEdi
         """
         return self.plan_input(doc, EntitiesExplode(
             uids=list(uids),
+            density=density,
             expected_revision=expected_revision,
         ))
 
@@ -1717,6 +1735,7 @@ class _EntitiesExplode(LocalCommand[EntitiesExplode, EntitiesEdited, EntitiesEdi
         /,
         *,
         uids: Sequence[str],
+        density: ExplodeDensity | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -1724,6 +1743,7 @@ class _EntitiesExplode(LocalCommand[EntitiesExplode, EntitiesEdited, EntitiesEdi
         """
         return self.validate_input(doc, EntitiesExplode(
             uids=list(uids),
+            density=density,
             expected_revision=expected_revision,
         ))
 
@@ -1733,6 +1753,7 @@ class _EntitiesExplode(LocalCommand[EntitiesExplode, EntitiesEdited, EntitiesEdi
         /,
         *,
         uids: Sequence[str],
+        density: ExplodeDensity | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -1745,6 +1766,7 @@ class _EntitiesExplode(LocalCommand[EntitiesExplode, EntitiesEdited, EntitiesEdi
         """
         return self.answer_input(doc, EntitiesExplode(
             uids=list(uids),
+            density=density,
             expected_revision=expected_revision,
         ), op=op, request_id=request_id, expected=expected)
 

@@ -771,6 +771,12 @@ pub struct Memory {
     pub cleanup_end_to_end: bool,
     pub cleanup_straight: bool,
     pub cleanup_ignore_look: bool,
+    /// Patlat's density of an exploded curve (docs/adr/0308), kept for the session: the way (0 deviation, 1 count,
+    /// 2 step) and each way's value.
+    pub explode_way: u8,
+    pub explode_count: u32,
+    pub explode_step: f64,
+    pub explode_deviation: f64,
     /// Denetle's options (docs/adr/0306), kept for the session: repair, remove the unused text and dimension styles.
     pub audit_fix: bool,
     pub audit_purge_text: bool,
@@ -1104,6 +1110,10 @@ impl Default for Memory {
             cleanup_end_to_end: false,
             cleanup_straight: true,
             cleanup_ignore_look: false,
+            explode_way: 0,
+            explode_count: 24,
+            explode_step: 1.0,
+            explode_deviation: kentos_contracts::EXPLODE_DEVIATION,
             audit_fix: true,
             audit_purge_text: false,
             audit_purge_dims: false,

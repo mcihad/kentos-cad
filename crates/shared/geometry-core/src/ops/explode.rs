@@ -30,7 +30,149 @@ fn line(a: Vec2, b: Vec2) -> Entity {
     Entity::new(Shape::Line { a, b })
 }
 
+/// How dense an exploded curve's vertices are (docs/adr/0308): equal pieces along it, this many, none longer than a
+/// length, or as few as keep every chord within a distance of it.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Density {
+    Count(u32),
+    Step(f64),
+    Deviation(f64),
+}
+
+/// A circle's, an arc's or an ellipse's chords' largest distance from it when no density is given, metres.
+pub const DEVIATION: f64 = 0.01;
+/// The most vertices one curve explodes into.
+pub const MAX_VERTICES: u32 = 100_000;
+
+/// The smallest radius of curvature of a curve: the circle's or the arc's radius, an ellipse's b²/a, a spline's or
+/// a NURBS curve's least circumradius of three successive vertices of its fine chords (0.1 mm).
+fn least_radius(e: &Shape, outline: &[Vec2]) -> f64 {
+    match e {
+        Shape::Circle { r, .. } | Shape::Arc { r, .. } => *r,
+        Shape::Ellipse { major, ratio, .. } => {
+            let a = js_hypot(major.x, major.y);
+            a * ratio * ratio
+        }
+        _ => outline
+            .windows(3)
+            .filter_map(|w| {
+                let (a, b, c) = (w[0], w[1], w[2]);
+                let cross = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+                (cross.abs() > 0.0).then(|| {
+                    let ab = js_hypot(b.x - a.x, b.y - a.y);
+                    let bc = js_hypot(c.x - b.x, c.y - b.y);
+                    let ca = js_hypot(a.x - c.x, a.y - c.y);
+                    (ab * bc * ca) / (2.0 * cross.abs())
+                })
+            })
+            .fold(f64::INFINITY, crate::jsmath::js_min),
+    }
+}
+
+/// A curve (circle, arc, ellipse or elliptical arc, spline, NURBS curve) as a polyline whose vertices lie on it, its
+/// pieces equal in length along it, as many as `density` asks (docs/adr/0308); closed when the curve is. None for
+/// anything else.
+pub fn curve_polyline(e: &Shape, density: Density) -> Option<Result<Shape, String>> {
+    if !matches!(
+        e,
+        Shape::Circle { .. }
+            | Shape::Arc { .. }
+            | Shape::Ellipse { .. }
+            | Shape::Spline { .. }
+            | Shape::Nurbs { .. }
+    ) {
+        return None;
+    }
+    let path = crate::ops::path::path_of(e)?;
+    let closed = path.closed;
+    let length = path.length;
+    let least = if closed { 3 } else { 1 };
+    let n: f64 = match density {
+        Density::Count(k) => f64::from(k),
+        Density::Step(step) => {
+            if !(step > 0.0 && step.is_finite()) {
+                return Some(Err("Aralık sıfırdan büyük olmalı.".into()));
+            }
+            (length / step).ceil()
+        }
+        Density::Deviation(tol) => {
+            if !(tol > 0.0 && tol.is_finite()) {
+                return Some(Err("Sapma sıfırdan büyük olmalı.".into()));
+            }
+            // The curve's fine chords, 0.1 mm (a NURBS curve's vertices are its control points).
+            let outline: Vec<Vec2> = match e {
+                Shape::Spline { pts, closed } => spline_outline(pts, *closed),
+                _ => crate::entity::entity_outline(e, 64.0),
+            };
+            let r = least_radius(e, &outline);
+            if r.is_finite() && r > 0.0 {
+                // A chord of an arc of radius r subtending θ lies within r(1 − cos θ/2) of it.
+                let theta = 2.0 * crate::jsmath::acos((1.0 - tol / r).clamp(-1.0, 1.0));
+                (length / js_max(r * theta, f64::MIN_POSITIVE)).ceil()
+            } else {
+                1.0
+            }
+        }
+    };
+    let n = js_max(n, f64::from(least));
+    if n > f64::from(MAX_VERTICES) {
+        return Some(Err(format!(
+            "Bu sıklıkta eğri {MAX_VERTICES} köşeden çok olur; daha az bölüm, daha uzun aralık ya da daha büyük sapma verin."
+        )));
+    }
+    let places = crate::ops::path::division_places(
+        e,
+        &crate::ops::path::Division::Parts(n),
+        false,
+        None,
+        crate::ops::path::DivisionEnds::Both,
+    );
+    let pts: Vec<Vec2> = places.into_iter().map(|p| p.at).collect();
+    Some(Ok(Shape::Polyline {
+        pts,
+        bulges: None,
+        holes: None,
+        parts: None,
+        closed,
+        widths: None,
+    }))
+}
+
+/// Patlat as the web's frozen calls know it (`explodeEntity`, ADR 0228): a circle and an ellipse refused, an arc a
+/// basic object. The desktop's command takes [`explode_with`] (docs/adr/0308).
 pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
+    match e {
+        Shape::Circle { .. } => {
+            Cut::Error("Daire patlatılamaz; parçalamak için Kır (B) kullanın.".into())
+        }
+        Shape::Ellipse { .. } => {
+            Cut::Error("Elips patlatılamaz; parçalamak için Kır (B) kullanın.".into())
+        }
+        Shape::Arc { .. } => {
+            Cut::Error("Bu nesne zaten temel bir nesne; patlatılacak bir şey yok.".into())
+        }
+        _ => explode_with(e, value_text, font, None),
+    }
+}
+
+/// [`explode_entity`] with the density of an exploded curve (docs/adr/0308): absent, a circle, an arc and an
+/// ellipse within [`DEVIATION`], a spline and a NURBS curve along their fine chords.
+pub fn explode_with(e: &Shape, value_text: &str, font: Font, density: Option<Density>) -> Cut {
+    let curve = match e {
+        Shape::Circle { .. } | Shape::Arc { .. } | Shape::Ellipse { .. } => {
+            Some(density.unwrap_or(Density::Deviation(DEVIATION)))
+        }
+        Shape::Spline { .. } | Shape::Nurbs { .. } => density,
+        _ => None,
+    };
+    if let Some(d) = curve
+        && let Some(made) = curve_polyline(e, d)
+    {
+        return match made {
+            Ok(shape) => Cut::Pieces(vec![Entity::new(shape)]),
+            Err(why) => Cut::Error(why),
+        };
+    }
     match e {
         // Its lines, and each cell's words a text on its baseline in the table's face; a
         // heading row's bold in its typeface (bold needs one, docs/adr/0183 §2).
@@ -342,12 +484,6 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
             }
             Cut::Pieces(pieces)
         }
-        Shape::Circle { .. } => {
-            Cut::Error("Daire patlatılamaz; parçalamak için Kır (B) kullanın.".into())
-        }
-        Shape::Ellipse { .. } => {
-            Cut::Error("Elips patlatılamaz; parçalamak için Kır (B) kullanın.".into())
-        }
         Shape::Image { .. } => Cut::Error(
             "Resim patlatılmaz; bir kısmını göstermek için Resmi kırp'ı kullanın.".into(),
         ),
@@ -405,3 +541,54 @@ pub(crate) static OPS: &[Op] = &[op!(
         )
     }
 )];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn count(e: &Shape, d: Density) -> (usize, bool) {
+        match curve_polyline(e, d) {
+            Some(Ok(Shape::Polyline { pts, closed, .. })) => (pts.len(), closed),
+            other => panic!("a polyline: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn curves_explode_as_dense_as_asked() {
+        let circle = Shape::Circle {
+            c: Vec2::new(0.0, 0.0),
+            r: 10.0,
+        };
+        assert_eq!(count(&circle, Density::Count(24)), (24, true));
+        assert_eq!(count(&circle, Density::Count(1)), (3, true));
+        assert_eq!(count(&circle, Density::Deviation(DEVIATION)), (71, true));
+        let spline = Shape::Spline {
+            pts: vec![
+                Vec2::new(0.0, 60.0),
+                Vec2::new(5.0, 64.0),
+                Vec2::new(10.0, 60.0),
+                Vec2::new(15.0, 64.0),
+            ],
+            closed: false,
+        };
+        assert_eq!(count(&spline, Density::Count(10)), (11, false));
+        // Every chord within the tolerance of the curve's fine chords.
+        let (n, _) = count(&spline, Density::Deviation(0.01));
+        let (m, _) = count(&spline, Density::Deviation(0.1));
+        assert!(n > m && m > 2, "{n} {m}");
+        assert!(matches!(
+            curve_polyline(&circle, Density::Step(0.0001)),
+            Some(Err(_))
+        ));
+        assert!(
+            curve_polyline(
+                &Shape::Line {
+                    a: Vec2::new(0.0, 0.0),
+                    b: Vec2::new(1.0, 0.0)
+                },
+                Density::Count(4)
+            )
+            .is_none()
+        );
+    }
+}

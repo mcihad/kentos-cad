@@ -12,7 +12,8 @@ use std::collections::HashSet;
 
 use kentos_contracts::{
     ArrayId, CommandResult, CommandWarning, EditOperation, EntitiesEdit, EntitiesEditPlan,
-    EntitiesEdited, EntitiesExplode, Entity, EntityEdit, LayerNodeType,
+    EntitiesEdited, EntitiesExplode, Entity, EntityEdit, ExplodeDensity, LayerNodeType,
+    MAX_EXPLODE_VERTICES,
 };
 use kentos_domain::{Document, Uuid};
 use kentos_geometry_core::api::json::Json;
@@ -20,7 +21,7 @@ use kentos_geometry_core::block::Blocks;
 use kentos_geometry_core::entity::{Entity as CoreEntity, dimension_geom};
 use kentos_geometry_core::geom::dimension::layout_dimension;
 use kentos_geometry_core::ops::curve_cuts::Cut;
-use kentos_geometry_core::ops::explode::explode_entity;
+use kentos_geometry_core::ops::explode::{Density, explode_with};
 use kentos_geometry_core::store::Store;
 use kentos_project::format::Format;
 
@@ -127,9 +128,63 @@ fn with_arrays(doc: &Document, uids: &[String]) -> (Vec<String>, Vec<ArrayId>) {
     (all, arrays)
 }
 
+/// The density an exploded curve takes (docs/adr/0308), checked.
+fn density(d: Option<ExplodeDensity>) -> Result<Option<Density>, Stop> {
+    let bad = |message: &str, path: &str| {
+        Stop::failed(error(
+            codes::INVALID_DENSITY,
+            message.to_owned(),
+            Some(path.into()),
+        ))
+    };
+    Ok(match d {
+        None => None,
+        Some(ExplodeDensity::Count { segments }) => {
+            if !(1..=MAX_EXPLODE_VERTICES).contains(&segments) {
+                return Err(bad(
+                    "Bölüm sayısı 1 ile 100 000 arasında olmalı.",
+                    "density.segments",
+                ));
+            }
+            Some(Density::Count(segments))
+        }
+        Some(ExplodeDensity::Step { length }) => {
+            if !(length > 0.0 && length.is_finite()) {
+                return Err(bad(
+                    "Aralık sıfırdan büyük bir sayı olmalı.",
+                    "density.length",
+                ));
+            }
+            Some(Density::Step(length))
+        }
+        Some(ExplodeDensity::Deviation { tolerance }) => {
+            if !(tolerance > 0.0 && tolerance.is_finite()) {
+                return Err(bad(
+                    "Sapma sıfırdan büyük bir sayı olmalı.",
+                    "density.tolerance",
+                ));
+            }
+            Some(Density::Deviation(tolerance))
+        }
+    })
+}
+
+/// Whether `e` is a curve Patlat turns into one polyline, its data kept (docs/adr/0308).
+fn curve(e: &Entity) -> bool {
+    matches!(
+        e,
+        Entity::Circle(_)
+            | Entity::Arc(_)
+            | Entity::Ellipse(_)
+            | Entity::Spline(_)
+            | Entity::Nurbs(_)
+    )
+}
+
 /// The checks in the contract's order, and the edit they make.
 fn check(doc: &Document, store: Option<&Store>, input: &EntitiesExplode) -> Result<Checked, Stop> {
     checks::uids(&input.uids, "Patlatılacak nesne verilmedi.")?;
+    let density = density(input.density)?;
     checks::revision(doc, input.expected_revision.as_deref())?;
     let (all, arrays) = with_arrays(doc, &input.uids);
     let found = checks::named(doc, &all)?;
@@ -145,7 +200,7 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesExplode) -> Resu
         let insert = matches!(e, Entity::Insert(_));
         let cut = match (e, blocks) {
             (Entity::Insert(_), Some(blocks)) => blocks.explode(&core_entity(e)),
-            _ => explode_entity(&shape(e), &value_text(e, &f), font),
+            _ => explode_with(&shape(e), &value_text(e, &f), font, density),
         };
         match cut {
             Cut::Error(message) => {
@@ -161,7 +216,8 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesExplode) -> Resu
                     changes.push(if insert {
                         block_piece(doc, uid, geometry, &piece)
                     } else {
-                        EntityEdit::add(uid.clone(), geometry, None)
+                        // A curve's one polyline is the same thing drawn otherwise: its data go with it.
+                        EntityEdit::add(uid.clone(), geometry, curve(e).then_some(true))
                     });
                 }
             }
@@ -212,8 +268,17 @@ pub mod entities_explode {
         cx: &ExecutionContext<'_>,
         input: &EntitiesExplode,
     ) -> CommandResult<EntitiesEditPlan> {
-        match check(cx.doc, cx.store, input) {
-            Ok(checked) => match edit::plan_in(cx.doc, &checked.change) {
+        plan_in(cx.doc, cx.store, input)
+    }
+
+    /// [`plan`] over the document and, when the host has one, its store (the Patlat tool's preview).
+    pub fn plan_in(
+        doc: &Document,
+        store: Option<&Store>,
+        input: &EntitiesExplode,
+    ) -> CommandResult<EntitiesEditPlan> {
+        match check(doc, store, input) {
+            Ok(checked) => match edit::plan_in(doc, &checked.change) {
                 CommandResult::Completed { output, warnings } => CommandResult::Completed {
                     output,
                     warnings: [checked.warnings, warnings].concat(),
