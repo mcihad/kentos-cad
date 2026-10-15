@@ -3,6 +3,7 @@
 //! One binary links once where each file was linked on its own.
 
 mod array_assoc;
+mod audit_cmd;
 mod break_join_ties;
 mod capabilities;
 mod catalog;

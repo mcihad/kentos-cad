@@ -454,6 +454,12 @@ const ENTRIES: &[Entry] = &[
         },
     },
     Entry {
+        id: "cad.drawing.audit",
+        refusals: &[REVISION],
+        warnings: &["layer_locked"],
+        targets: none,
+    },
+    Entry {
         id: "cad.entities.cleanup",
         refusals: &[
             &[

@@ -1595,6 +1595,42 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Denetle (docs/adr/0306), held together by fixtures/commands/v1/cad.drawing.audit.json.
+        CommandDescriptor {
+            id: crate::CAD_DRAWING_AUDIT.into(),
+            version: crate::CAD_DRAWING_AUDIT_VERSION,
+            title: "Denetle".into(),
+            summary: "Çizimin bozuk ilişkilerini ve kayıp tanımlarını bulur, istenirse onarır; kullanılmayan adlı kaynakları raporlar, istenirse stilleri temizler (AutoCAD'in AUDIT ve PURGE'ü). \
+                      Bulunanlar: nesnesi olmayan bağlı yazı (brokenLink), sınır nesnesi olmayan ilişkili tarama (brokenHatch), nesnesi olmayan canlı ölçü bağı (brokenDimension), projede olmayan yazı ya da ölçü stili (missingTextStyle, missingDimensionStyle). \
+                      fix ile onarım tek geri alma adımıdır, “Denetle”: bağ kopar, ilişki kalkar, ölçü bağı “nesne yok” nedeniyle kopar, stil Standart olur, görünüş kalır; kilitli katmandaki nesne onarılmaz, uyarılır. \
+                      Kullanılmayanlar: boş katmanlar ve gruplar, yerleştirilmeyen bloklar (cad.layers.edit'in purge'ünün bulduğu, kilitli olmayanlar), hiçbir nesnenin adını anmadığı yazı ve ölçü stilleri; purge (textStyles, dimensionStyles) stilleri siler, bu bir proje ayarıdır. \
+                      Retler: invalid_revision; expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::DrawingAudit>(),
+            output: schema::<crate::DrawingAudited>(),
+            plan: Some(schema::<crate::DrawingAudited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Yalnız denetle: bulunanları ve kullanılmayanları raporla".into(),
+                    input: json!({}),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Onar ve kullanılmayan stilleri temizle".into(),
+                    input: json!({ "fix": true, "purge": ["textStyles", "dimensionStyles"] }),
+                    output: None,
+                },
+            ],
+        },
         // Ötele's semantic command (docs/adr/0246), held together by
         // fixtures/commands/v1/cad.entities.offset.json. The web is paused
         // (docs/adr/0228): the desktop's host alone runs it for now.
@@ -4263,6 +4299,9 @@ mod tests {
                     crate::CAD_ENTITIES_CLEANUP => {
                         serde_json::from_value::<crate::EntitiesCleanup>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_DRAWING_AUDIT => {
+                        serde_json::from_value::<crate::DrawingAudit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_NURBS_CREATE => {
                         serde_json::from_value::<crate::NurbsCreate>(e.input.clone()).map(|_| ())
                     }
@@ -4516,6 +4555,10 @@ mod tests {
                         }
                         crate::CAD_ENTITIES_CLEANUP => {
                             serde_json::from_value::<crate::EntitiesCleaned>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_DRAWING_AUDIT => {
+                            serde_json::from_value::<crate::DrawingAudited>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ENTITIES_DIVIDE

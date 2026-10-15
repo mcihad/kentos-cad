@@ -170,6 +170,9 @@ Liste:
   uyarıları komutun sözleri; paralel iki doğruya TTY, saat yönünde verilen yaydan Devam; araç durumları
   `fixtures/curve-methods/v1/tools.json`. Web'in donmuş çağrı kayıtları eski `arcStartCenterEnd` ve `arcStartCenterAngle`'ı (tam tur)
   tutar; geri dönüşte komutun kuralına getirilir.
+- [ ] `CAD-EDIT-20` (ADR 0306, 15 Ekim): web'de gerekenler: `cad.drawing.audit`'in TS işleyicisi (sözleşme türleri `DrawingAudit`,
+  `AuditPurge`, `AuditCode`, `AuditFinding`, `ResourceKind`, `UnusedResource`, `DrawingAudited` üretildi; ortak durumlar
+  `cad.drawing.audit.json`), belgenin denetim kuralları (`kentos_domain::audit`'in karşılığı) ve Denetle aracı (`tool.audit`, üç seçenek).
 - [ ] `CAD-EDIT-19` (ADR 0305, 15 Ekim): web'de gerekenler: `cad.entities.cleanup`'ın TS işleyicisi (sözleşme türleri `EntitiesCleanup`,
   `CleanupIgnore`, `CleanupReport`, `EntitiesCleaned`, `EntitiesCleanupPlan` üretildi; ortak durumlar `cad.entities.cleanup.json`),
   çekirdeğin `ops::overkill`'inin WASM'a açılması ve Çizimi temizle'nin komutun planıyla önizleyip yazması, beş seçeneği.

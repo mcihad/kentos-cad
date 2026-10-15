@@ -1,0 +1,4385 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.drawing.audit",
+ "commandVersion": 1,
+ "title": "Denetle: bozuk ilişkiler, kayıp stiller, onarım, kullanılmayan adlı kaynaklar ve stillerin temizliği",
+ "note": "ADR 0306. Bağımsız başvuru: scripts/fixtures/audit_command_cases.py. Kurulumdaki çizim okuyucunun geçirdiği bozuklukları taşır: çizimde olmayan nesneye bağlı yazı, tarama ve ölçü bağı; projede olmayan stiller.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Denetle",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 100,
+   "workspace": "cad",
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+     "name": "Başlık",
+     "font": "arimo",
+     "bold": true
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+     "name": "Eski yazı",
+     "font": "overpass"
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001",
+     "name": "Mimari",
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+     "name": "Eski ölçü",
+     "height": 2.5
+    }
+   ]
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "bos",
+    "name": "Boş",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "eski",
+    "name": "Eski",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "eski-yol",
+      "name": "Eski yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "line",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 10,
+     "y": 0
+    }
+   },
+   {
+    "kind": "text",
+    "id": 2,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 0,
+     "y": 5
+    },
+    "text": "101",
+    "height": 1,
+    "rotation": 0,
+    "labelOf": "0192f5a2-0000-7000-8000-00000000ffff",
+    "labelScale": 500,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d9999"
+   },
+   {
+    "kind": "text",
+    "id": 3,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 0,
+     "y": 8
+    },
+    "text": "Başlık",
+    "height": 1,
+    "rotation": 0,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101"
+   },
+   {
+    "kind": "hatch",
+    "id": 4,
+    "layerId": "cizim",
+    "attrs": {},
+    "ring": [
+     {
+      "x": 20,
+      "y": 0
+     },
+     {
+      "x": 30,
+      "y": 0
+     },
+     {
+      "x": 30,
+      "y": 10
+     },
+     {
+      "x": 20,
+      "y": 10
+     }
+    ],
+    "pattern": {
+     "type": "solid",
+     "angle": 0,
+     "spacing": 1
+    },
+    "assoc": {
+     "outer": "0192f5a2-0000-7000-8000-00000000fffe",
+     "seed": {
+      "x": 25,
+      "y": 5
+     }
+    }
+   },
+   {
+    "kind": "dimension",
+    "id": 5,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": -2
+    },
+    "b": {
+     "x": 10,
+     "y": -2
+    },
+    "offset": 1.5,
+    "height": 0.25,
+    "refs": {
+     "a": {
+      "uid": "0192f5a2-0000-7000-8000-00000000ffff",
+      "place": {
+       "kind": "start"
+      }
+     },
+     "b": {
+      "uid": "0192f5a2-0000-7000-8000-00000000fffe",
+      "place": {
+       "kind": "end"
+      },
+      "broken": "object_gone"
+     }
+    },
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001"
+   },
+   {
+    "kind": "dimension",
+    "id": 6,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": -6
+    },
+    "b": {
+     "x": 10,
+     "y": -6
+    },
+    "offset": 1.5,
+    "height": 0.25,
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d9999"
+   },
+   {
+    "kind": "insert",
+    "id": 7,
+    "layerId": "cizim",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e01",
+    "p": {
+     "x": 40,
+     "y": 0
+    },
+    "scale": 1,
+    "rotation": 0
+   },
+   {
+    "kind": "text",
+    "id": 8,
+    "layerId": "kilitli",
+    "attrs": {},
+    "p": {
+     "x": 40,
+     "y": 10
+    },
+    "text": "Kilitli",
+    "height": 1,
+    "rotation": 0,
+    "labelOf": "0192f5a2-0000-7000-8000-00000000ffff",
+    "labelScale": 500
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "blocks": [
+   {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e01",
+    "name": "Rögar",
+    "base": {
+     "x": 0,
+     "y": 0
+    },
+    "entities": [
+     {
+      "kind": "circle",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "c": {
+       "x": 0,
+       "y": 0
+      },
+      "r": 0.5
+     }
+    ]
+   },
+   {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+    "name": "Eski blok",
+    "base": {
+     "x": 0,
+     "y": 0
+    },
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+       "x": 0,
+       "y": 0
+      },
+      "b": {
+       "x": 1,
+       "y": 0
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "Yalnız denetim: bozuk ilişkiler ve kayıp stiller nesne nesne, kullanılmayan katmanlar, grup, blok ve stiller; hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:2",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingTextStyle",
+         "uid": "$uidOf:2",
+         "message": "Yazının stili projede yok; onarım yazıyı Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:4",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenDimension",
+         "uid": "$uidOf:5",
+         "message": "İlişkili ölçünün bağlı olduğu nesne çizimde yok; onarım bağı “nesne yok” nedeniyle koparır, nokta yerinde kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingDimensionStyle",
+         "uid": "$uidOf:6",
+         "message": "Ölçünün stili projede yok; onarım ölçüyü Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+         "name": "Eski yazı",
+         "purged": false
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+         "name": "Eski ölçü",
+         "purged": false
+        }
+       ],
+       "changed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Onarımla yeniden denetim: yalnız kilitli katmandaki kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "fix": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:2",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingTextStyle",
+         "uid": "$uidOf:2",
+         "message": "Yazının stili projede yok; onarım yazıyı Standart'a bağlar, görünüşü kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:4",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenDimension",
+         "uid": "$uidOf:5",
+         "message": "İlişkili ölçünün bağlı olduğu nesne çizimde yok; onarım bağı “nesne yok” nedeniyle koparır, nokta yerinde kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingDimensionStyle",
+         "uid": "$uidOf:6",
+         "message": "Ölçünün stili projede yok; onarım ölçüyü Standart'a bağlar, görünüşü kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+         "name": "Eski yazı",
+         "purged": false
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+         "name": "Eski ölçü",
+         "purged": false
+        }
+       ],
+       "changed": [
+        "$uidOf:2",
+        "$uidOf:4",
+        "$uidOf:5",
+        "$uidOf:6"
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "layer_locked",
+        "message": "1 nesne kilitli katmanda olduğu için onarılmadı. Onarmak için katmanın kilidini Katmanlar panelinden açın.",
+        "path": "fix"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "entities": {
+       "2": {
+        "kind": "text",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 0,
+         "y": 5
+        },
+        "text": "101",
+        "height": 1,
+        "rotation": 0
+       },
+       "4": {
+        "kind": "hatch",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "ring": [
+         {
+          "x": 20,
+          "y": 0
+         },
+         {
+          "x": 30,
+          "y": 0
+         },
+         {
+          "x": 30,
+          "y": 10
+         },
+         {
+          "x": 20,
+          "y": 10
+         }
+        ],
+        "pattern": {
+         "type": "solid",
+         "angle": 0,
+         "spacing": 1
+        }
+       },
+       "5": {
+        "kind": "dimension",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": -2
+        },
+        "b": {
+         "x": 10,
+         "y": -2
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "0192f5a2-0000-7000-8000-00000000ffff",
+          "place": {
+           "kind": "start"
+          },
+          "broken": "object_gone"
+         },
+         "b": {
+          "uid": "0192f5a2-0000-7000-8000-00000000fffe",
+          "place": {
+           "kind": "end"
+          },
+          "broken": "object_gone"
+         }
+        },
+        "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001"
+       },
+       "6": {
+        "kind": "dimension",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": -6
+        },
+        "b": {
+         "x": 10,
+         "y": -6
+        },
+        "offset": 1.5,
+        "height": 0.25
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+         "name": "Eski yazı",
+         "purged": false
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+         "name": "Eski ölçü",
+         "purged": false
+        }
+       ],
+       "changed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kullanılmayan yazı stilleri temizlenir (proje ayarı, geri alma adımı değil); yeniden denetimde yoktur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "purge": [
+       "textStyles"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:2",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingTextStyle",
+         "uid": "$uidOf:2",
+         "message": "Yazının stili projede yok; onarım yazıyı Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:4",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenDimension",
+         "uid": "$uidOf:5",
+         "message": "İlişkili ölçünün bağlı olduğu nesne çizimde yok; onarım bağı “nesne yok” nedeniyle koparır, nokta yerinde kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingDimensionStyle",
+         "uid": "$uidOf:6",
+         "message": "Ölçünün stili projede yok; onarım ölçüyü Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+         "name": "Eski yazı",
+         "purged": true
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+         "name": "Eski ölçü",
+         "purged": false
+        }
+       ],
+       "changed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:2",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingTextStyle",
+         "uid": "$uidOf:2",
+         "message": "Yazının stili projede yok; onarım yazıyı Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:4",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenDimension",
+         "uid": "$uidOf:5",
+         "message": "İlişkili ölçünün bağlı olduğu nesne çizimde yok; onarım bağı “nesne yok” nedeniyle koparır, nokta yerinde kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingDimensionStyle",
+         "uid": "$uidOf:6",
+         "message": "Ölçünün stili projede yok; onarım ölçüyü Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+         "name": "Eski ölçü",
+         "purged": false
+        }
+       ],
+       "changed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kullanılmayan ölçü stilleri temizlenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "purge": [
+       "dimensionStyles"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:2",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingTextStyle",
+         "uid": "$uidOf:2",
+         "message": "Yazının stili projede yok; onarım yazıyı Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:4",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenDimension",
+         "uid": "$uidOf:5",
+         "message": "İlişkili ölçünün bağlı olduğu nesne çizimde yok; onarım bağı “nesne yok” nedeniyle koparır, nokta yerinde kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingDimensionStyle",
+         "uid": "$uidOf:6",
+         "message": "Ölçünün stili projede yok; onarım ölçüyü Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+         "name": "Eski yazı",
+         "purged": false
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+         "name": "Eski ölçü",
+         "purged": true
+        }
+       ],
+       "changed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:2",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingTextStyle",
+         "uid": "$uidOf:2",
+         "message": "Yazının stili projede yok; onarım yazıyı Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:4",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenDimension",
+         "uid": "$uidOf:5",
+         "message": "İlişkili ölçünün bağlı olduğu nesne çizimde yok; onarım bağı “nesne yok” nedeniyle koparır, nokta yerinde kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingDimensionStyle",
+         "uid": "$uidOf:6",
+         "message": "Ölçünün stili projede yok; onarım ölçüyü Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+         "name": "Eski yazı",
+         "purged": false
+        }
+       ],
+       "changed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Onarım ve iki tür stilin temizliği birlikte",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "fix": true,
+      "purge": [
+       "textStyles",
+       "dimensionStyles"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:2",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingTextStyle",
+         "uid": "$uidOf:2",
+         "message": "Yazının stili projede yok; onarım yazıyı Standart'a bağlar, görünüşü kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:4",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenDimension",
+         "uid": "$uidOf:5",
+         "message": "İlişkili ölçünün bağlı olduğu nesne çizimde yok; onarım bağı “nesne yok” nedeniyle koparır, nokta yerinde kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingDimensionStyle",
+         "uid": "$uidOf:6",
+         "message": "Ölçünün stili projede yok; onarım ölçüyü Standart'a bağlar, görünüşü kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+         "name": "Eski yazı",
+         "purged": true
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+         "name": "Eski ölçü",
+         "purged": true
+        }
+       ],
+       "changed": [
+        "$uidOf:2",
+        "$uidOf:4",
+        "$uidOf:5",
+        "$uidOf:6"
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "layer_locked",
+        "message": "1 nesne kilitli katmanda olduğu için onarılmadı. Onarmak için katmanın kilidini Katmanlar panelinden açın.",
+        "path": "fix"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "entities": {
+       "2": {
+        "kind": "text",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 0,
+         "y": 5
+        },
+        "text": "101",
+        "height": 1,
+        "rotation": 0
+       },
+       "4": {
+        "kind": "hatch",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "ring": [
+         {
+          "x": 20,
+          "y": 0
+         },
+         {
+          "x": 30,
+          "y": 0
+         },
+         {
+          "x": 30,
+          "y": 10
+         },
+         {
+          "x": 20,
+          "y": 10
+         }
+        ],
+        "pattern": {
+         "type": "solid",
+         "angle": 0,
+         "spacing": 1
+        }
+       },
+       "5": {
+        "kind": "dimension",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": -2
+        },
+        "b": {
+         "x": 10,
+         "y": -2
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "0192f5a2-0000-7000-8000-00000000ffff",
+          "place": {
+           "kind": "start"
+          },
+          "broken": "object_gone"
+         },
+         "b": {
+          "uid": "0192f5a2-0000-7000-8000-00000000fffe",
+          "place": {
+           "kind": "end"
+          },
+          "broken": "object_gone"
+         }
+        },
+        "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001"
+       },
+       "6": {
+        "kind": "dimension",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": -6
+        },
+        "b": {
+         "x": 10,
+         "y": -6
+        },
+        "offset": 1.5,
+        "height": 0.25
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        }
+       ],
+       "changed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kayıp stil Standart olunca kullanılan stiller değişmez: yalnız adı geçmeyenler temizlenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "fix": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:2",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingTextStyle",
+         "uid": "$uidOf:2",
+         "message": "Yazının stili projede yok; onarım yazıyı Standart'a bağlar, görünüşü kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:4",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenDimension",
+         "uid": "$uidOf:5",
+         "message": "İlişkili ölçünün bağlı olduğu nesne çizimde yok; onarım bağı “nesne yok” nedeniyle koparır, nokta yerinde kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingDimensionStyle",
+         "uid": "$uidOf:6",
+         "message": "Ölçünün stili projede yok; onarım ölçüyü Standart'a bağlar, görünüşü kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+         "name": "Eski yazı",
+         "purged": false
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+         "name": "Eski ölçü",
+         "purged": false
+        }
+       ],
+       "changed": [
+        "$uidOf:2",
+        "$uidOf:4",
+        "$uidOf:5",
+        "$uidOf:6"
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "layer_locked",
+        "message": "1 nesne kilitli katmanda olduğu için onarılmadı. Onarmak için katmanın kilidini Katmanlar panelinden açın.",
+        "path": "fix"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "entities": {
+       "2": {
+        "kind": "text",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 0,
+         "y": 5
+        },
+        "text": "101",
+        "height": 1,
+        "rotation": 0
+       },
+       "4": {
+        "kind": "hatch",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "ring": [
+         {
+          "x": 20,
+          "y": 0
+         },
+         {
+          "x": 30,
+          "y": 0
+         },
+         {
+          "x": 30,
+          "y": 10
+         },
+         {
+          "x": 20,
+          "y": 10
+         }
+        ],
+        "pattern": {
+         "type": "solid",
+         "angle": 0,
+         "spacing": 1
+        }
+       },
+       "5": {
+        "kind": "dimension",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": -2
+        },
+        "b": {
+         "x": 10,
+         "y": -2
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "0192f5a2-0000-7000-8000-00000000ffff",
+          "place": {
+           "kind": "start"
+          },
+          "broken": "object_gone"
+         },
+         "b": {
+          "uid": "0192f5a2-0000-7000-8000-00000000fffe",
+          "place": {
+           "kind": "end"
+          },
+          "broken": "object_gone"
+         }
+        },
+        "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001"
+       },
+       "6": {
+        "kind": "dimension",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": -6
+        },
+        "b": {
+         "x": 10,
+         "y": -6
+        },
+        "offset": 1.5,
+        "height": 0.25
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "purge": [
+       "textStyles",
+       "dimensionStyles"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+         "name": "Eski yazı",
+         "purged": true
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+         "name": "Eski ölçü",
+         "purged": true
+        }
+       ],
+       "changed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Boş temizlik listesi bir şey silmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "purge": []
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:2",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingTextStyle",
+         "uid": "$uidOf:2",
+         "message": "Yazının stili projede yok; onarım yazıyı Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:4",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenDimension",
+         "uid": "$uidOf:5",
+         "message": "İlişkili ölçünün bağlı olduğu nesne çizimde yok; onarım bağı “nesne yok” nedeniyle koparır, nokta yerinde kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingDimensionStyle",
+         "uid": "$uidOf:6",
+         "message": "Ölçünün stili projede yok; onarım ölçüyü Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+         "name": "Eski yazı",
+         "purged": false
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+         "name": "Eski ölçü",
+         "purged": false
+        }
+       ],
+       "changed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki kez onarım: ikincisi bir şey yazmaz, uyarı kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "fix": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:2",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingTextStyle",
+         "uid": "$uidOf:2",
+         "message": "Yazının stili projede yok; onarım yazıyı Standart'a bağlar, görünüşü kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:4",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenDimension",
+         "uid": "$uidOf:5",
+         "message": "İlişkili ölçünün bağlı olduğu nesne çizimde yok; onarım bağı “nesne yok” nedeniyle koparır, nokta yerinde kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingDimensionStyle",
+         "uid": "$uidOf:6",
+         "message": "Ölçünün stili projede yok; onarım ölçüyü Standart'a bağlar, görünüşü kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+         "name": "Eski yazı",
+         "purged": false
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+         "name": "Eski ölçü",
+         "purged": false
+        }
+       ],
+       "changed": [
+        "$uidOf:2",
+        "$uidOf:4",
+        "$uidOf:5",
+        "$uidOf:6"
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "layer_locked",
+        "message": "1 nesne kilitli katmanda olduğu için onarılmadı. Onarmak için katmanın kilidini Katmanlar panelinden açın.",
+        "path": "fix"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "entities": {
+       "2": {
+        "kind": "text",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 0,
+         "y": 5
+        },
+        "text": "101",
+        "height": 1,
+        "rotation": 0
+       },
+       "4": {
+        "kind": "hatch",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "ring": [
+         {
+          "x": 20,
+          "y": 0
+         },
+         {
+          "x": 30,
+          "y": 0
+         },
+         {
+          "x": 30,
+          "y": 10
+         },
+         {
+          "x": 20,
+          "y": 10
+         }
+        ],
+        "pattern": {
+         "type": "solid",
+         "angle": 0,
+         "spacing": 1
+        }
+       },
+       "5": {
+        "kind": "dimension",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": -2
+        },
+        "b": {
+         "x": 10,
+         "y": -2
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "0192f5a2-0000-7000-8000-00000000ffff",
+          "place": {
+           "kind": "start"
+          },
+          "broken": "object_gone"
+         },
+         "b": {
+          "uid": "0192f5a2-0000-7000-8000-00000000fffe",
+          "place": {
+           "kind": "end"
+          },
+          "broken": "object_gone"
+         }
+        },
+        "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001"
+       },
+       "6": {
+        "kind": "dimension",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": -6
+        },
+        "b": {
+         "x": 10,
+         "y": -6
+        },
+        "offset": 1.5,
+        "height": 0.25
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "fix": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+         "name": "Eski yazı",
+         "purged": false
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+         "name": "Eski ölçü",
+         "purged": false
+        }
+       ],
+       "changed": [],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "layer_locked",
+        "message": "1 nesne kilitli katmanda olduğu için onarılmadı. Onarmak için katmanın kilidini Katmanlar panelinden açın.",
+        "path": "fix"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Temizlenecek stil kalmayınca temizlik yazmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "purge": [
+       "textStyles",
+       "dimensionStyles"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:2",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingTextStyle",
+         "uid": "$uidOf:2",
+         "message": "Yazının stili projede yok; onarım yazıyı Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:4",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenDimension",
+         "uid": "$uidOf:5",
+         "message": "İlişkili ölçünün bağlı olduğu nesne çizimde yok; onarım bağı “nesne yok” nedeniyle koparır, nokta yerinde kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingDimensionStyle",
+         "uid": "$uidOf:6",
+         "message": "Ölçünün stili projede yok; onarım ölçüyü Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+         "name": "Eski yazı",
+         "purged": true
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+         "name": "Eski ölçü",
+         "purged": true
+        }
+       ],
+       "changed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "purge": [
+       "textStyles",
+       "dimensionStyles"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:2",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingTextStyle",
+         "uid": "$uidOf:2",
+         "message": "Yazının stili projede yok; onarım yazıyı Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:4",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenDimension",
+         "uid": "$uidOf:5",
+         "message": "İlişkili ölçünün bağlı olduğu nesne çizimde yok; onarım bağı “nesne yok” nedeniyle koparır, nokta yerinde kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingDimensionStyle",
+         "uid": "$uidOf:6",
+         "message": "Ölçünün stili projede yok; onarım ölçüyü Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        }
+       ],
+       "changed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm şimdiki sürümse onarım yazılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "fix": true,
+      "expectedRevision": "$current"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:2",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingTextStyle",
+         "uid": "$uidOf:2",
+         "message": "Yazının stili projede yok; onarım yazıyı Standart'a bağlar, görünüşü kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:4",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenDimension",
+         "uid": "$uidOf:5",
+         "message": "İlişkili ölçünün bağlı olduğu nesne çizimde yok; onarım bağı “nesne yok” nedeniyle koparır, nokta yerinde kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingDimensionStyle",
+         "uid": "$uidOf:6",
+         "message": "Ölçünün stili projede yok; onarım ölçüyü Standart'a bağlar, görünüşü kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+         "name": "Eski yazı",
+         "purged": false
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+         "name": "Eski ölçü",
+         "purged": false
+        }
+       ],
+       "changed": [
+        "$uidOf:2",
+        "$uidOf:4",
+        "$uidOf:5",
+        "$uidOf:6"
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "layer_locked",
+        "message": "1 nesne kilitli katmanda olduğu için onarılmadı. Onarmak için katmanın kilidini Katmanlar panelinden açın.",
+        "path": "fix"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "entities": {
+       "2": {
+        "kind": "text",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 0,
+         "y": 5
+        },
+        "text": "101",
+        "height": 1,
+        "rotation": 0
+       },
+       "4": {
+        "kind": "hatch",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "ring": [
+         {
+          "x": 20,
+          "y": 0
+         },
+         {
+          "x": 30,
+          "y": 0
+         },
+         {
+          "x": 30,
+          "y": 10
+         },
+         {
+          "x": 20,
+          "y": 10
+         }
+        ],
+        "pattern": {
+         "type": "solid",
+         "angle": 0,
+         "spacing": 1
+        }
+       },
+       "5": {
+        "kind": "dimension",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": -2
+        },
+        "b": {
+         "x": 10,
+         "y": -2
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "0192f5a2-0000-7000-8000-00000000ffff",
+          "place": {
+           "kind": "start"
+          },
+          "broken": "object_gone"
+         },
+         "b": {
+          "uid": "0192f5a2-0000-7000-8000-00000000fffe",
+          "place": {
+           "kind": "end"
+          },
+          "broken": "object_gone"
+         }
+        },
+        "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001"
+       },
+       "6": {
+        "kind": "dimension",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": -6
+        },
+        "b": {
+         "x": 10,
+         "y": -6
+        },
+        "offset": 1.5,
+        "height": 0.25
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Onarım tek adım “Denetle”: geri alınır ve yinelenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "fix": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:2",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingTextStyle",
+         "uid": "$uidOf:2",
+         "message": "Yazının stili projede yok; onarım yazıyı Standart'a bağlar, görünüşü kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:4",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenDimension",
+         "uid": "$uidOf:5",
+         "message": "İlişkili ölçünün bağlı olduğu nesne çizimde yok; onarım bağı “nesne yok” nedeniyle koparır, nokta yerinde kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingDimensionStyle",
+         "uid": "$uidOf:6",
+         "message": "Ölçünün stili projede yok; onarım ölçüyü Standart'a bağlar, görünüşü kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+         "name": "Eski yazı",
+         "purged": false
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+         "name": "Eski ölçü",
+         "purged": false
+        }
+       ],
+       "changed": [
+        "$uidOf:2",
+        "$uidOf:4",
+        "$uidOf:5",
+        "$uidOf:6"
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "layer_locked",
+        "message": "1 nesne kilitli katmanda olduğu için onarılmadı. Onarmak için katmanın kilidini Katmanlar panelinden açın.",
+        "path": "fix"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "entities": {
+       "2": {
+        "kind": "text",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 0,
+         "y": 5
+        },
+        "text": "101",
+        "height": 1,
+        "rotation": 0
+       },
+       "4": {
+        "kind": "hatch",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "ring": [
+         {
+          "x": 20,
+          "y": 0
+         },
+         {
+          "x": 30,
+          "y": 0
+         },
+         {
+          "x": 30,
+          "y": 10
+         },
+         {
+          "x": 20,
+          "y": 10
+         }
+        ],
+        "pattern": {
+         "type": "solid",
+         "angle": 0,
+         "spacing": 1
+        }
+       },
+       "5": {
+        "kind": "dimension",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": -2
+        },
+        "b": {
+         "x": 10,
+         "y": -2
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "0192f5a2-0000-7000-8000-00000000ffff",
+          "place": {
+           "kind": "start"
+          },
+          "broken": "object_gone"
+         },
+         "b": {
+          "uid": "0192f5a2-0000-7000-8000-00000000fffe",
+          "place": {
+           "kind": "end"
+          },
+          "broken": "object_gone"
+         }
+        },
+        "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001"
+       },
+       "6": {
+        "kind": "dimension",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": -6
+        },
+        "b": {
+         "x": 10,
+         "y": -6
+        },
+        "offset": 1.5,
+        "height": 0.25
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Denetle",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "entities": {
+       "2": {
+        "kind": "text",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 0,
+         "y": 5
+        },
+        "text": "101",
+        "height": 1,
+        "rotation": 0,
+        "labelOf": "0192f5a2-0000-7000-8000-00000000ffff",
+        "labelScale": 500,
+        "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d9999"
+       },
+       "4": {
+        "kind": "hatch",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "ring": [
+         {
+          "x": 20,
+          "y": 0
+         },
+         {
+          "x": 30,
+          "y": 0
+         },
+         {
+          "x": 30,
+          "y": 10
+         },
+         {
+          "x": 20,
+          "y": 10
+         }
+        ],
+        "pattern": {
+         "type": "solid",
+         "angle": 0,
+         "spacing": 1
+        },
+        "assoc": {
+         "outer": "0192f5a2-0000-7000-8000-00000000fffe",
+         "seed": {
+          "x": 25,
+          "y": 5
+         }
+        }
+       },
+       "5": {
+        "kind": "dimension",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": -2
+        },
+        "b": {
+         "x": 10,
+         "y": -2
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "0192f5a2-0000-7000-8000-00000000ffff",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "0192f5a2-0000-7000-8000-00000000fffe",
+          "place": {
+           "kind": "end"
+          },
+          "broken": "object_gone"
+         }
+        },
+        "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001"
+       },
+       "6": {
+        "kind": "dimension",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": -6
+        },
+        "b": {
+         "x": 10,
+         "y": -6
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d9999"
+       }
+      }
+     }
+    },
+    {
+     "op": "redo",
+     "returns": "Denetle",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "entities": {
+       "2": {
+        "kind": "text",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 0,
+         "y": 5
+        },
+        "text": "101",
+        "height": 1,
+        "rotation": 0
+       },
+       "4": {
+        "kind": "hatch",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "ring": [
+         {
+          "x": 20,
+          "y": 0
+         },
+         {
+          "x": 30,
+          "y": 0
+         },
+         {
+          "x": 30,
+          "y": 10
+         },
+         {
+          "x": 20,
+          "y": 10
+         }
+        ],
+        "pattern": {
+         "type": "solid",
+         "angle": 0,
+         "spacing": 1
+        }
+       },
+       "5": {
+        "kind": "dimension",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": -2
+        },
+        "b": {
+         "x": 10,
+         "y": -2
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "0192f5a2-0000-7000-8000-00000000ffff",
+          "place": {
+           "kind": "start"
+          },
+          "broken": "object_gone"
+         },
+         "b": {
+          "uid": "0192f5a2-0000-7000-8000-00000000fffe",
+          "place": {
+           "kind": "end"
+          },
+          "broken": "object_gone"
+         }
+        },
+        "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001"
+       },
+       "6": {
+        "kind": "dimension",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": -6
+        },
+        "b": {
+         "x": 10,
+         "y": -6
+        },
+        "offset": 1.5,
+        "height": 0.25
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilit açılınca kilitli katmandaki yazı da onarılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "fix": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:2",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingTextStyle",
+         "uid": "$uidOf:2",
+         "message": "Yazının stili projede yok; onarım yazıyı Standart'a bağlar, görünüşü kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:4",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenDimension",
+         "uid": "$uidOf:5",
+         "message": "İlişkili ölçünün bağlı olduğu nesne çizimde yok; onarım bağı “nesne yok” nedeniyle koparır, nokta yerinde kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingDimensionStyle",
+         "uid": "$uidOf:6",
+         "message": "Ölçünün stili projede yok; onarım ölçüyü Standart'a bağlar, görünüşü kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+         "name": "Eski yazı",
+         "purged": false
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+         "name": "Eski ölçü",
+         "purged": false
+        }
+       ],
+       "changed": [
+        "$uidOf:2",
+        "$uidOf:4",
+        "$uidOf:5",
+        "$uidOf:6"
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "layer_locked",
+        "message": "1 nesne kilitli katmanda olduğu için onarılmadı. Onarmak için katmanın kilidini Katmanlar panelinden açın.",
+        "path": "fix"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "entities": {
+       "2": {
+        "kind": "text",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 0,
+         "y": 5
+        },
+        "text": "101",
+        "height": 1,
+        "rotation": 0
+       },
+       "4": {
+        "kind": "hatch",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "ring": [
+         {
+          "x": 20,
+          "y": 0
+         },
+         {
+          "x": 30,
+          "y": 0
+         },
+         {
+          "x": 30,
+          "y": 10
+         },
+         {
+          "x": 20,
+          "y": 10
+         }
+        ],
+        "pattern": {
+         "type": "solid",
+         "angle": 0,
+         "spacing": 1
+        }
+       },
+       "5": {
+        "kind": "dimension",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": -2
+        },
+        "b": {
+         "x": 10,
+         "y": -2
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "0192f5a2-0000-7000-8000-00000000ffff",
+          "place": {
+           "kind": "start"
+          },
+          "broken": "object_gone"
+         },
+         "b": {
+          "uid": "0192f5a2-0000-7000-8000-00000000fffe",
+          "place": {
+           "kind": "end"
+          },
+          "broken": "object_gone"
+         }
+        },
+        "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001"
+       },
+       "6": {
+        "kind": "dimension",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": -6
+        },
+        "b": {
+         "x": 10,
+         "y": -6
+        },
+        "offset": 1.5,
+        "height": 0.25
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.set",
+     "input": {
+      "operation": "locked",
+      "layer": "kilitli",
+      "value": false
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "fix": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": true
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+         "name": "Eski yazı",
+         "purged": false
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+         "name": "Eski ölçü",
+         "purged": false
+        }
+       ],
+       "changed": [
+        "$uidOf:8"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "entities": {
+       "8": {
+        "kind": "text",
+        "id": 8,
+        "layerId": "kilitli",
+        "attrs": {},
+        "p": {
+         "x": 40,
+         "y": 10
+        },
+        "text": "Kilitli",
+        "height": 1,
+        "rotation": 0
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yerleştirmesi silinen blok kullanılmayanlara katılır (tanımların sırasıyla)",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "$uidOf:7"
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:2",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingTextStyle",
+         "uid": "$uidOf:2",
+         "message": "Yazının stili projede yok; onarım yazıyı Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:4",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenDimension",
+         "uid": "$uidOf:5",
+         "message": "İlişkili ölçünün bağlı olduğu nesne çizimde yok; onarım bağı “nesne yok” nedeniyle koparır, nokta yerinde kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingDimensionStyle",
+         "uid": "$uidOf:6",
+         "message": "Ölçünün stili projede yok; onarım ölçüyü Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e01",
+         "name": "Rögar",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+         "name": "Eski yazı",
+         "purged": false
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+         "name": "Eski ölçü",
+         "purged": false
+        }
+       ],
+       "changed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       8
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Stilini kullanan nesneler silinince stil kullanılmaz olur ve temizlenir",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "$uidOf:3",
+       "$uidOf:5"
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "purge": [
+       "textStyles",
+       "dimensionStyles"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:2",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingTextStyle",
+         "uid": "$uidOf:2",
+         "message": "Yazının stili projede yok; onarım yazıyı Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:4",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingDimensionStyle",
+         "uid": "$uidOf:6",
+         "message": "Ölçünün stili projede yok; onarım ölçüyü Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+         "name": "Başlık",
+         "purged": true
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+         "name": "Eski yazı",
+         "purged": true
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001",
+         "name": "Mimari",
+         "purged": true
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+         "name": "Eski ölçü",
+         "purged": true
+        }
+       ],
+       "changed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       4,
+       6,
+       7,
+       8
+      ],
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:2",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingTextStyle",
+         "uid": "$uidOf:2",
+         "message": "Yazının stili projede yok; onarım yazıyı Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:4",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingDimensionStyle",
+         "uid": "$uidOf:6",
+         "message": "Ölçünün stili projede yok; onarım ölçüyü Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        }
+       ],
+       "changed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       4,
+       6,
+       7,
+       8
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Onarılacak nesne kalmayınca onarım bir şey yazmaz; kilitli katmandaki silinmez, söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "$uidOf:2",
+       "$uidOf:4",
+       "$uidOf:5",
+       "$uidOf:6",
+       "$uidOf:8"
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "fix": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+         "name": "Eski yazı",
+         "purged": false
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001",
+         "name": "Mimari",
+         "purged": false
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+         "name": "Eski ölçü",
+         "purged": false
+        }
+       ],
+       "changed": [],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "layer_locked",
+        "message": "1 nesne kilitli katmanda olduğu için onarılmadı. Onarmak için katmanın kilidini Katmanlar panelinden açın.",
+        "path": "fix"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       3,
+       7,
+       8
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Temiz çizim: bulgu yok, yalnız kullanılmayan katmanlar, grup ve blok; onarım bir şey yazmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        }
+       ],
+       "changed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "fix": true,
+      "purge": [
+       "textStyles",
+       "dimensionStyles"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        }
+       ],
+       "changed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Denetle",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100,
+     "workspace": "cad",
+     "textStyles": [
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+       "name": "Başlık",
+       "font": "arimo",
+       "bold": true
+      }
+     ],
+     "dimensionStyles": [
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001",
+       "name": "Mimari",
+       "height": 3.5
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bos",
+      "name": "Boş",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "eski",
+      "name": "Eski",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "eski-yol",
+        "name": "Eski yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 0,
+       "y": 0
+      },
+      "b": {
+       "x": 10,
+       "y": 0
+      }
+     },
+     {
+      "kind": "text",
+      "id": 2,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 0,
+       "y": 8
+      },
+      "text": "Başlık",
+      "height": 1,
+      "rotation": 0,
+      "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101"
+     },
+     {
+      "kind": "insert",
+      "id": 3,
+      "layerId": "cizim",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e01",
+      "p": {
+       "x": 40,
+       "y": 0
+      },
+      "scale": 1,
+      "rotation": 0
+     },
+     {
+      "kind": "dimension",
+      "id": 4,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 0,
+       "y": -2
+      },
+      "b": {
+       "x": 10,
+       "y": -2
+      },
+      "offset": 1.5,
+      "height": 0.25,
+      "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001"
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e01",
+      "name": "Rögar",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "kind": "circle",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+         "x": 0,
+         "y": 0
+        },
+        "r": 0.5
+       }
+      ]
+     },
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+      "name": "Eski blok",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "kind": "line",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 1,
+         "y": 0
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Plan onarımı ve temizliği gösterir, hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "fix": true,
+      "purge": [
+       "textStyles"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:2",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingTextStyle",
+         "uid": "$uidOf:2",
+         "message": "Yazının stili projede yok; onarım yazıyı Standart'a bağlar, görünüşü kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:4",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenDimension",
+         "uid": "$uidOf:5",
+         "message": "İlişkili ölçünün bağlı olduğu nesne çizimde yok; onarım bağı “nesne yok” nedeniyle koparır, nokta yerinde kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingDimensionStyle",
+         "uid": "$uidOf:6",
+         "message": "Ölçünün stili projede yok; onarım ölçüyü Standart'a bağlar, görünüşü kalır.",
+         "fixed": true
+        },
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+         "name": "Eski yazı",
+         "purged": true
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+         "name": "Eski ölçü",
+         "purged": false
+        }
+       ],
+       "changed": [
+        "$uidOf:2",
+        "$uidOf:4",
+        "$uidOf:5",
+        "$uidOf:6"
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "layer_locked",
+        "message": "1 nesne kilitli katmanda olduğu için onarılmadı. Onarmak için katmanın kilidini Katmanlar panelinden açın.",
+        "path": "fix"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "revision": "same"
+     }
+    },
+    {
+     "op": "plan",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:2",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingTextStyle",
+         "uid": "$uidOf:2",
+         "message": "Yazının stili projede yok; onarım yazıyı Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:4",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenDimension",
+         "uid": "$uidOf:5",
+         "message": "İlişkili ölçünün bağlı olduğu nesne çizimde yok; onarım bağı “nesne yok” nedeniyle koparır, nokta yerinde kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingDimensionStyle",
+         "uid": "$uidOf:6",
+         "message": "Ölçünün stili projede yok; onarım ölçüyü Standart'a bağlar, görünüşü kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenLink",
+         "uid": "$uidOf:8",
+         "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        }
+       ],
+       "unused": [
+        {
+         "kind": "layer",
+         "id": "bos",
+         "name": "Boş",
+         "purged": false
+        },
+        {
+         "kind": "layer",
+         "id": "eski-yol",
+         "name": "Eski / Eski yol",
+         "purged": false
+        },
+        {
+         "kind": "group",
+         "id": "eski",
+         "name": "Eski",
+         "purged": false
+        },
+        {
+         "kind": "block",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02",
+         "name": "Eski blok",
+         "purged": false
+        },
+        {
+         "kind": "textStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+         "name": "Eski yazı",
+         "purged": false
+        },
+        {
+         "kind": "dimensionStyle",
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5002",
+         "name": "Eski ölçü",
+         "purged": false
+        }
+       ],
+       "changed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Doğrulama kilitli katmandakinin uyarısını yalnız onarımda verir",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "fix": true
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": [
+       {
+        "code": "layer_locked",
+        "message": "1 nesne kilitli katmanda olduğu için onarılmadı. Onarmak için katmanın kilidini Katmanlar panelinden açın.",
+        "path": "fix"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "validate",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "validate",
+     "input": {
+      "purge": [
+       "textStyles"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm sayı değil: invalid_revision",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "fix": true,
+      "expectedRevision": "on iki"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm geçmişte kaldıysa conflict, hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "captureRevision",
+     "as": "old"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 1,
+       "dy": 0
+      }
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "fix": true,
+      "purge": [
+       "textStyles"
+      ],
+      "expectedRevision": "$old"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "path": "expectedRevision",
+       "revision": "$current",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın."
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

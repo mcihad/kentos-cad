@@ -111025,6 +111025,358 @@
       ]
     },
     {
+      "id": "cad.drawing.audit",
+      "version": 1,
+      "title": "Denetle",
+      "summary": "Çizimin bozuk ilişkilerini ve kayıp tanımlarını bulur, istenirse onarır; kullanılmayan adlı kaynakları raporlar, istenirse stilleri temizler (AutoCAD'in AUDIT ve PURGE'ü). Bulunanlar: nesnesi olmayan bağlı yazı (brokenLink), sınır nesnesi olmayan ilişkili tarama (brokenHatch), nesnesi olmayan canlı ölçü bağı (brokenDimension), projede olmayan yazı ya da ölçü stili (missingTextStyle, missingDimensionStyle). fix ile onarım tek geri alma adımıdır, “Denetle”: bağ kopar, ilişki kalkar, ölçü bağı “nesne yok” nedeniyle kopar, stil Standart olur, görünüş kalır; kilitli katmandaki nesne onarılmaz, uyarılır. Kullanılmayanlar: boş katmanlar ve gruplar, yerleştirilmeyen bloklar (cad.layers.edit'in purge'ünün bulduğu, kilitli olmayanlar), hiçbir nesnenin adını anmadığı yazı ve ölçü stilleri; purge (textStyles, dimensionStyles) stilleri siler, bu bir proje ayarıdır. Retler: invalid_revision; expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "AuditPurge": {
+            "description": "The named resources Denetle removes when nothing uses them.",
+            "enum": [
+              "textStyles",
+              "dimensionStyles"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.drawing.audit` v1. Finds what the drawing carries broken (`AuditCode`) and the named resources\nnothing uses (empty layers and groups and unplaced block definitions as `cad.layers.edit`'s purge finds them, not\nlocked ones; the text and dimension styles no object of the drawing or of a block definition names). With `fix`\neach broken object is repaired (a linked text loses its link, a hatch its association, a dimension's reference\nbreaks as `object_gone`, an unknown style becomes Standart, the look kept) as one undo step “Denetle”; an object on\na locked layer is left broken with a warning (`layer_locked`). `purge` removes the unused styles of the kinds named\n(the styles' table is a project setting: no undo step). Nothing asked: nothing is written.\n\nRefusals (`CommandError.code`): `invalid_revision`, `revision_conflict` (status `conflict`).",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text. When given and the document is no\nlonger at it, nothing is written and the answer is `conflict`.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fix": {
+            "description": "Repair what is broken.",
+            "type": "boolean"
+          },
+          "purge": {
+            "description": "The unused styles to remove.",
+            "items": {
+              "$ref": "#/$defs/AuditPurge"
+            },
+            "type": "array"
+          }
+        },
+        "title": "DrawingAudit",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "AuditCode": {
+            "description": "What is broken.",
+            "oneOf": [
+              {
+                "const": "brokenLink",
+                "description": "A linked text whose object is gone.",
+                "type": "string"
+              },
+              {
+                "const": "brokenHatch",
+                "description": "An associative hatch one of whose boundary objects is gone.",
+                "type": "string"
+              },
+              {
+                "const": "brokenDimension",
+                "description": "An associative dimension's live reference to an object that is gone.",
+                "type": "string"
+              },
+              {
+                "const": "missingTextStyle",
+                "description": "A text or a table naming a text style the project does not have.",
+                "type": "string"
+              },
+              {
+                "const": "missingDimensionStyle",
+                "description": "A dimension naming a dimension style the project does not have.",
+                "type": "string"
+              }
+            ]
+          },
+          "AuditFinding": {
+            "description": "A broken object.",
+            "properties": {
+              "code": {
+                "$ref": "#/$defs/AuditCode"
+              },
+              "fixed": {
+                "description": "Whether it was repaired.",
+                "type": "boolean"
+              },
+              "message": {
+                "description": "What is broken and what the repair does, in Turkish.",
+                "type": "string"
+              },
+              "uid": {
+                "description": "The object's persistent id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "uid",
+              "message",
+              "fixed"
+            ],
+            "type": "object"
+          },
+          "ResourceKind": {
+            "description": "A named resource's kind.",
+            "enum": [
+              "layer",
+              "group",
+              "block",
+              "textStyle",
+              "dimensionStyle"
+            ],
+            "type": "string"
+          },
+          "UnusedResource": {
+            "description": "A named resource nothing uses.",
+            "properties": {
+              "id": {
+                "description": "Its id (a layer's or group's node id, a definition's or a style's id).",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/ResourceKind"
+              },
+              "name": {
+                "description": "Its name; a layer's or group's with its groups (`Eski / Yollar`).",
+                "type": "string"
+              },
+              "purged": {
+                "description": "Whether it was removed.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "kind",
+              "id",
+              "name",
+              "purged"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.drawing.audit` v1 (and its plan, what it would write).",
+        "properties": {
+          "changed": {
+            "description": "The objects repaired: their persistent ids, in the drawing's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "findings": {
+            "description": "What was found broken, object by object in the drawing's order.",
+            "items": {
+              "$ref": "#/$defs/AuditFinding"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text (the same when nothing was written).",
+            "type": "string"
+          },
+          "unused": {
+            "description": "The named resources nothing uses: layers, groups, blocks, text styles, dimension styles.",
+            "items": {
+              "$ref": "#/$defs/UnusedResource"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "findings",
+          "unused",
+          "changed",
+          "revision"
+        ],
+        "title": "DrawingAudited",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "AuditCode": {
+            "description": "What is broken.",
+            "oneOf": [
+              {
+                "const": "brokenLink",
+                "description": "A linked text whose object is gone.",
+                "type": "string"
+              },
+              {
+                "const": "brokenHatch",
+                "description": "An associative hatch one of whose boundary objects is gone.",
+                "type": "string"
+              },
+              {
+                "const": "brokenDimension",
+                "description": "An associative dimension's live reference to an object that is gone.",
+                "type": "string"
+              },
+              {
+                "const": "missingTextStyle",
+                "description": "A text or a table naming a text style the project does not have.",
+                "type": "string"
+              },
+              {
+                "const": "missingDimensionStyle",
+                "description": "A dimension naming a dimension style the project does not have.",
+                "type": "string"
+              }
+            ]
+          },
+          "AuditFinding": {
+            "description": "A broken object.",
+            "properties": {
+              "code": {
+                "$ref": "#/$defs/AuditCode"
+              },
+              "fixed": {
+                "description": "Whether it was repaired.",
+                "type": "boolean"
+              },
+              "message": {
+                "description": "What is broken and what the repair does, in Turkish.",
+                "type": "string"
+              },
+              "uid": {
+                "description": "The object's persistent id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "uid",
+              "message",
+              "fixed"
+            ],
+            "type": "object"
+          },
+          "ResourceKind": {
+            "description": "A named resource's kind.",
+            "enum": [
+              "layer",
+              "group",
+              "block",
+              "textStyle",
+              "dimensionStyle"
+            ],
+            "type": "string"
+          },
+          "UnusedResource": {
+            "description": "A named resource nothing uses.",
+            "properties": {
+              "id": {
+                "description": "Its id (a layer's or group's node id, a definition's or a style's id).",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/ResourceKind"
+              },
+              "name": {
+                "description": "Its name; a layer's or group's with its groups (`Eski / Yollar`).",
+                "type": "string"
+              },
+              "purged": {
+                "description": "Whether it was removed.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "kind",
+              "id",
+              "name",
+              "purged"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.drawing.audit` v1 (and its plan, what it would write).",
+        "properties": {
+          "changed": {
+            "description": "The objects repaired: their persistent ids, in the drawing's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "findings": {
+            "description": "What was found broken, object by object in the drawing's order.",
+            "items": {
+              "$ref": "#/$defs/AuditFinding"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text (the same when nothing was written).",
+            "type": "string"
+          },
+          "unused": {
+            "description": "The named resources nothing uses: layers, groups, blocks, text styles, dimension styles.",
+            "items": {
+              "$ref": "#/$defs/UnusedResource"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "findings",
+          "unused",
+          "changed",
+          "revision"
+        ],
+        "title": "DrawingAudited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_locked"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Yalnız denetle: bulunanları ve kullanılmayanları raporla",
+          "input": {}
+        },
+        {
+          "title": "Onar ve kullanılmayan stilleri temizle",
+          "input": {
+            "fix": true,
+            "purge": [
+              "textStyles",
+              "dimensionStyles"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.entities.offset",
       "version": 1,
       "title": "Nesneleri ötele",

@@ -7,7 +7,7 @@
 use kentos_contracts::{
     AddressesDefine, ArcCreate, ArraysEdit, BlocksDefine, BlocksEdit, CallOp, ChangesetApply,
     CircleCreate, CurvesConstruct, CurvesEdit, DimensionsCreate, DimensionsReassociate,
-    EntitiesArray, EntitiesBoundary, EntitiesBreak, EntitiesChamfer, EntitiesCleanup,
+    DrawingAudit, EntitiesArray, EntitiesBoundary, EntitiesBreak, EntitiesChamfer, EntitiesCleanup,
     EntitiesCreate, EntitiesDelete, EntitiesDivide, EntitiesEdit, EntitiesExplode, EntitiesFillet,
     EntitiesHatch, EntitiesJoin, EntitiesLengthen, EntitiesMatch, EntitiesOffset, EntitiesOrder,
     EntitiesPick, EntitiesReverse, EntitiesSelect, EntitiesSetProperties, EntitiesStretch,
@@ -22,15 +22,15 @@ use serde_json::Value;
 use crate::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, arrays_edit, blocks_define,
     blocks_edit, changeset, circle, create, curves_construct, curves_edit, delete,
-    dimensions_create, dimensions_reassociate, divide, edit, entities_boundary, entities_break,
-    entities_chamfer, entities_cleanup, entities_explode, entities_extend, entities_fillet,
-    entities_hatch, entities_join, entities_lengthen, entities_match, entities_order,
-    entities_pick, entities_reverse, entities_select, entities_trim, entities_vertex, file_import,
-    labels_pin, layers_compose, layers_edit, layers_filter, layers_info, layers_labels,
-    layers_renderer, layers_service, layers_set, layers_states, layers_time, line, network_define,
-    nurbs, offset, point, points_construct, polygon, polygon_regular, polyline, rectangle_create,
-    scenarios_edit, set, settings_set, sheets_edit, snap_find, stretch, styles_edit, transform,
-    ucs_set, units_change, views_edit,
+    dimensions_create, dimensions_reassociate, divide, drawing_audit, edit, entities_boundary,
+    entities_break, entities_chamfer, entities_cleanup, entities_explode, entities_extend,
+    entities_fillet, entities_hatch, entities_join, entities_lengthen, entities_match,
+    entities_order, entities_pick, entities_reverse, entities_select, entities_trim,
+    entities_vertex, file_import, labels_pin, layers_compose, layers_edit, layers_filter,
+    layers_info, layers_labels, layers_renderer, layers_service, layers_set, layers_states,
+    layers_time, line, network_define, nurbs, offset, point, points_construct, polygon,
+    polygon_regular, polyline, rectangle_create, scenarios_edit, set, settings_set, sheets_edit,
+    snap_find, stretch, styles_edit, transform, ucs_set, units_change, views_edit,
 };
 
 /// Why a command was not run: not a refusal of the command (that is its
@@ -119,6 +119,7 @@ macro_rules! by_command {
             kentos_contracts::CAD_CURVES_EDIT => $then!(curves_edit, CurvesEdit),
             kentos_contracts::CAD_ENTITIES_MATCH => $then!(entities_match, EntitiesMatch),
             kentos_contracts::CAD_ENTITIES_CLEANUP => $then!(entities_cleanup, EntitiesCleanup),
+            kentos_contracts::CAD_DRAWING_AUDIT => $then!(drawing_audit, DrawingAudit),
             kentos_contracts::CAD_ENTITIES_DIVIDE => $then!(divide, EntitiesDivide),
             kentos_contracts::CAD_ENTITIES_BOUNDARY => $then!(entities_boundary, EntitiesBoundary),
             kentos_contracts::CAD_ENTITIES_HATCH => $then!(entities_hatch, EntitiesHatch),

@@ -303,7 +303,7 @@ impl Objects {
     }
 }
 
-fn layer(id: &str, name: &str, color: &str, weight: f64) -> Value {
+pub(crate) fn layer(id: &str, name: &str, color: &str, weight: f64) -> Value {
     json!({
         "id": id, "name": name, "type": "layer", "visible": true, "locked": false,
         "expanded": true,
@@ -320,6 +320,15 @@ pub(crate) fn open(app: &mut App, objects: Objects) {
 
 /// `open` with the drawing's block definitions (the contract's `[{ id, name, base, entities }]`).
 pub(crate) fn open_with_blocks(app: &mut App, objects: Objects, blocks: Value) {
+    open_edited(app, objects, |d| {
+        if blocks.as_array().is_some_and(|b| !b.is_empty()) {
+            d["blocks"] = blocks;
+        }
+    });
+}
+
+/// `open` with the drawing's snapshot edited first (its settings, layers or blocks), as a file would carry them.
+pub(crate) fn open_edited(app: &mut App, objects: Objects, edit: impl FnOnce(&mut Value)) {
     let mut d: Value = serde_json::from_str(EMPTY).expect("the empty drawing reads");
     d["layers"] = json!([
         layer("cizim", "Çizim", "fg", 0.25),
@@ -327,9 +336,7 @@ pub(crate) fn open_with_blocks(app: &mut App, objects: Objects, blocks: Value) {
         layer("parsel", "Parsel", "#3E63DD", 0.35),
     ]);
     d["entities"] = Value::Array(objects.0);
-    if blocks.as_array().is_some_and(|b| !b.is_empty()) {
-        d["blocks"] = blocks;
-    }
+    edit(&mut d);
     let snapshot =
         kentos_contracts::DocumentSnapshotV1::from_json(&d.to_string()).expect("the drawing reads");
     let doc = Document::new(snapshot, None).expect("opens");

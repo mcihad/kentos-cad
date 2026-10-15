@@ -26,6 +26,7 @@
 )]
 
 pub mod arrays;
+pub mod audit;
 mod blocks;
 mod calls;
 mod changes;

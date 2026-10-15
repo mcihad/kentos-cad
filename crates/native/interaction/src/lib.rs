@@ -106,6 +106,7 @@ pub mod area;
 pub mod array;
 pub mod array_edit;
 pub mod array_path;
+pub mod audit;
 pub mod between;
 pub mod block_define;
 pub mod block_insert;

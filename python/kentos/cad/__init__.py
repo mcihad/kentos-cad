@@ -30,7 +30,7 @@ from .errors import *  # noqa: F403
 from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 
-from . import addresses, arc, arrays, blocks, changeset, circle, curves, dimensions, entities, file, labels, layers, line, network, nurbs, point, points, polygon, polyline, project, rectangle, scenarios, settings, sheets, snap, styles, ucs, units, views  # noqa: E402  isort: skip
+from . import addresses, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, file, labels, layers, line, network, nurbs, point, points, polygon, polyline, project, rectangle, scenarios, settings, sheets, snap, styles, ucs, units, views  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -97,6 +97,11 @@ __all__ = [
     "Attachment",
     "AttributeDefinition",
     "AttributesTableSource",
+    "AuditCode",
+    "AuditCodeName",
+    "AuditFinding",
+    "AuditPurge",
+    "AuditPurgeName",
     "AuthKind",
     "AuthKindName",
     "AzimuthDimensionMeasure",
@@ -228,6 +233,8 @@ __all__ = [
     "Document",
     "DocumentInfo",
     "DoorSource",
+    "DrawingAudit",
+    "DrawingAudited",
     "DrawingFont",
     "DrawingFontName",
     "DrawingUnit",
@@ -670,6 +677,8 @@ __all__ = [
     "ReplayReport",
     "ReplayStep",
     "ResetArrayEdit",
+    "ResourceKind",
+    "ResourceKindName",
     "RevisionConflict",
     "RingGeometry",
     "RotateTransform",
@@ -796,6 +805,7 @@ __all__ = [
     "UnknownSystem",
     "Unreachable",
     "Unset",
+    "UnusedResource",
     "UpdateBlockChange",
     "UpdateEntityEdit",
     "UpdateFeatureChange",
@@ -830,6 +840,7 @@ __all__ = [
     "current",
     "curves",
     "dimensions",
+    "drawing",
     "entities",
     "file",
     "labels",

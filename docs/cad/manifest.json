@@ -6902,6 +6902,22 @@
    "tests": 2
   },
   {
+   "id": "tool.audit",
+   "kind": "command",
+   "title": "Denetle",
+   "level": "semantic",
+   "via": [
+    "cad.drawing.audit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.drawing.audit",
+   "mcp": "cad.drawing.audit",
+   "note": "Onarım ve temizlenecek stil türleri komuta verilir; bozuk ilişkileri, kayıp stilleri ve kullanılmayan kaynakları komut bulur, önizleme komutun planıdır (ADR 0306).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.blockDefine",
    "kind": "tool",
    "title": "Blok oluştur",

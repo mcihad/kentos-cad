@@ -29,6 +29,8 @@ mod attachments;
 mod attachments_tests;
 mod attribute_table;
 mod attribute_values;
+#[cfg(test)]
+mod audit_scenes;
 mod block_attributes;
 mod blocks;
 mod blocks_panel;

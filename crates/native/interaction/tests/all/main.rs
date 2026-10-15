@@ -7,6 +7,7 @@ mod aids;
 mod area;
 mod arrange;
 mod array_path;
+mod audit;
 mod blocks;
 mod clipboard;
 mod colour;

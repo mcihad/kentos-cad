@@ -185,6 +185,36 @@ ArrangeModeName = Literal["left", "center", "right", "top", "middle", "bottom", 
 """The names of :class:`ArrangeMode`, for a plain string."""
 
 
+class AuditCode(_StrEnum):
+    """What is broken.
+
+    - ``brokenLink``: A linked text whose object is gone.
+    - ``brokenHatch``: An associative hatch one of whose boundary objects is gone.
+    - ``brokenDimension``: An associative dimension's live reference to an object that is gone.
+    - ``missingTextStyle``: A text or a table naming a text style the project does not have.
+    - ``missingDimensionStyle``: A dimension naming a dimension style the project does not have.
+    """
+    BROKEN_LINK = "brokenLink"
+    BROKEN_HATCH = "brokenHatch"
+    BROKEN_DIMENSION = "brokenDimension"
+    MISSING_TEXT_STYLE = "missingTextStyle"
+    MISSING_DIMENSION_STYLE = "missingDimensionStyle"
+
+
+AuditCodeName = Literal["brokenLink", "brokenHatch", "brokenDimension", "missingTextStyle", "missingDimensionStyle"]
+"""The names of :class:`AuditCode`, for a plain string."""
+
+
+class AuditPurge(_StrEnum):
+    """The named resources Denetle removes when nothing uses them."""
+    TEXT_STYLES = "textStyles"
+    DIMENSION_STYLES = "dimensionStyles"
+
+
+AuditPurgeName = Literal["textStyles", "dimensionStyles"]
+"""The names of :class:`AuditPurge`, for a plain string."""
+
+
 class AuthKind(_StrEnum):
     """The proof a service asks for (docs/adr/0208 §12).
 
@@ -1565,6 +1595,19 @@ class RegistryDatum(_StrEnum):
 
 RegistryDatumName = Literal["TUREF", "ED50", "WGS84"]
 """The names of :class:`RegistryDatum`, for a plain string."""
+
+
+class ResourceKind(_StrEnum):
+    """A named resource's kind."""
+    LAYER = "layer"
+    GROUP = "group"
+    BLOCK = "block"
+    TEXT_STYLE = "textStyle"
+    DIMENSION_STYLE = "dimensionStyle"
+
+
+ResourceKindName = Literal["layer", "group", "block", "textStyle", "dimensionStyle"]
+"""The names of :class:`ResourceKind`, for a plain string."""
 
 
 class ScenarioOperation(_StrEnum):
@@ -3470,6 +3513,37 @@ class AttributeDefinition(_Model):
             prompt=data.get("prompt", UNSET),
             value=data.get("value", UNSET),
             width_factor=UNSET if "widthFactor" not in data else None if data["widthFactor"] is None else float(data["widthFactor"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AuditFinding(_Model):
+    """A broken object.
+    Attributes:
+        uid: The object's persistent id.
+        message: What is broken and what the repair does, in Turkish.
+        fixed: Whether it was repaired.
+    """
+    code: AuditCode | AuditCodeName
+    uid: str
+    message: str
+    fixed: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["code"] = _enum_out(self.code)
+        out["uid"] = self.uid
+        out["message"] = self.message
+        out["fixed"] = self.fixed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AuditFinding:
+        return cls(
+            code=_enum_in(AuditCode, data["code"]),
+            uid=data["uid"],
+            message=data["message"],
+            fixed=data["fixed"],
         )
 
 
@@ -5625,6 +5699,78 @@ class DoorSource(_Model):
             neighbourhood=data.get("neighbourhood", UNSET),
             postcode=data.get("postcode", UNSET),
             province=data.get("province", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrawingAudit(_Model):
+    """Input of `cad.drawing.audit` v1. Finds what the drawing carries broken (`AuditCode`) and the named resources
+    nothing uses (empty layers and groups and unplaced block definitions as `cad.layers.edit`'s purge finds them, not
+    locked ones; the text and dimension styles no object of the drawing or of a block definition names). With `fix`
+    each broken object is repaired (a linked text loses its link, a hatch its association, a dimension's reference
+    breaks as `object_gone`, an unknown style becomes Standart, the look kept) as one undo step “Denetle”; an object on
+    a locked layer is left broken with a warning (`layer_locked`). `purge` removes the unused styles of the kinds named
+    (the styles' table is a project setting: no undo step). Nothing asked: nothing is written.
+
+    Refusals (`CommandError.code`): `invalid_revision`, `revision_conflict` (status `conflict`).
+    Attributes:
+        expected_revision: The document revision the input was prepared against, as decimal text. When given and the document is no
+            longer at it, nothing is written and the answer is `conflict`.
+        fix: Repair what is broken.
+        purge: The unused styles to remove.
+    """
+    expected_revision: str | None | Unset = UNSET
+    fix: bool | Unset = UNSET
+    purge: list[AuditPurge | AuditPurgeName] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.fix is not UNSET:
+            out["fix"] = self.fix
+        if self.purge is not UNSET:
+            out["purge"] = [_enum_out(e0) for e0 in self.purge]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrawingAudit:
+        return cls(
+            expected_revision=data.get("expectedRevision", UNSET),
+            fix=data.get("fix", UNSET),
+            purge=[_enum_in(AuditPurge, e0) for e0 in data["purge"]] if "purge" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrawingAudited(_Model):
+    """Output of `cad.drawing.audit` v1 (and its plan, what it would write).
+    Attributes:
+        findings: What was found broken, object by object in the drawing's order.
+        unused: The named resources nothing uses: layers, groups, blocks, text styles, dimension styles.
+        changed: The objects repaired: their persistent ids, in the drawing's order.
+        revision: The document's revision after the write, as decimal text (the same when nothing was written).
+    """
+    findings: list[AuditFinding]
+    unused: list[UnusedResource]
+    changed: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["findings"] = [e0.to_json() for e0 in self.findings]
+        out["unused"] = [e0.to_json() for e0 in self.unused]
+        out["changed"] = list(self.changed)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrawingAudited:
+        return cls(
+            findings=[AuditFinding.from_json(e0) for e0 in data["findings"]],
+            unused=[UnusedResource.from_json(e0) for e0 in data["unused"]],
+            changed=list(data["changed"]),
+            revision=data["revision"],
         )
 
 
@@ -17990,6 +18136,37 @@ class UnitsChanged(_Model):
         )
 
 
+@dataclass(kw_only=True, slots=True)
+class UnusedResource(_Model):
+    """A named resource nothing uses.
+    Attributes:
+        id: Its id (a layer's or group's node id, a definition's or a style's id).
+        name: Its name; a layer's or group's with its groups (`Eski / Yollar`).
+        purged: Whether it was removed.
+    """
+    kind: ResourceKind | ResourceKindName
+    id: str
+    name: str
+    purged: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["id"] = self.id
+        out["name"] = self.name
+        out["purged"] = self.purged
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnusedResource:
+        return cls(
+            kind=_enum_in(ResourceKind, data["kind"]),
+            id=data["id"],
+            name=data["name"],
+            purged=data["purged"],
+        )
+
+
 class Vec2(NamedTuple):
     """A point in world units: x = east (Y, sağa), y = north (X, yukarı)."""
 
@@ -22959,6 +23136,11 @@ __all__ = [
     "Attachment",
     "AttributeDefinition",
     "AttributesTableSource",
+    "AuditCode",
+    "AuditCodeName",
+    "AuditFinding",
+    "AuditPurge",
+    "AuditPurgeName",
     "AuthKind",
     "AuthKindName",
     "AzimuthDimensionMeasure",
@@ -23075,6 +23257,8 @@ __all__ = [
     "DivideEndsName",
     "Division",
     "DoorSource",
+    "DrawingAudit",
+    "DrawingAudited",
     "DrawingFont",
     "DrawingFontName",
     "DrawingUnit",
@@ -23490,6 +23674,8 @@ __all__ = [
     "ReplaceArrayEdit",
     "ReplaceEntityEdit",
     "ResetArrayEdit",
+    "ResourceKind",
+    "ResourceKindName",
     "RingGeometry",
     "RotateTransform",
     "RotateUcsTo",
@@ -23601,6 +23787,7 @@ __all__ = [
     "UnitSourceName",
     "UnitsChange",
     "UnitsChanged",
+    "UnusedResource",
     "UpdateBlockChange",
     "UpdateEntityEdit",
     "UpdateFeatureChange",

@@ -43,6 +43,7 @@ pub mod arc;
 pub mod array;
 mod array_assoc;
 pub mod arrays_edit;
+pub mod audit_cmd;
 pub mod blocks;
 pub mod blocks_define;
 pub mod blocks_edit;
@@ -75,6 +76,7 @@ pub mod label_texts;
 pub mod labels_pin;
 pub mod lengthen;
 pub mod reverse;
+pub use audit_cmd::drawing_audit;
 pub use break_join::{entities_break, entities_join};
 pub use cleanup_cmd::entities_cleanup;
 pub use curves_edit_cmd::curves_edit;
@@ -383,6 +385,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_ENTITIES_CLEANUP,
         kentos_contracts::CAD_ENTITIES_CLEANUP_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_DRAWING_AUDIT,
+        kentos_contracts::CAD_DRAWING_AUDIT_VERSION,
     ),
     (
         kentos_contracts::CAD_ENTITIES_DIVIDE,

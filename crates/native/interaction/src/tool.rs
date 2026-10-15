@@ -771,6 +771,10 @@ pub struct Memory {
     pub cleanup_end_to_end: bool,
     pub cleanup_straight: bool,
     pub cleanup_ignore_look: bool,
+    /// Denetle's options (docs/adr/0306), kept for the session: repair, remove the unused text and dimension styles.
+    pub audit_fix: bool,
+    pub audit_purge_text: bool,
+    pub audit_purge_dims: bool,
     /// Blok ekle's block, scale, turn in degrees and mirror
     /// (`BlockInsertTool.block`, `.scale`, `.rotation`, `.mirror`; docs/adr/0144).
     pub block_insert: Option<kentos_contracts::BlockId>,
@@ -1100,6 +1104,9 @@ impl Default for Memory {
             cleanup_end_to_end: false,
             cleanup_straight: true,
             cleanup_ignore_look: false,
+            audit_fix: true,
+            audit_purge_text: false,
+            audit_purge_dims: false,
             block_insert: None,
             block_scale: 1.0,
             block_rotation: 0.0,
