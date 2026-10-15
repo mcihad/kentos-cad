@@ -266,6 +266,11 @@ impl Session {
         self.doc.blocks().iter().map(|b| &**b).collect()
     }
 
+    /// The associative arrays in the order they were made (docs/adr/0300).
+    pub fn arrays(&self) -> Vec<&kentos_contracts::AssocArray> {
+        self.doc.arrays().iter().map(|a| &**a).collect()
+    }
+
     /// A page of objects.
     pub fn entities(
         &self,

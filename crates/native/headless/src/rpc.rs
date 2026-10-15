@@ -171,6 +171,8 @@ fn plain(doc: &mut Document, method: &str, params: &Value) -> Result<Value, Head
         "layers" => to_value(doc.layers().nodes()),
         // The block definitions in the drawing's order (docs/adr/0144).
         "blocks" => to_value(&doc.blocks().iter().map(|b| &**b).collect::<Vec<_>>()),
+        // The associative arrays in the order they were made (docs/adr/0300).
+        "arrays" => to_value(&doc.arrays().iter().map(|a| &**a).collect::<Vec<_>>()),
         "entities" => {
             let filter = Filter {
                 layer: optional_text(params, "layer")?,

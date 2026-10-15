@@ -41,6 +41,7 @@ pub mod addresses;
 pub mod annotation_follow;
 pub mod arc;
 pub mod array;
+mod array_assoc;
 pub mod blocks;
 pub mod blocks_define;
 pub mod blocks_edit;

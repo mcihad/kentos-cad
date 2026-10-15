@@ -3,6 +3,7 @@
 pub mod adjoin;
 pub mod areas;
 pub mod arrange;
+pub mod assoc_array;
 pub mod breaking;
 pub mod centerline;
 pub mod charts;

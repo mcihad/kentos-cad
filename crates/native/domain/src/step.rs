@@ -165,6 +165,8 @@ pub struct StepReport {
     /// place), removed.
     pub layers: IdChanges<String>,
     pub blocks: IdChanges<BlockId>,
+    /// The associative arrays it added, changed or removed (docs/adr/0300).
+    pub arrays: IdChanges<kentos_contracts::ArrayId>,
     /// The block definitions it added, changed or removed: their first
     /// state before the step and their last after.
     pub block_states: Vec<BlockChange>,
@@ -518,6 +520,9 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
                 report.blocks.change(after.id);
                 block_state(&mut report, after.id, Some(before), Some(after));
             }
+            Op::ArrayAdd { array, .. } => report.arrays.add(array.id),
+            Op::ArrayRemove { array, .. } => report.arrays.remove(array.id),
+            Op::ArrayUpdate { after, .. } => report.arrays.change(after.id),
             // The unit is a setting (docs/adr/0256 §1).
             Op::Units { .. } => {
                 if !report.parts.contains(&ProjectPart::Settings) {

@@ -24,6 +24,7 @@ project type not asked yet, docs/adr/0165 §1); so it is what opening that v1
 file and saving it as v2 must give on every platform.
 """
 import base64
+import copy
 import hashlib
 import json
 import math
@@ -1649,6 +1650,54 @@ def sheets(s):
     return cmap(fields(s, {"book": (opaque, True), "pictures": (lambda ps: array([picture(p) for p in ps]), False)}, "sheets"))
 
 
+def assoc_arrays(arrs):
+    """The associative arrays (schema 53, docs/adr/0300 §1): each its id, source block, first place, layout (its kind's own
+    fields; `fit` only when true) and items (an insert's id when there is one, `kept` only when true); not empty."""
+    assert arrs, "boş dizi listesi yazılmaz"
+
+    def layout(lay):
+        kind = lay["kind"]
+        out = {"kind": text(kind)}
+        if kind == "grid":
+            out.update(rows=uint(lay["rows"]), cols=uint(lay["cols"]), dx=f64(lay["dx"]), dy=f64(lay["dy"]))
+        elif kind == "polar":
+            out.update(center=point(lay["center"]), count=uint(lay["count"]), fill=f64(lay["fill"]), rotate=boolean(lay["rotate"]))
+        elif kind == "line":
+            out.update(count=uint(lay["count"]), dx=f64(lay["dx"]), dy=f64(lay["dy"]))
+            if lay.get("fit"):
+                out["fit"] = boolean(True)
+        else:
+            out.update(path=blob(uid_bytes(lay["path"])), count=uint(lay["count"]), align=boolean(lay["align"]))
+            if "spacing" in lay:
+                out["spacing"] = f64(lay["spacing"])
+        return cmap(out)
+
+    def item(it):
+        out = {}
+        if "uid" in it:
+            out["uid"] = blob(uid_bytes(it["uid"]))
+        if it.get("kept"):
+            out["kept"] = boolean(True)
+        return cmap(out)
+
+    def one(a):
+        out = {
+            "p": point(a["p"]),
+            "id": blob(uid_bytes(a["id"])),
+            "block": blob(uid_bytes(a["block"])),
+            "items": array([item(it) for it in a["items"]]),
+            "scale": f64(a["scale"]),
+            "layout": layout(a["layout"]),
+            "layerId": text(a["layerId"]),
+            "rotation": f64(a["rotation"]),
+        }
+        if a.get("mirror"):
+            out["mirror"] = boolean(True)
+        return cmap(out)
+
+    return array([one(a) for a in arrs])
+
+
 def requests(rs):
     """The request ledger (schema 45, docs/adr/0253 §6): the requests a drawing executed, in their order; each its id,
     its fingerprint (32 hex digits, 16 bytes in the file), the command, its version, the revision after it (decimal
@@ -1703,6 +1752,7 @@ def document(d):
             "styles": (lambda s: cmap(fields(s, {"items": (lambda xs: array([opaque(x) for x in xs]), True), "categories": (lambda xs: array([opaque(x) for x in xs]), True)}, "styles")), True),
             "projectId": (lambda u: blob(uid_bytes(u)), False),
             "sheets": (sheets, False),
+            "arrays": (assoc_arrays, False),
             "requests": (requests, False),
             "migratedFrom": (
                 lambda m: cmap(fields(m, {"format": (text, True), "version": (uint, True), "sourceSha256": (lambda h: blob(bytes.fromhex(h)), True)}, "migratedFrom")),
@@ -1712,11 +1762,11 @@ def document(d):
         "belge",
     )
     assert d.get("blocks", [None]), "boş blok listesi yazılmaz"
-    return root(cmap(body), version=uint(schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"], "sheets" in d, "requests" in d)))
+    return root(cmap(body), version=uint(schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"], "sheets" in d, "requests" in d, "arrays" in d)))
 
 
-def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False, has_requests=False):
-    """The oldest schema that holds the drawing: 44 with the project's sheet book (docs/adr/0251), 43 with a dimension's references (docs/adr/0249 §4), 42 with the project's address data (docs/adr/0229 §2), 41 with a layer's composition (docs/adr/0226 §3, §4), 40 with an object's
+def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False, has_requests=False, has_arrays=False):
+    """The oldest schema that holds the drawing: 53 with associative arrays (docs/adr/0300), 44 with the project's sheet book (docs/adr/0251), 43 with a dimension's references (docs/adr/0249 §4), 42 with the project's address data (docs/adr/0229 §2), 41 with a layer's composition (docs/adr/0226 §3, §4), 40 with an object's
     attachments or a layer's actions or card (docs/adr/0225), 39 with vertex measures (docs/adr/0224), 38 with a raster's
     dataset or its look's edges (docs/adr/0243 §6), 37 with the settings' variables (docs/adr/0214 §2.3), 36 with the
     label engine's fields, a layer's labelling or an object's
@@ -1805,6 +1855,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def composed(nodes):
         return any("compose" in n or composed(n["children"]) for n in nodes)
 
+    # Schema 53 (docs/adr/0300): an associative array.
+    if has_arrays:
+        return 53
     # Schema 52 (docs/adr/0285): a named view.
     if settings and "namedViews" in settings:
         return 52
@@ -2124,7 +2177,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-53.kcad"] = container(root(cmap(parts), version=uint(53)))
+    files["schema-version-54.kcad"] = container(root(cmap(parts), version=uint(54)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -3364,6 +3417,22 @@ def build():
     out["imperial.kcad"] = container(document(load("imperial.json")))
     out["subref-extras.kcad"] = container(document(load("subref-extras.json")))
     out["views.kcad"] = container(document(load("views.json")))
+    out["arrays.kcad"] = container(document(load("arrays.json")))
+    # The associative arrays are schema 53's (docs/adr/0300 §1): in schema 52 an unknown field; an unknown block, items not
+    # one per place, an insert in two items or not in the drawing, a scale of zero refused.
+    def arrays_broken(change):
+        d = copy.deepcopy(load("arrays.json"))
+        change(d)
+        return container(document(d))
+
+    payload = document(load("arrays.json"))
+    assert payload.count(b"\x67version\x18\x35") == 1
+    out["broken/arrays-in-schema-52.kcad"] = container(payload.replace(b"\x67version\x18\x35", b"\x67version\x18\x34"))
+    out["broken/arrays-block-unknown.kcad"] = arrays_broken(lambda d: d["arrays"][0].update(block="0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0bff"))
+    out["broken/arrays-items-short.kcad"] = arrays_broken(lambda d: d["arrays"][0]["items"].pop())
+    out["broken/arrays-item-twice.kcad"] = arrays_broken(lambda d: d["arrays"][0]["items"][2].update(uid=d["arrays"][0]["items"][0]["uid"]))
+    out["broken/arrays-item-missing.kcad"] = arrays_broken(lambda d: d["arrays"][0]["items"][2].update(uid="0192f5a2-2222-7000-8000-0000000000ff"))
+    out["broken/arrays-scale-zero.kcad"] = arrays_broken(lambda d: d["arrays"][1].update(scale=0.0))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

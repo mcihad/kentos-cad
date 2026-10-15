@@ -25,6 +25,7 @@ pub(super) fn opened(permissions: Vec<ProjectPermission>, state: ProjectState) -
         info: ProjectInfo {
             blocks: Vec::new(),
             sheets: None,
+            arrays: Vec::new(),
             id: "0199aaaa-0000-7000-8000-000000000001".into(),
             tenant_id: "0199aaaa-0000-7000-8000-000000000002".into(),
             tenant_name: "Harita Bürosu".into(),
@@ -1712,5 +1713,121 @@ fn a_draft_dropping_a_layer_someone_drew_on_since_keeps_it() {
         c.features
             .iter()
             .all(|f| matches!(f, FeatureChange::Delete { .. }))
+    );
+}
+
+/// A block and three inserts of it on the sample's first layer, made one grid array when `array`.
+fn arrayed(doc: &mut Document, array: bool) -> kentos_contracts::AssocArray {
+    use kentos_contracts::{
+        ArrayId, ArrayItem, ArrayLayout, AssocArray, BlockDefinition, BlockId, EntityId,
+        InsertEntity, Vec2,
+    };
+    let layer = point(0.0).base().layer_id.clone();
+    let block = BlockDefinition {
+        id: BlockId([7; 16]),
+        name: "Dizi 1".into(),
+        base: Vec2 { x: 0.0, y: 0.0 },
+        entities: vec![point(0.0)],
+        attributes: Vec::new(),
+        description: None,
+    };
+    let insert = |x: f64| {
+        let mut base = point(0.0).base().clone();
+        base.label = None;
+        Entity::Insert(InsertEntity {
+            base,
+            block: block.id,
+            p: Vec2 { x, y: 0.0 },
+            scale: 1.0,
+            rotation: 0.0,
+            mirror: false,
+        })
+    };
+    doc.transact("İlişkili dizi", |doc| {
+        doc.add_block(block.clone()).map_err(|r| r.to_string())?;
+        let slots = doc
+            .add_many(
+                vec![insert(486000.0), insert(486002.0), insert(486004.0)],
+                "ekle",
+            )
+            .map_err(|e| e.to_string())?;
+        let made = AssocArray {
+            id: ArrayId([9; 16]),
+            block: block.id,
+            layer_id: layer,
+            p: Vec2 {
+                x: 486000.0,
+                y: 0.0,
+            },
+            scale: 1.0,
+            rotation: 0.0,
+            mirror: false,
+            layout: ArrayLayout::Grid {
+                rows: 1,
+                cols: 3,
+                dx: 2.0,
+                dy: 0.0,
+            },
+            items: slots
+                .iter()
+                .map(|s| ArrayItem {
+                    uid: Some(EntityId(doc.uid(*s).unwrap().into_bytes())),
+                    kept: false,
+                })
+                .collect(),
+        };
+        if array {
+            doc.add_array(made.clone()).map_err(|r| r.to_string())?;
+        }
+        Ok::<_, String>(made)
+    })
+    .unwrap()
+}
+
+/// A database project's associative arrays (docs/adr/0300 §5) are metadata: they go whole with the project's
+/// version when they change, and another editor's come in with the project's info.
+#[test]
+fn the_associative_arrays_go_and_come_as_the_projects_metadata() {
+    let mut o = editor();
+    let before = Meta::of(&o.document);
+    let array = arrayed(&mut o.document, true);
+    let patch = before.patch(&o.document).unwrap();
+    assert_eq!(patch.arrays, Some(vec![array.clone()]));
+    assert!(patch.layers.is_none() && patch.sheets.is_none());
+    let wire = serde_json::to_value(&patch).unwrap();
+    assert_eq!(wire["arrays"][0]["layout"]["kind"], "grid");
+    assert_eq!(
+        Meta::of(&o.document).patch(&o.document),
+        None,
+        "unchanged: nothing goes"
+    );
+
+    // Another editor made the array of the same block and inserts: it comes with the project's info.
+    let mut p = editor();
+    let theirs = arrayed(&mut p.document, false);
+    let mut sync = ProjectSync::new(&p).unwrap();
+    sync.observe(&p.document);
+    let mut info = p.info.clone();
+    info.arrays = vec![theirs.clone()];
+    info.meta_version = "9".into();
+    let incoming = sync.incoming(&page(vec![event(10, None, &[], true)]));
+    sync.take_remote(
+        &mut p.document,
+        incoming,
+        Remote {
+            records: vec![],
+            info: Some(info),
+            blocks: None,
+        },
+    )
+    .unwrap();
+    assert_eq!(p.document.arrays().len(), 1);
+    assert_eq!(*p.document.arrays()[0], theirs);
+    assert_eq!(
+        sync.next(&p.document)
+            .and_then(|env| input(&env).project)
+            .and_then(|m| m.arrays),
+        None,
+        "theirs is not sent back"
     );
 }

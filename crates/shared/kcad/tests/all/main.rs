@@ -4,6 +4,7 @@
 
 mod addresses;
 mod annotation;
+mod arrays;
 mod attachments;
 mod blocks;
 mod columns;

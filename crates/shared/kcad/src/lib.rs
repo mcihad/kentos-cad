@@ -411,11 +411,15 @@ pub const SCHEMA_WITH_SUBREF_EXTRAS: u32 = 51;
 /// named views (a middle, a width and a height, a twist), written only when
 /// the project keeps one; older readers refuse the file instead of losing them.
 pub const SCHEMA_WITH_VIEWS: u32 = 52;
+/// Schema 53 (docs/specs/kcad-v2.md §6.14, docs/adr/0300): the document's
+/// associative arrays (`arrays`), written only when the drawing has one;
+/// older readers refuse the file instead of losing the arrays.
+pub const SCHEMA_WITH_ARRAYS: u32 = 53;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 51] = [
+pub const SCHEMAS: [u32; 52] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -467,6 +471,7 @@ pub const SCHEMAS: [u32; 51] = [
     SCHEMA_WITH_IMPERIAL,
     SCHEMA_WITH_SUBREF_EXTRAS,
     SCHEMA_WITH_VIEWS,
+    SCHEMA_WITH_ARRAYS,
 ];
 
 /// The file a drawing is saved as.

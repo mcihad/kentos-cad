@@ -454,6 +454,244 @@
             ],
             "type": "string"
           },
+          "ArrayId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "ArrayItem": {
+            "description": "One place of an associative array.",
+            "properties": {
+              "kept": {
+                "description": "Changed by hand (moved, turned, scaled, its block replaced): a layout change leaves it as it is.",
+                "type": "boolean"
+              },
+              "uid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/EntityId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The insert at this place; none: removed by hand (it stays removed until the array is reset)."
+              }
+            },
+            "type": "object"
+          },
+          "ArrayLayout": {
+            "description": "How the copies are laid out. The originals take the first place and stay\nwhere they are. Coordinates are x east (Y), y north (X), in the\nproject's units (m), float64.",
+            "oneOf": [
+              {
+                "description": "Dizi: `rows` × `cols` places, 2 to 10 000 of them; the copy `j`\ncolumns and `i` rows from the originals moves `j·dx` east and `i·dy`\nnorth. The copies are made row after row, each row column after\ncolumn. A direction with more than one place needs a spacing.",
+                "properties": {
+                  "cols": {
+                    "format": "uint32",
+                    "maximum": 10000,
+                    "minimum": 1,
+                    "type": "integer",
+                    "x-unit": "count"
+                  },
+                  "dx": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "dy": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "grid",
+                    "type": "string"
+                  },
+                  "rows": {
+                    "format": "uint32",
+                    "maximum": 10000,
+                    "minimum": 1,
+                    "type": "integer",
+                    "x-unit": "count"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "rows",
+                  "cols",
+                  "dx",
+                  "dy"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Kutupsal dizi: `count` items around `center`, 2 to 1000, the\noriginals among them, over `fill` degrees (counter-clockwise; minus\nclockwise; 360 a full turn). A full turn shares the circle out; a\npartial fill puts the last copy on its end. With `rotate` each copy\nturns about the centre; without, it keeps its direction and moves as\nthe middle of the copied objects' box goes round.",
+                "properties": {
+                  "center": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "count": {
+                    "format": "uint32",
+                    "maximum": 1000,
+                    "minimum": 2,
+                    "type": "integer",
+                    "x-unit": "count"
+                  },
+                  "fill": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "deg"
+                  },
+                  "kind": {
+                    "const": "polar",
+                    "type": "string"
+                  },
+                  "rotate": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "center",
+                  "count",
+                  "fill",
+                  "rotate"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Kopyala's Dizi (docs/adr/0291; AutoCAD COPY's Array): `count` places along the displacement (`dx`,\n`dy`), 2 to 10 000, the originals at the first: the copy `k` moves `k·(dx, dy)`; with `fit` the last one\nmoves the whole displacement and the others share it, the copy `k` moving `k·(dx, dy) / (count − 1)`.",
+                "properties": {
+                  "count": {
+                    "format": "uint32",
+                    "maximum": 10000,
+                    "minimum": 2,
+                    "type": "integer",
+                    "x-unit": "count"
+                  },
+                  "dx": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "dy": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "fit": {
+                    "type": "boolean"
+                  },
+                  "kind": {
+                    "const": "line",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "count",
+                  "dx",
+                  "dy"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Yol boyunca dizi (docs/adr/0140): `count` places, 2 to 10 000, along\nthe object `path` names by its persistent id (a line, an arc, a\ncircle or a polyline), the originals at the first, the path's start.\nThe places are `spacing` metres apart along the path from its start,\nor without a spacing spread evenly from its start to its end (round a\nclosed path, its end being its start). The copy at a place moves by\nthe path's point there less its start; with `align` it first turns\nabout the start by the path's direction there less its direction at\nthe start. The path is read, never changed.",
+                "properties": {
+                  "align": {
+                    "type": "boolean"
+                  },
+                  "count": {
+                    "format": "uint32",
+                    "maximum": 10000,
+                    "minimum": 2,
+                    "type": "integer",
+                    "x-unit": "count"
+                  },
+                  "kind": {
+                    "const": "path",
+                    "type": "string"
+                  },
+                  "path": {
+                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "type": "string"
+                  },
+                  "spacing": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "length"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "path",
+                  "count",
+                  "align"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "AssocArray": {
+            "description": "An associative array (docs/adr/0300).",
+            "properties": {
+              "block": {
+                "$ref": "#/$defs/BlockId",
+                "description": "The source: the block definition every item inserts."
+              },
+              "id": {
+                "$ref": "#/$defs/ArrayId"
+              },
+              "items": {
+                "description": "One per place, in the layout's order (a grid row after row).",
+                "items": {
+                  "$ref": "#/$defs/ArrayItem"
+                },
+                "type": "array"
+              },
+              "layerId": {
+                "description": "The items' layer.",
+                "type": "string"
+              },
+              "layout": {
+                "$ref": "#/$defs/ArrayLayout",
+                "description": "How the places are laid out; the first is `p` itself. A path array names its path by its persistent id\nand follows it."
+              },
+              "mirror": {
+                "type": "boolean"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "The first place: where the block's base point goes, its scale (above zero) and turn (radians), as an\ninsert's.",
+                "x-unit": "length"
+              },
+              "rotation": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "rad"
+              },
+              "scale": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "id",
+              "block",
+              "layerId",
+              "p",
+              "scale",
+              "rotation",
+              "layout",
+              "items"
+            ],
+            "type": "object"
+          },
           "Attachment": {
             "description": "One of an object's attachments: its name, its source (exactly one of\n`asset`, `file` and `url`) and an optional note.",
             "properties": {
@@ -6678,6 +6916,16 @@
                   "null"
                 ]
               },
+              "arrays": {
+                "description": "The associative arrays, whole (docs/adr/0300); an empty list: none any more. Held to the contract's\nrules (`arrays_problem`) but for the blocks and objects they name, which the document keeps.",
+                "items": {
+                  "$ref": "#/$defs/AssocArray"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "layers": {
                 "items": {
                   "$ref": "#/$defs/LayerNode"
@@ -10148,6 +10396,244 @@
             ],
             "type": "string"
           },
+          "ArrayId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "ArrayItem": {
+            "description": "One place of an associative array.",
+            "properties": {
+              "kept": {
+                "description": "Changed by hand (moved, turned, scaled, its block replaced): a layout change leaves it as it is.",
+                "type": "boolean"
+              },
+              "uid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/EntityId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The insert at this place; none: removed by hand (it stays removed until the array is reset)."
+              }
+            },
+            "type": "object"
+          },
+          "ArrayLayout": {
+            "description": "How the copies are laid out. The originals take the first place and stay\nwhere they are. Coordinates are x east (Y), y north (X), in the\nproject's units (m), float64.",
+            "oneOf": [
+              {
+                "description": "Dizi: `rows` × `cols` places, 2 to 10 000 of them; the copy `j`\ncolumns and `i` rows from the originals moves `j·dx` east and `i·dy`\nnorth. The copies are made row after row, each row column after\ncolumn. A direction with more than one place needs a spacing.",
+                "properties": {
+                  "cols": {
+                    "format": "uint32",
+                    "maximum": 10000,
+                    "minimum": 1,
+                    "type": "integer",
+                    "x-unit": "count"
+                  },
+                  "dx": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "dy": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "grid",
+                    "type": "string"
+                  },
+                  "rows": {
+                    "format": "uint32",
+                    "maximum": 10000,
+                    "minimum": 1,
+                    "type": "integer",
+                    "x-unit": "count"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "rows",
+                  "cols",
+                  "dx",
+                  "dy"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Kutupsal dizi: `count` items around `center`, 2 to 1000, the\noriginals among them, over `fill` degrees (counter-clockwise; minus\nclockwise; 360 a full turn). A full turn shares the circle out; a\npartial fill puts the last copy on its end. With `rotate` each copy\nturns about the centre; without, it keeps its direction and moves as\nthe middle of the copied objects' box goes round.",
+                "properties": {
+                  "center": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "count": {
+                    "format": "uint32",
+                    "maximum": 1000,
+                    "minimum": 2,
+                    "type": "integer",
+                    "x-unit": "count"
+                  },
+                  "fill": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "deg"
+                  },
+                  "kind": {
+                    "const": "polar",
+                    "type": "string"
+                  },
+                  "rotate": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "center",
+                  "count",
+                  "fill",
+                  "rotate"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Kopyala's Dizi (docs/adr/0291; AutoCAD COPY's Array): `count` places along the displacement (`dx`,\n`dy`), 2 to 10 000, the originals at the first: the copy `k` moves `k·(dx, dy)`; with `fit` the last one\nmoves the whole displacement and the others share it, the copy `k` moving `k·(dx, dy) / (count − 1)`.",
+                "properties": {
+                  "count": {
+                    "format": "uint32",
+                    "maximum": 10000,
+                    "minimum": 2,
+                    "type": "integer",
+                    "x-unit": "count"
+                  },
+                  "dx": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "dy": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "fit": {
+                    "type": "boolean"
+                  },
+                  "kind": {
+                    "const": "line",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "count",
+                  "dx",
+                  "dy"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Yol boyunca dizi (docs/adr/0140): `count` places, 2 to 10 000, along\nthe object `path` names by its persistent id (a line, an arc, a\ncircle or a polyline), the originals at the first, the path's start.\nThe places are `spacing` metres apart along the path from its start,\nor without a spacing spread evenly from its start to its end (round a\nclosed path, its end being its start). The copy at a place moves by\nthe path's point there less its start; with `align` it first turns\nabout the start by the path's direction there less its direction at\nthe start. The path is read, never changed.",
+                "properties": {
+                  "align": {
+                    "type": "boolean"
+                  },
+                  "count": {
+                    "format": "uint32",
+                    "maximum": 10000,
+                    "minimum": 2,
+                    "type": "integer",
+                    "x-unit": "count"
+                  },
+                  "kind": {
+                    "const": "path",
+                    "type": "string"
+                  },
+                  "path": {
+                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "type": "string"
+                  },
+                  "spacing": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "length"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "path",
+                  "count",
+                  "align"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "AssocArray": {
+            "description": "An associative array (docs/adr/0300).",
+            "properties": {
+              "block": {
+                "$ref": "#/$defs/BlockId",
+                "description": "The source: the block definition every item inserts."
+              },
+              "id": {
+                "$ref": "#/$defs/ArrayId"
+              },
+              "items": {
+                "description": "One per place, in the layout's order (a grid row after row).",
+                "items": {
+                  "$ref": "#/$defs/ArrayItem"
+                },
+                "type": "array"
+              },
+              "layerId": {
+                "description": "The items' layer.",
+                "type": "string"
+              },
+              "layout": {
+                "$ref": "#/$defs/ArrayLayout",
+                "description": "How the places are laid out; the first is `p` itself. A path array names its path by its persistent id\nand follows it."
+              },
+              "mirror": {
+                "type": "boolean"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "The first place: where the block's base point goes, its scale (above zero) and turn (radians), as an\ninsert's.",
+                "x-unit": "length"
+              },
+              "rotation": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "rad"
+              },
+              "scale": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "id",
+              "block",
+              "layerId",
+              "p",
+              "scale",
+              "rotation",
+              "layout",
+              "items"
+            ],
+            "type": "object"
+          },
           "AuthKind": {
             "description": "The proof a service asks for (docs/adr/0208 §12).",
             "oneOf": [
@@ -10211,6 +10697,11 @@
               "exclusion",
               "addition"
             ],
+            "type": "string"
+          },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
           "Bounds": {
@@ -14138,6 +14629,13 @@
           "activeLayer": {
             "type": "string"
           },
+          "arrays": {
+            "description": "The project's associative arrays (docs/adr/0300); absent: none.",
+            "items": {
+              "$ref": "#/$defs/AssocArray"
+            },
+            "type": "array"
+          },
           "description": {
             "description": "The catalog's description (docs/adr/0028); absent: none.",
             "type": [
@@ -14679,6 +15177,244 @@
               "ha"
             ],
             "type": "string"
+          },
+          "ArrayId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "ArrayItem": {
+            "description": "One place of an associative array.",
+            "properties": {
+              "kept": {
+                "description": "Changed by hand (moved, turned, scaled, its block replaced): a layout change leaves it as it is.",
+                "type": "boolean"
+              },
+              "uid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/EntityId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The insert at this place; none: removed by hand (it stays removed until the array is reset)."
+              }
+            },
+            "type": "object"
+          },
+          "ArrayLayout": {
+            "description": "How the copies are laid out. The originals take the first place and stay\nwhere they are. Coordinates are x east (Y), y north (X), in the\nproject's units (m), float64.",
+            "oneOf": [
+              {
+                "description": "Dizi: `rows` × `cols` places, 2 to 10 000 of them; the copy `j`\ncolumns and `i` rows from the originals moves `j·dx` east and `i·dy`\nnorth. The copies are made row after row, each row column after\ncolumn. A direction with more than one place needs a spacing.",
+                "properties": {
+                  "cols": {
+                    "format": "uint32",
+                    "maximum": 10000,
+                    "minimum": 1,
+                    "type": "integer",
+                    "x-unit": "count"
+                  },
+                  "dx": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "dy": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "grid",
+                    "type": "string"
+                  },
+                  "rows": {
+                    "format": "uint32",
+                    "maximum": 10000,
+                    "minimum": 1,
+                    "type": "integer",
+                    "x-unit": "count"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "rows",
+                  "cols",
+                  "dx",
+                  "dy"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Kutupsal dizi: `count` items around `center`, 2 to 1000, the\noriginals among them, over `fill` degrees (counter-clockwise; minus\nclockwise; 360 a full turn). A full turn shares the circle out; a\npartial fill puts the last copy on its end. With `rotate` each copy\nturns about the centre; without, it keeps its direction and moves as\nthe middle of the copied objects' box goes round.",
+                "properties": {
+                  "center": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "count": {
+                    "format": "uint32",
+                    "maximum": 1000,
+                    "minimum": 2,
+                    "type": "integer",
+                    "x-unit": "count"
+                  },
+                  "fill": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "deg"
+                  },
+                  "kind": {
+                    "const": "polar",
+                    "type": "string"
+                  },
+                  "rotate": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "center",
+                  "count",
+                  "fill",
+                  "rotate"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Kopyala's Dizi (docs/adr/0291; AutoCAD COPY's Array): `count` places along the displacement (`dx`,\n`dy`), 2 to 10 000, the originals at the first: the copy `k` moves `k·(dx, dy)`; with `fit` the last one\nmoves the whole displacement and the others share it, the copy `k` moving `k·(dx, dy) / (count − 1)`.",
+                "properties": {
+                  "count": {
+                    "format": "uint32",
+                    "maximum": 10000,
+                    "minimum": 2,
+                    "type": "integer",
+                    "x-unit": "count"
+                  },
+                  "dx": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "dy": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "fit": {
+                    "type": "boolean"
+                  },
+                  "kind": {
+                    "const": "line",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "count",
+                  "dx",
+                  "dy"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Yol boyunca dizi (docs/adr/0140): `count` places, 2 to 10 000, along\nthe object `path` names by its persistent id (a line, an arc, a\ncircle or a polyline), the originals at the first, the path's start.\nThe places are `spacing` metres apart along the path from its start,\nor without a spacing spread evenly from its start to its end (round a\nclosed path, its end being its start). The copy at a place moves by\nthe path's point there less its start; with `align` it first turns\nabout the start by the path's direction there less its direction at\nthe start. The path is read, never changed.",
+                "properties": {
+                  "align": {
+                    "type": "boolean"
+                  },
+                  "count": {
+                    "format": "uint32",
+                    "maximum": 10000,
+                    "minimum": 2,
+                    "type": "integer",
+                    "x-unit": "count"
+                  },
+                  "kind": {
+                    "const": "path",
+                    "type": "string"
+                  },
+                  "path": {
+                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "type": "string"
+                  },
+                  "spacing": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "length"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "path",
+                  "count",
+                  "align"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "AssocArray": {
+            "description": "An associative array (docs/adr/0300).",
+            "properties": {
+              "block": {
+                "$ref": "#/$defs/BlockId",
+                "description": "The source: the block definition every item inserts."
+              },
+              "id": {
+                "$ref": "#/$defs/ArrayId"
+              },
+              "items": {
+                "description": "One per place, in the layout's order (a grid row after row).",
+                "items": {
+                  "$ref": "#/$defs/ArrayItem"
+                },
+                "type": "array"
+              },
+              "layerId": {
+                "description": "The items' layer.",
+                "type": "string"
+              },
+              "layout": {
+                "$ref": "#/$defs/ArrayLayout",
+                "description": "How the places are laid out; the first is `p` itself. A path array names its path by its persistent id\nand follows it."
+              },
+              "mirror": {
+                "type": "boolean"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "The first place: where the block's base point goes, its scale (above zero) and turn (radians), as an\ninsert's.",
+                "x-unit": "length"
+              },
+              "rotation": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "rad"
+              },
+              "scale": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "id",
+              "block",
+              "layerId",
+              "p",
+              "scale",
+              "rotation",
+              "layout",
+              "items"
+            ],
+            "type": "object"
           },
           "Attachment": {
             "description": "One of an object's attachments: its name, its source (exactly one of\n`asset`, `file` and `url`) and an optional note.",
@@ -23780,6 +24516,13 @@
           },
           "activeLayer": {
             "type": "string"
+          },
+          "arrays": {
+            "description": "A database project's associative arrays (docs/adr/0300); an older server's answer without them has none.",
+            "items": {
+              "$ref": "#/$defs/AssocArray"
+            },
+            "type": "array"
           },
           "blocks": {
             "description": "A database project's block definitions with their versions\n(docs/adr/0144 §5), in the order they were made. An older server's\nanswer without them has none.",
@@ -77070,8 +77813,12 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.array` v1: copies of objects named by their\npersistent ids (docs/adr/0014) laid out by `layout`, as one undo step.\nThe array tools make the selection explicit here (TODOS.md CMD-07): they\ngive the selected objects' ids; the command reads no selection, layer or\nview.\n\nEach copy takes every field of its original (layer, colour, attributes,\nlabel, symbol) and a new persistent id; the originals stay. The copies\nare written place after place, each place the objects in the input's\norder. The undo step is the tool's name: “Dizi”, “Kutupsal dizi”,\n“Yol boyunca dizi” or, for a line of copies, “Kopyala”.\n\nObjects on a locked layer (by itself or a group above it) are not\ncopied: with others they are named in the output's `locked` with a\n`layer_locked` warning; when every one is locked nothing is written and\nthe answer is `layer_locked`. A polar array's copies that do not turn are\nplaced by the middle of the box of the objects that are copied. A\nrepeated id counts once.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`,\n`invalid_uid` (each id in order, then a path array's path at\n`layout.path`), `not_finite` (the layout's numbers, in their order),\n`invalid_count` (rows and columns, or the count, out of their range),\n`invalid_spacing` (a grid direction with more than one place and no\nspacing; a line's displacement of no length; a path array's spacing not\nabove zero), `invalid_fill` (a polar\nfill of zero or past a full turn), `invalid_revision`,\n`revision_conflict` (status `conflict`), `entity_not_found` (each id in\norder, then the path at `layout.path`), `invalid_path` (a path that is\nnot a line, an arc, a circle or a polyline, or has no length),\n`invalid_spacing` again (a path array's places past the end of an open\npath, or round to the start of a closed one), `layer_locked`, then\n`not_finite` again (path `layout`) when a copy would lie past the\nlargest float64; on the desktop also `slots_exhausted`.",
+        "description": "Input of `cad.entities.array` v1: copies of objects named by their\npersistent ids (docs/adr/0014) laid out by `layout`, as one undo step.\nThe array tools make the selection explicit here (TODOS.md CMD-07): they\ngive the selected objects' ids; the command reads no selection, layer or\nview.\n\nEach copy takes every field of its original (layer, colour, attributes,\nlabel, symbol) and a new persistent id; the originals stay. The copies\nare written place after place, each place the objects in the input's\norder. The undo step is the tool's name: “Dizi”, “Kutupsal dizi”,\n“Yol boyunca dizi” or, for a line of copies, “Kopyala”.\n\nObjects on a locked layer (by itself or a group above it) are not\ncopied: with others they are named in the output's `locked` with a\n`layer_locked` warning; when every one is locked nothing is written and\nthe answer is `layer_locked`. A polar array's copies that do not turn are\nplaced by the middle of the box of the objects that are copied. A\nrepeated id counts once.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`,\n`invalid_uid` (each id in order, then a path array's path at\n`layout.path`), `not_finite` (the layout's numbers, in their order),\n`invalid_count` (rows and columns, or the count, out of their range),\n`invalid_spacing` (a grid direction with more than one place and no\nspacing; a line's displacement of no length; a path array's spacing not\nabove zero), `invalid_fill` (a polar\nfill of zero or past a full turn), `invalid_revision`,\n`revision_conflict` (status `conflict`), `entity_not_found` (each id in\norder, then the path at `layout.path`), `invalid_path` (a path that is\nnot a line, an arc, a circle or a polyline, or has no length),\n`invalid_spacing` again (a path array's places past the end of an open\npath, or round to the start of a closed one), `layer_locked`, then\n`not_finite` again (path `layout`) when a copy would lie past the\nlargest float64; on the desktop also `slots_exhausted`.\n\nWith `associative` (docs/adr/0300) the objects become a block, “Dizi n”\n(its base point the middle of their box), and every place, theirs the\nfirst, gets an insert of it: the items of one associative array the\ndocument keeps (`AssocArray`). The objects are removed; editing the block\nchanges every item. A path array then follows its path. Refused with\n`block_refused` when the objects cannot be a block.",
         "properties": {
+          "associative": {
+            "description": "One associative array of a block's inserts instead of independent copies.",
+            "type": "boolean"
+          },
           "expectedRevision": {
             "description": "The document revision the input was prepared against, as decimal text\n(from a plan, or the document). When given and the document is no\nlonger at it, nothing is written and the answer is `conflict`.",
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -77101,9 +77848,27 @@
         "type": "object"
       },
       "output": {
+        "$defs": {
+          "ArrayId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.entities.array` v1: what was made and what stayed.",
         "properties": {
+          "array": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ArrayId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "An associative array's id; `created` are then its items' inserts, its source's first."
+          },
           "created": {
             "description": "The copies' persistent ids, place after place, each place in the order\nof their originals in the input.",
             "items": {

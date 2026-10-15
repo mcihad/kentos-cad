@@ -3153,6 +3153,85 @@ class AreaSource(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ArrayItem(_Model):
+    """One place of an associative array.
+    Attributes:
+        kept: Changed by hand (moved, turned, scaled, its block replaced): a layout change leaves it as it is.
+        uid: The insert at this place; none: removed by hand (it stays removed until the array is reset).
+    """
+    kept: bool | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.kept is not UNSET:
+            out["kept"] = self.kept
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArrayItem:
+        return cls(
+            kept=data.get("kept", UNSET),
+            uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AssocArray(_Model):
+    """An associative array (docs/adr/0300).
+    Attributes:
+        block: The source: the block definition every item inserts.
+        layer_id: The items' layer.
+        p: The first place: where the block's base point goes, its scale (above zero) and turn (radians), as an
+            insert's. Unit: length.
+        scale: Unit: 1.
+        rotation: Unit: rad.
+        layout: How the places are laid out; the first is `p` itself. A path array names its path by its persistent id
+            and follows it.
+        items: One per place, in the layout's order (a grid row after row).
+    """
+    id: str
+    block: str
+    layer_id: str
+    p: Vec2
+    scale: float
+    rotation: float
+    layout: ArrayLayout
+    items: list[ArrayItem]
+    mirror: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["block"] = self.block
+        out["layerId"] = self.layer_id
+        out["p"] = _vec2_out(self.p)
+        out["scale"] = float(self.scale)
+        out["rotation"] = float(self.rotation)
+        out["layout"] = self.layout.to_json()
+        out["items"] = [e0.to_json() for e0 in self.items]
+        if self.mirror is not UNSET:
+            out["mirror"] = self.mirror
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AssocArray:
+        return cls(
+            id=data["id"],
+            block=data["block"],
+            layer_id=data["layerId"],
+            p=Vec2.from_json(data["p"]),
+            scale=float(data["scale"]),
+            rotation=float(data["rotation"]),
+            layout=ArrayLayout.from_json(data["layout"]),
+            items=[ArrayItem.from_json(e0) for e0 in data["items"]],
+            mirror=data.get("mirror", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class Attachment(_Model):
     """One of an object's attachments: its name, its source (exactly one of
     `asset`, `file` and `url`) and an optional note.
@@ -5654,21 +5733,32 @@ class EntitiesArray(_Model):
     path, or round to the start of a closed one), `layer_locked`, then
     `not_finite` again (path `layout`) when a copy would lie past the
     largest float64; on the desktop also `slots_exhausted`.
+
+    With `associative` (docs/adr/0300) the objects become a block, “Dizi n”
+    (its base point the middle of their box), and every place, theirs the
+    first, gets an insert of it: the items of one associative array the
+    document keeps (`AssocArray`). The objects are removed; editing the block
+    changes every item. A path array then follows its path. Refused with
+    `block_refused` when the objects cannot be a block.
     Attributes:
         uids: The objects' persistent ids (lowercase UUID text with hyphens), at least one.
         layout: Where the copies go.
+        associative: One associative array of a block's inserts instead of independent copies.
         expected_revision: The document revision the input was prepared against, as decimal text
             (from a plan, or the document). When given and the document is no
             longer at it, nothing is written and the answer is `conflict`.
     """
     uids: list[str]
     layout: ArrayLayout
+    associative: bool | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["uids"] = list(self.uids)
         out["layout"] = self.layout.to_json()
+        if self.associative is not UNSET:
+            out["associative"] = self.associative
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         return out
@@ -5678,6 +5768,7 @@ class EntitiesArray(_Model):
         return cls(
             uids=list(data["uids"]),
             layout=ArrayLayout.from_json(data["layout"]),
+            associative=data.get("associative", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
         )
 
@@ -5726,16 +5817,20 @@ class EntitiesArrayed(_Model):
         revision: The document's revision after the write, as decimal text. Inside an
             open transaction or group the write joins it, and the revision
             changes when that ends.
+        array: An associative array's id; `created` are then its items' inserts, its source's first.
     """
     created: list[str]
     locked: list[str]
     revision: str
+    array: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["created"] = list(self.created)
         out["locked"] = list(self.locked)
         out["revision"] = self.revision
+        if self.array is not UNSET:
+            out["array"] = self.array
         return out
 
     @classmethod
@@ -5744,6 +5839,7 @@ class EntitiesArrayed(_Model):
             created=list(data["created"]),
             locked=list(data["locked"]),
             revision=data["revision"],
+            array=data.get("array", UNSET),
         )
 
 
@@ -13684,6 +13780,7 @@ class ProjectCreate(_Model):
     """`POST /v1/tenants/{tenant}/projects`: a new project's metadata (its objects follow as commands).
     Attributes:
         origin: Unit: length.
+        arrays: The project's associative arrays (docs/adr/0300); absent: none.
         description: The catalog's description (docs/adr/0028); absent: none.
         home_view: Unit: length.
         project_type: Absent: the general type (`cad`).
@@ -13698,6 +13795,7 @@ class ProjectCreate(_Model):
     layers: list[LayerNode]
     active_layer: str
     styles: ProjectStyles
+    arrays: list[AssocArray] | Unset = UNSET
     description: str | None | Unset = UNSET
     home_view: Bounds | None | Unset = UNSET
     project_type: ProjectType | ProjectTypeName | None | Unset = UNSET
@@ -13713,6 +13811,8 @@ class ProjectCreate(_Model):
         out["layers"] = [e0.to_json() for e0 in self.layers]
         out["activeLayer"] = self.active_layer
         out["styles"] = self.styles.to_json()
+        if self.arrays is not UNSET:
+            out["arrays"] = [e0.to_json() for e0 in self.arrays]
         if self.description is not UNSET:
             out["description"] = self.description
         if self.home_view is not UNSET:
@@ -13736,6 +13836,7 @@ class ProjectCreate(_Model):
             layers=[LayerNode.from_json(e0) for e0 in data["layers"]],
             active_layer=data["activeLayer"],
             styles=ProjectStyles.from_json(data["styles"]),
+            arrays=[AssocArray.from_json(e0) for e0 in data["arrays"]] if "arrays" in data else UNSET,
             description=data.get("description", UNSET),
             home_view=UNSET if "homeView" not in data else None if data["homeView"] is None else Bounds.from_json(data["homeView"]),
             project_type=UNSET if "projectType" not in data else None if data["projectType"] is None else _enum_in(ProjectType, data["projectType"]),
@@ -13913,6 +14014,7 @@ class ProjectInfo(_Model):
         state: Active or archived (an archived project opens read-only; one in the trash does not open).
         origin: Unit: length.
         event_cursor: Event cursor at the moment this was read: subscribe after it to miss nothing.
+        arrays: A database project's associative arrays (docs/adr/0300); an older server's answer without them has none.
         blocks: A database project's block definitions with their versions
             (docs/adr/0144 §5), in the order they were made. An older server's
             answer without them has none.
@@ -13939,6 +14041,7 @@ class ProjectInfo(_Model):
     data_revision: str
     feature_count: str
     event_cursor: str
+    arrays: list[AssocArray] | Unset = UNSET
     blocks: list[BlockRecord] | Unset = UNSET
     home_view: Bounds | None | Unset = UNSET
     sheets: ProjectSheets | None | Unset = UNSET
@@ -13962,6 +14065,8 @@ class ProjectInfo(_Model):
         out["dataRevision"] = self.data_revision
         out["featureCount"] = self.feature_count
         out["eventCursor"] = self.event_cursor
+        if self.arrays is not UNSET:
+            out["arrays"] = [e0.to_json() for e0 in self.arrays]
         if self.blocks is not UNSET:
             out["blocks"] = [e0.to_json() for e0 in self.blocks]
         if self.home_view is not UNSET:
@@ -13990,6 +14095,7 @@ class ProjectInfo(_Model):
             data_revision=data["dataRevision"],
             feature_count=data["featureCount"],
             event_cursor=data["eventCursor"],
+            arrays=[AssocArray.from_json(e0) for e0 in data["arrays"]] if "arrays" in data else UNSET,
             blocks=[BlockRecord.from_json(e0) for e0 in data["blocks"]] if "blocks" in data else UNSET,
             home_view=UNSET if "homeView" not in data else None if data["homeView"] is None else Bounds.from_json(data["homeView"]),
             sheets=UNSET if "sheets" not in data else None if data["sheets"] is None else ProjectSheets.from_json(data["sheets"]),
@@ -14119,11 +14225,14 @@ class ProjectMetadataUpdate(_Model):
 class ProjectPatch(_Model):
     """Metadata to replace; absent fields stay. Needs `expectedVersions["@project"]`.
     Attributes:
+        arrays: The associative arrays, whole (docs/adr/0300); an empty list: none any more. Held to the contract's
+            rules (`arrays_problem`) but for the blocks and objects they name, which the document keeps.
         sheets: The sheet book and its pictures, whole (docs/adr/0251); null: the
             project has none any more. Held to the file format's rules
             (`sheets_problem`).
     """
     active_layer: str | None | Unset = UNSET
+    arrays: list[AssocArray] | None | Unset = UNSET
     layers: list[LayerNode] | None | Unset = UNSET
     name: str | None | Unset = UNSET
     settings: ProjectSettings | None | Unset = UNSET
@@ -14134,6 +14243,8 @@ class ProjectPatch(_Model):
         out: dict[str, Any] = {}
         if self.active_layer is not UNSET:
             out["activeLayer"] = self.active_layer
+        if self.arrays is not UNSET:
+            out["arrays"] = None if self.arrays is None else [e0.to_json() for e0 in self.arrays]
         if self.layers is not UNSET:
             out["layers"] = None if self.layers is None else [e0.to_json() for e0 in self.layers]
         if self.name is not UNSET:
@@ -14150,6 +14261,7 @@ class ProjectPatch(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ProjectPatch:
         return cls(
             active_layer=data.get("activeLayer", UNSET),
+            arrays=UNSET if "arrays" not in data else None if data["arrays"] is None else [AssocArray.from_json(e0) for e0 in data["arrays"]],
             layers=UNSET if "layers" not in data else None if data["layers"] is None else [LayerNode.from_json(e0) for e0 in data["layers"]],
             name=data.get("name", UNSET),
             settings=UNSET if "settings" not in data else None if data["settings"] is None else ProjectSettings.from_json(data["settings"]),
@@ -21980,7 +22092,9 @@ __all__ = [
     "ArrangeMode",
     "ArrangeModeName",
     "ArrangeTransform",
+    "ArrayItem",
     "ArrayLayout",
+    "AssocArray",
     "AtMeasuredPoint",
     "Attachment",
     "AttributeDefinition",

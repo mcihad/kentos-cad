@@ -2135,6 +2135,23 @@ fn check(
                     .collect::<Outcome<_>>()?;
                 expect_same(&json!(got), want, "bloklar", at)?;
             }
+            // The drawing's associative arrays in order, each without its id (docs/adr/0300); the expected
+            // block and items by `$blockOf:Ad` and `$uidOf:12`.
+            "arrays" => {
+                let got: Vec<Value> = doc
+                    .arrays()
+                    .iter()
+                    .map(|a| {
+                        let mut v = serde_json::to_value(&**a).map_err(|e| format!("{at}: {e}"))?;
+                        if let Some(fields) = v.as_object_mut() {
+                            fields.remove("id");
+                        }
+                        Ok(v)
+                    })
+                    .collect::<Outcome<_>>()?;
+                let wanted = block_ids(want, doc, state, at)?;
+                expect_same(&json!(got), &wanted, "ilişkili diziler", at)?;
+            }
             // A definition's id by its name: "new" (none the setup had nor
             // `captureBlock` took), "$block:name" or the id itself.
             "blockIds" => {

@@ -443,6 +443,13 @@ pub struct ProjectCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub sheets: Option<crate::sheets::ProjectSheets>,
+    /// The project's associative arrays (docs/adr/0300); absent: none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::assoc_array::AssocArray>>")
+    )]
+    pub arrays: Vec<crate::assoc_array::AssocArray>,
     /// The catalog's description (docs/adr/0028); absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -493,6 +500,13 @@ pub struct ProjectInfo {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub sheets: Option<crate::sheets::ProjectSheets>,
+    /// A database project's associative arrays (docs/adr/0300); an older server's answer without them has none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::assoc_array::AssocArray>>")
+    )]
+    pub arrays: Vec<crate::assoc_array::AssocArray>,
     pub meta_version: String,
     pub data_revision: String,
     pub feature_count: String,
@@ -659,6 +673,14 @@ pub struct ProjectPatch {
         schemars(with = "Option<crate::sheets::ProjectSheets>")
     )]
     pub sheets: Option<Option<crate::sheets::ProjectSheets>>,
+    /// The associative arrays, whole (docs/adr/0300); an empty list: none any more. Held to the contract's
+    /// rules (`arrays_problem`) but for the blocks and objects they name, which the document keeps.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::assoc_array::AssocArray>>")
+    )]
+    pub arrays: Option<Vec<crate::assoc_array::AssocArray>>,
 }
 
 /// The committed result; a retry with the same idempotency key gets the same one (`replayed`).

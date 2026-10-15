@@ -147,7 +147,10 @@ use crate::layer::LineType;
 ///    web's copy stays 53.
 /// 62 (docs/adr/0263): a dimension reference's `along` place (kind 6, its t a float) and block path (the
 ///    kind plus 8, then the path) in the typed columns. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 62;
+/// 63 (docs/adr/0300): associative arrays: `.kcad` document schema 53, the document's `arrays` (a
+///    block, its first place, the array command's layout and one item per place: its insert's id,
+///    none when removed, `kept` when changed by hand). The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 63;
 
 // ── Every import ────────────────────────────────────────────────────────
 

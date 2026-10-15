@@ -136,6 +136,13 @@ pub enum ArrayLayout {
 /// path, or round to the start of a closed one), `layer_locked`, then
 /// `not_finite` again (path `layout`) when a copy would lie past the
 /// largest float64; on the desktop also `slots_exhausted`.
+///
+/// With `associative` (docs/adr/0300) the objects become a block, “Dizi n”
+/// (its base point the middle of their box), and every place, theirs the
+/// first, gets an insert of it: the items of one associative array the
+/// document keeps (`AssocArray`). The objects are removed; editing the block
+/// changes every item. A path array then follows its path. Refused with
+/// `block_refused` when the objects cannot be a block.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -147,6 +154,10 @@ pub struct EntitiesArray {
     pub uids: Vec<String>,
     /// Where the copies go.
     pub layout: ArrayLayout,
+    /// One associative array of a block's inserts instead of independent copies.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub associative: bool,
     /// The document revision the input was prepared against, as decimal text
     /// (from a plan, or the document). When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
@@ -168,6 +179,10 @@ pub struct EntitiesArrayed {
     pub created: Vec<String>,
     /// The ids not copied because their layer is locked, in the input's order.
     pub locked: Vec<String>,
+    /// An associative array's id; `created` are then its items' inserts, its source's first.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub array: Option<crate::identity::ArrayId>,
     /// The document's revision after the write, as decimal text. Inside an
     /// open transaction or group the write joins it, and the revision
     /// changes when that ends.

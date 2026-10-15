@@ -76,6 +76,9 @@ class SessionBase:
     def blocks(self) -> str:
         raise NotImplementedError
 
+    def arrays(self) -> str:
+        raise NotImplementedError
+
     def entities(
         self,
         layer: str | None = None,
@@ -717,6 +720,13 @@ class Document:
         """The block definitions in the drawing's order (docs/adr/0144): each its
         id, name, base point and objects (their ids local to it)."""
         return [decode(BlockDefinition, b, "Document.blocks") for b in json.loads(self._session.blocks())]
+
+    def arrays(self) -> list[dict[str, Any]]:
+        """The associative arrays in the order they were made (docs/adr/0300): each its id, source block, first
+        place (`p`, `scale`, `rotation`, `mirror`), layout (`cad.entities.array`'s) and items, one per place: the
+        insert there (`uid`; none when removed by hand) and `kept` when it was changed by hand. Made by
+        `cad.entities.array` with `associative=True`."""
+        return list(json.loads(self._session.arrays()))
 
     def all_layers(self) -> Iterator[LayerNode]:
         """Every layer of the tree (not the groups), depth first."""

@@ -1,0 +1,256 @@
+{
+ "format": "kentos.document",
+ "version": 2,
+ "name": "İlişkili diziler",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000.0
+ },
+ "origin": {
+  "x": 500000.0,
+  "y": 4400000.0
+ },
+ "layers": [
+  {
+   "id": "0",
+   "name": "0",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "aydinlatma",
+   "name": "Aydınlatma",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "0",
+ "entities": [
+  {
+   "kind": "insert",
+   "id": 1,
+   "layerId": "aydinlatma",
+   "attrs": {},
+   "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0b01",
+   "p": {
+    "x": 500000.0,
+    "y": 4400000.0
+   },
+   "scale": 1.0,
+   "rotation": 0.0
+  },
+  {
+   "kind": "insert",
+   "id": 2,
+   "layerId": "aydinlatma",
+   "attrs": {},
+   "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0b01",
+   "p": {
+    "x": 500030.0,
+    "y": 4400000.0
+   },
+   "scale": 1.0,
+   "rotation": 0.0
+  },
+  {
+   "kind": "insert",
+   "id": 3,
+   "layerId": "aydinlatma",
+   "attrs": {},
+   "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0b01",
+   "p": {
+    "x": 500092.0,
+    "y": 4400003.0
+   },
+   "scale": 1.0,
+   "rotation": 0.25
+  },
+  {
+   "kind": "insert",
+   "id": 4,
+   "layerId": "aydinlatma",
+   "attrs": {},
+   "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0b01",
+   "p": {
+    "x": 500000.0,
+    "y": 4400050.0
+   },
+   "scale": 1.0,
+   "rotation": 0.0
+  },
+  {
+   "kind": "insert",
+   "id": 5,
+   "layerId": "aydinlatma",
+   "attrs": {},
+   "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0b01",
+   "p": {
+    "x": 500010.0,
+    "y": 4400060.0
+   },
+   "scale": 1.0,
+   "rotation": 1.5707963267948966
+  },
+  {
+   "kind": "polyline",
+   "id": 6,
+   "layerId": "0",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 500000.0,
+     "y": 4400100.0
+    },
+    {
+     "x": 500060.0,
+     "y": 4400100.0
+    },
+    {
+     "x": 500100.0,
+     "y": 4400140.0
+    }
+   ]
+  }
+ ],
+ "uids": [
+  "0192f5a2-2222-7000-8000-000000000001",
+  "0192f5a2-2222-7000-8000-000000000002",
+  "0192f5a2-2222-7000-8000-000000000003",
+  "0192f5a2-2222-7000-8000-000000000004",
+  "0192f5a2-2222-7000-8000-000000000005",
+  "0192f5a2-2222-7000-8000-000000000006"
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ },
+ "blocks": [
+  {
+   "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0b01",
+   "name": "Direk",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "circle",
+     "id": 1,
+     "layerId": "0",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "r": 0.4
+    }
+   ]
+  }
+ ],
+ "arrays": [
+  {
+   "id": "0192f5a3-3333-7000-8000-000000000001",
+   "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0b01",
+   "layerId": "aydinlatma",
+   "p": {
+    "x": 500000.0,
+    "y": 4400000.0
+   },
+   "scale": 1.0,
+   "rotation": 0.0,
+   "layout": {
+    "kind": "grid",
+    "rows": 1,
+    "cols": 4,
+    "dx": 30.0,
+    "dy": 0.0
+   },
+   "items": [
+    {
+     "uid": "0192f5a2-2222-7000-8000-000000000001"
+    },
+    {
+     "uid": "0192f5a2-2222-7000-8000-000000000002"
+    },
+    {},
+    {
+     "uid": "0192f5a2-2222-7000-8000-000000000003",
+     "kept": true
+    }
+   ]
+  },
+  {
+   "id": "0192f5a3-3333-7000-8000-000000000002",
+   "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0b01",
+   "layerId": "aydinlatma",
+   "p": {
+    "x": 500000.0,
+    "y": 4400050.0
+   },
+   "scale": 1.0,
+   "rotation": 0.0,
+   "mirror": true,
+   "layout": {
+    "kind": "polar",
+    "center": {
+     "x": 500000.0,
+     "y": 4400060.0
+    },
+    "count": 2,
+    "fill": 90.0,
+    "rotate": true
+   },
+   "items": [
+    {
+     "uid": "0192f5a2-2222-7000-8000-000000000004"
+    },
+    {
+     "uid": "0192f5a2-2222-7000-8000-000000000005"
+    }
+   ]
+  },
+  {
+   "id": "0192f5a3-3333-7000-8000-000000000003",
+   "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0b01",
+   "layerId": "aydinlatma",
+   "p": {
+    "x": 500000.0,
+    "y": 4400100.0
+   },
+   "scale": 2.0,
+   "rotation": 0.0,
+   "layout": {
+    "kind": "path",
+    "path": "0192f5a2-2222-7000-8000-000000000006",
+    "count": 3,
+    "spacing": 25.0,
+    "align": true
+   },
+   "items": [
+    {},
+    {},
+    {}
+   ]
+  }
+ ]
+}

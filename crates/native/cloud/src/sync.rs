@@ -157,6 +157,8 @@ struct Meta {
     styles: ProjectStyles,
     /// The sheet book (docs/adr/0251), shared with the drawing's.
     sheets: Option<Arc<ProjectSheets>>,
+    /// The associative arrays (docs/adr/0300 §5), shared with the drawing's.
+    arrays: Vec<Arc<kentos_contracts::AssocArray>>,
 }
 
 impl Meta {
@@ -167,6 +169,7 @@ impl Meta {
             layers: doc.layers().nodes().to_vec(),
             styles: doc.styles().clone(),
             sheets: doc.sheets_shared().cloned(),
+            arrays: doc.arrays().to_vec(),
         }
     }
 
@@ -189,6 +192,9 @@ impl Meta {
         }
         if doc.sheets() != self.sheets.as_deref() {
             patch.sheets = Some(doc.sheets().cloned());
+        }
+        if doc.arrays() != self.arrays.as_slice() {
+            patch.arrays = Some(doc.arrays().iter().map(|a| (**a).clone()).collect());
         }
         (patch != ProjectPatch::default()).then_some(patch)
     }

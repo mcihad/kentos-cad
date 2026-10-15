@@ -337,6 +337,7 @@ pub fn project_create(doc: &Document, name: &str, storage: ProjectStorage) -> Pr
         active_layer: doc.layers().active().to_string(),
         styles: doc.styles().clone(),
         sheets: doc.sheets().cloned(),
+        arrays: doc.arrays().iter().map(|a| (**a).clone()).collect(),
         description: None,
         project_type: None,
         tags: None,

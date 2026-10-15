@@ -32,6 +32,7 @@ fn opened(storage: ProjectStorage) -> Opened {
         info: ProjectInfo {
             blocks: Vec::new(),
             sheets: None,
+            arrays: Vec::new(),
             id: "0199aaaa-0000-7000-8000-000000000001".into(),
             tenant_id: "0199aaaa-0000-7000-8000-000000000002".into(),
             tenant_name: "Harita Bürosu".into(),
@@ -179,6 +180,7 @@ fn what_came_to_be_known_is_kept_step_by_step() {
                 layers,
                 styles: o.info.styles.clone(),
                 sheets: None,
+                arrays: Vec::new(),
             }),
             ..BaseStep::default()
         })

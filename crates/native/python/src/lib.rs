@@ -235,6 +235,11 @@ impl PySession {
         text(&self.inner.blocks())
     }
 
+    /// The associative arrays in the order they were made (docs/adr/0300).
+    fn arrays(&self) -> PyResult<String> {
+        text(&self.inner.arrays())
+    }
+
     /// A page of objects: `bbox` is `(min_x, min_y, max_x, max_y)`, `after`
     /// the cursor a page gave.
     #[pyo3(signature = (layer = None, kinds = None, bbox = None, after = None, limit = None))]

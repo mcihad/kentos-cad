@@ -162,6 +162,7 @@ fn opened(n: usize) -> Opened {
         migrated_from: None,
         sheets: None,
         requests: Vec::new(),
+        arrays: Vec::new(),
     };
     let document = Document::from_snapshot_v2(snapshot).expect("the drawing opens");
     let tenant = Uuid::now_v7();
@@ -171,6 +172,7 @@ fn opened(n: usize) -> Opened {
         info: ProjectInfo {
             blocks: Vec::new(),
             sheets: None,
+            arrays: Vec::new(),
             id: project.to_string(),
             tenant_id: tenant.to_string(),
             tenant_name: "Ölçüm".into(),

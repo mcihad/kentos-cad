@@ -146,6 +146,7 @@ class _EntitiesArray(LocalCommand[EntitiesArray, EntitiesArrayed, EntitiesArrayP
         *,
         uids: Sequence[str],
         layout: ArrayLayout,
+        associative: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -177,6 +178,7 @@ class _EntitiesArray(LocalCommand[EntitiesArray, EntitiesArrayed, EntitiesArrayP
             doc: The drawing it works on.
             uids: The objects' persistent ids (lowercase UUID text with hyphens), at least one.
             layout: Where the copies go.
+            associative: One associative array of a block's inserts instead of independent copies.
             expected_revision: The document revision the input was prepared against, as decimal text
                 (from a plan, or the document). When given and the document is no
                 longer at it, nothing is written and the answer is `conflict`.
@@ -195,6 +197,7 @@ class _EntitiesArray(LocalCommand[EntitiesArray, EntitiesArrayed, EntitiesArrayP
         return self.execute_input(doc, EntitiesArray(
             uids=list(uids),
             layout=layout,
+            associative=associative,
             expected_revision=expected_revision,
         ), request_id=request_id, expected=expected)
 
@@ -205,6 +208,7 @@ class _EntitiesArray(LocalCommand[EntitiesArray, EntitiesArrayed, EntitiesArrayP
         *,
         uids: Sequence[str],
         layout: ArrayLayout,
+        associative: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
     ) -> EntitiesArrayPlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -213,6 +217,7 @@ class _EntitiesArray(LocalCommand[EntitiesArray, EntitiesArrayed, EntitiesArrayP
         return self.plan_input(doc, EntitiesArray(
             uids=list(uids),
             layout=layout,
+            associative=associative,
             expected_revision=expected_revision,
         ))
 
@@ -223,6 +228,7 @@ class _EntitiesArray(LocalCommand[EntitiesArray, EntitiesArrayed, EntitiesArrayP
         *,
         uids: Sequence[str],
         layout: ArrayLayout,
+        associative: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -231,6 +237,7 @@ class _EntitiesArray(LocalCommand[EntitiesArray, EntitiesArrayed, EntitiesArrayP
         return self.validate_input(doc, EntitiesArray(
             uids=list(uids),
             layout=layout,
+            associative=associative,
             expected_revision=expected_revision,
         ))
 
@@ -241,6 +248,7 @@ class _EntitiesArray(LocalCommand[EntitiesArray, EntitiesArrayed, EntitiesArrayP
         *,
         uids: Sequence[str],
         layout: ArrayLayout,
+        associative: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -254,6 +262,7 @@ class _EntitiesArray(LocalCommand[EntitiesArray, EntitiesArrayed, EntitiesArrayP
         return self.answer_input(doc, EntitiesArray(
             uids=list(uids),
             layout=layout,
+            associative=associative,
             expected_revision=expected_revision,
         ), op=op, request_id=request_id, expected=expected)
 

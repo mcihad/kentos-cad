@@ -457,6 +457,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::stretch_scenes::scenes());
     all.extend(crate::lengthen_scenes::scenes());
     all.extend(crate::divide_scenes::scenes());
+    all.extend(crate::assoc_array_scenes::scenes());
     all.extend(crate::polyline_scenes::scenes());
     all.extend(crate::nurbs_scenes::scenes());
     all.extend(crate::look_scenes::scenes());

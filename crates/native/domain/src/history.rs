@@ -20,7 +20,8 @@ use std::collections::{HashSet, VecDeque};
 use std::sync::Arc;
 
 use kentos_contracts::{
-    BlockDefinition, BlockId, Entity, FeatureFeed, LayerField, LayerNode, LayerStyle, ServiceLayer,
+    AssocArray, BlockDefinition, BlockId, Entity, FeatureFeed, LayerField, LayerNode, LayerStyle,
+    ServiceLayer,
 };
 
 use crate::changes::Journal;
@@ -163,6 +164,21 @@ pub(crate) enum Op {
         before: Arc<BlockDefinition>,
         after: Arc<BlockDefinition>,
     },
+    /// An associative array added at `index` of the list (arrays.rs,
+    /// docs/adr/0300), its inverse, which takes it out, and the same array
+    /// (its id) before and after; shared, so a step keeps no copy.
+    ArrayAdd {
+        index: usize,
+        array: Arc<AssocArray>,
+    },
+    ArrayRemove {
+        index: usize,
+        array: Arc<AssocArray>,
+    },
+    ArrayUpdate {
+        before: Arc<AssocArray>,
+        after: Arc<AssocArray>,
+    },
     /// The drawing unit, the home view and the anchor a unit change wrote
     /// (docs/adr/0256 §1), before and after: in the step with the objects
     /// it scaled, so undo gives both back.
@@ -277,6 +293,18 @@ impl Op {
             Op::BlockAdd { index, block } => Op::BlockRemove {
                 index: *index,
                 block: block.clone(),
+            },
+            Op::ArrayAdd { index, array } => Op::ArrayRemove {
+                index: *index,
+                array: array.clone(),
+            },
+            Op::ArrayRemove { index, array } => Op::ArrayAdd {
+                index: *index,
+                array: array.clone(),
+            },
+            Op::ArrayUpdate { before, after } => Op::ArrayUpdate {
+                before: after.clone(),
+                after: before.clone(),
             },
             Op::BlockRemove { index, block } => Op::BlockAdd {
                 index: *index,
@@ -584,6 +612,9 @@ impl Document {
         // After the linked texts: a text a hatch leaves open may have moved with its object.
         let ties = self.follow_hatches(ops);
         ops.extend(ties);
+        // After the hatches: an array's items and path (docs/adr/0300 §3), before the dimensions tied to the items.
+        let arrays = self.follow_arrays(ops);
+        ops.extend(arrays);
         // After the hatches: a dimension follows the places its points name.
         let relocated = std::mem::take(&mut self.relocated);
         let dims = self.follow_dimensions(ops, &relocated);
@@ -672,6 +703,9 @@ impl Document {
                 | Op::BlockAdd { .. }
                 | Op::BlockRemove { .. }
                 | Op::BlockUpdate { .. }
+                | Op::ArrayAdd { .. }
+                | Op::ArrayRemove { .. }
+                | Op::ArrayUpdate { .. }
                 | Op::Units { .. } => false,
             })
         };
@@ -746,6 +780,21 @@ impl Document {
                 Op::Update { before, after } => places(&before.entity) || places(&after.entity),
                 Op::Add(s) | Op::Remove(s) => places(&s.entity),
                 _ => false,
+            })
+        };
+        self.history.undo.retain(|step| !touches(step));
+        self.history.redo.retain(|step| !touches(step));
+    }
+
+    /// Drops the undo and redo steps that change an associative array: another editor's arrays came, and
+    /// undoing such a step would put back one they replaced (docs/adr/0300 §5).
+    pub(crate) fn forget_array_history(&mut self) {
+        let touches = |step: &Step| {
+            step.ops.iter().any(|op| {
+                matches!(
+                    op,
+                    Op::ArrayAdd { .. } | Op::ArrayRemove { .. } | Op::ArrayUpdate { .. }
+                )
             })
         };
         self.history.undo.retain(|step| !touches(step));
@@ -829,6 +878,10 @@ impl Document {
             // Not objects: a reader compares the definitions themselves (blocks.rs).
             Op::BlockAdd { .. } | Op::BlockRemove { .. } | Op::BlockUpdate { .. } => {
                 self.apply_block_op(op);
+                return;
+            }
+            Op::ArrayAdd { .. } | Op::ArrayRemove { .. } | Op::ArrayUpdate { .. } => {
+                self.apply_array_op(op);
                 return;
             }
             Op::Units { after, .. } => {

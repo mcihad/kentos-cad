@@ -151,6 +151,9 @@ class DesktopSession(_document.SessionBase):
     def blocks(self) -> str:
         return self._ask("blocks")
 
+    def arrays(self) -> str:
+        return self._ask("arrays")
+
     def entities(
         self,
         layer: str | None = None,

@@ -65,6 +65,7 @@ async fn new_project(db: &TestDb, who: &Access) -> Uuid {
         active_layer: s.active_layer,
         styles: s.styles,
         sheets: None,
+        arrays: Vec::new(),
         description: None,
         project_type: None,
         tags: None,

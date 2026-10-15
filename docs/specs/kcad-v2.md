@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `52`'ye bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-53.kcad`) |
+| `version` | tam sayı | `2`'den `52`'ye bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-54.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -299,9 +299,11 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 52**, şema 51'in kendisi ve adlı görünümlerdir (ADR 0285): ayarların `namedViews`'i (§6.4.12). Yazıcı `52`'yi **yalnız projede adlı görünüm varken** yazar. Başka her çizim şema 2–51'dir ve eskisiyle bayt bayt aynıdır. Şema 2–51 yükünde `namedViews` bilinmeyen alandır (`unknown_field`, `broken/views-in-schema-51.kcad`): eski okuyucu görünümleri sessizce düşürmez. Şema 52 şema 51'i kapsar. Örnek dosya `views.kcad`.
 
+**Şema 53**, şema 52'nin kendisi ve ilişkili dizilerdir (ADR 0300): belgenin `arrays`'i (§6.14). Yazıcı `53`'ü **yalnız çizimde ilişkili dizi varken** yazar. Başka her çizim şema 2–52'dir ve eskisiyle bayt bayt aynıdır. Şema 2–52 yükünde `arrays` bilinmeyen alandır (`unknown_field`, `broken/arrays-in-schema-52.kcad`): eski okuyucu diziyi sessizce bağımsız yerleştirmelere çevirmez, dosyayı açmaz. Şema 53 şema 52'yi kapsar. Örnek dosya `arrays.kcad`.
+
 **Yeni şema eklemenin kuralı** (ADR 0265 §2): her yeni şema `n` için (1) yazıcı `n`'yi yalnız yeni özellik varken yazar; (2) `n`'de yazılmış geçerli bir örnek, bağımsız Python yazıcısıyla; (3) özelliğin `n − 1`'de yazılmış bozuk örneği (`broken/…-in-schema-<n−1>.kcad`) ve `broken/schema-version-<n+1>.kcad`; (4) önceki örneklerin hepsi okunmaya devam eder; (5) `tools/kcad/kcad.py` aynı kuralı okur; (6) örnek kodekten, tipli sütunlardan, bulutun kaynağından ve Python'un tipli katmanından geçer. Bir şema numarası yeniden kullanılmaz. `kentos-kcad`'in `schemas` testi (1)–(3)'ü zorlar.
 
-Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: adlı görünümü olan proje 52, bir ölçüsünün başvurusu eğri üzerinde ya da blok içinde olan çizim 51, inç ya da ayak birimli ya da uzunluk biçimli çizim 50, geçerli UCS'i dünya olmayan ya da adlı UCS'i olan çizim 49, bir nesnesinin kendi görünüşü (çizgi tipi, ölçeği, saydamlık, çizim sırası, katmana göre parçalar) ya da yazdırılmayan katmanı olan çizim 48, NURBS eğrisi olan çizim 47, kapalı ya da genişlikli çoklu çizgisi olan çizim 46, istek yürütmüş çizim 45, pafta kitabı olan proje 44, başvurulu ölçüsü olan çizim 43, adres verisi olan proje 42, katman çizimi olan çizim 41, eki, eylemi ya da bilgi kartı olan çizim 40, köşe ölçüsü olan çizim 39, veri setli ya da ağ çizgili rasteri olan çizim 38, değişkeni olan proje 37, etiket motorunun bir alanı (etiket stilinin motor anahtarı, katmanın etiketlemesi ya da bir nesnenin etiket iğnesi) olan çizim 36, süzgeçli katmanı olan çizim 35, zaman ayarı, senaryosu ya da senaryo katmanı olan çizim 34, ağı olan proje 33, servis katmanı, servisten alınan katmanı ya da bağlantısı olan çizim 32, nokta bulutu ya da adresten okunan rasteri olan çizim 31, yazı yüksekliği, ölçü çizgisi, kılavuz ok boyu ya da yeni kılavuz oku olan çizim 30, rasteri olan çizim 29, ölçme ayarlarında önsel doğruluk olan çizim 28, topoloji ayarı olan çizim 27, alanı olan katmanı olan çizim 26, eğri boyunca yazısı olan çizim 25, resmi olan çizim 24, deseni çizgi aileli ya da degrade olan ya da nesnelere bağlı taraması olan çizim 23, tablosu olan çizim 22, projede yazı ya da ölçü stili olan ya da bir yazısının yüzü ya da bir ölçüsünün görünüşü olan çizim 21, kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
+Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: ilişkili dizisi olan çizim 53, adlı görünümü olan proje 52, bir ölçüsünün başvurusu eğri üzerinde ya da blok içinde olan çizim 51, inç ya da ayak birimli ya da uzunluk biçimli çizim 50, geçerli UCS'i dünya olmayan ya da adlı UCS'i olan çizim 49, bir nesnesinin kendi görünüşü (çizgi tipi, ölçeği, saydamlık, çizim sırası, katmana göre parçalar) ya da yazdırılmayan katmanı olan çizim 48, NURBS eğrisi olan çizim 47, kapalı ya da genişlikli çoklu çizgisi olan çizim 46, istek yürütmüş çizim 45, pafta kitabı olan proje 44, başvurulu ölçüsü olan çizim 43, adres verisi olan proje 42, katman çizimi olan çizim 41, eki, eylemi ya da bilgi kartı olan çizim 40, köşe ölçüsü olan çizim 39, veri setli ya da ağ çizgili rasteri olan çizim 38, değişkeni olan proje 37, etiket motorunun bir alanı (etiket stilinin motor anahtarı, katmanın etiketlemesi ya da bir nesnenin etiket iğnesi) olan çizim 36, süzgeçli katmanı olan çizim 35, zaman ayarı, senaryosu ya da senaryo katmanı olan çizim 34, ağı olan proje 33, servis katmanı, servisten alınan katmanı ya da bağlantısı olan çizim 32, nokta bulutu ya da adresten okunan rasteri olan çizim 31, yazı yüksekliği, ölçü çizgisi, kılavuz ok boyu ya da yeni kılavuz oku olan çizim 30, rasteri olan çizim 29, ölçme ayarlarında önsel doğruluk olan çizim 28, topoloji ayarı olan çizim 27, alanı olan katmanı olan çizim 26, eğri boyunca yazısı olan çizim 25, resmi olan çizim 24, deseni çizgi aileli ya da degrade olan ya da nesnelere bağlı taraması olan çizim 23, tablosu olan çizim 22, projede yazı ya da ölçü stili olan ya da bir yazısının yüzü ya da bir ölçüsünün görünüşü olan çizim 21, kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -310,6 +312,7 @@ Tablolar anahtarları **dosyadaki sırasıyla** verir (§5.2). “Zorunlu” sü
 | Anahtar | Tür | Zorunlu | Anlamı |
 |---|---|---|---|
 | `name` | metin | evet | projenin adı |
+| `arrays` | dizi: ilişkili dizi (§6.14) | | yalnız şema 53: ilişkili diziler, yapıldıkları sırayla; boş dizi yazılmaz (`bad_value`) |
 | `blocks` | dizi: blok tanımı (§6.9) | | yalnız şema 6: blok tanımları, sırasıyla; boş dizi yazılmaz (`bad_value`) |
 | `layers` | dizi: katman (§6.5) | evet | katman ağacının üst düzeyi, sırasıyla |
 | `origin` | nokta | evet | yerel orijin: verinin yakınında bir çapa (GPU ona göre çalışır) |
@@ -1071,6 +1074,37 @@ Resim harita:
 
 - Sözleşmenin JSON'unda (`DocumentSnapshotV2.requests`, `RequestRecord`) `fingerprint` 32 küçük onaltılık hanedir.
 - Defter dosyanın bir parçasıdır, geri alma geçmişi değildir: oturumun kaydı (`kentos.calls/1`) ve geri alma adımları dosyaya girmez (§6.10). Veritabanı projesi defter tutmaz; sunucunun kendi idempotency'si vardır (ADR 0026).
+
+### 6.14 İlişkili diziler
+
+Şema 53 (ADR 0300). `arrays` dizi: ilişkili dizi, yapıldıkları sırayla. İlişkili dizi harita:
+
+| Anahtar | Tür | Zorunlu | Anlamı |
+|---|---|---|---|
+| `p` | nokta | evet | ilk yer: bloğun taban noktasının gittiği yer |
+| `id` | kimlik | evet | dizinin kalıcı kimliği; iki dizide aynı kimlik `bad_value` |
+| `block` | kimlik | evet | kaynak: bütün öğelerin yerleştirdiği blok tanımı; çizimde tanımlı değilse `bad_value` (`broken/arrays-block-unknown.kcad`) |
+| `items` | dizi: öğe | evet | yer başına bir öğe, yerleşimin sırasıyla (ızgarada satır satır); sayısı yerlerinkinden başkaysa `bad_value` (`broken/arrays-items-short.kcad`) |
+| `scale` | float | evet | ilk yerin ölçeği, sıfırdan büyük (`broken/arrays-scale-zero.kcad`) |
+| `layout` | harita | evet | yerleşim (aşağıda) |
+| `mirror` | bool | | ilk yer aynalıysa `true`; değilse yazılmaz |
+| `layerId` | metin | evet | öğelerin katmanı; boş olamaz |
+| `rotation` | float | evet | ilk yerin dönüşü, radyan |
+
+Öğe harita: `uid` (kimlik; o yerdeki yerleştirmenin kalıcı kimliği, yoksa öğe elle silinmiştir) ve `kept` (bool, yalnız `true` yazılır: öğe elle değiştirilmiştir, yerleşim değişince yerinde kalır). Bir yerleştirme iki öğede olamaz (`broken/arrays-item-twice.kcad`); öğenin yerleştirmesi çizimin nesnelerinden biri olmalıdır (`broken/arrays-item-missing.kcad`).
+
+Yerleşim harita, `kind`'ı ve yalnız kendi alanlarıyla (başkasının alanı `bad_value`):
+
+| `kind` | Alanlar |
+|---|---|
+| `grid` | `dx`, `dy` (float), `cols`, `rows` (tam sayı): `rows` × `cols` yer |
+| `polar` | `fill` (float, radyan), `count` (tam sayı), `center` (nokta), `rotate` (bool) |
+| `line` | `dx`, `dy` (float), `fit` (bool, yalnız `true`), `count` (tam sayı) |
+| `path` | `path` (kimlik: yolun kalıcı kimliği), `align` (bool), `count` (tam sayı), `spacing` (float, sıfırdan büyük; yoksa yerler yola eşit dağılır) |
+
+- Yer sayısı 2 ile 10 000 arasındadır; sayılar sonludur.
+- Sözleşmenin JSON'unda (`DocumentSnapshotV2.arrays`, `AssocArray`) kimlikler küçük harfli, tireli UUID metnidir; yolun kimliği de.
+- Öğeler sıradan yerleştirmelerdir (§6.6); dizi onların üstünde bir kayıttır. Yerlerin hesabı Dizi komutununkidir (`array_transforms`, ADR 0047).
 
 ## 7. v1'den göç
 

@@ -14,6 +14,7 @@
 //! names in `names.rs`.
 
 mod addresses;
+mod arrays;
 mod blocks;
 mod compose;
 mod crs;
@@ -45,8 +46,8 @@ use crate::cbor::{MAX_DEPTH, MAX_ITEMS, MAX_STRING, Seg, Writer, key_order, rend
 use crate::error::{Code, KcadError};
 use crate::watch::{Step, Watch, report};
 use crate::{
-    SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_BLOCKS,
-    SCHEMA_WITH_COMPOSE, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSION_REFS,
+    SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_ATTACHMENTS,
+    SCHEMA_WITH_BLOCKS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSION_REFS,
     SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_FILTERS,
     SCHEMA_WITH_GROUND, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_IMPERIAL,
     SCHEMA_WITH_LABELS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
@@ -271,17 +272,22 @@ impl<'d> Encoder<'d> {
             self.path.push(Seg::Name("layers"));
             return Err(self.fail(Code::BadValue, &problem));
         }
-        let optional = usize::from(!doc.blocks.is_empty())
+        let optional = usize::from(!doc.arrays.is_empty())
+            + usize::from(!doc.blocks.is_empty())
             + usize::from(doc.home_view.is_some())
             + usize::from(doc.project_id.is_some())
             + usize::from(doc.migrated_from.is_some())
             + usize::from(doc.sheets.is_some())
             + usize::from(!doc.requests.is_empty());
         self.open(7 + optional, true)?;
-        // name (4), blocks layers origin sheets styles (6), entities homeView requests settings (8),
+        // name (4), arrays blocks layers origin sheets styles (6), entities homeView requests settings (8),
         // projectId (9), activeLayer (11), migratedFrom (12).
         self.key("name");
         self.at(Seg::Name("name"), |e| e.text(&doc.name))?;
+        if !doc.arrays.is_empty() {
+            self.key("arrays");
+            self.at(Seg::Name("arrays"), |e| e.arrays(&doc.arrays, &doc.blocks))?;
+        }
         if !doc.blocks.is_empty() {
             self.key("blocks");
             self.at(Seg::Name("blocks"), |e| e.blocks(&doc.blocks))?;
@@ -1155,6 +1161,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
+    }
+    // Schema 53 (docs/adr/0300): an associative array.
+    if !doc.arrays.is_empty() {
+        return SCHEMA_WITH_ARRAYS;
     }
     // Schema 52 (docs/adr/0285): a named view.
     if !doc.settings.named_views.is_empty() {

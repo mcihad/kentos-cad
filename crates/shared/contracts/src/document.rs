@@ -860,6 +860,13 @@ pub struct DocumentSnapshotV2 {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub sheets: Option<crate::sheets::ProjectSheets>,
+    /// The associative arrays (docs/adr/0300), in the order they were made; none when the drawing has none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::assoc_array::AssocArray>>")
+    )]
+    pub arrays: Vec<crate::assoc_array::AssocArray>,
     /// The requests the drawing executed (docs/adr/0253 §6), oldest first,
     /// the last `REQUEST_LEDGER`; none when it executed none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

@@ -92,7 +92,11 @@ type Versions = Vec<(Uuid, String)>;
 
 /// A drawing of the project's metadata, its block definitions and these objects.
 fn snapshot(info: &ProjectInfo, project: Uuid, objects: Objects) -> DocumentSnapshotV2 {
-    let (uids, entities) = objects.into_iter().unzip();
+    let (uids, entities): (Vec<EntityId>, Vec<_>) = objects.into_iter().unzip();
+    // The arrays as these blocks and objects hold them (docs/adr/0300 §5): an item another editor removed
+    // without its array is an item removed.
+    let blocks: Vec<_> = info.blocks.iter().map(|r| r.block.id).collect();
+    let arrays = kentos_contracts::arrays_kept(&info.arrays, &blocks, &uids);
     DocumentSnapshotV2 {
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,
@@ -111,6 +115,7 @@ fn snapshot(info: &ProjectInfo, project: Uuid, objects: Objects) -> DocumentSnap
         sheets: info.sheets.clone(),
         // A database project keeps no request ledger: the server has its own idempotency (docs/adr/0026).
         requests: Vec::new(),
+        arrays,
     }
 }
 
@@ -300,6 +305,7 @@ mod tests {
         ProjectInfo {
             blocks: Vec::new(),
             sheets: None,
+            arrays: Vec::new(),
             id: "0199aaaa-0000-7000-8000-000000000001".into(),
             tenant_id: "0199aaaa-0000-7000-8000-000000000002".into(),
             tenant_name: "Harita Bürosu".into(),

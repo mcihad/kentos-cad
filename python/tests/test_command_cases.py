@@ -234,6 +234,15 @@ class Case:
                     data.pop("id")
                     got.append(data)
                 same(got, want, f"{at}: blocks")
+            elif key == "arrays":
+                # The associative arrays in order, each without its id; the block and the items by `$blockOf:Ad` and
+                # `$uidOf:12` (docs/adr/0300).
+                got = []
+                for a in self.doc.arrays():
+                    a = dict(a)
+                    a.pop("id")
+                    got.append(a)
+                same(got, self.block_ids(want, at), f"{at}: arrays")
             elif key == "blockIds":
                 for name, id in want.items():
                     block = self.block_named(name)

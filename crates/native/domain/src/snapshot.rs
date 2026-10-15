@@ -104,6 +104,7 @@ impl Document {
             migrated_from,
             sheets,
             requests,
+            arrays,
             ..
         } = snapshot;
         let mut doc = Self::build(Parts {
@@ -126,6 +127,13 @@ impl Document {
             sheets,
         });
         doc.load_requests(requests);
+        if !arrays.is_empty() {
+            let list: Vec<&kentos_contracts::AssocArray> = arrays.iter().collect();
+            if let Some(why) = doc.arrays_refused(&list) {
+                return Err(why);
+            }
+            doc.arrays = arrays.into_iter().map(Arc::new).collect();
+        }
         Ok(doc)
     }
 
@@ -167,6 +175,7 @@ impl Document {
             project_id: parts.project_id,
             migrated_from: parts.migrated_from,
             sheets: parts.sheets.map(Arc::new),
+            arrays: Vec::new(),
             layers: LayerTree::new(layers, &active_layer),
             store,
             next_slot: u64::from(largest) + 1,
@@ -223,6 +232,7 @@ impl Document {
             migrated_from: self.migrated_from.clone(),
             sheets: self.sheets.as_deref().cloned(),
             requests: self.requests(),
+            arrays: self.arrays.iter().map(|a| (**a).clone()).collect(),
         }
     }
 }

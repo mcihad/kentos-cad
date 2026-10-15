@@ -7,6 +7,7 @@
 //! the block definitions in `blocks.rs`.
 
 mod addresses;
+mod arrays;
 mod blocks;
 mod compose;
 mod crs;
@@ -260,9 +261,11 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     let mut migrated_from = None;
     let mut sheets_ = None;
     let mut requests_ = None;
+    let mut arrays_ = None;
     map(r, |r, key| {
         match key {
             "name" => name = Some(text(r)?),
+            "arrays" if has.arrays => arrays_ = Some(arrays::arrays(r)?),
             "blocks" if has.blocks => blocks = Some(blocks::definitions(r, has)?),
             "layers" => layers = Some(list(r, |r, _| layer(r, has))?),
             "origin" => origin = Some(point(r)?),
@@ -307,6 +310,12 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     label_tree(r, &layers)?;
     info_tree(r, &layers)?;
     compose_tree(r, &layers)?;
+    let blocks = blocks.map(|(list, _)| list).unwrap_or_default();
+    let arrays = arrays_.unwrap_or_default();
+    if !arrays.is_empty() {
+        let ids: Vec<_> = blocks.iter().map(|b| b.id).collect();
+        arrays::check(r, &arrays, &ids, &uids)?;
+    }
     Ok(DocumentSnapshotV2 {
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,
@@ -319,11 +328,12 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
         entities,
         uids,
         styles,
-        blocks: blocks.map(|(list, _)| list).unwrap_or_default(),
+        blocks,
         project_id,
         migrated_from,
         sheets: sheets_,
         requests: requests_.unwrap_or_default(),
+        arrays,
     })
 }
 

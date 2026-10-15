@@ -207,6 +207,8 @@ pub(super) struct Features {
     pub(super) ucs: bool,
     /// Schema 52: the settings' `namedViews` (docs/adr/0285).
     pub(super) views: bool,
+    /// Schema 53: the document's `arrays` (docs/adr/0300).
+    pub(super) arrays: bool,
     /// Schema 50: the drawing units `in` and `ft` and the settings' `lengthStyle` (docs/adr/0262).
     pub(super) imperial: bool,
     /// Schema 30: the settings' annotation heights, a dimension's and a
@@ -265,6 +267,7 @@ impl Features {
             look: schema >= crate::SCHEMA_WITH_LOOK,
             ucs: schema >= crate::SCHEMA_WITH_UCS,
             views: schema >= crate::SCHEMA_WITH_VIEWS,
+            arrays: schema >= crate::SCHEMA_WITH_ARRAYS,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,

@@ -128,6 +128,7 @@ pub(crate) fn info(storage: ProjectStorage, write: bool, state: ProjectState) ->
         active_layer: s.active_layer,
         styles: s.styles,
         sheets: None,
+        arrays: Vec::new(),
         meta_version: "4".into(),
         data_revision: "7".into(),
         feature_count: "13".into(),

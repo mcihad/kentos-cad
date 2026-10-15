@@ -178,6 +178,10 @@ SCHEMA_WITH_IMPERIAL = 50
 SCHEMA_WITH_SUBREF_EXTRAS = 51
 # Schema 52: schema 51 and the settings' `namedViews`, the project's named views (docs/adr/0285 §1).
 SCHEMA_WITH_VIEWS = 52
+# Schema 53: schema 52 and the document's `arrays`, its associative arrays (docs/adr/0300).
+SCHEMA_WITH_ARRAYS = 53
+# An associative array holds 2 to 10 000 places (kentos_contracts::ARRAY_PLACES_MAX).
+ARRAY_PLACES_MAX = 10_000
 # A named view's bounds (kentos_contracts::cad_views): a middle within 10 000 km, a width and a height above 0 and at
 # most 20 000 km, a twist in [0, 2π), at most 100 named, a name trimmed, 1 to 64 characters, no control characters.
 MOST_VIEW_SIZE = 2.0e7
@@ -353,7 +357,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1849,6 +1853,7 @@ class _Schema:
         self.imperial = version >= SCHEMA_WITH_IMPERIAL
         self.subref_extras = version >= SCHEMA_WITH_SUBREF_EXTRAS
         self.views = version >= SCHEMA_WITH_VIEWS
+        self.arrays = version >= SCHEMA_WITH_ARRAYS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -1891,8 +1896,12 @@ class _Schema:
                 "migratedFrom": (self.source, False),
                 **({"sheets": (self.sheets_, False)} if self.sheets else {}),
                 **({"requests": (self.requests_, False)} if self.requests else {}),
+                **({"arrays": (self.arrays_, False)} if self.arrays else {}),
             }
         )(v)
+        # Schema 53's rules (docs/adr/0300 §1), once the blocks and the objects are known.
+        if "arrays" in d:
+            self.check_arrays(d["arrays"], [b["id"] for b in d.get("blocks", [])], set(self.uids))
         # Schema 32's links (docs/adr/0208 §2).
         links = service_links_problem(d["layers"], d["settings"].get("connections", []), d["entities"])
         if links:
@@ -1946,9 +1955,98 @@ class _Schema:
             out["migratedFrom"] = d["migratedFrom"]
         if "sheets" in d:
             out["sheets"] = d["sheets"]
+        if "arrays" in d:
+            out["arrays"] = d["arrays"]
         if "requests" in d:
             out["requests"] = d["requests"]
         return out
+
+    # Schema 53's associative arrays (docs/adr/0300 §1): read field by field (true flags only, a layout's own fields
+    # only), then checked against the blocks and the objects.
+
+    def arrays_(self, v):
+        def true(v):
+            if self.bool(v) is not True:
+                self.fail("bad_value", "yalnız doğruyken yazılır")
+            return True
+
+        def count(v):
+            n = self.uint(64)(v)
+            if n > ARRAY_PLACES_MAX:
+                self.fail("bad_value", f"{n} aralık dışında (0…{ARRAY_PLACES_MAX})")
+            return n
+
+        kinds = {
+            "grid": {"rows": (count, True), "cols": (count, True), "dx": (self.float, True), "dy": (self.float, True)},
+            "polar": {"center": (self.point, True), "count": (count, True), "fill": (self.float, True), "rotate": (self.bool, True)},
+            "line": {"count": (count, True), "dx": (self.float, True), "dy": (self.float, True), "fit": (true, False)},
+            "path": {"path": (self.id16, True), "count": (count, True), "spacing": (self.float, False), "align": (self.bool, True)},
+        }
+
+        def layout(v):
+            if type(v) is not dict:
+                self.fail("wrong_type", "harita olmalı")
+            kind = self.at("kind", self.enum(tuple(kinds)), v.get("kind"))
+            return self.fields({"kind": (self.text, True), **kinds[kind]})(v)
+
+        item = self.fields({"uid": (self.id16, False), "kept": (true, False)})
+        array = self.fields(
+            {
+                "p": (self.point, True),
+                "id": (self.id16, True),
+                "block": (self.id16, True),
+                "items": (self.array(item), True),
+                "scale": (self.float, True),
+                "layout": (layout, True),
+                "mirror": (true, False),
+                "layerId": (self.text, True),
+                "rotation": (self.float, True),
+            }
+        )
+        if type(v) is list and not v:
+            self.fail("bad_value", "boş dizi listesi yazılmaz")
+        return self.array(array)(v)
+
+    def check_arrays(self, arrays, blocks, uids):
+        """The contract's rules (`arrays_problem`), and every item's insert an object of the drawing."""
+        ids, used = set(), set()
+        for i, a in enumerate(arrays):
+            self.path.extend(["arrays", str(i)])
+            if a["id"] in ids:
+                self.fail("bad_value", "dizinin kimliği iki kez verilmiş")
+            ids.add(a["id"])
+            if a["block"] not in blocks:
+                self.fail("bad_value", "dizinin bloğu çizimde tanımlı değil")
+            if not a["layerId"]:
+                self.fail("bad_value", "dizinin katmanı boş")
+            if not (math.isfinite(a["p"]["x"]) and math.isfinite(a["p"]["y"]) and math.isfinite(a["rotation"])):
+                self.fail("bad_value", "dizinin yeri ya da dönüşü sonlu değil")
+            if not (math.isfinite(a["scale"]) and a["scale"] > 0):
+                self.fail("bad_value", "dizinin ölçeği sıfırdan büyük sonlu bir sayı olmalı")
+            lay = a["layout"]
+            numbers = [lay[k] for k in ("dx", "dy", "fill", "spacing") if k in lay]
+            if "center" in lay:
+                numbers += [lay["center"]["x"], lay["center"]["y"]]
+            if not all(math.isfinite(x) for x in numbers):
+                self.fail("bad_value", "dizinin yerleşiminde sonlu olmayan sayı var")
+            if "spacing" in lay and lay["spacing"] <= 0:
+                self.fail("bad_value", "yol dizisinin aralığı sıfırdan büyük olmalı")
+            places = lay["rows"] * lay["cols"] if lay["kind"] == "grid" else lay["count"]
+            if not 2 <= places <= ARRAY_PLACES_MAX:
+                self.fail("bad_value", "dizinin yeri 2 ile 10 000 arasında olmalı")
+            if len(a["items"]) != places:
+                self.fail("bad_value", "dizinin her yerinin bir öğesi olmalı")
+            for k, item in enumerate(a["items"]):
+                if "uid" in item:
+                    self.path.extend(["items", str(k)])
+                    if item["uid"] in used:
+                        self.fail("bad_value", "bir yerleştirme iki öğede")
+                    used.add(item["uid"])
+                    if item["uid"] not in uids:
+                        self.path.append("uid")
+                        self.fail("bad_value", "öğenin yerleştirmesi çizimde yok")
+                    del self.path[-2:]
+            del self.path[-2:]
 
     def requests_(self, v):
         """The request ledger (schema 45, docs/adr/0253 §6): not empty, at most 256; each request's id 1–128 of letters,

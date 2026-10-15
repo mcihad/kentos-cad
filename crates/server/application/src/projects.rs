@@ -223,6 +223,33 @@ pub fn check_address_locators(
     }
 }
 
+/// A project's associative arrays by the contract's rules but for the blocks
+/// and objects they name (`arrays_shape_problem`, docs/adr/0300 §5), refused
+/// at their place under `path`; the blocks and objects are the document's.
+pub fn check_arrays(arrays: &[kentos_contracts::AssocArray], path: &str) -> AppResult<()> {
+    match kentos_contracts::arrays_shape_problem(arrays) {
+        Some((fault, why)) => {
+            let place = match fault {
+                kentos_contracts::ArrayFault::Array(i) => format!("{path}[{i}]"),
+                kentos_contracts::ArrayFault::Item(i, k) => format!("{path}[{i}].items[{k}]"),
+            };
+            Err(AppError::invalid_at(
+                place,
+                format!("İlişkili dizi: {why}."),
+            ))
+        }
+        None => Ok(()),
+    }
+}
+
+/// The arrays as a column holds them: none when there are none.
+pub(crate) fn arrays_value(arrays: &[kentos_contracts::AssocArray]) -> AppResult<Option<Value>> {
+    if arrays.is_empty() {
+        return Ok(None);
+    }
+    Ok(Some(json(&arrays)?))
+}
+
 /// A project's sheet book by the file format's rules (`sheets_problem`,
 /// docs/adr/0251), refused at its place under `path`. The book's own rules
 /// are the sheet core's: the clients read it, the server keeps it.
@@ -346,6 +373,7 @@ pub async fn create(
     check_networks(&input.settings.networks, "settings.networks")?;
     check_address_locators(&input.settings.address_locators, "settings.addressLocators")?;
     check_sheets(input.sheets.as_ref(), "sheets")?;
+    check_arrays(&input.arrays, "arrays")?;
     let description =
         crate::catalog::check_description(input.description.as_deref().unwrap_or(""))?;
     let tags = crate::catalog::normalize_tags(input.tags.as_deref().unwrap_or(&[]))?;
@@ -371,8 +399,8 @@ pub async fn create(
     check_srid(&mut tx, input.settings.srid).await?;
     sqlx::query(
         "insert into kentos.project (tenant_id, id, name, srid, settings, layers, active_layer, origin_x, origin_y, home_view, styles, created_by, owner_user_id,
-                                     description, project_type, tags, storage, sheets)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12, $13, $14, $15, $16, $17)",
+                                     description, project_type, tags, storage, sheets, arrays)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12, $13, $14, $15, $16, $17, $18)",
     )
     .bind(access.tenant)
     .bind(id)
@@ -391,6 +419,7 @@ pub async fn create(
     .bind(&tags)
     .bind(storage_name(input.storage.unwrap_or(ProjectStorage::Database)))
     .bind(input.sheets.as_ref().map(json).transpose()?)
+    .bind(arrays_value(&input.arrays)?)
     .execute(&mut *tx)
     .await?;
     sqlx::query("insert into kentos.audit_event (tenant_id, project_id, actor, action, detail) values ($1, $2, $3, 'project.create', $4)")
@@ -470,6 +499,7 @@ type ProjectRow = (
     bool,
     String,
     Option<Value>,
+    Option<Value>,
 );
 
 /// A project's metadata, object count and the event cursor of this moment:
@@ -484,7 +514,7 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
                 (select count(*) from kentos.feature f where f.tenant_id = p.tenant_id and f.project_id = p.id),
                 greatest(coalesce((select max(seq) from kentos.outbox_event o where o.tenant_id = p.tenant_id and o.project_id = p.id), 0),
                          coalesce((select pruned_through from kentos.outbox_horizon h where h.tenant_id = p.tenant_id and h.project_id = p.id), 0)),
-                p.deleted_at is not null, p.storage, p.sheets
+                p.deleted_at is not null, p.storage, p.sheets, p.arrays
            from kentos.project p where p.tenant_id = $1 and p.id = $2",
     )
     .bind(access.tenant)
@@ -510,6 +540,7 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
         deleted,
         storage,
         sheets,
+        arrays,
     ) = row.ok_or_else(not_found)?;
     if deleted {
         return Err(gone(&name));
@@ -534,6 +565,11 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
             .map(serde_json::from_value)
             .transpose()
             .map_err(bad)?,
+        arrays: arrays
+            .map(serde_json::from_value)
+            .transpose()
+            .map_err(bad)?
+            .unwrap_or_default(),
         meta_version: meta.to_string(),
         data_revision: rev.to_string(),
         feature_count: count.to_string(),

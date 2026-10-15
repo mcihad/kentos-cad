@@ -590,6 +590,7 @@ pub(crate) fn array_selection(layout: ArrayLayout, cx: &mut Context<'_>) -> Opti
     let input = EntitiesArray {
         uids: selected_uids(cx),
         layout,
+        associative: false,
         expected_revision: None,
     };
     let result = array::execute(&mut ExecutionContext::new(cx.doc), input);

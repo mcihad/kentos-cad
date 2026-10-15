@@ -255,6 +255,7 @@ async fn an_import_needs_the_right_project_rights_and_upload() {
         active_layer: s.active_layer,
         styles: s.styles,
         sheets: None,
+        arrays: Vec::new(),
         description: None,
         project_type: None,
         tags: None,

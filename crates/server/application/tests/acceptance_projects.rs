@@ -162,6 +162,7 @@ async fn scenario(storage: ProjectStorage) {
         active_layer: "cizim".into(),
         styles: s.styles,
         sheets: None,
+        arrays: Vec::new(),
         description: Some("Kabul seti".into()),
         project_type: Some(ProjectType::LandReadjustment),
         tags: None,

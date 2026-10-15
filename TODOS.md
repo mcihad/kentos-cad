@@ -170,6 +170,11 @@ Liste:
   uyarıları komutun sözleri; paralel iki doğruya TTY, saat yönünde verilen yaydan Devam; araç durumları
   `fixtures/curve-methods/v1/tools.json`. Web'in donmuş çağrı kayıtları eski `arcStartCenterEnd` ve `arcStartCenterAngle`'ı (tam tur)
   tutar; geri dönüşte komutun kuralına getirilir.
+- [ ] `CAD-EDIT-14` (ADR 0300, 15 Ekim): web'de gerekenler: belgenin `arrays`'i (`model/document.ts`: ekleme, değiştirme,
+  kaldırma, geri alma, adımın sonunda izleme: silinen öğe boş, değişen `kept`, yol dizisi yolu izler), `.kcad` şema 53'ün okunup
+  yazılması (`io/kcad.ts`; sözleşme türleri `AssocArray`, `ArrayItem`, `ArrayId` üretildi), `cad.entities.array`'in `associative`'i
+  (TS işleyicisi; ortak durumlar `cad.entities.array.assoc.json`), bulut eşitlemesinde `ProjectPatch.arrays` ve `ProjectInfo.arrays`
+  (`app/cloud/`); `io/version.ts`'in `FORMATS_VERSION`'ı 53'te.
 - [ ] `CAD-EDIT-13` (ADR 0299, 15 Ekim): web'de gerekenler: `cad.entities.divide`'ın `block`, `start` ve `ends`'i (TS işleyicisi;
   sözleşme türleri `DivideBlock`, `DivideEnds` üretildi) ve Böl aracının Blok, Nokta, Hizala, Uçlar ve İlk seçenekleri, plandan
   önizleme; ortak durumlar `cad.entities.divide.places.json`. Çekirdeğin `division_places`'i WASM'a bağlanmadı (web `divisionPoints`

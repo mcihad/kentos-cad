@@ -42,6 +42,9 @@ pub struct BaseMeta {
     /// The sheet book (docs/adr/0251); a copy written before it has none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sheets: Option<kentos_contracts::ProjectSheets>,
+    /// The associative arrays (docs/adr/0300 §5); a copy written before them has none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub arrays: Vec<kentos_contracts::AssocArray>,
 }
 
 /// A block definition as the server has it, with its version (docs/adr/0144 §5).
@@ -154,6 +157,12 @@ impl ProjectSync {
                 layers: self.meta_base.layers.clone(),
                 styles: self.meta_base.styles.clone(),
                 sheets: self.meta_base.sheets.as_deref().cloned(),
+                arrays: self
+                    .meta_base
+                    .arrays
+                    .iter()
+                    .map(|a| (**a).clone())
+                    .collect(),
             }),
             blocks: g.blocks.then(|| {
                 self.known_block_list()
@@ -205,6 +214,12 @@ impl ProjectSync {
                 migrated_from: None,
                 sheets: self.meta_base.sheets.as_deref().cloned(),
                 requests: Vec::new(),
+                arrays: self
+                    .meta_base
+                    .arrays
+                    .iter()
+                    .map(|a| (**a).clone())
+                    .collect(),
             },
             versions,
             block_versions: known_blocks.into_iter().map(|(id, v, _)| (id, v)).collect(),

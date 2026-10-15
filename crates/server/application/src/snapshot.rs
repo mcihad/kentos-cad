@@ -42,6 +42,8 @@ pub struct DrawingMeta {
     pub styles: ProjectStyles,
     pub blocks: Vec<BlockDefinition>,
     pub sheets: Option<kentos_contracts::ProjectSheets>,
+    /// The associative arrays (docs/adr/0300).
+    pub arrays: Vec<kentos_contracts::AssocArray>,
 }
 
 impl DrawingMeta {
@@ -55,6 +57,7 @@ impl DrawingMeta {
             styles: doc.styles.clone(),
             blocks: doc.blocks.clone(),
             sheets: doc.sheets.clone(),
+            arrays: doc.arrays.clone(),
         }
     }
 }
@@ -142,6 +145,7 @@ type SnapshotRow = (
     String,
     bool,
     Option<Value>,
+    Option<Value>,
 );
 
 /// The drawing of the project in scope, its data revision and its event
@@ -155,7 +159,7 @@ pub async fn read(
         "select p.name, p.settings, p.layers, p.active_layer, p.origin_x, p.origin_y, p.home_view, p.styles, p.data_revision,
                 greatest(coalesce((select max(seq) from kentos.outbox_event o where o.tenant_id = p.tenant_id and o.project_id = p.id), 0),
                          coalesce((select pruned_through from kentos.outbox_horizon h where h.tenant_id = p.tenant_id and h.project_id = p.id), 0)),
-                p.storage, p.deleted_at is not null, p.sheets
+                p.storage, p.deleted_at is not null, p.sheets, p.arrays
            from kentos.project p where p.tenant_id = $1 and p.id = $2",
     )
     .bind(access.tenant)
@@ -176,6 +180,7 @@ pub async fn read(
         storage,
         deleted,
         sheets,
+        arrays,
     ) = row.ok_or_else(not_found)?;
     if deleted {
         return Err(gone(&name));
@@ -201,6 +206,21 @@ pub async fn read(
     let bad = |e: serde_json::Error| {
         AppError::invalid(format!("“{name}” projesinin kaydı okunamadı: {e}"))
     };
+    let blocks: Vec<BlockDefinition> =
+        crate::blocks::read(tx, access.tenant, access.project, false)
+            .await?
+            .into_iter()
+            .map(|s| s.block)
+            .collect();
+    // The arrays as the blocks and objects of this moment hold them (docs/adr/0300 §5): another editor may have
+    // removed an item or a block since they were written.
+    let arrays: Vec<kentos_contracts::AssocArray> = arrays
+        .map(serde_json::from_value)
+        .transpose()
+        .map_err(bad)?
+        .unwrap_or_default();
+    let block_ids: Vec<_> = blocks.iter().map(|b| b.id).collect();
+    let arrays = kentos_contracts::arrays_kept(&arrays, &block_ids, &uids);
     let doc = DocumentSnapshotV2 {
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,
@@ -216,11 +236,7 @@ pub async fn read(
         entities,
         uids,
         styles: serde_json::from_value(styles).map_err(bad)?,
-        blocks: crate::blocks::read(tx, access.tenant, access.project, false)
-            .await?
-            .into_iter()
-            .map(|s| s.block)
-            .collect(),
+        blocks,
         project_id: Some(ProjectId(*access.project.as_bytes())),
         migrated_from: None,
         sheets: sheets
@@ -229,6 +245,7 @@ pub async fn read(
             .map_err(bad)?,
         // The server keeps its own idempotency (docs/adr/0026); a drawing's ledger is the file's.
         requests: Vec::new(),
+        arrays,
     };
     Ok((doc, revision, cursor))
 }

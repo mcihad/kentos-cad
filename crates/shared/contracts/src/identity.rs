@@ -162,9 +162,17 @@ macro_rules! uuid_impls {
 #[cfg_attr(feature = "ts", ts(export, type = "string"))]
 pub struct BlockId(pub [u8; 16]);
 
+/// An associative array's persistent id (docs/adr/0300): given when the
+/// array is made (UUIDv7), kept while its layout or source changes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "ts", ts(export, type = "string"))]
+pub struct ArrayId(pub [u8; 16]);
+
 uuid_impls!(EntityId);
 uuid_impls!(ProjectId);
 uuid_impls!(BlockId);
+uuid_impls!(ArrayId);
 
 /// Reads a UUID written lowercase with hyphens (8-4-4-4-12), as `uuid_text` writes it.
 pub fn uuid_from_text(text: &str) -> Option<[u8; 16]> {
@@ -424,6 +432,7 @@ pub fn migrate_v1(snapshot: DocumentSnapshotV1) -> Result<DocumentSnapshotV2, St
         migrated_from: Some(MigrationSource::v1(ids.source_sha256)),
         sheets: None,
         requests: Vec::new(),
+        arrays: Vec::new(),
     })
 }
 

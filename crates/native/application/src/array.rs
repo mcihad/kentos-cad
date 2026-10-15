@@ -99,6 +99,26 @@ fn write_execute(
         Ok(checked) => checked,
         Err(stop) => return stop.into(),
     };
+    // One associative array of a block's inserts (docs/adr/0300).
+    if input.associative {
+        return match crate::array_assoc::write(
+            cx.doc,
+            &checked.sources,
+            &input.layout,
+            label(&input.layout),
+        ) {
+            Ok(made) => CommandResult::Completed {
+                output: EntitiesArrayed {
+                    created: made.created,
+                    locked: checked.locked,
+                    array: Some(made.array),
+                    revision: cx.doc.revision().to_string(),
+                },
+                warnings: checked.warnings,
+            },
+            Err(stop) => stop.into(),
+        };
+    }
     let slots = match cx.doc.add_many(checked.copies, label(&input.layout)) {
         Ok(slots) => slots,
         Err(full) => {
@@ -123,6 +143,7 @@ fn write_execute(
         output: EntitiesArrayed {
             created,
             locked: checked.locked,
+            array: None,
             revision: doc.revision().to_string(),
         },
         warnings: checked.warnings,

@@ -447,6 +447,10 @@ pub async fn commit(
     if let Some(Some(sheets)) = &patch.sheets {
         check_sheets(Some(sheets), "project.sheets")?;
     }
+    // So do the associative arrays, but for their blocks and objects (docs/adr/0300 §5).
+    if let Some(arrays) = &patch.arrays {
+        crate::projects::check_arrays(arrays, "project.arrays")?;
+    }
     if new_srid != srid as u32 {
         check_srid(&mut tx, new_srid).await?;
     }
@@ -821,6 +825,7 @@ pub async fn commit(
             name = coalesce($4, name), settings = coalesce($5, settings), srid = $6,
             layers = coalesce($7, layers), active_layer = coalesce($8, active_layer), styles = coalesce($9, styles),
             sheets = case when $11 then $12 else sheets end,
+            arrays = case when $13 then $14 else arrays end,
             catalog_version = catalog_version + $10::int, updated_at = now()
           where tenant_id = $1 and id = $2
           returning data_revision, meta_version",
@@ -842,6 +847,15 @@ pub async fn commit(
             .as_ref()
             .and_then(Option::as_ref)
             .map(|s| serde_json::to_value(s).expect("sheets serialize")),
+    )
+    .bind(patch.arrays.is_some())
+    .bind(
+        patch
+            .arrays
+            .as_deref()
+            .map(crate::projects::arrays_value)
+            .transpose()?
+            .flatten(),
     )
     .fetch_one(&mut *tx)
     .await?;

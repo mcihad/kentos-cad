@@ -21,12 +21,18 @@
 //! list that breaks a block rule is refused before anything happens. The
 //! steps that change a definition that differs now, or that place or hold
 //! one that is gone, are dropped.
+//!
+//! Associative arrays (docs/adr/0300 §5) come as the whole list too; the
+//! drawing keeps those its blocks and objects can hold (an array whose block
+//! is gone dropped, an item whose insert is gone removed, an array that
+//! still breaks a rule left out), and the steps that change an array go.
 
 use std::collections::HashSet;
 use std::sync::Arc;
 
 use kentos_contracts::{
-    BlockDefinition, Entity, LayerNode, ProjectSettings, ProjectSheets, ProjectStyles,
+    AssocArray, BlockDefinition, Entity, EntityId, LayerNode, ProjectSettings, ProjectSheets,
+    ProjectStyles,
 };
 
 use crate::document::Document;
@@ -45,6 +51,8 @@ pub struct ExternalMeta {
     pub styles: Option<ProjectStyles>,
     /// The sheet book and its pictures (docs/adr/0251); `Some(None)`: the project has none any more.
     pub sheets: Option<Option<ProjectSheets>>,
+    /// The associative arrays (docs/adr/0300 §5), whole; none: they stay.
+    pub arrays: Option<Vec<AssocArray>>,
 }
 
 /// What came from outside.
@@ -212,6 +220,9 @@ impl Document {
             if let Some(sheets) = meta.sheets {
                 self.sheets = sheets.map(Arc::new);
             }
+            if let Some(arrays) = meta.arrays {
+                self.take_arrays(&arrays);
+            }
         }
         self.forget_history_of(&slots, &named);
         if let Some((changed, gone)) = forget_blocks {
@@ -225,5 +236,35 @@ impl Document {
             self.generation += 1;
         }
         Ok(())
+    }
+
+    /// Takes another editor's arrays as this drawing's blocks and objects can hold them; when they differ, the
+    /// steps that change an array are dropped.
+    fn take_arrays(&mut self, arrays: &[AssocArray]) {
+        let blocks: Vec<_> = self.blocks.iter().map(|b| b.id).collect();
+        let uids: Vec<EntityId> = self
+            .store
+            .iter()
+            .map(|s| EntityId(s.uid.into_bytes()))
+            .collect();
+        let mut kept = kentos_contracts::arrays_kept(arrays, &blocks, &uids);
+        while let Some((fault, _)) = kentos_contracts::arrays_problem(&kept, &blocks) {
+            let (kentos_contracts::ArrayFault::Array(i) | kentos_contracts::ArrayFault::Item(i, _)) =
+                fault;
+            kept.remove(i);
+        }
+        let now: Vec<&AssocArray> = self.arrays.iter().map(|a| &**a).collect();
+        if now.len() == kept.len() && now.iter().zip(&kept).all(|(a, b)| *a == b) {
+            return;
+        }
+        let next = kept
+            .into_iter()
+            .map(|a| match self.arrays.iter().find(|w| ***w == a) {
+                Some(was) => was.clone(),
+                None => Arc::new(a),
+            })
+            .collect();
+        self.arrays = next;
+        self.forget_array_history();
     }
 }
