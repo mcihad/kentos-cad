@@ -1,0 +1,1697 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.styles.impact",
+ "commandVersion": 1,
+ "title": "Stil değişikliğinin etkisi",
+ "note": "Written by scripts/fixtures/style_impact_cases.py from the contract's rules and docs/adr/0312 §4, 0183, 0314 §4; do not edit by hand.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Stil etkisi",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "cad",
+   "drawingFont": "barlow",
+   "textStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+     "name": "Ada no",
+     "font": "arimo",
+     "bold": true,
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+     "name": "Yol adı",
+     "font": "overpass",
+     "italic": true,
+     "oblique": 15.0,
+     "widthFactor": 0.8
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+     "name": "Mimari",
+     "height": 3.5,
+     "arrow": "closed",
+     "arrowSize": 3.5,
+     "extOffset": 1.0,
+     "extBeyond": 1.75,
+     "textGap": 0.875,
+     "decimals": 1,
+     "unit": "cm",
+     "prefix": "~",
+     "suffix": " cm",
+     "font": "arimo"
+    }
+   ],
+   "lineTypes": [
+    {
+     "name": "EKSEN",
+     "elements": [
+      {
+       "length": 12.0
+      },
+      {
+       "length": -3.0
+      }
+     ],
+     "unit": "drawing"
+    },
+    {
+     "name": "BOS",
+     "elements": [
+      {
+       "length": 2.0
+      },
+      {
+       "length": -1.0
+      }
+     ],
+     "unit": "paper"
+    }
+   ],
+   "layerStates": [
+    {
+     "id": "s1",
+     "name": "Sunum",
+     "nodes": [
+      {
+       "node": "duvar",
+       "visible": true,
+       "style": {
+        "color": "#000000",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+       }
+      }
+     ]
+    },
+    {
+     "id": "s2",
+     "name": "Eksenler",
+     "nodes": [
+      {
+       "node": "aks",
+       "visible": true,
+       "style": {
+        "color": "#E5484D",
+        "lineType": "dashed",
+        "lineWeight": 0.18,
+        "linePattern": "EKSEN"
+       }
+      }
+     ]
+    },
+    {
+     "id": "s3",
+     "name": "Aynı",
+     "nodes": [
+      {
+       "node": "duvar",
+       "visible": true,
+       "style": {
+        "color": "#111111",
+        "lineType": "continuous",
+        "lineWeight": 0.35
+       }
+      }
+     ]
+    }
+   ]
+  },
+  "origin": {
+   "x": 500000,
+   "y": 4400000
+  },
+  "layers": [
+   {
+    "id": "duvar",
+    "name": "Duvar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "#111111",
+     "lineType": "continuous",
+     "lineWeight": 0.35
+    },
+    "children": []
+   },
+   {
+    "id": "aks",
+    "name": "Aks",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "#E5484D",
+     "lineType": "dashed",
+     "lineWeight": 0.18,
+     "linePattern": "EKSEN"
+    },
+    "children": []
+   },
+   {
+    "id": "yazi",
+    "name": "Yazı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "bos",
+    "name": "Boş",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "yazi",
+  "entities": [
+   {
+    "kind": "line",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "a": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "b": {
+     "x": 500010,
+     "y": 4400000
+    }
+   },
+   {
+    "kind": "line",
+    "id": 2,
+    "layerId": "duvar",
+    "attrs": {},
+    "a": {
+     "x": 500000,
+     "y": 4400001
+    },
+    "b": {
+     "x": 500010,
+     "y": 4400001
+    },
+    "color": "#FF0000"
+   },
+   {
+    "kind": "line",
+    "id": 3,
+    "layerId": "duvar",
+    "attrs": {},
+    "a": {
+     "x": 500000,
+     "y": 4400002
+    },
+    "b": {
+     "x": 500010,
+     "y": 4400002
+    },
+    "color": "#FF0000",
+    "lineType": "dashed",
+    "lineWeight": 0.7,
+    "transparency": 0.5
+   },
+   {
+    "kind": "line",
+    "id": 4,
+    "layerId": "duvar",
+    "attrs": {},
+    "a": {
+     "x": 500000,
+     "y": 4400003
+    },
+    "b": {
+     "x": 500010,
+     "y": 4400003
+    },
+    "lineType": "dashed",
+    "linePattern": "EKSEN"
+   },
+   {
+    "kind": "line",
+    "id": 5,
+    "layerId": "aks",
+    "attrs": {},
+    "a": {
+     "x": 500000,
+     "y": 4400004
+    },
+    "b": {
+     "x": 500010,
+     "y": 4400004
+    }
+   },
+   {
+    "kind": "line",
+    "id": 6,
+    "layerId": "aks",
+    "attrs": {},
+    "a": {
+     "x": 500000,
+     "y": 4400005
+    },
+    "b": {
+     "x": 500010,
+     "y": 4400005
+    },
+    "lineType": "dotted"
+   },
+   {
+    "kind": "text",
+    "id": 7,
+    "layerId": "yazi",
+    "attrs": {},
+    "p": {
+     "x": 500000,
+     "y": 4400030
+    },
+    "text": "A",
+    "height": 3.5,
+    "rotation": 0,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "font": "arimo",
+    "bold": true
+   },
+   {
+    "kind": "text",
+    "id": 8,
+    "layerId": "kilitli",
+    "attrs": {},
+    "p": {
+     "x": 500010,
+     "y": 4400030
+    },
+    "text": "A",
+    "height": 3.5,
+    "rotation": 0,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "font": "arimo",
+    "bold": true
+   },
+   {
+    "kind": "text",
+    "id": 9,
+    "layerId": "yazi",
+    "attrs": {},
+    "p": {
+     "x": 500020,
+     "y": 4400030
+    },
+    "text": "A",
+    "height": 3.5,
+    "rotation": 0,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "font": "barlow"
+   },
+   {
+    "kind": "dimension",
+    "id": 10,
+    "layerId": "yazi",
+    "attrs": {},
+    "a": {
+     "x": 500000,
+     "y": 4400050
+    },
+    "b": {
+     "x": 500024.5,
+     "y": 4400050
+    },
+    "offset": -2,
+    "height": 3.5,
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "arrow": "closed",
+    "extOffset": 0.2857142857142857,
+    "textGap": 0.25,
+    "decimals": 1,
+    "unit": "cm",
+    "prefix": "~",
+    "suffix": " cm",
+    "font": "arimo"
+   },
+   {
+    "kind": "dimension",
+    "id": 11,
+    "layerId": "yazi",
+    "attrs": {},
+    "a": {
+     "x": 500000,
+     "y": 4400050
+    },
+    "b": {
+     "x": 500024.5,
+     "y": 4400050
+    },
+    "offset": -2,
+    "height": 3.5,
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "arrow": "closed",
+    "extOffset": 0.2857142857142857,
+    "textGap": 0.25,
+    "decimals": 3,
+    "unit": "cm",
+    "prefix": "~",
+    "suffix": " cm",
+    "font": "arimo"
+   },
+   {
+    "kind": "insert",
+    "id": 12,
+    "layerId": "duvar",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+    "p": {
+     "x": 500012,
+     "y": 4400070
+    },
+    "scale": 1,
+    "rotation": 0
+   },
+   {
+    "kind": "insert",
+    "id": 13,
+    "layerId": "yazi",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002",
+    "p": {
+     "x": 500013,
+     "y": 4400070
+    },
+    "scale": 1,
+    "rotation": 0
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "blocks": [
+   {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+    "name": "Kapı",
+    "base": {
+     "x": 0,
+     "y": 0
+    },
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": 0,
+       "y": 0
+      },
+      "b": {
+       "x": 1,
+       "y": 0
+      },
+      "byLayer": [
+       "color"
+      ]
+     },
+     {
+      "kind": "text",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 0,
+       "y": 1
+      },
+      "text": "A",
+      "height": 3.5,
+      "rotation": 0,
+      "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+      "font": "arimo",
+      "bold": true
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": 0,
+       "y": 0
+      },
+      "b": {
+       "x": 1,
+       "y": 0
+      }
+     }
+    ]
+   },
+   {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002",
+    "name": "Cephe",
+    "base": {
+     "x": 0,
+     "y": 0
+    },
+    "entities": [
+     {
+      "kind": "insert",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+      "p": {
+       "x": 0,
+       "y": 0
+      },
+      "scale": 1,
+      "rotation": 0
+     },
+     {
+      "kind": "line",
+      "id": 2,
+      "layerId": "aks",
+      "attrs": {},
+      "a": {
+       "x": 0,
+       "y": 0
+      },
+      "b": {
+       "x": 1,
+       "y": 0
+      },
+      "byLayer": [
+       "lineType"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "Katman: duvar; kendi değerli nesneler sayılır, blok parçası ve onu gösteren iç içe yerleştirmeler, eski görünüşü saklayan durum",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "target": "layer",
+      "id": "duvar"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "name": "Duvar",
+       "follow": 4,
+       "uids": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:4",
+        "$uidOf:12"
+       ],
+       "own": [
+        {
+         "property": "color",
+         "count": 2
+        },
+        {
+         "property": "lineType",
+         "count": 2
+        },
+        {
+         "property": "lineWeight",
+         "count": 1
+        },
+        {
+         "property": "transparency",
+         "count": 1
+        }
+       ],
+       "locked": 0,
+       "layers": [],
+       "blocks": [
+        "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"
+       ],
+       "blockPieces": 1,
+       "inserts": 2,
+       "layerStates": [
+        "Sunum"
+       ],
+       "sheetMaps": [],
+       "externalReferences": 0,
+       "notes": [
+        "4 nesne değişikliği alır.",
+        "Kendi değerini koruyanlar: 2 renk, 2 çizgi tipi, 1 kalınlık, 1 saydamlık.",
+        "Katmanın görünüşü kilitli katmandaki nesnelere de yansır.",
+        "1 blokta 1 parça izler; 2 yerleştirmede görünür.",
+        "Katman durumları kendi görünüşünü saklıyor ve uygulanınca geri getirir: Sunum.",
+        "Dış başvuru (xref) yok: KentOS dış başvuru taşımaz."
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katman: aks; çizgi tipi kendi olan sayılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "target": "layer",
+      "id": "aks"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "name": "Aks",
+       "follow": 2,
+       "uids": [
+        "$uidOf:5",
+        "$uidOf:6"
+       ],
+       "own": [
+        {
+         "property": "lineType",
+         "count": 1
+        }
+       ],
+       "locked": 0,
+       "layers": [],
+       "blocks": [
+        "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002"
+       ],
+       "blockPieces": 1,
+       "inserts": 1,
+       "layerStates": [],
+       "sheetMaps": [],
+       "externalReferences": 0,
+       "notes": [
+        "2 nesne değişikliği alır.",
+        "Kendi değerini koruyanlar: 1 çizgi tipi.",
+        "Katmanın görünüşü kilitli katmandaki nesnelere de yansır.",
+        "1 blokta 1 parça izler; 1 yerleştirmede görünür.",
+        "Dış başvuru (xref) yok: KentOS dış başvuru taşımaz."
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katman: yazı; yazılar, ölçüler ve yerleştirme izler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "target": "layer",
+      "id": "yazi"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "name": "Yazı",
+       "follow": 5,
+       "uids": [
+        "$uidOf:7",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:13"
+       ],
+       "own": [],
+       "locked": 0,
+       "layers": [],
+       "blocks": [],
+       "blockPieces": 0,
+       "inserts": 0,
+       "layerStates": [],
+       "sheetMaps": [],
+       "externalReferences": 0,
+       "notes": [
+        "5 nesne değişikliği alır.",
+        "Katmanın görünüşü kilitli katmandaki nesnelere de yansır.",
+        "Dış başvuru (xref) yok: KentOS dış başvuru taşımaz."
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katman: kilitli; katmanın görünüşü kilitli katmana da yansır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "target": "layer",
+      "id": "kilitli"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "name": "Kilitli",
+       "follow": 1,
+       "uids": [
+        "$uidOf:8"
+       ],
+       "own": [],
+       "locked": 0,
+       "layers": [],
+       "blocks": [],
+       "blockPieces": 0,
+       "inserts": 0,
+       "layerStates": [],
+       "sheetMaps": [],
+       "externalReferences": 0,
+       "notes": [
+        "1 nesne değişikliği alır.",
+        "Katmanın görünüşü kilitli katmandaki nesnelere de yansır.",
+        "Dış başvuru (xref) yok: KentOS dış başvuru taşımaz."
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katman: boş katman; hiçbir şeye ulaşmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "target": "layer",
+      "id": "bos"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "name": "Boş",
+       "follow": 0,
+       "uids": [],
+       "own": [],
+       "locked": 0,
+       "layers": [],
+       "blocks": [],
+       "blockPieces": 0,
+       "inserts": 0,
+       "layerStates": [],
+       "sheetMaps": [],
+       "externalReferences": 0,
+       "notes": [
+        "0 nesne değişikliği alır.",
+        "Katmanın görünüşü kilitli katmandaki nesnelere de yansır.",
+        "Dış başvuru (xref) yok: KentOS dış başvuru taşımaz."
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katman: plan aynı cevabı verir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "target": "layer",
+      "id": "duvar"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "name": "Duvar",
+       "follow": 4,
+       "uids": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:4",
+        "$uidOf:12"
+       ],
+       "own": [
+        {
+         "property": "color",
+         "count": 2
+        },
+        {
+         "property": "lineType",
+         "count": 2
+        },
+        {
+         "property": "lineWeight",
+         "count": 1
+        },
+        {
+         "property": "transparency",
+         "count": 1
+        }
+       ],
+       "locked": 0,
+       "layers": [],
+       "blocks": [
+        "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"
+       ],
+       "blockPieces": 1,
+       "inserts": 2,
+       "layerStates": [
+        "Sunum"
+       ],
+       "sheetMaps": [],
+       "externalReferences": 0,
+       "notes": [
+        "4 nesne değişikliği alır.",
+        "Kendi değerini koruyanlar: 2 renk, 2 çizgi tipi, 1 kalınlık, 1 saydamlık.",
+        "Katmanın görünüşü kilitli katmandaki nesnelere de yansır.",
+        "1 blokta 1 parça izler; 2 yerleştirmede görünür.",
+        "Katman durumları kendi görünüşünü saklıyor ve uygulanınca geri getirir: Sunum.",
+        "Dış başvuru (xref) yok: KentOS dış başvuru taşımaz."
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katman: doğrula yazmaz",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "target": "layer",
+      "id": "duvar"
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizgi tipi: EKSEN; kendi deseniyle çizilen ve desenli katmanın nesneleri, katmana göre blok parçası, durum",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "target": "lineType",
+      "id": "EKSEN"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "name": "EKSEN",
+       "follow": 2,
+       "uids": [
+        "$uidOf:4",
+        "$uidOf:5"
+       ],
+       "own": [
+        {
+         "property": "lineType",
+         "count": 1
+        }
+       ],
+       "locked": 0,
+       "layers": [
+        "aks"
+       ],
+       "blocks": [
+        "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002"
+       ],
+       "blockPieces": 1,
+       "inserts": 1,
+       "layerStates": [
+        "Eksenler"
+       ],
+       "sheetMaps": [],
+       "externalReferences": 0,
+       "notes": [
+        "2 nesne değişikliği alır.",
+        "Kendi değerini koruyanlar: 1 çizgi tipi.",
+        "1 blokta 1 parça izler; 1 yerleştirmede görünür.",
+        "Katman durumları kendi görünüşünü saklıyor ve uygulanınca geri getirir: Eksenler.",
+        "Dış başvuru (xref) yok: KentOS dış başvuru taşımaz."
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizgi tipi: ad harf büyüklüğüne ve kenar boşluklarına bakmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "target": "lineType",
+      "id": " eksen "
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "name": "EKSEN",
+       "follow": 2,
+       "uids": [
+        "$uidOf:4",
+        "$uidOf:5"
+       ],
+       "own": [
+        {
+         "property": "lineType",
+         "count": 1
+        }
+       ],
+       "locked": 0,
+       "layers": [
+        "aks"
+       ],
+       "blocks": [
+        "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002"
+       ],
+       "blockPieces": 1,
+       "inserts": 1,
+       "layerStates": [
+        "Eksenler"
+       ],
+       "sheetMaps": [],
+       "externalReferences": 0,
+       "notes": [
+        "2 nesne değişikliği alır.",
+        "Kendi değerini koruyanlar: 1 çizgi tipi.",
+        "1 blokta 1 parça izler; 1 yerleştirmede görünür.",
+        "Katman durumları kendi görünüşünü saklıyor ve uygulanınca geri getirir: Eksenler.",
+        "Dış başvuru (xref) yok: KentOS dış başvuru taşımaz."
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizgi tipi: kullanılmayan desen",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "target": "lineType",
+      "id": "BOS"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "name": "BOS",
+       "follow": 0,
+       "uids": [],
+       "own": [],
+       "locked": 0,
+       "layers": [],
+       "blocks": [],
+       "blockPieces": 0,
+       "inserts": 0,
+       "layerStates": [],
+       "sheetMaps": [],
+       "externalReferences": 0,
+       "notes": [
+        "0 nesne değişikliği alır.",
+        "Dış başvuru (xref) yok: KentOS dış başvuru taşımaz."
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yazı stili: Ada no; kendi kalınlığı ve yazı tipi olan, kilitli katmandaki ve blok parçası",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "target": "textStyle",
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "name": "Ada no",
+       "follow": 3,
+       "uids": [
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "own": [
+        {
+         "property": "font",
+         "count": 1
+        },
+        {
+         "property": "bold",
+         "count": 1
+        }
+       ],
+       "locked": 1,
+       "layers": [],
+       "blocks": [
+        "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"
+       ],
+       "blockPieces": 1,
+       "inserts": 2,
+       "layerStates": [],
+       "sheetMaps": [],
+       "externalReferences": 0,
+       "notes": [
+        "3 nesne değişikliği alır.",
+        "Kendi değerini koruyanlar: 1 yazı tipi, 1 kalın.",
+        "1 nesne kilitli katmanda: stil değişince olduğu gibi kalır.",
+        "1 blokta 1 parça izler; 2 yerleştirmede görünür.",
+        "Dış başvuru (xref) yok: KentOS dış başvuru taşımaz."
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yazı stili: kullanılmayan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "target": "textStyle",
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "name": "Yol adı",
+       "follow": 0,
+       "uids": [],
+       "own": [],
+       "locked": 0,
+       "layers": [],
+       "blocks": [],
+       "blockPieces": 0,
+       "inserts": 0,
+       "layerStates": [],
+       "sheetMaps": [],
+       "externalReferences": 0,
+       "notes": [
+        "0 nesne değişikliği alır.",
+        "Dış başvuru (xref) yok: KentOS dış başvuru taşımaz."
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ölçü stili: Mimari; kendi basamağı olan ölçü",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "target": "dimensionStyle",
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "name": "Mimari",
+       "follow": 2,
+       "uids": [
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "own": [
+        {
+         "property": "decimals",
+         "count": 1
+        }
+       ],
+       "locked": 0,
+       "layers": [],
+       "blocks": [],
+       "blockPieces": 0,
+       "inserts": 0,
+       "layerStates": [],
+       "sheetMaps": [],
+       "externalReferences": 0,
+       "notes": [
+        "2 nesne değişikliği alır.",
+        "Kendi değerini koruyanlar: 1 decimals.",
+        "Dış başvuru (xref) yok: KentOS dış başvuru taşımaz."
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ölçü stili: plan aynı cevabı verir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "target": "dimensionStyle",
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "name": "Mimari",
+       "follow": 2,
+       "uids": [
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "own": [
+        {
+         "property": "decimals",
+         "count": 1
+        }
+       ],
+       "locked": 0,
+       "layers": [],
+       "blocks": [],
+       "blockPieces": 0,
+       "inserts": 0,
+       "layerStates": [],
+       "sheetMaps": [],
+       "externalReferences": 0,
+       "notes": [
+        "2 nesne değişikliği alır.",
+        "Kendi değerini koruyanlar: 1 decimals.",
+        "Dış başvuru (xref) yok: KentOS dış başvuru taşımaz."
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: kimlik yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "target": "layer",
+      "id": ""
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "empty_name",
+       "message": "Etkisi sorulan katmanın, stilin ya da çizgi tipinin kimliğini verin (id).",
+       "path": "id"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: kimlik yalnız boşluk",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "target": "lineType",
+      "id": "  "
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "empty_name",
+       "message": "Etkisi sorulan katmanın, stilin ya da çizgi tipinin kimliğini verin (id).",
+       "path": "id"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: katman çizimde yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "target": "layer",
+      "id": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman çizimde yok.",
+       "path": "id"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: yazı stili projede yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "target": "textStyle",
+      "id": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "style_not_found",
+       "message": "“yok” kimlikli yazı stili projede yok.",
+       "path": "id"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: yazı stilinin kimliği ölçü stili diye verilmiş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "target": "dimensionStyle",
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "style_not_found",
+       "message": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101” kimlikli ölçü stili projede yok.",
+       "path": "id"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: çizgi tipi projede yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "target": "lineType",
+      "id": "ZIKZAK"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "line_type_not_found",
+       "message": "“ZIKZAK” adlı çizgi tipi projede yok.",
+       "path": "id"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

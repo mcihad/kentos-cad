@@ -1461,6 +1461,7 @@ mod tests {
             })
         };
         let map = Prim::Map(MapPrim {
+            layer_overrides: Vec::new(),
             item: "m".into(),
             clip: RectUm::new(0, 0, 100, 100),
             rotation: 0,

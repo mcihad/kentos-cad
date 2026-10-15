@@ -16,9 +16,9 @@ use kentos_domain::contracts::{
     CAD_ENTITIES_SET, DimensionsReassociate, EntitiesChamfer, EntitiesCreate, EntitiesFillet,
     EntitiesOffset, EntitiesOrder, EntitiesSetProperties, EntitiesTrim, LabelsPin, LayersCompose,
     LayersEdit, LayersFilter, LayersFind, LayersInfo, LayersLabels, LayersRenderer, LayersService,
-    LayersSet, LayersStates, LayersTime, LayersTranslate, LineTypesEdit, NetworkDefine,
-    NurbsCreate, OffsetBy, ScenariosEdit, SettingsSet, SheetsEdit, StandardsApply, StandardsCheck,
-    StylesEdit, UcsSet, UcsTo, ViewsEdit, ViewsOp,
+    LayersSet, LayersStates, LayersTime, LayersTranslate, LibraryEdit, LineTypesEdit,
+    NetworkDefine, NurbsCreate, OffsetBy, ScenariosEdit, SettingsSet, SheetsEdit, StandardsApply,
+    StandardsCheck, StylesEdit, StylesImpact, UcsSet, UcsTo, ViewsEdit, ViewsOp,
 };
 use kentos_domain::contracts::{
     ArcCreate, ArrayLayout, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_ARRAY,
@@ -33,7 +33,6 @@ use kentos_domain::contracts::{
     UnitsChange,
 };
 use kentos_domain::{Document, Slot, Uuid};
-use kentos_native_application::line_types_edit;
 use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, blocks_define, blocks_edit,
@@ -52,6 +51,7 @@ use kentos_native_application::{
     entities_hatch, entities_join, entities_lengthen, entities_match, entities_paste,
     entities_reverse, file_import, stretch,
 };
+use kentos_native_application::{library_edit, line_types_edit, styles_impact};
 use serde_json::{Value, json};
 
 type Outcome<T> = Result<T, String>;
@@ -1183,6 +1183,18 @@ impl Input for LayersFind {
     }
 }
 
+impl Input for LibraryEdit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for StylesImpact {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for LineTypesEdit {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         (path == "scale").then_some(())?;
@@ -1989,6 +2001,8 @@ fn run_op(
         kentos_domain::contracts::CAD_STANDARDS_CHECK => run!(standards_check, StandardsCheck),
         kentos_domain::contracts::CAD_STANDARDS_APPLY => run!(standards_apply, StandardsApply),
         kentos_domain::contracts::CAD_LINE_TYPES_EDIT => run!(line_types_edit, LineTypesEdit),
+        kentos_domain::contracts::CAD_LIBRARY_EDIT => run!(library_edit, LibraryEdit),
+        kentos_domain::contracts::CAD_STYLES_IMPACT => run!(styles_impact, StylesImpact),
         kentos_domain::contracts::CAD_STYLES_EDIT => run!(styles_edit, StylesEdit),
         kentos_domain::contracts::CAD_SETTINGS_SET => run!(settings_set, SettingsSet),
         kentos_domain::contracts::CAD_UCS_SET => run!(ucs_set, UcsSet),
@@ -2436,6 +2450,11 @@ fn check(
                         at,
                     )?;
                 }
+            }
+            // The project's style library, each item's id, kind, name and path (docs/adr/0314 §3).
+            "library" => {
+                let got = json!(kentos_native_application::library_edit::listed(doc));
+                expect_same(&got, want, "kitaplık", at)?;
             }
             // Where the view opens and the drawing's anchor (docs/adr/0256 §1).
             "homeView" => {

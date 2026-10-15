@@ -17,7 +17,7 @@ use kentos_sheet::kinds::MapLayers;
 use kentos_sheet::pdf::{MapContent, MapLayerContent, MapPath, MapText, TextAnchor, VectorMap};
 
 use crate::fonts::sheet_font;
-use crate::layers::{Look, build_whole, in_order, names, printed_layers};
+use crate::layers::{Look, build_whole, in_order, names};
 use crate::vectors::{VectorScale, layer_paths};
 
 /// A CSS pixel on the paper, millimetres: the unit the maps' labels are laid out in (the web's
@@ -110,6 +110,7 @@ pub struct MapSource<'a> {
 pub fn vector_content(
     src: &MapSource<'_>,
     layers: &MapLayers,
+    overrides: &[kentos_sheet::kinds::LayerOverride],
     scale: u32,
     extent: [f64; 4],
     labels: &[MapLabel],
@@ -162,7 +163,14 @@ pub fn vector_content(
     crate::layers::styles(doc.layers().nodes(), &mut layer_styles);
     let mut shapes: Vec<MapLayerContent> = Vec::new();
     let mut unsupported = Vec::new();
-    for node in printed_layers(doc.layers().nodes()) {
+    // The map's layer state and overrides (docs/adr/0314 §1): its own layers, the drawing's untouched.
+    for node in crate::layers::map_layers(
+        doc.layers().nodes(),
+        &doc.settings().layer_states,
+        layers,
+        overrides,
+    ) {
+        let node: &kentos_contracts::LayerNode = &node;
         if only.is_some_and(|l| !l.contains(&node.id)) {
             continue;
         }

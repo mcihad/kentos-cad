@@ -380,6 +380,9 @@ impl Designer {
                 if let Some(row) = self.map_row(&chosen, editable) {
                     col = col.push(row);
                 }
+                if let Some(part) = self.map_layers_part(&chosen, editable) {
+                    col = col.push(part);
+                }
             }
         }
         // The look.
@@ -706,6 +709,214 @@ impl Designer {
             .padding([4, 4])
             .into(),
         )
+    }
+
+    /// One map's own layers (docs/adr/0314 §1): Katman durumu (a layer state of the project in this map only, or the
+    /// drawing's), and a card per overridden layer: Dondur, Yazdır, Renk, Kalınlık, Çizgi tipi, Kaldır; Katman ekle
+    /// lists the layers not overridden yet. The drawing's layers stay as they are.
+    fn map_layers_part(&self, chosen: &[&Item], editable: bool) -> Option<Element<'_, Message>> {
+        use crate::message::OverrideEdit;
+        use kentos_sheet::kinds::{ItemKind, MapLayers};
+        use kentos_ui::widget::select::{Choice, Select};
+        let [one] = chosen else { return None };
+        let ItemKind::Map(m) = &one.kind else {
+            return None;
+        };
+        let states = self.ctx.layer_states.clone();
+        let mut labels = vec!["Çizimdeki gibi".to_owned()];
+        labels.extend(states.iter().cloned());
+        let at = match &m.layers {
+            MapLayers::Theme(t) => match states.iter().position(|s| s.trim() == t.name.trim()) {
+                Some(i) => Some(i + 1),
+                None => {
+                    labels.push(format!("{} (projede yok)", t.name));
+                    Some(labels.len() - 1)
+                }
+            },
+            _ => Some(0),
+        };
+        let kept = states.clone();
+        let state = Select::new(labels.into_iter().map(Choice::new), at, move |i| {
+            Message::MapLayerState(i.checked_sub(1).and_then(|i| kept.get(i).cloned()))
+        })
+        .searchable(false);
+        let said = match &m.layers {
+            MapLayers::Theme(_) => "Durumun görünürlüğü, dondurması, yazdırması ve sakladığı görünüşler yalnız bu haritada.".to_owned(),
+            MapLayers::List(_) => "Harita seçilen katmanları gösterir.".to_owned(),
+            MapLayers::All(_) => "Çizimin katmanları olduğu gibi.".to_owned(),
+        };
+        let mut col = column![labelled("Katman durumu", state.into(), said)].spacing(6);
+        let name_of = |id: &str| {
+            self.ctx
+                .layers
+                .iter()
+                .find(|(l, _)| l == id)
+                .map_or_else(|| format!("{id} (çizimde yok)"), |(_, n)| n.clone())
+        };
+        let small = |s: Select<'static, Message>| -> Element<'static, Message> {
+            s.searchable(false).into()
+        };
+        const COLORS: [(&str, Option<&str>); 7] = [
+            ("Renk: katmana göre", None),
+            ("Siyah", Some("#000000")),
+            ("Koyu gri", Some("#555555")),
+            ("Kırmızı", Some("#E5484D")),
+            ("Mavi", Some("#3E63DD")),
+            ("Yeşil", Some("#30A46C")),
+            ("Turuncu", Some("#F5A524")),
+        ];
+        const WEIGHTS: [(&str, Option<i32>); 8] = [
+            ("Kalınlık: katmana göre", None),
+            ("0,13 mm", Some(130)),
+            ("0,18 mm", Some(180)),
+            ("0,25 mm", Some(250)),
+            ("0,35 mm", Some(350)),
+            ("0,50 mm", Some(500)),
+            ("0,70 mm", Some(700)),
+            ("1,00 mm", Some(1000)),
+        ];
+        const BUILT_IN: [(&str, &str); 4] = [
+            ("Sürekli", "continuous"),
+            ("Kesikli", "dashed"),
+            ("Noktalı kesik", "dashdot"),
+            ("Noktalı", "dotted"),
+        ];
+        for (k, o) in m.layer_overrides.iter().enumerate() {
+            let frozen = Switch::new(o.frozen, move |on| {
+                Message::MapOverride(k, OverrideEdit::Frozen(on))
+            })
+            .label("Dondur");
+            let plot_at = match o.plot {
+                None => 0,
+                Some(true) => 1,
+                Some(false) => 2,
+            };
+            let plot = Select::new(
+                ["Yazdır: katmana göre", "Yazdır", "Yazdırma"].map(Choice::new),
+                Some(plot_at),
+                move |i| {
+                    Message::MapOverride(
+                        k,
+                        OverrideEdit::Plot([None, Some(true), Some(false)][i.min(2)]),
+                    )
+                },
+            );
+            let mut colors: Vec<(String, Option<String>)> = COLORS
+                .iter()
+                .map(|(n, c)| ((*n).to_owned(), c.map(str::to_owned)))
+                .collect();
+            if let Some(c) = &o.color
+                && !colors.iter().any(|(_, x)| x.as_deref() == Some(c.as_str()))
+            {
+                colors.push((format!("Özel {c}"), Some(c.clone())));
+            }
+            let color_at = colors.iter().position(|(_, c)| *c == o.color);
+            let picked = colors.clone();
+            let color = Select::new(
+                colors.into_iter().map(|(n, _)| Choice::new(n)),
+                color_at,
+                move |i| {
+                    Message::MapOverride(
+                        k,
+                        OverrideEdit::Color(picked.get(i).and_then(|(_, c)| c.clone())),
+                    )
+                },
+            );
+            let weight_at = WEIGHTS.iter().position(|(_, w)| *w == o.line_weight);
+            let weight = Select::new(
+                WEIGHTS.iter().map(|(n, _)| Choice::new(*n)),
+                weight_at,
+                move |i| {
+                    Message::MapOverride(
+                        k,
+                        OverrideEdit::Weight(WEIGHTS.get(i).and_then(|(_, w)| *w)),
+                    )
+                },
+            );
+            let mut lines: Vec<(String, Option<String>)> =
+                vec![("Çizgi tipi: katmana göre".to_owned(), None)];
+            lines.extend(
+                BUILT_IN
+                    .iter()
+                    .map(|(n, v)| ((*n).to_owned(), Some((*v).to_owned()))),
+            );
+            lines.extend(
+                self.ctx
+                    .line_types
+                    .iter()
+                    .map(|p| (format!("Desen: {p}"), Some(format!("pattern:{p}")))),
+            );
+            let current = match (&o.line_pattern, &o.line_type) {
+                (Some(p), _) => Some(format!("pattern:{p}")),
+                (None, Some(t)) => Some(t.clone()),
+                _ => None,
+            };
+            let line_at = lines.iter().position(|(_, v)| *v == current);
+            let picked = lines.clone();
+            let line = Select::new(
+                lines.into_iter().map(|(n, _)| Choice::new(n)),
+                line_at,
+                move |i| {
+                    Message::MapOverride(
+                        k,
+                        OverrideEdit::Line(picked.get(i).and_then(|(_, v)| v.clone())),
+                    )
+                },
+            );
+            let remove = button(icon(Icon::Close).size(12.0))
+                .on_press_maybe(editable.then_some(Message::MapOverrideRemove(k)))
+                .padding([2, 6])
+                .style(style::button::ghost);
+            let card = column![
+                row![
+                    container(
+                        kentos_ui::widget::Elided::new(name_of(&o.layer))
+                            .size(kentos_ui::theme::typography::body())
+                    )
+                    .width(Fill),
+                    remove
+                ]
+                .align_y(Center),
+                row![frozen, container(small(plot)).width(Fill)]
+                    .spacing(8)
+                    .align_y(Center),
+                row![
+                    container(small(color)).width(Fill),
+                    container(small(weight)).width(Fill)
+                ]
+                .spacing(6),
+                small(line),
+            ]
+            .spacing(4);
+            col = col.push(
+                container(card)
+                    .padding([6, 8])
+                    .width(Fill)
+                    .style(style::container::bordered),
+            );
+        }
+        let free: Vec<(String, String)> = self
+            .ctx
+            .layers
+            .iter()
+            .filter(|(id, _)| !m.layer_overrides.iter().any(|o| o.layer == *id))
+            .cloned()
+            .collect();
+        if editable && !free.is_empty() {
+            let names = free.clone();
+            let add = Select::new(
+                free.into_iter().map(|(_, n)| Choice::new(n)),
+                None,
+                move |i| {
+                    Message::MapOverrideAdd(
+                        names.get(i).map(|(id, _)| id.clone()).unwrap_or_default(),
+                    )
+                },
+            )
+            .placeholder("Katmanı bu haritada geçersiz kıl…");
+            col = col.push(container(small(add)).padding([0, 12]));
+        }
+        Some(container(col).padding([4, 4]).into())
     }
 
     /// Fixed maps' scale and centre from the drawing (docs/adr/0206 §1, the web's `mapSection`):

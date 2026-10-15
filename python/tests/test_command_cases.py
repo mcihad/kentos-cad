@@ -288,6 +288,9 @@ class Case:
             elif key in ("homeView", "origin"):
                 # Where the view opens and the drawing's anchor (docs/adr/0256 §1).
                 same(json.loads(self.doc._session.summary())[key], want, f"{at}: {key}")
+            elif key == "library":
+                # The project's style library, each item's id, kind, name and path (docs/adr/0314 §3).
+                same(json.loads(self.doc._session.summary())["library"], want, f"{at}: library")
             elif key == "addressLocators":
                 # The project's address data (docs/adr/0229 §2).
                 settings = json.loads(self.doc._session.summary())["settings"]

@@ -812,6 +812,122 @@ edit.append({
     ],
 })
 
+# ── the library operations (docs/adr/0314 §3) ────────────────────────
+
+BANK = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2201"
+PARK = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2202"
+FILE_LAMBA = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2203"
+FILE_BLOCKS = [
+    {"id": FILE_LAMBA, "name": "Lamba", "base": P(0, 0), "entities": [piece("circle", 1, c=P(0, 0), r=0.5)]},
+    {"id": BANK, "name": "Bank", "base": P(0, 0), "entities": [piece("polygon", 1, pts=[P(-1, -0.25), P(1, -0.25), P(1, 0.25), P(-1, 0.25)])]},
+    {"id": PARK, "name": "Park seti", "base": P(0, 0), "entities": [
+        {**piece("insert", 1), "block": BANK, "p": P(0, 0), "scale": 1, "rotation": 0},
+        {**piece("insert", 2), "block": FILE_LAMBA, "p": P(2, 0), "scale": 1, "rotation": 0},
+    ]},
+]
+
+
+def blocks_file(blocks, fmt="kentos.blocks", version=1):
+    return json.dumps({"format": fmt, "version": version, "blocks": blocks}, ensure_ascii=False)
+
+
+def library_done(added=(), changed=(), skipped=(), library=None):
+    out = {"changed": list(changed), "removed": [], "deleted": []}
+    if added:
+        out["added"] = list(added)
+    if skipped:
+        out["skipped"] = list(skipped)
+    if library is not None:
+        out["library"] = library
+    out["revision"] = "$current"
+    return {"status": "completed", "output": out, "warnings": []}
+
+
+def taken(file_block, into_ids):
+    """A file's definition as the drawing keeps it: its id kept, its inserts pointing at the drawing's definitions."""
+    b = json.loads(json.dumps(file_block))
+    for e in b["entities"]:
+        if e["kind"] == "insert":
+            e["block"] = into_ids.get(e["block"], e["block"])
+    b.pop("id")
+    return b
+
+
+INTO = {FILE_LAMBA: LAMBA, BANK: BANK}
+DIREK_2 = without_id(B(DIREK))
+DIREK_2["name"] = "Direk 2"
+BAD_FILE = "Blok dosyası okunamadı: {}. KentOS'un “Blokları dışa aktar”ının yazdığı bir kentos.blocks dosyası verin."
+
+edit.append({
+    "name": "Blok kopyala: aynı içerik, taban ve öznitelikler yeni adla, yeni kimlikle sona; yerleştirmeler eskisinde; geri alınır",
+    "steps": [
+        {"op": "execute", "input": {"operation": "duplicate", "block": DIREK, "name": "Direk 2"},
+         "result": library_done(added=["$blockOf:Direk 2"]),
+         "expect": {"ids": IDS, "entities": {"5": E(5)}, "blocks": SETUP_BLOCKS + [DIREK_2], "blockIds": {"Direk 2": "new"},
+                    "canUndo": True, "dirty": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Blok kopyala", "expect": {"blocks": SETUP_BLOCKS, "canUndo": False}},
+    ],
+})
+
+edit.append({
+    "name": "Blok kopyala: ad boş, ad çizimde var (ileti çizimdekinin adıyla), blok yok, blok verilmemiş",
+    "steps": [
+        {"op": "execute", "input": {"operation": "duplicate", "block": DIREK, "name": "  "}, "result": failed("empty_name", EMPTY_NAME, "name"), "expect": NOTHING},
+        {"op": "execute", "input": {"operation": "duplicate", "block": DIREK, "name": "rögar"}, "result": duplicate("Rögar"), "expect": NOTHING},
+        {"op": "execute", "input": {"operation": "duplicate", "block": MISSING_BLOCK, "name": "X"}, "result": unknown_block(MISSING_BLOCK), "expect": NOTHING},
+        {"op": "execute", "input": {"operation": "duplicate", "name": "X"},
+         "result": failed("no_block", "Kopyalanacak blok verilmedi. Bloğun kimliğini verin.", "block"), "expect": NOTHING},
+    ],
+})
+
+edit.append({
+    "name": "Blokları dışa aktar: kentos.blocks metni, yerleştirdikleriyle; çizim değişmez",
+    "steps": [
+        {"op": "execute", "input": {"operation": "export", "blocks": [DIREK]}, "result": library_done(library="$any"), "expect": NOTHING},
+        {"op": "execute", "input": {"operation": "export"}, "result": library_done(library="$any"), "expect": NOTHING},
+        {"op": "execute", "input": {"operation": "export", "blocks": [ROGAR, MISSING_BLOCK]},
+         "result": {"status": "failed", "error": {"code": "unknown_block", "message": unknown_block(MISSING_BLOCK)["error"]["message"], "path": "blocks[1]"}},
+         "expect": NOTHING},
+    ],
+})
+
+edit.append({
+    "name": "Blokları al: çizimde olan ad kalır, yeniler kimlikleriyle sona; yerleştirmeler çizimin aynı adlı bloğuna; tek adım",
+    "steps": [
+        {"op": "execute", "input": {"operation": "import", "library": blocks_file(FILE_BLOCKS)},
+         "result": library_done(added=[BANK, PARK], skipped=["Lamba"]),
+         "expect": {"ids": IDS, "blocks": SETUP_BLOCKS + [taken(FILE_BLOCKS[1], INTO), taken(FILE_BLOCKS[2], INTO)],
+                    "blockIds": {"Bank": BANK, "Park seti": PARK}, "canUndo": True, "dirty": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Blokları al", "expect": {"blocks": SETUP_BLOCKS, "canUndo": False}},
+    ],
+})
+
+edit.append({
+    "name": "Blokları al: replace ile aynı adlı tanım yerinde değişir, kimliği kalır",
+    "steps": [
+        {"op": "execute", "input": {"operation": "import", "library": blocks_file(FILE_BLOCKS), "replace": True},
+         "result": library_done(added=[BANK, PARK], changed=[LAMBA]),
+         "expect": {"blocks": blocks_after((LAMBA, taken(FILE_BLOCKS[0], INTO)), (None, taken(FILE_BLOCKS[1], INTO)), (None, taken(FILE_BLOCKS[2], INTO))),
+                    "blockIds": {"Lamba": LAMBA}, "revision": "changed"}},
+    ],
+})
+
+edit.append({
+    "name": "Blokları al: metin yok, biçim değil, sürüm değil, bilinmeyen bloğu yerleştiren tanım",
+    "steps": [
+        {"op": "execute", "input": {"operation": "import"},
+         "result": failed("no_library", "Alınacak blok dosyasının metnini verin (library).", "library"), "expect": NOTHING},
+        {"op": "execute", "input": {"operation": "import", "library": blocks_file([], fmt="kentos.style")},
+         "result": failed("invalid_library", BAD_FILE.format("biçimi kentos.blocks değil"), "library"), "expect": NOTHING},
+        {"op": "execute", "input": {"operation": "import", "library": blocks_file([], version=2)},
+         "result": failed("invalid_library", BAD_FILE.format("sürümü 2; bu KentOS 1. sürümü okur"), "library"), "expect": NOTHING},
+        {"op": "execute", "input": {"operation": "import", "library": blocks_file(FILE_BLOCKS[2:])},
+         "result": failed("invalid_library", BAD_FILE.format("“Park seti” bloğu dosyada da çizimde de olmayan bir bloğu yerleştiriyor"), "library"),
+         "expect": NOTHING},
+    ],
+})
+
+
 # ── attributes (docs/adr/0144 §7) ─────────────────────────────────────
 
 

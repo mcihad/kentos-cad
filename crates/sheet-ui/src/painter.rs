@@ -28,6 +28,8 @@ pub struct MapRequest<'a> {
     /// The view: the ground point at the content's middle, the scale, the content's turn.
     pub view: &'a MapViewPrim,
     pub layers: &'a MapLayers,
+    /// Layers drawn otherwise in this map (docs/adr/0314 §1).
+    pub overrides: &'a [kentos_sheet::kinds::LayerOverride],
     pub crs: Option<&'a str>,
     /// The ground the content covers: min east, min north, max east, max north.
     pub extent: Option<[f64; 4]>,
@@ -47,6 +49,7 @@ impl<'a> MapRequest<'a> {
             size,
             view: &m.view,
             layers: &m.layers,
+            overrides: &m.layer_overrides,
             crs: m.crs.as_deref(),
             extent: m.extent,
             pixels_per_metre: ppm,
@@ -340,6 +343,7 @@ mod tests {
                 size: Size::new(160.0, 90.0),
                 view: &view,
                 layers: &layers,
+                overrides: &[],
                 crs: None,
                 extent: Some([800.0, 1_800.0, 1_200.0, 2_200.0]),
                 pixels_per_metre: 1.0,
@@ -402,6 +406,7 @@ mod tests {
             size: Size::new(200.0, 100.0),
             view: &view,
             layers: &layers,
+            overrides: &[],
             crs: None,
             extent: None,
             pixels_per_metre: 2.0,

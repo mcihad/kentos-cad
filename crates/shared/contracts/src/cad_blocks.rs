@@ -150,7 +150,21 @@ pub enum BlockEditOperation {
     /// Its attribute definitions, the whole list (“Blok değiştir”): every
     /// insert shows them (docs/adr/0144 §7).
     Attributes,
+    /// A copy of a definition under a new name (“Blok kopyala”, docs/adr/0314 §3): its objects, base point,
+    /// description and attributes; the drawing's inserts stay on the original.
+    Duplicate,
+    /// Definitions as a `kentos.blocks` file's text, with the definitions they insert (“Blokları dışa aktar”);
+    /// nothing is written.
+    Export,
+    /// A `kentos.blocks` file's definitions taken in (“Blokları al”): a name the drawing has is kept, or with
+    /// `replace` redefined; inserts in them point at the drawing's definitions of their names.
+    Import,
 }
+
+/// The format of a block library file (docs/adr/0314 §3).
+pub const BLOCKS_FORMAT: &str = "kentos.blocks";
+/// Its version.
+pub const BLOCKS_VERSION: u32 = 1;
 
 /// Input of `cad.blocks.edit` v1: one change of the drawing's definitions, as
 /// one undo step named after the operation. A definition is named by its id.
@@ -163,7 +177,10 @@ pub enum BlockEditOperation {
 /// - `remove`: `block`;
 /// - `purge`: nothing; a definition only unused ones use goes too;
 /// - `attributes`: `block`, `attributes` (the whole list, in its order;
-///   empty: none).
+///   empty: none);
+/// - `duplicate`: `block`, `name` (the copy's);
+/// - `export`: `blocks` (absent: every definition);
+/// - `import`: `library` (a `kentos.blocks` file's text), `replace`.
 ///
 /// What would change nothing (the same name, base point, objects or
 /// attributes; nothing unused to purge) writes nothing: the answer is
@@ -220,6 +237,14 @@ pub struct BlocksEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub attributes: Option<Vec<crate::entity::AttributeDefinition>>,
+    /// `export`: the definitions, by id (absent: every one).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub blocks: Option<Vec<BlockId>>,
+    /// `import`: a `kentos.blocks` file's text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub library: Option<String>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -249,6 +274,16 @@ pub struct BlocksEdited {
     pub id: Option<u32>,
     /// `redefine` with `replace`: the objects deleted, in the input's order.
     pub deleted: Vec<String>,
+    /// `duplicate`, `import`: the definitions added, in the drawing's order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub added: Vec<BlockId>,
+    /// `import`: the file's names the drawing has, kept as they are.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub skipped: Vec<String>,
+    /// `export`: the file's text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub library: Option<String>,
     /// The document's revision after the write (the same when nothing was
     /// written), as decimal text.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -264,6 +299,9 @@ pub struct BlocksEdited {
 pub struct BlocksEditPlan {
     /// The definitions as execute would write them (`rename`, `redefine`, `rebase`, `attributes`).
     pub changed: Vec<BlockDefinition>,
+    /// `duplicate`, `import`: the definitions execute would add.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub added: Vec<BlockDefinition>,
     /// The definitions execute would delete (`remove`, `purge`).
     pub removed: Vec<BlockId>,
     /// `redefine` with `replace`: the insert as execute would write it, `id` 0.

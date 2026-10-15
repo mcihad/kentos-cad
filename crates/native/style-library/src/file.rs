@@ -11,7 +11,7 @@ use kentos_style_core::js::number;
 use kentos_style_core::js::text::{is_space, trim};
 use serde_json::{Map, Value, json};
 
-use crate::classify::js_number;
+use crate::number::js_number;
 use crate::library::{ItemKind, Source, StyleLibrary, assets_of_symbol, new_item_id};
 use crate::object_template::template_issues;
 
@@ -628,7 +628,8 @@ pub fn sanitize_svg(svg: &str) -> String {
 
 // ── Reading a file ─────────────────────────────────────────────────────
 
-fn validate_item(it: &Value, i: usize) -> Vec<String> {
+/// The file's rules of one item, the `i`th (from 0): its id, name, path and kind's fields; what breaks them, said.
+pub fn validate_item(it: &Value, i: usize) -> Vec<String> {
     let w = format!("öğe {}", i + 1);
     if !it.is_object() {
         return vec![format!("{w}: nesne değil")];

@@ -63,8 +63,9 @@ pub struct SheetMaps {
 
 /// The shown layers through the style engine at one scale on the paper's palette.
 struct StyledAt {
-    /// The drawing (its session and state), the library's version and the scale.
-    key: (u64, u64, u64, u32),
+    /// The drawing (its session and state), the library's version, the scale and the map's own layers (its layer
+    /// state and overrides, docs/adr/0314 §1; 0 for none).
+    key: (u64, u64, u64, u32, u64),
     origin: Vec2,
     /// Each shown layer's id and name, and its build.
     layers: Vec<(String, String, kentos_native_style::batches::StyledLayer)>,
@@ -123,12 +124,28 @@ impl SheetMaps {
         store: &kentos_geometry_core::store::Store,
         library: &kentos_native_style::library::StyleLibrary,
         scale: u32,
+        own: (&MapLayers, &[kentos_sheet::kinds::LayerOverride]),
     ) -> Rc<StyledAt> {
+        let own_key = match own {
+            (MapLayers::Theme(_), _) | (_, [_, ..]) => {
+                use std::hash::{Hash, Hasher};
+                let mut h = std::collections::hash_map::DefaultHasher::new();
+                serde_json::to_string(&own.0)
+                    .unwrap_or_default()
+                    .hash(&mut h);
+                serde_json::to_string(own.1)
+                    .unwrap_or_default()
+                    .hash(&mut h);
+                h.finish() | 1
+            }
+            _ => 0,
+        };
         let key = (
             doc.session,
             doc.model.generation(),
             library.version(),
             scale,
+            own_key,
         );
         if let Some(at) = self.styled.borrow().iter().find(|a| a.key == key) {
             return Rc::clone(at);
@@ -170,7 +187,14 @@ impl SheetMaps {
         kentos_plot::layers::styles(doc.model.layers().nodes(), &mut styles);
         let mut layers = Vec::new();
         // What a sheet prints: Yazdır off leaves a layer out; its objects in their drawing order (docs/adr/0260).
-        for node in kentos_plot::layers::printed_layers(doc.model.layers().nodes()) {
+        // The map's layer state and overrides (docs/adr/0314 §1): its own layers, the drawing's untouched.
+        for node in kentos_plot::layers::map_layers(
+            doc.model.layers().nodes(),
+            &doc.model.settings().layer_states,
+            own.0,
+            own.1,
+        ) {
+            let node: &kentos_contracts::LayerNode = &node;
             let objects: Vec<&kentos_contracts::Entity> =
                 kentos_plot::layers::in_order(doc.model.by_layer(&node.id).collect());
             if objects.is_empty() {
@@ -424,7 +448,8 @@ impl MapPainter for SheetPainter<'_> {
             library: self.library,
             origin: kentos_render_wgpu::scene::scene_origin(drawing),
         };
-        kentos_plot::maps::vector_content(&src, r.layers, r.view.scale, extent, &texts).ok()
+        kentos_plot::maps::vector_content(&src, r.layers, r.overrides, r.view.scale, extent, &texts)
+            .ok()
     }
 
     fn vectors(&self) -> bool {
@@ -472,9 +497,13 @@ impl SheetPainter<'_> {
             return false;
         }
         let scale = r.view.scale.max(1);
-        let at = self
-            .maps
-            .styled_at(drawing, self.spatial.store(), self.library, scale);
+        let at = self.maps.styled_at(
+            drawing,
+            self.spatial.store(),
+            self.library,
+            scale,
+            (r.layers, r.overrides),
+        );
         let s = f64::from(scale);
         let pad = 20.0 * s / 1000.0;
         let reach = [
@@ -572,9 +601,13 @@ impl SheetPainter<'_> {
         let drawing = self.drawing?;
         let extent = r.extent?;
         let scale = r.view.scale.max(1);
-        let at = self
-            .maps
-            .styled_at(drawing, self.spatial.store(), self.library, scale);
+        let at = self.maps.styled_at(
+            drawing,
+            self.spatial.store(),
+            self.library,
+            scale,
+            (r.layers, r.overrides),
+        );
         let s = f64::from(scale);
         let pad = 20.0 * s / 1000.0;
         let reach = [
@@ -646,6 +679,22 @@ impl SheetPainter<'_> {
             spots.retain(|spot| {
                 doc.get(crate::labels::slot_of(spot))
                     .is_some_and(|e| layers.layers.contains(&e.base().layer_id))
+            });
+        }
+        // A map's own layer state and overrides (docs/adr/0314 §1): the text of the layers it draws.
+        if matches!(r.layers, MapLayers::Theme(_)) || !r.overrides.is_empty() {
+            let drawn: std::collections::HashSet<String> = kentos_plot::layers::map_layers(
+                doc.layers().nodes(),
+                &doc.settings().layer_states,
+                r.layers,
+                r.overrides,
+            )
+            .into_iter()
+            .map(|n| n.id.clone())
+            .collect();
+            spots.retain(|spot| {
+                doc.get(crate::labels::slot_of(spot))
+                    .is_some_and(|e| drawn.contains(&e.base().layer_id))
             });
         }
         let fence = crate::labels::Fence {
@@ -966,6 +1015,13 @@ impl App {
                 .map(|_| &self.viewport.camera)
                 .filter(|cam| cam.scale > 0.0 && cam.width > 0.0 && cam.height > 0.0)
                 .map(|cam| [cam.width / cam.scale, cam.height / cam.scale]),
+            // A map's own layers (docs/adr/0314 §1): the project's layer states and patterns by name.
+            layer_states: settings.map_or_else(Vec::new, |s| {
+                s.layer_states.iter().map(|l| l.name.clone()).collect()
+            }),
+            line_types: settings.map_or_else(Vec::new, |s| {
+                s.line_types.iter().map(|t| t.name.clone()).collect()
+            }),
         }
     }
 
@@ -2017,6 +2073,7 @@ mod tests {
             };
             let layers = MapLayers::default();
             let r = MapRequest {
+                overrides: &[],
                 item: "m",
                 // As large as a map's picture is drawn (no shrinking: the text at its own size).
                 size: Size::new(640.0, 480.0),

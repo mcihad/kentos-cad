@@ -268313,6 +268313,21 @@
                 "const": "attributes",
                 "description": "Its attribute definitions, the whole list (“Blok değiştir”): every\ninsert shows them (docs/adr/0144 §7).",
                 "type": "string"
+              },
+              {
+                "const": "duplicate",
+                "description": "A copy of a definition under a new name (“Blok kopyala”, docs/adr/0314 §3): its objects, base point,\ndescription and attributes; the drawing's inserts stay on the original.",
+                "type": "string"
+              },
+              {
+                "const": "export",
+                "description": "Definitions as a `kentos.blocks` file's text, with the definitions they insert (“Blokları dışa aktar”);\nnothing is written.",
+                "type": "string"
+              },
+              {
+                "const": "import",
+                "description": "A `kentos.blocks` file's definitions taken in (“Blokları al”): a name the drawing has is kept, or with\n`replace` redefined; inserts in them point at the drawing's definitions of their names.",
+                "type": "string"
               }
             ]
           },
@@ -268358,7 +268373,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.blocks.edit` v1: one change of the drawing's definitions, as\none undo step named after the operation. A definition is named by its id.\n\n- `rename`: `block`, `name`;\n- `redefine`: `block`, `uids` (the objects it is made of now, copied as\n  `cad.blocks.define` copies them), `base` (absent: kept), `replace` and\n  `layerId` as `cad.blocks.define` has them;\n- `rebase`: `block`, `base`;\n- `remove`: `block`;\n- `purge`: nothing; a definition only unused ones use goes too;\n- `attributes`: `block`, `attributes` (the whole list, in its order;\n  empty: none).\n\nWhat would change nothing (the same name, base point, objects or\nattributes; nothing unused to purge) writes nothing: the answer is\ncompleted, with nothing in `changed` and `removed`.\n\nRefusals (`CommandError.code`), checked in this order: `no_block` (none\ngiven where the operation needs one); `rename`: `empty_name`; `redefine`:\n`no_entities`, `invalid_uid` (each id in order), `not_finite` (the base\npoint), `no_layer`; `rebase`: `no_base`, `not_finite`; `attributes`:\n`no_attributes`, then each attribute in order: `empty_tag` (empty or only\nwhite space), `duplicate_tag` (a tag an earlier one has, exactly),\n`not_finite` (its point, east first, then its turn), `invalid_height` (not\nabove zero); then\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`unknown_block`; `rename`: `duplicate_block`; `redefine`:\n`entity_not_found`, `block_cycle` (an object is an\ninsert of this block or of one holding it), `block_too_deep`, with\n`replace` the layer checks of `cad.blocks.define`; `remove`: `block_in_use`\n(inserts of it in the drawing or in another definition).",
+        "description": "Input of `cad.blocks.edit` v1: one change of the drawing's definitions, as\none undo step named after the operation. A definition is named by its id.\n\n- `rename`: `block`, `name`;\n- `redefine`: `block`, `uids` (the objects it is made of now, copied as\n  `cad.blocks.define` copies them), `base` (absent: kept), `replace` and\n  `layerId` as `cad.blocks.define` has them;\n- `rebase`: `block`, `base`;\n- `remove`: `block`;\n- `purge`: nothing; a definition only unused ones use goes too;\n- `attributes`: `block`, `attributes` (the whole list, in its order;\n  empty: none);\n- `duplicate`: `block`, `name` (the copy's);\n- `export`: `blocks` (absent: every definition);\n- `import`: `library` (a `kentos.blocks` file's text), `replace`.\n\nWhat would change nothing (the same name, base point, objects or\nattributes; nothing unused to purge) writes nothing: the answer is\ncompleted, with nothing in `changed` and `removed`.\n\nRefusals (`CommandError.code`), checked in this order: `no_block` (none\ngiven where the operation needs one); `rename`: `empty_name`; `redefine`:\n`no_entities`, `invalid_uid` (each id in order), `not_finite` (the base\npoint), `no_layer`; `rebase`: `no_base`, `not_finite`; `attributes`:\n`no_attributes`, then each attribute in order: `empty_tag` (empty or only\nwhite space), `duplicate_tag` (a tag an earlier one has, exactly),\n`not_finite` (its point, east first, then its turn), `invalid_height` (not\nabove zero); then\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`unknown_block`; `rename`: `duplicate_block`; `redefine`:\n`entity_not_found`, `block_cycle` (an object is an\ninsert of this block or of one holding it), `block_too_deep`, with\n`replace` the layer checks of `cad.blocks.define`; `remove`: `block_in_use`\n(inserts of it in the drawing or in another definition).",
         "properties": {
           "attributes": {
             "description": "`attributes`: the definition's attribute definitions, the whole list\nin its order (empty: it has none).",
@@ -268393,6 +268408,16 @@
             ],
             "description": "The definition; every operation but `purge`."
           },
+          "blocks": {
+            "description": "`export`: the definitions, by id (absent: every one).",
+            "items": {
+              "$ref": "#/$defs/BlockId"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "expectedRevision": {
             "description": "The document revision the input was prepared against, as decimal text.",
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -268403,6 +268428,13 @@
           },
           "layerId": {
             "description": "`redefine` with `replace`: the layer the insert goes on.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "library": {
+            "description": "`import`: a `kentos.blocks` file's text.",
             "type": [
               "string",
               "null"
@@ -268453,6 +268485,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.blocks.edit` v1.",
         "properties": {
+          "added": {
+            "description": "`duplicate`, `import`: the definitions added, in the drawing's order.",
+            "items": {
+              "$ref": "#/$defs/BlockId"
+            },
+            "type": "array"
+          },
           "changed": {
             "description": "The definitions changed (`rename`, `redefine`, `rebase`, `attributes`).",
             "items": {
@@ -268484,6 +268523,13 @@
               "null"
             ]
           },
+          "library": {
+            "description": "`export`: the file's text.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "removed": {
             "description": "The definitions deleted (`remove`, `purge`), in the drawing's order.",
             "items": {
@@ -268495,6 +268541,13 @@
             "description": "The document's revision after the write (the same when nothing was\nwritten), as decimal text.",
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
+          },
+          "skipped": {
+            "description": "`import`: the file's names the drawing has, kept as they are.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "required": [
@@ -274157,6 +274210,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "What `cad.blocks.edit` would write (plan mode); nothing is written.",
         "properties": {
+          "added": {
+            "description": "`duplicate`, `import`: the definitions execute would add.",
+            "items": {
+              "$ref": "#/$defs/BlockDefinition"
+            },
+            "type": "array"
+          },
           "changed": {
             "description": "The definitions as execute would write them (`rename`, `redefine`, `rebase`, `attributes`).",
             "items": {
@@ -274227,6 +274287,8 @@
           "image_in_block",
           "raster_in_block",
           "block_refused",
+          "no_library",
+          "invalid_library",
           "invalid_revision",
           "revision_conflict"
         ]
@@ -298242,6 +298304,733 @@
       ]
     },
     {
+      "id": "cad.library.edit",
+      "version": 1,
+      "title": "Stil kitaplığı",
+      "summary": "Projenin stil kitaplığını değiştirir (semboller, çizimler ve resimler, nesne şablonları; sistemin ve kullanıcının kitaplıkları ev sahibinindir): create bir öğe ekler (item: id, kind, name, path ve türünün alanları; .kstil dosyasının kurallarıyla, çizimler temizlenir), update id'nin alanlarını patch'le değiştirir (null kaldırır), duplicate kopyasını newId (yoksa yeni), name ve path ile ekler, rename adını, move kategorisini değiştirir, remove bir nesne, katman, şablon ya da sembol kullanmıyorsa siler (library_item_in_use). import bir .kstil dosyasının metnini (kstil) alır: kitaplıkta olan kimlik kalır (conflict: skip) ya da değişir (replace); export öğeleri (ids, yoksa hepsi) çizdikleriyle .kstil metni olarak kstil'de verir, çizimi değiştirmez. Kitaplık geri alma adımı değildir, çizimi kirli yapar. assign sembolü nesnelere (uids; cad.entities.set'in “Sembol ata” adımı) ya da bir katmana (layer; tek sembollü işleyicinin sembolün türündeki yuvası, cad.layers.renderer'ın “Katman stili” adımı) verir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [
+        "stylelibrary"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "LibraryConflict": {
+            "description": "What an import does with an id the library has.",
+            "oneOf": [
+              {
+                "const": "skip",
+                "description": "The library's kept.",
+                "type": "string"
+              },
+              {
+                "const": "replace",
+                "description": "The file's in its place.",
+                "type": "string"
+              }
+            ]
+          },
+          "LibraryOperation": {
+            "description": "What `cad.library.edit` does.",
+            "oneOf": [
+              {
+                "const": "create",
+                "description": "`item` added: its id one the library does not have.",
+                "type": "string"
+              },
+              {
+                "const": "update",
+                "description": "`id`'s fields from `patch` (null takes one away); never its id or kind.",
+                "type": "string"
+              },
+              {
+                "const": "duplicate",
+                "description": "A copy of `id` under `newId` (absent: a new one), `name` (absent: “… (kopya)”) and `path`.",
+                "type": "string"
+              },
+              {
+                "const": "rename",
+                "description": "`id` renamed to `name` (blank: “Adsız”).",
+                "type": "string"
+              },
+              {
+                "const": "move",
+                "description": "`id` moved to the category `path`.",
+                "type": "string"
+              },
+              {
+                "const": "remove",
+                "description": "`id` taken away when nothing uses it: an object's or a layer's symbol, a template, a symbol drawing it.",
+                "type": "string"
+              },
+              {
+                "const": "import",
+                "description": "A `.kstil` file's text (`kstil`) taken in; an id the library has kept, replaced (`conflict: replace`).",
+                "type": "string"
+              },
+              {
+                "const": "export",
+                "description": "The items `ids` (absent: every one) with what they draw with, as a `.kstil` file's text; nothing is written.",
+                "type": "string"
+              },
+              {
+                "const": "assign",
+                "description": "The symbol `id` given to objects (`uids`) or a layer (`layer`, its single symbol): one undo step.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.library.edit` v1.\n\nRefusals (`CommandError.code`), in this order: `no_item` (create without `item`), `no_id` (an operation that\nnames an item without `id`), `no_kstil` (import without `kstil`), `no_targets` (assign without `uids` or\n`layer`), `invalid_library_item` (an item the file's rules refuse: kind, name, path, a symbol's layers, a\ndrawing's format), `invalid_kstil` (a file that does not read, with its issues), `invalid_revision`,\n`revision_conflict`, `library_item_exists` (create's id, duplicate's `newId`), `library_item_not_found`,\n`library_item_in_use` (remove), `not_a_symbol` (assign of a drawing or a template), then assign's\n`cad.entities.set` and `cad.layers.renderer` refusals.",
+        "properties": {
+          "conflict": {
+            "$ref": "#/$defs/LibraryConflict",
+            "default": "skip"
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "The item named.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ids": {
+            "description": "`export`: the items (absent: every one of the project's).",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "item": {
+            "description": "`create`: the item as the library keeps it (`id`, `kind`, `name`, `path`, the kind's fields)."
+          },
+          "kstil": {
+            "description": "`import`: a `.kstil` file's text.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "`assign`: the layer whose single symbol it becomes.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "`rename`, `duplicate`: the name.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "newId": {
+            "description": "`duplicate`: the copy's id.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/LibraryOperation"
+          },
+          "patch": {
+            "description": "`update`: the fields to set; null takes one away."
+          },
+          "path": {
+            "description": "`move`, `duplicate`: the category path from its top.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "uids": {
+            "description": "`assign`: the objects, by persistent id.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "LibraryEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.library.edit` v1.",
+        "properties": {
+          "added": {
+            "description": "Items added (create, duplicate, import), by id.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "changed": {
+            "description": "Whether anything was written.",
+            "type": "boolean"
+          },
+          "kstil": {
+            "description": "`export`: the `.kstil` file's text.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "objects": {
+            "description": "`assign`: the objects given the symbol, by persistent id, and the layer.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "removed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "replaced": {
+            "description": "Items changed (update, rename, move; import's replaced).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made against), as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "skipped": {
+            "description": "Import's items the library kept.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "changed",
+          "added",
+          "replaced",
+          "skipped",
+          "removed",
+          "objects",
+          "revision"
+        ],
+        "title": "LibraryEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.library.edit` v1.",
+        "properties": {
+          "added": {
+            "description": "Items added (create, duplicate, import), by id.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "changed": {
+            "description": "Whether anything was written.",
+            "type": "boolean"
+          },
+          "kstil": {
+            "description": "`export`: the `.kstil` file's text.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "objects": {
+            "description": "`assign`: the objects given the symbol, by persistent id, and the layer.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "removed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "replaced": {
+            "description": "Items changed (update, rename, move; import's replaced).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made against), as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "skipped": {
+            "description": "Import's items the library kept.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "changed",
+          "added",
+          "replaced",
+          "skipped",
+          "removed",
+          "objects",
+          "revision"
+        ],
+        "title": "LibraryEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_item",
+          "no_id",
+          "no_kstil",
+          "no_targets",
+          "invalid_library_item",
+          "invalid_kstil",
+          "invalid_revision",
+          "revision_conflict",
+          "library_item_exists",
+          "library_item_not_found",
+          "library_item_in_use",
+          "not_a_symbol",
+          "layer_not_found"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Projenin bir sembolünü kopyala",
+          "input": {
+            "id": "p-agac",
+            "name": "Ağaç (büyük)",
+            "newId": "p-agac-2",
+            "operation": "duplicate"
+          }
+        },
+        {
+          "title": "Sembolü seçili nesnelere ver",
+          "input": {
+            "id": "p-agac",
+            "operation": "assign",
+            "uids": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.styles.impact",
+      "version": 1,
+      "title": "Stil değişikliğinin etkisi",
+      "summary": "Bir katmanın görünüşü, bir yazı ya da ölçü stili ya da bir çizgi tipi değişince neye ulaşacağını söyler (target: layer, textStyle, dimensionStyle, lineType; id katmanın ya da stilin kimliği, çizgi tipinin adı): değişikliği alan nesneler (follow, ilk 1000'inin kimlikleri uids'te), kendi değerini koruyanlar özelliklerine göre (own: color, lineType, lineWeight, transparency; yazıda font, bold, italic, oblique, widthFactor, height; ölçüde görünüşün alanları), kilitli katmanda kalanlar (stil değişince olduğu gibi kalır; katmanın görünüşü onlara da yansır), deseni kullanan katmanlar, onu izleyen blok parçaları ve onları gösteren yerleştirmeler (iç içe olanlar da), kendi görünüşünü saklayan katman durumları, onu geçersiz kılan pafta haritaları ve dış başvurular (KentOS dış başvuru taşımaz: hep 0); notes Türkçe özettir. Çizimi değiştirmez; plan aynı cevabı verir.",
+      "aliases": [
+        "styleimpact"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "ImpactTarget": {
+            "description": "A look's source.",
+            "oneOf": [
+              {
+                "const": "layer",
+                "description": "A layer by its id: its colour, line type, pattern, weight and transparency.",
+                "type": "string"
+              },
+              {
+                "const": "textStyle",
+                "description": "A text style by its id.",
+                "type": "string"
+              },
+              {
+                "const": "dimensionStyle",
+                "description": "A dimension style by its id.",
+                "type": "string"
+              },
+              {
+                "const": "lineType",
+                "description": "A project line type by its name (docs/adr/0313).",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.styles.impact` v1. Refusals: `empty_name` (no `id`), `layer_not_found`,\n`style_not_found`, `line_type_not_found`.",
+        "properties": {
+          "id": {
+            "description": "The layer's or the style's id, the line type's name.",
+            "type": "string"
+          },
+          "target": {
+            "$ref": "#/$defs/ImpactTarget"
+          }
+        },
+        "required": [
+          "target",
+          "id"
+        ],
+        "title": "StylesImpact",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "ImpactOwn": {
+            "description": "Objects keeping one property of their own.",
+            "properties": {
+              "count": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "property": {
+                "description": "The property, as the contract names it (`color`, `lineType`, `font` …).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "property",
+              "count"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.styles.impact` v1.",
+        "properties": {
+          "blockPieces": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "blocks": {
+            "description": "The block definitions with pieces that take it, by id.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "externalReferences": {
+            "description": "External references holding it: KentOS keeps none, always 0.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "follow": {
+            "description": "The drawing's objects that take at least one of its values.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "inserts": {
+            "description": "The drawing's inserts that show those definitions, nested ones too.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "layerStates": {
+            "description": "The layer states that keep a look of their own for it (applying them brings that back), by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "layers": {
+            "description": "The layers drawn with it (a line type), by id.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "locked": {
+            "description": "Of the followers, those on locked layers: a style's change leaves them as they are (a layer's look still\nreaches them).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "name": {
+            "description": "The source's name as people see it.",
+            "type": "string"
+          },
+          "notes": {
+            "description": "What it means, Turkish sentences.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "own": {
+            "description": "Of the objects drawn with it, those keeping a value of their own, by property.",
+            "items": {
+              "$ref": "#/$defs/ImpactOwn"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision it was read at, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "sheetMaps": {
+            "description": "The sheet maps that draw it otherwise (docs/adr/0314 §1), by item id.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "uids": {
+            "description": "Their persistent ids, at most [`IMPACT_UIDS`], in the drawing's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "follow",
+          "uids",
+          "own",
+          "locked",
+          "layers",
+          "blocks",
+          "blockPieces",
+          "inserts",
+          "layerStates",
+          "sheetMaps",
+          "externalReferences",
+          "notes",
+          "revision"
+        ],
+        "title": "StyleImpact",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "ImpactOwn": {
+            "description": "Objects keeping one property of their own.",
+            "properties": {
+              "count": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "property": {
+                "description": "The property, as the contract names it (`color`, `lineType`, `font` …).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "property",
+              "count"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.styles.impact` v1.",
+        "properties": {
+          "blockPieces": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "blocks": {
+            "description": "The block definitions with pieces that take it, by id.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "externalReferences": {
+            "description": "External references holding it: KentOS keeps none, always 0.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "follow": {
+            "description": "The drawing's objects that take at least one of its values.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "inserts": {
+            "description": "The drawing's inserts that show those definitions, nested ones too.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "layerStates": {
+            "description": "The layer states that keep a look of their own for it (applying them brings that back), by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "layers": {
+            "description": "The layers drawn with it (a line type), by id.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "locked": {
+            "description": "Of the followers, those on locked layers: a style's change leaves them as they are (a layer's look still\nreaches them).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "name": {
+            "description": "The source's name as people see it.",
+            "type": "string"
+          },
+          "notes": {
+            "description": "What it means, Turkish sentences.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "own": {
+            "description": "Of the objects drawn with it, those keeping a value of their own, by property.",
+            "items": {
+              "$ref": "#/$defs/ImpactOwn"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision it was read at, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "sheetMaps": {
+            "description": "The sheet maps that draw it otherwise (docs/adr/0314 §1), by item id.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "uids": {
+            "description": "Their persistent ids, at most [`IMPACT_UIDS`], in the drawing's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "follow",
+          "uids",
+          "own",
+          "locked",
+          "layers",
+          "blocks",
+          "blockPieces",
+          "inserts",
+          "layerStates",
+          "sheetMaps",
+          "externalReferences",
+          "notes",
+          "revision"
+        ],
+        "title": "StyleImpact",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "empty_name",
+          "layer_not_found",
+          "style_not_found",
+          "line_type_not_found"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Duvar katmanının rengi değişirse neye ulaşır",
+          "input": {
+            "id": "duvar",
+            "target": "layer"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.standards.check",
       "version": 1,
       "title": "Standardı denetle",
@@ -302383,6 +303172,9 @@
       "capabilities": {
         "refusals": [
           "no_operations",
+          "bad_color",
+          "bad_value",
+          "out_of_range",
           "invalid_operation",
           "book_unreadable",
           "unknown_sheet",
@@ -326250,6 +327042,72 @@
       "meaning": "Yüklenecek LIN dosyası verilmedi."
     },
     {
+      "code": "no_library",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Alınacak blok dosyası verilmedi."
+    },
+    {
+      "code": "invalid_library",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Blok dosyası okunamadı."
+    },
+    {
+      "code": "no_item",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Eklenecek kitaplık öğesi verilmedi."
+    },
+    {
+      "code": "no_kstil",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Alınacak .kstil dosyasının metni verilmedi."
+    },
+    {
+      "code": "no_targets",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Sembolün verileceği nesne ya da katman verilmedi."
+    },
+    {
+      "code": "invalid_library_item",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kitaplık öğesi kurallara uymuyor."
+    },
+    {
+      "code": "invalid_kstil",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": ".kstil dosyası okunamadı."
+    },
+    {
+      "code": "library_item_exists",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projenin kitaplığında bu kimlikle bir öğe var."
+    },
+    {
+      "code": "library_item_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projenin kitaplığında bu öğe yok."
+    },
+    {
+      "code": "library_item_in_use",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Öğeyi bir nesne, katman, şablon ya da sembol kullanıyor."
+    },
+    {
+      "code": "not_a_symbol",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Öğe bir sembol değil."
+    },
+    {
       "code": "no_definition",
       "kind": "failed",
       "retryable": false,
@@ -326392,6 +327250,24 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Yeni sıra paftanın öğelerinin hepsini birer kez saymalı."
+    },
+    {
+      "code": "bad_color",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta öğesinin rengi bir renk değil."
+    },
+    {
+      "code": "bad_value",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta öğesinin değeri kurallarına uymuyor."
+    },
+    {
+      "code": "out_of_range",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pafta öğesinin sayısı aralığının dışında."
     },
     {
       "code": "unknown_guide",
@@ -326784,6 +327660,221 @@
     {
       "unit": "px/length",
       "meaning": "Görünümün ölçeği: ekran pikseli bölü projenin uzunluk birimi (px/m)."
+    }
+  ],
+  "effects": [
+    {
+      "id": "object-look",
+      "change": "Nesnenin rengi, çizgi tipi, deseni, ölçeği, kalınlığı, saydamlığı ya da sembolü",
+      "command": "cad.entities.set",
+      "undo": "step",
+      "dirty": true,
+      "parts": [
+        "objects"
+      ],
+      "cloud": [
+        "project.changes: nesne başına sürümle"
+      ]
+    },
+    {
+      "id": "object-order",
+      "change": "Nesnenin çizim sırası",
+      "command": "cad.entities.order",
+      "undo": "step",
+      "dirty": true,
+      "parts": [
+        "objects"
+      ],
+      "cloud": [
+        "project.changes: nesne başına sürümle"
+      ]
+    },
+    {
+      "id": "match",
+      "change": "Özellik kopyala",
+      "command": "cad.entities.match",
+      "undo": "step",
+      "dirty": true,
+      "parts": [
+        "objects"
+      ],
+      "cloud": [
+        "project.changes: nesne başına sürümle"
+      ]
+    },
+    {
+      "id": "layer-look",
+      "change": "Katmanın rengi, çizgi tipi, deseni ya da kalınlığı",
+      "command": "cad.layers.edit",
+      "undo": "step",
+      "dirty": true,
+      "parts": [
+        "layers"
+      ],
+      "cloud": [
+        "ProjectPatch.layers: katman ağacı bütün olarak"
+      ]
+    },
+    {
+      "id": "layer-renderer",
+      "change": "Katmanın işleyicisi (Katman stili)",
+      "command": "cad.layers.renderer",
+      "undo": "step",
+      "dirty": true,
+      "parts": [
+        "layers"
+      ],
+      "cloud": [
+        "ProjectPatch.layers: katman ağacı bütün olarak"
+      ]
+    },
+    {
+      "id": "layer-flags",
+      "change": "Katmanın görünürlüğü, kilidi, dondurulması, yazdırılması ya da adı",
+      "command": "cad.layers.set",
+      "undo": "outside",
+      "dirty": true,
+      "parts": [
+        "layers"
+      ],
+      "cloud": [
+        "ProjectPatch.layers: katman ağacı bütün olarak"
+      ]
+    },
+    {
+      "id": "layer-states",
+      "change": "Katman durumunu kaydetmek",
+      "command": "cad.layers.states",
+      "undo": "outside",
+      "dirty": true,
+      "parts": [
+        "settings"
+      ],
+      "cloud": [
+        "ProjectPatch.settings: proje ayarları bütün olarak"
+      ]
+    },
+    {
+      "id": "annotation-styles",
+      "change": "Yazı ve ölçü stilleri (stile uyan nesneler aynı adımda izler)",
+      "command": "cad.styles.edit",
+      "undo": "step",
+      "dirty": true,
+      "parts": [
+        "objects",
+        "settings"
+      ],
+      "cloud": [
+        "project.changes: nesne başına sürümle",
+        "ProjectPatch.settings: proje ayarları bütün olarak"
+      ]
+    },
+    {
+      "id": "line-types",
+      "change": "Çizgi tipleri ve çizgi tipi ölçeği (LTSCALE)",
+      "command": "cad.linetypes.edit",
+      "undo": "outside",
+      "dirty": true,
+      "parts": [
+        "settings"
+      ],
+      "cloud": [
+        "ProjectPatch.settings: proje ayarları bütün olarak"
+      ]
+    },
+    {
+      "id": "standards",
+      "change": "Standardı uygula (katmanlar, nesnelerin görünüşü ve yazı ve ölçü stilleri)",
+      "command": "cad.standards.apply",
+      "undo": "step",
+      "dirty": true,
+      "parts": [
+        "objects",
+        "layers",
+        "settings"
+      ],
+      "cloud": [
+        "project.changes: nesne başına sürümle",
+        "ProjectPatch.layers: katman ağacı bütün olarak",
+        "ProjectPatch.settings: proje ayarları bütün olarak"
+      ]
+    },
+    {
+      "id": "library",
+      "change": "Projenin stil kitaplığı (sembol, çizim, şablon)",
+      "command": "cad.library.edit",
+      "undo": "outside",
+      "dirty": true,
+      "parts": [
+        "styles"
+      ],
+      "cloud": [
+        "ProjectPatch.styles: projenin kitaplığı bütün olarak"
+      ]
+    },
+    {
+      "id": "library-assign",
+      "change": "Kitaplıktan sembolü nesnelere vermek",
+      "command": "cad.library.edit",
+      "undo": "step",
+      "dirty": true,
+      "parts": [
+        "objects"
+      ],
+      "cloud": [
+        "project.changes: nesne başına sürümle"
+      ]
+    },
+    {
+      "id": "blocks",
+      "change": "Blok tanımları (ad, içerik, taban noktası, kopya, içe alma)",
+      "command": "cad.blocks.edit",
+      "undo": "step",
+      "dirty": true,
+      "parts": [
+        "blocks"
+      ],
+      "cloud": [
+        "project.changes: blok başına sürümle (block:<id>)"
+      ]
+    },
+    {
+      "id": "sheet-maps",
+      "change": "Paftanın haritasında katman durumu ve katmanların geçersiz kılınması",
+      "command": "cad.sheets.edit",
+      "undo": "outside",
+      "dirty": true,
+      "parts": [
+        "sheets"
+      ],
+      "cloud": [
+        "ProjectPatch.sheets: pafta kitabı bütün olarak"
+      ]
+    },
+    {
+      "id": "settings",
+      "change": "Proje ayarları (çizim ölçeği, birimler, yazı yükseklikleri)",
+      "command": "cad.settings.set",
+      "undo": "outside",
+      "dirty": true,
+      "parts": [
+        "settings"
+      ],
+      "cloud": [
+        "ProjectPatch.settings: proje ayarları bütün olarak"
+      ]
+    },
+    {
+      "id": "view-modes",
+      "change": "Görünüm kipleri: Renk kipi, Dolgular, Alan sınırları, Saydamlık, vurgu",
+      "undo": "none",
+      "dirty": false,
+      "parts": [
+        "preferences"
+      ],
+      "cloud": [
+        "eşitlenmez: kullanıcının ya da cihazın tercihi"
+      ]
     }
   ]
 }

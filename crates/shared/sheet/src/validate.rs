@@ -58,6 +58,73 @@ fn color(path: &str, c: &str) -> Result<()> {
     }
 }
 
+/// A map's layer overrides (docs/adr/0314 §1): a layer once, a colour that is one (a theme's name too), a built-in
+/// line type, a pattern's name, a weight from 0 to 20 mm. Whether the layer and the pattern are the project's is the
+/// host's to say: a map of a layer the drawing no longer has draws nothing of it.
+fn layer_overrides(path: &str, list: &[crate::kinds::LayerOverride]) -> Result<()> {
+    for (i, o) in list.iter().enumerate() {
+        let at = format!("{path}[{i}]");
+        if o.layer.trim().is_empty() {
+            return Err(err(
+                "bad_value",
+                &format!("{at}.layer"),
+                "Geçersiz kılınan katmanın kimliği boş olamaz.",
+            ));
+        }
+        if list[..i].iter().any(|p| p.layer == o.layer) {
+            return Err(err(
+                "bad_value",
+                &format!("{at}.layer"),
+                format!(
+                    "“{}” katmanı bu haritada bir kez geçersiz kılınır.",
+                    o.layer
+                ),
+            ));
+        }
+        if let Some(c) = &o.color
+            && !is_color(c)
+            && !["fg", "fg-dim", "ink", "paper"].contains(&c.as_str())
+        {
+            return Err(err(
+                "bad_color",
+                &format!("{at}.color"),
+                format!(
+                    "“{c}” bir renk değil: #rrggbb ya da tema adı (fg, fg-dim, ink, paper) yazın."
+                ),
+            ));
+        }
+        if let Some(t) = &o.line_type
+            && !["continuous", "dashed", "dashdot", "dotted"].contains(&t.as_str())
+        {
+            return Err(err(
+                "bad_value",
+                &format!("{at}.lineType"),
+                format!("“{t}” bir çizgi tipi değil: continuous, dashed, dashdot ya da dotted."),
+            ));
+        }
+        if o.line_pattern
+            .as_deref()
+            .is_some_and(|p| p.trim().is_empty())
+        {
+            return Err(err(
+                "bad_value",
+                &format!("{at}.linePattern"),
+                "Desenin adı boş olamaz.",
+            ));
+        }
+        if let Some(w) = o.line_weight
+            && !(0..=20_000).contains(&w)
+        {
+            return Err(err(
+                "out_of_range",
+                &format!("{at}.lineWeight"),
+                "Çizgi kalınlığı 0 ile 20 mm arasında olmalı.",
+            ));
+        }
+    }
+    Ok(())
+}
+
 fn stroke(path: &str, s: &Stroke) -> Result<()> {
     color(&format!("{path}.color"), &s.color)?;
     if !(0..=20_000).contains(&s.width) {
@@ -538,6 +605,16 @@ fn kind(path: &str, item: &Item) -> Result<()> {
                 half.max(0),
                 "Yazı bandı (µm)",
             )?;
+            if let crate::kinds::MapLayers::Theme(t) = &m.layers
+                && t.name.trim().is_empty()
+            {
+                return Err(err(
+                    "bad_value",
+                    &format!("{p}.layers.name"),
+                    "Haritanın katman durumunun adı boş olamaz.",
+                ));
+            }
+            layer_overrides(&format!("{p}.layerOverrides"), &m.layer_overrides)?;
             for (g, grid) in m.grids.iter().enumerate() {
                 let gp = format!("{p}.grids[{g}]");
                 for (v, n) in [(grid.interval, "interval"), (grid.offset, "offset")] {

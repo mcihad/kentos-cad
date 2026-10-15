@@ -597,6 +597,48 @@
       "shortcuts": [],
       "category": "Yönet",
       "status": "implemented"
+    },
+    {
+      "id": "block.export",
+      "title": "Blokları dışa aktar",
+      "short": "Dışa aktar",
+      "icon": "blockExport",
+      "description": "Çizimin bloklarını (Bloklar panelinde bir bloğun menüsünden yalnız onu) yerleştirdikleri bloklarla bir .kblok dosyasına yazar: kentos.blocks metni. cad.blocks.edit'in export'u; başka bir çizime Blokları al ile alınır.",
+      "aliases": [
+        "BLOKVER",
+        "BLOCKEXPORT"
+      ],
+      "shortcuts": [],
+      "category": "Ekle",
+      "status": "implemented"
+    },
+    {
+      "id": "block.import",
+      "title": "Blokları al",
+      "short": "Blokları al",
+      "icon": "blockImport",
+      "description": "Bir .kblok dosyasının bloklarını çizime tek adımda alır: çizimde adı olan blok olduğu gibi kalır ve söylenir, yenilerin içindeki yerleştirmeler çizimin aynı adlı bloğunu gösterir. cad.blocks.edit'in import'u.",
+      "aliases": [
+        "BLOKAL",
+        "BLOCKIMPORT"
+      ],
+      "shortcuts": [],
+      "category": "Ekle",
+      "status": "implemented"
+    },
+    {
+      "id": "layer.impact",
+      "title": "Değişikliğin etkisi",
+      "short": "Etkisi",
+      "icon": "styleImpact",
+      "description": "Etkin katmanın görünüşü değişince neye ulaşacağını söyler: değişikliği alan ve kendi değerini koruyan nesneler, blok parçaları ve onları gösteren yerleştirmeler, eski görünüşü saklayan katman durumları, geçersiz kılan pafta haritaları; dış başvuru yok. cad.styles.impact ile; Katmanlar'ın sağ tıkında her katman, Çizgi tipleri'nde seçilen tip için.",
+      "aliases": [
+        "ETKI",
+        "STYLEIMPACT"
+      ],
+      "shortcuts": [],
+      "category": "Yönet",
+      "status": "implemented"
     }
   ],
   "icons": {
@@ -666,7 +708,10 @@
     "layersTranslate": "<path d=\"m6 2.8 4.6 2.5L6 7.8 1.4 5.3z\" fill=\"currentColor\" fill-opacity=\".3\"/><path d=\"m1.4 8.4 4.6 2.5 4.6-2.5\"/><path d=\"m14 10.4 4.6 2.5-4.6 2.5-4.6-2.5z\" fill=\"currentColor\" fill-opacity=\".3\"/><path d=\"m9.4 16 4.6 2.5 4.6-2.5\"/><path d=\"M12.2 3.6h2.4a2 2 0 0 1 2 2v2.6m-1.6-1.4 1.6 1.6 1.6-1.6\" stroke-width=\"1.15\"/>",
     "standardsCheck": "<path d=\"M4 2.5h6.5L14 6v3.2\"/><path d=\"M4 2.5v15h5.5\"/><path d=\"M10.5 2.5V6H14\"/><path d=\"M6.5 8.5h4.5M6.5 11h2.5\"/><circle cx=\"13.6\" cy=\"13.6\" r=\"3\" fill=\"currentColor\" fill-opacity=\".2\"/><path d=\"m15.8 15.8 2.4 2.4\" stroke-width=\"1.4\"/>",
     "standardsApply": "<path d=\"m7.5 2.6 5.6 2.9-5.6 2.9-5.6-2.9z\" fill=\"currentColor\" fill-opacity=\".3\"/><path d=\"m1.9 9 5.6 2.9 5.6-2.9\"/><path d=\"m1.9 12.5 5.6 2.9 2.6-1.3\"/><circle cx=\"15\" cy=\"14.6\" r=\"3.4\" fill=\"currentColor\" fill-opacity=\".3\"/><path d=\"m13.5 14.7 1.1 1.1 2-2.2\"/>",
-    "lineTypesManage": "<path d=\"M2.5 4.5h15\"/><path d=\"M2.5 10h3.6m2.4 0h3.6m2.4 0h3\"/><path d=\"M2.5 15.5h5m2 0h.5m2 0h5.5\"/>"
+    "lineTypesManage": "<path d=\"M2.5 4.5h15\"/><path d=\"M2.5 10h3.6m2.4 0h3.6m2.4 0h3\"/><path d=\"M2.5 15.5h5m2 0h.5m2 0h5.5\"/>",
+    "blockExport": "<rect x=\"2.5\" y=\"9.5\" width=\"8\" height=\"8\" rx=\"1.2\"/><circle cx=\"6.5\" cy=\"13.5\" r=\"1.8\"/><path d=\"M11 9 17 3M12.5 3H17v4.5\"/>",
+    "blockImport": "<rect x=\"9.5\" y=\"9.5\" width=\"8\" height=\"8\" rx=\"1.2\"/><circle cx=\"13.5\" cy=\"13.5\" r=\"1.8\"/><path d=\"M3 3 9 9M9 4.5V9H4.5\"/>",
+    "styleImpact": "<path d=\"m7.5 3 5.6 2.9-5.6 2.9L1.9 5.9z\" fill=\"currentColor\" fill-opacity=\".3\"/><path d=\"m1.9 9.4 5.6 2.9 5.6-2.9\"/><path d=\"M14.6 12a3 3 0 0 1 0 4M16.8 10a6 6 0 0 1 0 8\"/>"
   },
   "ribbon": [
     {
@@ -1113,6 +1158,10 @@
         {
           "command": "lineTypes.manage",
           "size": "small"
+        },
+        {
+          "command": "layer.impact",
+          "size": "small"
         }
       ]
     },
@@ -1134,6 +1183,27 @@
         },
         {
           "command": "lineTypes.manage",
+          "size": "small"
+        },
+        {
+          "command": "layer.impact",
+          "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "insert",
+      "into": "Blok",
+      "items": [
+        {
+          "command": "block.import",
+          "size": "small"
+        },
+        {
+          "command": "block.export",
           "size": "small"
         }
       ]

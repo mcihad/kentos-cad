@@ -22,6 +22,8 @@ kentos-geometry-core = { path = "../../shared/geometry-core" }
 kentos-expression = { path = "../../shared/expression" }
 # Katman stili's renderers (docs/adr/0213 §5): the style core's rules of a renderer, the web's through WASM.
 kentos-style-core = { path = "../../shared/style-core" }
+# The style library and its .kstil file (cad.library.edit, docs/adr/0314 §3).
+kentos-style-library = { path = "../style-library" }
 # Etiket motoru (docs/adr/0212 §3.1): the layers' labelling goes to the geometry core as the contract's JSON, as
 # the web sends it (one reader in the core for both).
 # Pafta kitabı (docs/adr/0252 §2): the sheet core's operations, the ones the sheet designer makes.

@@ -557,6 +557,7 @@ fn command_tool(c: &Value) -> Value {
             | "cad.layers.translate"
             | "cad.standards.apply"
             | "cad.linetypes.edit"
+            | "cad.library.edit"
             | "cad.styles.edit"
             | "cad.settings.set"
             // Its delete takes a named UCS away (docs/adr/0261 §2).

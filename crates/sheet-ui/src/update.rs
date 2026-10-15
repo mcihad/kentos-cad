@@ -422,6 +422,49 @@ impl Designer {
             Message::CoordLive => {
                 self.patch_coordinate_lists(json!({ "source": { "type": "selection" } }))
             }
+            Message::MapLayerState(name) => self.patch_map_layers(|_| match &name {
+                Some(n) => json!({ "layers": { "type": "theme", "name": n } }),
+                None => json!({ "layers": { "type": "all" } }),
+            }),
+            Message::MapOverrideAdd(layer) => self.edit_overrides(|list| {
+                if !list.iter().any(|o| o.layer == layer) {
+                    list.push(kentos_sheet::kinds::LayerOverride {
+                        layer: layer.clone(),
+                        frozen: false,
+                        plot: None,
+                        color: None,
+                        line_type: None,
+                        line_pattern: None,
+                        line_weight: None,
+                    });
+                }
+            }),
+            Message::MapOverride(at, edit) => self.edit_overrides(|list| {
+                let Some(o) = list.get_mut(at) else { return };
+                match edit.clone() {
+                    crate::message::OverrideEdit::Frozen(on) => o.frozen = on,
+                    crate::message::OverrideEdit::Plot(p) => o.plot = p,
+                    crate::message::OverrideEdit::Color(c) => o.color = c,
+                    crate::message::OverrideEdit::Weight(w) => o.line_weight = w,
+                    crate::message::OverrideEdit::Line(l) => {
+                        match l.as_deref().and_then(|l| l.strip_prefix("pattern:")) {
+                            Some(name) => {
+                                o.line_pattern = Some(name.to_owned());
+                                o.line_type = None;
+                            }
+                            None => {
+                                o.line_pattern = None;
+                                o.line_type = l;
+                            }
+                        }
+                    }
+                }
+            }),
+            Message::MapOverrideRemove(at) => self.edit_overrides(|list| {
+                if at < list.len() {
+                    list.remove(at);
+                }
+            }),
             Message::CoordLayer(layer) => self
                 .patch_coordinate_lists(json!({ "source": { "type": "layer", "layer": layer } })),
             Message::CoordObjects(uids) => self
@@ -653,6 +696,38 @@ impl Designer {
         if !ops.is_empty() {
             self.commit(ops);
         }
+    }
+
+    /// The one chosen, unlocked map (fixed or atlas) patched in its kind (docs/adr/0314 §1), as one step.
+    fn patch_map_layers(
+        &mut self,
+        kind: impl Fn(&kentos_sheet::kinds::MapItem) -> serde_json::Value,
+    ) {
+        let op = {
+            let chosen = self.chosen();
+            match chosen.as_slice() {
+                [one] if !one.locked => match &one.kind {
+                    kentos_sheet::kinds::ItemKind::Map(m) => Some(Op::SetItemProps(SetItemProps {
+                        id: one.id.clone(),
+                        patch: json!({ "kind": kind(m) }),
+                    })),
+                    _ => None,
+                },
+                _ => None,
+            }
+        };
+        if let Some(op) = op {
+            self.commit(vec![op]);
+        }
+    }
+
+    /// The one chosen map's overrides changed by `edit` and written whole (docs/adr/0314 §1).
+    fn edit_overrides(&mut self, edit: impl Fn(&mut Vec<kentos_sheet::kinds::LayerOverride>)) {
+        self.patch_map_layers(|m| {
+            let mut list = m.layer_overrides.clone();
+            edit(&mut list);
+            json!({ "layerOverrides": list })
+        });
     }
 
     /// Each chosen, unlocked map with a fixed view patched (docs/adr/0206 §1), in one step.

@@ -33,15 +33,14 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+pub use kentos_style_library::{file, library, object_template};
+
 pub mod batches;
 pub mod classify;
 pub mod color;
 pub mod designer;
-pub mod file;
 pub mod legend;
-pub mod library;
 pub mod line_types;
-pub mod object_template;
 pub mod preview;
 pub mod program;
 pub mod renderer;

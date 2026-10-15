@@ -25,6 +25,8 @@ fn name_of(doc: &Document, id: BlockId) -> String {
 
 fn input(operation: BlockEditOperation, block: Option<BlockId>) -> BlocksEdit {
     BlocksEdit {
+        blocks: None,
+        library: None,
         operation,
         block,
         name: None,

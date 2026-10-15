@@ -2743,6 +2743,7 @@ dependencies = [
  "kentos-project",
  "kentos-sheet",
  "kentos-style-core",
+ "kentos-style-library",
  "serde",
  "serde_json",
 ]
@@ -2755,6 +2756,7 @@ dependencies = [
  "kentos-geometry-core",
  "kentos-native-application",
  "kentos-style-core",
+ "kentos-style-library",
  "libm",
  "serde",
  "serde_json",
@@ -3006,6 +3008,15 @@ version = "0.1.0"
 dependencies = [
  "kentos-expression",
  "kentos-geometry-core",
+ "serde_json",
+]
+
+[[package]]
+name = "kentos-style-library"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-style-core",
  "serde_json",
 ]
 

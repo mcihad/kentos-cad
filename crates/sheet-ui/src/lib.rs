@@ -54,6 +54,6 @@ pub mod view_math;
 
 pub use designer::{Context, Designer, Effect, Say, empty_inputs};
 pub use library::{Library, LibraryAccount, LibraryEvent, LibraryRequest, SyncStatus};
-pub use message::{ExportKind, InspectorTab, Message, StageEvent, Tool};
+pub use message::{ExportKind, InspectorTab, Message, OverrideEdit, StageEvent, Tool};
 pub use painter::{DemoMaps, MapPainter, MapRequest, NoMaps, Painter, lend};
 pub use store::{ProjectKey, Store, StoredTemplate, project_key};

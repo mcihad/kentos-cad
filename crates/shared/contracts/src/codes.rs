@@ -659,6 +659,28 @@ codes! {
     INVALID_LINE_TYPE = "invalid_line_type", Failed, false, "Çizgi tipi kurallarına uymuyor.";
     /// Line types loaded without a LIN file's text.
     NO_LIN = "no_lin", Failed, false, "Yüklenecek LIN dosyası verilmedi.";
+    /// Block definitions taken in without a file's text (docs/adr/0314 §3).
+    NO_LIBRARY = "no_library", Failed, false, "Alınacak blok dosyası verilmedi.";
+    /// A block library file that does not read.
+    INVALID_LIBRARY = "invalid_library", Failed, false, "Blok dosyası okunamadı.";
+    /// A library item created without the item.
+    NO_ITEM = "no_item", Failed, false, "Eklenecek kitaplık öğesi verilmedi.";
+    /// A library import without a .kstil file's text.
+    NO_KSTIL = "no_kstil", Failed, false, "Alınacak .kstil dosyasının metni verilmedi.";
+    /// A symbol given to nothing.
+    NO_TARGETS = "no_targets", Failed, false, "Sembolün verileceği nesne ya da katman verilmedi.";
+    /// A library item against the file's rules.
+    INVALID_LIBRARY_ITEM = "invalid_library_item", Failed, false, "Kitaplık öğesi kurallara uymuyor.";
+    /// A .kstil file that does not read.
+    INVALID_KSTIL = "invalid_kstil", Failed, false, ".kstil dosyası okunamadı.";
+    /// An id the project's library has.
+    LIBRARY_ITEM_EXISTS = "library_item_exists", Failed, false, "Projenin kitaplığında bu kimlikle bir öğe var.";
+    /// An id the project's library does not have.
+    LIBRARY_ITEM_NOT_FOUND = "library_item_not_found", Failed, false, "Projenin kitaplığında bu öğe yok.";
+    /// A library item something still uses.
+    LIBRARY_ITEM_IN_USE = "library_item_in_use", Failed, false, "Öğeyi bir nesne, katman, şablon ya da sembol kullanıyor.";
+    /// A drawing or a template given as a symbol.
+    NOT_A_SYMBOL = "not_a_symbol", Failed, false, "Öğe bir sembol değil.";
     /// A style created or updated without its definition.
     NO_DEFINITION = "no_definition", Failed, false, "Stilin tanımı verilmedi.";
     /// A style renamed or removed without its id.
@@ -709,6 +731,12 @@ codes! {
     NO_MASTER = "no_master", Failed, false, "Bu paftanın ana sayfası yok.";
     /// A new order that does not count every item once.
     BAD_ORDER = "bad_order", Failed, false, "Yeni sıra paftanın öğelerinin hepsini birer kez saymalı.";
+    /// A sheet item's colour that is none (the sheet core's, a map's layer override: docs/adr/0314 §1).
+    BAD_COLOR = "bad_color", Failed, false, "Pafta öğesinin rengi bir renk değil.";
+    /// A sheet item's value its rules refuse (a map's layer override, a layer state's name).
+    BAD_VALUE = "bad_value", Failed, false, "Pafta öğesinin değeri kurallarına uymuyor.";
+    /// A sheet item's number out of its range (a line weight above 20 mm).
+    OUT_OF_RANGE = "out_of_range", Failed, false, "Pafta öğesinin sayısı aralığının dışında.";
     /// A guide the sheet does not have.
     UNKNOWN_GUIDE = "unknown_guide", Failed, false, "Bu kimlikte kılavuz yok.";
     /// A picture an item uses.

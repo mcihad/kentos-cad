@@ -1831,3 +1831,73 @@ fn the_associative_arrays_go_and_come_as_the_projects_metadata() {
         "theirs is not sent back"
     );
 }
+
+/// Every project part of the change effects table (docs/adr/0314 §2) that rides `ProjectPatch` gets there: a change
+/// of it alone gives a patch with that field and no other.
+#[test]
+fn every_part_the_effects_table_names_rides_its_patch_field() {
+    use kentos_contracts::{CHANGE_EFFECTS, EffectPart};
+    let parts: Vec<EffectPart> = CHANGE_EFFECTS
+        .iter()
+        .flat_map(|e| e.parts.iter().copied())
+        .filter(|p| {
+            matches!(
+                p,
+                EffectPart::Layers | EffectPart::Settings | EffectPart::Styles | EffectPart::Sheets
+            )
+        })
+        .collect();
+    for part in [
+        EffectPart::Layers,
+        EffectPart::Settings,
+        EffectPart::Styles,
+        EffectPart::Sheets,
+    ] {
+        assert!(parts.contains(&part), "{part:?} is in the table");
+        let mut doc = editor().document;
+        let meta = Meta::of(&doc);
+        match part {
+            EffectPart::Settings => {
+                let mut s = doc.settings().clone();
+                s.line_type_scale = Some(2.0);
+                doc.set_settings(s);
+            }
+            EffectPart::Styles => {
+                let mut s = doc.styles().clone();
+                s.categories.push(serde_json::json!({ "path": ["Yeni"] }));
+                doc.set_styles(s);
+            }
+            EffectPart::Layers => {
+                let id = doc.layers().nodes()[0].id.clone();
+                doc.set_layer_visible(&id, false);
+            }
+            EffectPart::Sheets => {
+                let op: kentos_sheet::ops::Op = serde_json::from_value(serde_json::json!({ "op": "addSheet", "sheet": {
+                    "id": "kat-plani", "name": "Kat planı", "items": [],
+                    "page": { "margins": { "bottom": 10000, "left": 20000, "right": 10000, "top": 10000 },
+                              "orientation": "landscape", "paper": "a3", "size": { "height": 297000, "width": 420000 } } } }))
+                .expect("an operation");
+                let book =
+                    kentos_sheet::ops::apply(&kentos_sheet::model::SheetBook::default(), &op)
+                        .expect("applied")
+                        .book;
+                let sheets =
+                    kentos_sheet::project::project_sheets(&book, |_| None).expect("a book");
+                doc.set_sheets(sheets).expect("written");
+            }
+            _ => unreachable!(),
+        }
+        let patch = meta
+            .patch(&doc)
+            .unwrap_or_else(|| panic!("{part:?}: no patch"));
+        let fields = [
+            (EffectPart::Settings, patch.settings.is_some()),
+            (EffectPart::Styles, patch.styles.is_some()),
+            (EffectPart::Layers, patch.layers.is_some()),
+            (EffectPart::Sheets, patch.sheets.is_some()),
+        ];
+        for (p, set) in fields {
+            assert_eq!(set, p == part, "{part:?}: the patch's {p:?}");
+        }
+    }
+}

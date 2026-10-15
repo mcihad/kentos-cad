@@ -34,6 +34,9 @@ pub use crate::codes;
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &BlocksEdit) -> CommandResult<()> {
+    if crate::blocks_library::is_library(input.operation) {
+        return crate::blocks_library::validate(cx, input);
+    }
     match check(cx.doc, input) {
         Ok(checked) => CommandResult::Completed {
             output: (),
@@ -45,9 +48,13 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &BlocksEdit) -> CommandResult<
 
 /// What execute would write now; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &BlocksEdit) -> CommandResult<BlocksEditPlan> {
+    if crate::blocks_library::is_library(input.operation) {
+        return crate::blocks_library::plan(cx, input);
+    }
     match check(cx.doc, input) {
         Ok(checked) => CommandResult::Completed {
             output: BlocksEditPlan {
+                added: Vec::new(),
                 removed: in_drawing_order(cx.doc, &checked.removed),
                 changed: checked.changed.into_iter().collect(),
                 insert: checked.insert,
@@ -75,6 +82,9 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: BlocksEdit) -> CommandResul
 /// [`execute`]'s write; `call::recorded` runs it as one step of the
 /// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
 fn write_execute(cx: &mut ExecutionContext<'_>, input: BlocksEdit) -> CommandResult<BlocksEdited> {
+    if crate::blocks_library::is_library(input.operation) {
+        return crate::blocks_library::write(cx, &input);
+    }
     let checked = match check(cx.doc, &input) {
         Ok(checked) => checked,
         Err(stop) => return stop.into(),
@@ -128,6 +138,8 @@ pub fn label(operation: BlockEditOperation) -> &'static str {
         | BlockEditOperation::Attributes => labels::BLOCK_CHANGE,
         BlockEditOperation::Remove => labels::BLOCK_REMOVE,
         BlockEditOperation::Purge => labels::BLOCK_PURGE,
+        BlockEditOperation::Duplicate => crate::blocks_library::DUPLICATE,
+        BlockEditOperation::Import | BlockEditOperation::Export => crate::blocks_library::IMPORT,
     }
 }
 
@@ -144,6 +156,9 @@ fn done(
         insert: slot.and_then(|s| doc.uid(s)).map(|u| u.to_string()),
         id: slot.map(|s| s.0),
         deleted,
+        added: Vec::new(),
+        skipped: Vec::new(),
+        library: None,
         revision: doc.revision().to_string(),
     }
 }
@@ -205,7 +220,11 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
             checks::point(base, "Taban noktasının", "base")?;
         }
         BlockEditOperation::Attributes => attributes(input.attributes.as_deref())?,
-        BlockEditOperation::Remove | BlockEditOperation::Purge => {}
+        BlockEditOperation::Remove
+        | BlockEditOperation::Purge
+        | BlockEditOperation::Duplicate
+        | BlockEditOperation::Export
+        | BlockEditOperation::Import => {}
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
     if input.operation == BlockEditOperation::Purge {
@@ -266,7 +285,10 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
             checked.removed = vec![old.id];
             return Ok(checked);
         }
-        BlockEditOperation::Purge => {}
+        BlockEditOperation::Purge
+        | BlockEditOperation::Duplicate
+        | BlockEditOperation::Export
+        | BlockEditOperation::Import => {}
     }
     if next != *old {
         checked.changed = Some(next);

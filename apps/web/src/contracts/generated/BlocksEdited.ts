@@ -22,6 +22,18 @@ insert?: string, id?: number,
  */
 deleted: Array<string>, 
 /**
+ * `duplicate`, `import`: the definitions added, in the drawing's order.
+ */
+added?: Array<BlockId>, 
+/**
+ * `import`: the file's names the drawing has, kept as they are.
+ */
+skipped?: Array<string>, 
+/**
+ * `export`: the file's text.
+ */
+library?: string, 
+/**
  * The document's revision after the write (the same when nothing was
  * written), as decimal text.
  */

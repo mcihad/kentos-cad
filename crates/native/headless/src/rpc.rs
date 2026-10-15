@@ -259,6 +259,8 @@ pub fn summary(doc: &Document) -> Value {
         "canRedo": doc.can_redo(),
         // The sheet book's sheets (docs/adr/0252 §2); null for a book the core cannot read.
         "sheets": kentos_native_application::sheets_edit::sheets_in(doc),
+        // The project's style library, each item's id, kind, name and path (docs/adr/0314 §3).
+        "library": kentos_native_application::library_edit::listed(doc),
         // The project's parts' state stamps (docs/adr/0253 §2): what a call expects of them.
         "stamps": {
             "layers": doc.layers_stamp(),

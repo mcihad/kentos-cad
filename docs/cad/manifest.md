@@ -17,21 +17,21 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 49 | 130 | 38 | 38 | 255 |
+| semantic | 51 | 130 | 38 | 38 | 257 |
 | geometry | 19 | 61 | 0 | 8 | 88 |
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 20 | 0 | 6 | 26 |
-| query | 0 | 22 | 1 | 4 | 27 |
+| query | 0 | 23 | 1 | 4 | 28 |
 | session | 0 | 80 | 48 | 5 | 133 |
 | host | 0 | 15 | 14 | 4 | 33 |
-| **toplam** | 68 | 339 | 103 | 205 | 715 |
+| **toplam** | 70 | 340 | 103 | 205 | 718 |
 
 Kapsam: `cad` yalnız CAD şeridinde, `gis` yalnız CBS şeridinde, `shared` ikisinde, `none` hiçbir şeritte (kısayol, menü,
 komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 510 satırdan 132'i: geometry 80, none 20, processing 13, query 19.
+CBS'ye özgü olmayan 513 satırdan 133'i: geometry 80, none 20, processing 13, query 20.
 
 ### Sonucu çağıran hesaplar (geometry) — 80
 
@@ -161,7 +161,7 @@ CBS'ye özgü olmayan 510 satırdan 132'i: geometry 80, none 20, processing 13, 
 | `processing.run.pointcloud.thin` | Seyrelt… | shared | — | İşlemler aracı; Python ve MCP'den çalıştırılamaz. |
 | `processing.run.pointcloud.tile` | Karola… | shared | — | İşlemler aracı; Python ve MCP'den çalıştırılamaz. |
 
-### Okuma, Python'da yok (query) — 19
+### Okuma, Python'da yok (query) — 20
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -177,6 +177,7 @@ CBS'ye özgü olmayan 510 satırdan 132'i: geometry 80, none 20, processing 13, 
 | `data.chart` | Grafik | shared | — |  |
 | `data.search` | Veride ara | shared | — |  |
 | `data.statistics` | Alan istatistikleri | shared | — |  |
+| `layer.impact` | Değişikliğin etkisi | shared | cad.styles.impact |  |
 | `pointcloud.query` | Nokta bulutu XYZ sor | shared | — |  |
 | `sheet.preflight` | Ön denetim | none | — |  |
 | `standards.check` | Standardı denetle | shared | cad.standards.check | Bulgular komutun cevabıdır; pencere onları gösterir (ADR 0312 §2). |

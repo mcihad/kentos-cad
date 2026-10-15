@@ -634,6 +634,15 @@ impl App {
                     Message::LayerStyle(crate::style::layer_style::Event::Open(Some(id.clone()))),
                 )
                 .icon(crate::icons::from_web(Some("layerStyle")))
+                // Değişikliğin etkisi (docs/adr/0314 §4): what a change of its look would reach.
+                .item(
+                    "Değişikliğin etkisi…",
+                    Message::StyleImpact(crate::style_impact::Event::Open(
+                        kentos_contracts::ImpactTarget::Layer,
+                        id.clone(),
+                    )),
+                )
+                .icon(crate::icons::from_web(Some("styleImpact")))
                 // Etiketler (docs/adr/0212 §4): how its objects are labelled.
                 .item(
                     match node.style.labels.as_ref().map(|l| l.mode) {

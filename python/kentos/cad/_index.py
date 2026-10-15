@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import addresses, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, file, labels, layers, line, linetypes, network, nurbs, point, points, polygon, polyline, project, rectangle, scenarios, settings, sheets, snap, standards, styles, ucs, units, views
+from . import addresses, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, file, labels, layers, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, rectangle, scenarios, settings, sheets, snap, standards, styles, ucs, units, views
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.define": addresses.define,
@@ -63,6 +63,7 @@ COMMANDS: dict[str, Any] = {
     "cad.layers.states": layers.states,
     "cad.layers.time": layers.time,
     "cad.layers.translate": layers.translate,
+    "cad.library.edit": library.edit,
     "cad.line.create": line.create,
     "cad.linetypes.edit": linetypes.edit,
     "cad.network.define": network.define,
@@ -80,6 +81,7 @@ COMMANDS: dict[str, Any] = {
     "cad.standards.apply": standards.apply,
     "cad.standards.check": standards.check,
     "cad.styles.edit": styles.edit,
+    "cad.styles.impact": styles.impact,
     "cad.ucs.set": ucs.set,
     "cad.units.change": units.change,
     "cad.views.edit": views.edit,
@@ -110,4 +112,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("addresses", "arc", "arrays", "blocks", "changeset", "circle", "curves", "dimensions", "drawing", "entities", "file", "labels", "layers", "line", "linetypes", "network", "nurbs", "point", "points", "polygon", "polyline", "project", "rectangle", "scenarios", "settings", "sheets", "snap", "standards", "styles", "ucs", "units", "views",)
+NAMESPACES = ("addresses", "arc", "arrays", "blocks", "changeset", "circle", "curves", "dimensions", "drawing", "entities", "file", "labels", "layers", "library", "line", "linetypes", "network", "nurbs", "point", "points", "polygon", "polyline", "project", "rectangle", "scenarios", "settings", "sheets", "snap", "standards", "styles", "ucs", "units", "views",)

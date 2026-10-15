@@ -16,7 +16,10 @@ import type { Vec2 } from "./Vec2";
  * - `remove`: `block`;
  * - `purge`: nothing; a definition only unused ones use goes too;
  * - `attributes`: `block`, `attributes` (the whole list, in its order;
- *   empty: none).
+ *   empty: none);
+ * - `duplicate`: `block`, `name` (the copy's);
+ * - `export`: `blocks` (absent: every definition);
+ * - `import`: `library` (a `kentos.blocks` file's text), `replace`.
  *
  * What would change nothing (the same name, base point, objects or
  * attributes; nothing unused to purge) writes nothing: the answer is
@@ -67,6 +70,14 @@ layerId?: string,
  * in its order (empty: it has none).
  */
 attributes?: Array<AttributeDefinition>, 
+/**
+ * `export`: the definitions, by id (absent: every one).
+ */
+blocks?: Array<BlockId>, 
+/**
+ * `import`: a `kentos.blocks` file's text.
+ */
+library?: string, 
 /**
  * The document revision the input was prepared against, as decimal text.
  */

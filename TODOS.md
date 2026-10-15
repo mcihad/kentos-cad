@@ -170,6 +170,12 @@ Liste:
   uyarıları komutun sözleri; paralel iki doğruya TTY, saat yönünde verilen yaydan Devam; araç durumları
   `fixtures/curve-methods/v1/tools.json`. Web'in donmuş çağrı kayıtları eski `arcStartCenterEnd` ve `arcStartCenterAngle`'ı (tam tur)
   tutar; geri dönüşte komutun kuralına getirilir.
+- [ ] `CAD-STYLE-12`, `13`, `14`, `15` haritanın katmanları, değişikliğin etkisi, kitaplık API'si ve etki raporu (ADR 0314, 16 Ekim):
+  web'de gerekenler: pafta tasarımcısının Denetçi'sinde haritanın Katmanlar bölümü ve web'in pafta çiziminde `layerOverrides`
+  (`kentos_plot::layers::map_layers`'ın kuralı WASM'la ya da sheet-wasm'dan); `cad.library.edit` ve `cad.styles.impact`'in TS
+  işleyicileri, `cad.blocks.edit`'in `duplicate`, `export`, `import`'u (kanonik metin `canonical_json`'la aynı baytlar); Stil
+  yöneticisinin ve Bloklar panelinin bu komutlarla yazması, Değişikliğin etkisi penceresi; kataloğun `effects`'ini web'in kendi
+  geri alma ve kirlilik kurallarıyla sınayan test.
 - [ ] `CAD-STYLE-08`, `09`, `10`, `11` çizgi tipleri (ADR 0313, 15 Ekim): web'de gerekenler: `.kcad` şema 56'nın `lineTypes`,
   `lineTypeScale` ve `linePattern`'ı (web'in kopyası 55'te), `cad.linetypes.edit`'in TS işleyicisi (LIN okuyucu ve yazıcı WASM'la
   `kentos_formats::lin`'den), `cad.layers.edit` ve `cad.entities.set`'in `linePattern`'ı; web'in stil motoru bağında

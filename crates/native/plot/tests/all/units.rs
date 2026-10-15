@@ -77,6 +77,7 @@ fn map_fills(doc: &Document) -> Vec<String> {
     let content = vector_content(
         &src,
         &MapLayers::default(),
+        &[],
         50,
         [-5.0, -5.0, 20.0, 10.0],
         &[],

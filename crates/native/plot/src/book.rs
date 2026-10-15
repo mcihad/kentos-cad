@@ -210,7 +210,14 @@ pub fn book_pdf(
                     kentos_contracts::Entity::Text(_) | kentos_contracts::Entity::Dimension(_)
                 ) || e.base().label.is_some()
             });
-            match vector_content(&src, &m.layers, m.view.scale, extent, &[]) {
+            match vector_content(
+                &src,
+                &m.layers,
+                &m.layer_overrides,
+                m.view.scale,
+                extent,
+                &[],
+            ) {
                 Ok(content) => maps.push(PdfMap {
                     item: m.item.clone(),
                     content,

@@ -1,0 +1,15 @@
+[package]
+name = "kentos-style-library"
+description = "The style library and its file (docs/adr/0092, 0176, 0314): items, sources and categories, the .kstil file read, checked and written, object templates; under the application's commands (cad.library.edit) and the desktop's style page"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure Rust over the shared libraries only (scripts/arch/deps.mjs, group `stylelib`): the product
+# commands use it, so it knows neither the application nor the style engine page, which re-exports it.
+[dependencies]
+kentos-contracts = { path = "../../shared/contracts", default-features = false }
+kentos-style-core = { path = "../../shared/style-core" }
+serde_json = { workspace = true }
+

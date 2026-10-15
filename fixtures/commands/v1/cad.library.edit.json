@@ -1,0 +1,3460 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.library.edit",
+ "commandVersion": 1,
+ "title": "Stil kitaplığı",
+ "note": "Written by scripts/fixtures/library_command_cases.py from the contract's rules and docs/adr/0092, 0176, 0314 §3; do not edit by hand.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Kitaplık",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 500000,
+   "y": 4400000
+  },
+  "layers": [
+   {
+    "id": "park",
+    "name": "Park",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "agaclar",
+    "name": "Ağaçlar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25,
+     "renderer": {
+      "type": "single",
+      "symbols": {
+       "marker": {
+        "ref": "p-agac"
+       }
+      }
+     }
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "park",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "park",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500000,
+      "y": 4400000
+     },
+     {
+      "x": 500010,
+      "y": 4400000
+     },
+     {
+      "x": 500010,
+      "y": 4400010
+     },
+     {
+      "x": 500000,
+      "y": 4400010
+     }
+    ],
+    "symbol": "p-alan"
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "park",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500020,
+      "y": 4400000
+     },
+     {
+      "x": 500030,
+      "y": 4400000
+     },
+     {
+      "x": 500030,
+      "y": 4400010
+     },
+     {
+      "x": 500020,
+      "y": 4400010
+     }
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 3,
+    "layerId": "agaclar",
+    "attrs": {},
+    "p": {
+     "x": 500005,
+     "y": 4400030
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "kilitli",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500040,
+      "y": 4400000
+     },
+     {
+      "x": 500050,
+      "y": 4400000
+     },
+     {
+      "x": 500050,
+      "y": 4400010
+     },
+     {
+      "x": 500040,
+      "y": 4400010
+     }
+    ]
+   }
+  ],
+  "styles": {
+   "items": [
+    {
+     "kind": "asset",
+     "id": "p-cizim",
+     "name": "Ağaç çizimi",
+     "path": [
+      "Çizimler"
+     ],
+     "format": "svg",
+     "data": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 20 30\"><circle cx=\"10\" cy=\"10\" r=\"8\" fill=\"#2E7D32\"/></svg>",
+     "width": 20,
+     "height": 30
+    },
+    {
+     "kind": "symbol",
+     "id": "p-agac",
+     "name": "Ağaç",
+     "path": [
+      "Semboller"
+     ],
+     "symbol": {
+      "type": "marker",
+      "layers": [
+       {
+        "id": "v",
+        "type": "svg",
+        "asset": "p-cizim",
+        "size": 4
+       }
+      ]
+     }
+    },
+    {
+     "kind": "symbol",
+     "id": "p-alan",
+     "name": "Yeşil alan",
+     "path": [
+      "Semboller"
+     ],
+     "symbol": {
+      "type": "fill",
+      "layers": [
+       {
+        "id": "f",
+        "type": "simpleFill",
+        "color": "#30A46C"
+       }
+      ]
+     }
+    },
+    {
+     "kind": "symbol",
+     "id": "p-bos",
+     "name": "Boş",
+     "path": [
+      "Semboller"
+     ],
+     "symbol": {
+      "type": "fill",
+      "layers": [
+       {
+        "id": "f",
+        "type": "simpleFill",
+        "color": "#EDC948"
+       }
+      ]
+     }
+    }
+   ],
+   "categories": [
+    {
+     "path": [
+      "Semboller"
+     ],
+     "order": 1
+    }
+   ]
+  }
+ },
+ "cases": [
+  {
+   "name": "Oluştur: yeni sembol sona eklenir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "operation": "create",
+      "item": {
+       "kind": "symbol",
+       "id": "p-yeni",
+       "name": "Su",
+       "path": [
+        "Semboller"
+       ],
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#0090FF"
+         }
+        ]
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "added": [
+        "p-yeni"
+       ],
+       "replaced": [],
+       "skipped": [],
+       "removed": [],
+       "objects": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "create",
+      "item": {
+       "kind": "symbol",
+       "id": "p-yeni",
+       "name": "Su",
+       "path": [
+        "Semboller"
+       ],
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#0090FF"
+         }
+        ]
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "added": [
+        "p-yeni"
+       ],
+       "replaced": [],
+       "skipped": [],
+       "removed": [],
+       "objects": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "dirty": true,
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-yeni",
+        "kind": "symbol",
+        "name": "Su",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Güncelle: yamanın alanları yazılır, kimlik ve tür değişmez",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "operation": "update",
+      "id": "p-alan",
+      "patch": {
+       "name": "Çimen",
+       "tags": [
+        "park"
+       ],
+       "id": "baska",
+       "kind": "asset"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "added": [],
+       "replaced": [
+        "p-alan"
+       ],
+       "skipped": [],
+       "removed": [],
+       "objects": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "update",
+      "id": "p-alan",
+      "patch": {
+       "name": "Çimen",
+       "tags": [
+        "park"
+       ],
+       "id": "baska",
+       "kind": "asset"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "added": [],
+       "replaced": [
+        "p-alan"
+       ],
+       "skipped": [],
+       "removed": [],
+       "objects": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "dirty": true,
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Çimen",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kopyala: yeni kimlik ve adla, aynı yerde",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "operation": "duplicate",
+      "id": "p-alan",
+      "newId": "p-alan-2",
+      "name": "Yeşil alan 2"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "added": [
+        "p-alan-2"
+       ],
+       "replaced": [],
+       "skipped": [],
+       "removed": [],
+       "objects": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "duplicate",
+      "id": "p-alan",
+      "newId": "p-alan-2",
+      "name": "Yeşil alan 2"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "added": [
+        "p-alan-2"
+       ],
+       "replaced": [],
+       "skipped": [],
+       "removed": [],
+       "objects": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "dirty": true,
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan-2",
+        "kind": "symbol",
+        "name": "Yeşil alan 2",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kopyala: ad verilmezse “(kopya)”, yol verilirse oraya",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "operation": "duplicate",
+      "id": "p-bos",
+      "newId": "p-bos-2",
+      "path": [
+       "Arşiv"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "added": [
+        "p-bos-2"
+       ],
+       "replaced": [],
+       "skipped": [],
+       "removed": [],
+       "objects": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "duplicate",
+      "id": "p-bos",
+      "newId": "p-bos-2",
+      "path": [
+       "Arşiv"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "added": [
+        "p-bos-2"
+       ],
+       "replaced": [],
+       "skipped": [],
+       "removed": [],
+       "objects": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "dirty": true,
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos-2",
+        "kind": "symbol",
+        "name": "Boş (kopya)",
+        "path": [
+         "Arşiv"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ad ver: boş ad “Adsız”",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "operation": "rename",
+      "id": "p-bos",
+      "name": "  "
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "added": [],
+       "replaced": [
+        "p-bos"
+       ],
+       "skipped": [],
+       "removed": [],
+       "objects": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "rename",
+      "id": "p-bos",
+      "name": "  "
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "added": [],
+       "replaced": [
+        "p-bos"
+       ],
+       "skipped": [],
+       "removed": [],
+       "objects": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "dirty": true,
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Adsız",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Taşı: başka kategoriye",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "operation": "move",
+      "id": "p-bos",
+      "path": [
+       "Arşiv",
+       "Eski"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "added": [],
+       "replaced": [
+        "p-bos"
+       ],
+       "skipped": [],
+       "removed": [],
+       "objects": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "move",
+      "id": "p-bos",
+      "path": [
+       "Arşiv",
+       "Eski"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "added": [],
+       "replaced": [
+        "p-bos"
+       ],
+       "skipped": [],
+       "removed": [],
+       "objects": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "dirty": true,
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Arşiv",
+         "Eski"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sil: kullanılmayan sembol",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "operation": "remove",
+      "id": "p-bos"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "added": [],
+       "replaced": [],
+       "skipped": [],
+       "removed": [
+        "p-bos"
+       ],
+       "objects": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "remove",
+      "id": "p-bos"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "added": [],
+       "replaced": [],
+       "skipped": [],
+       "removed": [
+        "p-bos"
+       ],
+       "objects": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "dirty": true,
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "İçe al: yeni öğe eklenir, kitaplıkta olan kalır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "operation": "import",
+      "kstil": "{\"format\": \"kentos-style\", \"version\": 1, \"items\": [{\"kind\": \"symbol\", \"id\": \"p-bos\", \"name\": \"Gelen boş\", \"path\": [\"Semboller\"], \"symbol\": {\"type\": \"fill\", \"layers\": [{\"id\": \"f\", \"type\": \"simpleFill\", \"color\": \"#EDC948\"}]}}, {\"kind\": \"symbol\", \"id\": \"p-gelen\", \"name\": \"Gelen\", \"path\": [\"Gelenler\"], \"symbol\": {\"type\": \"fill\", \"layers\": [{\"id\": \"f\", \"type\": \"simpleFill\", \"color\": \"#8A94A6\"}]}}]}"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "added": [
+        "p-gelen"
+       ],
+       "replaced": [],
+       "skipped": [
+        "p-bos"
+       ],
+       "removed": [],
+       "objects": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "import",
+      "kstil": "{\"format\": \"kentos-style\", \"version\": 1, \"items\": [{\"kind\": \"symbol\", \"id\": \"p-bos\", \"name\": \"Gelen boş\", \"path\": [\"Semboller\"], \"symbol\": {\"type\": \"fill\", \"layers\": [{\"id\": \"f\", \"type\": \"simpleFill\", \"color\": \"#EDC948\"}]}}, {\"kind\": \"symbol\", \"id\": \"p-gelen\", \"name\": \"Gelen\", \"path\": [\"Gelenler\"], \"symbol\": {\"type\": \"fill\", \"layers\": [{\"id\": \"f\", \"type\": \"simpleFill\", \"color\": \"#8A94A6\"}]}}]}"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "added": [
+        "p-gelen"
+       ],
+       "replaced": [],
+       "skipped": [
+        "p-bos"
+       ],
+       "removed": [],
+       "objects": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "dirty": true,
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-gelen",
+        "kind": "symbol",
+        "name": "Gelen",
+        "path": [
+         "Gelenler"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "İçe al: replace ile kitaplıkta olan değişir, yerinde",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "operation": "import",
+      "kstil": "{\"format\": \"kentos-style\", \"version\": 1, \"items\": [{\"kind\": \"symbol\", \"id\": \"p-bos\", \"name\": \"Gelen boş\", \"path\": [\"Semboller\"], \"symbol\": {\"type\": \"fill\", \"layers\": [{\"id\": \"f\", \"type\": \"simpleFill\", \"color\": \"#EDC948\"}]}}, {\"kind\": \"symbol\", \"id\": \"p-gelen\", \"name\": \"Gelen\", \"path\": [\"Gelenler\"], \"symbol\": {\"type\": \"fill\", \"layers\": [{\"id\": \"f\", \"type\": \"simpleFill\", \"color\": \"#8A94A6\"}]}}]}",
+      "conflict": "replace"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "added": [
+        "p-gelen"
+       ],
+       "replaced": [
+        "p-bos"
+       ],
+       "skipped": [],
+       "removed": [],
+       "objects": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "import",
+      "kstil": "{\"format\": \"kentos-style\", \"version\": 1, \"items\": [{\"kind\": \"symbol\", \"id\": \"p-bos\", \"name\": \"Gelen boş\", \"path\": [\"Semboller\"], \"symbol\": {\"type\": \"fill\", \"layers\": [{\"id\": \"f\", \"type\": \"simpleFill\", \"color\": \"#EDC948\"}]}}, {\"kind\": \"symbol\", \"id\": \"p-gelen\", \"name\": \"Gelen\", \"path\": [\"Gelenler\"], \"symbol\": {\"type\": \"fill\", \"layers\": [{\"id\": \"f\", \"type\": \"simpleFill\", \"color\": \"#8A94A6\"}]}}]}",
+      "conflict": "replace"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "added": [
+        "p-gelen"
+       ],
+       "replaced": [
+        "p-bos"
+       ],
+       "skipped": [],
+       "removed": [],
+       "objects": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "dirty": true,
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Gelen boş",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-gelen",
+        "kind": "symbol",
+        "name": "Gelen",
+        "path": [
+         "Gelenler"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "İçe al: hepsi kitaplıkta, değişen yok",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "operation": "import",
+      "kstil": "{\"format\": \"kentos-style\", \"version\": 1, \"items\": [{\"kind\": \"symbol\", \"id\": \"p-bos\", \"name\": \"Boş\", \"path\": [\"Semboller\"], \"symbol\": {\"type\": \"fill\", \"layers\": [{\"id\": \"f\", \"type\": \"simpleFill\", \"color\": \"#EDC948\"}]}}]}"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": false,
+       "added": [],
+       "replaced": [],
+       "skipped": [
+        "p-bos"
+       ],
+       "removed": [],
+       "objects": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "import",
+      "kstil": "{\"format\": \"kentos-style\", \"version\": 1, \"items\": [{\"kind\": \"symbol\", \"id\": \"p-bos\", \"name\": \"Boş\", \"path\": [\"Semboller\"], \"symbol\": {\"type\": \"fill\", \"layers\": [{\"id\": \"f\", \"type\": \"simpleFill\", \"color\": \"#EDC948\"}]}}]}"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": false,
+       "added": [],
+       "replaced": [],
+       "skipped": [
+        "p-bos"
+       ],
+       "removed": [],
+       "objects": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dışa aktar: sembol çizdiği çizimle; çizim değişmez",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "operation": "export",
+      "ids": [
+       "p-agac"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": false,
+       "added": [],
+       "replaced": [],
+       "skipped": [],
+       "removed": [],
+       "objects": [],
+       "kstil": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "export",
+      "ids": [
+       "p-agac"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": false,
+       "added": [],
+       "replaced": [],
+       "skipped": [],
+       "removed": [],
+       "objects": [],
+       "kstil": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dışa aktar: kimlik verilmezse bütün kitaplık",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "operation": "export"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": false,
+       "added": [],
+       "replaced": [],
+       "skipped": [],
+       "removed": [],
+       "objects": [],
+       "kstil": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "export"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": false,
+       "added": [],
+       "replaced": [],
+       "skipped": [],
+       "removed": [],
+       "objects": [],
+       "kstil": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ver: sembol nesnelere tek adımda (Sembol ata), kilitli katmandaki atlanır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "assign",
+      "id": "p-alan",
+      "uids": [
+       "$uidOf:2"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "added": [],
+       "replaced": [],
+       "skipped": [],
+       "removed": [],
+       "objects": [
+        "$uidOf:2"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ],
+      "entities": {
+       "2": {
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "park",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 500020,
+          "y": 4400000
+         },
+         {
+          "x": 500030,
+          "y": 4400000
+         },
+         {
+          "x": 500030,
+          "y": 4400010
+         },
+         {
+          "x": 500020,
+          "y": 4400010
+         }
+        ],
+        "symbol": "p-alan"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ver: sembol katmanın tek sembollü işleyicisine, türünün yuvasına (Katman stili)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "assign",
+      "id": "p-alan",
+      "layer": "park"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "added": [],
+       "replaced": [],
+       "skipped": [],
+       "removed": [],
+       "objects": [],
+       "layer": "park",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "layers": [
+       {
+        "id": "park",
+        "name": "Park",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "ref": "p-alan"
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "agaclar",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "marker": {
+            "ref": "p-agac"
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ver: tek sembollü işleyicinin öbür yuvaları kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "assign",
+      "id": "p-alan",
+      "layer": "agaclar"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "added": [],
+       "replaced": [],
+       "skipped": [],
+       "removed": [],
+       "objects": [],
+       "layer": "agaclar",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": true,
+      "layers": [
+       {
+        "id": "park",
+        "name": "Park",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "agaclar",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "marker": {
+            "ref": "p-agac"
+           },
+           "fill": {
+            "ref": "p-alan"
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Doğrula: yazmaz",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "operation": "remove",
+      "id": "p-bos"
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: oluşturulacak öğe yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "create"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_item",
+       "message": "Eklenecek öğeyi verin (item): kimliği, türü, adı ve yolu ile.",
+       "path": "item"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: kimlik yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "rename",
+      "name": "X"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_id",
+       "message": "Öğenin kimliğini verin (id).",
+       "path": "id"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: içe alınacak metin yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "import",
+      "kstil": "  "
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_kstil",
+       "message": "Alınacak .kstil dosyasının metnini verin (kstil).",
+       "path": "kstil"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: sembol hiçbir şeye verilmiyor",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "assign",
+      "id": "p-alan",
+      "uids": []
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_targets",
+       "message": "Sembolün verileceği nesneleri (uids) ya da katmanı (layer) verin.",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: öğenin adı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "create",
+      "item": {
+       "kind": "symbol",
+       "id": "p-x",
+       "path": [],
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#30A46C"
+         }
+        ]
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_library_item",
+       "message": "Kitaplık öğesi kurallara uymuyor: öğe 1: ad yok.",
+       "path": "item"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: .kstil değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "import",
+      "kstil": "{\"format\": \"baska\", \"version\": 1, \"items\": []}"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_kstil",
+       "message": ".kstil dosyası okunamadı: Bu bir KentOS stil dosyası (.kstil) değil.",
+       "path": "kstil"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: geçersiz sürüm",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "remove",
+      "id": "p-bos",
+      "expectedRevision": "on iki"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: kimlik kitaplıkta var",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "create",
+      "item": {
+       "kind": "symbol",
+       "id": "p-bos",
+       "name": "İkinci",
+       "path": [
+        "Semboller"
+       ],
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": "#EDC948"
+         }
+        ]
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "library_item_exists",
+       "message": "Projenin kitaplığında “p-bos” kimlikli bir öğe var; başka bir kimlik verin.",
+       "path": "item.id"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: kopyanın kimliği kitaplıkta var",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "duplicate",
+      "id": "p-alan",
+      "newId": "p-bos"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "library_item_exists",
+       "message": "Projenin kitaplığında “p-bos” kimlikli bir öğe var; başka bir kimlik verin.",
+       "path": "newId"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: öğe yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "update",
+      "id": "p-yok",
+      "patch": {
+       "name": "x"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "library_item_not_found",
+       "message": "“p-yok” kimlikli öğe projenin kitaplığında yok.",
+       "path": "id"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: dışa aktarılacak öğe yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "export",
+      "ids": [
+       "p-agac",
+       "p-yok"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "library_item_not_found",
+       "message": "“p-yok” kimlikli öğe projenin kitaplığında yok.",
+       "path": "ids[1]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: nesnenin sembolü silinmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "remove",
+      "id": "p-alan"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "library_item_in_use",
+       "message": "“p-alan” öğesini 1 nesne, 0 katman ve kitaplığın 0 öğesi kullanıyor; önce onlardan kaldırın.",
+       "path": "id"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: katmanın sembolü silinmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "remove",
+      "id": "p-agac"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "library_item_in_use",
+       "message": "“p-agac” öğesini 0 nesne, 1 katman ve kitaplığın 0 öğesi kullanıyor; önce onlardan kaldırın.",
+       "path": "id"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: sembolün çizimi silinmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "remove",
+      "id": "p-cizim"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "library_item_in_use",
+       "message": "“p-cizim” öğesini 0 nesne, 0 katman ve kitaplığın 1 öğesi kullanıyor; önce onlardan kaldırın.",
+       "path": "id"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: sembolün verileceği katman yok (cad.layers.renderer'ın reddi)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "assign",
+      "id": "p-alan",
+      "layer": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: hazırlandığı sürümden sonra çizim değişmiş",
+   "steps": [
+    {
+     "op": "captureRevision",
+     "as": "once"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "rename",
+      "id": "p-bos",
+      "name": "Bir"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "added": [],
+       "replaced": [
+        "p-bos"
+       ],
+       "skipped": [],
+       "removed": [],
+       "objects": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "rename",
+      "id": "p-bos",
+      "name": "İki",
+      "expectedRevision": "$once"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Bir",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: çizim sembol değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "assign",
+      "id": "p-cizim",
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_symbol",
+       "message": "“Ağaç çizimi” bir sembol değil; nesnelere ve katmanlara yalnız sembol verilir.",
+       "path": "id"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "library": [
+       {
+        "id": "p-cizim",
+        "kind": "asset",
+        "name": "Ağaç çizimi",
+        "path": [
+         "Çizimler"
+        ]
+       },
+       {
+        "id": "p-agac",
+        "kind": "symbol",
+        "name": "Ağaç",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-alan",
+        "kind": "symbol",
+        "name": "Yeşil alan",
+        "path": [
+         "Semboller"
+        ]
+       },
+       {
+        "id": "p-bos",
+        "kind": "symbol",
+        "name": "Boş",
+        "path": [
+         "Semboller"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

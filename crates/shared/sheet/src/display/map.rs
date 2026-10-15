@@ -368,6 +368,7 @@ pub(crate) fn draw(ctx: &Ctx, it: &Item, m: &MapItem, pen: &mut Pen, notes: &mut
             rotation: mf.view_rot,
         },
         layers: m.layers.clone(),
+        layer_overrides: m.layer_overrides.clone(),
         crs: m.crs.clone(),
         extent: mf.extent(),
         clip_feature,

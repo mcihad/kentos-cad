@@ -273,6 +273,9 @@ class BlockEditOperation(_StrEnum):
     - ``remove``: A definition no insert uses deleted (“Blok sil”).
     - ``purge``: Every definition no insert uses deleted (“Blokları temizle”).
     - ``attributes``: Its attribute definitions, the whole list (“Blok değiştir”): every
+    - ``duplicate``: A copy of a definition under a new name (“Blok kopyala”, docs/adr/0314 §3): its objects, base point,
+    - ``export``: Definitions as a `kentos.blocks` file's text, with the definitions they insert (“Blokları dışa aktar”);
+    - ``import``: A `kentos.blocks` file's definitions taken in (“Blokları al”): a name the drawing has is kept, or with
     """
     RENAME = "rename"
     REDEFINE = "redefine"
@@ -280,9 +283,12 @@ class BlockEditOperation(_StrEnum):
     REMOVE = "remove"
     PURGE = "purge"
     ATTRIBUTES = "attributes"
+    DUPLICATE = "duplicate"
+    EXPORT = "export"
+    IMPORT = "import"
 
 
-BlockEditOperationName = Literal["rename", "redefine", "rebase", "remove", "purge", "attributes"]
+BlockEditOperationName = Literal["rename", "redefine", "rebase", "remove", "purge", "attributes", "duplicate", "export", "import"]
 """The names of :class:`BlockEditOperation`, for a plain string."""
 
 
@@ -839,6 +845,24 @@ HatchWayName = Literal["object", "lines"]
 """The names of :class:`HatchWay`, for a plain string."""
 
 
+class ImpactTarget(_StrEnum):
+    """A look's source.
+
+    - ``layer``: A layer by its id: its colour, line type, pattern, weight and transparency.
+    - ``textStyle``: A text style by its id.
+    - ``dimensionStyle``: A dimension style by its id.
+    - ``lineType``: A project line type by its name (docs/adr/0313).
+    """
+    LAYER = "layer"
+    TEXT_STYLE = "textStyle"
+    DIMENSION_STYLE = "dimensionStyle"
+    LINE_TYPE = "lineType"
+
+
+ImpactTargetName = Literal["layer", "textStyle", "dimensionStyle", "lineType"]
+"""The names of :class:`ImpactTarget`, for a plain string."""
+
+
 class InvitationState(_StrEnum):
     """Where an invitation is.
 
@@ -1163,6 +1187,48 @@ class LengthenEnd(_StrEnum):
 
 LengthenEndName = Literal["start", "end"]
 """The names of :class:`LengthenEnd`, for a plain string."""
+
+
+class LibraryConflict(_StrEnum):
+    """What an import does with an id the library has.
+
+    - ``skip``: The library's kept.
+    - ``replace``: The file's in its place.
+    """
+    SKIP = "skip"
+    REPLACE = "replace"
+
+
+LibraryConflictName = Literal["skip", "replace"]
+"""The names of :class:`LibraryConflict`, for a plain string."""
+
+
+class LibraryOperation(_StrEnum):
+    """What `cad.library.edit` does.
+
+    - ``create``: `item` added: its id one the library does not have.
+    - ``update``: `id`'s fields from `patch` (null takes one away); never its id or kind.
+    - ``duplicate``: A copy of `id` under `newId` (absent: a new one), `name` (absent: “… (kopya)”) and `path`.
+    - ``rename``: `id` renamed to `name` (blank: “Adsız”).
+    - ``move``: `id` moved to the category `path`.
+    - ``remove``: `id` taken away when nothing uses it: an object's or a layer's symbol, a template, a symbol drawing it.
+    - ``import``: A `.kstil` file's text (`kstil`) taken in; an id the library has kept, replaced (`conflict: replace`).
+    - ``export``: The items `ids` (absent: every one) with what they draw with, as a `.kstil` file's text; nothing is written.
+    - ``assign``: The symbol `id` given to objects (`uids`) or a layer (`layer`, its single symbol): one undo step.
+    """
+    CREATE = "create"
+    UPDATE = "update"
+    DUPLICATE = "duplicate"
+    RENAME = "rename"
+    MOVE = "move"
+    REMOVE = "remove"
+    IMPORT = "import"
+    EXPORT = "export"
+    ASSIGN = "assign"
+
+
+LibraryOperationName = Literal["create", "update", "duplicate", "rename", "move", "remove", "import", "export", "assign"]
+"""The names of :class:`LibraryOperation`, for a plain string."""
 
 
 class LineLabelMode(_StrEnum):
@@ -3923,7 +3989,10 @@ class BlocksEdit(_Model):
     - `remove`: `block`;
     - `purge`: nothing; a definition only unused ones use goes too;
     - `attributes`: `block`, `attributes` (the whole list, in its order;
-      empty: none).
+      empty: none);
+    - `duplicate`: `block`, `name` (the copy's);
+    - `export`: `blocks` (absent: every definition);
+    - `import`: `library` (a `kentos.blocks` file's text), `replace`.
 
     What would change nothing (the same name, base point, objects or
     attributes; nothing unused to purge) writes nothing: the answer is
@@ -3948,8 +4017,10 @@ class BlocksEdit(_Model):
             in its order (empty: it has none).
         base: `rebase`: the new base point; `redefine`: the base point (absent: kept). Unit: length.
         block: The definition; every operation but `purge`.
+        blocks: `export`: the definitions, by id (absent: every one).
         expected_revision: The document revision the input was prepared against, as decimal text.
         layer_id: `redefine` with `replace`: the layer the insert goes on.
+        library: `import`: a `kentos.blocks` file's text.
         name: `rename`: the new name.
         replace: `redefine`: true, the objects are replaced by an insert of the block.
         uids: `redefine`: the objects it is made of now, by persistent id.
@@ -3958,8 +4029,10 @@ class BlocksEdit(_Model):
     attributes: list[AttributeDefinition] | None | Unset = UNSET
     base: Vec2 | None | Unset = UNSET
     block: str | None | Unset = UNSET
+    blocks: list[str] | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     layer_id: str | None | Unset = UNSET
+    library: str | None | Unset = UNSET
     name: str | None | Unset = UNSET
     replace: bool | None | Unset = UNSET
     uids: list[str] | None | Unset = UNSET
@@ -3973,10 +4046,14 @@ class BlocksEdit(_Model):
             out["base"] = None if self.base is None else _vec2_out(self.base)
         if self.block is not UNSET:
             out["block"] = self.block
+        if self.blocks is not UNSET:
+            out["blocks"] = None if self.blocks is None else list(self.blocks)
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.layer_id is not UNSET:
             out["layerId"] = self.layer_id
+        if self.library is not UNSET:
+            out["library"] = self.library
         if self.name is not UNSET:
             out["name"] = self.name
         if self.replace is not UNSET:
@@ -3992,8 +4069,10 @@ class BlocksEdit(_Model):
             attributes=UNSET if "attributes" not in data else None if data["attributes"] is None else [AttributeDefinition.from_json(e0) for e0 in data["attributes"]],
             base=UNSET if "base" not in data else None if data["base"] is None else Vec2.from_json(data["base"]),
             block=data.get("block", UNSET),
+            blocks=UNSET if "blocks" not in data else None if data["blocks"] is None else list(data["blocks"]),
             expected_revision=data.get("expectedRevision", UNSET),
             layer_id=data.get("layerId", UNSET),
+            library=data.get("library", UNSET),
             name=data.get("name", UNSET),
             replace=data.get("replace", UNSET),
             uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
@@ -4008,12 +4087,14 @@ class BlocksEditPlan(_Model):
         removed: The definitions execute would delete (`remove`, `purge`).
         deleted: `redefine` with `replace`: the objects execute would delete.
         revision: The document revision the plan was made against.
+        added: `duplicate`, `import`: the definitions execute would add.
         insert: `redefine` with `replace`: the insert as execute would write it, `id` 0.
     """
     changed: list[BlockDefinition]
     removed: list[str]
     deleted: list[str]
     revision: str
+    added: list[BlockDefinition] | Unset = UNSET
     insert: Entity | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -4022,6 +4103,8 @@ class BlocksEditPlan(_Model):
         out["removed"] = list(self.removed)
         out["deleted"] = list(self.deleted)
         out["revision"] = self.revision
+        if self.added is not UNSET:
+            out["added"] = [e0.to_json() for e0 in self.added]
         if self.insert is not UNSET:
             out["insert"] = None if self.insert is None else self.insert.to_json()
         return out
@@ -4033,6 +4116,7 @@ class BlocksEditPlan(_Model):
             removed=list(data["removed"]),
             deleted=list(data["deleted"]),
             revision=data["revision"],
+            added=[BlockDefinition.from_json(e0) for e0 in data["added"]] if "added" in data else UNSET,
             insert=UNSET if "insert" not in data else None if data["insert"] is None else Entity.from_json(data["insert"]),
         )
 
@@ -4046,15 +4130,21 @@ class BlocksEdited(_Model):
         deleted: `redefine` with `replace`: the objects deleted, in the input's order.
         revision: The document's revision after the write (the same when nothing was
             written), as decimal text.
+        added: `duplicate`, `import`: the definitions added, in the drawing's order.
         id: Unit: id.
         insert: `redefine` with `replace`: the insert's persistent id and its slot.
+        library: `export`: the file's text.
+        skipped: `import`: the file's names the drawing has, kept as they are.
     """
     changed: list[str]
     removed: list[str]
     deleted: list[str]
     revision: str
+    added: list[str] | Unset = UNSET
     id: int | None | Unset = UNSET
     insert: str | None | Unset = UNSET
+    library: str | None | Unset = UNSET
+    skipped: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -4062,10 +4152,16 @@ class BlocksEdited(_Model):
         out["removed"] = list(self.removed)
         out["deleted"] = list(self.deleted)
         out["revision"] = self.revision
+        if self.added is not UNSET:
+            out["added"] = list(self.added)
         if self.id is not UNSET:
             out["id"] = self.id
         if self.insert is not UNSET:
             out["insert"] = self.insert
+        if self.library is not UNSET:
+            out["library"] = self.library
+        if self.skipped is not UNSET:
+            out["skipped"] = list(self.skipped)
         return out
 
     @classmethod
@@ -4075,8 +4171,11 @@ class BlocksEdited(_Model):
             removed=list(data["removed"]),
             deleted=list(data["deleted"]),
             revision=data["revision"],
+            added=list(data["added"]) if "added" in data else UNSET,
             id=data.get("id", UNSET),
             insert=data.get("insert", UNSET),
+            library=data.get("library", UNSET),
+            skipped=list(data["skipped"]) if "skipped" in data else UNSET,
         )
 
 
@@ -9900,6 +9999,30 @@ class ImageFields(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ImpactOwn(_Model):
+    """Objects keeping one property of their own.
+    Attributes:
+        property: The property, as the contract names it (`color`, `lineType`, `font` …).
+        count: Unit: count.
+    """
+    property: str
+    count: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["property"] = self.property
+        out["count"] = self.count
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImpactOwn:
+        return cls(
+            property=data["property"],
+            count=data["count"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ImportDxf(_Model):
     """Input of `file.import.dxf` v1. Refusals (`CommandError.code`), in order:
     `invalid_file_path` (empty, relative, a directory), `invalid_revision`,
@@ -13023,6 +13146,143 @@ class LeaderEntity(Entity):
             text=data.get("text", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LibraryEdit(_Model):
+    """Input of `cad.library.edit` v1.
+
+    Refusals (`CommandError.code`), in this order: `no_item` (create without `item`), `no_id` (an operation that
+    names an item without `id`), `no_kstil` (import without `kstil`), `no_targets` (assign without `uids` or
+    `layer`), `invalid_library_item` (an item the file's rules refuse: kind, name, path, a symbol's layers, a
+    drawing's format), `invalid_kstil` (a file that does not read, with its issues), `invalid_revision`,
+    `revision_conflict`, `library_item_exists` (create's id, duplicate's `newId`), `library_item_not_found`,
+    `library_item_in_use` (remove), `not_a_symbol` (assign of a drawing or a template), then assign's
+    `cad.entities.set` and `cad.layers.renderer` refusals.
+    Attributes:
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        id: The item named.
+        ids: `export`: the items (absent: every one of the project's).
+        item: `create`: the item as the library keeps it (`id`, `kind`, `name`, `path`, the kind's fields).
+        kstil: `import`: a `.kstil` file's text.
+        layer: `assign`: the layer whose single symbol it becomes.
+        name: `rename`, `duplicate`: the name.
+        new_id: `duplicate`: the copy's id.
+        patch: `update`: the fields to set; null takes one away.
+        path: `move`, `duplicate`: the category path from its top.
+        uids: `assign`: the objects, by persistent id.
+    """
+    operation: LibraryOperation | LibraryOperationName
+    conflict: LibraryConflict | LibraryConflictName = LibraryConflict.SKIP
+    expected_revision: str | None | Unset = UNSET
+    id: str | None | Unset = UNSET
+    ids: list[str] | None | Unset = UNSET
+    item: Any | Unset = UNSET
+    kstil: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    new_id: str | None | Unset = UNSET
+    patch: Any | Unset = UNSET
+    path: list[str] | None | Unset = UNSET
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        out["conflict"] = _enum_out(self.conflict)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.id is not UNSET:
+            out["id"] = self.id
+        if self.ids is not UNSET:
+            out["ids"] = None if self.ids is None else list(self.ids)
+        if self.item is not UNSET:
+            out["item"] = self.item
+        if self.kstil is not UNSET:
+            out["kstil"] = self.kstil
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.new_id is not UNSET:
+            out["newId"] = self.new_id
+        if self.patch is not UNSET:
+            out["patch"] = self.patch
+        if self.path is not UNSET:
+            out["path"] = None if self.path is None else list(self.path)
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LibraryEdit:
+        return cls(
+            operation=_enum_in(LibraryOperation, data["operation"]),
+            conflict=_enum_in(LibraryConflict, data["conflict"]) if "conflict" in data else LibraryConflict.SKIP,
+            expected_revision=data.get("expectedRevision", UNSET),
+            id=data.get("id", UNSET),
+            ids=UNSET if "ids" not in data else None if data["ids"] is None else list(data["ids"]),
+            item=data.get("item", UNSET),
+            kstil=data.get("kstil", UNSET),
+            layer=data.get("layer", UNSET),
+            name=data.get("name", UNSET),
+            new_id=data.get("newId", UNSET),
+            patch=data.get("patch", UNSET),
+            path=UNSET if "path" not in data else None if data["path"] is None else list(data["path"]),
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LibraryEdited(_Model):
+    """Output of `cad.library.edit` v1.
+    Attributes:
+        changed: Whether anything was written.
+        added: Items added (create, duplicate, import), by id.
+        replaced: Items changed (update, rename, move; import's replaced).
+        skipped: Import's items the library kept.
+        objects: `assign`: the objects given the symbol, by persistent id, and the layer.
+        revision: The document's revision afterwards (plan: the one it was made against), as decimal text.
+        kstil: `export`: the `.kstil` file's text.
+    """
+    changed: bool
+    added: list[str]
+    replaced: list[str]
+    skipped: list[str]
+    removed: list[str]
+    objects: list[str]
+    revision: str
+    kstil: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = self.changed
+        out["added"] = list(self.added)
+        out["replaced"] = list(self.replaced)
+        out["skipped"] = list(self.skipped)
+        out["removed"] = list(self.removed)
+        out["objects"] = list(self.objects)
+        out["revision"] = self.revision
+        if self.kstil is not UNSET:
+            out["kstil"] = self.kstil
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LibraryEdited:
+        return cls(
+            changed=data["changed"],
+            added=list(data["added"]),
+            replaced=list(data["replaced"]),
+            skipped=list(data["skipped"]),
+            removed=list(data["removed"]),
+            objects=list(data["objects"]),
+            revision=data["revision"],
+            kstil=data.get("kstil", UNSET),
+            layer=data.get("layer", UNSET),
         )
 
 
@@ -18536,6 +18796,79 @@ class StretchWindow(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class StyleImpact(_Model):
+    """Output of `cad.styles.impact` v1.
+    Attributes:
+        name: The source's name as people see it.
+        follow: The drawing's objects that take at least one of its values. Unit: count.
+        uids: Their persistent ids, at most [`IMPACT_UIDS`], in the drawing's order.
+        own: Of the objects drawn with it, those keeping a value of their own, by property.
+        locked: Of the followers, those on locked layers: a style's change leaves them as they are (a layer's look still
+            reaches them). Unit: count.
+        layers: The layers drawn with it (a line type), by id.
+        blocks: The block definitions with pieces that take it, by id.
+        block_pieces: Unit: count.
+        inserts: The drawing's inserts that show those definitions, nested ones too. Unit: count.
+        layer_states: The layer states that keep a look of their own for it (applying them brings that back), by name.
+        sheet_maps: The sheet maps that draw it otherwise (docs/adr/0314 §1), by item id.
+        external_references: External references holding it: KentOS keeps none, always 0. Unit: count.
+        notes: What it means, Turkish sentences.
+        revision: The document's revision it was read at, as decimal text.
+    """
+    name: str
+    follow: int
+    uids: list[str]
+    own: list[ImpactOwn]
+    locked: int
+    layers: list[str]
+    blocks: list[str]
+    block_pieces: int
+    inserts: int
+    layer_states: list[str]
+    sheet_maps: list[str]
+    external_references: int
+    notes: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["follow"] = self.follow
+        out["uids"] = list(self.uids)
+        out["own"] = [e0.to_json() for e0 in self.own]
+        out["locked"] = self.locked
+        out["layers"] = list(self.layers)
+        out["blocks"] = list(self.blocks)
+        out["blockPieces"] = self.block_pieces
+        out["inserts"] = self.inserts
+        out["layerStates"] = list(self.layer_states)
+        out["sheetMaps"] = list(self.sheet_maps)
+        out["externalReferences"] = self.external_references
+        out["notes"] = list(self.notes)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StyleImpact:
+        return cls(
+            name=data["name"],
+            follow=data["follow"],
+            uids=list(data["uids"]),
+            own=[ImpactOwn.from_json(e0) for e0 in data["own"]],
+            locked=data["locked"],
+            layers=list(data["layers"]),
+            blocks=list(data["blocks"]),
+            block_pieces=data["blockPieces"],
+            inserts=data["inserts"],
+            layer_states=list(data["layerStates"]),
+            sheet_maps=list(data["sheetMaps"]),
+            external_references=data["externalReferences"],
+            notes=list(data["notes"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class StylesEdit(_Model):
     """Input of `cad.styles.edit` v1.
 
@@ -18641,6 +18974,30 @@ class StylesEdited(_Model):
             followed=data["followed"],
             locked=data["locked"],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StylesImpact(_Model):
+    """Input of `cad.styles.impact` v1. Refusals: `empty_name` (no `id`), `layer_not_found`,
+    `style_not_found`, `line_type_not_found`.
+    Attributes:
+        id: The layer's or the style's id, the line type's name.
+    """
+    target: ImpactTarget | ImpactTargetName
+    id: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["target"] = _enum_out(self.target)
+        out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StylesImpact:
+        return cls(
+            target=_enum_in(ImpactTarget, data["target"]),
+            id=data["id"],
         )
 
 
@@ -25209,6 +25566,9 @@ __all__ = [
     "ImageEntity",
     "ImageEntityGeometry",
     "ImageFields",
+    "ImpactOwn",
+    "ImpactTarget",
+    "ImpactTargetName",
     "ImportDxf",
     "ImportedLayer",
     "InfoCard",
@@ -25322,6 +25682,12 @@ __all__ = [
     "LengthenChange",
     "LengthenEnd",
     "LengthenEndName",
+    "LibraryConflict",
+    "LibraryConflictName",
+    "LibraryEdit",
+    "LibraryEdited",
+    "LibraryOperation",
+    "LibraryOperationName",
     "LinLineProblem",
     "LineArrayLayout",
     "LineCreate",
@@ -25591,8 +25957,10 @@ __all__ = [
     "StretchWindow",
     "StyleEditOperation",
     "StyleEditOperationName",
+    "StyleImpact",
     "StylesEdit",
     "StylesEdited",
+    "StylesImpact",
     "SubPlace",
     "SubRef",
     "SurveySettings",

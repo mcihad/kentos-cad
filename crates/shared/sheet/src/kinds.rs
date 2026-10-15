@@ -209,8 +209,44 @@ pub struct LayerList {
 pub enum MapLayers {
     /// The layers visible in the drawing.
     All(Empty),
+    /// A layer state of the project by its name, in this map only (docs/adr/0314 §1): the layers' visibility,
+    /// freezing, printing and, when the state kept them, their looks; the drawing stays as it is.
     Theme(ThemeRef),
     List(LayerList),
+}
+
+/// One layer drawn otherwise in one map (docs/adr/0314 §1; AutoCAD's viewport overrides, VPFREEZE): the model's
+/// layer stays as it is. Absent fields keep the layer's own.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+pub struct LayerOverride {
+    /// The layer's id.
+    pub layer: String,
+    /// Not drawn in this map.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub frozen: bool,
+    /// Printed in this map or not, whatever the layer's own Yazdır.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub plot: Option<bool>,
+    /// A colour (`#RRGGBB` or a theme's name) for the layer's own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub color: Option<String>,
+    /// A built-in line type (`continuous`, `dashed`, `dashdot`, `dotted`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub line_type: Option<String>,
+    /// A project line type by its name (docs/adr/0313).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub line_pattern: Option<String>,
+    /// A line weight on the paper, micrometres.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub line_weight: Option<Um>,
 }
 
 impl Default for MapLayers {
@@ -251,6 +287,9 @@ pub struct MapItem {
     /// A band inside the frame and around the content for the grid's outside labels: the frame holds them (design §3.1).
     #[serde(default)]
     pub label_band: Um,
+    /// Layers drawn otherwise in this map (docs/adr/0314 §1), at most one per layer.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub layer_overrides: Vec<LayerOverride>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -1537,6 +1576,7 @@ pub fn default_kind(type_name: &str) -> Option<ItemKind> {
             overview_frame: overview_frame(),
             clip_to_atlas_feature: false,
             label_band: 0,
+            layer_overrides: Vec::new(),
         }),
         "text" => ItemKind::Text(TextItem {
             content: String::new(),

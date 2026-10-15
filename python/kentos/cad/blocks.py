@@ -234,8 +234,10 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         attributes: Sequence[AttributeDefinition] | None | Unset = UNSET,
         base: Vec2Like | None | Unset = UNSET,
         block: str | None | Unset = UNSET,
+        blocks: Sequence[str] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
+        library: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         replace: bool | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
@@ -263,8 +265,10 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
                 in its order (empty: it has none).
             base: `rebase`: the new base point; `redefine`: the base point (absent: kept). Unit: length.
             block: The definition; every operation but `purge`.
+            blocks: `export`: the definitions, by id (absent: every one).
             expected_revision: The document revision the input was prepared against, as decimal text.
             layer_id: `redefine` with `replace`: the layer the insert goes on.
+            library: `import`: a `kentos.blocks` file's text.
             name: `rename`: the new name.
             replace: `redefine`: true, the objects are replaced by an insert of the block.
             uids: `redefine`: the objects it is made of now, by persistent id.
@@ -285,8 +289,10 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             attributes=_opt(attributes, lambda x: list(x)),
             base=_opt(base, lambda x: Vec2.of(x)),
             block=block,
+            blocks=_opt(blocks, lambda x: list(x)),
             expected_revision=expected_revision,
             layer_id=layer_id,
+            library=library,
             name=name,
             replace=replace,
             uids=_opt(uids, lambda x: list(x)),
@@ -301,8 +307,10 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         attributes: Sequence[AttributeDefinition] | None | Unset = UNSET,
         base: Vec2Like | None | Unset = UNSET,
         block: str | None | Unset = UNSET,
+        blocks: Sequence[str] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
+        library: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         replace: bool | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
@@ -315,8 +323,10 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             attributes=_opt(attributes, lambda x: list(x)),
             base=_opt(base, lambda x: Vec2.of(x)),
             block=block,
+            blocks=_opt(blocks, lambda x: list(x)),
             expected_revision=expected_revision,
             layer_id=layer_id,
+            library=library,
             name=name,
             replace=replace,
             uids=_opt(uids, lambda x: list(x)),
@@ -331,8 +341,10 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         attributes: Sequence[AttributeDefinition] | None | Unset = UNSET,
         base: Vec2Like | None | Unset = UNSET,
         block: str | None | Unset = UNSET,
+        blocks: Sequence[str] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
+        library: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         replace: bool | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
@@ -345,8 +357,10 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             attributes=_opt(attributes, lambda x: list(x)),
             base=_opt(base, lambda x: Vec2.of(x)),
             block=block,
+            blocks=_opt(blocks, lambda x: list(x)),
             expected_revision=expected_revision,
             layer_id=layer_id,
+            library=library,
             name=name,
             replace=replace,
             uids=_opt(uids, lambda x: list(x)),
@@ -361,8 +375,10 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         attributes: Sequence[AttributeDefinition] | None | Unset = UNSET,
         base: Vec2Like | None | Unset = UNSET,
         block: str | None | Unset = UNSET,
+        blocks: Sequence[str] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
+        library: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         replace: bool | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
@@ -380,8 +396,10 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             attributes=_opt(attributes, lambda x: list(x)),
             base=_opt(base, lambda x: Vec2.of(x)),
             block=block,
+            blocks=_opt(blocks, lambda x: list(x)),
             expected_revision=expected_revision,
             layer_id=layer_id,
+            library=library,
             name=name,
             replace=replace,
             uids=_opt(uids, lambda x: list(x)),

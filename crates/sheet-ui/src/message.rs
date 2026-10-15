@@ -275,6 +275,12 @@ pub enum Message {
     MapScaleFromDrawing,
     MapFitView,
     MapCentreFromView,
+    /// The chosen map's own layers (docs/adr/0314 §1): a layer state of the project by its name (none: the
+    /// drawing's), a layer overridden, one override's change, one taken away.
+    MapLayerState(Option<String>),
+    MapOverrideAdd(String),
+    MapOverride(usize, OverrideEdit),
+    MapOverrideRemove(usize),
     /// The chosen coordinate lists (docs/adr/0206 §2, §3): the drawing's
     /// choice now as their source (live), a layer (its id), or the objects
     /// taken by their ids; “Seçimi al” (the host answers with
@@ -314,4 +320,16 @@ pub enum NorthMessage {
     Declination(f64),
     /// “Sapmanın yılı”.
     Year(f64),
+}
+
+/// One field of a map's layer override (docs/adr/0314 §1); none: the layer's own.
+#[derive(Clone, Debug, PartialEq)]
+pub enum OverrideEdit {
+    Frozen(bool),
+    Plot(Option<bool>),
+    Color(Option<String>),
+    /// A built-in line type (`dashed` …) or a project pattern (`pattern:NAME`).
+    Line(Option<String>),
+    /// Micrometres on the paper.
+    Weight(Option<i32>),
 }

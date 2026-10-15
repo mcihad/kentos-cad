@@ -25,6 +25,7 @@ pub const LINE_TYPES_TITLE: &str = "Çizgi tipleri";
 const LOAD: &str = "LIN'den yükle…";
 const EXPORT: &str = "Dışa aktar…";
 const REMOVE: &str = "Sil";
+const IMPACT: &str = "Etkisi…";
 const CLOSE: &str = "Kapat";
 const ROW: f32 = 34.0;
 
@@ -401,6 +402,16 @@ impl App {
             words::secondary(LOAD, Some(msg(Event::Load))),
             words::secondary(EXPORT, (!types.is_empty()).then(|| msg(Event::Export))),
             words::secondary(REMOVE, w.chosen.is_some().then(|| msg(Event::Remove))),
+            // What a change of the chosen type would reach (docs/adr/0314 §4).
+            words::secondary(
+                IMPACT,
+                w.chosen.clone().map(|name| {
+                    Message::StyleImpact(crate::style_impact::Event::Open(
+                        kentos_contracts::ImpactTarget::LineType,
+                        name,
+                    ))
+                }),
+            ),
         ]
         .spacing(8);
         let scale = row![

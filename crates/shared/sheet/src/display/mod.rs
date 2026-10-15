@@ -163,6 +163,9 @@ pub struct MapPrim {
     pub rotation: Mdeg,
     pub view: MapViewPrim,
     pub layers: MapLayers,
+    /// Layers drawn otherwise in this map (docs/adr/0314 §1).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub layer_overrides: Vec<crate::kinds::LayerOverride>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub crs: Option<String>,

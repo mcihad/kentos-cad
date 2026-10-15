@@ -1072,6 +1072,24 @@
       ],
       "operation": "frozen",
       "note": "Araç tıklanan nesnenin katmanını bulur; komut katmanın kimliğini alır (ADR 0311 §1)."
+    },
+    "block.export": {
+      "level": "semantic",
+      "via": [
+        "cad.blocks.edit"
+      ]
+    },
+    "block.import": {
+      "level": "semantic",
+      "via": [
+        "cad.blocks.edit"
+      ]
+    },
+    "layer.impact": {
+      "level": "query",
+      "via": [
+        "cad.styles.impact"
+      ]
     }
   },
   "tools": {

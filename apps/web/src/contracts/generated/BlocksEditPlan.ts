@@ -12,6 +12,10 @@ export type BlocksEditPlan = {
  */
 changed: Array<BlockDefinition>, 
 /**
+ * `duplicate`, `import`: the definitions execute would add.
+ */
+added?: Array<BlockDefinition>, 
+/**
  * The definitions execute would delete (`remove`, `purge`).
  */
 removed: Array<BlockId>, 

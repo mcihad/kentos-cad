@@ -654,6 +654,8 @@ const ENTRIES: &[Entry] = &[
                 "image_in_block",
                 "raster_in_block",
                 "block_refused",
+                "no_library",
+                "invalid_library",
             ],
             REVISION,
         ],
@@ -1350,6 +1352,40 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.library.edit",
+        refusals: &[
+            &[
+                "no_item",
+                "no_id",
+                "no_kstil",
+                "no_targets",
+                "invalid_library_item",
+                "invalid_kstil",
+            ],
+            REVISION,
+            &[
+                "library_item_exists",
+                "library_item_not_found",
+                "library_item_in_use",
+                "not_a_symbol",
+                "layer_not_found",
+            ],
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.styles.impact",
+        refusals: &[&[
+            "empty_name",
+            "layer_not_found",
+            "style_not_found",
+            "line_type_not_found",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.standards.check",
         refusals: &[&["no_standard", "standard_not_found", "invalid_standard"]],
         warnings: &[],
@@ -1457,6 +1493,9 @@ const ENTRIES: &[Entry] = &[
         refusals: &[
             &[
                 "no_operations",
+                "bad_color",
+                "bad_value",
+                "out_of_range",
                 "invalid_operation",
                 "book_unreadable",
                 "unknown_sheet",

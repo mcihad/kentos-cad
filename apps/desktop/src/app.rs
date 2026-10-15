@@ -172,6 +172,8 @@ pub enum Dialog {
     DrawingStandard,
     /// Çizgi tipleri (line_types_window.rs, docs/adr/0313 §7); the window is `App::line_types_window`.
     LineTypes,
+    /// Değişikliğin etkisi (style_impact.rs, docs/adr/0314 §4); the window is `App::style_impact`.
+    StyleImpact,
     /// Alanlar (layer_fields.rs, docs/adr/0199 §3); the window is `App::layer_fields`.
     LayerFields,
     /// Katman süzgeci (layer_filters.rs, docs/adr/0211 §4); the window is `App::layer_filter`.
@@ -420,6 +422,8 @@ pub enum Message {
     DrawingStandard(crate::drawing_standard::Event),
     /// Çizgi tipleri's window (line_types_window.rs, docs/adr/0313 §7).
     LineTypes(crate::line_types_window::Event),
+    /// Değişikliğin etkisi (style_impact.rs, docs/adr/0314 §4).
+    StyleImpact(crate::style_impact::Event),
     /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
     LayerFilter(crate::layer_filters::Event),
     /// An object's attachments: their windows, the viewer and the photos decoded (attachments.rs).
@@ -830,6 +834,8 @@ pub struct App {
     pub(crate) drawing_standard: Option<crate::drawing_standard::Window>,
     /// Çizgi tipleri's window (line_types_window.rs, docs/adr/0313 §7).
     pub(crate) line_types_window: Option<crate::line_types_window::Window>,
+    /// Değişikliğin etkisi's window (style_impact.rs, docs/adr/0314 §4).
+    pub(crate) style_impact: Option<crate::style_impact::Window>,
     /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
     pub(crate) layer_filter: Option<crate::layer_filters::Window>,
     /// Bilgi's card: the object it shows and the drawing's point it was clicked at (info_card.rs).
@@ -1127,6 +1133,7 @@ impl App {
             layer_translate: None,
             drawing_standard: None,
             line_types_window: None,
+            style_impact: None,
             layer_filter: None,
             info_card: None,
             photos: crate::photo_view::Photos::default(),
@@ -1648,6 +1655,7 @@ impl App {
             Message::LayerTranslate(event) => return self.layer_translate_event(event),
             Message::DrawingStandard(event) => return self.drawing_standard_event(event),
             Message::LineTypes(event) => return self.line_types_event(event),
+            Message::StyleImpact(event) => return self.style_impact_event(event),
             Message::LayerFilter(event) => return self.layer_filter_event(event),
             Message::Attachment(event) => return self.attachment_event(event),
             Message::InfoCard(event) => return self.info_card_event(event),
@@ -2451,6 +2459,22 @@ impl App {
             // The blocks (blocks_panel.rs, docs/adr/0144).
             "block.panel" => self.show_blocks_panel(),
             "block.purge" => self.purge_blocks(),
+            // Blokları dışa aktar and Blokları al (blocks_files.rs, docs/adr/0314 §3).
+            "block.export" => return self.blocks_export(None),
+            // Değişikliğin etkisi for the active layer (style_impact.rs, docs/adr/0314 §4).
+            "layer.impact" => {
+                if let Some(active) = self
+                    .document
+                    .as_ref()
+                    .map(|d| d.model.layers().active().to_owned())
+                {
+                    return self.style_impact_event(crate::style_impact::Event::Open(
+                        kentos_contracts::ImpactTarget::Layer,
+                        active,
+                    ));
+                }
+            }
+            "block.import" => return self.blocks_import(),
             "block.attributes" => self.open_selected_block_attributes(),
             // Bul ve değiştir (find_replace.rs, docs/adr/0145 §6).
             "text.findReplace" => self.open_find_replace(),
@@ -2612,7 +2636,8 @@ impl App {
             "server.check" => !self.server_checking,
             id if id.starts_with("cloud.") => self.cloud_available(id),
             "layer.new" | "layer.newGroup" => self.tree_locked().is_none(),
-            "block.purge" => doc.is_some_and(|d| !d.blocks().is_empty()),
+            "block.purge" | "block.export" => doc.is_some_and(|d| !d.blocks().is_empty()),
+            "block.import" | "layer.impact" => doc.is_some(),
             "block.attributes" => doc.is_some_and(|d| {
                 kentos_interaction::blocks::selected_block(d, &self.selection).is_some()
             }),

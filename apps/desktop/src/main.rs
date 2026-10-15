@@ -33,6 +33,7 @@ mod attribute_values;
 mod audit_scenes;
 mod block_attributes;
 mod blocks;
+mod blocks_files;
 mod blocks_panel;
 mod bottom;
 mod calc;
@@ -96,6 +97,8 @@ mod icon_tour;
 mod icons;
 #[cfg(test)]
 mod image_scenes;
+#[cfg(test)]
+mod impact_scenes;
 #[cfg(test)]
 mod imperial_scenes;
 mod info_card;
@@ -225,6 +228,7 @@ mod settings_view;
 mod standard_scenes;
 #[cfg(test)]
 mod stretch_scenes;
+mod style_impact;
 mod sub_object;
 #[cfg(test)]
 mod subref_scenes;

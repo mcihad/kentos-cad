@@ -425,6 +425,38 @@
    "tests": 2
   },
   {
+   "id": "block.export",
+   "kind": "command",
+   "title": "Blokları dışa aktar",
+   "level": "semantic",
+   "via": [
+    "cad.blocks.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.blocks.edit",
+   "mcp": "cad.blocks.edit",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "block.import",
+   "kind": "command",
+   "title": "Blokları al",
+   "level": "semantic",
+   "via": [
+    "cad.blocks.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.blocks.edit",
+   "mcp": "cad.blocks.edit",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "block.insertFile",
    "kind": "command",
    "title": "Dosyadan blok ekle…",
@@ -2557,6 +2589,22 @@
    "scope": "gis",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "layer.impact",
+   "kind": "command",
+   "title": "Değişikliğin etkisi",
+   "level": "query",
+   "via": [
+    "cad.styles.impact"
+   ],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": null,
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "layer.info",

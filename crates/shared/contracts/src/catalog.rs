@@ -41,6 +41,10 @@ pub struct CommandCatalog {
     /// every command's input, output and plan names one.
     #[serde(default)]
     pub units: Vec<CatalogUnit>,
+    /// What a change of looks and styles does: its undo, whether it makes the drawing unsaved, the project's
+    /// parts it writes and how the cloud carries them (docs/adr/0314 §2).
+    #[serde(default)]
+    pub effects: Vec<crate::change_effects::CatalogEffect>,
 }
 
 /// A unit the schemas' `x-unit` names and what it means.
@@ -3481,6 +3485,70 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Projenin stil kitaplığı (docs/adr/0314 §3), held together by fixtures/commands/v1/cad.library.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_LIBRARY_EDIT.into(),
+            version: crate::CAD_LIBRARY_EDIT_VERSION,
+            title: "Stil kitaplığı".into(),
+            summary: "Projenin stil kitaplığını değiştirir (semboller, çizimler ve resimler, nesne şablonları; sistemin ve kullanıcının kitaplıkları ev sahibinindir): create bir öğe ekler (item: id, kind, name, path ve türünün alanları; .kstil dosyasının kurallarıyla, çizimler temizlenir), \
+                      update id'nin alanlarını patch'le değiştirir (null kaldırır), duplicate kopyasını newId (yoksa yeni), name ve path ile ekler, rename adını, move kategorisini değiştirir, remove bir nesne, katman, şablon ya da sembol kullanmıyorsa siler (library_item_in_use). \
+                      import bir .kstil dosyasının metnini (kstil) alır: kitaplıkta olan kimlik kalır (conflict: skip) ya da değişir (replace); export öğeleri (ids, yoksa hepsi) çizdikleriyle .kstil metni olarak kstil'de verir, çizimi değiştirmez. \
+                      Kitaplık geri alma adımı değildir, çizimi kirli yapar. assign sembolü nesnelere (uids; cad.entities.set'in “Sembol ata” adımı) ya da bir katmana (layer; tek sembollü işleyicinin sembolün türündeki yuvası, cad.layers.renderer'ın “Katman stili” adımı) verir. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec!["stylelibrary".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LibraryEdit>(),
+            output: schema::<crate::LibraryEdited>(),
+            plan: Some(schema::<crate::LibraryEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Projenin bir sembolünü kopyala".into(),
+                    input: json!({ "operation": "duplicate", "id": "p-agac", "newId": "p-agac-2", "name": "Ağaç (büyük)" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Sembolü seçili nesnelere ver".into(),
+                    input: json!({ "operation": "assign", "id": "p-agac", "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"] }),
+                    output: None,
+                },
+            ],
+        },
+        // Stil değişikliğinin etkisi (docs/adr/0314 §4), held together by fixtures/commands/v1/cad.styles.impact.json.
+        CommandDescriptor {
+            id: crate::CAD_STYLES_IMPACT.into(),
+            version: crate::CAD_STYLES_IMPACT_VERSION,
+            title: "Stil değişikliğinin etkisi".into(),
+            summary: "Bir katmanın görünüşü, bir yazı ya da ölçü stili ya da bir çizgi tipi değişince neye ulaşacağını söyler (target: layer, textStyle, dimensionStyle, lineType; id katmanın ya da stilin kimliği, çizgi tipinin adı): \
+                      değişikliği alan nesneler (follow, ilk 1000'inin kimlikleri uids'te), kendi değerini koruyanlar özelliklerine göre (own: color, lineType, lineWeight, transparency; yazıda font, bold, italic, oblique, widthFactor, height; ölçüde görünüşün alanları), \
+                      kilitli katmanda kalanlar (stil değişince olduğu gibi kalır; katmanın görünüşü onlara da yansır), deseni kullanan katmanlar, onu izleyen blok parçaları ve onları gösteren yerleştirmeler (iç içe olanlar da), \
+                      kendi görünüşünü saklayan katman durumları, onu geçersiz kılan pafta haritaları ve dış başvurular (KentOS dış başvuru taşımaz: hep 0); notes Türkçe özettir. Çizimi değiştirmez; plan aynı cevabı verir."
+                .into(),
+            aliases: vec!["styleimpact".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::StylesImpact>(),
+            output: schema::<crate::StyleImpact>(),
+            plan: Some(schema::<crate::StyleImpact>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Duvar katmanının rengi değişirse neye ulaşır".into(),
+                input: json!({ "target": "layer", "id": "duvar" }),
+                output: None,
+            }],
+        },
         // Standardı denetle (docs/adr/0312 §2), held together by fixtures/commands/v1/cad.standards.check.json.
         CommandDescriptor {
             id: crate::CAD_STANDARDS_CHECK.into(),
@@ -3896,6 +3964,10 @@ pub fn catalog() -> CommandCatalog {
                 unit: (*unit).into(),
                 meaning: (*meaning).into(),
             })
+            .collect(),
+        effects: crate::change_effects::CHANGE_EFFECTS
+            .iter()
+            .map(crate::change_effects::CatalogEffect::from)
             .collect(),
     }
 }
@@ -4679,6 +4751,12 @@ mod tests {
                     crate::CAD_LINE_TYPES_EDIT => {
                         serde_json::from_value::<crate::LineTypesEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_LIBRARY_EDIT => {
+                        serde_json::from_value::<crate::LibraryEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_STYLES_IMPACT => {
+                        serde_json::from_value::<crate::StylesImpact>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_STANDARDS_APPLY => {
                         serde_json::from_value::<crate::StandardsApply>(e.input.clone()).map(|_| ())
                     }
@@ -4929,6 +5007,14 @@ mod tests {
                         }
                         crate::CAD_LINE_TYPES_EDIT => {
                             serde_json::from_value::<crate::LineTypesEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LIBRARY_EDIT => {
+                            serde_json::from_value::<crate::LibraryEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_STYLES_IMPACT => {
+                            serde_json::from_value::<crate::StyleImpact>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_STANDARDS_APPLY => {

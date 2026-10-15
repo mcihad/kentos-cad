@@ -4,4 +4,5 @@
 mod files;
 
 mod book;
+mod map_layers;
 mod units;

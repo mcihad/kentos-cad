@@ -186,6 +186,14 @@ def item(sid: str, iid: str, name: str, scale: int) -> dict:
     return it
 
 
+# A map's own layers (docs/adr/0314 §1): a layer state of the project by its name, the drawing's layer frozen, not
+# printed, drawn red, dashed in a pattern, 0.5 mm thick, in this map only.
+OWN = {"layers": {"type": "theme", "name": "Sunum"},
+       "layerOverrides": [{"layer": "cizim", "plot": True, "color": "#E5484D", "lineType": "dashed",
+                           "linePattern": "EKSEN", "lineWeight": 500}]}
+OVERRIDE_AT = "ops[0].sheets[0].items[0].kind.layerOverrides[0]"
+
+
 def more_cases() -> list:
     """What the operations do to a book that has sheets: the inverse is the core's own undo of each."""
     add_plan = {"op": "execute", "input": {"ops": [{"op": "addSheet", "sheet": PLAN}]},
@@ -242,6 +250,48 @@ def more_cases() -> list:
             "op": "execute", "input": {"ops": [{"id": "kat-plani"}]},
             "result": failed("invalid_operation", invalid_operation(1, "missing field `op`"), "ops[0]"),
             "expect": UNCHANGED,
+        }]},
+        {"name": "Haritanın kendi katmanları: katman durumu ve geçersiz kılmalar yazılır; tersi eski hâlini verir (ADR 0314 §1)",
+         "steps": [add_plan, {
+             "op": "execute", "input": {"ops": [{"op": "setItemProps", "id": "kat-plani-harita", "patch": {"kind": OWN}}]},
+             "result": done("Değiştir: Harita", [{"id": "kat-plani-harita", "op": "setItemProps",
+                                                   "patch": {"kind": {"layerOverrides": None, "layers": {"type": "all"}}}}],
+                            [listed(PLAN)]),
+             "expect": {"sheets": [listed(PLAN)], "canUndo": False},
+         }]},
+        {"name": "Geçersiz kılınan renk renk değil: çekirdeğin yolu ve sözü", "steps": [add_plan, {
+            "op": "execute", "input": {"ops": [{"op": "setItemProps", "id": "kat-plani-harita",
+                                                "patch": {"kind": {"layerOverrides": [{"layer": "cizim", "color": "kırmızı"}]}}}]},
+            "result": failed("bad_color", "“kırmızı” bir renk değil: #rrggbb ya da tema adı (fg, fg-dim, ink, paper) yazın.",
+                             f"{OVERRIDE_AT}.color"),
+            "expect": {"sheets": [listed(PLAN)], "revision": "same"},
+        }]},
+        {"name": "Bir katman bir haritada bir kez geçersiz kılınır", "steps": [add_plan, {
+            "op": "execute", "input": {"ops": [{"op": "setItemProps", "id": "kat-plani-harita",
+                                                "patch": {"kind": {"layerOverrides": [{"layer": "cizim", "frozen": True},
+                                                                                      {"layer": "cizim", "plot": False}]}}}]},
+            "result": failed("bad_value", "“cizim” katmanı bu haritada bir kez geçersiz kılınır.",
+                             "ops[0].sheets[0].items[0].kind.layerOverrides[1].layer"),
+            "expect": {"sheets": [listed(PLAN)], "revision": "same"},
+        }]},
+        {"name": "Geçersiz kılınan kalınlık 20 mm'den kalın olamaz", "steps": [add_plan, {
+            "op": "execute", "input": {"ops": [{"op": "setItemProps", "id": "kat-plani-harita",
+                                                "patch": {"kind": {"layerOverrides": [{"layer": "cizim", "lineWeight": 25000}]}}}]},
+            "result": failed("out_of_range", "Çizgi kalınlığı 0 ile 20 mm arasında olmalı.", f"{OVERRIDE_AT}.lineWeight"),
+            "expect": {"sheets": [listed(PLAN)], "revision": "same"},
+        }]},
+        {"name": "Geçersiz kılınan çizgi tipi yerleşik bir tip olmalı; desen adıyla linePattern'dedir", "steps": [add_plan, {
+            "op": "execute", "input": {"ops": [{"op": "setItemProps", "id": "kat-plani-harita",
+                                                "patch": {"kind": {"layerOverrides": [{"layer": "cizim", "lineType": "EKSEN"}]}}}]},
+            "result": failed("bad_value", "“EKSEN” bir çizgi tipi değil: continuous, dashed, dashdot ya da dotted.",
+                             f"{OVERRIDE_AT}.lineType"),
+            "expect": {"sheets": [listed(PLAN)], "revision": "same"},
+        }]},
+        {"name": "Haritanın katman durumunun adı boş olamaz", "steps": [add_plan, {
+            "op": "execute", "input": {"ops": [{"op": "setItemProps", "id": "kat-plani-harita",
+                                                "patch": {"kind": {"layers": {"type": "theme", "name": "  "}}}}]},
+            "result": failed("bad_value", "Haritanın katman durumunun adı boş olamaz.", "ops[0].sheets[0].items[0].kind.layers.name"),
+            "expect": {"sheets": [listed(PLAN)], "revision": "same"},
         }]},
         {"name": "Gizlenen öğe kitapta yok: çekirdeğin reddi yoluyla", "steps": [add_plan, {
             "op": "execute", "input": {"ops": [{"op": "hide", "ids": ["yok"], "value": True}]},

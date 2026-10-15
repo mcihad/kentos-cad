@@ -65,6 +65,8 @@ members = [
     "crates/native/cloud",
     # The desktop's style engine page (docs/adr/0090): the style library and a layer's way to the GPU.
     "crates/native/style",
+    # The style library and its .kstil file (docs/adr/0314 §3), under the product commands and the style page.
+    "crates/native/style-library",
     "crates/native/plot",
     # Server-only libraries: PostgreSQL/PostGIS and the use cases.
     "crates/server/postgres",
@@ -114,6 +116,7 @@ default-members = [
     "crates/native/mcp",
     "crates/native/cloud",
     "crates/native/style",
+    "crates/native/style-library",
     "crates/server/postgres",
     "crates/server/application",
     "apps/api",

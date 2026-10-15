@@ -374,3 +374,60 @@ fn rename_screens() {
         }
     }
 }
+
+/// A map's own layers (docs/adr/0314 §1): the map shows the project's “Sunum” layer state and draws two layers
+/// otherwise (Duvar red and 0.50 mm, Aks frozen); the inspector's Katman durumu and the override cards;
+/// `.run/shots/sheet-desktop/*-0314-*`:
+///
+/// ```text
+/// cargo test -p kentos-sheet-ui --test screens adr_0314 -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn adr_0314_screens() {
+    use kentos_sheet_ui::OverrideEdit;
+    let fonts =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../apps/desktop/assets/fonts/drawing");
+    assert!(kentos_sheet_ui::fonts::load_dir(&fonts) > 0);
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = out_dir();
+    for (mode, tag) in [(Mode::Light, "pafta"), (Mode::Dark, "grafit")] {
+        let size = Size::new(1440.0, 1300.0);
+        let mut d = with("sys:genel-a3-yatay", None, None);
+        d.set_context(Context {
+            layers: vec![
+                ("duvar".into(), "Duvar".into()),
+                ("aks".into(), "Aks".into()),
+                ("mobilya".into(), "Mobilya".into()),
+            ],
+            layer_states: vec!["Sunum".into(), "Uygulama".into()],
+            line_types: vec!["EKSEN".into(), "SINIR".into()],
+            ..context(None)
+        });
+        let map = d
+            .open_sheet()
+            .unwrap()
+            .items
+            .iter()
+            .find(|i| i.name == "Harita")
+            .map(|i| i.id.clone())
+            .expect("the map");
+        d.update(Message::Select(vec![map]));
+        d.update(Message::MapLayerState(Some("Sunum".into())));
+        d.update(Message::MapOverrideAdd("duvar".into()));
+        d.update(Message::MapOverride(
+            0,
+            OverrideEdit::Color(Some("#E5484D".into())),
+        ));
+        d.update(Message::MapOverride(0, OverrideEdit::Weight(Some(500))));
+        d.update(Message::MapOverride(
+            0,
+            OverrideEdit::Line(Some("pattern:SINIR".into())),
+        ));
+        d.update(Message::MapOverrideAdd("aks".into()));
+        d.update(Message::MapOverride(1, OverrideEdit::Frozen(true)));
+        d.update(Message::MapOverride(1, OverrideEdit::Plot(Some(false))));
+        let mut w = Window { d, mode };
+        shot(&mut w, size, &out, &format!("{tag}-0314-harita-katmanlari"));
+    }
+}

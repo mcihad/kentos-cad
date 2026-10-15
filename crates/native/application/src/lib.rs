@@ -47,6 +47,7 @@ pub mod audit_cmd;
 pub mod blocks;
 pub mod blocks_define;
 pub mod blocks_edit;
+pub mod blocks_library;
 pub mod break_join;
 pub mod call;
 pub mod changeset;
@@ -77,7 +78,9 @@ pub mod jobs;
 pub mod label_texts;
 pub mod labels_pin;
 pub mod lengthen;
+pub mod library_edit;
 pub mod reverse;
+pub mod styles_impact;
 pub use audit_cmd::drawing_audit;
 pub use break_join::{entities_break, entities_join};
 pub use cleanup_cmd::entities_cleanup;
@@ -460,6 +463,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_LINE_TYPES_EDIT,
         kentos_contracts::CAD_LINE_TYPES_EDIT_VERSION,
+    ),
+    // The project's style library and a change's reach ([`library_edit`], [`styles_impact`], docs/adr/0314).
+    (
+        kentos_contracts::CAD_LIBRARY_EDIT,
+        kentos_contracts::CAD_LIBRARY_EDIT_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_STYLES_IMPACT,
+        kentos_contracts::CAD_STYLES_IMPACT_VERSION,
     ),
     (
         kentos_contracts::CAD_STYLES_EDIT,

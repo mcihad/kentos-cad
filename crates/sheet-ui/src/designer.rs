@@ -117,6 +117,10 @@ pub struct Context {
     /// The drawing's layers (id, name), for a coordinate list's source
     /// (docs/adr/0206 §2).
     pub layers: Vec<(String, String)>,
+    /// The project's layer states by name and its line types with patterns, for a map's own layers
+    /// (docs/adr/0314 §1).
+    pub layer_states: Vec<String>,
+    pub line_types: Vec<String>,
 }
 
 /// One step of the undo or redo stack: its name and the operations that

@@ -80,6 +80,11 @@ pub enum Event {
     Attributes(BlockId),
     SelectInserts(BlockId),
     Remove(BlockId),
+    /// Kopyasını oluştur, Dışa aktar… and Blokları al…'s file (blocks_files.rs, docs/adr/0314 §3).
+    Duplicate(BlockId),
+    Export(Option<BlockId>),
+    Exported(Option<BlockId>, Option<std::path::PathBuf>),
+    Imported(Option<(String, String)>),
 }
 
 fn msg(event: Event) -> Message {
@@ -186,6 +191,10 @@ impl App {
                 }
             }
             Event::Remove(id) => self.blocks_remove(id),
+            Event::Duplicate(id) => self.blocks_duplicate(id),
+            Event::Export(id) => return self.blocks_export(id),
+            Event::Exported(id, path) => self.blocks_exported(id, path),
+            Event::Imported(read) => self.blocks_imported(read),
         }
         Task::none()
     }
@@ -434,6 +443,8 @@ impl App {
                 search,
                 self.blocks_button("tool.blockDefine"),
                 self.blocks_button("tool.blockInsert"),
+                self.blocks_button("block.import"),
+                self.blocks_button("block.export"),
                 self.blocks_button("block.purge"),
             ]
             .spacing(2)
@@ -554,7 +565,11 @@ impl App {
             .icon(crate::icons::from_web(Some("edit")))
             .shortcut("F2")
             .item("Öznitelikler…", msg(Event::Attributes(id)))
-            .icon(crate::icons::from_web(Some("blockAttributes")));
+            .icon(crate::icons::from_web(Some("blockAttributes")))
+            .item("Kopyasını oluştur", msg(Event::Duplicate(id)))
+            .icon(crate::icons::from_web(Some("copy")))
+            .item("Dışa aktar…", msg(Event::Export(Some(id))))
+            .icon(crate::icons::from_web(Some("export")));
         let attributes = model.block(id).map_or(0, |b| b.attributes.len());
         if attributes > 0 {
             menu = menu.hint(attributes.to_string());
