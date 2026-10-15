@@ -81,7 +81,14 @@ impl Break {
             let doc = &*cx.doc;
             cx.selection.retain(|s| doc.get(s).is_some());
             cx.selection.set_hover(None);
-            let text = if dist(p1, p2) < 1e-9 {
+            // A multi-part line stays one object: its parts are said (docs/adr/0307).
+            let text = if let Some(n) = crate::edge::line_parts(cx.doc, slot) {
+                if dist(p1, p2) < 1e-9 {
+                    format!("Parça bölündü: çizgi {n} parçalı.")
+                } else {
+                    format!("Aradaki kısım silindi: çizgi {n} parçalı.")
+                }
+            } else if dist(p1, p2) < 1e-9 {
                 format!(
                     "Nesne bölündü: {} parça.",
                     out.changed.len() + out.created.len()

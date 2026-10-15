@@ -55,6 +55,42 @@ pub fn one_area(areas: &[Area]) -> Option<Entity> {
     join_parts(&shapes).map(Entity::new)
 }
 
+/// The part of `s` (0: its own fields) nearest `at`, as `area_parts` lists them: the part a pick
+/// on a multi-part object means (docs/adr/0307); the first of equally near ones.
+pub fn part_near(s: &Shape, at: crate::vec2::Vec2) -> usize {
+    let mut best = (0, f64::INFINITY);
+    for (k, part) in area_parts(s).iter().enumerate() {
+        let d = crate::ops::offset::through_distance(part, at);
+        if d < best.1 {
+            best = (k, d);
+        }
+    }
+    best.0
+}
+
+/// Pieces of a multi-part polyline's parts as one polyline again, in order (docs/adr/0307): a
+/// two-vertex piece a cut gives as a line stays a polyline's part. None of none, or of an area.
+pub fn polyline_of_pieces(pieces: &[Shape]) -> Option<Shape> {
+    let lines: Vec<Shape> = pieces
+        .iter()
+        .map(|p| match p {
+            Shape::Line { a, b } => Shape::Polyline {
+                pts: vec![*a, *b],
+                bulges: None,
+                holes: None,
+                parts: None,
+                closed: false,
+                widths: None,
+            },
+            other => other.clone(),
+        })
+        .collect();
+    match join_parts(&lines)? {
+        joined @ Shape::Polyline { .. } => Some(joined),
+        _ => None,
+    }
+}
+
 pub(crate) static OPS: &[Op] = &[
     op!("gripPart", |e: Entity, index: usize| grip_part_of(
         &e.shape, index
@@ -79,6 +115,46 @@ mod tests {
             Vec2::new(x + side, side),
             Vec2::new(x, side),
         ]
+    }
+
+    fn line(pts: &[(f64, f64)]) -> Shape {
+        Shape::Polyline {
+            pts: pts.iter().map(|&(x, y)| Vec2::new(x, y)).collect(),
+            bulges: None,
+            holes: None,
+            parts: None,
+            closed: false,
+            widths: None,
+        }
+    }
+
+    #[test]
+    fn a_pick_means_the_part_nearest_it_and_pieces_join_back_into_one_line() {
+        let three = polyline_of_pieces(&[
+            line(&[(0.0, 0.0), (10.0, 0.0)]),
+            line(&[(0.0, 5.0), (10.0, 5.0)]),
+            line(&[(0.0, 12.0), (4.0, 12.0)]),
+        ])
+        .expect("one line");
+        assert!(crate::entity::is_multi_part(&three));
+        assert_eq!(part_near(&three, Vec2::new(8.0, 1.0)), 0);
+        assert_eq!(part_near(&three, Vec2::new(8.0, 4.0)), 1);
+        assert_eq!(part_near(&three, Vec2::new(9.0, 13.0)), 2);
+        // Equally near: the first.
+        assert_eq!(part_near(&three, Vec2::new(5.0, 2.5)), 0);
+        // A two-vertex piece a cut gives as a line stays a part.
+        let joined = polyline_of_pieces(&[
+            Shape::Line {
+                a: Vec2::new(0.0, 0.0),
+                b: Vec2::new(4.0, 0.0),
+            },
+            line(&[(6.0, 0.0), (10.0, 0.0)]),
+        ])
+        .expect("one line");
+        assert_eq!(area_parts(&joined).len(), 2);
+        // Areas are not a line's pieces.
+        assert!(polyline_of_pieces(&[two()]).is_none());
+        assert!(polyline_of_pieces(&[]).is_none());
     }
 
     /// A 10 m square with a 2 m hole, and a 4 m square part 20 m east.

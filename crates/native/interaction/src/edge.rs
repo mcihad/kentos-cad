@@ -182,3 +182,16 @@ impl Outline {
         self
     }
 }
+
+/// How many parts the polyline at `slot` has when it has more than one (docs/adr/0174, 0307): what Kır and Buda say
+/// of a multi-part line, which stays one object.
+pub fn line_parts(doc: &kentos_domain::Document, slot: kentos_domain::Slot) -> Option<usize> {
+    match doc.get(slot)? {
+        kentos_contracts::Entity::Polyline(p) => p
+            .parts
+            .as_ref()
+            .filter(|parts| !parts.is_empty())
+            .map(|parts| parts.len() + 1),
+        _ => None,
+    }
+}

@@ -170,6 +170,8 @@ Liste:
   uyarıları komutun sözleri; paralel iki doğruya TTY, saat yönünde verilen yaydan Devam; araç durumları
   `fixtures/curve-methods/v1/tools.json`. Web'in donmuş çağrı kayıtları eski `arcStartCenterEnd` ve `arcStartCenterAngle`'ı (tam tur)
   tutar; geri dönüşte komutun kuralına getirilir.
+- [ ] `CAD-EDIT-21` (ADR 0307, 15 Ekim): web'de gerekenler: TS işleyicilerinde Kır, Buda ve Uzat çok parçalı çizgide tıklanan parçada
+  (parçalar aynı nesnede; ortak durumlar `cad.entities.{break,trim,extend}.parts.json`).
 - [ ] `CAD-EDIT-20` (ADR 0306, 15 Ekim): web'de gerekenler: `cad.drawing.audit`'in TS işleyicisi (sözleşme türleri `DrawingAudit`,
   `AuditPurge`, `AuditCode`, `AuditFinding`, `ResourceKind`, `UnusedResource`, `DrawingAudited` üretildi; ortak durumlar
   `cad.drawing.audit.json`), belgenin denetim kuralları (`kentos_domain::audit`'in karşılığı) ve Denetle aracı (`tool.audit`, üç seçenek).

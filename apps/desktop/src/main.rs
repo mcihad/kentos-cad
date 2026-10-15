@@ -142,6 +142,8 @@ mod method_scenes;
 #[cfg(test)]
 mod mirror_scenes;
 mod modes;
+#[cfg(test)]
+mod multipart_scenes;
 mod navigation;
 mod navigation_cards;
 #[cfg(test)]

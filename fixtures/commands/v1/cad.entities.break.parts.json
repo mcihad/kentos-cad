@@ -1,0 +1,2399 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.entities.break",
+ "commandVersion": 1,
+ "title": "Kır: çok parçalı çizgi",
+ "note": "ADR 0307. Bağımsız başvuru: scripts/fixtures/multipart_edit_cases.py (eksenlere paralel kenarlar, kesirlerle).",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Çok parçalı çizgi",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 100,
+   "workspace": "cad"
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "sinir",
+    "name": "Sınır",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "polyline",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {
+     "Ad": "Hat 1"
+    },
+    "color": "#30A46C",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     }
+    ],
+    "zs": [
+     10,
+     20
+    ],
+    "ms": [
+     0,
+     10
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 0,
+        "y": 5
+       },
+       {
+        "x": 10,
+        "y": 5
+       },
+       {
+        "x": 10,
+        "y": 9
+       }
+      ],
+      "zs": [
+       0,
+       10,
+       14
+      ],
+      "ms": [
+       0,
+       10,
+       14
+      ]
+     },
+     {
+      "pts": [
+       {
+        "x": 0,
+        "y": 12
+       },
+       {
+        "x": 4,
+        "y": 12
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 2,
+    "layerId": "sinir",
+    "attrs": {},
+    "a": {
+     "x": 6,
+     "y": -2
+    },
+    "b": {
+     "x": 6,
+     "y": 14
+    }
+   },
+   {
+    "kind": "line",
+    "id": 3,
+    "layerId": "sinir",
+    "attrs": {},
+    "a": {
+     "x": -2,
+     "y": 7
+    },
+    "b": {
+     "x": 12,
+     "y": 7
+    }
+   },
+   {
+    "kind": "line",
+    "id": 4,
+    "layerId": "sinir",
+    "attrs": {},
+    "a": {
+     "x": 14,
+     "y": -2
+    },
+    "b": {
+     "x": 14,
+     "y": 4
+    }
+   },
+   {
+    "kind": "line",
+    "id": 5,
+    "layerId": "sinir",
+    "attrs": {},
+    "a": {
+     "x": 8,
+     "y": 16
+    },
+    "b": {
+     "x": 12,
+     "y": 16
+    }
+   },
+   {
+    "kind": "line",
+    "id": 6,
+    "layerId": "sinir",
+    "attrs": {},
+    "a": {
+     "x": -3,
+     "y": -2
+    },
+    "b": {
+     "x": -3,
+     "y": 6
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 7,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 30,
+      "y": 0
+     },
+     {
+      "x": 40,
+      "y": 0
+     },
+     {
+      "x": 40,
+      "y": 10
+     },
+     {
+      "x": 30,
+      "y": 10
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 33,
+        "y": 3
+       },
+       {
+        "x": 37,
+        "y": 3
+       },
+       {
+        "x": 37,
+        "y": 7
+       },
+       {
+        "x": 33,
+        "y": 7
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 8,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 50,
+      "y": 0
+     },
+     {
+      "x": 54,
+      "y": 0
+     },
+     {
+      "x": 54,
+      "y": 4
+     },
+     {
+      "x": 50,
+      "y": 4
+     }
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 56,
+        "y": 0
+       },
+       {
+        "x": 60,
+        "y": 0
+       },
+       {
+        "x": 60,
+        "y": 4
+       },
+       {
+        "x": 56,
+        "y": 4
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 9,
+    "layerId": "kilitli",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 30,
+      "y": 20
+     },
+     {
+      "x": 40,
+      "y": 20
+     }
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 30,
+        "y": 22
+       },
+       {
+        "x": 40,
+        "y": 22
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 10,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 70,
+      "y": 0
+     },
+     {
+      "x": 74,
+      "y": 0
+     }
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 70,
+        "y": 2
+       },
+       {
+        "x": 74,
+        "y": 2
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Kır tek noktada parçayı ikiye böler: iki parça aynı nesnede; kimlik, öznitelikler, kot ve ölçü kalır; adım “Kır”",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "first": {
+       "x": 4,
+       "y": 0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Hat 1"
+        },
+        "color": "#30A46C",
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 4,
+          "y": 0
+         }
+        ],
+        "zs": [
+         10,
+         14
+        ],
+        "ms": [
+         0,
+         4
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 4,
+            "y": 0
+           },
+           {
+            "x": 10,
+            "y": 0
+           }
+          ],
+          "zs": [
+           14,
+           20
+          ],
+          "ms": [
+           4,
+           10
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 9
+           }
+          ],
+          "zs": [
+           0,
+           10,
+           14
+          ],
+          "ms": [
+           0,
+           10,
+           14
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 12
+           },
+           {
+            "x": 4,
+            "y": 12
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     },
+     "within": 1e-09
+    },
+    {
+     "op": "undo",
+     "returns": "Kır",
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Hat 1"
+        },
+        "color": "#30A46C",
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0
+         }
+        ],
+        "zs": [
+         10,
+         20
+        ],
+        "ms": [
+         0,
+         10
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 9
+           }
+          ],
+          "zs": [
+           0,
+           10,
+           14
+          ],
+          "ms": [
+           0,
+           10,
+           14
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 12
+           },
+           {
+            "x": 4,
+            "y": 12
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki nokta arası gider: köşeli parçada iki parça kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "first": {
+       "x": 2,
+       "y": 5
+      },
+      "second": {
+       "x": 10,
+       "y": 8
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Hat 1"
+        },
+        "color": "#30A46C",
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0
+         }
+        ],
+        "zs": [
+         10,
+         20
+        ],
+        "ms": [
+         0,
+         10
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 5
+           },
+           {
+            "x": 2,
+            "y": 5
+           }
+          ],
+          "zs": [
+           0,
+           2
+          ],
+          "ms": [
+           0,
+           2
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 10,
+            "y": 8
+           },
+           {
+            "x": 10,
+            "y": 9
+           }
+          ],
+          "zs": [
+           13,
+           14
+          ],
+          "ms": [
+           13,
+           14
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 12
+           },
+           {
+            "x": 4,
+            "y": 12
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Kotsuz parça ikiye bölünür",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "first": {
+       "x": 2,
+       "y": 12
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Hat 1"
+        },
+        "color": "#30A46C",
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0
+         }
+        ],
+        "zs": [
+         10,
+         20
+        ],
+        "ms": [
+         0,
+         10
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 9
+           }
+          ],
+          "zs": [
+           0,
+           10,
+           14
+          ],
+          "ms": [
+           0,
+           10,
+           14
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 12
+           },
+           {
+            "x": 2,
+            "y": 12
+           }
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 2,
+            "y": 12
+           },
+           {
+            "x": 4,
+            "y": 12
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki nokta arası parçanın ucuna dek: tek parça kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "first": {
+       "x": 4,
+       "y": 0
+      },
+      "second": {
+       "x": 10,
+       "y": 0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Hat 1"
+        },
+        "color": "#30A46C",
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 4,
+          "y": 0
+         }
+        ],
+        "zs": [
+         10,
+         14
+        ],
+        "ms": [
+         0,
+         4
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 9
+           }
+          ],
+          "zs": [
+           0,
+           10,
+           14
+          ],
+          "ms": [
+           0,
+           10,
+           14
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 12
+           },
+           {
+            "x": 4,
+            "y": 12
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "İki nokta başka parçalarda: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "first": {
+       "x": 2,
+       "y": 5
+      },
+      "second": {
+       "x": 8,
+       "y": 0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "break_failed",
+       "message": "İki kırma noktası çok parçalı çizginin aynı parçasında olmalı; ikinci noktayı ilkinin parçasında verin.",
+       "path": "second"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Parçanın ucundan kırılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "first": {
+       "x": 4,
+       "y": 12
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "break_failed",
+       "message": "Nesne ucundan kırılamaz; iç kısmında bir nokta gösterin.",
+       "path": "first"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çok parçalı alan kırılmaz: parçaları alan olarak kalamazdı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:8",
+      "first": {
+       "x": 52,
+       "y": 0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "break_failed",
+       "message": "Bu işlem çok parçalı nesnede çalışmaz; önce Parçalara ayır ile parçalarına ayırın.",
+       "path": "first"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Delikli alan kırılmaz: delikler kaybolurdu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:7",
+      "first": {
+       "x": 35,
+       "y": 0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_breakable",
+       "message": "Adalı alanda kırma yapılamaz; iç halkalar kaybolurdu. Önce Patlat ile halkalarına ayırın ya da Alan böl kullanın.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli katmandaki çok parçalı çizgi kırılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:9",
+      "first": {
+       "x": 35,
+       "y": 20
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli; üzerindeki nesne değiştirilemez. Kilidi Katmanlar panelinden açın.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan yazmadan gösterir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "$uidOf:1",
+      "first": {
+       "x": 2,
+       "y": 5
+      },
+      "second": {
+       "x": 10,
+       "y": 8
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        {
+         "kind": "polyline",
+         "id": 1,
+         "layerId": "cizim",
+         "attrs": {
+          "Ad": "Hat 1"
+         },
+         "color": "#30A46C",
+         "pts": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 10,
+           "y": 0
+          }
+         ],
+         "zs": [
+          10,
+          20
+         ],
+         "ms": [
+          0,
+          10
+         ],
+         "parts": [
+          {
+           "pts": [
+            {
+             "x": 0,
+             "y": 5
+            },
+            {
+             "x": 2,
+             "y": 5
+            }
+           ],
+           "zs": [
+            0,
+            2
+           ],
+           "ms": [
+            0,
+            2
+           ]
+          },
+          {
+           "pts": [
+            {
+             "x": 10,
+             "y": 8
+            },
+            {
+             "x": 10,
+             "y": 9
+            }
+           ],
+           "zs": [
+            13,
+            14
+           ],
+           "ms": [
+            13,
+            14
+           ]
+          },
+          {
+           "pts": [
+            {
+             "x": 0,
+             "y": 12
+            },
+            {
+             "x": 4,
+             "y": 12
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Hat 1"
+        },
+        "color": "#30A46C",
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0
+         }
+        ],
+        "zs": [
+         10,
+         20
+        ],
+        "ms": [
+         0,
+         10
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 9
+           }
+          ],
+          "zs": [
+           0,
+           10,
+           14
+          ],
+          "ms": [
+           0,
+           10,
+           14
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 12
+           },
+           {
+            "x": 4,
+            "y": 12
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Köşeli parçanın yatay kenarından tek noktada",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "first": {
+       "x": 6,
+       "y": 5
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Hat 1"
+        },
+        "color": "#30A46C",
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0
+         }
+        ],
+        "zs": [
+         10,
+         20
+        ],
+        "ms": [
+         0,
+         10
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 5
+           },
+           {
+            "x": 6,
+            "y": 5
+           }
+          ],
+          "zs": [
+           0,
+           6
+          ],
+          "ms": [
+           0,
+           6
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 6,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 9
+           }
+          ],
+          "zs": [
+           6,
+           10,
+           14
+          ],
+          "ms": [
+           6,
+           10,
+           14
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 12
+           },
+           {
+            "x": 4,
+            "y": 12
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Köşeli parçanın düşey kenarından tek noktada",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "first": {
+       "x": 10,
+       "y": 7
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Hat 1"
+        },
+        "color": "#30A46C",
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0
+         }
+        ],
+        "zs": [
+         10,
+         20
+        ],
+        "ms": [
+         0,
+         10
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 7
+           }
+          ],
+          "zs": [
+           0,
+           10,
+           12
+          ],
+          "ms": [
+           0,
+           10,
+           12
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 10,
+            "y": 7
+           },
+           {
+            "x": 10,
+            "y": 9
+           }
+          ],
+          "zs": [
+           12,
+           14
+          ],
+          "ms": [
+           12,
+           14
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 12
+           },
+           {
+            "x": 4,
+            "y": 12
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Aynı kenarda iki nokta arası gider",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "first": {
+       "x": 1,
+       "y": 0
+      },
+      "second": {
+       "x": 3,
+       "y": 0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Hat 1"
+        },
+        "color": "#30A46C",
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 1,
+          "y": 0
+         }
+        ],
+        "zs": [
+         10,
+         11
+        ],
+        "ms": [
+         0,
+         1
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 3,
+            "y": 0
+           },
+           {
+            "x": 10,
+            "y": 0
+           }
+          ],
+          "zs": [
+           13,
+           20
+          ],
+          "ms": [
+           3,
+           10
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 9
+           }
+          ],
+          "zs": [
+           0,
+           10,
+           14
+          ],
+          "ms": [
+           0,
+           10,
+           14
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 12
+           },
+           {
+            "x": 4,
+            "y": 12
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Noktaların sırası sonucu değiştirmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "first": {
+       "x": 3,
+       "y": 0
+      },
+      "second": {
+       "x": 1,
+       "y": 0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Hat 1"
+        },
+        "color": "#30A46C",
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 1,
+          "y": 0
+         }
+        ],
+        "zs": [
+         10,
+         11
+        ],
+        "ms": [
+         0,
+         1
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 3,
+            "y": 0
+           },
+           {
+            "x": 10,
+            "y": 0
+           }
+          ],
+          "zs": [
+           13,
+           20
+          ],
+          "ms": [
+           3,
+           10
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 9
+           }
+          ],
+          "zs": [
+           0,
+           10,
+           14
+          ],
+          "ms": [
+           0,
+           10,
+           14
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 12
+           },
+           {
+            "x": 4,
+            "y": 12
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Köşeyi içine alan iki nokta: köşe gider",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "first": {
+       "x": 8,
+       "y": 5
+      },
+      "second": {
+       "x": 10,
+       "y": 6
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Hat 1"
+        },
+        "color": "#30A46C",
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0
+         }
+        ],
+        "zs": [
+         10,
+         20
+        ],
+        "ms": [
+         0,
+         10
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 5
+           },
+           {
+            "x": 8,
+            "y": 5
+           }
+          ],
+          "zs": [
+           0,
+           8
+          ],
+          "ms": [
+           0,
+           8
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 10,
+            "y": 6
+           },
+           {
+            "x": 10,
+            "y": 9
+           }
+          ],
+          "zs": [
+           11,
+           14
+          ],
+          "ms": [
+           11,
+           14
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 12
+           },
+           {
+            "x": 4,
+            "y": 12
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Parçanın başından bir noktaya: tek parça kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "first": {
+       "x": 0,
+       "y": 12
+      },
+      "second": {
+       "x": 2,
+       "y": 12
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Hat 1"
+        },
+        "color": "#30A46C",
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0
+         }
+        ],
+        "zs": [
+         10,
+         20
+        ],
+        "ms": [
+         0,
+         10
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 9
+           }
+          ],
+          "zs": [
+           0,
+           10,
+           14
+          ],
+          "ms": [
+           0,
+           10,
+           14
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 2,
+            "y": 12
+           },
+           {
+            "x": 4,
+            "y": 12
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Doğrulama yazmaz",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "uid": "$uidOf:1",
+      "first": {
+       "x": 4,
+       "y": 0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizim değiştiyse conflict, hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "captureRevision",
+     "as": "old"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0,
+       "dy": 0.5
+      }
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "first": {
+       "x": 4,
+       "y": 0
+      },
+      "expectedRevision": "$old"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "path": "expectedRevision",
+       "revision": "$current",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın."
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geri alınan kırma yinelenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "first": {
+       "x": 4,
+       "y": 0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Hat 1"
+        },
+        "color": "#30A46C",
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 4,
+          "y": 0
+         }
+        ],
+        "zs": [
+         10,
+         14
+        ],
+        "ms": [
+         0,
+         4
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 4,
+            "y": 0
+           },
+           {
+            "x": 10,
+            "y": 0
+           }
+          ],
+          "zs": [
+           14,
+           20
+          ],
+          "ms": [
+           4,
+           10
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 9
+           }
+          ],
+          "zs": [
+           0,
+           10,
+           14
+          ],
+          "ms": [
+           0,
+           10,
+           14
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 12
+           },
+           {
+            "x": 4,
+            "y": 12
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     },
+     "within": 1e-09
+    },
+    {
+     "op": "undo",
+     "returns": "Kır",
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Hat 1"
+        },
+        "color": "#30A46C",
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0
+         }
+        ],
+        "zs": [
+         10,
+         20
+        ],
+        "ms": [
+         0,
+         10
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 9
+           }
+          ],
+          "zs": [
+           0,
+           10,
+           14
+          ],
+          "ms": [
+           0,
+           10,
+           14
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 12
+           },
+           {
+            "x": 4,
+            "y": 12
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "redo",
+     "returns": "Kır",
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Hat 1"
+        },
+        "color": "#30A46C",
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 4,
+          "y": 0
+         }
+        ],
+        "zs": [
+         10,
+         14
+        ],
+        "ms": [
+         0,
+         4
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 4,
+            "y": 0
+           },
+           {
+            "x": 10,
+            "y": 0
+           }
+          ],
+          "zs": [
+           14,
+           20
+          ],
+          "ms": [
+           4,
+           10
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 9
+           }
+          ],
+          "zs": [
+           0,
+           10,
+           14
+          ],
+          "ms": [
+           0,
+           10,
+           14
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 12
+           },
+           {
+            "x": 4,
+            "y": 12
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Düşey kenarda iki nokta, sonu dahil: tek parça kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "first": {
+       "x": 10,
+       "y": 6
+      },
+      "second": {
+       "x": 10,
+       "y": 9
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {
+         "Ad": "Hat 1"
+        },
+        "color": "#30A46C",
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0
+         }
+        ],
+        "zs": [
+         10,
+         20
+        ],
+        "ms": [
+         0,
+         10
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 5
+           },
+           {
+            "x": 10,
+            "y": 6
+           }
+          ],
+          "zs": [
+           0,
+           10,
+           11
+          ],
+          "ms": [
+           0,
+           10,
+           11
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 0,
+            "y": 12
+           },
+           {
+            "x": 4,
+            "y": 12
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     },
+     "within": 1e-09
+    }
+   ]
+  }
+ ]
+}

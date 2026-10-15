@@ -28,10 +28,11 @@ use kentos_contracts::{
     EntitiesTrimmed, Entity, EntityEdit, TrimBoundaries, TrimEdgeMode,
 };
 use kentos_domain::{Document, Slot, Uuid};
-use kentos_geometry_core::entity::{Entity as CoreEntity, Shape};
+use kentos_geometry_core::entity::{Entity as CoreEntity, Shape, area_parts, is_multi_part};
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::ops::curve_cuts::{Cut, Geometry};
 use kentos_geometry_core::ops::offset::through_distance;
+use kentos_geometry_core::ops::parts::polyline_of_pieces;
 use kentos_geometry_core::ops::path::{nearest_s, path_of, point_at_s};
 use kentos_geometry_core::ops::trim::{fence_crossings, trimmable, window_point, window_points};
 use kentos_geometry_core::store::Store;
@@ -375,7 +376,11 @@ fn check(
         let mut crossed = false;
         for (slot, shut) in run.shown_in(&rect_of(&pts)) {
             let Some(e) = doc.get(slot) else { continue };
-            let at = fence_crossings(&CoreEntity::new(shape(e)), &pts);
+            // A multi-part polyline is crossed part by part (docs/adr/0307).
+            let at: Vec<Vec2> = area_parts(&shape(e))
+                .iter()
+                .flat_map(|part| fence_crossings(&CoreEntity::new(part.clone()), &pts))
+                .collect();
             if at.is_empty() {
                 continue;
             }
@@ -440,6 +445,12 @@ fn check(
             continue;
         }
         match act {
+            // A multi-part polyline's pieces stay parts of the one object (docs/adr/0307).
+            Act::Trim if w.parted && !w.pieces.is_empty() => {
+                if let Some(joined) = polyline_of_pieces(&w.pieces) {
+                    changes.extend(replace_changes(doc, *slot, &[joined]));
+                }
+            }
             Act::Trim => changes.extend(replace_changes(doc, *slot, &w.pieces)),
             Act::Extend => {
                 if let Some(geometry) = edit_geometry(w.current.clone()) {
@@ -528,15 +539,32 @@ const WINDOW_STEPS: usize = 10_000;
 
 /// One object as the picks leave it.
 struct Work {
-    /// Buda: the pieces left, in order along the object; none: it went whole.
+    /// Buda: the pieces left, in order along the object; none: it went whole. A multi-part polyline's
+    /// pieces start as its parts (docs/adr/0307).
     pieces: Vec<Shape>,
-    /// Buda: a pick has cut it: every piece is one an earlier cut left, so
-    /// one no boundary cuts goes whole (its ends are cuts or the object's).
-    cut: bool,
-    /// Uzat: the object as grown so far, and which ends grew.
+    /// Buda: whether each piece is as the object had it, no pick having cut it. A piece an earlier cut
+    /// left that no boundary cuts goes whole (its ends are cuts or the object's).
+    fresh: Vec<bool>,
+    /// A multi-part polyline: a pick acts on the part it is near, the parts written back as one object.
+    parted: bool,
+    /// Uzat: the object as grown so far, and which ends of each part grew.
     current: Shape,
-    used: [bool; 2],
+    used: Vec<[bool; 2]>,
     done: bool,
+}
+
+/// Whether Buda and Uzat take `s` part by part: a multi-part polyline (docs/adr/0307).
+fn parted(s: &Shape) -> bool {
+    matches!(s, Shape::Polyline { .. }) && is_multi_part(s)
+}
+
+/// The piece of `pieces` nearest `at`, with its distance.
+fn nearest_piece(pieces: &[Shape], at: Vec2) -> Option<(usize, f64)> {
+    pieces
+        .iter()
+        .enumerate()
+        .map(|(i, p)| (i, through_distance(p, at)))
+        .min_by(|a, b| a.1.total_cmp(&b.1))
 }
 
 /// The command's walk over its picks.
@@ -585,13 +613,21 @@ impl Run<'_> {
             let e = self.doc.get(slot)?;
             let s = shape(e);
             self.order.push(slot);
+            let parted = parted(&s);
+            let pieces = if parted {
+                area_parts(&s).into_owned()
+            } else {
+                vec![s.clone()]
+            };
+            let n = pieces.len();
             self.work.insert(
                 slot,
                 Work {
-                    pieces: vec![s.clone()],
-                    cut: false,
+                    pieces,
+                    fresh: vec![true; n],
+                    parted,
                     current: s,
-                    used: [false; 2],
+                    used: vec![[false; 2]; n],
                     done: false,
                 },
             );
@@ -642,10 +678,14 @@ impl Run<'_> {
     /// click near it); a later one on the piece an earlier left it lies on, or nothing.
     fn trim_at(&mut self, slot: Slot, at: Vec2, path: &str) {
         let Some(w) = self.work(slot) else { return };
-        let k = if w.cut {
-            piece_at(&w.pieces, at)
-        } else {
+        let k = if w.parted {
+            // The part the pick is near, as on an object as it is; a piece an earlier cut left, only on it.
+            nearest_piece(&w.pieces, at)
+                .and_then(|(k, d)| (w.fresh[k] || d < ON_PIECE).then_some(k))
+        } else if w.fresh.first() == Some(&true) && w.pieces.len() == 1 {
             Some(0)
+        } else {
+            piece_at(&w.pieces, at)
         };
         if let Some(k) = k {
             self.trim_piece(slot, k, at, path);
@@ -658,7 +698,7 @@ impl Run<'_> {
             return false;
         };
         let piece = w.pieces[k].clone();
-        let was_cut = w.cut;
+        let was_cut = !w.fresh[k];
         let result = self.cut(slot, &piece, at);
         let erase = self.erase && trimmable(&piece);
         let now = match result {
@@ -680,13 +720,10 @@ impl Run<'_> {
         let Some(w) = self.work.get_mut(&slot) else {
             return false;
         };
-        match now {
-            Some(now) => {
-                w.pieces.splice(k..=k, now);
-            }
-            None => w.pieces.clear(),
-        }
-        w.cut = true;
+        // What no boundary cuts in quick mode goes whole: the piece, a part of a multi-part line alone.
+        let now = now.unwrap_or_default();
+        w.fresh.splice(k..=k, vec![false; now.len()]);
+        w.pieces.splice(k..=k, now);
         w.done = true;
         true
     }
@@ -694,7 +731,19 @@ impl Run<'_> {
     /// Uzat at `at`: the end of the object nearest it grows, once.
     fn extend_at(&mut self, slot: Slot, at: Vec2, path: &str) {
         let Some(w) = self.work(slot) else { return };
-        let Some(line) = path_of(&w.current).filter(|p| !p.closed) else {
+        // A multi-part polyline grows the part the pick is near (docs/adr/0307).
+        let parts = area_parts(&w.current).into_owned();
+        let k = if w.parted {
+            nearest_piece(&parts, at).map_or(0, |(k, _)| k)
+        } else {
+            0
+        };
+        let target = if w.parted {
+            parts[k].clone()
+        } else {
+            w.current.clone()
+        };
+        let Some(line) = path_of(&target).filter(|p| !p.closed) else {
             self.warn(
                 path,
                 "Yalnız açık çizgiler, çoklu çizgiler ve yaylar uzatılabilir.".into(),
@@ -702,15 +751,23 @@ impl Run<'_> {
             return;
         };
         let end = usize::from(nearest_s(&line, at) > line.length / 2.0);
-        if std::mem::replace(&mut w.used[end], true) {
+        if std::mem::replace(&mut w.used[k][end], true) {
             return;
         }
-        let current = w.current.clone();
-        match self.grow(slot, &current, at) {
+        match self.grow(slot, &target, at) {
             Geometry::Ok(g) => {
                 if let Some(w) = self.work.get_mut(&slot) {
-                    w.current = g.shape;
-                    w.done = true;
+                    let grown = if w.parted {
+                        let mut parts = parts;
+                        parts[k] = g.shape;
+                        polyline_of_pieces(&parts)
+                    } else {
+                        Some(g.shape)
+                    };
+                    if let Some(grown) = grown {
+                        w.current = grown;
+                        w.done = true;
+                    }
                 }
             }
             Geometry::Error(why) => {
@@ -737,9 +794,12 @@ impl Run<'_> {
             Act::Trim => {
                 let pieces = match self.work.get(&slot) {
                     Some(w) => w.pieces.clone(),
+                    None if parted(&s) => area_parts(&s).into_owned(),
                     None => vec![s.clone()],
                 };
-                if !trimmable(&s) || pieces.iter().all(|p| window_point(p, window).is_none()) {
+                if !(trimmable(&s) || parted(&s))
+                    || pieces.iter().all(|p| window_point(p, window).is_none())
+                {
                     return Met::No;
                 }
                 if locked {
@@ -752,6 +812,7 @@ impl Run<'_> {
                 for _ in 0..WINDOW_STEPS {
                     let pieces = match self.work.get(&slot) {
                         Some(w) => w.pieces.clone(),
+                        None if parted(&s) => area_parts(&s).into_owned(),
                         None => vec![s.clone()],
                     };
                     let Some((k, at)) = pieces.iter().enumerate().find_map(|(k, p)| {
@@ -762,12 +823,12 @@ impl Run<'_> {
                     };
                     // On the object as it is, a pick that lands on its only crossing finds none around it:
                     // the part's other points are tried first.
-                    let fresh = !self.work.get(&slot).is_some_and(|w| w.cut);
-                    let q = if fresh && !self.cuts_at(slot, &pieces[0], at[0]) {
+                    let fresh = self.work.get(&slot).is_none_or(|w| w.fresh[k]);
+                    let q = if fresh && !self.cuts_at(slot, &pieces[k], at[0]) {
                         at[1..]
                             .iter()
                             .copied()
-                            .find(|q| self.cuts_at(slot, &pieces[0], *q))
+                            .find(|q| self.cuts_at(slot, &pieces[k], *q))
                             .unwrap_or(at[0])
                     } else {
                         at[0]
@@ -783,11 +844,17 @@ impl Run<'_> {
                     Some(w) => w.current.clone(),
                     None => s,
                 };
-                let Some(line) = path_of(&current).filter(|p| !p.closed) else {
+                let lines: Vec<_> = area_parts(&current)
+                    .iter()
+                    .filter_map(path_of)
+                    .filter(|p| !p.closed)
+                    .collect();
+                if lines.is_empty() {
                     return Met::No;
-                };
-                let ends: Vec<Vec2> = [point_at_s(&line, 0.0), point_at_s(&line, line.length)]
-                    .into_iter()
+                }
+                let ends: Vec<Vec2> = lines
+                    .iter()
+                    .flat_map(|line| [point_at_s(line, 0.0), point_at_s(line, line.length)])
                     .filter(|p| {
                         p.x >= window.min_x
                             && p.x <= window.max_x

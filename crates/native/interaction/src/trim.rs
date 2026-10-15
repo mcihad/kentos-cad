@@ -245,7 +245,9 @@ impl Boundary {
         let result = self.run(Act::Trim, Picks::At(vec![(slot, at)]), cx);
         if let Some(out) = points::written(result, cx) {
             let left = out.changed.len() + out.created.len();
-            if left == 0 {
+            if let Some(n) = crate::edge::line_parts(cx.doc, slot) {
+                cx.say(Level::Success, format!("Budandı: çizgi {n} parçalı."));
+            } else if left == 0 {
                 cx.say(
                     Level::Success,
                     "Silindi: onu kesen bir sınır yoktu (hızlı kip).",

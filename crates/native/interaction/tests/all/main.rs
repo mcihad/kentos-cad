@@ -42,6 +42,7 @@ mod measure;
 mod methods;
 mod mirror_texts;
 mod modify;
+mod multipart;
 mod navigate;
 mod nurbs;
 mod overlap;

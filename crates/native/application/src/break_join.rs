@@ -22,11 +22,12 @@ use kentos_contracts::{
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::api::json::Json;
-use kentos_geometry_core::entity::Entity as CoreEntity;
+use kentos_geometry_core::entity::{Entity as CoreEntity, Shape, area_parts, is_multi_part};
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::ops::breaking::break_entity;
 use kentos_geometry_core::ops::curve_cuts::Cut;
 use kentos_geometry_core::ops::join::{ChainObject, chain, join_entities, simplest};
+use kentos_geometry_core::ops::parts::{part_near, polyline_of_pieces};
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::vec2::Vec2;
 
@@ -241,7 +242,22 @@ fn check_break(doc: &Document, input: &EntitiesBreak) -> Result<Checked, Stop> {
     }
     let first = point(input.first);
     let second = input.second.map_or(first, point);
-    match break_entity(&CoreEntity::new(shape(e)), first, second) {
+    let whole = shape(e);
+    // A multi-part polyline breaks in the part the first point is on, its pieces staying parts of the one
+    // object: its id, data, elevations and measures kept (docs/adr/0307).
+    let parted = matches!(whole, Shape::Polyline { .. }) && is_multi_part(&whole);
+    let part = if parted { part_near(&whole, first) } else { 0 };
+    if parted && input.second.is_some() && part_near(&whole, second) != part {
+        return Err(refuse(
+            codes::BREAK_FAILED,
+            "İki kırma noktası çok parçalı çizginin aynı parçasında olmalı; ikinci noktayı ilkinin parçasında verin."
+                .into(),
+            "second",
+        ));
+    }
+    let parts = area_parts(&whole).into_owned();
+    let target = if parted { parts[part].clone() } else { whole };
+    match break_entity(&CoreEntity::new(target), first, second) {
         Cut::Error(why) => Err(refuse(
             codes::BREAK_FAILED,
             if why.is_empty() {
@@ -271,6 +287,23 @@ fn check_break(doc: &Document, input: &EntitiesBreak) -> Result<Checked, Stop> {
                     other => other,
                 })
                 .collect();
+            let shapes = if parted {
+                let mut all = parts;
+                all.splice(part..=part, shapes);
+                match polyline_of_pieces(&all) {
+                    Some(joined) => vec![joined],
+                    None => {
+                        return Err(refuse(
+                            codes::BREAK_FAILED,
+                            "Nesne bu noktalarda kırılamadı; noktaları nesnenin üstünde verin."
+                                .into(),
+                            "first",
+                        ));
+                    }
+                }
+            } else {
+                shapes
+            };
             let ties = Ties {
                 onto: doc.uid(slot).map(|u| (u, vec![u])).into_iter().collect(),
                 pieces: true,
