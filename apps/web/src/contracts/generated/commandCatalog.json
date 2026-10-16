@@ -5976,6 +5976,17 @@
                   "null"
                 ]
               },
+              "merge": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MergePolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,\nParçaları birleştir; docs/adr/0419). None: the first object's."
+              },
               "min": {
                 "description": "A number's least value, in its canonical text; included.",
                 "type": [
@@ -6003,6 +6014,17 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "split": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SplitPolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,\nKır, Parçalara ayır; docs/adr/0419). None: each piece keeps it."
               },
               "values": {
                 "description": "The values a text or a number takes, when only some.",
@@ -7115,6 +7137,36 @@
               "values"
             ],
             "type": "object"
+          },
+          "MergePolicy": {
+            "description": "A field's value in the object merged from several (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "first",
+                "description": "The first object's value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "Empty.",
+                "type": "string"
+              },
+              {
+                "const": "sum",
+                "description": "The values' sum, exact to the field's last digit: integers and decimals with fraction digits.",
+                "type": "string"
+              },
+              {
+                "const": "min",
+                "description": "The least value (numbers).",
+                "type": "string"
+              },
+              {
+                "const": "max",
+                "description": "The greatest value (numbers).",
+                "type": "string"
+              }
+            ]
           },
           "NamedUcs": {
             "additionalProperties": false,
@@ -10202,6 +10254,31 @@
               "closed"
             ],
             "type": "object"
+          },
+          "SplitPolicy": {
+            "description": "A field's value in the pieces of a split object (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "copy",
+                "description": "Each piece keeps the value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The pieces' values are emptied.",
+                "type": "string"
+              },
+              {
+                "const": "default",
+                "description": "The pieces take the field's default (none: empty).",
+                "type": "string"
+              },
+              {
+                "const": "ratio",
+                "description": "The value is shared by the pieces' areas (lines: lengths), the total kept to the field's last\ndigit: integers and decimals with fraction digits.",
+                "type": "string"
+              }
+            ]
           },
           "StackMode": {
             "description": "When a label is cut into lines.",
@@ -15128,6 +15205,17 @@
                   "null"
                 ]
               },
+              "merge": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MergePolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,\nParçaları birleştir; docs/adr/0419). None: the first object's."
+              },
               "min": {
                 "description": "A number's least value, in its canonical text; included.",
                 "type": [
@@ -15155,6 +15243,17 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "split": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SplitPolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,\nKır, Parçalara ayır; docs/adr/0419). None: each piece keeps it."
               },
               "values": {
                 "description": "The values a text or a number takes, when only some.",
@@ -15793,6 +15892,36 @@
               "record"
             ],
             "type": "object"
+          },
+          "MergePolicy": {
+            "description": "A field's value in the object merged from several (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "first",
+                "description": "The first object's value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "Empty.",
+                "type": "string"
+              },
+              {
+                "const": "sum",
+                "description": "The values' sum, exact to the field's last digit: integers and decimals with fraction digits.",
+                "type": "string"
+              },
+              {
+                "const": "min",
+                "description": "The least value (numbers).",
+                "type": "string"
+              },
+              {
+                "const": "max",
+                "description": "The greatest value (numbers).",
+                "type": "string"
+              }
+            ]
           },
           "NamedUcs": {
             "additionalProperties": false,
@@ -17077,6 +17206,31 @@
               "bytes"
             ],
             "type": "object"
+          },
+          "SplitPolicy": {
+            "description": "A field's value in the pieces of a split object (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "copy",
+                "description": "Each piece keeps the value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The pieces' values are emptied.",
+                "type": "string"
+              },
+              {
+                "const": "default",
+                "description": "The pieces take the field's default (none: empty).",
+                "type": "string"
+              },
+              {
+                "const": "ratio",
+                "description": "The value is shared by the pieces' areas (lines: lengths), the total kept to the field's last\ndigit: integers and decimals with fraction digits.",
+                "type": "string"
+              }
+            ]
           },
           "StackMode": {
             "description": "When a label is cut into lines.",
@@ -23764,6 +23918,17 @@
                   "null"
                 ]
               },
+              "merge": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MergePolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,\nParçaları birleştir; docs/adr/0419). None: the first object's."
+              },
               "min": {
                 "description": "A number's least value, in its canonical text; included.",
                 "type": [
@@ -23791,6 +23956,17 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "split": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SplitPolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,\nKır, Parçalara ayır; docs/adr/0419). None: each piece keeps it."
               },
               "values": {
                 "description": "The values a text or a number takes, when only some.",
@@ -24903,6 +25079,36 @@
               "values"
             ],
             "type": "object"
+          },
+          "MergePolicy": {
+            "description": "A field's value in the object merged from several (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "first",
+                "description": "The first object's value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "Empty.",
+                "type": "string"
+              },
+              {
+                "const": "sum",
+                "description": "The values' sum, exact to the field's last digit: integers and decimals with fraction digits.",
+                "type": "string"
+              },
+              {
+                "const": "min",
+                "description": "The least value (numbers).",
+                "type": "string"
+              },
+              {
+                "const": "max",
+                "description": "The greatest value (numbers).",
+                "type": "string"
+              }
+            ]
           },
           "NamedUcs": {
             "additionalProperties": false,
@@ -28075,6 +28281,31 @@
               "closed"
             ],
             "type": "object"
+          },
+          "SplitPolicy": {
+            "description": "A field's value in the pieces of a split object (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "copy",
+                "description": "Each piece keeps the value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The pieces' values are emptied.",
+                "type": "string"
+              },
+              {
+                "const": "default",
+                "description": "The pieces take the field's default (none: empty).",
+                "type": "string"
+              },
+              {
+                "const": "ratio",
+                "description": "The value is shared by the pieces' areas (lines: lengths), the total kept to the field's last\ndigit: integers and decimals with fraction digits.",
+                "type": "string"
+              }
+            ]
           },
           "StackMode": {
             "description": "When a label is cut into lines.",
@@ -128509,6 +128740,17 @@
                   "null"
                 ]
               },
+              "merge": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MergePolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,\nParçaları birleştir; docs/adr/0419). None: the first object's."
+              },
               "min": {
                 "description": "A number's least value, in its canonical text; included.",
                 "type": [
@@ -128536,6 +128778,17 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "split": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SplitPolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,\nKır, Parçalara ayır; docs/adr/0419). None: each piece keeps it."
               },
               "values": {
                 "description": "The values a text or a number takes, when only some.",
@@ -129473,6 +129726,36 @@
               "values"
             ],
             "type": "object"
+          },
+          "MergePolicy": {
+            "description": "A field's value in the object merged from several (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "first",
+                "description": "The first object's value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "Empty.",
+                "type": "string"
+              },
+              {
+                "const": "sum",
+                "description": "The values' sum, exact to the field's last digit: integers and decimals with fraction digits.",
+                "type": "string"
+              },
+              {
+                "const": "min",
+                "description": "The least value (numbers).",
+                "type": "string"
+              },
+              {
+                "const": "max",
+                "description": "The greatest value (numbers).",
+                "type": "string"
+              }
+            ]
           },
           "NumberRule": {
             "additionalProperties": false,
@@ -131578,6 +131861,31 @@
               "closed"
             ],
             "type": "object"
+          },
+          "SplitPolicy": {
+            "description": "A field's value in the pieces of a split object (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "copy",
+                "description": "Each piece keeps the value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The pieces' values are emptied.",
+                "type": "string"
+              },
+              {
+                "const": "default",
+                "description": "The pieces take the field's default (none: empty).",
+                "type": "string"
+              },
+              {
+                "const": "ratio",
+                "description": "The value is shared by the pieces' areas (lines: lengths), the total kept to the field's last\ndigit: integers and decimals with fraction digits.",
+                "type": "string"
+              }
+            ]
           },
           "StackMode": {
             "description": "When a label is cut into lines.",
@@ -137219,6 +137527,17 @@
                   "null"
                 ]
               },
+              "merge": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MergePolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,\nParçaları birleştir; docs/adr/0419). None: the first object's."
+              },
               "min": {
                 "description": "A number's least value, in its canonical text; included.",
                 "type": [
@@ -137246,6 +137565,17 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "split": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SplitPolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,\nKır, Parçalara ayır; docs/adr/0419). None: each piece keeps it."
               },
               "values": {
                 "description": "The values a text or a number takes, when only some.",
@@ -138183,6 +138513,36 @@
               "values"
             ],
             "type": "object"
+          },
+          "MergePolicy": {
+            "description": "A field's value in the object merged from several (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "first",
+                "description": "The first object's value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "Empty.",
+                "type": "string"
+              },
+              {
+                "const": "sum",
+                "description": "The values' sum, exact to the field's last digit: integers and decimals with fraction digits.",
+                "type": "string"
+              },
+              {
+                "const": "min",
+                "description": "The least value (numbers).",
+                "type": "string"
+              },
+              {
+                "const": "max",
+                "description": "The greatest value (numbers).",
+                "type": "string"
+              }
+            ]
           },
           "NumberRule": {
             "additionalProperties": false,
@@ -140288,6 +140648,31 @@
               "closed"
             ],
             "type": "object"
+          },
+          "SplitPolicy": {
+            "description": "A field's value in the pieces of a split object (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "copy",
+                "description": "Each piece keeps the value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The pieces' values are emptied.",
+                "type": "string"
+              },
+              {
+                "const": "default",
+                "description": "The pieces take the field's default (none: empty).",
+                "type": "string"
+              },
+              {
+                "const": "ratio",
+                "description": "The value is shared by the pieces' areas (lines: lengths), the total kept to the field's last\ndigit: integers and decimals with fraction digits.",
+                "type": "string"
+              }
+            ]
           },
           "StackMode": {
             "description": "When a label is cut into lines.",
@@ -146052,6 +146437,17 @@
                   "null"
                 ]
               },
+              "merge": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MergePolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,\nParçaları birleştir; docs/adr/0419). None: the first object's."
+              },
               "min": {
                 "description": "A number's least value, in its canonical text; included.",
                 "type": [
@@ -146079,6 +146475,17 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "split": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SplitPolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,\nKır, Parçalara ayır; docs/adr/0419). None: each piece keeps it."
               },
               "values": {
                 "description": "The values a text or a number takes, when only some.",
@@ -147016,6 +147423,36 @@
               "values"
             ],
             "type": "object"
+          },
+          "MergePolicy": {
+            "description": "A field's value in the object merged from several (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "first",
+                "description": "The first object's value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "Empty.",
+                "type": "string"
+              },
+              {
+                "const": "sum",
+                "description": "The values' sum, exact to the field's last digit: integers and decimals with fraction digits.",
+                "type": "string"
+              },
+              {
+                "const": "min",
+                "description": "The least value (numbers).",
+                "type": "string"
+              },
+              {
+                "const": "max",
+                "description": "The greatest value (numbers).",
+                "type": "string"
+              }
+            ]
           },
           "NumberRule": {
             "additionalProperties": false,
@@ -149121,6 +149558,31 @@
               "closed"
             ],
             "type": "object"
+          },
+          "SplitPolicy": {
+            "description": "A field's value in the pieces of a split object (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "copy",
+                "description": "Each piece keeps the value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The pieces' values are emptied.",
+                "type": "string"
+              },
+              {
+                "const": "default",
+                "description": "The pieces take the field's default (none: empty).",
+                "type": "string"
+              },
+              {
+                "const": "ratio",
+                "description": "The value is shared by the pieces' areas (lines: lengths), the total kept to the field's last\ndigit: integers and decimals with fraction digits.",
+                "type": "string"
+              }
+            ]
           },
           "StackMode": {
             "description": "When a label is cut into lines.",
@@ -303405,6 +303867,17 @@
                   "null"
                 ]
               },
+              "merge": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MergePolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,\nParçaları birleştir; docs/adr/0419). None: the first object's."
+              },
               "min": {
                 "description": "A number's least value, in its canonical text; included.",
                 "type": [
@@ -303432,6 +303905,17 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "split": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SplitPolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,\nKır, Parçalara ayır; docs/adr/0419). None: each piece keeps it."
               },
               "values": {
                 "description": "The values a text or a number takes, when only some.",
@@ -303496,6 +303980,36 @@
               {
                 "const": "remove",
                 "description": "A layer drawn from a service taken away (“Servis katmanını sil”).",
+                "type": "string"
+              }
+            ]
+          },
+          "MergePolicy": {
+            "description": "A field's value in the object merged from several (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "first",
+                "description": "The first object's value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "Empty.",
+                "type": "string"
+              },
+              {
+                "const": "sum",
+                "description": "The values' sum, exact to the field's last digit: integers and decimals with fraction digits.",
+                "type": "string"
+              },
+              {
+                "const": "min",
+                "description": "The least value (numbers).",
+                "type": "string"
+              },
+              {
+                "const": "max",
+                "description": "The greatest value (numbers).",
                 "type": "string"
               }
             ]
@@ -303774,6 +304288,31 @@
               "value"
             ],
             "type": "object"
+          },
+          "SplitPolicy": {
+            "description": "A field's value in the pieces of a split object (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "copy",
+                "description": "Each piece keeps the value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The pieces' values are emptied.",
+                "type": "string"
+              },
+              {
+                "const": "default",
+                "description": "The pieces take the field's default (none: empty).",
+                "type": "string"
+              },
+              {
+                "const": "ratio",
+                "description": "The value is shared by the pieces' areas (lines: lengths), the total kept to the field's last\ndigit: integers and decimals with fraction digits.",
+                "type": "string"
+              }
+            ]
           },
           "TileGrid": {
             "description": "A service's tile grid as read: its system and its matrices, coarsest first.",
@@ -305027,6 +305566,17 @@
                   "null"
                 ]
               },
+              "merge": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MergePolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,\nParçaları birleştir; docs/adr/0419). None: the first object's."
+              },
               "min": {
                 "description": "A number's least value, in its canonical text; included.",
                 "type": [
@@ -305054,6 +305604,17 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "split": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SplitPolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,\nKır, Parçalara ayır; docs/adr/0419). None: each piece keeps it."
               },
               "values": {
                 "description": "The values a text or a number takes, when only some.",
@@ -305518,6 +306079,36 @@
             ],
             "type": "string"
           },
+          "MergePolicy": {
+            "description": "A field's value in the object merged from several (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "first",
+                "description": "The first object's value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "Empty.",
+                "type": "string"
+              },
+              {
+                "const": "sum",
+                "description": "The values' sum, exact to the field's last digit: integers and decimals with fraction digits.",
+                "type": "string"
+              },
+              {
+                "const": "min",
+                "description": "The least value (numbers).",
+                "type": "string"
+              },
+              {
+                "const": "max",
+                "description": "The greatest value (numbers).",
+                "type": "string"
+              }
+            ]
+          },
           "ObstacleKind": {
             "description": "What of an obstacle area a label avoids.",
             "oneOf": [
@@ -305860,6 +306451,31 @@
               "value"
             ],
             "type": "object"
+          },
+          "SplitPolicy": {
+            "description": "A field's value in the pieces of a split object (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "copy",
+                "description": "Each piece keeps the value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The pieces' values are emptied.",
+                "type": "string"
+              },
+              {
+                "const": "default",
+                "description": "The pieces take the field's default (none: empty).",
+                "type": "string"
+              },
+              {
+                "const": "ratio",
+                "description": "The value is shared by the pieces' areas (lines: lengths), the total kept to the field's last\ndigit: integers and decimals with fraction digits.",
+                "type": "string"
+              }
+            ]
           },
           "StackMode": {
             "description": "When a label is cut into lines.",
@@ -309059,6 +309675,17 @@
                   "null"
                 ]
               },
+              "merge": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MergePolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,\nParçaları birleştir; docs/adr/0419). None: the first object's."
+              },
               "min": {
                 "description": "A number's least value, in its canonical text; included.",
                 "type": [
@@ -309086,6 +309713,17 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "split": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SplitPolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,\nKır, Parçalara ayır; docs/adr/0419). None: each piece keeps it."
               },
               "values": {
                 "description": "The values a text or a number takes, when only some.",
@@ -309550,6 +310188,36 @@
             ],
             "type": "string"
           },
+          "MergePolicy": {
+            "description": "A field's value in the object merged from several (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "first",
+                "description": "The first object's value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "Empty.",
+                "type": "string"
+              },
+              {
+                "const": "sum",
+                "description": "The values' sum, exact to the field's last digit: integers and decimals with fraction digits.",
+                "type": "string"
+              },
+              {
+                "const": "min",
+                "description": "The least value (numbers).",
+                "type": "string"
+              },
+              {
+                "const": "max",
+                "description": "The greatest value (numbers).",
+                "type": "string"
+              }
+            ]
+          },
           "ObstacleKind": {
             "description": "What of an obstacle area a label avoids.",
             "oneOf": [
@@ -309846,6 +310514,31 @@
               "value"
             ],
             "type": "object"
+          },
+          "SplitPolicy": {
+            "description": "A field's value in the pieces of a split object (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "copy",
+                "description": "Each piece keeps the value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The pieces' values are emptied.",
+                "type": "string"
+              },
+              {
+                "const": "default",
+                "description": "The pieces take the field's default (none: empty).",
+                "type": "string"
+              },
+              {
+                "const": "ratio",
+                "description": "The value is shared by the pieces' areas (lines: lengths), the total kept to the field's last\ndigit: integers and decimals with fraction digits.",
+                "type": "string"
+              }
+            ]
           },
           "StackMode": {
             "description": "When a label is cut into lines.",
@@ -311473,6 +312166,17 @@
                   "null"
                 ]
               },
+              "merge": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MergePolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,\nParçaları birleştir; docs/adr/0419). None: the first object's."
+              },
               "min": {
                 "description": "A number's least value, in its canonical text; included.",
                 "type": [
@@ -311500,6 +312204,17 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "split": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SplitPolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,\nKır, Parçalara ayır; docs/adr/0419). None: each piece keeps it."
               },
               "values": {
                 "description": "The values a text or a number takes, when only some.",
@@ -311964,6 +312679,36 @@
             ],
             "type": "string"
           },
+          "MergePolicy": {
+            "description": "A field's value in the object merged from several (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "first",
+                "description": "The first object's value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "Empty.",
+                "type": "string"
+              },
+              {
+                "const": "sum",
+                "description": "The values' sum, exact to the field's last digit: integers and decimals with fraction digits.",
+                "type": "string"
+              },
+              {
+                "const": "min",
+                "description": "The least value (numbers).",
+                "type": "string"
+              },
+              {
+                "const": "max",
+                "description": "The greatest value (numbers).",
+                "type": "string"
+              }
+            ]
+          },
           "ObstacleKind": {
             "description": "What of an obstacle area a label avoids.",
             "oneOf": [
@@ -312260,6 +313005,31 @@
               "value"
             ],
             "type": "object"
+          },
+          "SplitPolicy": {
+            "description": "A field's value in the pieces of a split object (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "copy",
+                "description": "Each piece keeps the value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The pieces' values are emptied.",
+                "type": "string"
+              },
+              {
+                "const": "default",
+                "description": "The pieces take the field's default (none: empty).",
+                "type": "string"
+              },
+              {
+                "const": "ratio",
+                "description": "The value is shared by the pieces' areas (lines: lengths), the total kept to the field's last\ndigit: integers and decimals with fraction digits.",
+                "type": "string"
+              }
+            ]
           },
           "StackMode": {
             "description": "When a label is cut into lines.",
@@ -313614,6 +314384,17 @@
                   "null"
                 ]
               },
+              "merge": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MergePolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,\nParçaları birleştir; docs/adr/0419). None: the first object's."
+              },
               "min": {
                 "description": "A number's least value, in its canonical text; included.",
                 "type": [
@@ -313641,6 +314422,17 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "split": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SplitPolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,\nKır, Parçalara ayır; docs/adr/0419). None: each piece keeps it."
               },
               "values": {
                 "description": "The values a text or a number takes, when only some.",
@@ -314105,6 +314897,36 @@
             ],
             "type": "string"
           },
+          "MergePolicy": {
+            "description": "A field's value in the object merged from several (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "first",
+                "description": "The first object's value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "Empty.",
+                "type": "string"
+              },
+              {
+                "const": "sum",
+                "description": "The values' sum, exact to the field's last digit: integers and decimals with fraction digits.",
+                "type": "string"
+              },
+              {
+                "const": "min",
+                "description": "The least value (numbers).",
+                "type": "string"
+              },
+              {
+                "const": "max",
+                "description": "The greatest value (numbers).",
+                "type": "string"
+              }
+            ]
+          },
           "ObstacleKind": {
             "description": "What of an obstacle area a label avoids.",
             "oneOf": [
@@ -314401,6 +315223,31 @@
               "value"
             ],
             "type": "object"
+          },
+          "SplitPolicy": {
+            "description": "A field's value in the pieces of a split object (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "copy",
+                "description": "Each piece keeps the value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The pieces' values are emptied.",
+                "type": "string"
+              },
+              {
+                "const": "default",
+                "description": "The pieces take the field's default (none: empty).",
+                "type": "string"
+              },
+              {
+                "const": "ratio",
+                "description": "The value is shared by the pieces' areas (lines: lengths), the total kept to the field's last\ndigit: integers and decimals with fraction digits.",
+                "type": "string"
+              }
+            ]
           },
           "StackMode": {
             "description": "When a label is cut into lines.",
@@ -315758,6 +316605,17 @@
                   "null"
                 ]
               },
+              "merge": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MergePolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,\nParçaları birleştir; docs/adr/0419). None: the first object's."
+              },
               "min": {
                 "description": "A number's least value, in its canonical text; included.",
                 "type": [
@@ -315785,6 +316643,17 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "split": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SplitPolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,\nKır, Parçalara ayır; docs/adr/0419). None: each piece keeps it."
               },
               "values": {
                 "description": "The values a text or a number takes, when only some.",
@@ -316249,6 +317118,36 @@
             ],
             "type": "string"
           },
+          "MergePolicy": {
+            "description": "A field's value in the object merged from several (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "first",
+                "description": "The first object's value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "Empty.",
+                "type": "string"
+              },
+              {
+                "const": "sum",
+                "description": "The values' sum, exact to the field's last digit: integers and decimals with fraction digits.",
+                "type": "string"
+              },
+              {
+                "const": "min",
+                "description": "The least value (numbers).",
+                "type": "string"
+              },
+              {
+                "const": "max",
+                "description": "The greatest value (numbers).",
+                "type": "string"
+              }
+            ]
+          },
           "ObstacleKind": {
             "description": "What of an obstacle area a label avoids.",
             "oneOf": [
@@ -316545,6 +317444,31 @@
               "value"
             ],
             "type": "object"
+          },
+          "SplitPolicy": {
+            "description": "A field's value in the pieces of a split object (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "copy",
+                "description": "Each piece keeps the value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The pieces' values are emptied.",
+                "type": "string"
+              },
+              {
+                "const": "default",
+                "description": "The pieces take the field's default (none: empty).",
+                "type": "string"
+              },
+              {
+                "const": "ratio",
+                "description": "The value is shared by the pieces' areas (lines: lengths), the total kept to the field's last\ndigit: integers and decimals with fraction digits.",
+                "type": "string"
+              }
+            ]
           },
           "StackMode": {
             "description": "When a label is cut into lines.",
@@ -317908,6 +318832,17 @@
                   "null"
                 ]
               },
+              "merge": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MergePolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,\nParçaları birleştir; docs/adr/0419). None: the first object's."
+              },
               "min": {
                 "description": "A number's least value, in its canonical text; included.",
                 "type": [
@@ -317935,6 +318870,17 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "split": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SplitPolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,\nKır, Parçalara ayır; docs/adr/0419). None: each piece keeps it."
               },
               "values": {
                 "description": "The values a text or a number takes, when only some.",
@@ -318399,6 +319345,36 @@
             ],
             "type": "string"
           },
+          "MergePolicy": {
+            "description": "A field's value in the object merged from several (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "first",
+                "description": "The first object's value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "Empty.",
+                "type": "string"
+              },
+              {
+                "const": "sum",
+                "description": "The values' sum, exact to the field's last digit: integers and decimals with fraction digits.",
+                "type": "string"
+              },
+              {
+                "const": "min",
+                "description": "The least value (numbers).",
+                "type": "string"
+              },
+              {
+                "const": "max",
+                "description": "The greatest value (numbers).",
+                "type": "string"
+              }
+            ]
+          },
           "ObstacleKind": {
             "description": "What of an obstacle area a label avoids.",
             "oneOf": [
@@ -318695,6 +319671,31 @@
               "value"
             ],
             "type": "object"
+          },
+          "SplitPolicy": {
+            "description": "A field's value in the pieces of a split object (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "copy",
+                "description": "Each piece keeps the value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The pieces' values are emptied.",
+                "type": "string"
+              },
+              {
+                "const": "default",
+                "description": "The pieces take the field's default (none: empty).",
+                "type": "string"
+              },
+              {
+                "const": "ratio",
+                "description": "The value is shared by the pieces' areas (lines: lengths), the total kept to the field's last\ndigit: integers and decimals with fraction digits.",
+                "type": "string"
+              }
+            ]
           },
           "StackMode": {
             "description": "When a label is cut into lines.",
@@ -320834,6 +321835,17 @@
                   "null"
                 ]
               },
+              "merge": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MergePolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,\nParçaları birleştir; docs/adr/0419). None: the first object's."
+              },
               "min": {
                 "description": "A number's least value, in its canonical text; included.",
                 "type": [
@@ -320861,6 +321873,17 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "split": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SplitPolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,\nKır, Parçalara ayır; docs/adr/0419). None: each piece keeps it."
               },
               "values": {
                 "description": "The values a text or a number takes, when only some.",
@@ -321325,6 +322348,36 @@
             ],
             "type": "string"
           },
+          "MergePolicy": {
+            "description": "A field's value in the object merged from several (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "first",
+                "description": "The first object's value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "Empty.",
+                "type": "string"
+              },
+              {
+                "const": "sum",
+                "description": "The values' sum, exact to the field's last digit: integers and decimals with fraction digits.",
+                "type": "string"
+              },
+              {
+                "const": "min",
+                "description": "The least value (numbers).",
+                "type": "string"
+              },
+              {
+                "const": "max",
+                "description": "The greatest value (numbers).",
+                "type": "string"
+              }
+            ]
+          },
           "ObstacleKind": {
             "description": "What of an obstacle area a label avoids.",
             "oneOf": [
@@ -321621,6 +322674,31 @@
               "value"
             ],
             "type": "object"
+          },
+          "SplitPolicy": {
+            "description": "A field's value in the pieces of a split object (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "copy",
+                "description": "Each piece keeps the value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The pieces' values are emptied.",
+                "type": "string"
+              },
+              {
+                "const": "default",
+                "description": "The pieces take the field's default (none: empty).",
+                "type": "string"
+              },
+              {
+                "const": "ratio",
+                "description": "The value is shared by the pieces' areas (lines: lengths), the total kept to the field's last\ndigit: integers and decimals with fraction digits.",
+                "type": "string"
+              }
+            ]
           },
           "StackMode": {
             "description": "When a label is cut into lines.",
@@ -323297,6 +324375,17 @@
                   "null"
                 ]
               },
+              "merge": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MergePolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,\nParçaları birleştir; docs/adr/0419). None: the first object's."
+              },
               "min": {
                 "description": "A number's least value, in its canonical text; included.",
                 "type": [
@@ -323324,6 +324413,17 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "split": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SplitPolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,\nKır, Parçalara ayır; docs/adr/0419). None: each piece keeps it."
               },
               "values": {
                 "description": "The values a text or a number takes, when only some.",
@@ -323788,6 +324888,36 @@
             ],
             "type": "string"
           },
+          "MergePolicy": {
+            "description": "A field's value in the object merged from several (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "first",
+                "description": "The first object's value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "Empty.",
+                "type": "string"
+              },
+              {
+                "const": "sum",
+                "description": "The values' sum, exact to the field's last digit: integers and decimals with fraction digits.",
+                "type": "string"
+              },
+              {
+                "const": "min",
+                "description": "The least value (numbers).",
+                "type": "string"
+              },
+              {
+                "const": "max",
+                "description": "The greatest value (numbers).",
+                "type": "string"
+              }
+            ]
+          },
           "ObstacleKind": {
             "description": "What of an obstacle area a label avoids.",
             "oneOf": [
@@ -324084,6 +325214,31 @@
               "value"
             ],
             "type": "object"
+          },
+          "SplitPolicy": {
+            "description": "A field's value in the pieces of a split object (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "copy",
+                "description": "Each piece keeps the value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The pieces' values are emptied.",
+                "type": "string"
+              },
+              {
+                "const": "default",
+                "description": "The pieces take the field's default (none: empty).",
+                "type": "string"
+              },
+              {
+                "const": "ratio",
+                "description": "The value is shared by the pieces' areas (lines: lengths), the total kept to the field's last\ndigit: integers and decimals with fraction digits.",
+                "type": "string"
+              }
+            ]
           },
           "StackMode": {
             "description": "When a label is cut into lines.",
@@ -324480,6 +325635,17 @@
                   "null"
                 ]
               },
+              "merge": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MergePolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,\nParçaları birleştir; docs/adr/0419). None: the first object's."
+              },
               "min": {
                 "description": "A number's least value, in its canonical text; included.",
                 "type": [
@@ -324507,6 +325673,17 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "split": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SplitPolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,\nKır, Parçalara ayır; docs/adr/0419). None: each piece keeps it."
               },
               "values": {
                 "description": "The values a text or a number takes, when only some.",
@@ -324565,6 +325742,61 @@
               "dotted"
             ],
             "type": "string"
+          },
+          "MergePolicy": {
+            "description": "A field's value in the object merged from several (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "first",
+                "description": "The first object's value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "Empty.",
+                "type": "string"
+              },
+              {
+                "const": "sum",
+                "description": "The values' sum, exact to the field's last digit: integers and decimals with fraction digits.",
+                "type": "string"
+              },
+              {
+                "const": "min",
+                "description": "The least value (numbers).",
+                "type": "string"
+              },
+              {
+                "const": "max",
+                "description": "The greatest value (numbers).",
+                "type": "string"
+              }
+            ]
+          },
+          "SplitPolicy": {
+            "description": "A field's value in the pieces of a split object (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "copy",
+                "description": "Each piece keeps the value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The pieces' values are emptied.",
+                "type": "string"
+              },
+              {
+                "const": "default",
+                "description": "The pieces take the field's default (none: empty).",
+                "type": "string"
+              },
+              {
+                "const": "ratio",
+                "description": "The value is shared by the pieces' areas (lines: lengths), the total kept to the field's last\ndigit: integers and decimals with fraction digits.",
+                "type": "string"
+              }
+            ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",

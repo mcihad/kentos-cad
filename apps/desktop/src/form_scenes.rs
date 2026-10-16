@@ -523,6 +523,23 @@ fn designer_links(app: &mut App) {
     designer(app, designer::Event::SelectItem("kat".into()));
 }
 
+/// Alanlar on the buildings, the floor count chosen: it is shared by area when a building is split and
+/// summed when buildings are merged (docs/adr/0419).
+fn field_policies(app: &mut App) {
+    use crate::layer_fields::Event;
+    styled_buildings(app);
+    let _ = app.open_layer_fields("bina");
+    let _ = app.update(Message::LayerFields(Event::Choose(2)));
+    let _ = app.update(Message::LayerFields(Event::Split(
+        2,
+        Some(kentos_contracts::SplitPolicy::Ratio),
+    )));
+    let _ = app.update(Message::LayerFields(Event::Merge(
+        2,
+        Some(kentos_contracts::MergePolicy::Sum),
+    )));
+}
+
 /// Koşullu biçim's window on the buildings' rules, the floor count's rule chosen.
 fn styles_window(app: &mut App) {
     styled_buildings(app);
@@ -1204,6 +1221,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-baglar", designer_links),
         ("form-hesap-degistir", overridden_height),
         ("form-kalkmis-deger", retired_list),
+        ("form-alan-politika", field_policies),
     ]
 }
 
@@ -1266,6 +1284,18 @@ mod tests {
         let undone = app.document.as_mut().unwrap().model.undo();
         assert_eq!(undone.as_deref(), Some("Koşullu biçim"));
         assert_eq!(rules(&app).len(), 4, "one step undoes it");
+    }
+
+    #[test]
+    fn the_fields_window_writes_the_split_and_merge_policies() {
+        let mut app = crate::files_testing::app_with_drawing();
+        field_policies(&mut app);
+        let _ = app.update(Message::LayerFields(crate::layer_fields::Event::Save));
+        let doc = app.document.as_ref().unwrap();
+        let kat = &doc.model.layers().get("bina").unwrap().fields[2];
+        assert_eq!(kat.name, "Kat");
+        assert_eq!(kat.split, Some(kentos_contracts::SplitPolicy::Ratio));
+        assert_eq!(kat.merge, Some(kentos_contracts::MergePolicy::Sum));
     }
 
     #[test]

@@ -231,6 +231,91 @@ pub struct LayerField {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub multiple: bool,
+    /// What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,
+    /// Kır, Parçalara ayır; docs/adr/0419). None: each piece keeps it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub split: Option<SplitPolicy>,
+    /// What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,
+    /// Parçaları birleştir; docs/adr/0419). None: the first object's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub merge: Option<MergePolicy>,
+}
+
+/// A field's value in the pieces of a split object (docs/adr/0419).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum SplitPolicy {
+    /// Each piece keeps the value.
+    Copy,
+    /// The pieces' values are emptied.
+    Clear,
+    /// The pieces take the field's default (none: empty).
+    Default,
+    /// The value is shared by the pieces' areas (lines: lengths), the total kept to the field's last
+    /// digit: integers and decimals with fraction digits.
+    Ratio,
+}
+
+impl SplitPolicy {
+    pub const ALL: [SplitPolicy; 4] = [
+        SplitPolicy::Copy,
+        SplitPolicy::Clear,
+        SplitPolicy::Default,
+        SplitPolicy::Ratio,
+    ];
+
+    pub fn label(self) -> &'static str {
+        match self {
+            SplitPolicy::Copy => "Kopyala",
+            SplitPolicy::Clear => "Boşalt",
+            SplitPolicy::Default => "Varsayılan",
+            SplitPolicy::Ratio => "Alan oranında paylaştır",
+        }
+    }
+}
+
+/// A field's value in the object merged from several (docs/adr/0419).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum MergePolicy {
+    /// The first object's value.
+    First,
+    /// Empty.
+    Clear,
+    /// The values' sum, exact to the field's last digit: integers and decimals with fraction digits.
+    Sum,
+    /// The least value (numbers).
+    Min,
+    /// The greatest value (numbers).
+    Max,
+}
+
+impl MergePolicy {
+    pub const ALL: [MergePolicy; 5] = [
+        MergePolicy::First,
+        MergePolicy::Clear,
+        MergePolicy::Sum,
+        MergePolicy::Min,
+        MergePolicy::Max,
+    ];
+
+    pub fn label(self) -> &'static str {
+        match self {
+            MergePolicy::First => "İlkinin değeri",
+            MergePolicy::Clear => "Boşalt",
+            MergePolicy::Sum => "Topla",
+            MergePolicy::Min => "En küçüğü",
+            MergePolicy::Max => "En büyüğü",
+        }
+    }
 }
 
 /// What joins a multiple field's codes (docs/adr/0408 §1).
@@ -252,6 +337,8 @@ impl LayerField {
             required: false,
             default: None,
             multiple: false,
+            split: None,
+            merge: None,
         }
     }
 
@@ -892,6 +979,26 @@ pub fn field_problem(field: &LayerField) -> Option<String> {
                 ));
             }
         }
+    }
+    // Sharing and summing keep the total to the last digit: whole units only (docs/adr/0419).
+    let units = kind == LayerFieldKind::Integer
+        || (kind == LayerFieldKind::Decimal && field.scale.is_some());
+    if field.split == Some(SplitPolicy::Ratio) && !units {
+        return Some(format!(
+            "“{name}” alanı oranla paylaştırılamaz: bu tam sayı ya da ondalık basamağı verilmiş ondalık sayı alanında olur."
+        ));
+    }
+    if field.merge == Some(MergePolicy::Sum) && !units {
+        return Some(format!(
+            "“{name}” alanı toplanamaz: bu tam sayı ya da ondalık basamağı verilmiş ondalık sayı alanında olur."
+        ));
+    }
+    if matches!(field.merge, Some(MergePolicy::Min | MergePolicy::Max))
+        && !matches!(kind, LayerFieldKind::Integer | LayerFieldKind::Decimal)
+    {
+        return Some(format!(
+            "“{name}” alanında en küçüğü ve en büyüğü yalnız sayı alanlarında olur."
+        ));
     }
     if field
         .values

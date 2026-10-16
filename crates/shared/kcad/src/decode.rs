@@ -1259,6 +1259,7 @@ fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
     let (mut name, mut kind, mut alias, mut length, mut scale) = (None, None, None, None, None);
     let (mut min, mut max, mut values, mut default, mut must) = (None, None, None, None, None);
     let mut many = None;
+    let (mut split, mut merge) = (None, None);
     let count = |r: &mut Reader<'_>| r.uint(u64::from(u32::MAX)).map(|n| n as u32);
     map(r, |r, key| {
         match key {
@@ -1284,6 +1285,23 @@ fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
             "default" => default = Some(text(r)?),
             "required" => must = Some(r.bool()?),
             "multiple" if ids => many = Some(r.bool()?),
+            // Schema 60 (docs/adr/0419): the split and merge policies.
+            "split" if ids => {
+                let all: Vec<(&str, kentos_contracts::SplitPolicy)> =
+                    kentos_contracts::SplitPolicy::ALL
+                        .into_iter()
+                        .map(|p| (crate::encode::split_name(p), p))
+                        .collect();
+                split = Some(named(r, &all)?)
+            }
+            "merge" if ids => {
+                let all: Vec<(&str, kentos_contracts::MergePolicy)> =
+                    kentos_contracts::MergePolicy::ALL
+                        .into_iter()
+                        .map(|p| (crate::encode::merge_name(p), p))
+                        .collect();
+                merge = Some(named(r, &all)?)
+            }
             _ => return Err(unknown(r)),
         }
         Ok(())
@@ -1307,6 +1325,8 @@ fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
         required: must == Some(true),
         default,
         multiple: many == Some(true),
+        split,
+        merge,
     })
 }
 

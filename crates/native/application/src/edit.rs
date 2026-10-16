@@ -490,8 +490,26 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
         input.operation,
         EditOperation::Break | EditOperation::Join | EditOperation::Reverse
     );
+    // What the field policies read (docs/adr/0419): the pieces that carry their object's data (an
+    // update, a kept-data replacement or new piece) with their object, and the removed objects.
+    let mut pieces: Vec<(Piece, Slot)> = Vec::new();
+    let mut gone: Vec<(Slot, std::collections::BTreeMap<String, String>)> = Vec::new();
+    let mut before: std::collections::HashMap<Slot, std::collections::BTreeMap<String, String>> =
+        std::collections::HashMap::new();
     for (change, (slot, entity)) in input.changes.iter().zip(found) {
         let base = entity.base();
+        before.entry(slot).or_insert_with(|| base.attrs.clone());
+        match change {
+            EntityEdit::Update { .. } => pieces.push((Piece::Changed(checked.changed.len()), slot)),
+            EntityEdit::Replace { keep_data, .. } if keep_data.unwrap_or(false) => {
+                pieces.push((Piece::Changed(checked.changed.len()), slot));
+            }
+            EntityEdit::Add { keep_data, .. } if keep_data.unwrap_or(false) => {
+                pieces.push((Piece::Created(checked.created.len()), slot));
+            }
+            EntityEdit::Remove { .. } => gone.push((slot, base.attrs.clone())),
+            _ => {}
+        }
         match change {
             EntityEdit::Update { uid, geometry } => {
                 let mut next = entity_of(geometry, base.clone());
@@ -564,6 +582,7 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
             EntityEdit::Remove { uid } => checked.removed.push((slot, uid.clone())),
         }
     }
+    follow_policies(doc, input.operation, &mut checked, &pieces, &gone, &before);
     if lost > 0 {
         checked.warnings.push(CommandWarning {
             code: codes::ELEVATION_LOST.into(),
@@ -589,6 +608,117 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
         });
     }
     Ok(checked)
+}
+
+/// Where a piece of an edit is written: an object changed in place or a new one.
+#[derive(Clone, Copy)]
+enum Piece {
+    Changed(usize),
+    Created(usize),
+}
+
+/// The layer fields' split and merge policies (docs/adr/0419) on what the edit writes: a split object's
+/// pieces (those that carry its data) share, empty or default its values; a merge's one piece takes
+/// its fields' values from its object and the removed ones, its object first.
+fn follow_policies(
+    doc: &Document,
+    operation: EditOperation,
+    checked: &mut Checked,
+    pieces: &[(Piece, Slot)],
+    gone: &[(Slot, std::collections::BTreeMap<String, String>)],
+    before: &std::collections::HashMap<Slot, std::collections::BTreeMap<String, String>>,
+) {
+    use crate::field_policy::{merge, split};
+    let fields_of = |entity: &Entity| {
+        doc.layers()
+            .get(&entity.base().layer_id)
+            .map(|n| n.fields.clone())
+            .unwrap_or_default()
+    };
+    let weight = |entity: &Entity| {
+        let shape = crate::geometry::shape(entity);
+        kentos_geometry_core::entity::entity_area(&shape)
+            .filter(|a| *a > 0.0)
+            .or_else(|| kentos_geometry_core::entity::entity_length(&shape))
+            .unwrap_or(0.0)
+    };
+    let entity_at = |checked: &Checked, p: Piece| match p {
+        Piece::Changed(i) => checked.changed[i].entity.clone(),
+        Piece::Created(i) => checked.created[i].clone(),
+    };
+    let write = |checked: &mut Checked, p: Piece, name: &str, value: Option<String>| {
+        let entity = match p {
+            Piece::Changed(i) => &mut checked.changed[i].entity,
+            Piece::Created(i) => &mut checked.created[i],
+        };
+        let attrs = &mut entity.base_mut().attrs;
+        match value.filter(|v| !v.is_empty()) {
+            Some(v) => {
+                attrs.insert(name.to_owned(), v);
+            }
+            None => {
+                attrs.remove(name);
+            }
+        }
+    };
+    let splits = matches!(
+        operation,
+        EditOperation::AreaSplit
+            | EditOperation::Split
+            | EditOperation::Break
+            | EditOperation::PartsSplit
+    );
+    let merges = matches!(
+        operation,
+        EditOperation::AreaUnion | EditOperation::Join | EditOperation::PartsJoin
+    );
+    if splits {
+        let mut sources: Vec<Slot> = Vec::new();
+        for (_, s) in pieces {
+            if !sources.contains(s) {
+                sources.push(*s);
+            }
+        }
+        for source in sources {
+            let at: Vec<Piece> = pieces
+                .iter()
+                .filter(|(_, s)| *s == source)
+                .map(|(p, _)| *p)
+                .collect();
+            let (true, Some(attrs)) = (at.len() >= 2, before.get(&source)) else {
+                continue;
+            };
+            let first = entity_at(checked, at[0]);
+            let weights: Vec<f64> = at.iter().map(|p| weight(&entity_at(checked, *p))).collect();
+            for field in fields_of(&first) {
+                let held = attrs.get(&field.name).map(String::as_str);
+                let Some(values) = split(&field, held, &weights) else {
+                    continue;
+                };
+                for (p, value) in at.iter().zip(values) {
+                    write(checked, *p, &field.name, value);
+                }
+            }
+        }
+    }
+    if merges && !gone.is_empty() {
+        let [(piece, source)] = pieces else {
+            return;
+        };
+        let Some(first) = before.get(source) else {
+            return;
+        };
+        let entity = entity_at(checked, *piece);
+        for field in fields_of(&entity) {
+            let values: Vec<Option<&str>> = std::iter::once(first)
+                .chain(gone.iter().filter(|(s, _)| s != source).map(|(_, a)| a))
+                .map(|a| a.get(&field.name).map(String::as_str))
+                .collect();
+            if let Some(value) = merge(&field, &values) {
+                write(checked, *piece, &field.name, value);
+            }
+        }
+    }
 }
 
 /// What a replacement or a new piece takes from its object: the layer, the

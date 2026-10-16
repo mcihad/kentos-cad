@@ -304,6 +304,13 @@
         {
           "name": "Vardiya",
           "kind": "time"
+        },
+        {
+          "name": "Pay",
+          "kind": "decimal",
+          "scale": 2,
+          "split": "ratio",
+          "merge": "sum"
         }
       ],
       "tableStyles": [

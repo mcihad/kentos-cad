@@ -370,6 +370,14 @@ def field_problem(f):
                 return f"“{name}” çok değerli; değer listesinin kodlarında ve etiketlerinde “;” olamaz."
             codes.add(code)
             labels.add(folded(trim(label)))
+    # docs/adr/0419: sharing and summing keep the total to the last digit; the least and greatest are numbers'.
+    units = k == "integer" or (k == "decimal" and "scale" in f)
+    if f.get("split") == "ratio" and not units:
+        return f"“{name}” alanı oranla paylaştırılamaz: bu tam sayı ya da ondalık basamağı verilmiş ondalık sayı alanında olur."
+    if f.get("merge") == "sum" and not units:
+        return f"“{name}” alanı toplanamaz: bu tam sayı ya da ondalık basamağı verilmiş ondalık sayı alanında olur."
+    if f.get("merge") in ("min", "max") and k not in ("integer", "decimal"):
+        return f"“{name}” alanında en küçüğü ve en büyüğü yalnız sayı alanlarında olur."
     # docs/adr/0418: at least one value is offered; the default is not retired.
     if f.get("values") and all(v.get("retired") for v in f["values"]):
         return f"“{name}” alanının bütün değerleri kullanımdan kalkmış; en az biri sunulmalı."
@@ -537,6 +545,12 @@ PROBLEMS = [
     ("saatte-liste", [{**TM, "values": [{"code": "08:00:00", "label": "Sabah"}]}]),
     ("saat-varsayılanı", [{**TM, "default": "08:30:00"}, {**DT, "default": "2026-10-16T08:30:00"}]),
     ("saat-varsayılanı-tek-biçim", [{**TM, "default": "8:30"}]),
+    ("paylaştırma-ve-toplam", [{"name": "Pay", "kind": "integer", "split": "ratio", "merge": "sum"},
+                               {"name": "Alan", "kind": "decimal", "scale": 2, "split": "ratio", "merge": "max"},
+                               {"name": "Not", "kind": "text", "split": "clear", "merge": "first"}]),
+    ("basamaksız-ondalık-paylaşılmaz", [{"name": "Alan", "kind": "decimal", "split": "ratio"}]),
+    ("metin-toplanmaz", [{"name": "Ad", "kind": "text", "merge": "sum"}]),
+    ("tarihte-en-küçük-yok", [{"name": "Tarih", "kind": "date", "merge": "min"}]),
     ("kalkmış-değer", [{"name": "Tür", "kind": "text", "values": [{"code": "K", "label": "Konut"}, {"code": "E", "label": "Eski", "retired": True}]}]),
     ("bütün-değerler-kalkmış", [{"name": "Tür", "kind": "text", "values": [{"code": "E", "label": "Eski", "retired": True}]}]),
     ("kalkmış-varsayılan", [{"name": "Tür", "kind": "text", "values": [{"code": "K", "label": "Konut"}, {"code": "E", "label": "Eski", "retired": True}],

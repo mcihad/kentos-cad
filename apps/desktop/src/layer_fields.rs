@@ -72,6 +72,9 @@ pub struct FieldRow {
     pub values: Option<Vec<FieldChoice>>,
     /// A listed text field holds several codes (docs/adr/0408 §1).
     pub multiple: bool,
+    /// Bölünce and Birleşince (docs/adr/0419).
+    pub split: Option<kentos_contracts::SplitPolicy>,
+    pub merge: Option<kentos_contracts::MergePolicy>,
 }
 
 /// A field as the window shows it (the web's `rowOf`).
@@ -93,6 +96,8 @@ pub fn row_of(f: &LayerField) -> FieldRow {
         max: f.max.clone().unwrap_or_default(),
         values: f.values.clone(),
         multiple: f.multiple,
+        split: f.split,
+        merge: f.merge,
     }
 }
 
@@ -140,6 +145,8 @@ pub fn field_of(r: &FieldRow) -> LayerField {
     if !r.default.trim().is_empty() {
         f.default = Some(r.default.clone());
     }
+    f.split = r.split;
+    f.merge = r.merge;
     f
 }
 
@@ -226,6 +233,9 @@ pub enum Event {
     ListLabel(usize, String),
     /// Kullanımdan kalktı (docs/adr/0418).
     ListRetired(usize, bool),
+    /// Bölünce and Birleşince of a row (docs/adr/0419).
+    Split(usize, Option<kentos_contracts::SplitPolicy>),
+    Merge(usize, Option<kentos_contracts::MergePolicy>),
     ListAdd,
     ListRemove(usize),
     /// Birden çok değer seçilebilir (docs/adr/0408 §1).
@@ -357,6 +367,8 @@ impl App {
                     max: String::new(),
                     values: None,
                     multiple: false,
+                    split: None,
+                    merge: None,
                 });
                 w.chosen = Some(w.rows.len() - 1);
             }
@@ -438,6 +450,16 @@ impl App {
             Event::ListLabel(i, t) => {
                 if let Some(c) = w.choices.as_mut().and_then(|c| c.list.get_mut(i)) {
                     c.label = t;
+                }
+            }
+            Event::Split(i, p) => {
+                if let Some(r) = w.rows.get_mut(i) {
+                    r.split = p;
+                }
+            }
+            Event::Merge(i, p) => {
+                if let Some(r) = w.rows.get_mut(i) {
+                    r.merge = p;
                 }
             }
             Event::ListRetired(i, on) => {
@@ -738,7 +760,7 @@ impl App {
         ]
         .spacing(8)
         .align_y(Center);
-        let usage = self.field_usage_box(w);
+        let usage = iced::widget::column![policy_box(w), self.field_usage_box(w)].spacing(10);
         let problem = problem_of(&w.rows);
         let renamed = renames_of(&w.rows).len();
         let line = match (&w.said, &problem) {
@@ -904,6 +926,72 @@ impl App {
             other => return Err(format!("“{FIELDS_TITLE}” penceresinde {other} yok")),
         })
     }
+}
+
+/// Bölünce and Birleşince of the chosen row (docs/adr/0419): only what its kind takes.
+fn policy_box<'a>(w: &Window) -> Element<'a, Message> {
+    use kentos_contracts::{MergePolicy, SplitPolicy};
+    let Some((i, r)) = w.chosen.and_then(|i| w.rows.get(i).map(|r| (i, r))) else {
+        return iced::widget::space().into();
+    };
+    let units = r.kind == LayerFieldKind::Integer
+        || (r.kind == LayerFieldKind::Decimal && !r.size.trim().is_empty());
+    let number = r.kind.is_number();
+    let splits: Vec<SplitPolicy> = SplitPolicy::ALL
+        .into_iter()
+        .filter(|p| *p != SplitPolicy::Ratio || units)
+        .collect();
+    let merges: Vec<MergePolicy> = MergePolicy::ALL
+        .into_iter()
+        .filter(|p| match p {
+            MergePolicy::Sum => units,
+            MergePolicy::Min | MergePolicy::Max => number,
+            _ => true,
+        })
+        .collect();
+    let split_at = splits
+        .iter()
+        .position(|p| Some(*p) == r.split.or(Some(SplitPolicy::Copy)));
+    let merge_at = merges
+        .iter()
+        .position(|p| Some(*p) == r.merge.or(Some(MergePolicy::First)));
+    let split = {
+        let picks = splits.clone();
+        Select::new(
+            splits.iter().map(|p| Choice::new(p.label())),
+            split_at,
+            move |k| {
+                let p = picks[k];
+                msg(Event::Split(i, (p != SplitPolicy::Copy).then_some(p)))
+            },
+        )
+    };
+    let merge = {
+        let picks = merges.clone();
+        Select::new(
+            merges.iter().map(|p| Choice::new(p.label())),
+            merge_at,
+            move |k| {
+                let p = picks[k];
+                msg(Event::Merge(i, (p != MergePolicy::First).then_some(p)))
+            },
+        )
+    };
+    row![
+        words::field(
+            "Nesne bölününce",
+            container(split).width(Length::Fixed(220.0)),
+            None
+        ),
+        words::field(
+            "Nesneler birleşince",
+            container(merge).width(Length::Fixed(180.0)),
+            None
+        ),
+    ]
+    .spacing(16)
+    .align_y(iced::Alignment::End)
+    .into()
 }
 
 #[cfg(test)]

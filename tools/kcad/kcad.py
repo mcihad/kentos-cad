@@ -1401,6 +1401,13 @@ def fields_problem(fields):
                 return f"“{name}” çok değerli; değer listesinde “;” olamaz"
             if all(c.get("retired") for c in vs):
                 return f"“{name}” alanının bütün değerleri kullanımdan kalkmış"
+        units = kind == "integer" or (kind == "decimal" and "scale" in f)
+        if f.get("split") == "ratio" and not units:
+            return f"“{name}” alanı oranla paylaştırılamaz"
+        if f.get("merge") == "sum" and not units:
+            return f"“{name}” alanı toplanamaz"
+        if f.get("merge") in ("min", "max") and kind not in ("integer", "decimal"):
+            return f"“{name}” alanında en küçüğü ve en büyüğü yalnız sayı alanlarında olur"
         if f.get("multiple") and kind != "text":
             return f"“{name}” alanı çok değerli olamaz"
         if "default" in f and not _default_fits(f, f["default"]):
@@ -3290,6 +3297,9 @@ class _Schema:
                 "default": (self.text, False),
                 # Schema 60 (docs/adr/0408 §1): a listed text field holding several codes.
                 **({"multiple": (self.bool, False)} if self.forms else {}),
+                # Schema 60 (docs/adr/0419): the split and merge policies.
+                **({"split": (self.enum(("copy", "clear", "default", "ratio")), False),
+                    "merge": (self.enum(("first", "clear", "sum", "min", "max")), False)} if self.forms else {}),
                 "required": (self.bool, False),
             }
         )

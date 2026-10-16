@@ -124,6 +124,7 @@ pub mod layer_filter;
 pub mod layers_compose;
 pub mod layers_edit;
 pub mod layers_filter;
+pub mod field_policy;
 pub mod fields_usage;
 pub mod layers_find;
 pub mod layers_info;

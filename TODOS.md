@@ -194,6 +194,9 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-AA` alanın bölme ve birleştirme kuralı (ADR 0419, 16 Ekim): web'de gerekenler: alanın `split` ve `merge`'i (TS türleri
+  üretildi), `cad.entities.edit`'in TS işleyicisinde kurallar (`fixtures/commands/v1/cad.entities.edit.policies.json`), alan kuralları
+  (`fixtures/layer-fields/v1/cases.json`), Alanlar penceresinde iki seçim, `.kcad` okuma.
 - [ ] `FORM-Z` kullanımdan kalkan liste değeri (ADR 0418, 16 Ekim): web'de gerekenler: değer listesi öğesinin `retired`'ı (TS türü
   üretildi), `model/layerFields.ts`'in iki alan kuralı (`fixtures/layer-fields/v1/cases.json`), form çekirdeğinin `form_value_retired`'ı
   ve sunulan değerleri (`fixtures/forms/v1/cases.json`), seçicilerde “(kullanımdan kalktı)”, Alanlar'da Kalktı, `.kcad` okuma.
@@ -1485,6 +1488,8 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-AA` Alanın bölme ve birleştirme kuralı: Kopyala, Boşalt, Varsayılan, Alan oranında paylaştır; İlkinin değeri, Boşalt,
+  Topla, En küçüğü, En büyüğü; toplam son basamağına dek korunur. — **16 Ekim, [ADR 0419](docs/adr/0419-split-and-merge-policies.md).**
 - [x] `FORM-Z` Kullanımdan kalkan liste değeri: tutan kayıtta kalır ve görünür, yeni seçimde sunulmaz, formla yeniden yazılmaz; Alanlar'da
   Kalktı, `.kcad` şema 60. — **16 Ekim, [ADR 0418](docs/adr/0418-retired-values.md).**
 - [x] `FORM-Y` Değiştirilebilir hesap: boşken hesaplanır, yazılan değer kalır, boşaltılınca yeniden hesaplanır; formda izleme ve ↺. —

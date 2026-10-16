@@ -1141,7 +1141,9 @@ impl<'d> Encoder<'d> {
             + usize::from(f.values.is_some())
             + usize::from(f.default.is_some())
             + usize::from(f.multiple)
-            + usize::from(f.required);
+            + usize::from(f.required)
+            + usize::from(f.split.is_some())
+            + usize::from(f.merge.is_some());
         self.open(n, true)?;
         if let Some(id) = &f.id {
             self.key("id");
@@ -1163,9 +1165,18 @@ impl<'d> Encoder<'d> {
             self.key("alias");
             self.at(Seg::Name("alias"), |e| e.text(alias))?;
         }
+        // Schema 60 (docs/adr/0419): the merge and split policies, in the keys' canonical order.
+        if let Some(merge) = f.merge {
+            self.key("merge");
+            self.w.text(merge_name(merge));
+        }
         if let Some(scale) = f.scale {
             self.key("scale");
             self.w.uint(u64::from(scale));
+        }
+        if let Some(split) = f.split {
+            self.key("split");
+            self.w.text(split_name(split));
         }
         if let Some(length) = f.length {
             self.key("length");
@@ -1498,6 +1509,8 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             f.id.is_some()
                 || f.multiple
                 || f.values.as_ref().is_some_and(|v| v.iter().any(|c| c.retired))
+                || f.split.is_some()
+                || f.merge.is_some()
                 || matches!(
                     f.kind,
                     kentos_contracts::LayerFieldKind::DateTime
@@ -1973,6 +1986,27 @@ fn parse_hex32(text: &str) -> Option<[u8; 32]> {
         *byte = (digit(raw[2 * i])? << 4) | digit(raw[2 * i + 1])?;
     }
     Some(out)
+}
+
+/// A split policy's name in the file (docs/adr/0419).
+pub(crate) fn split_name(p: kentos_contracts::SplitPolicy) -> &'static str {
+    match p {
+        kentos_contracts::SplitPolicy::Copy => "copy",
+        kentos_contracts::SplitPolicy::Clear => "clear",
+        kentos_contracts::SplitPolicy::Default => "default",
+        kentos_contracts::SplitPolicy::Ratio => "ratio",
+    }
+}
+
+/// A merge policy's name in the file (docs/adr/0419).
+pub(crate) fn merge_name(p: kentos_contracts::MergePolicy) -> &'static str {
+    match p {
+        kentos_contracts::MergePolicy::First => "first",
+        kentos_contracts::MergePolicy::Clear => "clear",
+        kentos_contracts::MergePolicy::Sum => "sum",
+        kentos_contracts::MergePolicy::Min => "min",
+        kentos_contracts::MergePolicy::Max => "max",
+    }
 }
 
 #[cfg(test)]

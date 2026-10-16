@@ -1923,6 +1923,64 @@
       "want": "“Vardiya” alanının varsayılanı “8:30” alanın kurallarına uymuyor."
     },
     {
+      "name": "paylaştırma-ve-toplam",
+      "fields": [
+        {
+          "name": "Pay",
+          "kind": "integer",
+          "split": "ratio",
+          "merge": "sum"
+        },
+        {
+          "name": "Alan",
+          "kind": "decimal",
+          "scale": 2,
+          "split": "ratio",
+          "merge": "max"
+        },
+        {
+          "name": "Not",
+          "kind": "text",
+          "split": "clear",
+          "merge": "first"
+        }
+      ],
+      "want": null
+    },
+    {
+      "name": "basamaksız-ondalık-paylaşılmaz",
+      "fields": [
+        {
+          "name": "Alan",
+          "kind": "decimal",
+          "split": "ratio"
+        }
+      ],
+      "want": "“Alan” alanı oranla paylaştırılamaz: bu tam sayı ya da ondalık basamağı verilmiş ondalık sayı alanında olur."
+    },
+    {
+      "name": "metin-toplanmaz",
+      "fields": [
+        {
+          "name": "Ad",
+          "kind": "text",
+          "merge": "sum"
+        }
+      ],
+      "want": "“Ad” alanı toplanamaz: bu tam sayı ya da ondalık basamağı verilmiş ondalık sayı alanında olur."
+    },
+    {
+      "name": "tarihte-en-küçük-yok",
+      "fields": [
+        {
+          "name": "Tarih",
+          "kind": "date",
+          "merge": "min"
+        }
+      ],
+      "want": "“Tarih” alanında en küçüğü ve en büyüğü yalnız sayı alanlarında olur."
+    },
+    {
       "name": "kalkmış-değer",
       "fields": [
         {

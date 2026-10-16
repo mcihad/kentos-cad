@@ -809,6 +809,9 @@ def layer_field(f):
         "default": (text, False),
         # Schema 60 (docs/adr/0408 §1): several codes of the list.
         "multiple": (boolean, False),
+        # Schema 60 (docs/adr/0419): the split and merge policies.
+        "split": (enum(("copy", "clear", "default", "ratio")), False),
+        "merge": (enum(("first", "clear", "sum", "min", "max")), False),
     }
     return cmap(fields(f, table, f"alan {f.get('name')}"))
 
@@ -1972,7 +1975,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     # Schema 60 (docs/adr/0401): a form of the project, or a layer field's stable id.
     def keyed(nodes):
         return any(any("id" in f or f.get("multiple") or f["kind"] in ("datetime", "time")
-                       or any(c.get("retired") for c in f.get("values", [])) for f in n.get("fields", []))
+                       or any(c.get("retired") for c in f.get("values", [])) or "split" in f or "merge" in f
+                       for f in n.get("fields", []))
                    or keyed(n.get("children", [])) for n in nodes)
 
     # A record without a geometry is schema 60's too (docs/adr/0410 §2).
@@ -3690,7 +3694,8 @@ def build():
     out["broken/field-id-in-schema-59.kcad"] = container(keyed_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
     # A date and time field alone is schema 60's (docs/adr/0412 §4).
     def unretired(d):
-        """The sample without its retired value: another rule of schema 60 alone."""
+        """The sample without its retired value and its policies: another rule of schema 60 alone."""
+        d["layers"][0]["fields"] = [f for f in d["layers"][0]["fields"] if "split" not in f and "merge" not in f]
         for f in d["layers"][0]["fields"]:
             if "values" in f:
                 f["values"] = [c for c in f["values"] if not c.get("retired")]
@@ -3709,9 +3714,23 @@ def build():
     aged["layers"][0].pop("tableStyles")
     aged["layers"][0]["fields"] = [{k: v for k, v in f.items() if k != "id"} for f in aged["layers"][0]["fields"]
                                    if f["kind"] not in ("datetime", "time") and not f.get("multiple")]
+    aged["layers"][0]["fields"] = [f for f in aged["layers"][0]["fields"] if "split" not in f and "merge" not in f]
     aged_payload = document(aged)
     assert aged_payload.count(b"\x67version\x18\x3c") == 1, "a retired value alone is schema 60"
     out["broken/value-retired-in-schema-59.kcad"] = container(aged_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
+    # A field's split and merge policies alone are schema 60's (docs/adr/0419).
+    shared = copy.deepcopy(load("forms.json"))
+    shared["settings"].pop("forms")
+    shared["layers"][0].pop("tableStyles")
+    shared["layers"][0]["fields"] = [{k: v for k, v in f.items() if k != "id"} for f in shared["layers"][0]["fields"]
+                                     if f["kind"] not in ("datetime", "time") and not f.get("multiple")]
+    for f in shared["layers"][0]["fields"]:
+        if "values" in f:
+            f["values"] = [c for c in f["values"] if not c.get("retired")]
+    shared_payload = document(shared)
+    assert shared_payload.count(b"\x67version\x18\x3c") == 1, "the policies alone are schema 60"
+    out["broken/field-split-in-schema-59.kcad"] = container(shared_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
+
     # A layer's table rules alone are schema 60's (docs/adr/0413 §3).
     styled = copy.deepcopy(load("forms.json"))
     styled["settings"].pop("forms")

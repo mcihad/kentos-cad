@@ -1504,6 +1504,26 @@ MatchPropertyName = Literal["layer", "color", "lineType", "lineTypeScale", "line
 """The names of :class:`MatchProperty`, for a plain string."""
 
 
+class MergePolicy(_StrEnum):
+    """A field's value in the object merged from several (docs/adr/0419).
+
+    - ``first``: The first object's value.
+    - ``clear``: Empty.
+    - ``sum``: The values' sum, exact to the field's last digit: integers and decimals with fraction digits.
+    - ``min``: The least value (numbers).
+    - ``max``: The greatest value (numbers).
+    """
+    FIRST = "first"
+    CLEAR = "clear"
+    SUM = "sum"
+    MIN = "min"
+    MAX = "max"
+
+
+MergePolicyName = Literal["first", "clear", "sum", "min", "max"]
+"""The names of :class:`MergePolicy`, for a plain string."""
+
+
 class MirrorText(_StrEnum):
     """What a mirror does to the texts (docs/adr/0292; AutoCAD's MIRRTEXT): texts, multi-line texts, texts along a
     curve, leaders' notes and tables.
@@ -2037,6 +2057,24 @@ class SnapKindName(_StrEnum):
 
 SnapKindNameName = Literal["endpoint", "midpoint", "center", "node", "quadrant", "intersection", "perpendicular", "tangent", "nearest", "centroid", "insertion"]
 """The names of :class:`SnapKindName`, for a plain string."""
+
+
+class SplitPolicy(_StrEnum):
+    """A field's value in the pieces of a split object (docs/adr/0419).
+
+    - ``copy``: Each piece keeps the value.
+    - ``clear``: The pieces' values are emptied.
+    - ``default``: The pieces take the field's default (none: empty).
+    - ``ratio``: The value is shared by the pieces' areas (lines: lengths), the total kept to the field's last
+    """
+    COPY = "copy"
+    CLEAR = "clear"
+    DEFAULT = "default"
+    RATIO = "ratio"
+
+
+SplitPolicyName = Literal["copy", "clear", "default", "ratio"]
+"""The names of :class:`SplitPolicy`, for a plain string."""
 
 
 class StackMode(_StrEnum):
@@ -13117,12 +13155,16 @@ class LayerField(_Model):
             rename writes the old name here so a binding holds. Unique among the layer's fields' keys.
         length: A text's most characters (1–10 000). Unit: count.
         max: A number's greatest value, in its canonical text; included.
+        merge: What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,
+            Parçaları birleştir; docs/adr/0419). None: the first object's.
         min: A number's least value, in its canonical text; included.
         multiple: A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the
             list's order, an unlisted one its values in their order (objects' persistent ids for a
             many-to-many reference), joined with `; `; written only as `true`.
         required: An object may not leave it empty; written only as `true`.
         scale: A decimal's most fraction digits (0–15). Unit: count.
+        split: What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,
+            Kır, Parçalara ayır; docs/adr/0419). None: each piece keeps it.
         values: The values a text or a number takes, when only some.
     """
     name: str
@@ -13132,10 +13174,12 @@ class LayerField(_Model):
     id: str | None | Unset = UNSET
     length: int | None | Unset = UNSET
     max: str | None | Unset = UNSET
+    merge: MergePolicy | MergePolicyName | None | Unset = UNSET
     min: str | None | Unset = UNSET
     multiple: bool | Unset = UNSET
     required: bool | Unset = UNSET
     scale: int | None | Unset = UNSET
+    split: SplitPolicy | SplitPolicyName | None | Unset = UNSET
     values: list[FieldChoice] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -13152,6 +13196,8 @@ class LayerField(_Model):
             out["length"] = self.length
         if self.max is not UNSET:
             out["max"] = self.max
+        if self.merge is not UNSET:
+            out["merge"] = None if self.merge is None else _enum_out(self.merge)
         if self.min is not UNSET:
             out["min"] = self.min
         if self.multiple is not UNSET:
@@ -13160,6 +13206,8 @@ class LayerField(_Model):
             out["required"] = self.required
         if self.scale is not UNSET:
             out["scale"] = self.scale
+        if self.split is not UNSET:
+            out["split"] = None if self.split is None else _enum_out(self.split)
         if self.values is not UNSET:
             out["values"] = None if self.values is None else [e0.to_json() for e0 in self.values]
         return out
@@ -13174,10 +13222,12 @@ class LayerField(_Model):
             id=data.get("id", UNSET),
             length=data.get("length", UNSET),
             max=data.get("max", UNSET),
+            merge=UNSET if "merge" not in data else None if data["merge"] is None else _enum_in(MergePolicy, data["merge"]),
             min=data.get("min", UNSET),
             multiple=data.get("multiple", UNSET),
             required=data.get("required", UNSET),
             scale=data.get("scale", UNSET),
+            split=UNSET if "split" not in data else None if data["split"] is None else _enum_in(SplitPolicy, data["split"]),
             values=UNSET if "values" not in data else None if data["values"] is None else [FieldChoice.from_json(e0) for e0 in data["values"]],
         )
 
@@ -29430,6 +29480,8 @@ __all__ = [
     "MatchProperty",
     "MatchPropertyName",
     "MeasuredPoint",
+    "MergePolicy",
+    "MergePolicyName",
     "MidPointConstruction",
     "MidSubPlace",
     "MirrorText",
@@ -29685,6 +29737,8 @@ __all__ = [
     "SnapKindNameName",
     "SplineEntity",
     "SplineEntityGeometry",
+    "SplitPolicy",
+    "SplitPolicyName",
     "StackMode",
     "StackModeName",
     "StandardDimensionStyle",

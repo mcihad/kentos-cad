@@ -1,0 +1,4130 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.entities.edit",
+  "commandVersion": 1,
+  "title": "Alanların bölme ve birleştirme kuralı",
+  "note": "Written by scripts/fixtures/field_policy_cases.py from docs/adr/0419; do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Alanların bölme ve birleştirme kuralı",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "gis",
+      "drawingFont": "barlow"
+    },
+    "origin": {
+      "x": 500000,
+      "y": 4400000
+    },
+    "layers": [
+      {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+          {
+            "name": "Ada",
+            "kind": "text"
+          },
+          {
+            "name": "Pay",
+            "kind": "integer",
+            "split": "ratio",
+            "merge": "sum"
+          },
+          {
+            "name": "Alan",
+            "kind": "decimal",
+            "scale": 2,
+            "split": "ratio",
+            "merge": "sum"
+          },
+          {
+            "name": "Not",
+            "kind": "text",
+            "split": "clear",
+            "merge": "clear"
+          },
+          {
+            "name": "Tür",
+            "kind": "text",
+            "default": "bölünmüş",
+            "split": "default",
+            "merge": "first"
+          },
+          {
+            "name": "Kot",
+            "kind": "decimal",
+            "scale": 1,
+            "split": "copy",
+            "merge": "max"
+          },
+          {
+            "name": "En",
+            "kind": "integer",
+            "merge": "min"
+          }
+        ]
+      },
+      {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+          {
+            "name": "Ad",
+            "kind": "text"
+          },
+          {
+            "name": "Uzunluk",
+            "kind": "decimal",
+            "scale": 1,
+            "split": "ratio",
+            "merge": "sum"
+          }
+        ]
+      }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+      {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "parsel",
+        "pts": [
+          {
+            "x": 500000,
+            "y": 4400000
+          },
+          {
+            "x": 500020,
+            "y": 4400000
+          },
+          {
+            "x": 500020,
+            "y": 4400010
+          },
+          {
+            "x": 500000,
+            "y": 4400010
+          }
+        ],
+        "attrs": {
+          "Ada": "101",
+          "Pay": "1000",
+          "Alan": "200.00",
+          "Not": "eski",
+          "Tür": "arsa",
+          "Kot": "12.5",
+          "En": "3"
+        }
+      },
+      {
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "parsel",
+        "pts": [
+          {
+            "x": 500020,
+            "y": 4400000
+          },
+          {
+            "x": 500040,
+            "y": 4400000
+          },
+          {
+            "x": 500040,
+            "y": 4400010
+          },
+          {
+            "x": 500020,
+            "y": 4400010
+          }
+        ],
+        "attrs": {
+          "Ada": "101",
+          "Pay": "500",
+          "Alan": "199.99",
+          "Kot": "15.0",
+          "En": "7"
+        }
+      },
+      {
+        "kind": "polygon",
+        "id": 3,
+        "layerId": "parsel",
+        "pts": [
+          {
+            "x": 500040,
+            "y": 4400000
+          },
+          {
+            "x": 500070,
+            "y": 4400000
+          },
+          {
+            "x": 500070,
+            "y": 4400010
+          },
+          {
+            "x": 500040,
+            "y": 4400010
+          }
+        ],
+        "attrs": {
+          "Pay": "1001",
+          "Alan": "0.05"
+        }
+      },
+      {
+        "kind": "polygon",
+        "id": 4,
+        "layerId": "parsel",
+        "pts": [
+          {
+            "x": 500070,
+            "y": 4400000
+          },
+          {
+            "x": 500080,
+            "y": 4400000
+          },
+          {
+            "x": 500080,
+            "y": 4400010
+          },
+          {
+            "x": 500070,
+            "y": 4400010
+          }
+        ],
+        "attrs": {
+          "Pay": "-7",
+          "Alan": "-0.03"
+        }
+      },
+      {
+        "kind": "line",
+        "id": 5,
+        "layerId": "yol",
+        "a": {
+          "x": 500000,
+          "y": 4399990
+        },
+        "b": {
+          "x": 500030,
+          "y": 4399990
+        },
+        "attrs": {
+          "Ad": "Cadde",
+          "Uzunluk": "10.0"
+        }
+      },
+      {
+        "kind": "line",
+        "id": 6,
+        "layerId": "yol",
+        "a": {
+          "x": 500030,
+          "y": 4399990
+        },
+        "b": {
+          "x": 500040,
+          "y": 4399990
+        },
+        "attrs": {
+          "Ad": "Sokak",
+          "Uzunluk": "10.5"
+        }
+      },
+      {
+        "kind": "polygon",
+        "id": 7,
+        "layerId": "parsel",
+        "pts": [
+          {
+            "x": 500080,
+            "y": 4400000
+          },
+          {
+            "x": 500090,
+            "y": 4400000
+          },
+          {
+            "x": 500090,
+            "y": 4400010
+          },
+          {
+            "x": 500080,
+            "y": 4400010
+          }
+        ],
+        "attrs": {}
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Alan böl ikiye: pay ve alan yarı yarıya, not boşalır, tür varsayılanını alır, ada ve kot kalır",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "s1"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "areaSplit",
+            "changes": [
+              {
+                "kind": "replace",
+                "uid": "$uidOf:1",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500000,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500010,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500010,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500000,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              },
+              {
+                "kind": "add",
+                "from": "$uidOf:1",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500010,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500020,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500020,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500010,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uid:s1"
+              ],
+              "created": [
+                "$uidOf:8"
+              ],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "500",
+                  "Alan": "100.00",
+                  "Tür": "bölünmüş",
+                  "Kot": "12.5",
+                  "En": "3"
+                },
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500010,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500010,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500000,
+                    "y": 4400010
+                  }
+                ]
+              },
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "500",
+                  "Alan": "100.00",
+                  "Tür": "bölünmüş",
+                  "Kot": "12.5",
+                  "En": "3"
+                },
+                "pts": [
+                  {
+                    "x": 500010,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500010,
+                    "y": 4400010
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500000,
+                    "y": 4400010
+                  }
+                ],
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "1000",
+                  "Alan": "200.00",
+                  "Not": "eski",
+                  "Tür": "arsa",
+                  "Kot": "12.5",
+                  "En": "3"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alan böl üçe, eşit olmayan alanlar: 100, 60, 40",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "s1"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "areaSplit",
+            "changes": [
+              {
+                "kind": "replace",
+                "uid": "$uidOf:1",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500000,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500010,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500010,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500000,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              },
+              {
+                "kind": "add",
+                "from": "$uidOf:1",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500010,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500016,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500016,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500010,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              },
+              {
+                "kind": "add",
+                "from": "$uidOf:1",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500016,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500020,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500020,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500016,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uid:s1"
+              ],
+              "created": [
+                "$uidOf:8",
+                "$uidOf:9"
+              ],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "500",
+                  "Alan": "100.00",
+                  "Tür": "bölünmüş",
+                  "Kot": "12.5",
+                  "En": "3"
+                },
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500010,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500010,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500000,
+                    "y": 4400010
+                  }
+                ]
+              },
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "300",
+                  "Alan": "60.00",
+                  "Tür": "bölünmüş",
+                  "Kot": "12.5",
+                  "En": "3"
+                },
+                "pts": [
+                  {
+                    "x": 500010,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500016,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500016,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500010,
+                    "y": 4400010
+                  }
+                ]
+              },
+              "9": {
+                "kind": "polygon",
+                "id": 9,
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "200",
+                  "Alan": "40.00",
+                  "Tür": "bölünmüş",
+                  "Kot": "12.5",
+                  "En": "3"
+                },
+                "pts": [
+                  {
+                    "x": 500016,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500016,
+                    "y": 4400010
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500000,
+                    "y": 4400010
+                  }
+                ],
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "1000",
+                  "Alan": "200.00",
+                  "Not": "eski",
+                  "Tür": "arsa",
+                  "Kot": "12.5",
+                  "En": "3"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "eşit üç parça: 1001'in kalanı ilk parçaya; 0.05'in kalanları en büyük kalanlara",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 3,
+          "as": "s3"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "areaSplit",
+            "changes": [
+              {
+                "kind": "replace",
+                "uid": "$uidOf:3",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500040,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500050,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500050,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500040,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              },
+              {
+                "kind": "add",
+                "from": "$uidOf:3",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500050,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500060,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500060,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500050,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              },
+              {
+                "kind": "add",
+                "from": "$uidOf:3",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500060,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500070,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500070,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500060,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uid:s3"
+              ],
+              "created": [
+                "$uidOf:8",
+                "$uidOf:9"
+              ],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "3": {
+                "kind": "polygon",
+                "id": 3,
+                "layerId": "parsel",
+                "attrs": {
+                  "Pay": "334",
+                  "Alan": "0.02",
+                  "Tür": "bölünmüş"
+                },
+                "pts": [
+                  {
+                    "x": 500040,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500050,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500050,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500040,
+                    "y": 4400010
+                  }
+                ]
+              },
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {
+                  "Pay": "334",
+                  "Alan": "0.02",
+                  "Tür": "bölünmüş"
+                },
+                "pts": [
+                  {
+                    "x": 500050,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500060,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500060,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500050,
+                    "y": 4400010
+                  }
+                ]
+              },
+              "9": {
+                "kind": "polygon",
+                "id": 9,
+                "layerId": "parsel",
+                "attrs": {
+                  "Pay": "333",
+                  "Alan": "0.01",
+                  "Tür": "bölünmüş"
+                },
+                "pts": [
+                  {
+                    "x": 500060,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500070,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500070,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500060,
+                    "y": 4400010
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "3": {
+                "kind": "polygon",
+                "id": 3,
+                "layerId": "parsel",
+                "pts": [
+                  {
+                    "x": 500040,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500070,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500070,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500040,
+                    "y": 4400010
+                  }
+                ],
+                "attrs": {
+                  "Pay": "1001",
+                  "Alan": "0.05"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "eksi değer: -7 ikiye -4 ve -3",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 4,
+          "as": "s4"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "areaSplit",
+            "changes": [
+              {
+                "kind": "replace",
+                "uid": "$uidOf:4",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500070,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500075,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500075,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500070,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              },
+              {
+                "kind": "add",
+                "from": "$uidOf:4",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500075,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500080,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500080,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500075,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uid:s4"
+              ],
+              "created": [
+                "$uidOf:8"
+              ],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "4": {
+                "kind": "polygon",
+                "id": 4,
+                "layerId": "parsel",
+                "attrs": {
+                  "Pay": "-4",
+                  "Alan": "-0.02",
+                  "Tür": "bölünmüş"
+                },
+                "pts": [
+                  {
+                    "x": 500070,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500075,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500075,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500070,
+                    "y": 4400010
+                  }
+                ]
+              },
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {
+                  "Pay": "-3",
+                  "Alan": "-0.01",
+                  "Tür": "bölünmüş"
+                },
+                "pts": [
+                  {
+                    "x": 500075,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500080,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500080,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500075,
+                    "y": 4400010
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "4": {
+                "kind": "polygon",
+                "id": 4,
+                "layerId": "parsel",
+                "pts": [
+                  {
+                    "x": 500070,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500080,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500080,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500070,
+                    "y": 4400010
+                  }
+                ],
+                "attrs": {
+                  "Pay": "-7",
+                  "Alan": "-0.03"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "yeni parça önce: ağırlıklar parçaların yazılış sırasıyla",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "s1"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "areaSplit",
+            "changes": [
+              {
+                "kind": "add",
+                "from": "$uidOf:1",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500000,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500005,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500005,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500000,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              },
+              {
+                "kind": "replace",
+                "uid": "$uidOf:1",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500005,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500020,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500020,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500005,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uid:s1"
+              ],
+              "created": [
+                "$uidOf:8"
+              ],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "750",
+                  "Alan": "150.00",
+                  "Tür": "bölünmüş",
+                  "Kot": "12.5",
+                  "En": "3"
+                },
+                "pts": [
+                  {
+                    "x": 500005,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500005,
+                    "y": 4400010
+                  }
+                ]
+              },
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "250",
+                  "Alan": "50.00",
+                  "Tür": "bölünmüş",
+                  "Kot": "12.5",
+                  "En": "3"
+                },
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500005,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500005,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500000,
+                    "y": 4400010
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500000,
+                    "y": 4400010
+                  }
+                ],
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "1000",
+                  "Alan": "200.00",
+                  "Not": "eski",
+                  "Tür": "arsa",
+                  "Kot": "12.5",
+                  "En": "3"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "verisini taşımayan parçaya kural uygulanmaz",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "s1"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "areaSplit",
+            "changes": [
+              {
+                "kind": "replace",
+                "uid": "$uidOf:1",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500000,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500010,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500010,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500000,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              },
+              {
+                "kind": "add",
+                "from": "$uidOf:1",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500010,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500020,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500020,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500010,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": false
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uid:s1"
+              ],
+              "created": [
+                "$uidOf:8"
+              ],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "1000",
+                  "Alan": "200.00",
+                  "Not": "eski",
+                  "Tür": "arsa",
+                  "Kot": "12.5",
+                  "En": "3"
+                },
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500010,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500010,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500000,
+                    "y": 4400010
+                  }
+                ]
+              },
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500010,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500010,
+                    "y": 4400010
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500000,
+                    "y": 4400010
+                  }
+                ],
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "1000",
+                  "Alan": "200.00",
+                  "Not": "eski",
+                  "Tür": "arsa",
+                  "Kot": "12.5",
+                  "En": "3"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "tek parça: bölünme yok, değerler kalır",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "s1"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "areaSplit",
+            "changes": [
+              {
+                "kind": "replace",
+                "uid": "$uidOf:1",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500000,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500018,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500018,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500000,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uid:s1"
+              ],
+              "created": [],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "1000",
+                  "Alan": "200.00",
+                  "Not": "eski",
+                  "Tür": "arsa",
+                  "Kot": "12.5",
+                  "En": "3"
+                },
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500018,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500018,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500000,
+                    "y": 4400010
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500000,
+                    "y": 4400010
+                  }
+                ],
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "1000",
+                  "Alan": "200.00",
+                  "Not": "eski",
+                  "Tür": "arsa",
+                  "Kot": "12.5",
+                  "En": "3"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş öznitelikler boş kalır, tür varsayılanını alır",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 7,
+          "as": "s7"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "areaSplit",
+            "changes": [
+              {
+                "kind": "replace",
+                "uid": "$uidOf:7",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500080,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500085,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500085,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500080,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              },
+              {
+                "kind": "add",
+                "from": "$uidOf:7",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500085,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500090,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500090,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500085,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uid:s7"
+              ],
+              "created": [
+                "$uidOf:8"
+              ],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "7": {
+                "kind": "polygon",
+                "id": 7,
+                "layerId": "parsel",
+                "attrs": {
+                  "Tür": "bölünmüş"
+                },
+                "pts": [
+                  {
+                    "x": 500080,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500085,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500085,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500080,
+                    "y": 4400010
+                  }
+                ]
+              },
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {
+                  "Tür": "bölünmüş"
+                },
+                "pts": [
+                  {
+                    "x": 500085,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500090,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500090,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500085,
+                    "y": 4400010
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "7": {
+                "kind": "polygon",
+                "id": 7,
+                "layerId": "parsel",
+                "pts": [
+                  {
+                    "x": 500080,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500090,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500090,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500080,
+                    "y": 4400010
+                  }
+                ],
+                "attrs": {}
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "iki nesne birlikte bölünür: her biri kendi parçalarıyla",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "s1"
+        },
+        {
+          "op": "captureUid",
+          "id": 2,
+          "as": "s2"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "areaSplit",
+            "changes": [
+              {
+                "kind": "replace",
+                "uid": "$uidOf:1",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500000,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500010,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500010,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500000,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              },
+              {
+                "kind": "add",
+                "from": "$uidOf:1",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500010,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500020,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500020,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500010,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              },
+              {
+                "kind": "replace",
+                "uid": "$uidOf:2",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500020,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500025,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500025,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500020,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              },
+              {
+                "kind": "add",
+                "from": "$uidOf:2",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500025,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500040,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500040,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500025,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uid:s1",
+                "$uid:s2"
+              ],
+              "created": [
+                "$uidOf:8",
+                "$uidOf:9"
+              ],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "500",
+                  "Alan": "100.00",
+                  "Tür": "bölünmüş",
+                  "Kot": "12.5",
+                  "En": "3"
+                },
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500010,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500010,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500000,
+                    "y": 4400010
+                  }
+                ]
+              },
+              "2": {
+                "kind": "polygon",
+                "id": 2,
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "125",
+                  "Alan": "50.00",
+                  "Kot": "15.0",
+                  "En": "7",
+                  "Tür": "bölünmüş"
+                },
+                "pts": [
+                  {
+                    "x": 500020,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500025,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500025,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400010
+                  }
+                ]
+              },
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "500",
+                  "Alan": "100.00",
+                  "Tür": "bölünmüş",
+                  "Kot": "12.5",
+                  "En": "3"
+                },
+                "pts": [
+                  {
+                    "x": 500010,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500010,
+                    "y": 4400010
+                  }
+                ]
+              },
+              "9": {
+                "kind": "polygon",
+                "id": 9,
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "375",
+                  "Alan": "149.99",
+                  "Kot": "15.0",
+                  "En": "7",
+                  "Tür": "bölünmüş"
+                },
+                "pts": [
+                  {
+                    "x": 500025,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500040,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500040,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500025,
+                    "y": 4400010
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500000,
+                    "y": 4400010
+                  }
+                ],
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "1000",
+                  "Alan": "200.00",
+                  "Not": "eski",
+                  "Tür": "arsa",
+                  "Kot": "12.5",
+                  "En": "3"
+                }
+              },
+              "2": {
+                "kind": "polygon",
+                "id": 2,
+                "layerId": "parsel",
+                "pts": [
+                  {
+                    "x": 500020,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500040,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500040,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400010
+                  }
+                ],
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "500",
+                  "Alan": "199.99",
+                  "Kot": "15.0",
+                  "En": "7"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Parçala: çizgi uzunluklarıyla 10 ve 20",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 5,
+          "as": "s5"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "split",
+            "changes": [
+              {
+                "kind": "replace",
+                "uid": "$uidOf:5",
+                "geometry": {
+                  "kind": "line",
+                  "a": {
+                    "x": 500000,
+                    "y": 4399990
+                  },
+                  "b": {
+                    "x": 500010,
+                    "y": 4399990
+                  }
+                },
+                "keepData": true
+              },
+              {
+                "kind": "add",
+                "from": "$uidOf:5",
+                "geometry": {
+                  "kind": "line",
+                  "a": {
+                    "x": 500010,
+                    "y": 4399990
+                  },
+                  "b": {
+                    "x": 500030,
+                    "y": 4399990
+                  }
+                },
+                "keepData": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uid:s5"
+              ],
+              "created": [
+                "$uidOf:8"
+              ],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "5": {
+                "kind": "line",
+                "id": 5,
+                "layerId": "yol",
+                "attrs": {
+                  "Ad": "Cadde",
+                  "Uzunluk": "3.3"
+                },
+                "a": {
+                  "x": 500000,
+                  "y": 4399990
+                },
+                "b": {
+                  "x": 500010,
+                  "y": 4399990
+                }
+              },
+              "8": {
+                "kind": "line",
+                "id": 8,
+                "layerId": "yol",
+                "attrs": {
+                  "Ad": "Cadde",
+                  "Uzunluk": "6.7"
+                },
+                "a": {
+                  "x": 500010,
+                  "y": 4399990
+                },
+                "b": {
+                  "x": 500030,
+                  "y": 4399990
+                }
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "5": {
+                "kind": "line",
+                "id": 5,
+                "layerId": "yol",
+                "a": {
+                  "x": 500000,
+                  "y": 4399990
+                },
+                "b": {
+                  "x": 500030,
+                  "y": 4399990
+                },
+                "attrs": {
+                  "Ad": "Cadde",
+                  "Uzunluk": "10.0"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Parçala: 10.5 üçte bir ve üçte iki, kalan büyük kalana",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 6,
+          "as": "s6"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "split",
+            "changes": [
+              {
+                "kind": "replace",
+                "uid": "$uidOf:6",
+                "geometry": {
+                  "kind": "line",
+                  "a": {
+                    "x": 500030,
+                    "y": 4399990
+                  },
+                  "b": {
+                    "x": 500033.3333,
+                    "y": 4399990
+                  }
+                },
+                "keepData": true
+              },
+              {
+                "kind": "add",
+                "from": "$uidOf:6",
+                "geometry": {
+                  "kind": "line",
+                  "a": {
+                    "x": 500033.3333,
+                    "y": 4399990
+                  },
+                  "b": {
+                    "x": 500040,
+                    "y": 4399990
+                  }
+                },
+                "keepData": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uid:s6"
+              ],
+              "created": [
+                "$uidOf:8"
+              ],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "6": {
+                "kind": "line",
+                "id": 6,
+                "layerId": "yol",
+                "attrs": {
+                  "Ad": "Sokak",
+                  "Uzunluk": "3.5"
+                },
+                "a": {
+                  "x": 500030,
+                  "y": 4399990
+                },
+                "b": {
+                  "x": 500033.3333,
+                  "y": 4399990
+                }
+              },
+              "8": {
+                "kind": "line",
+                "id": 8,
+                "layerId": "yol",
+                "attrs": {
+                  "Ad": "Sokak",
+                  "Uzunluk": "7.0"
+                },
+                "a": {
+                  "x": 500033.3333,
+                  "y": 4399990
+                },
+                "b": {
+                  "x": 500040,
+                  "y": 4399990
+                }
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "6": {
+                "kind": "line",
+                "id": 6,
+                "layerId": "yol",
+                "a": {
+                  "x": 500030,
+                  "y": 4399990
+                },
+                "b": {
+                  "x": 500040,
+                  "y": 4399990
+                },
+                "attrs": {
+                  "Ad": "Sokak",
+                  "Uzunluk": "10.5"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alan birleştir: pay ve alan toplanır, not boşalır, tür ilkinin, kot en büyüğü, en en küçüğü",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "s1"
+        },
+        {
+          "op": "captureUid",
+          "id": 2,
+          "as": "s2"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "areaUnion",
+            "changes": [
+              {
+                "kind": "remove",
+                "uid": "$uidOf:1"
+              },
+              {
+                "kind": "remove",
+                "uid": "$uidOf:2"
+              },
+              {
+                "kind": "add",
+                "from": "$uidOf:1",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500000,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500040,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500040,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500000,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "created": [
+                "$uidOf:8"
+              ],
+              "removed": [
+                "$uid:s1",
+                "$uid:s2"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "1500",
+                  "Alan": "399.99",
+                  "Tür": "arsa",
+                  "Kot": "15.0",
+                  "En": "3"
+                },
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500040,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500040,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500000,
+                    "y": 4400010
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alan birleştir ikinciden: ilkinin değeri ikincininki",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "s1"
+        },
+        {
+          "op": "captureUid",
+          "id": 2,
+          "as": "s2"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "areaUnion",
+            "changes": [
+              {
+                "kind": "remove",
+                "uid": "$uidOf:1"
+              },
+              {
+                "kind": "remove",
+                "uid": "$uidOf:2"
+              },
+              {
+                "kind": "add",
+                "from": "$uidOf:2",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500000,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500040,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500040,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500000,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "created": [
+                "$uidOf:8"
+              ],
+              "removed": [
+                "$uid:s1",
+                "$uid:s2"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "1500",
+                  "Alan": "399.99",
+                  "Kot": "15.0",
+                  "En": "3"
+                },
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500040,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500040,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500000,
+                    "y": 4400010
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alan birleştir üç parsel: toplamlar",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "s1"
+        },
+        {
+          "op": "captureUid",
+          "id": 2,
+          "as": "s2"
+        },
+        {
+          "op": "captureUid",
+          "id": 3,
+          "as": "s3"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "areaUnion",
+            "changes": [
+              {
+                "kind": "remove",
+                "uid": "$uidOf:1"
+              },
+              {
+                "kind": "remove",
+                "uid": "$uidOf:2"
+              },
+              {
+                "kind": "remove",
+                "uid": "$uidOf:3"
+              },
+              {
+                "kind": "add",
+                "from": "$uidOf:3",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500000,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500070,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500070,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500000,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "created": [
+                "$uidOf:8"
+              ],
+              "removed": [
+                "$uid:s1",
+                "$uid:s2",
+                "$uid:s3"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {
+                  "Pay": "2501",
+                  "Alan": "400.04",
+                  "Kot": "15.0",
+                  "En": "3"
+                },
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500070,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500070,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500000,
+                    "y": 4400010
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "eksi toplam",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 3,
+          "as": "s3"
+        },
+        {
+          "op": "captureUid",
+          "id": 4,
+          "as": "s4"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "areaUnion",
+            "changes": [
+              {
+                "kind": "remove",
+                "uid": "$uidOf:3"
+              },
+              {
+                "kind": "remove",
+                "uid": "$uidOf:4"
+              },
+              {
+                "kind": "add",
+                "from": "$uidOf:4",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500040,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500080,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500080,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500040,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "created": [
+                "$uidOf:8"
+              ],
+              "removed": [
+                "$uid:s3",
+                "$uid:s4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {
+                  "Pay": "994",
+                  "Alan": "0.02"
+                },
+                "pts": [
+                  {
+                    "x": 500040,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500080,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500080,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500040,
+                    "y": 4400010
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş değerler toplama girmez; hiç değer yoksa boş kalır",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 4,
+          "as": "s4"
+        },
+        {
+          "op": "captureUid",
+          "id": 7,
+          "as": "s7"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "areaUnion",
+            "changes": [
+              {
+                "kind": "remove",
+                "uid": "$uidOf:7"
+              },
+              {
+                "kind": "remove",
+                "uid": "$uidOf:4"
+              },
+              {
+                "kind": "add",
+                "from": "$uidOf:7",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500070,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500090,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500090,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500070,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "created": [
+                "$uidOf:8"
+              ],
+              "removed": [
+                "$uid:s7",
+                "$uid:s4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              5,
+              6,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {
+                  "Pay": "-7",
+                  "Alan": "-0.03"
+                },
+                "pts": [
+                  {
+                    "x": 500070,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500090,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500090,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500070,
+                    "y": 4400010
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birleştir: yerinde kalan çizgi uzunlukları toplar",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 5,
+          "as": "s5"
+        },
+        {
+          "op": "captureUid",
+          "id": 6,
+          "as": "s6"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "join",
+            "changes": [
+              {
+                "kind": "replace",
+                "uid": "$uidOf:5",
+                "geometry": {
+                  "kind": "line",
+                  "a": {
+                    "x": 500000,
+                    "y": 4399990
+                  },
+                  "b": {
+                    "x": 500040,
+                    "y": 4399990
+                  }
+                },
+                "keepData": true
+              },
+              {
+                "kind": "remove",
+                "uid": "$uidOf:6"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uid:s5"
+              ],
+              "created": [],
+              "removed": [
+                "$uid:s6"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              7
+            ],
+            "entities": {
+              "5": {
+                "kind": "line",
+                "id": 5,
+                "layerId": "yol",
+                "attrs": {
+                  "Ad": "Cadde",
+                  "Uzunluk": "20.5"
+                },
+                "a": {
+                  "x": 500000,
+                  "y": 4399990
+                },
+                "b": {
+                  "x": 500040,
+                  "y": 4399990
+                }
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "5": {
+                "kind": "line",
+                "id": 5,
+                "layerId": "yol",
+                "a": {
+                  "x": 500000,
+                  "y": 4399990
+                },
+                "b": {
+                  "x": 500030,
+                  "y": 4399990
+                },
+                "attrs": {
+                  "Ad": "Cadde",
+                  "Uzunluk": "10.0"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "iki parça kalırsa birleştirme kuralı uygulanmaz",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "s1"
+        },
+        {
+          "op": "captureUid",
+          "id": 2,
+          "as": "s2"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "areaUnion",
+            "changes": [
+              {
+                "kind": "remove",
+                "uid": "$uidOf:1"
+              },
+              {
+                "kind": "remove",
+                "uid": "$uidOf:2"
+              },
+              {
+                "kind": "add",
+                "from": "$uidOf:1",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500000,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500020,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500020,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500000,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              },
+              {
+                "kind": "add",
+                "from": "$uidOf:2",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500020,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500040,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500040,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500020,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "created": [
+                "$uidOf:8",
+                "$uidOf:9"
+              ],
+              "removed": [
+                "$uid:s1",
+                "$uid:s2"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "1000",
+                  "Alan": "200.00",
+                  "Not": "eski",
+                  "Tür": "arsa",
+                  "Kot": "12.5",
+                  "En": "3"
+                },
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500000,
+                    "y": 4400010
+                  }
+                ]
+              },
+              "9": {
+                "kind": "polygon",
+                "id": 9,
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "500",
+                  "Alan": "199.99",
+                  "Kot": "15.0",
+                  "En": "7"
+                },
+                "pts": [
+                  {
+                    "x": 500020,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500040,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500040,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400010
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "bölme ya da birleştirme olmayan iş kuralları uygulamaz",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "s1"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "areaSubtract",
+            "changes": [
+              {
+                "kind": "replace",
+                "uid": "$uidOf:1",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500000,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500015,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500015,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500000,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uid:s1"
+              ],
+              "created": [],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "1000",
+                  "Alan": "200.00",
+                  "Not": "eski",
+                  "Tür": "arsa",
+                  "Kot": "12.5",
+                  "En": "3"
+                },
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500015,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500015,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500000,
+                    "y": 4400010
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500000,
+                    "y": 4400010
+                  }
+                ],
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "1000",
+                  "Alan": "200.00",
+                  "Not": "eski",
+                  "Tür": "arsa",
+                  "Kot": "12.5",
+                  "En": "3"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Parçalara ayır: yerinde kalan ve yeni parça paylaşır",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 2,
+          "as": "s2"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "partsSplit",
+            "changes": [
+              {
+                "kind": "update",
+                "uid": "$uidOf:2",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500020,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500030,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500030,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500020,
+                      "y": 4400010
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "add",
+                "from": "$uidOf:2",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500030,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500040,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500040,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500030,
+                      "y": 4400010
+                    }
+                  ]
+                },
+                "keepData": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uid:s2"
+              ],
+              "created": [
+                "$uidOf:8"
+              ],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "2": {
+                "kind": "polygon",
+                "id": 2,
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "250",
+                  "Alan": "100.00",
+                  "Kot": "15.0",
+                  "En": "7",
+                  "Tür": "bölünmüş"
+                },
+                "pts": [
+                  {
+                    "x": 500020,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500030,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500030,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400010
+                  }
+                ]
+              },
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "250",
+                  "Alan": "99.99",
+                  "Kot": "15.0",
+                  "En": "7",
+                  "Tür": "bölünmüş"
+                },
+                "pts": [
+                  {
+                    "x": 500030,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500040,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500040,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500030,
+                    "y": 4400010
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "2": {
+                "kind": "polygon",
+                "id": 2,
+                "layerId": "parsel",
+                "pts": [
+                  {
+                    "x": 500020,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500040,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500040,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400010
+                  }
+                ],
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "500",
+                  "Alan": "199.99",
+                  "Kot": "15.0",
+                  "En": "7"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Parçaları birleştir: yerinde kalan silinenlerle toplar",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "s1"
+        },
+        {
+          "op": "captureUid",
+          "id": 2,
+          "as": "s2"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "partsJoin",
+            "changes": [
+              {
+                "kind": "update",
+                "uid": "$uidOf:1",
+                "geometry": {
+                  "kind": "polygon",
+                  "pts": [
+                    {
+                      "x": 500000,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500040,
+                      "y": 4400000
+                    },
+                    {
+                      "x": 500040,
+                      "y": 4400010
+                    },
+                    {
+                      "x": 500000,
+                      "y": 4400010
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "remove",
+                "uid": "$uidOf:2"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uid:s1"
+              ],
+              "created": [],
+              "removed": [
+                "$uid:s2"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "1500",
+                  "Alan": "399.99",
+                  "Tür": "arsa",
+                  "Kot": "15.0",
+                  "En": "3"
+                },
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500040,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500040,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500000,
+                    "y": 4400010
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500020,
+                    "y": 4400010
+                  },
+                  {
+                    "x": 500000,
+                    "y": 4400010
+                  }
+                ],
+                "attrs": {
+                  "Ada": "101",
+                  "Pay": "1000",
+                  "Alan": "200.00",
+                  "Not": "eski",
+                  "Tür": "arsa",
+                  "Kot": "12.5",
+                  "En": "3"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
