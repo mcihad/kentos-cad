@@ -494,6 +494,7 @@ impl App {
                 "“{name}” için bu cihazda bekleyen bir kayıt var (revizyon {based_on} üstüne); bağlantı gelince gönderilecek."
             ));
         }
+        self.apply_role_policy();
         if entry && !archived {
             self.output(format!(
                 "“{name}” projesinde Veri girişi rolündesiniz: kayıtların özniteliklerini Formla düzenle ile değiştirebilirsiniz; nesne çizmek, taşımak ya da silmek buluta kaydedilmez."

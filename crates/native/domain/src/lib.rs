@@ -57,7 +57,7 @@ mod units;
 
 pub use calls::{REFUSED_CALLS, RefusedAs, RefusedCall};
 pub use changes::{ChangeMark, Changes};
-pub use document::Document;
+pub use document::{Document, ObjectPolicy};
 pub use edit::{Refusal, SlotsExhausted, labels};
 pub use external::{External, ExternalMeta};
 pub use hash::{SlotHasher, SlotMap};

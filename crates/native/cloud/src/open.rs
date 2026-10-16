@@ -79,6 +79,12 @@ impl Opened {
         self.may(ProjectPermission::FeatureWrite)
     }
 
+    /// Whether it may send changes of objects: a writer's, or a Veri girişi's records' attributes
+    /// through forms (`forms.use`, docs/adr/0411 §5; the server judges each change).
+    pub fn can_send_objects(&self) -> bool {
+        self.may(ProjectPermission::FeatureWrite) || self.may(ProjectPermission::FormsUse)
+    }
+
     /// Whether it may change the project's name, settings, layer tree and styles.
     pub fn can_edit_meta(&self) -> bool {
         self.may(ProjectPermission::Edit)

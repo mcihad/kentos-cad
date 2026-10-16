@@ -705,6 +705,7 @@ impl App {
                         self.output(format!("“{name}” projesindeki rolünüz: {role}."));
                     }
                 }
+                self.apply_role_policy();
                 Task::none()
             }
             Err(failure) if failure.not_found() && live.sent.is_none() => {

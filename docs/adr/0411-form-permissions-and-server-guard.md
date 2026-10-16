@@ -73,6 +73,14 @@ katmandan listeler, ilişkili kayıtlar) projenin kayıtlı nesnelerinden, deği
 `@simdi` istemcideki gibi denetimde yoktur. Kural bozulursa bütün değişiklik reddedilir (`form_rules`, alanın yolu
 `features[i].entity`). Masaüstü, Python, MCP ve web aynı bekçiden geçer.
 
+### 5. Masaüstünde Veri girişi
+
+Veri girişi rolüyle açılan veritabanı projesinde belgenin nesne kuralı `AttributesOnly`'dir (`kentos_domain::ObjectPolicy`):
+her komut adımının bütünlük denetimi (`faults`, ADR 0253 §8) yeni nesneyi, silmeyi ve öznitelik dışındaki her değişikliği
+nedeniyle reddeder, adım bütünüyle geri alınır. Formla düzenle, Öznitelikler ve Öznitelik tablosu öznitelikleri yazar.
+Eşitleme `forms.use` sahibine de nesne değişikliklerini gönderir (`OpenedProject::can_send_objects`); dosya projesinin
+revizyonu yalnız yazanın. Rol açıkken değişince kural da değişir.
+
 ## Denetimler
 
 - Bekçinin kuralları saf bir modülde (`form_guard.rs`) birim testleriyle: ayarların izinleri, Veri girişinin yazabildikleri
@@ -81,6 +89,8 @@ katmandan listeler, ilişkili kayıtlar) projenin kayıtlı nesnelerinden, deği
   güncellemesi ve şekil değişikliğinin reddi, düzenleyicinin kuralı bozan yazmasının reddi.
 - Sunucunun bütün veritabanı testleri (133) kendi geçici PostGIS kapsayıcısında (127.0.0.1:55432; geliştiricinin 5432'si
   değil) göç 0020 ve 0021 dahil geçti.
+- `kentos-native-application`'ın `object_policy` testi: kural açıkken nokta oluşturma, taşıma ve silme reddedilir, öznitelik
+  yazılır.
 - Masaüstü: paylaşma penceresinde Veri girişi rolü (`fixtures/cloud/v1/share.json`, resim `bulut-paylas-kisiler-*`);
   Veri girişi rolündeki kullanıcıya proje açılınca ne yapabileceği söylenir.
 
@@ -88,5 +98,5 @@ katmandan listeler, ilişkili kayıtlar) projenin kayıtlı nesnelerinden, deği
 
 - Formun tasarımı, yayını ve kullanımı ayrı yetkilerdir; saha ekibi çizimi değiştirmeden formla veri girer.
 - Kuralları uygula bir istemci tercihi olmaktan çıkar, sunucunun kuralı olur.
-- Açık: alan düzeyinde okuma yetkisi (gizli alanların okunamaması), form başına kullanıcı ataması, onay akışı (FORM-ACL,
-  FORM-WORK); masaüstünde Veri girişi için çizimin salt okunur açılması (bugün çizim değişikliği sunucuda reddedilir).
+- Açık: alan düzeyinde okuma yetkisi (formun göstermediği alanın Veri girişine gönderilmemesi, TODOS.md `FORM-R`), form başına
+  kullanıcı ataması, onay akışı (FORM-ACL, FORM-WORK).

@@ -25,6 +25,7 @@ use kentos_contracts::{EventPage, FileRevisions, ProjectInfo, ProjectState, Proj
 use kentos_domain::Uuid;
 
 use crate::app::{App, Dialog, Message};
+use crate::cloud::Event;
 use crate::cloud::cells_plan::FileState;
 use crate::cloud::file::FileConflict;
 use crate::cloud::local_time::Zone;
@@ -32,7 +33,6 @@ use crate::cloud::revisions::{
     self, AnswerDoes, AnswerWork, Ended, Offer, ProjectAnswer, ResyncStep, RevisionConflict,
     RevisionInput, RevisionState, SaveStage, Tone, Via,
 };
-use crate::cloud::{Event, access_of};
 use crate::saving::{Stage, Target};
 
 /// An open file project followed.
@@ -437,7 +437,12 @@ impl App {
             ProjectState::Archived => return self.file_end(Ended::Archived, "", false),
             ProjectState::Active => {}
         }
-        let (write, _) = access_of(info);
+        // A file project's revisions are written whole: a writer's alone (a Veri girişi's forms are a
+        // database project's, docs/adr/0411 §5).
+        let write = info
+            .access
+            .permissions
+            .contains(&kentos_contracts::ProjectPermission::FeatureWrite);
         let Some(source) = self.document.as_mut().and_then(|d| d.cloud_source_mut()) else {
             return;
         };

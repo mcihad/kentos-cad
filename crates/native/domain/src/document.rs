@@ -55,6 +55,9 @@ pub struct Document {
     /// Within a step: objects whose associative dimensions follow them by where
     /// their points are, onto the objects listed (`relocate_ties`, docs/adr/0296).
     pub(crate) relocated: std::collections::BTreeMap<Uuid, Vec<Uuid>>,
+    /// What a step may do to the objects (docs/adr/0411 §5): a Veri girişi's cloud project changes
+    /// existing records' attributes alone. Not the file's: the host sets it from the account's role.
+    pub(crate) object_policy: ObjectPolicy,
     pub(crate) history: History,
     /// The journal of what was written and the ledger of requests executed
     /// (calls.rs, docs/adr/0253 §3, §6).
@@ -66,7 +69,27 @@ pub struct Document {
     pub(crate) dirty: bool,
 }
 
+/// What a step may do to the drawing's objects (docs/adr/0411 §5).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum ObjectPolicy {
+    /// Anything.
+    #[default]
+    Free,
+    /// Existing objects' attributes alone: no object added or removed, nothing else of one changed.
+    AttributesOnly,
+}
+
 impl Document {
+    /// What a step may do to the objects (docs/adr/0411 §5).
+    pub fn object_policy(&self) -> ObjectPolicy {
+        self.object_policy
+    }
+
+    /// Sets what a step may do to the objects: the host's, from the account's role.
+    pub fn set_object_policy(&mut self, policy: ObjectPolicy) {
+        self.object_policy = policy;
+    }
+
     pub fn name(&self) -> &str {
         &self.name
     }
@@ -219,6 +242,7 @@ impl Document {
             store: self.store.clone(),
             next_slot: self.next_slot,
             relocated: Default::default(),
+            object_policy: self.object_policy,
             history: History::default(),
             // A copy starts its own journal; the ledger it keeps, so a call
             // on the copy (a plan, a job) knows the requests already executed.

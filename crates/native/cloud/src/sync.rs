@@ -301,7 +301,7 @@ impl ProjectSync {
             .collect();
         let state = if opened.archived() {
             SaveState::Archived
-        } else if opened.can_write() {
+        } else if opened.can_send_objects() {
             SaveState::Saved
         } else {
             SaveState::ReadOnly
@@ -319,7 +319,7 @@ impl ProjectSync {
             meta_base: Meta::of(doc),
             meta_version: opened.info.meta_version.clone(),
             meta_dirty: false,
-            can_write: opened.can_write(),
+            can_write: opened.can_send_objects(),
             can_edit_meta: opened.can_edit_meta(),
             inflight: None,
             state,

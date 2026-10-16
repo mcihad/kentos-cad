@@ -32,6 +32,28 @@ impl Document {
     /// What the step reported would leave broken; none when nothing.
     pub fn faults(&self, report: &StepReport) -> Vec<Fault> {
         let mut out = Vec::new();
+        // A Veri girişi's project (docs/adr/0411 §5): existing records' attributes alone.
+        if self.object_policy == crate::document::ObjectPolicy::AttributesOnly {
+            for change in &report.objects {
+                let attributes_only = match (change.before.as_deref(), change.after.as_deref()) {
+                    (Some(before), Some(after)) => {
+                        let mut probe = after.clone();
+                        probe.base_mut().attrs = before.base().attrs.clone();
+                        probe == *before
+                    }
+                    _ => false,
+                };
+                if !attributes_only {
+                    out.push(Fault {
+                        uid: change.uid,
+                        message: "Bu projede Veri girişi rolündesiniz: yalnız kayıtların özniteliklerini formla değiştirebilirsiniz; nesne eklenmez, silinmez, şekli ve görünüşü değişmez.".into(),
+                    });
+                }
+            }
+            if !out.is_empty() {
+                return out;
+            }
+        }
         for change in &report.objects {
             let Some(after) = &change.after else {
                 // Removed: nothing may still follow it.

@@ -535,15 +535,35 @@ pub fn ticks() -> impl Stream<Item = Message> {
     ticks
 }
 
-/// A project's access in this account, from its info: whether it may change
-/// the objects, and the name, settings and layers (an archived project may neither).
+/// A project's access in this account, from its info: whether it may send changes of objects (a
+/// Veri girişi's records' attributes too, docs/adr/0411 §5), and change the name, settings and
+/// layers (an archived project may neither).
 pub fn access_of(info: &ProjectInfo) -> (bool, bool) {
     let archived = info.state == ProjectState::Archived;
     let may = |p| !archived && info.access.permissions.contains(&p);
     (
-        may(ProjectPermission::FeatureWrite),
+        may(ProjectPermission::FeatureWrite) || may(ProjectPermission::FormsUse),
         may(ProjectPermission::Edit),
     )
+}
+
+impl App {
+    /// What the drawing's steps may do to its objects by the account's role (docs/adr/0411 §5): a
+    /// Veri girişi's database project changes existing records' attributes alone.
+    pub(crate) fn apply_role_policy(&mut self) {
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let entry = doc.cloud_source().is_some_and(|s| {
+            s.info.access.role == kentos_contracts::ProjectRole::Entry
+                && s.info.storage == kentos_contracts::ProjectStorage::Database
+        });
+        doc.model.set_object_policy(if entry {
+            kentos_domain::ObjectPolicy::AttributesOnly
+        } else {
+            kentos_domain::ObjectPolicy::Free
+        });
+    }
 }
 
 /// A project id from the server's text.

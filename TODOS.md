@@ -1463,8 +1463,10 @@ burada aşamaları izlenir.
 - [x] `FORM-F` Merkezi yayın ve izinler (FM2, plan `FORM-FIRST-14`–`17`): `forms.design`, `forms.publish`, `forms.use`, Veri girişi
   rolü (göç 0021), ayarların bekçisi (izinler, değişmez yayın), yazma bekçisi `project.changes`'te bütün yollar için. — **16 Ekim,
   [ADR 0411](docs/adr/0411-form-permissions-and-server-guard.md).**
-- [ ] `FORM-Q` Veri girişi için masaüstünde çizimin salt okunur açılması (yalnız Formla düzenle yazar); alan düzeyinde okuma
-  yetkisi (formun gizlediği alanın okunmaması, plan `FORM-FIRST-16`'nın okuma yanı).
+- [x] `FORM-Q` Veri girişi masaüstünde: belgenin nesne kuralı (yalnız öznitelik), eşitleme formla yazılanı gönderir. — **16 Ekim,
+  ADR 0411 §5.**
+- [ ] `FORM-R` Alan düzeyinde okuma yetkisi: formun göstermediği alan Veri girişine gönderilmez (nesne sayfaları, olaylar, `.kcad`
+  görüntüsü), yazmasında saklı alanlar korunur (plan `FORM-FIRST-16`'nın okuma yanı).
 
 ## 17. Arazi, yol ve altyapı projeleri — P2/P3
 
