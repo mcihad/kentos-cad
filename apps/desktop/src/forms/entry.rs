@@ -649,7 +649,7 @@ impl App {
 
     /// The moment and the person a form's rules read (docs/adr/0402 §5): this device's clock in its
     /// zone to the second (a test's fixed moment instead) and the signed-in person, if any.
-    fn form_moment(&self) -> (Option<String>, Option<String>) {
+    pub(crate) fn form_moment(&self) -> (Option<String>, Option<String>) {
         let moment = self.form_memory.clock.clone().unwrap_or_else(|| {
             let utc = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -1704,6 +1704,47 @@ fn entry_control<'a>(
                     .style(style::field::input),
             ))
             .clearable(!field.required)
+            .into()
+        }
+        // A slider between the field's least and most (docs/adr/0406 §2); the value beside it.
+        FormWidget::Slider if !read_only => {
+            let (lo, hi) = (
+                field
+                    .min
+                    .as_deref()
+                    .and_then(|v| v.parse::<f64>().ok())
+                    .unwrap_or(0.0),
+                field
+                    .max
+                    .as_deref()
+                    .and_then(|v| v.parse::<f64>().ok())
+                    .unwrap_or(100.0),
+            );
+            let places = if field.kind == LayerFieldKind::Integer {
+                0
+            } else {
+                field.scale.unwrap_or(2).min(6) as usize
+            };
+            let step = 10f64.powi(-(places as i32));
+            let now = value.trim().parse::<f64>().unwrap_or(lo).clamp(lo, hi);
+            let set_value = set.clone();
+            row![
+                iced::widget::slider(lo..=hi.max(lo), now, move |v| {
+                    set_value(format!("{v:.places$}"))
+                })
+                .step(step)
+                .style(style::field::slider)
+                .width(Fill),
+                container(label::body(if value.trim().is_empty() {
+                    "—".to_owned()
+                } else {
+                    value.clone()
+                }))
+                .width(typography::scaled(56.0))
+                .align_x(iced::alignment::Horizontal::Right),
+            ]
+            .spacing(10)
+            .align_y(Center)
             .into()
         }
         FormWidget::TextArea if !read_only => {

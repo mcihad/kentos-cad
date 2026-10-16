@@ -163,6 +163,7 @@ pub mod ucs_set;
 pub mod units_change;
 pub mod views_edit;
 pub mod forms;
+pub mod forms_audit;
 pub mod forms_edit;
 pub mod forms_fill;
 pub mod forms_submit;
@@ -230,6 +231,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_FORMS_VALIDATE,
         kentos_contracts::CAD_FORMS_VALIDATE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_FORMS_AUDIT,
+        kentos_contracts::CAD_FORMS_AUDIT_VERSION,
     ),
     (
         kentos_contracts::CAD_FORMS_SUBMIT,

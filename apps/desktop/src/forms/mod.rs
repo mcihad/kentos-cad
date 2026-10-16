@@ -10,6 +10,7 @@
 //! The rules are the forms core's (`kentos_forms`): the windows ask it as the user types, the
 //! commands ask it again before they write.
 
+pub mod audit;
 pub mod designer;
 mod designer_view;
 pub mod entry;
@@ -23,7 +24,12 @@ use kentos_interaction::Level;
 use crate::app::{App, Message};
 
 /// The commands this module runs.
-pub const COMMANDS: [&str; 3] = ["data.forms", "data.formEdit", "data.relations"];
+pub const COMMANDS: [&str; 4] = [
+    "data.forms",
+    "data.formEdit",
+    "data.relations",
+    "data.formAudit",
+];
 
 /// The drawing tools whose one new object opens its layer's form (docs/adr/0403 §4); a copy, an
 /// array, a paste or an import does not.
@@ -61,6 +67,7 @@ impl App {
             "data.forms" => self.open_forms(None),
             "data.formEdit" => return self.open_form_entry(),
             "data.relations" => self.open_relations(),
+            "data.formAudit" => return self.open_form_audit(None),
             _ => {}
         }
         Task::none()
@@ -139,7 +146,7 @@ impl App {
     }
 
     /// The layer's first published form, else its first form (a draft).
-    fn form_of_layer(&self, layer: &str) -> Option<String> {
+    pub(crate) fn form_of_layer(&self, layer: &str) -> Option<String> {
         let forms: Vec<&ProjectForm> = self
             .project_forms()
             .iter()

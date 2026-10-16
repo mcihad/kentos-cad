@@ -167,6 +167,14 @@ class FormsTests(unittest.TestCase):
             cad.forms.validate(doc, form="bina", moment="dün")
         self.assertEqual(moment.exception.code, "invalid_moment")
 
+        # docs/adr/0406 §1: the layer's records by the form; the drawn one has no status.
+        audit = cad.forms.audit(doc, form="bina", warnings=True)
+        self.assertEqual((audit.checked, audit.failing, audit.warned), (1, 0, 1))
+        self.assertEqual([r.uid for r in audit.records], [poly.uid])
+        with self.assertRaises(cad.CommandFailed) as limit:
+            cad.forms.audit(doc, form="bina", limit=0)
+        self.assertEqual(limit.exception.code, "invalid_count")
+
     def test_many_records_are_written_at_once(self) -> None:
         """docs/adr/0403 §5: the same values to many records, each checked by itself, every record or none."""
         doc, layer = drawing()

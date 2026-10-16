@@ -1614,6 +1614,15 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.forms.audit",
+        refusals: &[
+            &["invalid_count", "invalid_moment", "invalid_user"],
+            &["unknown_form", "form_unpublished", "form_preflight"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.relations.edit",
         refusals: &[
             &["invalid_relation"],

@@ -339,7 +339,7 @@ ArcGIS'in domain yaklaşımı; kodlu değer veya aralık, yeniden kullanım ve s
 - [ ] **FORM-DATA-21:** Split/merge default/duplicate/sum/proportional gibi attribute politikaları domain/field modelinde açık olsun; geometri işlemlerine bağlantısı korunsun.
 - [ ] **FORM-DATA-22:** Domain/subtype/contingent create/edit/publish/import/export işlemleri UI/Python/AI'da aynı komut olsun.
 - [ ] **FORM-DATA-23:** Final commit bütün API'lerde authoritative dataset/domain/contingent validation yapsın; form widget listesi tek denetim olmasın.
-- [ ] **FORM-DATA-24:** Invalid legacy data için audit/repair raporu ve planlı correction sun; görüntüleme sırasında sessiz düzeltme yapma.
+- [x] **FORM-DATA-24:** Invalid legacy data için audit/repair raporu ve planlı correction sun; görüntüleme sırasında sessiz düzeltme yapma. — *Yapıldı (16 Ekim; ADR 0406 §1 (`cad.forms.audit`, Kayıtları denetle; düzeltme Formla düzenle ve `cad.forms.fill` ile)).*
 
 **Kabul:** Aynı domain iki katmanda kullanılır, subtype ve üst seçim alt seçenekleri sınırlar. UI payload'ına elle illegal code yazan Python/HTTP/AI isteği aynı validation koduyla reddedilir.
 

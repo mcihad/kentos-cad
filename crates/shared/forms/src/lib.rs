@@ -45,6 +45,8 @@ pub mod codes {
     pub const WIDGET_UNFIT: &str = "form_widget_unfit";
     /// A list, radio or segmented widget on a field without a value list.
     pub const WIDGET_NEEDS_VALUES: &str = "form_widget_needs_values";
+    /// A slider on a field without its least and most (docs/adr/0406 §2).
+    pub const WIDGET_NEEDS_RANGE: &str = "form_widget_needs_range";
     /// The default does not keep the field's rules.
     pub const DEFAULT_INVALID: &str = "form_default_invalid";
     /// A rule or a check does not compile.

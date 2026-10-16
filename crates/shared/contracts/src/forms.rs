@@ -356,10 +356,12 @@ pub enum FormWidget {
     Radio,
     /// A segmented choice: fields with a short value list.
     Segmented,
+    /// A slider between the field's least and most (docs/adr/0406 §2): number fields with both.
+    Slider,
 }
 
 impl FormWidget {
-    pub const ALL: [FormWidget; 9] = [
+    pub const ALL: [FormWidget; 10] = [
         FormWidget::Text,
         FormWidget::TextArea,
         FormWidget::Number,
@@ -369,6 +371,7 @@ impl FormWidget {
         FormWidget::List,
         FormWidget::Radio,
         FormWidget::Segmented,
+        FormWidget::Slider,
     ];
 
     /// Its name in the interface.
@@ -383,6 +386,7 @@ impl FormWidget {
             FormWidget::List => "Açılır liste",
             FormWidget::Radio => "Seçenek düğmeleri",
             FormWidget::Segmented => "Parçalı seçim",
+            FormWidget::Slider => "Kaydırıcı",
         }
     }
 }

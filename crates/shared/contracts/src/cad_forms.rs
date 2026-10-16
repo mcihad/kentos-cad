@@ -29,6 +29,9 @@ pub const CAD_FORMS_VALIDATE_VERSION: u32 = 1;
 /// Writes a record through a form.
 pub const CAD_FORMS_SUBMIT: &str = "cad.forms.submit";
 pub const CAD_FORMS_SUBMIT_VERSION: u32 = 1;
+/// Every record of a form's layer checked by its rules; read-only (docs/adr/0406 §1).
+pub const CAD_FORMS_AUDIT: &str = "cad.forms.audit";
+pub const CAD_FORMS_AUDIT_VERSION: u32 = 1;
 /// Creates, updates and removes the project's relations (docs/adr/0405 §3).
 pub const CAD_RELATIONS_EDIT: &str = "cad.relations.edit";
 pub const CAD_RELATIONS_EDIT_VERSION: u32 = 1;
@@ -388,4 +391,80 @@ pub struct RelationsEdited {
     /// The document's revision afterwards (plan: the one it was made against).
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
+}
+
+/// Input of `cad.forms.audit` v1 (docs/adr/0406 §1).
+///
+/// Refusals: `invalid_count` (at `limit`), `invalid_moment`, `invalid_user`; `unknown_form`,
+/// `form_unpublished`, `form_preflight`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormsAudit {
+    /// The form's id.
+    pub form: String,
+    /// Through its draft instead of its latest release.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub draft: bool,
+    /// The records with only warnings are listed too.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub warnings: bool,
+    /// The most records listed (1–10000); none: 500. The counts are of every record.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub limit: Option<u32>,
+    /// As `cad.forms.submit`'s.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub moment: Option<String>,
+    /// As `cad.forms.submit`'s.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub user: Option<String>,
+}
+
+/// A record `cad.forms.audit` lists: its persistent id and its issues.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AuditedRecord {
+    pub uid: String,
+    pub issues: Vec<FormIssue>,
+}
+
+/// Output of `cad.forms.audit` v1.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormsAudited {
+    /// The release asked; none: the draft.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub version: Option<u32>,
+    /// The layer's records checked.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub checked: u32,
+    /// The records with an error.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub failing: u32,
+    /// The records with warnings and no error.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub warned: u32,
+    /// The records listed, in the layer's order: those with an error, and with `warnings` those
+    /// with only warnings.
+    pub records: Vec<AuditedRecord>,
+    /// More records had issues than `limit` lists.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub more: bool,
 }

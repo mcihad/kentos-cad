@@ -210,3 +210,31 @@ pub fn body_scrollbar() -> scrollable::Direction {
             .spacing(8),
     )
 }
+
+/// Kaydırıcı: vurgu renginde dolu ray, alan renginde kenarlı tutamak
+/// (formun kaydırıcısı, docs/adr/0406 §2); üzerine gelince ve sürüklerken
+/// tutamağın kenarı vurgulanır.
+pub fn slider(theme: &Theme, status: iced::widget::slider::Status) -> iced::widget::slider::Style {
+    use iced::widget::slider::{Handle, HandleShape, Rail, Status, Style};
+    let t = Tokens::of(theme);
+    let edge = match status {
+        Status::Active => t.border_strong(),
+        Status::Hovered | Status::Dragged => t.accent_line(),
+    };
+    Style {
+        rail: Rail {
+            backgrounds: (Background::Color(t.accent), Background::Color(t.border)),
+            width: 4.0,
+            border: Border {
+                radius: 2.0.into(),
+                ..Border::default()
+            },
+        },
+        handle: Handle {
+            shape: HandleShape::Circle { radius: 7.0 },
+            background: Background::Color(t.field),
+            border_width: 1.5,
+            border_color: edge,
+        },
+    }
+}

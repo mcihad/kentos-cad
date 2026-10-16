@@ -5,7 +5,7 @@
 //!
 //! ```text
 //! KENTOS_SHOTS_ONLY=form-tasarim,form-tasarim-sorun,form-yeni,form-duzenle,form-duzenle-sorun,form-duzenle-sekme,form-oznitelikler cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
-//! KENTOS_SHOTS_ONLY=form-hesap-tasarim,form-hesap-duzenle,form-hesap-sorun,form-onizleme,form-tasarim-tasima,form-toplu,form-adres,form-adres-tasarim,form-iliskiler cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=form-hesap-tasarim,form-hesap-duzenle,form-hesap-sorun,form-onizleme,form-tasarim-tasima,form-toplu,form-adres,form-adres-tasarim,form-iliskiler,form-kayit-denetle,form-kaydirici cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! docs/adr/0402's: the calculating form in the designer (the material's choice filter), Formla
@@ -21,7 +21,7 @@ use kentos_domain::Slot;
 use serde_json::{Value, json};
 
 use crate::app::{App, Message};
-use crate::forms::{designer, entry, relations};
+use crate::forms::{audit, designer, entry, relations};
 use crate::tools_scenes::{E, N, Objects, open_edited, run};
 use crate::tools_screens::Scene;
 
@@ -343,6 +343,69 @@ fn relations_window(app: &mut App) {
     }
 }
 
+/// Kayıtları denetle (docs/adr/0406 §1): the calculating form's buildings, some of them breaking its
+/// rules (a code twice, a status missing), warnings shown too.
+fn records_audit(app: &mut App) {
+    calc_buildings(app);
+    if let Some(doc) = app.document.as_mut() {
+        let uid = doc
+            .model
+            .uid(Slot(2))
+            .map(|u| u.to_string())
+            .unwrap_or_default();
+        let _ = kentos_native_application::registry::run(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            kentos_contracts::CAD_ENTITIES_SET,
+            kentos_contracts::CallOp::Execute,
+            json!({ "uids": [uid], "attrs": { "Durum": "iyi", "Kod": "B-3", "Kat": "2" }, "operation": "attributes" }),
+        );
+    }
+    run(app, "data.formAudit");
+    let _ = app.update(Message::FormAudit(audit::Event::Warnings(true)));
+}
+
+/// Formla düzenle with the storeys on a slider (docs/adr/0406 §2).
+fn slider_editing(app: &mut App) {
+    calc_buildings(app);
+    if let Some(doc) = app.document.as_mut() {
+        let mut s = doc.model.settings().clone();
+        for f in &mut s.forms {
+            if let Some(kentos_contracts::FormItem::Field(k)) =
+                items_mut_find(&mut f.draft.items, "kat")
+            {
+                k.widget = Some(kentos_contracts::FormWidget::Slider);
+            }
+            for r in &mut f.releases {
+                if let Some(kentos_contracts::FormItem::Field(k)) =
+                    items_mut_find(&mut r.body.items, "kat")
+                {
+                    k.widget = Some(kentos_contracts::FormWidget::Slider);
+                }
+                r.digest = kentos_contracts::body_digest(&r.body);
+            }
+        }
+        doc.model.set_settings(s);
+    }
+    app.selection.set([Slot(1)]);
+    run(app, "data.formEdit");
+}
+
+/// The item `id` anywhere in `items`, to change.
+fn items_mut_find<'a>(
+    items: &'a mut [kentos_contracts::FormItem],
+    id: &str,
+) -> Option<&'a mut kentos_contracts::FormItem> {
+    for i in items.iter_mut() {
+        if i.id() == id {
+            return Some(i);
+        }
+        if let Some(found) = i.items_mut().and_then(|xs| items_mut_find(xs, id)) {
+            return Some(found);
+        }
+    }
+    None
+}
+
 /// A street block of four buildings, two with records; the layer's form in the project.
 fn buildings(app: &mut App, published: bool) {
     let mut o = Objects::new();
@@ -557,6 +620,8 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-adres", address_editing),
         ("form-adres-tasarim", address_designing),
         ("form-iliskiler", relations_window),
+        ("form-kayit-denetle", records_audit),
+        ("form-kaydirici", slider_editing),
     ]
 }
 
@@ -1023,6 +1088,33 @@ mod tests {
             );
         }
         assert_eq!(count(&app), before - 3, "the building and its two meters");
+    }
+
+    /// docs/adr/0406: Kayıtları denetle lists the buildings breaking the form's rules and selects them;
+    /// a slider writes the storeys within the field's range.
+    #[test]
+    fn records_are_audited_and_a_slider_writes_within_the_range() {
+        let mut app = crate::files_testing::app_with_drawing();
+        records_audit(&mut app);
+        assert!(app.form_audit.is_some());
+        let _ = app.update(Message::FormAudit(audit::Event::SelectAll));
+        // The first two share code B-3; the other two have no status.
+        assert_eq!(app.selection.len(), 4);
+        let _ = app.update(Message::FormAudit(audit::Event::Close));
+        assert!(app.form_audit.is_none());
+
+        let mut app = crate::files_testing::app_with_drawing();
+        slider_editing(&mut app);
+        entry(
+            &mut app,
+            entry::Event::Value("kat-sayisi".into(), "7".into()),
+        );
+        entry(&mut app, entry::Event::Save);
+        assert_eq!(attrs(&app, 1).get("Kat").map(String::as_str), Some("7"));
+        assert_eq!(
+            attrs(&app, 1).get("Yükseklik").map(String::as_str),
+            Some("21")
+        );
     }
 
     /// docs/adr/0401 §9: a form made of the layer's fields, an item added, Kaydet writes the draft and

@@ -4071,6 +4071,33 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Every record of a form's layer by its rules (docs/adr/0406 §1), held together by
+        // fixtures/commands/v1/cad.forms.audit.json. The web is paused (docs/adr/0228).
+        CommandDescriptor {
+            id: crate::CAD_FORMS_AUDIT.into(),
+            version: crate::CAD_FORMS_AUDIT_VERSION,
+            title: "Kayıtları formla denetle".into(),
+            summary: "Formun katmanındaki bütün kayıtları formun kurallarıyla denetler, hiçbir şey yazmaz: her kayıt hesaplarıyla tamamlanır ve formla yazılsa nasıl değerlendirilecekse öyle değerlendirilir (zorunlu alan, değerin kuralı, süzülen seçenek, başka katmandan liste, denetimler, tekil alan). \
+                      checked bütün kayıtlar, failing hatası olanlar, warned yalnız uyarısı olanlar; records hatası olanlar (warnings ile uyarısı olanlar da), katmanın sırasıyla, en çok limit (varsayılan 500, en çok 10000), fazlası more. draft taslakla, moment ve user cad.forms.submit'teki gibi."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::FormsAudit>(),
+            output: schema::<crate::FormsAudited>(),
+            plan: Some(schema::<crate::FormsAudited>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bina formuna uymayan kayıtları listele".into(),
+                input: json!({ "form": "bina-denetimi", "warnings": true }),
+                output: None,
+            }],
+        },
         // The project's relations (docs/adr/0405 §3), held together by
         // fixtures/commands/v1/cad.relations.edit.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -5175,6 +5202,9 @@ mod tests {
                     crate::CAD_RELATIONS_EDIT => {
                         serde_json::from_value::<crate::RelationsEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_FORMS_AUDIT => {
+                        serde_json::from_value::<crate::FormsAudit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SHEETS_EDIT => {
                         serde_json::from_value::<crate::SheetsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -5473,6 +5503,10 @@ mod tests {
                         }
                         crate::CAD_RELATIONS_EDIT => {
                             serde_json::from_value::<crate::RelationsEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_FORMS_AUDIT => {
+                            serde_json::from_value::<crate::FormsAudited>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_SHEETS_EDIT => {

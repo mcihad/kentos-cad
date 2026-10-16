@@ -99,13 +99,20 @@ pub fn widget_fits(widget: FormWidget, field: &LayerField) -> Result<(), &'stati
             W::Text | W::TextArea | W::List | W::Radio | W::Segmented
         ),
         LayerFieldKind::Integer | LayerFieldKind::Decimal => {
-            matches!(widget, W::Number | W::List | W::Radio | W::Segmented)
+            matches!(
+                widget,
+                W::Number | W::List | W::Radio | W::Segmented | W::Slider
+            )
         }
         LayerFieldKind::Date => widget == W::Date,
         LayerFieldKind::Boolean => matches!(widget, W::Check | W::Switch | W::Radio | W::Segmented),
     };
     if !kind_fits {
         return Err(codes::WIDGET_UNFIT);
+    }
+    // A slider runs between the field's least and most (docs/adr/0406 §2).
+    if widget == W::Slider && (field.min.is_none() || field.max.is_none()) {
+        return Err(codes::WIDGET_NEEDS_RANGE);
     }
     let needs_list = matches!(widget, W::List | W::Radio | W::Segmented);
     if needs_list && !listed && field.kind != LayerFieldKind::Boolean {
@@ -215,7 +222,12 @@ impl Preflight<'_> {
             }]);
         }
         if let Err(code) = widget_fits(widget, &probe) {
-            let message = if code == codes::WIDGET_UNFIT {
+            let message = if code == codes::WIDGET_NEEDS_RANGE {
+                format!(
+                    "Kaydırıcı en az ve en çok değer ister; “{}” alanının aralığı yok.",
+                    layer.label()
+                )
+            } else if code == codes::WIDGET_UNFIT {
                 format!(
                     "“{}” bir {} alanı; {} onu düzenleyemez.",
                     layer.label(),

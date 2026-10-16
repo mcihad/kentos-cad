@@ -15,7 +15,7 @@ use kentos_ui::{label, style};
 use kentos_ui::widget::tree_view::{self, Node, TreeView};
 
 use super::designer::{
-    ADD_GROUP, ADD_NOTE, ADD_RELATED, ADD_TAB, CANCEL, CREATE, DOWN, ENFORCE, Event, NAME,
+    ADD_GROUP, ADD_NOTE, ADD_RELATED, ADD_TAB, AUDIT, CANCEL, CREATE, DOWN, ENFORCE, Event, NAME,
     NEW_FORM, PREVIEW, PROPERTIES, PUBLISH, REDO, REMOVE_FORM, REMOVE_ITEM, Rule, SAVE, TITLE,
     Text, UNDO, UP, Window, bound, find, msg,
 };
@@ -810,6 +810,7 @@ impl App {
         .align_y(Center);
         let actions = row![
             words::ghost(REMOVE_FORM, editable.then(|| msg(Event::RemoveForm))),
+            words::ghost(AUDIT, Some(msg(Event::Audit))),
             space::horizontal().width(Fill),
             words::secondary(CANCEL, Some(msg(Event::Cancel))),
             words::secondary(

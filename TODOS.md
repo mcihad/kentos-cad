@@ -188,6 +188,9 @@ Liste:
   katmanın izlemesi (`form_follow.rs`'in kuralı, `cad.polygon.create.forms.json` ve `cad.entities.set.forms.json` durumları);
   Formla düzenle'de hesaplanan alanların kilidi, süzülen listeler, sarı uyarı, kapalı grup, son değer; tasarımcının yeni
   denetçi satırları; kapalı girişin soluk görünüşü ve `Form`'un uyarı satırı web'in form bileşenlerinde.
+- [ ] `FORM-J` kayıt denetimi ve kaydırıcı (ADR 0406, 16 Ekim): web'de gerekenler: `cad.forms.audit`'in TS işleyicisi
+  (`cad.forms.audit.json`), ön denetimin `slider`'ı ve `form_widget_needs_range`'i, web formunda kaydırıcı, Kayıtları denetle
+  penceresi.
 - [ ] `FORM-I` ilişkiler (ADR 0405, 16 Ekim): web'de gerekenler: ayarların `relations`'ı (`.kcad` şema 60), `cad.relations.edit`
   ve `cad.entities.delete`'in `relation_restricted`'ının TS işleyicileri (`cad.relations.edit.json`,
   `cad.entities.delete.relations.json`), web belgesinde silme politikasının izlenmesi, İlişkiler penceresi, Bağla ve Bağı kopar.
@@ -1425,7 +1428,9 @@ burada aşamaları izlenir.
 - [x] `FORM-I` İlişkiler: kalıcı 1:N ilişki tanımı (`relations`, `cad.relations.edit`), silme politikası (unlink, cascade,
   restrict, keep) bütün silme yollarında, İlişkiler penceresi, formda Bağla ve Bağı kopar. — **16 Ekim,
   [ADR 0405](docs/adr/0405-relations.md).**
-- [ ] `FORM-J` N:M bağlantı tablosu, geometrisiz tablo katmanı, formun içinden yeni alt kayıt.
+- [x] `FORM-J` Kayıtları formla denetle (`cad.forms.audit`: katmanın bütün kayıtları formun kurallarıyla, uymayanlar listede;
+  Git, Aç, Hepsini seç) ve kaydırıcı öğe türü. — **16 Ekim, [ADR 0406](docs/adr/0406-form-audit-and-slider.md).**
+- [ ] `FORM-K` N:M bağlantı tablosu, geometrisiz tablo katmanı, formun içinden yeni alt kayıt.
 - [ ] `FORM-F` Merkezi yayın ve izinler (FM2, plan `FORM-FIRST-14`–`17`): bulutta form taslağı, yayın ve dağıtım kaynakları,
   `forms.design`, `forms.publish`, `forms.use` izinleri, sunucunun yazma bekçisi bütün yollarda.
 

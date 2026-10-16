@@ -3253,7 +3253,7 @@ class _Schema:
                 return lst
             return check
 
-        widgets = ("text", "textArea", "number", "date", "check", "switch", "list", "radio", "segmented")
+        widgets = ("text", "textArea", "number", "date", "check", "switch", "list", "radio", "segmented", "slider")
         check = self.fields({"rule": (self.text, True), "message": (self.text, True), "warning": (true_, False)})
         # docs/adr/0404 §1: a field's list from another layer, its chain's matches.
         match = self.fields({"field": (self.text, True), "record": (self.text, True)})

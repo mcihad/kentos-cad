@@ -4130,6 +4130,11 @@
                 "const": "segmented",
                 "description": "A segmented choice: fields with a short value list.",
                 "type": "string"
+              },
+              {
+                "const": "slider",
+                "description": "A slider between the field's least and most (docs/adr/0406 §2): number fields with both.",
+                "type": "string"
               }
             ]
           },
@@ -13721,6 +13726,11 @@
                 "const": "segmented",
                 "description": "A segmented choice: fields with a short value list.",
                 "type": "string"
+              },
+              {
+                "const": "slider",
+                "description": "A slider between the field's least and most (docs/adr/0406 §2): number fields with both.",
+                "type": "string"
               }
             ]
           },
@@ -21411,6 +21421,11 @@
               {
                 "const": "segmented",
                 "description": "A segmented choice: fields with a short value list.",
+                "type": "string"
+              },
+              {
+                "const": "slider",
+                "description": "A slider between the field's least and most (docs/adr/0406 §2): number fields with both.",
                 "type": "string"
               }
             ]
@@ -323717,6 +323732,11 @@
                 "const": "segmented",
                 "description": "A segmented choice: fields with a short value list.",
                 "type": "string"
+              },
+              {
+                "const": "slider",
+                "description": "A slider between the field's least and most (docs/adr/0406 §2): number fields with both.",
+                "type": "string"
               }
             ]
           },
@@ -324454,6 +324474,11 @@
                 "const": "segmented",
                 "description": "A segmented choice: fields with a short value list.",
                 "type": "string"
+              },
+              {
+                "const": "slider",
+                "description": "A slider between the field's least and most (docs/adr/0406 §2): number fields with both.",
+                "type": "string"
               }
             ]
           },
@@ -325109,6 +325134,11 @@
               {
                 "const": "segmented",
                 "description": "A segmented choice: fields with a short value list.",
+                "type": "string"
+              },
+              {
+                "const": "slider",
+                "description": "A slider between the field's least and most (docs/adr/0406 §2): number fields with both.",
                 "type": "string"
               }
             ]
@@ -325918,6 +325948,347 @@
               "Durum": "inceleme",
               "Not": "Çatı arası ayrıca bakılmalı."
             }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.forms.audit",
+      "version": 1,
+      "title": "Kayıtları formla denetle",
+      "summary": "Formun katmanındaki bütün kayıtları formun kurallarıyla denetler, hiçbir şey yazmaz: her kayıt hesaplarıyla tamamlanır ve formla yazılsa nasıl değerlendirilecekse öyle değerlendirilir (zorunlu alan, değerin kuralı, süzülen seçenek, başka katmandan liste, denetimler, tekil alan). checked bütün kayıtlar, failing hatası olanlar, warned yalnız uyarısı olanlar; records hatası olanlar (warnings ile uyarısı olanlar da), katmanın sırasıyla, en çok limit (varsayılan 500, en çok 10000), fazlası more. draft taslakla, moment ve user cad.forms.submit'teki gibi.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.forms.audit` v1 (docs/adr/0406 §1).\n\nRefusals: `invalid_count` (at `limit`), `invalid_moment`, `invalid_user`; `unknown_form`,\n`form_unpublished`, `form_preflight`.",
+        "properties": {
+          "draft": {
+            "description": "Through its draft instead of its latest release.",
+            "type": "boolean"
+          },
+          "form": {
+            "description": "The form's id.",
+            "type": "string"
+          },
+          "limit": {
+            "description": "The most records listed (1–10000); none: 500. The counts are of every record.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "moment": {
+            "description": "As `cad.forms.submit`'s.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "user": {
+            "description": "As `cad.forms.submit`'s.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "warnings": {
+            "description": "The records with only warnings are listed too.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "form"
+        ],
+        "title": "FormsAudit",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "AuditedRecord": {
+            "description": "A record `cad.forms.audit` lists: its persistent id and its issues.",
+            "properties": {
+              "issues": {
+                "items": {
+                  "$ref": "#/$defs/FormIssue"
+                },
+                "type": "array"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "issues"
+            ],
+            "type": "object"
+          },
+          "FormIssue": {
+            "additionalProperties": false,
+            "description": "What a form's preflight or a record's validation found (docs/adr/0401 §4, §6): a stable code,\nwhere (the item, the field's key, the rule) and the sentence that says it.",
+            "properties": {
+              "code": {
+                "description": "`form_field_unknown`, `form_required`, … (the forms core's `codes`).",
+                "type": "string"
+              },
+              "field": {
+                "description": "The layer field's key it is about.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "item": {
+                "description": "The item it is about.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "message": {
+                "type": "string"
+              },
+              "rule": {
+                "description": "The rule it is about: `visibleWhen`, `requiredWhen`, `readOnlyWhen`, `default`, `checks/0` …",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "severity": {
+                "$ref": "#/$defs/FormSeverity"
+              }
+            },
+            "required": [
+              "code",
+              "severity",
+              "message"
+            ],
+            "type": "object"
+          },
+          "FormSeverity": {
+            "description": "How much an issue weighs: an error stops a save or a publish, a warning is said.",
+            "enum": [
+              "error",
+              "warning"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.forms.audit` v1.",
+        "properties": {
+          "checked": {
+            "description": "The layer's records checked.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "failing": {
+            "description": "The records with an error.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "more": {
+            "description": "More records had issues than `limit` lists.",
+            "type": "boolean"
+          },
+          "records": {
+            "description": "The records listed, in the layer's order: those with an error, and with `warnings` those\nwith only warnings.",
+            "items": {
+              "$ref": "#/$defs/AuditedRecord"
+            },
+            "type": "array"
+          },
+          "version": {
+            "description": "The release asked; none: the draft.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "version"
+          },
+          "warned": {
+            "description": "The records with warnings and no error.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "checked",
+          "failing",
+          "warned",
+          "records"
+        ],
+        "title": "FormsAudited",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "AuditedRecord": {
+            "description": "A record `cad.forms.audit` lists: its persistent id and its issues.",
+            "properties": {
+              "issues": {
+                "items": {
+                  "$ref": "#/$defs/FormIssue"
+                },
+                "type": "array"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "issues"
+            ],
+            "type": "object"
+          },
+          "FormIssue": {
+            "additionalProperties": false,
+            "description": "What a form's preflight or a record's validation found (docs/adr/0401 §4, §6): a stable code,\nwhere (the item, the field's key, the rule) and the sentence that says it.",
+            "properties": {
+              "code": {
+                "description": "`form_field_unknown`, `form_required`, … (the forms core's `codes`).",
+                "type": "string"
+              },
+              "field": {
+                "description": "The layer field's key it is about.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "item": {
+                "description": "The item it is about.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "message": {
+                "type": "string"
+              },
+              "rule": {
+                "description": "The rule it is about: `visibleWhen`, `requiredWhen`, `readOnlyWhen`, `default`, `checks/0` …",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "severity": {
+                "$ref": "#/$defs/FormSeverity"
+              }
+            },
+            "required": [
+              "code",
+              "severity",
+              "message"
+            ],
+            "type": "object"
+          },
+          "FormSeverity": {
+            "description": "How much an issue weighs: an error stops a save or a publish, a warning is said.",
+            "enum": [
+              "error",
+              "warning"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.forms.audit` v1.",
+        "properties": {
+          "checked": {
+            "description": "The layer's records checked.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "failing": {
+            "description": "The records with an error.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "more": {
+            "description": "More records had issues than `limit` lists.",
+            "type": "boolean"
+          },
+          "records": {
+            "description": "The records listed, in the layer's order: those with an error, and with `warnings` those\nwith only warnings.",
+            "items": {
+              "$ref": "#/$defs/AuditedRecord"
+            },
+            "type": "array"
+          },
+          "version": {
+            "description": "The release asked; none: the draft.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "version"
+          },
+          "warned": {
+            "description": "The records with warnings and no error.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "checked",
+          "failing",
+          "warned",
+          "records"
+        ],
+        "title": "FormsAudited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_count",
+          "invalid_moment",
+          "invalid_user",
+          "unknown_form",
+          "form_unpublished",
+          "form_preflight"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bina formuna uymayan kayıtları listele",
+          "input": {
+            "form": "bina-denetimi",
+            "warnings": true
           }
         }
       ]

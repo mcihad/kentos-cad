@@ -890,6 +890,7 @@ class FormWidget(_StrEnum):
     - ``list``: A drop-down list: fields with a value list.
     - ``radio``: Radio buttons: fields with a value list.
     - ``segmented``: A segmented choice: fields with a short value list.
+    - ``slider``: A slider between the field's least and most (docs/adr/0406 §2): number fields with both.
     """
     TEXT = "text"
     TEXT_AREA = "textArea"
@@ -900,9 +901,10 @@ class FormWidget(_StrEnum):
     LIST = "list"
     RADIO = "radio"
     SEGMENTED = "segmented"
+    SLIDER = "slider"
 
 
-FormWidgetName = Literal["text", "textArea", "number", "date", "check", "switch", "list", "radio", "segmented"]
+FormWidgetName = Literal["text", "textArea", "number", "date", "check", "switch", "list", "radio", "segmented", "slider"]
 """The names of :class:`FormWidget`, for a plain string."""
 
 
@@ -4160,6 +4162,26 @@ class AuditFinding(_Model):
             uid=data["uid"],
             message=data["message"],
             fixed=data["fixed"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AuditedRecord(_Model):
+    """A record `cad.forms.audit` lists: its persistent id and its issues."""
+    uid: str
+    issues: list[FormIssue]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["issues"] = [e0.to_json() for e0 in self.issues]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AuditedRecord:
+        return cls(
+            uid=data["uid"],
+            issues=[FormIssue.from_json(e0) for e0 in data["issues"]],
         )
 
 
@@ -10767,6 +10789,97 @@ class FormSummary(_Model):
             layer=data["layer"],
             revision=data["revision"],
             enforce=data.get("enforce", UNSET),
+            version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormsAudit(_Model):
+    """Input of `cad.forms.audit` v1 (docs/adr/0406 §1).
+
+    Refusals: `invalid_count` (at `limit`), `invalid_moment`, `invalid_user`; `unknown_form`,
+    `form_unpublished`, `form_preflight`.
+    Attributes:
+        form: The form's id.
+        draft: Through its draft instead of its latest release.
+        limit: The most records listed (1–10000); none: 500. The counts are of every record. Unit: count.
+        moment: As `cad.forms.submit`'s.
+        user: As `cad.forms.submit`'s.
+        warnings: The records with only warnings are listed too.
+    """
+    form: str
+    draft: bool | Unset = UNSET
+    limit: int | None | Unset = UNSET
+    moment: str | None | Unset = UNSET
+    user: str | None | Unset = UNSET
+    warnings: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["form"] = self.form
+        if self.draft is not UNSET:
+            out["draft"] = self.draft
+        if self.limit is not UNSET:
+            out["limit"] = self.limit
+        if self.moment is not UNSET:
+            out["moment"] = self.moment
+        if self.user is not UNSET:
+            out["user"] = self.user
+        if self.warnings is not UNSET:
+            out["warnings"] = self.warnings
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsAudit:
+        return cls(
+            form=data["form"],
+            draft=data.get("draft", UNSET),
+            limit=data.get("limit", UNSET),
+            moment=data.get("moment", UNSET),
+            user=data.get("user", UNSET),
+            warnings=data.get("warnings", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormsAudited(_Model):
+    """Output of `cad.forms.audit` v1.
+    Attributes:
+        checked: The layer's records checked. Unit: count.
+        failing: The records with an error. Unit: count.
+        warned: The records with warnings and no error. Unit: count.
+        records: The records listed, in the layer's order: those with an error, and with `warnings` those
+            with only warnings.
+        more: More records had issues than `limit` lists.
+        version: The release asked; none: the draft. Unit: version.
+    """
+    checked: int
+    failing: int
+    warned: int
+    records: list[AuditedRecord]
+    more: bool | Unset = UNSET
+    version: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["checked"] = self.checked
+        out["failing"] = self.failing
+        out["warned"] = self.warned
+        out["records"] = [e0.to_json() for e0 in self.records]
+        if self.more is not UNSET:
+            out["more"] = self.more
+        if self.version is not UNSET:
+            out["version"] = self.version
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsAudited:
+        return cls(
+            checked=data["checked"],
+            failing=data["failing"],
+            warned=data["warned"],
+            records=[AuditedRecord.from_json(e0) for e0 in data["records"]],
+            more=data.get("more", UNSET),
             version=data.get("version", UNSET),
         )
 
@@ -28219,6 +28332,7 @@ __all__ = [
     "AuditFinding",
     "AuditPurge",
     "AuditPurgeName",
+    "AuditedRecord",
     "AuthKind",
     "AuthKindName",
     "AzimuthDimensionMeasure",
@@ -28481,6 +28595,8 @@ __all__ = [
     "FormSummary",
     "FormWidget",
     "FormWidgetName",
+    "FormsAudit",
+    "FormsAudited",
     "FormsEdit",
     "FormsEdited",
     "FormsFill",

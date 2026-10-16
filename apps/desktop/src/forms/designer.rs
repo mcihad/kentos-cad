@@ -54,6 +54,7 @@ pub(super) const UP: &str = "Yukarı";
 pub(super) const DOWN: &str = "Aşağı";
 pub(super) const REMOVE_ITEM: &str = "Öğeyi sil";
 pub(super) const ADD_RELATED: &str = "İlişkili";
+pub(super) const AUDIT: &str = "Kayıtları denetle";
 pub(super) const UNDO: &str = "Geri al";
 pub(super) const PREVIEW: &str = "Önizleme";
 pub(super) const PROPERTIES: &str = "Özellikler";
@@ -187,6 +188,8 @@ pub enum Event {
     Redo,
     /// The third column: the properties (`false`) or the preview.
     Preview(bool),
+    /// Kayıtları denetle on the chosen form (docs/adr/0406 §1).
+    Audit,
     RemoveItem,
     Text(Text, String),
     Widget(Option<FormWidget>),
@@ -915,6 +918,21 @@ impl App {
                 }
             }
             Event::Undo | Event::Redo => {}
+            Event::Audit => {
+                let form = w.chosen.clone();
+                if w.dirty {
+                    self.say(
+                        Level::Warn,
+                        "Kayıtlar formun kaydedilmiş hâliyle denetlenir: önce Kaydet’e basın.",
+                    );
+                    self.forms_window = Some(w);
+                    return Task::none();
+                }
+                self.forms_window = None;
+                self.form_preview = None;
+                self.dialog = None;
+                return self.open_form_audit(form);
+            }
             Event::Preview(on) => {
                 w.previewing = on;
                 if !on {
@@ -1145,6 +1163,7 @@ impl App {
             Control::Press(ADD_GROUP) => Some(msg(Event::AddGroup)),
             Control::Press(ADD_NOTE) => Some(msg(Event::AddNote)),
             Control::Press(ADD_RELATED) => Some(msg(Event::AddRelated)),
+            Control::Press(AUDIT) => Some(msg(Event::Audit)),
             Control::Press(ENFORCE) => self.chosen_form().map(|f| msg(Event::Enforce(!f.enforce))),
             Control::Press(UNDO) => Some(msg(Event::Undo)),
             Control::Press(REDO) => Some(msg(Event::Redo)),

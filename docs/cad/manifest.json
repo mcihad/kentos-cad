@@ -1135,6 +1135,22 @@
    "tests": 3
   },
   {
+   "id": "data.formAudit",
+   "kind": "command",
+   "title": "Kayıtları denetle",
+   "level": "semantic",
+   "via": [
+    "cad.forms.audit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.forms.audit",
+   "mcp": "cad.forms.audit",
+   "note": "Bütün kayıtlar cad.forms.audit ile denetlenir; pencere yazmaz, seçer ve Formla düzenle'yi açar (ADR 0406).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "data.formEdit",
    "kind": "command",
    "title": "Formla düzenle",

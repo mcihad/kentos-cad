@@ -290,8 +290,8 @@ def text_for(v, f):
 
 FITS = {
     "text": {"text", "textArea", "list", "radio", "segmented"},
-    "integer": {"number", "list", "radio", "segmented"},
-    "decimal": {"number", "list", "radio", "segmented"},
+    "integer": {"number", "list", "radio", "segmented", "slider"},
+    "decimal": {"number", "list", "radio", "segmented", "slider"},
     "date": {"date"},
     "boolean": {"check", "switch", "radio", "segmented"},
 }
@@ -385,6 +385,8 @@ def preflight(body, fields, variables=(), world=None):
         w = widget_of(f, layer)
         if w not in FITS[layer["kind"]]:
             issues.append(issue("form_widget_unfit", True, f["id"], key))
+        elif w == "slider" and ("min" not in layer or "max" not in layer):
+            issues.append(issue("form_widget_needs_range", True, f["id"], key))
         elif w in ("list", "radio", "segmented") and not layer.get("values") and layer["kind"] != "boolean" \
                 and "lookup" not in f:
             issues.append(issue("form_widget_needs_values", True, f["id"], key))
@@ -937,6 +939,11 @@ def core():
          body_with(lambda b: (item(b, "tarih").update(widget="check"), item(b, "kat").update(widget="text"), item(b, "onay").update(widget="number"))))
     case("liste öğesi değer listesi ister; evet/hayırın iki değeri liste sayılır",
          body_with(lambda b: (item(b, "aciklama").update(widget="list"), item(b, "onay").update(widget="segmented"), item(b, "kat").update(widget="radio"))))
+    case("kaydırıcı: aralığı olan sayı alanına uyar, metne uymaz",
+         body_with(lambda b: (item(b, "kat").update(widget="slider"), item(b, "aciklama").update(widget="slider"))))
+    case("kaydırıcı en az ve en çok değer ister",
+         body_with(lambda b: item(b, "kat").update(widget="slider")),
+         [{k: v for k, v in f.items() if k != "min"} if f.get("id") == "kat-sayisi" else f for f in FIELDS])
     case("varsayılan alanın kuralına uymalı: aralık dışı kat, takvimde olmayan gün",
          body_with(lambda b: (item(b, "kat").update(default="41"), item(b, "tarih").update(default="2026-02-30"))))
     case("varsayılan listenin etiketiyle de yazılır; tek biçime çevrilir",
@@ -2415,6 +2422,118 @@ def look_command_cases():
     return validate, submit, sets, fills
 
 
+# ── A layer's records checked by its form (docs/adr/0406 §1) ────────────
+
+AUDIT_ENTITIES = FILL_ENTITIES + [
+    {"kind": "polygon", "id": 7, "layerId": "bina", "attrs": {"Durum": "iyi", "Kat": "0"}, "pts": square(100, 0)},
+    {"kind": "polygon", "id": 8, "layerId": "bina", "attrs": {"Durum": "iyi", "Kat": "3", "Kod": "B-3"}, "pts": square(120, 0)},
+    {"kind": "polygon", "id": 9, "layerId": "bina", "attrs": {"Durum": "inceleme", "Kat": "2", "Açıklama": "Kısa"},
+     "pts": square(140, 0)},
+    {"kind": "polygon", "id": 10, "layerId": "bina", "attrs": {"Durum": "inceleme", "Kat": "1", "Açıklama": "Yedi harf"},
+     "pts": square(160, 0)},
+    {"kind": "polygon", "id": 11, "layerId": "bina", "attrs": {"Durum": "iyi", "Kat": "1", "Tür": "sanayi", "Malzeme": "ahsap"},
+     "pts": square(180, 0)},
+]
+
+
+def audit_cases():
+    cases = []
+
+    def audited(name, inp, body=CALC_BODY, fields=CALC_FIELDS, entities=AUDIT_ENTITIES, forms=None, variables=(),
+                version=1, world=None, objects=None):
+        f = Form(body, fields, variables, world)
+        rows = [e for e in entities if e["layerId"] == "bina"]
+        held = {}
+        unique = [fl["name"] for x, _ in f.bound() if x.get("unique") for fl in [f.layer(x)]]
+        for e in rows:
+            for k, n in enumerate(unique):
+                v = e["attrs"].get(n, "").strip(JS_SPACE)
+                if v:
+                    held[(k, v)] = held.get((k, v), 0) + 1
+        out = {"checked": 0, "failing": 0, "warned": 0, "records": []}
+        limit = inp.get("limit", 500)
+        more = False
+        for e in rows:
+            out["checked"] += 1
+            obj = (objects or {}).get(e["id"], SQUARE)
+            after, issues = f.complete(e["attrs"], obj, False)
+            said = [i.get("field") for i in issues]
+            issues = issues + [i for i in f.validate(after, obj) if i.get("field") not in said]
+            if any(held.get((k, after.get(n, "").strip(JS_SPACE)), 0) > 1 for k, n in enumerate(unique)):
+                issues += f.unique_issues(after, obj, [x["attrs"] for x in rows if x is not e])
+            err = bool(errors(issues))
+            if err:
+                out["failing"] += 1
+            elif issues:
+                out["warned"] += 1
+            if err or (inp.get("warnings") and issues):
+                if len(out["records"]) < limit:
+                    out["records"].append({"uid": f"$uidOf:{e['id']}", "issues": shown_issues(issues)})
+                else:
+                    more = True
+        if version is not None:
+            out["version"] = version
+        if more:
+            out["more"] = True
+        setup_doc = setup(forms or [CALC_FORM], fields, entities) if world is None else None
+        return setup_doc, {"op": "plan", "input": inp, "result": {"status": "completed", "output": out, "warnings": []}}
+
+    def case(name, inp, **more):
+        doc, step = audited(name, inp, **more)
+        cases.append({"name": name, "setup": more.get("setup_doc") or doc, "steps": [step]})
+
+    case("katmanın kayıtları: hatalılar katmanın sırasıyla; tekil kod iki kayıtta", {"form": "hesap"})
+    case("uyarısı olanlar da", {"form": "hesap", "warnings": True})
+    case("en çok iki kayıt; fazlası more", {"form": "hesap", "warnings": True, "limit": 2})
+    case("tek kayıt", {"form": "hesap", "limit": 1})
+    case("an ve kullanıcı verilir: var olan kayıt varsayılan almaz", {"form": "hesap", **MOMENT_GIVEN}, variables=GIVEN)
+    hidden = calc_with(lambda b: b.update(clearHidden=True))
+    hidden_form = {**copy.deepcopy(CALC_FORM), "draft": hidden, "releases": [release_of(hidden, 1)]}
+    case("gizlenenleri silen form: gizlenen açıklama denetlenmez", {"form": "hesap", "warnings": True}, body=hidden, forms=[hidden_form])
+    draft_form = {"id": "hesap", "name": "Bina hesabı", "layer": "bina", "draft": copy.deepcopy(CALC_BODY)}
+    case("yayınlanmamış form taslağıyla", {"form": "hesap", "draft": True}, forms=[draft_form], version=None)
+    case("kuralları uygulanan form da denetler", {"form": "hesap"}, forms=[CALC_ENFORCED])
+    no_unique = calc_with(lambda b: item(b, "kod").pop("unique"))
+    nu_form = {**copy.deepcopy(CALC_FORM), "draft": no_unique, "releases": [release_of(no_unique, 1)]}
+    case("tekil olmayan kod: yinelenen kod sorun değil", {"form": "hesap"}, body=no_unique, forms=[nu_form])
+    soft = calc_with(lambda b: item(b, "aciklama")["checks"].__setitem__(0, {**item(b, "aciklama")["checks"][0], "warning": True}))
+    soft_form = {**copy.deepcopy(CALC_FORM), "draft": soft, "releases": [release_of(soft, 1)]}
+    case("sert denetim yumuşatılınca kayıt yalnız uyarır", {"form": "hesap", "warnings": True}, body=soft, forms=[soft_form])
+    case("katmanda kayıt yok: sıfır kayıt denetlenir", {"form": "hesap", "warnings": True},
+         entities=[e for e in AUDIT_ENTITIES if e["layerId"] != "bina"])
+
+    def refused(name, inp, result, forms=None):
+        cases.append({"name": name, "setup": setup(forms or [CALC_FORM], CALC_FIELDS, AUDIT_ENTITIES), "steps": [
+            {"op": "plan", "input": inp, "result": result}]})
+
+    refused("sıfır kayıt listelenmez", {"form": "hesap", "limit": 0},
+            failed("invalid_count", "Listelenecek kayıt sayısı 1 ile 10000 arasında olmalı.", "limit"))
+    refused("en çok 10000 kayıt listelenir", {"form": "hesap", "limit": 10001},
+            failed("invalid_count", "Listelenecek kayıt sayısı 1 ile 10000 arasında olmalı.", "limit"))
+    refused("olmayan form", {"form": "yok"}, unknown_form("yok", "form"))
+    refused("yayınlanmamış form taslaksız", {"form": "hesap"}, unpublished("Bina hesabı", "draft"), forms=[draft_form])
+    broken = {**copy.deepcopy(CALC_FORM), "draft": BROKEN, "releases": []}
+    refused("ön denetimde hata olan form", {"form": "hesap", "draft": True}, failed("form_preflight", ANY, "form"), forms=[broken])
+    refused("geçersiz an", {"form": "hesap", "moment": "dün"},
+            failed("invalid_moment", "“dün” bir an değil. Bir tarih (2026-10-16) ya da tarih ve yerel saat (2026-10-16T14:30:00) yazın.", "moment"))
+    refused("geçersiz kullanıcı", {"form": "hesap", "user": " "},
+            failed("invalid_user", "Kullanıcının adı boş olamaz, başında ve sonunda boşluk olmaz, en çok 64 karakterdir.", "user"))
+
+    # Lists from other layers: a district outside the chain, a parcel that is not there.
+    world = look_world()
+    f = Form(LOOK_BODY, LOOK_FIELDS, (), world)
+    first = {"İl": "34", "İlçe": "0601"}
+    out = {"checked": 2, "failing": 1, "warned": 0, "version": 1,
+           "records": [{"uid": "$uidOf:1", "issues": shown_issues(f.complete(first, {**SQUARE, "uid": "$uidOf:1"}, False)[1]
+                                                             + f.validate(first, {**SQUARE, "uid": "$uidOf:1"}))}]}
+    cases.append({"name": "başka katmandan liste: zincirin dışındaki ilçe", "setup": look_setup(first=first), "steps": [
+        {"op": "plan", "input": {"form": "adres"}, "result": {"status": "completed", "output": out, "warnings": []}}]})
+    out2 = {"checked": 2, "failing": 0, "warned": 0, "version": 1, "records": []}
+    cases.append({"name": "başka katmandan liste: boş kayıtlar sorunsuz", "setup": look_setup(), "steps": [
+        {"op": "plan", "input": {"form": "adres", "warnings": True}, "result": {"status": "completed", "output": out2, "warnings": []}}]})
+    return cases
+
+
 # ── Relations (docs/adr/0405) ───────────────────────────────────────────
 
 REL_FIELDS = {"bina": [{"name": "Ad", "kind": "text"}],
@@ -2643,6 +2762,10 @@ def commands():
             "cad.forms.fill", "Formla toplu yaz",
             "ADR 0403 §5: aynı değerler birden çok kayda formla yazılır; her kayıt kendi değerleri ve şekliyle denetlenir ve "
             "tamamlanır, biri geçmezse hiçbiri yazılmaz.", fill_cases() + look_fill),
+        d / "cad.forms.audit.json": command_file(
+            "cad.forms.audit", "Kayıtları formla denetle",
+            "ADR 0406 §1: formun katmanındaki bütün kayıtlar formun kurallarıyla denetlenir; hiçbir şey yazılmaz.",
+            audit_cases()),
         d / "cad.relations.edit.json": command_file(
             "cad.relations.edit", "İlişkiler",
             "ADR 0405 §3: projenin ilişkileri; oluşturma, değiştirme, silme. Proje ayarıdır, geri alma adımı değildir.",
