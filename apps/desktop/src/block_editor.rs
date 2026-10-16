@@ -211,6 +211,7 @@ impl App {
         };
         let entities = definition_objects(doc);
         let input = BlocksEdit {
+            dynamic: None,
             sync: None,
             renames: None,
             remove_tags: None,

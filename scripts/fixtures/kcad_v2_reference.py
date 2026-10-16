@@ -1452,7 +1452,9 @@ KINDS = {
                # Schema 57 (docs/adr/0315 §3): its own y factor, only when it is not the x one.
                "yScale": (f64, False),
                # Schema 58 (docs/adr/0317 §1): where it shows its moved attributes, none written empty.
-               "attributePlaces": (lambda m: cmap({k: point(v) for k, v in m.items()}), False)},
+               "attributePlaces": (lambda m: cmap({k: point(v) for k, v in m.items()}), False),
+               # Schema 59 (docs/adr/0318 §3): its parameter values, none written empty.
+               "parameters": (lambda m: cmap({k: param_value(v) for k, v in m.items()}), False)},
     # Schema 22 (docs/adr/0184): one-line cells row by row, merged ranges, alignments, a heading row only when true, lines
     # by name, a frame's width, a text's face, a source; only in the drawing.
     "table": {
@@ -1707,8 +1709,21 @@ def definition(b):
         "units": (enum(("mm", "cm", "m", "in", "ft", "unitless")), False),
         # Schema 58 (docs/adr/0317 §4): its library card.
         "card": (card, False),
+        # Schema 59 (docs/adr/0318): its parameters and actions, as their JSON.
+        "dynamic": (opaque, False),
     }
     return cmap(fields(b, table, f"blok {b.get('name')}"))
+
+
+def param_value(v):
+    """An insert's parameter value (schema 59): true or false, a float, a text or a point [x, y]."""
+    if type(v) is bool:
+        return boolean(v)
+    if type(v) is float:
+        return f64(v)
+    if type(v) is str:
+        return text(v)
+    return point(v)
 
 
 def sheets(s):
@@ -1939,6 +1954,10 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def line_patterned(nodes):
         return any("linePattern" in n.get("style", {}) or line_patterned(n.get("children", [])) for n in nodes)
 
+    # Schema 59 (docs/adr/0318): a block's dynamic part or an insert's parameter values.
+    valued = lambda es: any(e["kind"] == "insert" and "parameters" in e for e in es)  # noqa: E731
+    if valued(entities) or any("dynamic" in b or valued(b["entities"]) for b in blocks or []):
+        return 59
     # Schema 58 (docs/adr/0317 §1, §4): an attribute's option, an insert's moved attribute or a block's card.
     options = ("invisible", "constant", "verify", "preset", "movable", "multiline", "boxWidth", "field")
     placed = lambda es: any(e["kind"] == "insert" and "attributePlaces" in e for e in es)  # noqa: E731
@@ -2287,7 +2306,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-59.kcad"] = container(root(cmap(parts), version=uint(59)))
+    files["schema-version-60.kcad"] = container(root(cmap(parts), version=uint(60)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -3589,6 +3608,27 @@ def build():
     payload = document(load("wipeouts.json"))
     assert payload.count(b"\x67version\x18\x36") == 1
     out["broken/wipeouts-in-schema-53.kcad"] = container(payload.replace(b"\x67version\x18\x36", b"\x67version\x18\x35"))
+    out["dynamic-blocks.kcad"] = container(document(load("dynamic-blocks.json")))
+    payload = document(load("dynamic-blocks.json"))
+    assert payload.count(b"\x67version\x18\x3b") == 1
+    out["broken/dynamic-blocks-in-schema-58.kcad"] = container(payload.replace(b"\x67version\x18\x3b", b"\x67version\x18\x3a"))
+
+    def dynamic_broken(change):
+        d = load("dynamic-blocks.json")
+        change(d)
+        return container(document(d))
+
+    dyn = lambda d: d["blocks"][0]["dynamic"]  # noqa: E731
+    out["broken/dynamic-action-unfit.kcad"] = dynamic_broken(lambda d: dyn(d)["actions"].append({"kind": "rotate", "parameter": "Genişlik", "pieces": [1]}))
+    out["broken/dynamic-piece-unknown.kcad"] = dynamic_broken(lambda d: dyn(d)["actions"][1].update(pieces=[9]))
+    out["broken/dynamic-default-off-rule.kcad"] = dynamic_broken(lambda d: dyn(d)["parameters"][0]["rule"].update(min=1.0))
+    out["broken/dynamic-name-twice.kcad"] = dynamic_broken(lambda d: dyn(d)["parameters"][1].update(name="Genişlik"))
+    out["broken/dynamic-unknown-field.kcad"] = dynamic_broken(lambda d: dyn(d)["parameters"][1].update(color="#FF0000"))
+    out["broken/dynamic-lookup-off-rule.kcad"] = dynamic_broken(lambda d: dyn(d)["parameters"][3]["rows"][0]["values"].update({"Genişlik": 0.72}))
+    out["broken/parameters-off-rule.kcad"] = dynamic_broken(lambda d: d["entities"][1]["parameters"].update({"Genişlik": 1.5}))
+    out["broken/parameters-unknown.kcad"] = dynamic_broken(lambda d: d["entities"][1]["parameters"].update({"Renk": 1.0}))
+    out["broken/parameters-empty.kcad"] = dynamic_broken(lambda d: d["entities"][0].update(parameters={}))
+    out["broken/parameters-not-dynamic.kcad"] = dynamic_broken(lambda d: d["blocks"][0].pop("dynamic"))
     out["block-cards.kcad"] = container(document(load("block-cards.json")))
     payload = document(load("block-cards.json"))
     assert payload.count(b"\x67version\x18\x3a") == 1

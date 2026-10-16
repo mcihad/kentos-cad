@@ -35,7 +35,8 @@ impl<'d> Encoder<'d> {
                 + usize::from(!block.attributes.is_empty())
                 + usize::from(block.description.is_some())
                 + usize::from(block.units.is_some())
-                + usize::from(block.card.is_some());
+                + usize::from(block.card.is_some())
+                + usize::from(block.dynamic.is_some());
             self.open(n, true)?;
             // id (2), base card name (4), units (5), entities (8), attributes (10), description (11).
             self.key("id");
@@ -56,6 +57,15 @@ impl<'d> Encoder<'d> {
                     e.w.text(units_name(u));
                     Ok(())
                 })?;
+            }
+            // Its parameters and actions (docs/adr/0318), as their JSON.
+            if let Some(d) = &block.dynamic {
+                let value = serde_json::to_value(d)
+                    .map_err(|e| self.fail(Code::BadValue, &format!("dinamik bölüm yazılamadı: {e}")))?;
+                self.key("dynamic");
+                self.path.push(Seg::Name("dynamic"));
+                self.json(&value)?;
+                self.path.pop();
             }
             self.key("entities");
             self.path.push(Seg::Name("entities"));

@@ -162,7 +162,10 @@ use crate::layer::LineType;
 ///    definition's `invisible`, `constant`, `verify`, `preset`, `movable`, `multiline`, `boxWidth` and `field`, an
 ///    insert's `attributePlaces` and a definition's `card`; in the typed columns the insert's option bit 2, a count
 ///    and each tag and point. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 67;
+/// 68 (docs/adr/0318): dynamic blocks: `.kcad` document schema 59, a definition's `dynamic` (its parameters and
+///    actions as their JSON) and an insert's `parameters`; in the typed columns the insert's option bit 3 and the
+///    values' JSON text. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 68;
 
 // ── Every import ────────────────────────────────────────────────────────
 

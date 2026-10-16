@@ -3,6 +3,7 @@ import type { AttributeDefinition } from "./AttributeDefinition";
 import type { BlockEditOperation } from "./BlockEditOperation";
 import type { BlockId } from "./BlockId";
 import type { BlockUnits } from "./BlockUnits";
+import type { DynamicBlock } from "./DynamicBlock";
 import type { Entity } from "./Entity";
 import type { Vec2 } from "./Vec2";
 
@@ -129,6 +130,10 @@ tags?: Array<string>,
  * `card`: its description (empty: none).
  */
 description?: string, 
+/**
+ * `dynamic`: the parameters and actions (absent: none, a plain block).
+ */
+dynamic?: DynamicBlock, 
 /**
  * The document revision the input was prepared against, as decimal text.
  */

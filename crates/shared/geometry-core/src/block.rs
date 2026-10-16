@@ -36,9 +36,10 @@
 //! while its layer does.
 
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use crate::api::json::Json;
+use crate::block_dynamic::Dynamic;
 use crate::entity::{Attrs, Entity, Places, Shape, entity_bounds_in};
 use crate::geom::affine::{Affine, apply, compose, translation};
 use crate::ops::warp::{Warp, warp_shape};
@@ -142,6 +143,8 @@ pub struct Definition {
     pub base: Vec2,
     pub entities: Vec<Entity>,
     pub attributes: Vec<Attribute>,
+    /// Its parameters and actions (docs/adr/0318): an insert with values draws a variant of it.
+    pub dynamic: Option<Arc<Dynamic>>,
 }
 
 /// One drawn piece of a block: a shape (never an insert), with the colour
@@ -200,11 +203,18 @@ pub struct Flat {
     pub pieces: Vec<Piece>,
 }
 
-/// A drawing's definitions, flattened, by id.
+/// A drawing's definitions, flattened, by id; and a dynamic block's variants, made when an insert first draws them.
 #[derive(Clone, Debug, Default)]
 pub struct Blocks {
     by_id: HashMap<String, Arc<Flat>>,
+    /// The dynamic definitions as given, for their variants.
+    dynamic: Arc<HashMap<String, Arc<Definition>>>,
+    /// Their variants by block id and values (`Params::key`); emptied when it grows past `MAX_VARIANTS`.
+    variants: Arc<Mutex<HashMap<String, Arc<Flat>>>>,
 }
+
+/// The most variants kept at once: a drawing's dynamic inserts draw few distinct values.
+const MAX_VARIANTS: usize = 4096;
 
 impl Blocks {
     /// The definitions flattened, each once whatever uses it.
@@ -215,7 +225,46 @@ impl Blocks {
         for d in &defs {
             flatten(&d.id, &sources, &mut done, &mut stack);
         }
-        Blocks { by_id: done }
+        let dynamic = defs
+            .iter()
+            .filter(|d| d.dynamic.is_some())
+            .map(|d| (d.id.clone(), Arc::new(d.clone())))
+            .collect();
+        Blocks {
+            by_id: done,
+            dynamic: Arc::new(dynamic),
+            variants: Arc::default(),
+        }
+    }
+
+    /// The flat an insert draws: its definition's, or the variant its parameter values make (docs/adr/0318 §2).
+    fn flat_for(&self, block: &str, params: Option<&crate::entity::Params>) -> Option<Arc<Flat>> {
+        let flat = self.by_id.get(block)?;
+        let Some(def) = self.dynamic.get(block) else {
+            return Some(flat.clone());
+        };
+        let dynamic = def.dynamic.as_ref()?;
+        if dynamic.is_default(params) {
+            return Some(flat.clone());
+        }
+        let key = format!("{block}|{}", params.map(|p| p.key()).unwrap_or_default());
+        if let Ok(cache) = self.variants.lock()
+            && let Some(f) = cache.get(&key)
+        {
+            return Some(f.clone());
+        }
+        let varied = Definition {
+            entities: dynamic.vary(&def.entities, params),
+            ..(**def).clone()
+        };
+        let variant = variant_flat(&varied, &self.by_id, &self.dynamic);
+        if let Ok(mut cache) = self.variants.lock() {
+            if cache.len() >= MAX_VARIANTS {
+                cache.clear();
+            }
+            cache.insert(key, variant.clone());
+        }
+        Some(variant)
     }
 
     /// The definitions read from their JSON: the contract's `BlockDefinition`
@@ -252,11 +301,16 @@ impl Blocks {
                     .collect::<Result<Vec<Attribute>, String>>()?,
                 _ => Vec::new(),
             };
+            let dynamic = match d.get("dynamic") {
+                Json::Obj(_) => Some(Arc::new(Dynamic::from_json(d.get("dynamic")))),
+                _ => None,
+            };
             defs.push(Definition {
                 id: id.clone(),
                 base,
                 entities,
                 attributes,
+                dynamic,
             });
         }
         Ok(Blocks::new(defs))
@@ -282,7 +336,7 @@ impl Blocks {
         flat.pieces
             .iter()
             .map(|piece| {
-                let shape = place(&attribute_piece(flat, piece, values, places), &m, similar);
+                let shape = place(&attribute_piece(&flat, piece, values, places), &m, similar);
                 Piece {
                     shape,
                     color: piece.color.clone(),
@@ -303,11 +357,11 @@ impl Blocks {
         if path.is_empty() || path.len() > MAX_DEPTH {
             return None;
         }
-        let mut cur = insert;
+        let mut cur = insert.clone();
         let mut m: Affine = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
         let mut similar = true;
         for (depth, &i) in path.iter().enumerate() {
-            let (flat, placed, alike) = self.placed(cur)?;
+            let (flat, placed, alike) = self.placed(&cur)?;
             similar &= alike;
             m = compose(
                 &m,
@@ -319,7 +373,7 @@ impl Blocks {
                 if !inner {
                     return None;
                 }
-                cur = &e.shape;
+                cur = e.shape.clone();
             } else {
                 return (!inner).then(|| place(&e.shape, &m, similar));
             }
@@ -345,11 +399,11 @@ impl Blocks {
                 _ => None,
             }
         };
-        let (mut was, mut now) = (insert, after_insert);
+        let (mut was, mut now) = (insert.clone(), after_insert.clone());
         let mut out = Vec::with_capacity(path.len());
         for &i in path {
-            let (old, _, _) = self.placed(was)?;
-            let (new, _, _) = after.placed(now)?;
+            let (old, _, _) = self.placed(&was)?;
+            let (new, _, _) = after.placed(&now)?;
             let e = old.entities.get(i as usize)?;
             let j = local(e)
                 .filter(|&id| once(&old.entities, id) == Some(i as usize))
@@ -357,8 +411,8 @@ impl Blocks {
                 .unwrap_or(i as usize);
             let next = new.entities.get(j)?;
             out.push(j as u32);
-            was = &e.shape;
-            now = &next.shape;
+            was = e.shape.clone();
+            now = next.shape.clone();
         }
         Some(out)
     }
@@ -420,7 +474,7 @@ impl Blocks {
 
     /// An insert's definition, its placement from the base-relative pieces to the drawing, and whether that is a
     /// similarity (no y factor of its own).
-    fn placed(&self, insert: &Shape) -> Option<(&Arc<Flat>, Affine, bool)> {
+    fn placed(&self, insert: &Shape) -> Option<(Arc<Flat>, Affine, bool)> {
         let Shape::Insert {
             block,
             p,
@@ -428,12 +482,13 @@ impl Blocks {
             y_scale,
             rotation,
             mirror,
+            params,
             ..
         } = insert
         else {
             return None;
         };
-        let flat = self.by_id.get(block)?;
+        let flat = self.flat_for(block, params.as_ref())?;
         let sy = y_scale.unwrap_or(*scale);
         Some((
             flat,
@@ -667,6 +722,7 @@ pub fn place(shape: &Shape, m: &Affine, similar: bool) -> Shape {
 /// longer square) and no insert can hold it.
 pub fn insert_through(shape: &Shape, m: &Affine) -> Option<Shape> {
     let Shape::Insert {
+        params,
         block,
         p,
         scale,
@@ -695,6 +751,7 @@ pub fn insert_through(shape: &Shape, m: &Affine) -> Option<Shape> {
     let flip = u.x * v.y - u.y * v.x < 0.0;
     let sy = if (su - sv).abs() <= 1e-15 * su { su } else { sv };
     Some(Shape::Insert {
+        params: params.clone(),
         block: block.clone(),
         p: apply(m, *p),
         scale: su,
@@ -798,9 +855,42 @@ fn flatten(
         return;
     }
     let Some(def) = sources.get(id) else { return };
+    if let Some(flat) = flat_of(def, sources, done, stack) {
+        done.insert(id.to_owned(), flat);
+    }
+}
+
+/// A dynamic definition's variant, its objects already varied (docs/adr/0318 §2): flattened over the drawing's
+/// flats, nested dynamic inserts drawing their own variants.
+fn variant_flat(
+    def: &Definition,
+    flats: &HashMap<String, Arc<Flat>>,
+    dynamic: &HashMap<String, Arc<Definition>>,
+) -> Arc<Flat> {
+    let sources: HashMap<&str, &Definition> =
+        dynamic.iter().map(|(k, d)| (k.as_str(), &**d)).collect();
+    let mut done = flats.clone();
+    flat_of(def, &sources, &mut done, &mut Vec::new()).unwrap_or_else(|| {
+        Arc::new(Flat {
+            base: def.base,
+            entities: Vec::new(),
+            attributes: Vec::new(),
+            pieces: Vec::new(),
+        })
+    })
+}
+
+/// A definition flattened (every definition it uses flattened into `done` first); none for a cycle or past the depth.
+fn flat_of(
+    def: &Definition,
+    sources: &HashMap<&str, &Definition>,
+    done: &mut HashMap<String, Arc<Flat>>,
+    stack: &mut Vec<String>,
+) -> Option<Arc<Flat>> {
+    let id = def.id.as_str();
     // A cycle, or deeper than the documents allow: nothing more below here.
     if stack.iter().any(|s| s == id) || stack.len() >= MAX_DEPTH {
-        return;
+        return None;
     }
     stack.push(id.to_owned());
     let to_base = translation(-def.base.x, -def.base.y);
@@ -812,6 +902,7 @@ fn flatten(
         let own_layer = text_field(&e.rest, "layerId").unwrap_or_default();
         let own_follows = by_layer(&e.rest);
         if let Shape::Insert {
+            params,
             block,
             p,
             scale,
@@ -823,7 +914,19 @@ fn flatten(
         } = &e.shape
         {
             flatten(block, sources, done, stack);
-            let Some(inner) = done.get(block.as_str()).cloned() else {
+            // A nested dynamic insert draws its own variant (docs/adr/0318 §2).
+            let varied = sources
+                .get(block.as_str())
+                .and_then(|d| d.dynamic.as_ref().map(|dy| (d, dy)))
+                .filter(|(_, dy)| !dy.is_default(params.as_ref()))
+                .and_then(|(d, dy)| {
+                    let varied = Definition {
+                        entities: dy.vary(&d.entities, params.as_ref()),
+                        ..(**d).clone()
+                    };
+                    flat_of(&varied, sources, done, stack)
+                });
+            let Some(inner) = varied.or_else(|| done.get(block.as_str()).cloned()) else {
                 continue;
             };
             // The nested pieces: placed in this definition, then relative to its base point.
@@ -958,15 +1061,12 @@ fn flatten(
         });
     }
     stack.pop();
-    done.insert(
-        id.to_owned(),
-        Arc::new(Flat {
-            base: def.base,
-            entities: def.entities.clone(),
-            attributes: def.attributes.clone(),
-            pieces,
-        }),
-    );
+    Some(Arc::new(Flat {
+        base: def.base,
+        entities: def.entities.clone(),
+        attributes: def.attributes.clone(),
+        pieces,
+    }))
 }
 
 /// A piece's colour follows its own layer (docs/adr/0260 §1).
@@ -1027,6 +1127,7 @@ mod tests {
     fn blocks() -> Blocks {
         Blocks::new(vec![
             Definition {
+                dynamic: None,
                 id: DIREK.into(),
                 base: Vec2::new(0.0, 0.0),
                 entities: vec![
@@ -1039,6 +1140,7 @@ mod tests {
                 attributes: Vec::new(),
             },
             Definition {
+                dynamic: None,
                 id: ROGAR.into(),
                 base: Vec2::new(1.0, 0.0),
                 entities: vec![
@@ -1056,6 +1158,7 @@ mod tests {
 
     fn insert(block: &str, p: (f64, f64), scale: f64, rotation: f64, mirror: bool) -> Shape {
         Shape::Insert {
+            params: None,
             block: block.into(),
             p: Vec2::new(p.0, p.1),
             scale,
@@ -1102,6 +1205,7 @@ mod tests {
     fn a_mirrored_door_keeps_its_number_readable() {
         const DOOR: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003";
         let blocks = Blocks::new(vec![Definition {
+            dynamic: None,
             id: DOOR.into(),
             base: Vec2::new(0.0, 0.0),
             entities: vec![
@@ -1129,6 +1233,7 @@ mod tests {
         let mut attrs = Attrs::default();
         attrs.0.push(("NO".to_owned(), Json::Str("K-12".to_owned())));
         let door = |rotation: f64| Shape::Insert {
+            params: None,
             block: DOOR.into(),
             p: Vec2::new(10.0, 20.0),
             scale: 1.0,
@@ -1254,6 +1359,7 @@ mod tests {
         // A holds B, B holds A: each stops where the cycle closes.
         let ring = Blocks::new(vec![
             Definition {
+                dynamic: None,
                 id: "a".into(),
                 base: Vec2::new(0.0, 0.0),
                 entities: vec![entity(
@@ -1262,6 +1368,7 @@ mod tests {
                 attributes: Vec::new(),
             },
             Definition {
+                dynamic: None,
                 id: "b".into(),
                 base: Vec2::new(0.0, 0.0),
                 entities: vec![

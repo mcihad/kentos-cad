@@ -3,6 +3,7 @@ import type { AttributeDefinition } from "./AttributeDefinition";
 import type { BlockCard } from "./BlockCard";
 import type { BlockId } from "./BlockId";
 import type { BlockUnits } from "./BlockUnits";
+import type { DynamicBlock } from "./DynamicBlock";
 import type { Entity } from "./Entity";
 import type { Vec2 } from "./Vec2";
 
@@ -38,4 +39,8 @@ units?: BlockUnits,
 /**
  * Its library card (docs/adr/0317 §4): category, tags and version.
  */
-card?: BlockCard, };
+card?: BlockCard, 
+/**
+ * Its parameters and actions (docs/adr/0318): one definition at many sizes and looks.
+ */
+dynamic?: DynamicBlock, };

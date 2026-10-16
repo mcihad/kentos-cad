@@ -83,6 +83,7 @@ pub(crate) fn write(
         .map(|e| e.base().layer_id.clone())
         .unwrap_or_default();
     let block = BlockDefinition {
+        dynamic: None,
         card: None,
         id: BlockId(*Uuid::now_v7().as_bytes()),
         name: free_name(doc),

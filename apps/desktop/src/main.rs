@@ -105,6 +105,8 @@ mod impact_scenes;
 #[cfg(test)]
 mod block_attr_scenes;
 #[cfg(test)]
+mod block_dynamic_scenes;
+#[cfg(test)]
 mod block_scenes;
 #[cfg(test)]
 mod imperial_scenes;

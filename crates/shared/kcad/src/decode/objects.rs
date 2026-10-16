@@ -212,6 +212,8 @@ pub(super) struct Features {
     /// Schema 58: an attribute definition's options, an insert's `attributePlaces` and a block's `card`
     /// (docs/adr/0317 §1, §4).
     pub(super) block_cards: bool,
+    /// Schema 59: a block definition's `dynamic` and an insert's `parameters` (docs/adr/0318).
+    pub(super) dynamic_blocks: bool,
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
     pub(super) look: bool,
@@ -285,6 +287,7 @@ impl Features {
             patterns: schema >= crate::SCHEMA_WITH_PATTERNS,
             block_extras: schema >= crate::SCHEMA_WITH_BLOCK_EXTRAS,
             block_cards: schema >= crate::SCHEMA_WITH_BLOCK_CARDS,
+            dynamic_blocks: schema >= crate::SCHEMA_WITH_DYNAMIC_BLOCKS,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,
@@ -401,6 +404,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                 matches!(key, "block" | "p" | "scale" | "rotation" | "mirror")
                     || (has.block_extras && key == "yScale")
                     || (has.block_cards && key == "attributePlaces")
+                    || (has.dynamic_blocks && key == "parameters")
             }
             Kind::Leader => {
                 matches!(
@@ -565,6 +569,8 @@ struct Fields {
     y_scale: Option<(f64, usize)>,
     /// Where an insert shows its movable attributes (docs/adr/0317 §1).
     attribute_places: Option<BTreeMap<String, Vec2>>,
+    /// An insert's parameter values (docs/adr/0318 §3).
+    parameters: Option<BTreeMap<String, kentos_contracts::ParamValue>>,
     mirror: Option<bool>,
     align: Option<TextAlign>,
     arrow: Option<LeaderArrow>,
@@ -1110,6 +1116,18 @@ pub(super) fn object(
                     return Err(r.fail_at(Code::BadValue, at, "boş öznitelik yerleri yazılmaz"));
                 }
                 f.attribute_places = Some(places);
+            }
+            "parameters" => {
+                let at = r.position();
+                let mut values = BTreeMap::new();
+                map(r, |r, name| {
+                    values.insert(name.to_owned(), param_value(r)?);
+                    Ok(())
+                })?;
+                if values.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş parametre değerleri yazılmaz"));
+                }
+                f.parameters = Some(values);
             }
             "mirror" => {
                 let at = r.position();
@@ -1673,6 +1691,7 @@ fn build(
                 ));
             }
             Entity::Insert(InsertEntity {
+            parameters: f.parameters.take().unwrap_or_default(),
             attribute_places: f.attribute_places.take().unwrap_or_default(),
             base,
             block: required(r, f.block, "block")?,
@@ -2731,4 +2750,15 @@ pub(super) fn width_factor(r: &mut Reader<'_>) -> Result<f64, KcadError> {
         ));
     }
     Ok(w)
+}
+
+/// A parameter's value (docs/adr/0318 §3): `true` or `false`, a float, a text or a point `[x, y]`.
+fn param_value(r: &mut Reader<'_>) -> Result<kentos_contracts::ParamValue, KcadError> {
+    use kentos_contracts::ParamValue as V;
+    Ok(match r.peek() {
+        Some(0xf4 | 0xf5) => V::Flag(r.bool()?),
+        Some(b) if b >> 5 == 3 => V::Text(text(r)?),
+        Some(b) if b >> 5 == 4 => V::Point(point(r)?),
+        _ => V::Number(r.float()?),
+    })
 }

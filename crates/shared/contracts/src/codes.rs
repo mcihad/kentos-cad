@@ -329,6 +329,16 @@ codes! {
     /// `file.import.block`'s pictures and tables, which a block cannot hold, left out (docs/adr/0316 §3).
     OBJECTS_LEFT_OUT = "objects_left_out", Warning, false, "Resimler ve tablolar bloğa konamaz; dosyadakiler alınmadı.";
     BLOCK_TOO_LARGE = "block_too_large", Failed, false, "Blok iç içe yerleştirmeleriyle bir milyondan çok parçaya açılırdı.";
+    /// A definition's dynamic part that breaks its rules (docs/adr/0318 §1).
+    INVALID_DYNAMIC_BLOCK = "invalid_dynamic_block", Failed, false, "Bloğun dinamik parametreleri ya da eylemleri kurallarına uymuyor.";
+    /// A parameter value that is not one of its parameter's (docs/adr/0318 §3).
+    INVALID_PARAMETER_VALUE = "invalid_parameter_value", Failed, false, "Parametrenin değeri kuralına uymuyor (aralık, adım, liste, tür).";
+    /// A parameter name the block does not have.
+    UNKNOWN_PARAMETER = "unknown_parameter", Failed, false, "Blokta bu adda parametre yok.";
+    /// A value for a parameter its expression computes (docs/adr/0318 §3).
+    DERIVED_PARAMETER = "derived_parameter", Failed, false, "Bu parametre ifadesiyle hesaplanır; değeri verilmez.";
+    /// Parameters for an insert of a block that is not dynamic.
+    NOT_DYNAMIC = "not_dynamic", Failed, false, "Bu bloğun parametresi yok; dinamik değil.";
     /// `replace` without the layer the insert goes on.
     NO_LAYER = "no_layer", Failed, false, "Yerleştirmenin gideceği katman verilmedi.";
     /// No block given where the operation needs one (`cad.blocks.edit`).

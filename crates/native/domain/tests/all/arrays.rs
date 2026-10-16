@@ -36,6 +36,7 @@ const BLOCK: BlockId = BlockId([7; 16]);
 
 fn insert(x: f64) -> Entity {
     Entity::Insert(InsertEntity {
+        parameters: Default::default(),
         attribute_places: Default::default(),
         base: base("a"),
         block: BLOCK,
@@ -51,6 +52,7 @@ fn insert(x: f64) -> Entity {
 fn arrayed() -> (Document, Vec<Slot>, AssocArray) {
     let mut doc = empty();
     let block = BlockDefinition {
+        dynamic: None,
         card: None,
         id: BLOCK,
         name: "Dizi 1".into(),

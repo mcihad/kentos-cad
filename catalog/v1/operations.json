@@ -1133,6 +1133,13 @@
         "cad.blocks.edit"
       ],
       "note": "card işlemi: kategori, etiketler, açıklama (ADR 0317 §4)."
+    },
+    "block.library": {
+      "level": "semantic",
+      "via": [
+        "cad.blocks.edit"
+      ],
+      "note": "import işlemi, name kentos-temel: KentOS'un blok kitaplığı (ADR 0318 §4)."
     }
   },
   "tools": {

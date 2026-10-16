@@ -93,6 +93,17 @@ pub enum BlockFault {
         at: Place,
         tag: String,
     },
+    /// A definition's dynamic part that breaks its rules (docs/adr/0318 §1): its path under the part and why.
+    BadDynamic {
+        definition: usize,
+        path: String,
+        problem: String,
+    },
+    /// An insert's kept parameter values that are not its block's (docs/adr/0318 §3).
+    BadValues {
+        at: Place,
+        problem: String,
+    },
 }
 
 /// The most pieces one definition opens into, its nested inserts' counted through and its attributes with them
@@ -148,6 +159,14 @@ impl BlockFault {
             BlockFault::BadPlace { tag, .. } => format!(
                 "“{tag}” özniteliği bu blokta taşınabilir değil; yeri değiştirilemez. Blok tanımında özniteliği taşınabilir yapın."
             ),
+            BlockFault::BadDynamic {
+                definition,
+                problem,
+                ..
+            } => format!("“{}” bloğunun dinamik parametreleri: {problem}.", name(*definition)),
+            BlockFault::BadValues { problem, .. } => {
+                format!("Yerleştirmenin parametre değeri bloğa uymuyor: {problem}.")
+            }
         }
     }
 }
@@ -447,6 +466,16 @@ pub fn definitions<B: Borrow<BlockDefinition>>(
                 problem,
             });
         }
+        if let Some(d) = &block.dynamic
+            && let Some((path, problem)) =
+                crate::block_dynamic::dynamic_problem(d, &crate::block_dynamic::local_ids(block))
+        {
+            return Err(BlockFault::BadDynamic {
+                definition: i,
+                path,
+                problem,
+            });
+        }
     }
     Ok(ids)
 }
@@ -460,6 +489,22 @@ pub fn places<B: Borrow<BlockDefinition>>(
     index: &HashMap<BlockId, usize>,
 ) -> Result<(), BlockFault> {
     for (entity, e) in entities.iter().enumerate() {
+        // Its parameter values: only a dynamic block's, each one of its parameter's (docs/adr/0318 §3).
+        if let Entity::Insert(insert) = e
+            && !insert.parameters.is_empty()
+            && let Some(&k) = index.get(&insert.block)
+        {
+            let problem = match &blocks[k].borrow().dynamic {
+                None => Some("blok dinamik değil".to_owned()),
+                Some(d) => crate::block_dynamic::values_problem(d, &insert.parameters).map(|(_, m)| m),
+            };
+            if let Some(problem) = problem {
+                return Err(BlockFault::BadValues {
+                    at: Place { definition, entity },
+                    problem,
+                });
+            }
+        }
         if let Entity::Insert(insert) = e
             && !insert.attribute_places.is_empty()
             && let Some(&k) = index.get(&insert.block)
@@ -600,6 +645,7 @@ mod tests {
 
     fn insert(block: u8, scale: f64) -> Entity {
         Entity::Insert(InsertEntity {
+            parameters: Default::default(),
             attribute_places: Default::default(),
             base: EntityBase {
                 look: Default::default(),
@@ -624,6 +670,7 @@ mod tests {
 
     fn block(n: u8, name: &str, inside: &[u8]) -> BlockDefinition {
         BlockDefinition {
+            dynamic: None,
             card: None,
             id: id(n),
             name: name.into(),

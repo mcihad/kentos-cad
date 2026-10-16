@@ -67,6 +67,8 @@ pub(super) enum Val<'d> {
     Runs(&'d [TextRun]),
     /// An insert's movable attributes' places by tag (docs/adr/0317 §1).
     Places(&'d BTreeMap<String, Vec2>),
+    /// An insert's parameter values by name (docs/adr/0318 §3).
+    Params(&'d BTreeMap<String, kentos_contracts::ParamValue>),
     /// A whole number (a dimension's decimals, docs/adr/0183).
     Uint(u64),
     /// A signed whole number (an object's drawing order, docs/adr/0260 §5).
@@ -786,6 +788,10 @@ impl<'d> Encoder<'d> {
                 if !e.attribute_places.is_empty() {
                     f.push(("attributePlaces", Val::Places(&e.attribute_places)));
                 }
+                // Its parameter values (docs/adr/0318 §3): no map when none.
+                if !e.parameters.is_empty() {
+                    f.push(("parameters", Val::Params(&e.parameters)));
+                }
                 if e.mirror {
                     f.push(("mirror", Val::Bool(true)));
                 }
@@ -1248,6 +1254,26 @@ impl<'d> Encoder<'d> {
                 for (k, v) in pairs {
                     self.text(k)?;
                     self.at(Seg::Key(k), |e| e.text(v))?;
+                }
+                self.close();
+                Ok(())
+            }
+            Val::Params(values) => {
+                use kentos_contracts::ParamValue as V;
+                let mut pairs: Vec<(&String, &V)> = values.iter().collect();
+                pairs.sort_by(|a, b| key_order(a.0, b.0));
+                self.open(pairs.len(), true)?;
+                for (k, v) in pairs {
+                    self.text(k)?;
+                    self.at(Seg::Key(k), |e| match v {
+                        V::Flag(b) => {
+                            e.w.bool(*b);
+                            Ok(())
+                        }
+                        V::Number(x) => e.float(*x),
+                        V::Text(t) => e.text(t),
+                        V::Point(p) => e.point(p),
+                    })?;
                 }
                 self.close();
                 Ok(())

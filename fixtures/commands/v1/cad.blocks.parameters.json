@@ -1,0 +1,219 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.blocks.parameters",
+  "commandVersion": 1,
+  "title": "Blok parametreleri: oku, değiştir, sıfırla; Blok ekle'nin değerleri",
+  "note": "Written by scripts/fixtures/dynamic_block_cases.py from docs/adr/0318; do not edit by hand.",
+  "setup": {"format": "kentos.document", "version": 1, "name": "Dinamik bloklar", "settings": {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg", "plotScale": 50, "workspace": "cad", "drawingFont": "barlow"}, "origin": {"x": 0, "y": 0}, "layers": [{"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}, {"id": "kapilar", "name": "Kapılar", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}, {"id": "kilitli", "name": "Kilitli", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}], "activeLayer": "yapi", "entities": [{"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 5, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Genişlik": 1.0, "Kanat": 0.5, "Yön": true}}, {"kind": "insert", "id": 3, "layerId": "kilitli", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 10, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Görünüş": "Sade"}}, {"kind": "insert", "id": 4, "layerId": "yapi", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8002", "p": {"x": 0, "y": 5}, "scale": 1, "rotation": 0}, {"kind": "insert", "id": 5, "layerId": "yapi", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8003", "p": {"x": 0, "y": 10}, "scale": 1, "rotation": 0}, {"kind": "line", "id": 6, "layerId": "yapi", "attrs": {}, "a": {"x": 0, "y": 20}, "b": {"x": 5, "y": 20}}], "styles": {"items": [], "categories": []}, "blocks": [{"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "name": "Kapı", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0.9}}, {"kind": "arc", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0}, "r": 0.9, "a0": 0, "a1": 1.5707963267948966}, {"kind": "line", "id": 3, "layerId": "", "attrs": {}, "a": {"x": 0, "y": -0.1}, "b": {"x": 0, "y": 0}}, {"kind": "line", "id": 4, "layerId": "", "attrs": {}, "a": {"x": 0.9, "y": -0.1}, "b": {"x": 0.9, "y": 0}}], "dynamic": {"parameters": [{"kind": "linear", "name": "Genişlik", "from": {"x": 0.0, "y": 0.0}, "to": {"x": 0.9, "y": 0.0}, "rule": {"min": 0.6, "max": 1.2, "step": 0.05}}, {"kind": "flip", "name": "Yön", "a": {"x": 0.45, "y": 0.0}, "b": {"x": 0.45, "y": 1.0}}, {"kind": "visibility", "name": "Görünüş", "states": [{"name": "Açılım"}, {"name": "Sade", "hidden": [2]}]}, {"kind": "lookup", "name": "Tip", "rows": [{"label": "Dar", "values": {"Genişlik": 0.7}}, {"label": "Standart", "values": {"Genişlik": 0.9}}, {"label": "Geniş", "values": {"Genişlik": 1.2}}]}, {"kind": "linear", "name": "Kanat", "from": {"x": 0.0, "y": 0.0}, "to": {"x": 0.0, "y": 0.45}, "rule": {"expression": "@Genişlik / 2"}}], "actions": [{"kind": "scale", "parameter": "Genişlik", "pieces": [1, 2]}, {"kind": "move", "parameter": "Genişlik", "pieces": [4]}, {"kind": "flip", "parameter": "Yön", "pieces": [1, 2, 3, 4]}]}}, {"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8002", "name": "Raf", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0.4, "y": 0}}, {"kind": "circle", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0.5}, "r": 0.05}], "dynamic": {"parameters": [{"kind": "linear", "name": "Uzunluk", "from": {"x": 0.0, "y": 0.0}, "to": {"x": 1.0, "y": 0.0}, "rule": {"min": 0.5, "max": 3.0, "step": 0.5}}, {"kind": "angle", "name": "Açı", "center": {"x": 0.0, "y": 0.0}, "base": 0.0, "rule": {"list": [0.0, 1.5707963267948966]}}, {"kind": "point", "name": "Etiket", "at": {"x": 0.0, "y": 0.5}}], "actions": [{"kind": "array", "parameter": "Uzunluk", "pieces": [1], "spacing": 0.5}, {"kind": "rotate", "parameter": "Açı", "pieces": [1, 2]}, {"kind": "move", "parameter": "Etiket", "pieces": [2]}]}}, {"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8003", "name": "Masa", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": -0.6, "y": 0}, "b": {"x": 0.6, "y": 0}}]}]},
+  "cases": [
+    {
+      "name": "oku: varsayılanlar, ifadenin değeri ve tabloda uyan satır",
+      "steps": [
+        {"op": "execute", "input": {"operation": "get", "uids": ["$uidOf:1"]}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:1", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 0.9, "Görünüş": "Açılım", "Kanat": 0.45, "Tip": "Standart", "Yön": false}}], "changed": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "revision": "same"}}
+      ]
+    },
+    {
+      "name": "oku: iki yerleştirme; uymayan tabloda satır yok",
+      "steps": [
+        {"op": "execute", "input": {"operation": "get", "uids": ["$uidOf:1", "$uidOf:2"]}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:1", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 0.9, "Görünüş": "Açılım", "Kanat": 0.45, "Tip": "Standart", "Yön": false}}, {"uid": "$uidOf:2", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 1.0, "Görünüş": "Açılım", "Kanat": 0.5, "Yön": true}}], "changed": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "revision": "same"}}
+      ]
+    },
+    {
+      "name": "oku: rafın açısı ve noktası",
+      "steps": [
+        {"op": "execute", "input": {"operation": "get", "uids": ["$uidOf:4"]}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:4", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8002", "values": {"Açı": 0.0, "Etiket": {"x": 0.0, "y": 0.5}, "Uzunluk": 1.0}}], "changed": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "revision": "same"}}
+      ]
+    },
+    {
+      "name": "değiştir: genişlik; ifade yeniden hesaplanır, tek adım ve geri alınır",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:1"], "values": {"Genişlik": 1.2}}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:1", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 1.2, "Görünüş": "Açılım", "Kanat": 0.6, "Tip": "Geniş", "Yön": false}}], "changed": ["$uidOf:1"], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Genişlik": 1.2, "Kanat": 0.6}}}, "canUndo": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Blok parametreleri", "expect": {"entities": {"1": {"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}}}}
+      ]
+    },
+    {
+      "name": "değiştir: tablonun satırı genişliği yazar",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:1"], "values": {"Tip": "Dar"}}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:1", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 0.7, "Görünüş": "Açılım", "Kanat": 0.35, "Tip": "Dar", "Yön": false}}], "changed": ["$uidOf:1"], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Genişlik": 0.7, "Kanat": 0.35}}}, "canUndo": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Blok parametreleri", "expect": {"entities": {"1": {"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}}}}
+      ]
+    },
+    {
+      "name": "değiştir: görünürlük durumu",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:1"], "values": {"Görünüş": "Sade"}}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:1", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 0.9, "Görünüş": "Sade", "Kanat": 0.45, "Tip": "Standart", "Yön": false}}], "changed": ["$uidOf:1"], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Görünüş": "Sade"}}}, "canUndo": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Blok parametreleri", "expect": {"entities": {"1": {"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}}}}
+      ]
+    },
+    {
+      "name": "değiştir: varsayılana dönen değer tutulmaz",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:2"], "values": {"Genişlik": 0.9}}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:2", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 0.9, "Görünüş": "Açılım", "Kanat": 0.45, "Tip": "Standart", "Yön": true}}], "changed": ["$uidOf:2"], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 5, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Yön": true}}}, "canUndo": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Blok parametreleri", "expect": {"entities": {"2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 5, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Genişlik": 1.0, "Kanat": 0.5, "Yön": true}}}}}
+      ]
+    },
+    {
+      "name": "değiştir: iki yerleştirme, zaten öyle olan yazılmaz",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:1", "$uidOf:2"], "values": {"Yön": true}}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:1", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 0.9, "Görünüş": "Açılım", "Kanat": 0.45, "Tip": "Standart", "Yön": true}}, {"uid": "$uidOf:2", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 1.0, "Görünüş": "Açılım", "Kanat": 0.5, "Yön": true}}], "changed": ["$uidOf:1"], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Yön": true}}}, "canUndo": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Blok parametreleri", "expect": {"entities": {"1": {"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}}}}
+      ]
+    },
+    {
+      "name": "değiştir: rafın uzunluğu, açısı ve etiketin yeri",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:4"], "values": {"Uzunluk": 1.5, "Açı": 1.5707963267948966, "Etiket": {"x": 0.2, "y": 0.8}}}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:4", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8002", "values": {"Açı": 1.5707963267948966, "Etiket": {"x": 0.2, "y": 0.8}, "Uzunluk": 1.5}}], "changed": ["$uidOf:4"], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"4": {"kind": "insert", "id": 4, "layerId": "yapi", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8002", "p": {"x": 0, "y": 5}, "scale": 1, "rotation": 0, "parameters": {"Açı": 1.5707963267948966, "Etiket": {"x": 0.2, "y": 0.8}, "Uzunluk": 1.5}}}, "canUndo": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Blok parametreleri", "expect": {"entities": {"4": {"kind": "insert", "id": 4, "layerId": "yapi", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8002", "p": {"x": 0, "y": 5}, "scale": 1, "rotation": 0}}}}
+      ]
+    },
+    {
+      "name": "değiştir: adımın üstündeki değer kayan noktayla da kabul edilir",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:1"], "values": {"Genişlik": 1.15}}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:1", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 1.15, "Görünüş": "Açılım", "Kanat": 0.575, "Yön": false}}], "changed": ["$uidOf:1"], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Genişlik": 1.15, "Kanat": 0.575}}}, "canUndo": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Blok parametreleri", "expect": {"entities": {"1": {"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}}}}
+      ]
+    },
+    {
+      "name": "sıfırla: bütün değerler",
+      "steps": [
+        {"op": "execute", "input": {"operation": "reset", "uids": ["$uidOf:2"]}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:2", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 0.9, "Görünüş": "Açılım", "Kanat": 0.45, "Tip": "Standart", "Yön": false}}], "changed": ["$uidOf:2"], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 5, "y": 0}, "scale": 1, "rotation": 0}}, "canUndo": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Blok parametreleri", "expect": {"entities": {"2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 5, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Genişlik": 1.0, "Kanat": 0.5, "Yön": true}}}}}
+      ]
+    },
+    {
+      "name": "sıfırla: adı verilen parametre",
+      "steps": [
+        {"op": "execute", "input": {"operation": "reset", "uids": ["$uidOf:2"], "names": ["Yön"]}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:2", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 1.0, "Görünüş": "Açılım", "Kanat": 0.5, "Yön": false}}], "changed": ["$uidOf:2"], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 5, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Genişlik": 1.0, "Kanat": 0.5}}}, "canUndo": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Blok parametreleri", "expect": {"entities": {"2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 5, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Genişlik": 1.0, "Kanat": 0.5, "Yön": true}}}}}
+      ]
+    },
+    {
+      "name": "sıfırla: tablo, satırlarının parametrelerini sıfırlar; ifade yeniden hesaplanır",
+      "steps": [
+        {"op": "execute", "input": {"operation": "reset", "uids": ["$uidOf:2"], "names": ["Tip"]}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:2", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 0.9, "Görünüş": "Açılım", "Kanat": 0.45, "Tip": "Standart", "Yön": true}}], "changed": ["$uidOf:2"], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 5, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Yön": true}}}, "canUndo": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Blok parametreleri", "expect": {"entities": {"2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 5, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Genişlik": 1.0, "Kanat": 0.5, "Yön": true}}}}}
+      ]
+    },
+    {
+      "name": "planla: cevabı verir, yazmaz",
+      "steps": [
+        {"op": "plan", "input": {"operation": "set", "uids": ["$uidOf:1"], "values": {"Tip": "Geniş"}}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:1", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 1.2, "Görünüş": "Açılım", "Kanat": 0.6, "Tip": "Geniş", "Yön": false}}], "changed": ["$uidOf:1"], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "kilitli katmandaki atlanır ve söylenir",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:1", "$uidOf:3"], "values": {"Yön": true}}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:1", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 0.9, "Görünüş": "Açılım", "Kanat": 0.45, "Tip": "Standart", "Yön": true}}, {"uid": "$uidOf:3", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 0.9, "Görünüş": "Sade", "Kanat": 0.45, "Tip": "Standart", "Yön": false}}], "changed": ["$uidOf:1"], "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"entities": {"1": {"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Yön": true}}, "3": {"kind": "insert", "id": 3, "layerId": "kilitli", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 10, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Görünüş": "Sade"}}}, "canUndo": true, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "bütünü kilitliyse reddedilir",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:3"], "values": {"Yön": true}}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Kilitli” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: yerleştirme verilmedi",
+      "steps": [
+        {"op": "execute", "input": {"operation": "get", "uids": []}, "result": {"status": "failed", "error": {"code": "no_entities", "message": "Parametreleri okunacak ya da değişecek yerleştirme verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "path": "uids"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: çizimde olmayan nesne",
+      "steps": [
+        {"op": "execute", "input": {"operation": "get", "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8fff"]}, "result": {"status": "failed", "error": {"code": "entity_not_found", "message": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8fff” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: yerleştirme olmayan nesne",
+      "steps": [
+        {"op": "execute", "input": {"operation": "get", "uids": ["$uidOf:6"]}, "result": {"status": "failed", "error": {"code": "not_insert", "message": "Verilen nesne bir blok yerleştirmesi değil. Dinamik bir bloğun yerleştirmesini verin.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: dinamik olmayan blok",
+      "steps": [
+        {"op": "execute", "input": {"operation": "get", "uids": ["$uidOf:5"]}, "result": {"status": "failed", "error": {"code": "not_dynamic", "message": "“Masa” bloğunun parametresi yok; dinamik değil. Dinamik bir bloğun yerleştirmesini verin.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: değer verilmedi",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:1"], "values": {}}, "result": {"status": "failed", "error": {"code": "invalid_parameter_value", "message": "Değer verilmedi. values ile parametrelerin adlarını ve değerlerini verin.", "path": "values"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: blokta olmayan parametre",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:1"], "values": {"Renk": 1.0}}, "result": {"status": "failed", "error": {"code": "unknown_parameter", "message": "Blokta “Renk” parametresi yok. Parametreler: Genişlik, Yön, Görünüş, Tip, Kanat.", "path": "values.Renk"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: ifadeyle hesaplanan parametre",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:1"], "values": {"Kanat": 0.5}}, "result": {"status": "failed", "error": {"code": "derived_parameter", "message": "“Kanat” ifadesiyle hesaplanır; değeri verilmez. Hesaplandığı parametreleri değiştirin.", "path": "values.Kanat"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: adımda olmayan değer",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:1"], "values": {"Genişlik": 1.02}}, "result": {"status": "failed", "error": {"code": "invalid_parameter_value", "message": "“Genişlik” parametresinin değeri: 0.6 değerinden 0.05 adımlarla.", "path": "values.Genişlik"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: aralığın dışındaki değer",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:1"], "values": {"Genişlik": 1.3}}, "result": {"status": "failed", "error": {"code": "invalid_parameter_value", "message": "“Genişlik” parametresinin değeri: en büyük değer 1.2.", "path": "values.Genişlik"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: türü yanlış değer",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:1"], "values": {"Yön": "evet"}}, "result": {"status": "failed", "error": {"code": "invalid_parameter_value", "message": "“Yön” parametresinin değeri: açık ya da kapalı (true, false) olmalı.", "path": "values.Yön"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: olmayan görünürlük durumu",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:1"], "values": {"Görünüş": "Kapalı"}}, "result": {"status": "failed", "error": {"code": "invalid_parameter_value", "message": "“Görünüş” parametresinin değeri: durumlardan biri olmalı: Açılım, Sade.", "path": "values.Görünüş"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: tabloda olmayan satır",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:1"], "values": {"Tip": "Çift"}}, "result": {"status": "failed", "error": {"code": "invalid_parameter_value", "message": "“Tip” parametresinin değeri: satırlardan biri olmalı: Dar, Standart, Geniş.", "path": "values.Tip"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: listede olmayan açı",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:4"], "values": {"Açı": 1.0}}, "result": {"status": "failed", "error": {"code": "invalid_parameter_value", "message": "“Açı” parametresinin değeri: şunlardan biri: 0, 1.5707963267948966.", "path": "values.Açı"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: sıfırlanacak parametre blokta yok",
+      "steps": [
+        {"op": "execute", "input": {"operation": "reset", "uids": ["$uidOf:1"], "names": ["Renk"]}, "result": {"status": "failed", "error": {"code": "unknown_parameter", "message": "Blokta “Renk” parametresi yok.", "path": "names[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: çizim değişmişse hiçbir şey yazılmaz",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:1"], "values": {"Yön": true}, "expectedRevision": "999"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "$any", "path": "expectedRevision", "revision": "$current"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: geçersiz kimlik",
+      "steps": [
+        {"op": "execute", "input": {"operation": "get", "uids": ["abc"]}, "result": {"status": "failed", "error": {"code": "invalid_uid", "message": "$any", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: okunamayan sürüm",
+      "steps": [
+        {"op": "execute", "input": {"operation": "get", "uids": ["$uidOf:1"], "expectedRevision": "yedi"}, "result": {"status": "failed", "error": {"code": "invalid_revision", "message": "$any", "path": "expectedRevision"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    }
+  ]
+}

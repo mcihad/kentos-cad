@@ -32,4 +32,8 @@ places: number,
 /**
  * Values a field wrote.
  */
-fields: number, };
+fields: number, 
+/**
+ * Parameter values dropped: the block's dynamic part no longer has them or they no longer fit (docs/adr/0318).
+ */
+parameters?: number, };

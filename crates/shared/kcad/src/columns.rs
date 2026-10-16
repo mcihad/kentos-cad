@@ -1159,6 +1159,7 @@ impl Packer {
                 rotation,
                 mirror,
                 attribute_places,
+                parameters,
             }) => {
                 self.point(p);
                 self.out.floats.extend([*scale, *rotation]);
@@ -1178,6 +1179,11 @@ impl Packer {
                         self.text(tag);
                         self.point(at);
                     }
+                }
+                // Its parameter values (docs/adr/0318 §3): their JSON text.
+                if !parameters.is_empty() {
+                    flags |= OPT[3];
+                    self.text(&serde_json::to_string(parameters).unwrap_or_default());
                 }
             }
             Entity::Image(ImageEntity {
@@ -1984,8 +1990,9 @@ fn allowed(kind: u8) -> u32 {
         11 => OPT.iter().fold(0, |m, b| m | b) | LINES | REFS,
         // A hatch: holes, schema 23's name, scale, families, gradient and tie (docs/adr/0186).
         12 => OPT[..6].iter().fold(0, |m, b| m | b),
-        // An insert: mirror, its own y factor (docs/adr/0315 §3), its moved attributes (docs/adr/0317 §1).
-        13 => OPT[0] | OPT[1] | OPT[2],
+        // An insert: mirror, its own y factor (docs/adr/0315 §3), its moved attributes (docs/adr/0317 §1), its
+        // parameter values (docs/adr/0318 §3).
+        13 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
         // A table: merges, aligns, header, grid, its face, source, frame (docs/adr/0184).
         15 => OPT[..11].iter().fold(0, |m, b| m | b),
         // A picture: mirror, asset, file, clip, opacity (docs/adr/0192).
@@ -3070,7 +3077,19 @@ fn geometry(
                     return Err(broken("boş öznitelik yerleri"));
                 }
             }
+            let parameters = if has(3) {
+                let text = c.text(|| place("parameters"))?;
+                let values: std::collections::BTreeMap<String, kentos_contracts::ParamValue> =
+                    serde_json::from_str(&text).map_err(|_| broken("parametre değerleri okunamadı"))?;
+                if values.is_empty() {
+                    return Err(broken("boş parametre değerleri"));
+                }
+                values
+            } else {
+                Default::default()
+            };
             Entity::Insert(InsertEntity {
+                parameters,
                 attribute_places,
                 base,
                 block,

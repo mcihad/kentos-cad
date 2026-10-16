@@ -252,8 +252,10 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             mirror,
             attrs,
             places,
+            params,
             ..
         } => Shape::Insert {
+            params: params.clone(),
             block: block.clone(),
             p,
             scale: *scale,

@@ -2770,6 +2770,42 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // A dynamic block's inserts' parameters (docs/adr/0318 §3), held together by
+        // fixtures/commands/v1/cad.blocks.parameters.json.
+        CommandDescriptor {
+            id: crate::CAD_BLOCKS_PARAMETERS.into(),
+            version: crate::CAD_BLOCKS_PARAMETERS_VERSION,
+            title: "Blok parametreleri".into(),
+            summary: "Dinamik bir bloğun yerleştirmelerinin parametrelerini okur (get), değiştirir (set) ya da varsayılanlarına döndürür (reset); yazma tek geri alma adımı, adı Blok parametreleri. \
+                      values parametrelerin adlarıyla değerleridir: doğrusal ve açı bir sayı (uzunluk, radyan), kutupsal ve nokta bir {x, y}, çevir true ya da false, görünürlük durumun adı, tablo satırın adı (satırın değerlerini yazar). \
+                      Her değer parametrenin kuralına uyar (en küçük, en büyük, adım, liste); ifadeyle hesaplanan parametre verilmez, öbürleri değişince yeniden hesaplanır. \
+                      Yerleştirme yalnız varsayılandan farklı değerleri tutar; cevap her yerleştirmenin bütün değerlerini verir. Kilitli katmandaki yerleştirme atlanır. AutoCAD'in dinamik blok özellikleri."
+                .into(),
+            aliases: vec!["bparameter".into(), "blokparametre".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::BlocksParameters>(),
+            output: schema::<crate::BlocksParametersOut>(),
+            plan: Some(schema::<crate::BlocksParametersOut>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Kapıyı genişlet ve çevir".into(),
+                    input: json!({ "operation": "set", "uids": ["01925f3e-7c1c-7b22-8d33-4c5e6f708193"], "values": { "Genişlik": 1.0, "Yön": true } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Parametreleri oku".into(),
+                    input: json!({ "operation": "get", "uids": ["01925f3e-7c1c-7b22-8d33-4c5e6f708193"] }),
+                    output: None,
+                },
+            ],
+        },
         // Blok ekle (docs/adr/0315 §4), held together by fixtures/commands/v1/cad.blocks.insert.json.
         CommandDescriptor {
             id: crate::CAD_BLOCKS_INSERT.into(),
@@ -4890,6 +4926,9 @@ mod tests {
                     crate::CAD_BLOCKS_QUERY => {
                         serde_json::from_value::<crate::BlocksQuery>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_BLOCKS_PARAMETERS => {
+                        serde_json::from_value::<crate::BlocksParameters>(e.input.clone()).map(|_| ())
+                    }
                     crate::FILE_IMPORT_BLOCK => {
                         serde_json::from_value::<crate::ImportBlock>(e.input.clone()).map(|_| ())
                     }
@@ -5227,6 +5266,10 @@ mod tests {
                         }
                         crate::CAD_BLOCKS_QUERY => {
                             serde_json::from_value::<crate::BlocksQueried>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_BLOCKS_PARAMETERS => {
+                            serde_json::from_value::<crate::BlocksParametersOut>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_STANDARDS_APPLY => {

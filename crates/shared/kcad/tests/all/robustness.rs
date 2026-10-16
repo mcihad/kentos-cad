@@ -638,6 +638,7 @@ fn with_blocks(doc: &mut DocumentSnapshotV2, rng: &mut Rng) {
             })
             .collect();
         blocks.push(BlockDefinition {
+            dynamic: None,
             card: None,
             id: BlockId(rng.uid()),
             // Distinct however the text folds: the last characters differ.
@@ -660,6 +661,7 @@ fn with_blocks(doc: &mut DocumentSnapshotV2, rng: &mut Rng) {
 fn insert(rng: &mut Rng, layer: &str, block: BlockId) -> Entity {
     let scale = rng.float().abs();
     Entity::Insert(InsertEntity {
+        parameters: Default::default(),
         attribute_places: Default::default(),
         base: base(rng, layer),
         block,
@@ -775,6 +777,7 @@ fn the_writer_refuses_what_a_reader_would_refuse() {
     // The block rules (docs/adr/0144).
     let layer = good.active_layer.clone();
     let block = |rng: &mut Rng, name: &str, inside: Vec<Entity>| BlockDefinition {
+        dynamic: None,
         card: None,
         id: BlockId(rng.uid()),
         name: name.to_owned(),

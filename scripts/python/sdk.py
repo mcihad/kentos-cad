@@ -220,8 +220,12 @@ class Model:
     def classify(self, name: str, s: dict) -> None:
         # Any of a few JSON kinds, none of them made of others: the value as it is.
         scalar = {"null": "None", "boolean": "bool", "number": "float", "integer": "int", "string": "str"}
-        if "anyOf" in s and all(set(a) <= {"type", "format", "description"} and a.get("type") in scalar for a in s["anyOf"]):
-            kinds = [scalar[a["type"]] for a in s["anyOf"]]
+        # A point among them (a block parameter's value, docs/adr/0318) is its JSON: a dict with x and y.
+        point = {"$ref": "#/$defs/Vec2"}
+        if "anyOf" in s and all(
+            a == point or (set(a) <= {"type", "format", "description"} and a.get("type") in scalar) for a in s["anyOf"]
+        ):
+            kinds = ["dict[str, float]" if a == point else scalar[a["type"]] for a in s["anyOf"]]
             hint = " | ".join([k for k in kinds if k != "None"] + (["None"] if "None" in kinds else []))
             self.aliases[name] = (s.get("description", ""), hint)
             return
@@ -674,7 +678,7 @@ def emit_types(model: Model, units: list[dict] | None = None) -> str:
         parts.append("\n\n" + emit_enum(model.enums[name]))
     for name in sorted(model.aliases):
         description, hint = model.aliases[name]
-        doc = f"#: {description}\n" if description else ""
+        doc = "".join(f"#: {line}\n" for line in description.splitlines()) if description else ""
         parts.append(f"\n\n{doc}{name} = Union[{', '.join(h.strip() for h in hint.split('|'))}]\n")
     for name in sorted(model.unions):
         u = model.unions[name]

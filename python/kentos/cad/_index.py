@@ -16,6 +16,7 @@ COMMANDS: dict[str, Any] = {
     "cad.blocks.define": blocks.define,
     "cad.blocks.edit": blocks.edit,
     "cad.blocks.insert": blocks.insert,
+    "cad.blocks.parameters": blocks.parameters,
     "cad.blocks.query": blocks.query,
     "cad.blocks.replace": blocks.replace,
     "cad.changeset.apply": changeset.apply,

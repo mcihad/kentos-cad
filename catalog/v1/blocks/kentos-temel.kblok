@@ -1,0 +1,1664 @@
+{
+ "format": "kentos.blocks",
+ "version": 1,
+ "blocks": [
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000001",
+   "name": "Kapı",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 0.0,
+      "y": 0.9
+     }
+    },
+    {
+     "kind": "arc",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "r": 0.9,
+     "a0": 0.0,
+     "a1": 1.5707963267948966
+    },
+    {
+     "kind": "line",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": -0.1
+     },
+     "b": {
+      "x": 0.0,
+      "y": 0.0
+     }
+    },
+    {
+     "kind": "line",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.9,
+      "y": -0.1
+     },
+     "b": {
+      "x": 0.9,
+      "y": 0.0
+     }
+    }
+   ],
+   "description": "Tek kanatlı kapı; taban noktası menteşe, duvar x boyunca. Genişlik 60–120 cm, açılış yönü ve el çevrilir.",
+   "units": "m",
+   "card": {
+    "category": "Mimari/Kapılar",
+    "tags": [
+     "kapı",
+     "tek kanat",
+     "iç kapı"
+    ],
+    "version": 1
+   },
+   "attributes": [
+    {
+     "tag": "NO",
+     "prompt": "Kapı numarası",
+     "p": {
+      "x": 0.1,
+      "y": 0.45
+     },
+     "height": 0.15,
+     "rotation": 0.0,
+     "movable": true
+    }
+   ],
+   "dynamic": {
+    "parameters": [
+     {
+      "kind": "linear",
+      "name": "Genişlik",
+      "from": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "to": {
+       "x": 0.9,
+       "y": 0.0
+      },
+      "rule": {
+       "min": 0.6,
+       "max": 1.2,
+       "step": 0.05
+      }
+     },
+     {
+      "kind": "flip",
+      "name": "Dışa açılır",
+      "a": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "b": {
+       "x": 1.0,
+       "y": 0.0
+      }
+     },
+     {
+      "kind": "flip",
+      "name": "Sol el",
+      "a": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "b": {
+       "x": 0.0,
+       "y": 1.0
+      }
+     },
+     {
+      "kind": "visibility",
+      "name": "Görünüş",
+      "states": [
+       {
+        "name": "Açılım"
+       },
+       {
+        "name": "Sade",
+        "hidden": [
+         2
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "lookup",
+      "name": "Tip",
+      "rows": [
+       {
+        "label": "Banyo 70",
+        "values": {
+         "Genişlik": 0.7
+        }
+       },
+       {
+        "label": "Oda 90",
+        "values": {
+         "Genişlik": 0.9
+        }
+       },
+       {
+        "label": "Giriş 100",
+        "values": {
+         "Genişlik": 1.0
+        }
+       }
+      ]
+     }
+    ],
+    "actions": [
+     {
+      "kind": "scale",
+      "parameter": "Genişlik",
+      "pieces": [
+       1,
+       2
+      ]
+     },
+     {
+      "kind": "move",
+      "parameter": "Genişlik",
+      "pieces": [
+       4
+      ]
+     },
+     {
+      "kind": "flip",
+      "parameter": "Dışa açılır",
+      "pieces": [
+       1,
+       2
+      ]
+     },
+     {
+      "kind": "flip",
+      "parameter": "Sol el",
+      "pieces": [
+       1,
+       2,
+       3,
+       4
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000002",
+   "name": "Çift kanatlı kapı",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 0.0,
+      "y": 0.8
+     }
+    },
+    {
+     "kind": "arc",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "r": 0.8,
+     "a0": 0.0,
+     "a1": 1.5707963267948966
+    },
+    {
+     "kind": "line",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 1.6,
+      "y": 0.0
+     },
+     "b": {
+      "x": 1.6,
+      "y": 0.8
+     }
+    },
+    {
+     "kind": "arc",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 1.6,
+      "y": 0.0
+     },
+     "r": 0.8,
+     "a0": 1.5707963267948966,
+     "a1": 3.141592653589793
+    },
+    {
+     "kind": "line",
+     "id": 5,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": -0.1
+     },
+     "b": {
+      "x": 0.0,
+      "y": 0.0
+     }
+    },
+    {
+     "kind": "line",
+     "id": 6,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 1.6,
+      "y": -0.1
+     },
+     "b": {
+      "x": 1.6,
+      "y": 0.0
+     }
+    }
+   ],
+   "description": "İki kanatlı kapı, 160 cm; taban noktası sol kasa.",
+   "units": "m",
+   "card": {
+    "category": "Mimari/Kapılar",
+    "tags": [
+     "kapı",
+     "çift kanat"
+    ],
+    "version": 1
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000003",
+   "name": "Pencere",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 1.2,
+      "y": 0.0
+     }
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.2
+     },
+     "b": {
+      "x": 1.2,
+      "y": 0.2
+     }
+    },
+    {
+     "kind": "line",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.1
+     },
+     "b": {
+      "x": 1.2,
+      "y": 0.1
+     }
+    },
+    {
+     "kind": "line",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 0.0,
+      "y": 0.2
+     }
+    },
+    {
+     "kind": "line",
+     "id": 5,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 1.2,
+      "y": 0.0
+     },
+     "b": {
+      "x": 1.2,
+      "y": 0.2
+     }
+    }
+   ],
+   "description": "Pencere, duvar kalınlığı 20 cm; genişlik 60–300 cm, 10 cm adımla esner.",
+   "units": "m",
+   "card": {
+    "category": "Mimari/Pencereler",
+    "tags": [
+     "pencere",
+     "doğrama"
+    ],
+    "version": 1
+   },
+   "dynamic": {
+    "parameters": [
+     {
+      "kind": "linear",
+      "name": "Genişlik",
+      "from": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "to": {
+       "x": 1.2,
+       "y": 0.0
+      },
+      "rule": {
+       "min": 0.6,
+       "max": 3.0,
+       "step": 0.1
+      }
+     }
+    ],
+    "actions": [
+     {
+      "kind": "stretch",
+      "parameter": "Genişlik",
+      "pieces": [
+       1,
+       2,
+       3,
+       5
+      ],
+      "min": {
+       "x": 1.1,
+       "y": -0.05
+      },
+      "max": {
+       "x": 1.3,
+       "y": 0.25
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000004",
+   "name": "Masa",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 1.6,
+       "y": 0.0
+      },
+      {
+       "x": 1.6,
+       "y": 0.8
+      },
+      {
+       "x": 0.0,
+       "y": 0.8
+      }
+     ],
+     "closed": true
+    }
+   ],
+   "description": "Dikdörtgen masa, 80 cm derin; uzunluk 120–240 cm.",
+   "units": "m",
+   "card": {
+    "category": "Mobilya/Masalar",
+    "tags": [
+     "masa",
+     "yemek"
+    ],
+    "version": 1
+   },
+   "dynamic": {
+    "parameters": [
+     {
+      "kind": "linear",
+      "name": "Uzunluk",
+      "from": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "to": {
+       "x": 1.6,
+       "y": 0.0
+      },
+      "rule": {
+       "min": 1.2,
+       "max": 2.4,
+       "step": 0.2
+      }
+     }
+    ],
+    "actions": [
+     {
+      "kind": "stretch",
+      "parameter": "Uzunluk",
+      "pieces": [
+       1
+      ],
+      "min": {
+       "x": 1.5,
+       "y": -0.1
+      },
+      "max": {
+       "x": 1.7,
+       "y": 0.9
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000005",
+   "name": "Sandalye",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": -0.225,
+       "y": 0.0
+      },
+      {
+       "x": 0.225,
+       "y": 0.0
+      },
+      {
+       "x": 0.225,
+       "y": 0.45
+      },
+      {
+       "x": -0.225,
+       "y": 0.45
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": -0.225,
+      "y": 0.4
+     },
+     "b": {
+      "x": 0.225,
+      "y": 0.4
+     }
+    }
+   ],
+   "description": "Sandalye, 45 × 45 cm; taban noktası oturağın önü ortası.",
+   "units": "m",
+   "card": {
+    "category": "Mobilya/Oturma",
+    "tags": [
+     "sandalye"
+    ],
+    "version": 1
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000006",
+   "name": "Kanepe",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 2.0,
+       "y": 0.0
+      },
+      {
+       "x": 2.0,
+       "y": 0.9
+      },
+      {
+       "x": 0.0,
+       "y": 0.9
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.2,
+      "y": 0.2
+     },
+     "b": {
+      "x": 1.8,
+      "y": 0.2
+     }
+    },
+    {
+     "kind": "line",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.2,
+      "y": 0.2
+     },
+     "b": {
+      "x": 0.2,
+      "y": 0.9
+     }
+    },
+    {
+     "kind": "line",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 1.8,
+      "y": 0.2
+     },
+     "b": {
+      "x": 1.8,
+      "y": 0.9
+     }
+    }
+   ],
+   "description": "Üçlü kanepe, 200 × 90 cm.",
+   "units": "m",
+   "card": {
+    "category": "Mobilya/Oturma",
+    "tags": [
+     "kanepe",
+     "üçlü"
+    ],
+    "version": 1
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000007",
+   "name": "Çift kişilik yatak",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 1.6,
+       "y": 0.0
+      },
+      {
+       "x": 1.6,
+       "y": 2.0
+      },
+      {
+       "x": 0.0,
+       "y": 2.0
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "polyline",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.1,
+       "y": 0.1
+      },
+      {
+       "x": 0.75,
+       "y": 0.1
+      },
+      {
+       "x": 0.75,
+       "y": 0.45
+      },
+      {
+       "x": 0.1,
+       "y": 0.45
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "polyline",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.85,
+       "y": 0.1
+      },
+      {
+       "x": 1.5,
+       "y": 0.1
+      },
+      {
+       "x": 1.5,
+       "y": 0.45
+      },
+      {
+       "x": 0.85,
+       "y": 0.45
+      }
+     ],
+     "closed": true
+    }
+   ],
+   "description": "Çift kişilik yatak, 160 × 200 cm; taban noktası başucu sol köşe.",
+   "units": "m",
+   "card": {
+    "category": "Mobilya/Yatak",
+    "tags": [
+     "yatak",
+     "çift"
+    ],
+    "version": 1
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000008",
+   "name": "Dolap",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 1.2,
+       "y": 0.0
+      },
+      {
+       "x": 1.2,
+       "y": 0.6
+      },
+      {
+       "x": 0.0,
+       "y": 0.6
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.05
+     },
+     "b": {
+      "x": 1.2,
+      "y": 0.05
+     }
+    },
+    {
+     "kind": "line",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.6,
+      "y": 0.0
+     },
+     "b": {
+      "x": 0.6,
+      "y": 0.05
+     }
+    }
+   ],
+   "description": "Gardırop, 60 cm derin; genişlik 60–300 cm.",
+   "units": "m",
+   "card": {
+    "category": "Mobilya/Depolama",
+    "tags": [
+     "dolap",
+     "gardırop"
+    ],
+    "version": 1
+   },
+   "dynamic": {
+    "parameters": [
+     {
+      "kind": "linear",
+      "name": "Genişlik",
+      "from": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "to": {
+       "x": 1.2,
+       "y": 0.0
+      },
+      "rule": {
+       "min": 0.6,
+       "max": 3.0,
+       "step": 0.6
+      }
+     }
+    ],
+    "actions": [
+     {
+      "kind": "stretch",
+      "parameter": "Genişlik",
+      "pieces": [
+       1,
+       2
+      ],
+      "min": {
+       "x": 1.1,
+       "y": -0.1
+      },
+      "max": {
+       "x": 1.3,
+       "y": 0.7
+      }
+     },
+     {
+      "kind": "array",
+      "parameter": "Genişlik",
+      "pieces": [
+       3
+      ],
+      "spacing": 0.6
+     }
+    ]
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000009",
+   "name": "Lavabo",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": -0.275,
+       "y": 0.0
+      },
+      {
+       "x": 0.275,
+       "y": 0.0
+      },
+      {
+       "x": 0.275,
+       "y": 0.45
+      },
+      {
+       "x": -0.275,
+       "y": 0.45
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "ellipse",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.25
+     },
+     "major": {
+      "x": 0.2,
+      "y": 0.0
+     },
+     "ratio": 0.65,
+     "t0": 0.0,
+     "t1": 0.0
+    },
+    {
+     "kind": "circle",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.05
+     },
+     "r": 0.02
+    }
+   ],
+   "description": "Lavabo, 55 × 45 cm; taban noktası duvarda ortası.",
+   "units": "m",
+   "card": {
+    "category": "Islak hacim/Lavabo",
+    "tags": [
+     "lavabo",
+     "banyo"
+    ],
+    "version": 1
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-00000000000a",
+   "name": "Klozet",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": -0.2,
+       "y": 0.0
+      },
+      {
+       "x": 0.2,
+       "y": 0.0
+      },
+      {
+       "x": 0.2,
+       "y": 0.18
+      },
+      {
+       "x": -0.2,
+       "y": 0.18
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "ellipse",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.45
+     },
+     "major": {
+      "x": 0.0,
+      "y": 0.24
+     },
+     "ratio": 0.75,
+     "t0": 0.0,
+     "t1": 0.0
+    }
+   ],
+   "description": "Klozet ve rezervuar; taban noktası duvarda ortası.",
+   "units": "m",
+   "card": {
+    "category": "Islak hacim/WC",
+    "tags": [
+     "klozet",
+     "wc",
+     "banyo"
+    ],
+    "version": 1
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-00000000000b",
+   "name": "Duş teknesi",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 0.9,
+       "y": 0.0
+      },
+      {
+       "x": 0.9,
+       "y": 0.9
+      },
+      {
+       "x": 0.0,
+       "y": 0.9
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 0.9,
+      "y": 0.9
+     }
+    },
+    {
+     "kind": "line",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.9
+     },
+     "b": {
+      "x": 0.9,
+      "y": 0.0
+     }
+    },
+    {
+     "kind": "circle",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.45,
+      "y": 0.45
+     },
+     "r": 0.04
+    }
+   ],
+   "description": "Duş teknesi, 90 × 90 cm.",
+   "units": "m",
+   "card": {
+    "category": "Islak hacim/Duş",
+    "tags": [
+     "duş",
+     "banyo"
+    ],
+    "version": 1
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-00000000000c",
+   "name": "Küvet",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 1.7,
+       "y": 0.0
+      },
+      {
+       "x": 1.7,
+       "y": 0.75
+      },
+      {
+       "x": 0.0,
+       "y": 0.75
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "polyline",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.1,
+       "y": 0.1
+      },
+      {
+       "x": 1.6,
+       "y": 0.1
+      },
+      {
+       "x": 1.6,
+       "y": 0.65
+      },
+      {
+       "x": 0.1,
+       "y": 0.65
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "circle",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 1.45,
+      "y": 0.375
+     },
+     "r": 0.03
+    }
+   ],
+   "description": "Küvet, 170 × 75 cm.",
+   "units": "m",
+   "card": {
+    "category": "Islak hacim/Küvet",
+    "tags": [
+     "küvet",
+     "banyo"
+    ],
+    "version": 1
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-00000000000d",
+   "name": "Kot işareti",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": -0.15,
+       "y": 0.15
+      },
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 0.15,
+       "y": 0.15
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 0.6,
+      "y": 0.0
+     }
+    }
+   ],
+   "description": "Kesitte ya da planda kot işareti; değer KOT özniteliğinde.",
+   "units": "m",
+   "card": {
+    "category": "İşaretler/Kot",
+    "tags": [
+     "kot",
+     "işaret"
+    ],
+    "version": 1
+   },
+   "attributes": [
+    {
+     "tag": "KOT",
+     "prompt": "Kot",
+     "value": "±0.00",
+     "p": {
+      "x": 0.2,
+      "y": 0.05
+     },
+     "height": 0.12,
+     "rotation": 0.0,
+     "movable": true
+    }
+   ]
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-00000000000e",
+   "name": "Kuzey oku",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "circle",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "r": 0.5
+    },
+    {
+     "kind": "polyline",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.6
+      },
+      {
+       "x": -0.15,
+       "y": -0.3
+      },
+      {
+       "x": 0.0,
+       "y": -0.15
+      },
+      {
+       "x": 0.15,
+       "y": -0.3
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "text",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "p": {
+      "x": -0.08,
+      "y": 0.7
+     },
+     "text": "K",
+     "height": 0.2,
+     "rotation": 0.0
+    }
+   ],
+   "description": "Kuzey oku; taban noktası dairenin merkezi.",
+   "units": "m",
+   "card": {
+    "category": "İşaretler/Yön",
+    "tags": [
+     "kuzey",
+     "ok",
+     "yön"
+    ],
+    "version": 1
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-00000000000f",
+   "name": "Kesit işareti",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 0.0,
+      "y": 0.6
+     }
+    },
+    {
+     "kind": "polyline",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.6
+      },
+      {
+       "x": 0.3,
+       "y": 0.6
+      },
+      {
+       "x": 0.2,
+       "y": 0.68
+      },
+      {
+       "x": 0.2,
+       "y": 0.52
+      },
+      {
+       "x": 0.3,
+       "y": 0.6
+      }
+     ]
+    }
+   ],
+   "description": "Kesit çizgisinin ucu: bakış yönü oku ve harfi.",
+   "units": "m",
+   "card": {
+    "category": "İşaretler/Kesit",
+    "tags": [
+     "kesit",
+     "işaret"
+    ],
+    "version": 1
+   },
+   "attributes": [
+    {
+     "tag": "KESİT",
+     "prompt": "Kesit adı",
+     "value": "A",
+     "p": {
+      "x": -0.2,
+      "y": 0.3
+     },
+     "height": 0.2,
+     "rotation": 0.0
+    }
+   ],
+   "dynamic": {
+    "parameters": [
+     {
+      "kind": "flip",
+      "name": "Ters yön",
+      "a": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "b": {
+       "x": 0.0,
+       "y": 1.0
+      }
+     }
+    ],
+    "actions": [
+     {
+      "kind": "flip",
+      "parameter": "Ters yön",
+      "pieces": [
+       2
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000010",
+   "name": "Antet",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 0.18,
+       "y": 0.0
+      },
+      {
+       "x": 0.18,
+       "y": 0.05
+      },
+      {
+       "x": 0.0,
+       "y": 0.05
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.01
+     },
+     "b": {
+      "x": 0.18,
+      "y": 0.01
+     }
+    },
+    {
+     "kind": "line",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.02
+     },
+     "b": {
+      "x": 0.18,
+      "y": 0.02
+     }
+    },
+    {
+     "kind": "line",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.03
+     },
+     "b": {
+      "x": 0.18,
+      "y": 0.03
+     }
+    },
+    {
+     "kind": "line",
+     "id": 5,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.04
+     },
+     "b": {
+      "x": 0.18,
+      "y": 0.04
+     }
+    },
+    {
+     "kind": "line",
+     "id": 6,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.04,
+      "y": 0.0
+     },
+     "b": {
+      "x": 0.04,
+      "y": 0.05
+     }
+    },
+    {
+     "kind": "text",
+     "id": 7,
+     "layerId": "",
+     "attrs": {},
+     "p": {
+      "x": 0.002,
+      "y": 0.042
+     },
+     "text": "Proje",
+     "height": 0.0035,
+     "rotation": 0.0
+    },
+    {
+     "kind": "text",
+     "id": 8,
+     "layerId": "",
+     "attrs": {},
+     "p": {
+      "x": 0.002,
+      "y": 0.032
+     },
+     "text": "Pafta",
+     "height": 0.0035,
+     "rotation": 0.0
+    },
+    {
+     "kind": "text",
+     "id": 9,
+     "layerId": "",
+     "attrs": {},
+     "p": {
+      "x": 0.002,
+      "y": 0.022
+     },
+     "text": "Ölçek",
+     "height": 0.0035,
+     "rotation": 0.0
+    },
+    {
+     "kind": "text",
+     "id": 10,
+     "layerId": "",
+     "attrs": {},
+     "p": {
+      "x": 0.002,
+      "y": 0.012
+     },
+     "text": "Tarih",
+     "height": 0.0035,
+     "rotation": 0.0
+    },
+    {
+     "kind": "text",
+     "id": 11,
+     "layerId": "",
+     "attrs": {},
+     "p": {
+      "x": 0.002,
+      "y": 0.002
+     },
+     "text": "Çizen",
+     "height": 0.0035,
+     "rotation": 0.0
+    }
+   ],
+   "description": "A3 paftanın sağ alt köşesine 180 × 50 mm antet, kâğıt boyunda: çizime ölçeği kadar büyütülerek yerleşir (1/50'de 50).",
+   "units": "m",
+   "card": {
+    "category": "Pafta/Antet",
+    "tags": [
+     "antet",
+     "pafta"
+    ],
+    "version": 1
+   },
+   "attributes": [
+    {
+     "tag": "PROJE",
+     "prompt": "Proje adı",
+     "p": {
+      "x": 0.042,
+      "y": 0.042
+     },
+     "height": 0.0035,
+     "rotation": 0.0
+    },
+    {
+     "tag": "PAFTA",
+     "prompt": "Pafta numarası",
+     "value": "1",
+     "p": {
+      "x": 0.042,
+      "y": 0.032
+     },
+     "height": 0.0035,
+     "rotation": 0.0
+    },
+    {
+     "tag": "ÖLÇEK",
+     "prompt": "Ölçek",
+     "value": "1/50",
+     "p": {
+      "x": 0.042,
+      "y": 0.022
+     },
+     "height": 0.0035,
+     "rotation": 0.0
+    },
+    {
+     "tag": "TARİH",
+     "prompt": "Tarih",
+     "p": {
+      "x": 0.042,
+      "y": 0.012
+     },
+     "height": 0.0035,
+     "rotation": 0.0
+    },
+    {
+     "tag": "ÇİZEN",
+     "prompt": "Çizen",
+     "p": {
+      "x": 0.042,
+      "y": 0.002
+     },
+     "height": 0.0035,
+     "rotation": 0.0
+    }
+   ]
+  }
+ ]
+}

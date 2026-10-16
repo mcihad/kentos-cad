@@ -402,6 +402,7 @@ impl Store {
         mirror: bool,
     ) -> Vec<f64> {
         let insert = Shape::Insert {
+            params: None,
             block: block.to_owned(),
             p,
             scale,

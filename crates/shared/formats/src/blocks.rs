@@ -43,6 +43,7 @@ impl Placing {
             blocks
                 .iter()
                 .map(|b| Definition {
+                    dynamic: b.dynamic.as_ref().and_then(core_dynamic),
                     id: b.id.to_text(),
                     base: core(b.base),
                     entities: b
@@ -682,6 +683,7 @@ pub(crate) fn shape(e: &Entity) -> Shape {
         }
         // Its attributes show as texts, which these formats leave out of a block.
         Entity::Insert(i) => Shape::Insert {
+            params: core_params(&i.parameters),
             block: i.block.to_text(),
             p: core(i.p),
             scale: i.scale,
@@ -963,6 +965,41 @@ fn entity(s: &Shape) -> Option<Entity> {
     })
 }
 
+/// A dynamic definition's part as the core varies it (docs/adr/0318 §2), read from the contract's JSON.
+pub fn core_dynamic(
+    d: &kentos_contracts::DynamicBlock,
+) -> Option<std::sync::Arc<kentos_geometry_core::block_dynamic::Dynamic>> {
+    let text = serde_json::to_string(d).ok()?;
+    let json = Json::parse(&text).ok()?;
+    Some(std::sync::Arc::new(
+        kentos_geometry_core::block_dynamic::Dynamic::from_json(&json),
+    ))
+}
+
+/// An insert's parameter values as the core draws them (docs/adr/0318 §3); none when it keeps none.
+pub fn core_params(
+    values: &std::collections::BTreeMap<String, kentos_contracts::ParamValue>,
+) -> Option<kentos_geometry_core::entity::Params> {
+    use kentos_contracts::ParamValue as V;
+    use kentos_geometry_core::entity::ParamValue as C;
+    (!values.is_empty()).then(|| {
+        kentos_geometry_core::entity::Params(
+            values
+                .iter()
+                .map(|(k, v)| {
+                    let value = match v {
+                        V::Flag(b) => C::Flag(*b),
+                        V::Number(x) => C::Number(*x),
+                        V::Text(t) => C::Text(t.clone()),
+                        V::Point(p) => C::Point(CoreVec2::new(p.x, p.y)),
+                    };
+                    (k.clone(), value)
+                })
+                .collect(),
+        )
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1001,6 +1038,7 @@ mod tests {
     fn an_insert_is_its_blocks_objects_placed() {
         let id = |n: u8| BlockId([n; 16]);
         let block = |n: u8, base: (f64, f64), entities: Vec<Entity>| BlockDefinition {
+            dynamic: None,
             card: None,
             id: id(n),
             name: format!("B{n}"),
@@ -1026,6 +1064,7 @@ mod tests {
             vec![
                 object(r#"{"kind":"point","id":1,"layerId":"","attrs":{},"p":{"x":1,"y":3}}"#),
                 Entity::Insert(InsertEntity {
+                    parameters: Default::default(),
                     attribute_places: Default::default(),
                     base: object(
                         r#"{"kind":"point","id":2,"layerId":"","attrs":{},"p":{"x":0,"y":0}}"#,
@@ -1043,6 +1082,7 @@ mod tests {
         );
         let placing = Placing::new(&[outer, inner]);
         let i = InsertEntity {
+            parameters: Default::default(),
             attribute_places: Default::default(),
             base: object(r#"{"kind":"point","id":7,"layerId":"a","attrs":{},"p":{"x":0,"y":0}}"#)
                 .base()

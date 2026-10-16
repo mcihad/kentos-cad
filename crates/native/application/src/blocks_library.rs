@@ -17,6 +17,12 @@ use crate::blocks_define::{block_rules, name};
 use crate::checks::{self, Stop, error};
 use crate::codes;
 
+/// The block libraries KentOS gives (docs/adr/0318 §4), by name: its own drawings, free to give out.
+pub const BUILTIN_LIBRARIES: &[(&str, &str)] = &[(
+    "kentos-temel",
+    include_str!("../../../../catalog/v1/blocks/kentos-temel.kblok"),
+)];
+
 /// The undo steps' names.
 pub const DUPLICATE: &str = "Blok kopyala";
 pub const IMPORT: &str = "Blokları al";
@@ -129,10 +135,25 @@ fn check(
             planned.library = Some(kentos_contracts::canonical::canonical_json(&file));
         }
         BlockEditOperation::Import => {
-            let Some(text) = input.library.as_deref().filter(|t| !t.trim().is_empty()) else {
+            // The file's text, or a library KentOS gives by its name (docs/adr/0318 §4).
+            let builtin = match (&input.library, input.name.as_deref()) {
+                (None, Some(name)) => match BUILTIN_LIBRARIES.iter().find(|(n, _)| *n == name) {
+                    Some((_, text)) => Some(*text),
+                    None => {
+                        let names: Vec<&str> = BUILTIN_LIBRARIES.iter().map(|(n, _)| *n).collect();
+                        return Err(Stop::failed(error(
+                            codes::INVALID_LIBRARY,
+                            format!("“{name}” adında KentOS blok kitaplığı yok. Kitaplıklar: {}.", names.join(", ")),
+                            Some("name".into()),
+                        )));
+                    }
+                },
+                _ => None,
+            };
+            let Some(text) = builtin.or(input.library.as_deref()).filter(|t| !t.trim().is_empty()) else {
                 return Err(Stop::failed(error(
                     codes::NO_LIBRARY,
-                    "Alınacak blok dosyasının metnini verin (library).".into(),
+                    "Alınacak blok dosyasının metnini (library) ya da KentOS kitaplığının adını (name: kentos-temel) verin.".into(),
                     Some("library".into()),
                 )));
             };

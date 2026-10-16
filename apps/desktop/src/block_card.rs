@@ -105,6 +105,7 @@ impl App {
             }
             Event::Save => {
                 let input = BlocksEdit {
+                    dynamic: None,
                     operation: BlockEditOperation::Card,
                     block: Some(w.block),
                     name: None,

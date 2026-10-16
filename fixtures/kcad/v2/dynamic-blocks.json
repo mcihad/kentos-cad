@@ -1,0 +1,271 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Dinamik bloklar",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "cad"
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "duvar",
+      "name": "A-DUVAR",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+      },
+      "children": []
+    },
+    {
+      "id": "kapilar",
+      "name": "A-KAPI",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#C8A165",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "duvar",
+  "entities": [
+    {
+      "kind": "insert",
+      "id": 1,
+      "layerId": "kapilar",
+      "attrs": {},
+      "block": "0192f5a1-2900-7000-8000-0000000000c1",
+      "p": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+    },
+    {
+      "kind": "insert",
+      "id": 2,
+      "layerId": "kapilar",
+      "attrs": {},
+      "block": "0192f5a1-2900-7000-8000-0000000000c1",
+      "p": {
+        "x": 2.0,
+        "y": 0.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0,
+      "parameters": {
+        "Genişlik": 1.0,
+        "Yön": true
+      }
+    },
+    {
+      "kind": "insert",
+      "id": 3,
+      "layerId": "kapilar",
+      "attrs": {},
+      "block": "0192f5a1-2900-7000-8000-0000000000c1",
+      "p": {
+        "x": 4.0,
+        "y": 0.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0,
+      "parameters": {
+        "Görünüş": "Sade"
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a1-2900-7000-8000-0000000000d1",
+    "0192f5a1-2900-7000-8000-0000000000d2",
+    "0192f5a1-2900-7000-8000-0000000000d3"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "blocks": [
+    {
+      "id": "0192f5a1-2900-7000-8000-0000000000c1",
+      "name": "Kapı (dinamik)",
+      "base": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "units": "m",
+      "entities": [
+        {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "b": {
+            "x": 0.0,
+            "y": 0.9
+          }
+        },
+        {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+        },
+        {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+            "x": 0.0,
+            "y": -0.1
+          },
+          "b": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+            "x": 0.9,
+            "y": -0.1
+          },
+          "b": {
+            "x": 0.9,
+            "y": 0.0
+          }
+        }
+      ],
+      "card": {
+        "category": "Mimari/Kapılar",
+        "version": 1
+      },
+      "dynamic": {
+        "parameters": [
+          {
+            "kind": "linear",
+            "name": "Genişlik",
+            "from": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "to": {
+              "x": 0.9,
+              "y": 0.0
+            },
+            "rule": {
+              "min": 0.6,
+              "max": 1.2,
+              "step": 0.05
+            }
+          },
+          {
+            "kind": "flip",
+            "name": "Yön",
+            "a": {
+              "x": 0.45,
+              "y": 0.0
+            },
+            "b": {
+              "x": 0.45,
+              "y": 1.0
+            }
+          },
+          {
+            "kind": "visibility",
+            "name": "Görünüş",
+            "states": [
+              {
+                "name": "Açılım"
+              },
+              {
+                "name": "Sade",
+                "hidden": [
+                  2
+                ]
+              }
+            ]
+          },
+          {
+            "kind": "lookup",
+            "name": "Tip",
+            "rows": [
+              {
+                "label": "Dar",
+                "values": {
+                  "Genişlik": 0.7
+                }
+              },
+              {
+                "label": "Standart",
+                "values": {
+                  "Genişlik": 0.9
+                }
+              }
+            ]
+          }
+        ],
+        "actions": [
+          {
+            "kind": "scale",
+            "parameter": "Genişlik",
+            "pieces": [
+              1,
+              2
+            ]
+          },
+          {
+            "kind": "move",
+            "parameter": "Genişlik",
+            "pieces": [
+              4
+            ]
+          },
+          {
+            "kind": "flip",
+            "parameter": "Yön",
+            "pieces": [
+              1,
+              2,
+              3,
+              4
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -195,6 +195,9 @@ pub enum BlockEditOperation {
     /// Its library card (“Blok kartı”, docs/adr/0317 §4): `category`, `tags` and `description`; its version is
     /// counted by the drawing.
     Card,
+    /// Its parameters and actions (“Dinamik blok”, docs/adr/0318 §1): `dynamic`, or none to make it a plain block;
+    /// its inserts' values that no longer fit are dropped and counted.
+    Dynamic,
 }
 
 /// The format of a block library file (docs/adr/0314 §3).
@@ -331,6 +334,10 @@ pub struct BlocksEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub description: Option<String>,
+    /// `dynamic`: the parameters and actions (absent: none, a plain block).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub dynamic: Option<crate::block_dynamic::DynamicBlock>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -405,6 +412,15 @@ pub struct AttributeSync {
     /// Values a field wrote.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub fields: u32,
+    /// Parameter values dropped: the block's dynamic part no longer has them or they no longer fit (docs/adr/0318).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub parameters: u32,
+}
+
+fn is_zero(n: &u32) -> bool {
+    *n == 0
 }
 
 /// What `cad.blocks.edit` would write (plan mode); nothing is written.
@@ -506,6 +522,10 @@ pub struct BlocksInsert {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub symbol: Option<String>,
+    /// A dynamic block's parameter values (docs/adr/0318 §3): by name; a lookup's row by its label.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub parameters: Option<std::collections::BTreeMap<String, crate::block_dynamic::ParamValue>>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -694,6 +714,78 @@ pub struct BlocksReplaced {
 /// attribute schedule; nothing is written.
 pub const CAD_BLOCKS_QUERY: &str = "cad.blocks.query";
 pub const CAD_BLOCKS_QUERY_VERSION: u32 = 1;
+
+pub const CAD_BLOCKS_PARAMETERS: &str = "cad.blocks.parameters";
+pub const CAD_BLOCKS_PARAMETERS_VERSION: u32 = 1;
+
+/// What `cad.blocks.parameters` does (docs/adr/0318 §3).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ParametersOperation {
+    /// Every parameter's value of the inserts; nothing is written.
+    Get,
+    /// The values given, a lookup's row by its label; an expression's parameters computed again.
+    Set,
+    /// The named parameters (absent: all) back to their defaults.
+    Reset,
+}
+
+/// Input of `cad.blocks.parameters` v1: a dynamic block's inserts' parameter values read, set or reset, as one undo
+/// step “Blok parametreleri” (docs/adr/0318 §3).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlocksParameters {
+    pub operation: ParametersOperation,
+    /// The inserts, by persistent id; each of a dynamic block.
+    pub uids: Vec<String>,
+    /// `set`: the values by parameter name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub values: Option<std::collections::BTreeMap<String, crate::block_dynamic::ParamValue>>,
+    /// `reset`: the parameters (absent: all).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub names: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// One insert's parameters.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct InsertParameters {
+    pub uid: String,
+    pub block: BlockId,
+    /// Every parameter's value, its default where the insert keeps none; a lookup's the label of the row its values
+    /// match, when one does.
+    pub values: std::collections::BTreeMap<String, crate::block_dynamic::ParamValue>,
+}
+
+/// Output of `cad.blocks.parameters` v1.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlocksParametersOut {
+    /// The inserts' values after the operation, in the order given.
+    pub inserts: Vec<InsertParameters>,
+    /// The inserts written (their kept values changed), in the order given.
+    pub changed: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
 
 /// What `cad.blocks.query` reports.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]

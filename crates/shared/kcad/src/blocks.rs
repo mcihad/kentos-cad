@@ -166,6 +166,20 @@ pub(crate) fn said(fault: &BlockFault, blocks: &[BlockDefinition]) -> Said {
                 format!("“{tag}” özniteliği blokta taşınabilir değil; yeri yazılmaz"),
             )
         }
+        BlockFault::BadDynamic {
+            definition,
+            path,
+            problem,
+        } => (
+            Code::BadValue,
+            "blocks",
+            in_block(*definition, &[Seg::Name("dynamic")]),
+            format!("“{}” bloğunun dinamik bölümü ({path}): {problem}", name(*definition)),
+        ),
+        BlockFault::BadValues { at, problem } => {
+            let (list, path) = insert(at, "parameters");
+            (Code::BadValue, list, path, format!("parametre değerleri: {problem}"))
+        }
         BlockFault::TooLarge { definition } => (
             Code::BlockTooLarge,
             "blocks",

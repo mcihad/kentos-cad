@@ -4,6 +4,7 @@
 
 mod arrange;
 mod block_attrs;
+mod block_dynamic;
 mod block_scales;
 mod centerline;
 mod charts;

@@ -48,6 +48,7 @@ pub mod blocks;
 pub mod blocks_define;
 pub mod blocks_edit;
 pub mod blocks_insert;
+pub mod block_params;
 pub mod blocks_query;
 pub mod blocks_replace;
 pub mod blocks_sync;
@@ -488,6 +489,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_BLOCKS_QUERY,
         kentos_contracts::CAD_BLOCKS_QUERY_VERSION,
+    ),
+    // A dynamic block's inserts' parameter values ([`block_params`], docs/adr/0318 §3).
+    (
+        kentos_contracts::CAD_BLOCKS_PARAMETERS,
+        kentos_contracts::CAD_BLOCKS_PARAMETERS_VERSION,
     ),
     // The project's style library and a change's reach ([`library_edit`], [`styles_impact`], docs/adr/0314).
     (

@@ -56,6 +56,47 @@ impl Attrs {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Places(pub Vec<(String, Vec2)>);
 
+/// A dynamic block's insert's parameter values (`parameters`, docs/adr/0318 §3), sorted by name: those that differ
+/// from the definition's defaults.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Params(pub Vec<(String, ParamValue)>);
+
+/// A parameter's value: a flip, a number (a length, an angle in radians), a name or a point of the definition.
+#[derive(Clone, Debug, PartialEq)]
+pub enum ParamValue {
+    Flag(bool),
+    Number(f64),
+    Text(String),
+    Point(Vec2),
+}
+
+impl Params {
+    pub fn of(&self, name: &str) -> Option<&ParamValue> {
+        self.0.iter().find(|(k, _)| k == name).map(|(_, v)| v)
+    }
+
+    /// The values as one text, a variant's key: the same values give the same text.
+    pub fn key(&self) -> String {
+        let mut out = String::new();
+        for (k, v) in &self.0 {
+            out.push_str(k);
+            out.push('=');
+            match v {
+                ParamValue::Flag(b) => out.push_str(if *b { "1" } else { "0" }),
+                ParamValue::Number(x) => out.push_str(&format!("{:x}", x.to_bits())),
+                ParamValue::Text(t) => {
+                    out.push('"');
+                    out.push_str(t);
+                    out.push('"');
+                }
+                ParamValue::Point(q) => out.push_str(&format!("{:x},{:x}", q.x.to_bits(), q.y.to_bits())),
+            }
+            out.push(';');
+        }
+        out
+    }
+}
+
 impl Places {
     /// The point `tag`'s text stands at, when the insert moved it.
     pub fn of(&self, tag: &str) -> Option<Vec2> {
@@ -323,6 +364,9 @@ pub enum Shape {
         /// Where it shows its block's movable attributes (docs/adr/0317 §1): a tag's text at this point of the
         /// definition's coordinates. Read from the entity's `attributePlaces`, which stay among its other fields.
         places: Option<Places>,
+        /// Its dynamic block's parameter values that differ from their defaults (docs/adr/0318 §3). Read from the
+        /// entity's `parameters`, which stay among its other fields.
+        params: Option<Params>,
     },
     /// A leader (docs/adr/0146): an arrowhead at `pts[0]`, a line through
     /// `pts` and, with a note, a landing from the last vertex along the
@@ -434,7 +478,7 @@ crate::json_tagged!(Shape, "kind",
     Text => "text" { p, text, height, rotation, align, width_factor => "widthFactor", mask, box_width => "boxWidth", line_spacing => "lineSpacing", runs, path & face: crate::text::face::Face },
     Dimension => "dimension" { a, b, offset, height, text, style, angle, c, mask, za, zb & look: crate::geom::dimension::Look },
     Hatch => "hatch" { ring, holes, pattern, assoc },
-    Insert => "insert" { block, p, scale, y_scale => "yScale", rotation, mirror; attrs, places },
+    Insert => "insert" { block, p, scale, y_scale => "yScale", rotation, mirror; attrs, places, params },
     Leader => "leader" { pts, text, height, rotation, arrow, arrow_size => "arrowSize", mask },
     Table => "table" { p, rotation, height, rows, columns, cells, merges, aligns, header, grid, frame, source & face: crate::text::face::Face },
     Image => "image" { p, width, height, rotation, mirror, asset, file, clip, opacity },
@@ -487,6 +531,28 @@ impl FromJson for Entity {
                 .collect();
             if !read.is_empty() {
                 *places = Some(Places(read));
+            }
+        }
+        // Its parameter values (docs/adr/0318 §3): by name, those that read.
+        if let Shape::Insert { params, .. } = &mut shape
+            && let Json::Obj(fields) = v.get("parameters")
+        {
+            let mut read: Vec<(String, ParamValue)> = fields
+                .iter()
+                .filter_map(|(k, x)| {
+                    let value = match x {
+                        Json::Bool(b) => ParamValue::Flag(*b),
+                        Json::Num(n) => ParamValue::Number(*n),
+                        Json::Str(t) => ParamValue::Text(t.clone()),
+                        Json::Obj(_) => ParamValue::Point(Vec2::from_json(x).ok()?),
+                        _ => return None,
+                    };
+                    Some((k.clone(), value))
+                })
+                .collect();
+            read.sort_by(|a, b| a.0.cmp(&b.0));
+            if !read.is_empty() {
+                *params = Some(Params(read));
             }
         }
         let kind = match v.get("kind") {

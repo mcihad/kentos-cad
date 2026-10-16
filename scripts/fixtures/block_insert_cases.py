@@ -403,6 +403,62 @@ add("katman: yok, grup, kilitli; gizli uyarıyla yazar", [
 ])
 
 
+# ── A dynamic block's values (docs/adr/0318 §3): resolved as cad.blocks.parameters resolves them ──────────────────
+# The door's width runs 0.6 to 1.2 by 0.05 (default 0.9, the length of its line); Kanat is computed as half of it;
+# Tip's rows set the width; a value at its default is not kept.
+
+KAPI_DYN = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5f11"
+DYNAMIC = json.loads(json.dumps(SETUP))
+DYNAMIC["blocks"] += [
+    {"id": KAPI_DYN, "name": "Dinamik kapı", "base": P(0, 0),
+     "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": P(0, 0), "b": P(0, 0.9)}],
+     "dynamic": {"parameters": [
+         {"kind": "linear", "name": "Genişlik", "from": P(0.0, 0.0), "to": P(0.9, 0.0), "rule": {"min": 0.6, "max": 1.2, "step": 0.05}},
+         {"kind": "flip", "name": "Yön", "a": P(0.45, 0.0), "b": P(0.45, 1.0)},
+         {"kind": "lookup", "name": "Tip", "rows": [{"label": "Dar", "values": {"Genişlik": 0.7}}, {"label": "Geniş", "values": {"Genişlik": 1.2}}]},
+         {"kind": "linear", "name": "Kanat", "from": P(0.0, 0.0), "to": P(0.0, 0.45), "rule": {"expression": "@Genişlik / 2"}},
+     ], "actions": [{"kind": "scale", "parameter": "Genişlik", "pieces": [1]}, {"kind": "flip", "parameter": "Yön", "pieces": [1]}]}},
+]
+DYN_NOTE = "Dinamik bloğun değerleri Blok ekle'de cad.blocks.parameters'ın kuralıyla çözülür; varsayılan değer tutulmaz (docs/adr/0318 §3)."
+
+
+def dyn_insert(params=None):
+    e = {"kind": "insert", "id": NEXT, "layerId": "kapilar", "attrs": {}, "block": KAPI_DYN, "p": AT, "scale": 1, "rotation": 0}
+    if params:
+        e["parameters"] = params
+    return e
+
+
+add("dinamik: tablonun satırı ve çevir; ifade hesaplanır", [
+    {"op": "execute", "input": {"block": KAPI_DYN, "at": AT, "layerId": "kapilar", "parameters": {"Tip": "Geniş", "Yön": True}},
+     "result": done(NEXT, KAPI_DYN), "expect": {"entities": {str(NEXT): dyn_insert({"Genişlik": 1.2, "Kanat": 0.6, "Yön": True})}}},
+], setup_doc=DYNAMIC, note=DYN_NOTE)
+add("dinamik: varsayılan değer tutulmaz", [
+    {"op": "execute", "input": {"block": KAPI_DYN, "at": AT, "layerId": "kapilar", "parameters": {"Genişlik": 0.9}},
+     "result": done(NEXT, KAPI_DYN), "expect": {"entities": {str(NEXT): dyn_insert()}}},
+], setup_doc=DYNAMIC)
+add("dinamik: kurala uymayan değer", [
+    {"op": "execute", "input": {"block": KAPI_DYN, "at": AT, "layerId": "kapilar", "parameters": {"Genişlik": 1.3}},
+     "result": failed("invalid_parameter_value", "“Genişlik” parametresinin değeri: en büyük değer 1.2.", "parameters.Genişlik"),
+     "expect": NOTHING},
+], setup_doc=DYNAMIC)
+add("dinamik: ifadeyle hesaplanan parametre verilmez", [
+    {"op": "execute", "input": {"block": KAPI_DYN, "at": AT, "layerId": "kapilar", "parameters": {"Kanat": 0.5}},
+     "result": failed("derived_parameter", "“Kanat” ifadesiyle hesaplanır; değeri verilmez. Hesaplandığı parametreleri değiştirin.", "parameters.Kanat"),
+     "expect": NOTHING},
+], setup_doc=DYNAMIC)
+add("dinamik: blokta olmayan parametre", [
+    {"op": "execute", "input": {"block": KAPI_DYN, "at": AT, "layerId": "kapilar", "parameters": {"Renk": 1.0}},
+     "result": failed("unknown_parameter", "Blokta “Renk” parametresi yok. Parametreler: Genişlik, Yön, Tip, Kanat.", "parameters.Renk"),
+     "expect": NOTHING},
+], setup_doc=DYNAMIC)
+add("dinamik: dinamik olmayan bloğa değer", [
+    {"op": "execute", "input": {"name": "Kapı", "at": AT, "layerId": "kapilar", "parameters": {"Genişlik": 1.0}},
+     "result": failed("not_dynamic", "“Kapı” bloğunun parametresi yok; dinamik değil. parameters'ı vermeyin.", "parameters"),
+     "expect": NOTHING},
+], setup_doc=DYNAMIC)
+
+
 def compact(v):
     return json.dumps(v, ensure_ascii=False, separators=(", ", ": "))
 

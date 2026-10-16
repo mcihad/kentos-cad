@@ -2505,6 +2505,8 @@ impl App {
             }
             // Blok çizelgesi, Öznitelikleri eşitle and Blok kartı (docs/adr/0317).
             "block.schedule" => self.open_block_schedule(None),
+            // KentOS's own blocks (blocks_files.rs, docs/adr/0318 §4).
+            "block.library" => self.blocks_builtin(),
             "block.sync" => {
                 if let Some(id) = self.block_at_hand() {
                     self.blocks_sync(id, false);

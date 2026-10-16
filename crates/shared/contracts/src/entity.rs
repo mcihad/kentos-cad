@@ -881,6 +881,11 @@ pub struct InsertEntity {
     #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, Vec2>>", optional, rename = "attributePlaces"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub attribute_places: BTreeMap<String, Vec2>,
+    /// Its dynamic block's parameter values that differ from their defaults (docs/adr/0318 §3), by parameter name;
+    /// a lookup's is not kept (its row's values are).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, crate::block_dynamic::ParamValue>>", optional))]
+    pub parameters: BTreeMap<String, crate::block_dynamic::ParamValue>,
 }
 
 /// A block definition (docs/adr/0144): objects drawn once, placed many
@@ -921,6 +926,10 @@ pub struct BlockDefinition {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub card: Option<BlockCard>,
+    /// Its parameters and actions (docs/adr/0318): one definition at many sizes and looks.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub dynamic: Option<crate::block_dynamic::DynamicBlock>,
 }
 
 /// A block's library card (docs/adr/0317 §4): what the Bloklar panel's cards and search show beside its name, its

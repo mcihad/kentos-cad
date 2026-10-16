@@ -193,6 +193,9 @@ SCHEMA_WITH_BLOCK_EXTRAS = 57
 # Schema 58: schema 57 and an attribute definition's options (`invisible`, `constant`, `verify`, `preset`, `movable`,
 # `multiline`, `boxWidth`, `field`), an insert's `attributePlaces` and a block definition's `card` (docs/adr/0317).
 SCHEMA_WITH_BLOCK_CARDS = 58
+# Schema 59: a block definition's `dynamic` part (parameters and actions, as their JSON) and an insert's `parameters`
+# (docs/adr/0318).
+SCHEMA_WITH_DYNAMIC_BLOCKS = 59
 # A definition opens into at most a million pieces (kentos_contracts::blocks::MAX_BLOCK_PIECES, docs/adr/0316 §4).
 MAX_BLOCK_PIECES = 1_000_000
 # A pattern has at most 12 elements (AutoCAD's LIN, kentos_contracts::MAX_PATTERN_ELEMENTS).
@@ -374,7 +377,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1700,6 +1703,7 @@ class _Schema:
         # The definitions' ids and places, once read; where each insert inside them is.
         self.index = {}
         self.movable = {}
+        self.dynamics = {}
 
     def where(self):
         return "/".join(self.path) or "(kök)"
@@ -1877,6 +1881,7 @@ class _Schema:
         self.patterns = version >= SCHEMA_WITH_PATTERNS
         self.block_extras = version >= SCHEMA_WITH_BLOCK_EXTRAS
         self.block_cards = version >= SCHEMA_WITH_BLOCK_CARDS
+        self.dynamic_blocks = version >= SCHEMA_WITH_DYNAMIC_BLOCKS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -3387,6 +3392,7 @@ class _Schema:
                 self.path.append("block")
                 self.fail("unknown_block", "yerleştirilen blok çizimde tanımlı değil")
             if kind == "insert" and self.inside is None:
+                self.values_rule(fields, self.dynamics.get(fields["block"]))
                 self.places_rule(fields, self.movable.get(fields["block"], set()))
         finally:
             self.path.pop()
@@ -3405,6 +3411,7 @@ class _Schema:
         self.check_blocks(blocks)
         self.index = {b["id"]: i for i, b in enumerate(blocks)}
         self.movable = {b["id"]: {a["tag"] for a in b.get("attributes", []) if a.get("movable")} for b in blocks}
+        self.dynamics = {b["id"]: b.get("dynamic") for b in blocks}
         return blocks
 
     def definition(self, v):
@@ -3432,9 +3439,122 @@ class _Schema:
                 **({"units": (self.enum(("mm", "cm", "m", "in", "ft", "unitless")), False)} if self.block_extras else {}),
                 # Its library card (schema 58, docs/adr/0317 §4).
                 **({"card": (self.card, False)} if self.block_cards else {}),
+                # Its parameters and actions (schema 59, docs/adr/0318).
+                **({"dynamic": (self.dynamic, False)} if self.dynamic_blocks else {}),
             }
         )(v)
-        return {k: d[k] for k in ("id", "name", "base", "entities", "attributes", "description", "units", "card") if k in d}
+        return {k: d[k] for k in ("id", "name", "base", "entities", "attributes", "description", "units", "card", "dynamic") if k in d}
+
+    # Dynamic blocks (schema 59, docs/adr/0318): the part is the contract's JSON, points as {x, y}, numbers floats,
+    # ids whole numbers, a field at its default (an empty list, a free rule) not written.
+
+    def jpoint(self, v):
+        return self.fields({"x": (self.float, True), "y": (self.float, True)})(v)
+
+    def ids(self, v):
+        return self.array(self.uint(32))(v)
+
+    def rule(self, v):
+        def floats(x):
+            if type(x) is list and not x:
+                self.fail("bad_value", "boş liste yazılmaz")
+            return self.array(self.float)(x)
+
+        r = self.fields({"min": (self.float, False), "max": (self.float, False), "step": (self.float, False),
+                         "list": (floats, False), "expression": (self.text, False)})(v)
+        if not r:
+            self.fail("bad_value", "serbest kural yazılmaz")
+        return r
+
+    def dynamic(self, v):
+        def kinded(kinds):
+            def check(x):
+                if type(x) is not dict:
+                    self.fail("wrong_type", "harita olmalı")
+                kind = x.get("kind")
+                if kind not in kinds:
+                    self.path.append("kind")
+                    self.fail("bad_value", f"“{kind}” bilinmiyor ({', '.join(kinds)})")
+                return {"kind": kind, **self.fields({"kind": (self.text, True), **kinds[kind]})(x)}
+            return check
+
+        def states(x):
+            def state(s):
+                def hidden(h):
+                    if type(h) is list and not h:
+                        self.fail("bad_value", "boş liste yazılmaz")
+                    return self.ids(h)
+                return self.fields({"name": (self.text, True), "hidden": (hidden, False)})(s)
+            return self.array(state)(x)
+
+        def rows(x):
+            def row(r):
+                def values(m):
+                    if type(m) is not dict:
+                        self.fail("wrong_type", "harita olmalı")
+                    return {k: self.at(k, self.json_value, x) for k, x in m.items()}
+                return self.fields({"label": (self.text, True), "values": (values, True)})(r)
+            return self.array(row)(x)
+
+        rule = {"rule": (self.rule, False)}
+        parameters = {
+            "linear": {"name": (self.text, True), "from": (self.jpoint, True), "to": (self.jpoint, True), **rule},
+            "polar": {"name": (self.text, True), "from": (self.jpoint, True), "to": (self.jpoint, True), **rule},
+            "angle": {"name": (self.text, True), "center": (self.jpoint, True), "base": (self.float, True), **rule},
+            "point": {"name": (self.text, True), "at": (self.jpoint, True)},
+            "flip": {"name": (self.text, True), "a": (self.jpoint, True), "b": (self.jpoint, True)},
+            "visibility": {"name": (self.text, True), "states": (states, True)},
+            "lookup": {"name": (self.text, True), "rows": (rows, True)},
+        }
+        acts = {"parameter": (self.text, True), "pieces": (self.ids, True)}
+        actions = {
+            "move": acts, "scale": acts, "rotate": acts, "flip": acts,
+            "stretch": {**acts, "min": (self.jpoint, True), "max": (self.jpoint, True)},
+            "array": {**acts, "spacing": (self.float, True)},
+        }
+
+        def action_list(x):
+            if type(x) is list and not x:
+                self.fail("bad_value", "boş eylem listesi yazılmaz")
+            return self.array(kinded(actions))(x)
+
+        return self.fields({"parameters": (self.array(kinded(parameters)), True), "actions": (action_list, False)})(v)
+
+    def json_value(self, v):
+        """A parameter's value in the JSON form: true or false, a float, a text or a point {x, y}."""
+        if type(v) in (bool, float, str):
+            return v
+        if type(v) is dict:
+            return self.jpoint(v)
+        self.fail("wrong_type", "değer true/false, float, metin ya da {x, y} noktası olmalı")
+
+    def param_values(self, v):
+        """An insert's parameter values (schema 59): name → true/false, a float, a text or a point [x, y]; not empty."""
+        if type(v) is not dict:
+            self.fail("wrong_type", "harita olmalı")
+        if not v:
+            self.fail("bad_value", "boş parametre değerleri yazılmaz")
+        out = {}
+        for k, x in v.items():
+            self.path.append(k)
+            if type(x) in (bool, float, str):
+                out[k] = x
+            elif type(x) is list:
+                out[k] = self.point(x)
+            else:
+                self.fail("wrong_type", "değer true/false, float, metin ya da [x, y] olmalı")
+            self.path.pop()
+        return out
+
+    def values_rule(self, fields, dynamic):
+        """An insert's values only for its block's parameters, each one of its (docs/adr/0318 §3)."""
+        values = fields.get("parameters")
+        if values is None:
+            return
+        problem = "blok dinamik değil" if dynamic is None else values_problem(dynamic, values)
+        if problem:
+            self.path.append("parameters")
+            self.fail("bad_value", f"parametre değerleri: {problem}")
 
     def card(self, v):
         """A block's card (schema 58): a version from 1, a category and tags trimmed and not blank, each tag once
@@ -4220,6 +4340,11 @@ class _Schema:
                 self.path.append("name")
                 self.fail("duplicate_block", f"“{b['name']}” adı {names[key] + 1}. tanımda da var")
             names[key] = i
+            if "dynamic" in b:
+                problem = dynamic_problem(b["dynamic"], {e["id"] for e in b["entities"]})
+                if problem:
+                    self.path.append("dynamic")
+                    self.fail("bad_value", problem)
             tags = {}
             for a, attribute in enumerate(b.get("attributes", [])):
                 self.path += ["attributes", str(a), "tag"]
@@ -4238,6 +4363,7 @@ class _Schema:
                 if e["kind"] == "insert":
                     movable = {a["tag"] for a in blocks[ids[e["block"]]].get("attributes", []) if a.get("movable")}
                     self.path += [str(i), "entities", str(j), "insert"]
+                    self.values_rule(e, blocks[ids[e["block"]]].get("dynamic"))
                     self.places_rule(e, movable)
                     del self.path[-4:]
         depth = [0] * len(blocks)
@@ -4603,7 +4729,8 @@ ENTITY_KINDS = {
     # Schema 6 (docs/adr/0144): `mirror` only when true.
     "insert": lambda s: {"block": (s.id16, True), "p": (s.point, True), "scale": (s.scale, True), "rotation": (s.float, True), "mirror": (s.mirror, False),
                          **({"yScale": (s.y_scale, False)} if s.block_extras else {}),
-                         **({"attributePlaces": (s.attribute_places, False)} if s.block_cards else {})},
+                         **({"attributePlaces": (s.attribute_places, False)} if s.block_cards else {}),
+                         **({"parameters": (s.param_values, False)} if s.dynamic_blocks else {})},
     # Schema 22 (docs/adr/0184): rows and columns of one-line cells, merged ranges, alignments, a heading row only when
     # true, lines by name (all: no field), a frame's width, a text's face, a source; only in the drawing.
     "table": lambda s: {
@@ -4794,3 +4921,171 @@ def main(argv):
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))
+
+
+# Dynamic blocks (docs/adr/0318): the definition's rules and a value's, written from the ADR.
+
+MAX_DYNAMIC_ITEMS = 256
+
+
+def _dist(a, b):
+    return math.hypot(b["x"] - a["x"], b["y"] - a["y"])
+
+
+def _slack(x):
+    return 1e-9 * max(abs(x), 1.0)
+
+
+def number_problem(rule, v):
+    """Why a number does not meet a rule: within min and max, on steps from min (or 0), one of the list."""
+    if not math.isfinite(v):
+        return "sonlu değil"
+    if "min" in rule and v < rule["min"] - _slack(rule["min"]):
+        return "en küçükten küçük"
+    if "max" in rule and v > rule["max"] + _slack(rule["max"]):
+        return "en büyükten büyük"
+    if "step" in rule:
+        k = (v - rule.get("min", 0.0)) / rule["step"]
+        if abs(k - round(k)) * rule["step"] > _slack(v):
+            return "adımda değil"
+    if rule.get("list") and not any(abs(x - v) <= _slack(v) for x in rule["list"]):
+        return "listede değil"
+    return None
+
+
+def default_number(p):
+    if p["kind"] == "linear":
+        return _dist(p["from"], p["to"])
+    if p["kind"] == "polar":
+        return _dist(p["from"], p["to"])
+    return p["base"]
+
+
+def value_problem(p, v):
+    kind = p["kind"]
+    if kind in ("linear", "angle"):
+        return None if type(v) is float and number_problem(p.get("rule", {}), v) is None else "sayı kurala uymuyor"
+    if kind == "polar":
+        return None if type(v) is dict and number_problem(p.get("rule", {}), _dist(p["from"], v)) is None else "nokta kurala uymuyor"
+    if kind == "point":
+        return None if type(v) is dict else "nokta değil"
+    if kind == "flip":
+        return None if type(v) is bool else "açık ya da kapalı değil"
+    if kind == "visibility":
+        return None if type(v) is str and any(s["name"] == v for s in p["states"]) else "durum değil"
+    return None if type(v) is str and any(r["label"] == v for r in p["rows"]) else "satır değil"
+
+
+ACTION_FITS = {
+    "move": ("linear", "polar", "point"), "stretch": ("linear", "polar", "point"), "scale": ("linear", "polar"),
+    "array": ("linear",), "rotate": ("angle",), "flip": ("flip",),
+}
+
+
+def dynamic_problem(d, ids):
+    """Why a dynamic part is not one (docs/adr/0318 §1), in the contract's order; None when it is."""
+    params, actions = d["parameters"], d.get("actions", [])
+    if not params:
+        return "en az bir parametre olmalı"
+    if len(params) > MAX_DYNAMIC_ITEMS or len(actions) > MAX_DYNAMIC_ITEMS:
+        return "çok fazla parametre ya da eylem"
+    names, visibility = set(), 0
+    for p in params:
+        name = p["name"]
+        if not name.strip() or name.strip() != name:
+            return "parametrenin adı boş ya da boşlukla çevrili"
+        if name_key(name) in names:
+            return f"“{name}” iki kez"
+        names.add(name_key(name))
+        pts = [p[k] for k in ("from", "to", "center", "at", "a", "b") if k in p]
+        if any(not (math.isfinite(q["x"]) and math.isfinite(q["y"])) for q in pts):
+            return "nokta sonlu değil"
+        if p["kind"] in ("linear", "polar") and _dist(p["from"], p["to"]) == 0.0:
+            return "iki nokta aynı"
+        if p["kind"] == "flip" and _dist(p["a"], p["b"]) == 0.0:
+            return "iki nokta aynı"
+        if p["kind"] == "angle" and not math.isfinite(p["base"]):
+            return "açı sonlu değil"
+        if p["kind"] == "visibility":
+            visibility += 1
+            if visibility > 1:
+                return "tek görünürlük parametresi olur"
+            states = p["states"]
+            if not states or len(states) > MAX_DYNAMIC_ITEMS:
+                return "durum sayısı"
+            seen = set()
+            for s in states:
+                if not s["name"].strip() or name_key(s["name"]) in seen:
+                    return "durum adı"
+                seen.add(name_key(s["name"]))
+                if any(h not in ids for h in s.get("hidden", [])):
+                    return "olmayan nesneyi gizliyor"
+        if p["kind"] in ("linear", "polar", "angle"):
+            r = p.get("rule", {})
+            for k in ("min", "max", "step"):
+                if k in r and not math.isfinite(r[k]):
+                    return "kural sonlu değil"
+            if "min" in r and "max" in r and r["min"] > r["max"]:
+                return "en küçük en büyükten büyük"
+            if "step" in r and r["step"] <= 0.0:
+                return "adım artı değil"
+            if any(not math.isfinite(x) for x in r.get("list", [])):
+                return "liste sonlu değil"
+            if "expression" in r and not r["expression"].strip():
+                return "ifade boş"
+            if "expression" in r and ("list" in r or "step" in r):
+                return "ifadenin listesi ya da adımı olmaz"
+            if "expression" not in r and number_problem(r, default_number(p)) is not None:
+                return "varsayılan değer kurala uymuyor"
+    by_name = {p["name"]: p for p in params}
+    for p in params:
+        if p["kind"] != "lookup":
+            continue
+        rows = p["rows"]
+        if not rows or len(rows) > MAX_DYNAMIC_ITEMS:
+            return "satır sayısı"
+        labels = set()
+        for row in rows:
+            if not row["label"].strip() or name_key(row["label"]) in labels:
+                return "satır adı"
+            labels.add(name_key(row["label"]))
+            if not row["values"]:
+                return "satır değer vermiyor"
+            for key, v in row["values"].items():
+                t = by_name.get(key)
+                if t is None or t["kind"] == "lookup":
+                    return "satır olmayan parametreye değer veriyor"
+                if "expression" in t.get("rule", {}):
+                    return "satır hesaplanan parametreye değer veriyor"
+                if value_problem(t, v):
+                    return "satırın değeri uymuyor"
+    for a in actions:
+        p = by_name.get(a["parameter"])
+        if p is None:
+            return "eylemin parametresi yok"
+        if p["kind"] not in ACTION_FITS[a["kind"]]:
+            return "eylem parametreye uymuyor"
+        pieces = a["pieces"]
+        if not pieces or len(pieces) > MAX_DYNAMIC_ITEMS or len(set(pieces)) != len(pieces) or any(i not in ids for i in pieces):
+            return "eylemin nesneleri"
+        if a["kind"] == "stretch":
+            lo, hi = a["min"], a["max"]
+            if not all(math.isfinite(q) for q in (lo["x"], lo["y"], hi["x"], hi["y"])) or not (lo["x"] < hi["x"] and lo["y"] < hi["y"]):
+                return "esnetmenin kutusu"
+        if a["kind"] == "array" and not (math.isfinite(a["spacing"]) and a["spacing"] > 0.0):
+            return "dizinin aralığı"
+    return None
+
+
+def values_problem(d, values):
+    """Why an insert's kept values are not its block's (docs/adr/0318 §3)."""
+    by_name = {p["name"]: p for p in d["parameters"]}
+    for name, v in values.items():
+        p = by_name.get(name)
+        if p is None:
+            return f"blokta “{name}” yok"
+        if p["kind"] == "lookup":
+            return f"“{name}” bir tablo"
+        if value_problem(p, v):
+            return f"“{name}” uymuyor"
+    return None

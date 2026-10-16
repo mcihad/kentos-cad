@@ -299,6 +299,7 @@ class BlockEditOperation(_StrEnum):
     - ``fields``: Its inserts' fields filled again (“Alanları güncelle”, UPDATEFIELD; docs/adr/0317 §1); every block's when no
     - ``place``: Where inserts (`uids`) show a movable attribute (`tag`): at `at`, a point of the drawing; absent, where the
     - ``card``: Its library card (“Blok kartı”, docs/adr/0317 §4): `category`, `tags` and `description`; its version is
+    - ``dynamic``: Its parameters and actions (“Dinamik blok”, docs/adr/0318 §1): `dynamic`, or none to make it a plain block;
     """
     RENAME = "rename"
     REDEFINE = "redefine"
@@ -315,9 +316,10 @@ class BlockEditOperation(_StrEnum):
     FIELDS = "fields"
     PLACE = "place"
     CARD = "card"
+    DYNAMIC = "dynamic"
 
 
-BlockEditOperationName = Literal["rename", "redefine", "rebase", "remove", "purge", "attributes", "duplicate", "export", "import", "units", "update", "sync", "fields", "place", "card"]
+BlockEditOperationName = Literal["rename", "redefine", "rebase", "remove", "purge", "attributes", "duplicate", "export", "import", "units", "update", "sync", "fields", "place", "card", "dynamic"]
 """The names of :class:`BlockEditOperation`, for a plain string."""
 
 
@@ -1502,6 +1504,22 @@ OrderToName = Literal["front", "back", "above", "under"]
 """The names of :class:`OrderTo`, for a plain string."""
 
 
+class ParametersOperation(_StrEnum):
+    """What `cad.blocks.parameters` does (docs/adr/0318 §3).
+
+    - ``get``: Every parameter's value of the inserts; nothing is written.
+    - ``set``: The values given, a lookup's row by its label; an expression's parameters computed again.
+    - ``reset``: The named parameters (absent: all) back to their defaults.
+    """
+    GET = "get"
+    SET = "set"
+    RESET = "reset"
+
+
+ParametersOperationName = Literal["get", "set", "reset"]
+"""The names of :class:`ParametersOperation`, for a plain string."""
+
+
 class PatternUnit(_StrEnum):
     """Where a pattern's lengths are measured.
 
@@ -2175,6 +2193,11 @@ WorkspaceName = Literal["cad", "gis", "plan3d", "disaster"]
 """The names of :class:`Workspace`, for a plain string."""
 
 
+#: A parameter's value: a number (a length, an angle in radians), a point of the definition's coordinates, a flip
+#: or a name (a visibility state, a lookup row).
+ParamValue = Union[bool, float, str, dict[str, float]]
+
+
 #: One cell of a schedule: a number (x, y, turn) or a text.
 ScheduleCell = Union[float, str]
 
@@ -2232,6 +2255,36 @@ class ArrayLayout(_Union):
         return _variant(_ARRAY_LAYOUT, "ArrayLayout", "kind", data).from_json(data)
 
 
+class BlockAction(_Union):
+    """An action (docs/adr/0318 §2): the objects (local ids) a parameter's change moves.
+
+    One of:
+
+    - :class:`MoveBlockAction` (``kind: move``)
+    - :class:`StretchBlockAction` (``kind: stretch``)
+    - :class:`ScaleBlockAction` (``kind: scale``)
+    - :class:`ArrayBlockAction` (``kind: array``)
+    - :class:`RotateBlockAction` (``kind: rotate``)
+    - :class:`FlipBlockAction` (``kind: flip``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    if TYPE_CHECKING:
+        # Every variant has these.
+        parameter: str
+        pieces: list[int]
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlockAction:
+        return _variant(_BLOCK_ACTION, "BlockAction", "kind", data).from_json(data)
+
+
 class BlockChange(_Union):
     """A change of one block definition. An update replaces it whole and a
     delete removes it, each guarded by `expectedVersions["block:<id>"]`.
@@ -2253,6 +2306,36 @@ class BlockChange(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> BlockChange:
         return _variant(_BLOCK_CHANGE, "BlockChange", "op", data).from_json(data)
+
+
+class BlockParameter(_Union):
+    """A parameter (docs/adr/0318 §1). Its points are the definition's coordinates.
+
+    One of:
+
+    - :class:`LinearBlockParameter` (``kind: linear``)
+    - :class:`PolarBlockParameter` (``kind: polar``)
+    - :class:`AngleBlockParameter` (``kind: angle``)
+    - :class:`PointBlockParameter` (``kind: point``)
+    - :class:`FlipBlockParameter` (``kind: flip``)
+    - :class:`VisibilityBlockParameter` (``kind: visibility``)
+    - :class:`LookupBlockParameter` (``kind: lookup``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    if TYPE_CHECKING:
+        # Every variant has these.
+        name: str
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlockParameter:
+        return _variant(_BLOCK_PARAMETER, "BlockParameter", "kind", data).from_json(data)
 
 
 class ConstructedCurve(_Union):
@@ -3880,6 +3963,7 @@ class AttributeSync(_Model):
         constant: The constant attributes' tags whose own values were taken off.
         places: Places dropped: their attributes are no longer movable. Unit: count.
         fields: Values a field wrote. Unit: count.
+        parameters: Parameter values dropped: the block's dynamic part no longer has them or they no longer fit (docs/adr/0318). Unit: count.
     """
     inserts: int
     added: list[str]
@@ -3888,6 +3972,7 @@ class AttributeSync(_Model):
     constant: list[str]
     places: int
     fields: int
+    parameters: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -3898,6 +3983,8 @@ class AttributeSync(_Model):
         out["constant"] = list(self.constant)
         out["places"] = self.places
         out["fields"] = self.fields
+        if self.parameters is not UNSET:
+            out["parameters"] = self.parameters
         return out
 
     @classmethod
@@ -3910,6 +3997,7 @@ class AttributeSync(_Model):
             constant=list(data["constant"]),
             places=data["places"],
             fields=data["fields"],
+            parameters=data.get("parameters", UNSET),
         )
 
 
@@ -4064,6 +4152,7 @@ class BlockDefinition(_Model):
         base: The point placed at an insert's `p`, in the definition's coordinates. Unit: length.
         attributes: The texts an insert shows from its attributes (ATTDEF).
         card: Its library card (docs/adr/0317 §4): category, tags and version.
+        dynamic: Its parameters and actions (docs/adr/0318): one definition at many sizes and looks.
         units: The unit it was drawn in (docs/adr/0315 §4): a unit, its geometry being metres as the drawing's (an insert
             keeps its size anywhere); `unitless`, its numbers being drawing units (an insert is scaled by the drawing's
             unit). Absent: a real-size block of an unknown unit.
@@ -4075,6 +4164,7 @@ class BlockDefinition(_Model):
     attributes: list[AttributeDefinition] | Unset = UNSET
     card: BlockCard | None | Unset = UNSET
     description: str | None | Unset = UNSET
+    dynamic: DynamicBlock | None | Unset = UNSET
     units: BlockUnits | BlockUnitsName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -4089,6 +4179,8 @@ class BlockDefinition(_Model):
             out["card"] = None if self.card is None else self.card.to_json()
         if self.description is not UNSET:
             out["description"] = self.description
+        if self.dynamic is not UNSET:
+            out["dynamic"] = None if self.dynamic is None else self.dynamic.to_json()
         if self.units is not UNSET:
             out["units"] = None if self.units is None else _enum_out(self.units)
         return out
@@ -4103,6 +4195,7 @@ class BlockDefinition(_Model):
             attributes=[AttributeDefinition.from_json(e0) for e0 in data["attributes"]] if "attributes" in data else UNSET,
             card=UNSET if "card" not in data else None if data["card"] is None else BlockCard.from_json(data["card"]),
             description=data.get("description", UNSET),
+            dynamic=UNSET if "dynamic" not in data else None if data["dynamic"] is None else DynamicBlock.from_json(data["dynamic"]),
             units=UNSET if "units" not in data else None if data["units"] is None else _enum_in(BlockUnits, data["units"]),
         )
 
@@ -4427,6 +4520,7 @@ class BlocksEdit(_Model):
         blocks: `export`: the definitions, by id (absent: every one).
         category: `card`: its category (empty: none).
         description: `card`: its description (empty: none).
+        dynamic: `dynamic`: the parameters and actions (absent: none, a plain block).
         entities: `update`: the definition's objects, in its own coordinates, each with its local id (0: a new one;
             docs/adr/0316 §1).
         expected_revision: The document revision the input was prepared against, as decimal text.
@@ -4453,6 +4547,7 @@ class BlocksEdit(_Model):
     blocks: list[str] | None | Unset = UNSET
     category: str | None | Unset = UNSET
     description: str | None | Unset = UNSET
+    dynamic: DynamicBlock | None | Unset = UNSET
     entities: list[Entity] | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     layer_id: str | None | Unset = UNSET
@@ -4485,6 +4580,8 @@ class BlocksEdit(_Model):
             out["category"] = self.category
         if self.description is not UNSET:
             out["description"] = self.description
+        if self.dynamic is not UNSET:
+            out["dynamic"] = None if self.dynamic is None else self.dynamic.to_json()
         if self.entities is not UNSET:
             out["entities"] = None if self.entities is None else [e0.to_json() for e0 in self.entities]
         if self.expected_revision is not UNSET:
@@ -4526,6 +4623,7 @@ class BlocksEdit(_Model):
             blocks=UNSET if "blocks" not in data else None if data["blocks"] is None else list(data["blocks"]),
             category=data.get("category", UNSET),
             description=data.get("description", UNSET),
+            dynamic=UNSET if "dynamic" not in data else None if data["dynamic"] is None else DynamicBlock.from_json(data["dynamic"]),
             entities=UNSET if "entities" not in data else None if data["entities"] is None else [Entity.from_json(e0) for e0 in data["entities"]],
             expected_revision=data.get("expectedRevision", UNSET),
             layer_id=data.get("layerId", UNSET),
@@ -4677,6 +4775,7 @@ class BlocksInsert(_Model):
         label: Its label.
         mirror: Mirrored in its x axis, before the turn.
         name: The block, by name, when `block` is absent (Turkish case folded).
+        parameters: A dynamic block's parameter values (docs/adr/0318 §3): by name; a lookup's row by its label.
         rotation: Radians, counter-clockwise from east (absent: 0). Unit: rad.
         scale: The factor along its x axis (absent: 1), before the unit's. Unit: 1.
         symbol: A library symbol over its layer's style.
@@ -4692,6 +4791,7 @@ class BlocksInsert(_Model):
     label: str | None | Unset = UNSET
     mirror: bool | None | Unset = UNSET
     name: str | None | Unset = UNSET
+    parameters: dict[str, ParamValue] | None | Unset = UNSET
     rotation: float | None | Unset = UNSET
     scale: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
@@ -4717,6 +4817,8 @@ class BlocksInsert(_Model):
             out["mirror"] = self.mirror
         if self.name is not UNSET:
             out["name"] = self.name
+        if self.parameters is not UNSET:
+            out["parameters"] = None if self.parameters is None else dict(self.parameters)
         if self.rotation is not UNSET:
             out["rotation"] = None if self.rotation is None else float(self.rotation)
         if self.scale is not UNSET:
@@ -4740,6 +4842,7 @@ class BlocksInsert(_Model):
             label=data.get("label", UNSET),
             mirror=data.get("mirror", UNSET),
             name=data.get("name", UNSET),
+            parameters=UNSET if "parameters" not in data else None if data["parameters"] is None else dict(data["parameters"]),
             rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
             scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
             symbol=data.get("symbol", UNSET),
@@ -4771,6 +4874,71 @@ class BlocksInsertPlan(_Model):
         return cls(
             insert=Entity.from_json(data["insert"]),
             unit_factor=float(data["unitFactor"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksParameters(_Model):
+    """Input of `cad.blocks.parameters` v1: a dynamic block's inserts' parameter values read, set or reset, as one undo
+    step “Blok parametreleri” (docs/adr/0318 §3).
+    Attributes:
+        uids: The inserts, by persistent id; each of a dynamic block.
+        names: `reset`: the parameters (absent: all).
+        values: `set`: the values by parameter name.
+    """
+    operation: ParametersOperation | ParametersOperationName
+    uids: list[str]
+    expected_revision: str | None | Unset = UNSET
+    names: list[str] | None | Unset = UNSET
+    values: dict[str, ParamValue] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        out["uids"] = list(self.uids)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.names is not UNSET:
+            out["names"] = None if self.names is None else list(self.names)
+        if self.values is not UNSET:
+            out["values"] = None if self.values is None else dict(self.values)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksParameters:
+        return cls(
+            operation=_enum_in(ParametersOperation, data["operation"]),
+            uids=list(data["uids"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            names=UNSET if "names" not in data else None if data["names"] is None else list(data["names"]),
+            values=UNSET if "values" not in data else None if data["values"] is None else dict(data["values"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksParametersOut(_Model):
+    """Output of `cad.blocks.parameters` v1.
+    Attributes:
+        inserts: The inserts' values after the operation, in the order given.
+        changed: The inserts written (their kept values changed), in the order given.
+    """
+    inserts: list[InsertParameters]
+    changed: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["inserts"] = [e0.to_json() for e0 in self.inserts]
+        out["changed"] = list(self.changed)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksParametersOut:
+        return cls(
+            inserts=[InsertParameters.from_json(e0) for e0 in data["inserts"]],
+            changed=list(data["changed"]),
             revision=data["revision"],
         )
 
@@ -7038,6 +7206,30 @@ class DxfImported(_Model):
             revision=data["revision"],
             group=data.get("group", UNSET),
             renamed=[RenamedBlock.from_json(e0) for e0 in data["renamed"]] if "renamed" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DynamicBlock(_Model):
+    """A definition's parameters and actions.
+    Attributes:
+        actions: Applied in this order to the definition's objects, each on what the ones before left.
+    """
+    parameters: list[BlockParameter]
+    actions: list[BlockAction] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["parameters"] = [e0.to_json() for e0 in self.parameters]
+        if self.actions is not UNSET:
+            out["actions"] = [e0.to_json() for e0 in self.actions]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DynamicBlock:
+        return cls(
+            parameters=[BlockParameter.from_json(e0) for e0 in data["parameters"]],
+            actions=[BlockAction.from_json(e0) for e0 in data["actions"]] if "actions" in data else UNSET,
         )
 
 
@@ -11046,6 +11238,8 @@ class InsertEntity(Entity):
         mirror: Mirrored in the definition's x axis, before the turn.
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        parameters: Its dynamic block's parameter values that differ from their defaults (docs/adr/0318 §3), by parameter name;
+            a lookup's is not kept (its row's values are).
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
@@ -11073,6 +11267,7 @@ class InsertEntity(Entity):
     line_weight: float | None | Unset = UNSET
     mirror: bool | Unset = UNSET
     order: int | None | Unset = UNSET
+    parameters: dict[str, ParamValue] | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
     wipeout: Wipeout | None | Unset = UNSET
@@ -11111,6 +11306,8 @@ class InsertEntity(Entity):
             out["mirror"] = self.mirror
         if self.order is not UNSET:
             out["order"] = self.order
+        if self.parameters is not UNSET:
+            out["parameters"] = dict(self.parameters)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.transparency is not UNSET:
@@ -11143,10 +11340,38 @@ class InsertEntity(Entity):
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             mirror=data.get("mirror", UNSET),
             order=data.get("order", UNSET),
+            parameters=dict(data["parameters"]) if "parameters" in data else UNSET,
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
             y_scale=UNSET if "yScale" not in data else None if data["yScale"] is None else float(data["yScale"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class InsertParameters(_Model):
+    """One insert's parameters.
+    Attributes:
+        values: Every parameter's value, its default where the insert keeps none; a lookup's the label of the row its values
+            match, when one does.
+    """
+    uid: str
+    block: str
+    values: dict[str, ParamValue]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["block"] = self.block
+        out["values"] = dict(self.values)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> InsertParameters:
+        return cls(
+            uid=data["uid"],
+            block=data["block"],
+            values=dict(data["values"]),
         )
 
 
@@ -14615,6 +14840,26 @@ class LocalDefinition(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LookupRow(_Model):
+    """One row of a lookup: its label and the values it sets."""
+    label: str
+    values: dict[str, ParamValue]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["label"] = self.label
+        out["values"] = dict(self.values)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LookupRow:
+        return cls(
+            label=data["label"],
+            values=dict(data["values"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NamedUcs(_Model):
     """A named UCS of the project.
     Attributes:
@@ -14933,6 +15178,47 @@ class NewObject(_Model):
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NumberRule(_Model):
+    """The values a number parameter may take: within `min` and `max`, on `step`s from `min` (from 0 without one), one
+    of `list`; or computed by `expression` from the other number parameters (it is not set then).
+    Attributes:
+        list: Unit: value.
+        max: Unit: value.
+        min: Unit: value.
+        step: Unit: value.
+    """
+    expression: str | None | Unset = UNSET
+    list: list[float] | Unset = UNSET
+    max: float | None | Unset = UNSET
+    min: float | None | Unset = UNSET
+    step: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.expression is not UNSET:
+            out["expression"] = self.expression
+        if self.list is not UNSET:
+            out["list"] = [float(e0) for e0 in self.list]
+        if self.max is not UNSET:
+            out["max"] = None if self.max is None else float(self.max)
+        if self.min is not UNSET:
+            out["min"] = None if self.min is None else float(self.min)
+        if self.step is not UNSET:
+            out["step"] = None if self.step is None else float(self.step)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NumberRule:
+        return cls(
+            expression=data.get("expression", UNSET),
+            list=[float(e0) for e0 in data["list"]] if "list" in data else UNSET,
+            max=UNSET if "max" not in data else None if data["max"] is None else float(data["max"]),
+            min=UNSET if "min" not in data else None if data["min"] is None else float(data["min"]),
+            step=UNSET if "step" not in data else None if data["step"] is None else float(data["step"]),
         )
 
 
@@ -21215,6 +21501,30 @@ class ViewsEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class VisibilityState(_Model):
+    """One of a visibility parameter's states: its name and the objects (local ids) it hides.
+    Attributes:
+        hidden: Unit: id.
+    """
+    name: str
+    hidden: list[int] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.hidden is not UNSET:
+            out["hidden"] = list(self.hidden)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VisibilityState:
+        return cls(
+            name=data["name"],
+            hidden=list(data["hidden"]) if "hidden" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class Wipeout(_Model):
     """An area's mask (docs/adr/0310 §1).
     Attributes:
@@ -21509,6 +21819,164 @@ class PathArrayLayout(ArrayLayout):
 
 
 @dataclass(kw_only=True, slots=True)
+class MoveBlockAction(BlockAction):
+    """The objects move by the parameter's change (a linear's along its line, a polar's and a point's by the moved
+    point).
+    Attributes:
+        pieces: Unit: id.
+    """
+    TAG_VALUE: ClassVar[str] = "move"
+    parameter: str
+    pieces: list[int]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "move"}
+        out["parameter"] = self.parameter
+        out["pieces"] = list(self.pieces)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MoveBlockAction:
+        return cls(
+            parameter=data["parameter"],
+            pieces=list(data["pieces"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StretchBlockAction(BlockAction):
+    """The objects' points inside the box move by the parameter's change; the rest stay.
+    Attributes:
+        pieces: Unit: id.
+        min: Unit: length.
+        max: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "stretch"
+    parameter: str
+    pieces: list[int]
+    min: Vec2
+    max: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "stretch"}
+        out["parameter"] = self.parameter
+        out["pieces"] = list(self.pieces)
+        out["min"] = _vec2_out(self.min)
+        out["max"] = _vec2_out(self.max)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StretchBlockAction:
+        return cls(
+            parameter=data["parameter"],
+            pieces=list(data["pieces"]),
+            min=Vec2.from_json(data["min"]),
+            max=Vec2.from_json(data["max"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ScaleBlockAction(BlockAction):
+    """The objects scale about the parameter's `from` by its value over its default.
+    Attributes:
+        pieces: Unit: id.
+    """
+    TAG_VALUE: ClassVar[str] = "scale"
+    parameter: str
+    pieces: list[int]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "scale"}
+        out["parameter"] = self.parameter
+        out["pieces"] = list(self.pieces)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScaleBlockAction:
+        return cls(
+            parameter=data["parameter"],
+            pieces=list(data["pieces"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArrayBlockAction(BlockAction):
+    """Copies of the objects every `spacing` along a linear parameter's line: one for each further `spacing` its
+    value holds past its default (the definition shows what the default holds).
+    Attributes:
+        pieces: Unit: id.
+        spacing: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "array"
+    parameter: str
+    pieces: list[int]
+    spacing: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "array"}
+        out["parameter"] = self.parameter
+        out["pieces"] = list(self.pieces)
+        out["spacing"] = float(self.spacing)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArrayBlockAction:
+        return cls(
+            parameter=data["parameter"],
+            pieces=list(data["pieces"]),
+            spacing=float(data["spacing"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RotateBlockAction(BlockAction):
+    """The objects turn about an angle parameter's centre by its change.
+    Attributes:
+        pieces: Unit: id.
+    """
+    TAG_VALUE: ClassVar[str] = "rotate"
+    parameter: str
+    pieces: list[int]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "rotate"}
+        out["parameter"] = self.parameter
+        out["pieces"] = list(self.pieces)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RotateBlockAction:
+        return cls(
+            parameter=data["parameter"],
+            pieces=list(data["pieces"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FlipBlockAction(BlockAction):
+    """The objects mirror about a flip parameter's line while it is on.
+    Attributes:
+        pieces: Unit: id.
+    """
+    TAG_VALUE: ClassVar[str] = "flip"
+    parameter: str
+    pieces: list[int]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "flip"}
+        out["parameter"] = self.parameter
+        out["pieces"] = list(self.pieces)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FlipBlockAction:
+        return cls(
+            parameter=data["parameter"],
+            pieces=list(data["pieces"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CreateBlockChange(BlockChange):
     """A new definition; its id is the client's, as an object's."""
     TAG_VALUE: ClassVar[str] = "create"
@@ -21557,6 +22025,196 @@ class DeleteBlockChange(BlockChange):
     def from_json(cls, data: Mapping[str, Any]) -> DeleteBlockChange:
         return cls(
             id=data["id"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LinearBlockParameter(BlockParameter):
+    """A length along `from`→`to`: its default the distance between them; a change moves `to` along the line.
+    Attributes:
+        from_: Unit: length.
+        to: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "linear"
+    name: str
+    from_: Vec2
+    to: Vec2
+    rule: NumberRule | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "linear"}
+        out["name"] = self.name
+        out["from"] = _vec2_out(self.from_)
+        out["to"] = _vec2_out(self.to)
+        if self.rule is not UNSET:
+            out["rule"] = self.rule.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LinearBlockParameter:
+        return cls(
+            name=data["name"],
+            from_=Vec2.from_json(data["from"]),
+            to=Vec2.from_json(data["to"]),
+            rule=NumberRule.from_json(data["rule"]) if "rule" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PolarBlockParameter(BlockParameter):
+    """`to` moved anywhere: its value a point, its rule on the distance from `from`.
+    Attributes:
+        from_: Unit: length.
+        to: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "polar"
+    name: str
+    from_: Vec2
+    to: Vec2
+    rule: NumberRule | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "polar"}
+        out["name"] = self.name
+        out["from"] = _vec2_out(self.from_)
+        out["to"] = _vec2_out(self.to)
+        if self.rule is not UNSET:
+            out["rule"] = self.rule.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PolarBlockParameter:
+        return cls(
+            name=data["name"],
+            from_=Vec2.from_json(data["from"]),
+            to=Vec2.from_json(data["to"]),
+            rule=NumberRule.from_json(data["rule"]) if "rule" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AngleBlockParameter(BlockParameter):
+    """An angle about `center`, radians counter-clockwise from east; its default `base`.
+    Attributes:
+        center: Unit: length.
+        base: Unit: rad.
+    """
+    TAG_VALUE: ClassVar[str] = "angle"
+    name: str
+    center: Vec2
+    base: float
+    rule: NumberRule | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "angle"}
+        out["name"] = self.name
+        out["center"] = _vec2_out(self.center)
+        out["base"] = float(self.base)
+        if self.rule is not UNSET:
+            out["rule"] = self.rule.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AngleBlockParameter:
+        return cls(
+            name=data["name"],
+            center=Vec2.from_json(data["center"]),
+            base=float(data["base"]),
+            rule=NumberRule.from_json(data["rule"]) if "rule" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointBlockParameter(BlockParameter):
+    """A point: its default `at`.
+    Attributes:
+        at: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "point"
+    name: str
+    at: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "point"}
+        out["name"] = self.name
+        out["at"] = _vec2_out(self.at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointBlockParameter:
+        return cls(
+            name=data["name"],
+            at=Vec2.from_json(data["at"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FlipBlockParameter(BlockParameter):
+    """A mirror about the line `a`→`b`, off by default.
+    Attributes:
+        a: Unit: length.
+        b: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "flip"
+    name: str
+    a: Vec2
+    b: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "flip"}
+        out["name"] = self.name
+        out["a"] = _vec2_out(self.a)
+        out["b"] = _vec2_out(self.b)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FlipBlockParameter:
+        return cls(
+            name=data["name"],
+            a=Vec2.from_json(data["a"]),
+            b=Vec2.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VisibilityBlockParameter(BlockParameter):
+    """The objects shown: its first state by default."""
+    TAG_VALUE: ClassVar[str] = "visibility"
+    name: str
+    states: list[VisibilityState]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "visibility"}
+        out["name"] = self.name
+        out["states"] = [e0.to_json() for e0 in self.states]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VisibilityBlockParameter:
+        return cls(
+            name=data["name"],
+            states=[VisibilityState.from_json(e0) for e0 in data["states"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LookupBlockParameter(BlockParameter):
+    """Rows of values set together, chosen by label; it has no value of its own to keep."""
+    TAG_VALUE: ClassVar[str] = "lookup"
+    name: str
+    rows: list[LookupRow]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "lookup"}
+        out["name"] = self.name
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LookupBlockParameter:
+        return cls(
+            name=data["name"],
+            rows=[LookupRow.from_json(e0) for e0 in data["rows"]],
         )
 
 
@@ -26032,7 +26690,13 @@ _ARRAY_EDIT: dict[str, type[ArrayEdit]] = {"layout": LayoutArrayEdit, "placement
 _ARRAY_LAYOUT: dict[str, type[ArrayLayout]] = {"grid": GridArrayLayout, "polar": PolarArrayLayout, "line": LineArrayLayout, "path": PathArrayLayout}
 
 
+_BLOCK_ACTION: dict[str, type[BlockAction]] = {"move": MoveBlockAction, "stretch": StretchBlockAction, "scale": ScaleBlockAction, "array": ArrayBlockAction, "rotate": RotateBlockAction, "flip": FlipBlockAction}
+
+
 _BLOCK_CHANGE: dict[str, type[BlockChange]] = {"create": CreateBlockChange, "update": UpdateBlockChange, "delete": DeleteBlockChange}
+
+
+_BLOCK_PARAMETER: dict[str, type[BlockParameter]] = {"linear": LinearBlockParameter, "polar": PolarBlockParameter, "angle": AngleBlockParameter, "point": PointBlockParameter, "flip": FlipBlockParameter, "visibility": VisibilityBlockParameter, "lookup": LookupBlockParameter}
 
 
 _CONSTRUCTED_CURVE: dict[str, type[ConstructedCurve]] = {"circle": CircleConstructedCurve, "arc": ArcConstructedCurve, "ellipse": EllipseConstructedCurve}
@@ -26145,6 +26809,7 @@ __all__ = [
     "AlongPointConstruction",
     "AlongSubPlace",
     "AngleArcDimensionMeasure",
+    "AngleBlockParameter",
     "AngleDimensionMeasure",
     "AngleUnit",
     "AngleUnitName",
@@ -26181,6 +26846,7 @@ __all__ = [
     "ArrangeMode",
     "ArrangeModeName",
     "ArrangeTransform",
+    "ArrayBlockAction",
     "ArrayEdit",
     "ArrayItem",
     "ArrayLayout",
@@ -26204,6 +26870,7 @@ __all__ = [
     "AzimuthDimensionMeasure",
     "BlendMode",
     "BlendModeName",
+    "BlockAction",
     "BlockCard",
     "BlockChange",
     "BlockCount",
@@ -26216,6 +26883,7 @@ __all__ = [
     "BlockFileMode",
     "BlockFileModeName",
     "BlockInserted",
+    "BlockParameter",
     "BlockRecord",
     "BlockReport",
     "BlockReportName",
@@ -26229,6 +26897,8 @@ __all__ = [
     "BlocksEdited",
     "BlocksInsert",
     "BlocksInsertPlan",
+    "BlocksParameters",
+    "BlocksParametersOut",
     "BlocksQueried",
     "BlocksQuery",
     "BlocksReplace",
@@ -26344,6 +27014,7 @@ __all__ = [
     "DrawingUnitName",
     "DxfExported",
     "DxfImported",
+    "DynamicBlock",
     "DynamicLengthenChange",
     "EdgeNear",
     "EdgeRectangleFrame",
@@ -26438,6 +27109,8 @@ __all__ = [
     "FileUnitName",
     "FilletRectangleCorners",
     "FitNurbsBy",
+    "FlipBlockAction",
+    "FlipBlockParameter",
     "FoundSnap",
     "FrameUcsTo",
     "GeographicCrsSystem",
@@ -26474,6 +27147,7 @@ __all__ = [
     "InsertEntity",
     "InsertEntityGeometry",
     "InsertKnotCurveEdit",
+    "InsertParameters",
     "InvertSelectRegion",
     "InvitationChange",
     "InvitationRevoke",
@@ -26602,12 +27276,15 @@ __all__ = [
     "LineTypesEdited",
     "LineTypesOperation",
     "LineTypesOperationName",
+    "LinearBlockParameter",
     "LinearDimensionMeasure",
     "LinesCornerPick",
     "LocalCrsSystem",
     "LocalDefinition",
     "LookPart",
     "LookPartName",
+    "LookupBlockParameter",
+    "LookupRow",
     "MatchProperty",
     "MatchPropertyName",
     "MeasuredPoint",
@@ -26616,6 +27293,7 @@ __all__ = [
     "MirrorText",
     "MirrorTextName",
     "MirrorTransform",
+    "MoveBlockAction",
     "MoveControlCurveEdit",
     "MoveFitCurveEdit",
     "MoveTransform",
@@ -26638,6 +27316,7 @@ __all__ = [
     "NetworkLayer",
     "NewObject",
     "NodeSubPlace",
+    "NumberRule",
     "NurbsBy",
     "NurbsCreate",
     "NurbsCreated",
@@ -26658,6 +27337,9 @@ __all__ = [
     "OrdinateDimensionMeasure",
     "OriginUcsTo",
     "ParallelPointConstruction",
+    "ParamValue",
+    "ParametersOperation",
+    "ParametersOperationName",
     "PartsDivision",
     "PasteReport",
     "PathArrayLayout",
@@ -26676,6 +27358,7 @@ __all__ = [
     "PlaceOn",
     "PlacementArrayEdit",
     "PointBinding",
+    "PointBlockParameter",
     "PointCloudEntity",
     "PointCloudFields",
     "PointCloudStyle",
@@ -26702,6 +27385,7 @@ __all__ = [
     "PointsConstruct",
     "PointsConstructed",
     "PolarArrayLayout",
+    "PolarBlockParameter",
     "PolarPointConstruction",
     "PolygonCreate",
     "PolygonCreated",
@@ -26791,12 +27475,14 @@ __all__ = [
     "ResourceKind",
     "ResourceKindName",
     "RingGeometry",
+    "RotateBlockAction",
     "RotateTransform",
     "RotateUcsTo",
     "RubberLink",
     "RubbersheetTransform",
     "SaveUcsTo",
     "SaveViewsOp",
+    "ScaleBlockAction",
     "ScaleTransform",
     "ScenarioInfo",
     "ScenarioOperation",
@@ -26852,6 +27538,7 @@ __all__ = [
     "StepExplodeDensity",
     "StepWarning",
     "StreetSource",
+    "StretchBlockAction",
     "StretchTopology",
     "StretchWindow",
     "StyleEditOperation",
@@ -26932,6 +27619,8 @@ __all__ = [
     "ViewsEdit",
     "ViewsEdited",
     "ViewsOp",
+    "VisibilityBlockParameter",
+    "VisibilityState",
     "WeightCurveEdit",
     "WindowSelectRegion",
     "Wipeout",

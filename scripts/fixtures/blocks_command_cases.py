@@ -962,11 +962,26 @@ edit.append({
     ],
 })
 
+# KentOS's own library by its name (docs/adr/0318 §4): its blocks added with their ids, none of them in the drawing.
+with open("catalog/v1/blocks/kentos-temel.kblok", encoding="utf-8") as _f:
+    BUILTIN = json.load(_f)["blocks"]
+edit.append({
+    "name": "Blokları al: KentOS'un temel kitaplığı adıyla",
+    "steps": [
+        {"op": "execute", "input": {"operation": "import", "name": "kentos-temel"},
+         "result": library_done(added=[b["id"] for b in BUILTIN]),
+         "expect": {"blockIds": {b["name"]: b["id"] for b in BUILTIN[:3]}, "canUndo": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Blokları al", "expect": {"ids": IDS, "revision": "changed"}},
+    ],
+})
+
 edit.append({
     "name": "Blokları al: metin yok, biçim değil, sürüm değil, bilinmeyen bloğu yerleştiren tanım",
     "steps": [
         {"op": "execute", "input": {"operation": "import"},
-         "result": failed("no_library", "Alınacak blok dosyasının metnini verin (library).", "library"), "expect": NOTHING},
+         "result": failed("no_library", "Alınacak blok dosyasının metnini (library) ya da KentOS kitaplığının adını (name: kentos-temel) verin.", "library"), "expect": NOTHING},
+        {"op": "execute", "input": {"operation": "import", "name": "kentos-ileri"},
+         "result": failed("invalid_library", "“kentos-ileri” adında KentOS blok kitaplığı yok. Kitaplıklar: kentos-temel.", "name"), "expect": NOTHING},
         {"op": "execute", "input": {"operation": "import", "library": blocks_file([], fmt="kentos.style")},
          "result": failed("invalid_library", BAD_FILE.format("biçimi kentos.blocks değil"), "library"), "expect": NOTHING},
         {"op": "execute", "input": {"operation": "import", "library": blocks_file([], version=2)},

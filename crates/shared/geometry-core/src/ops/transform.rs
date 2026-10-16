@@ -449,6 +449,7 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
         // adds `m`'s; a reflection flips `mirror` and runs the turn backwards
         // (R(θ)·M·R(ρ) = R(θ − ρ)·M).
         Shape::Insert {
+            params,
             block,
             p,
             scale,
@@ -462,6 +463,7 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
             let flip = is_reflection(m);
             let mirrored = mirror.unwrap_or(false) != flip;
             Shape::Insert {
+                params: params.clone(),
                 block: block.clone(),
                 p: apply(m, *p),
                 scale: scale * s,

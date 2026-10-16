@@ -757,6 +757,7 @@ impl<'l> Emitter<'l> {
             self.out.holes = holes;
             self.pending = pending;
             defs.push(BlockDefinition {
+                dynamic: None,
                 card: None,
                 id: self.kept[n],
                 name: block.name.clone(),
@@ -2677,6 +2678,7 @@ impl<'l> Emitter<'l> {
         let mut base = base(layer, self.color_of(e, ctx), self.weight_of(e, ctx));
         base.attrs = attrs;
         self.push(Entity::Insert(InsertEntity {
+            parameters: Default::default(),
             attribute_places: Default::default(),
             base,
             block: id,

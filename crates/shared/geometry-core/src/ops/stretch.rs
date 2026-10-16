@@ -97,6 +97,7 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
         })?,
         // A block moves whole when its insertion point is in the window (docs/adr/0144).
         Shape::Insert {
+            params,
             block,
             p,
             scale,
@@ -106,6 +107,7 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
             attrs,
             places,
         } => inside(*p, r).then(|| Shape::Insert {
+            params: params.clone(),
             block: block.clone(),
             p: mv(*p),
             scale: *scale,

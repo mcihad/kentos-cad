@@ -287,6 +287,7 @@ impl Reader<'_> {
                     )),
                 };
                 Shape::Insert {
+                    params: None,
                     p,
                     scale,
                     y_scale,
@@ -1189,6 +1190,7 @@ impl Packer {
             // docs/adr/0144: the insertion point, scale, turn, mirror flag, the
             // block's id, and its attributes' texts (§7: what its attribute texts show).
             Shape::Insert {
+                params: _,
                 block,
                 p,
                 scale,
@@ -1744,6 +1746,7 @@ mod tests {
         use crate::entity::Attrs;
         let text = |s: &str| Json::Str(s.to_owned());
         let with = Shape::Insert {
+            params: None,
             block: "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001".into(),
             p: Vec2::new(486520.25, 4420200.5),
             scale: 2.0,
@@ -1758,6 +1761,7 @@ mod tests {
             places: None,
         };
         let without = Shape::Insert {
+            params: None,
             block: "b".into(),
             p: Vec2::new(1.0, 2.0),
             scale: 1.0,

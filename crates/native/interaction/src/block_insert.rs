@@ -123,6 +123,7 @@ impl BlockInsert {
     ) -> BlocksInsert {
         let m = &*cx.memory;
         BlocksInsert {
+            parameters: Default::default(),
             block: Some(block),
             name: None,
             at: wire(p),

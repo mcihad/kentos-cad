@@ -1486,6 +1486,25 @@ fn shape(entity: &Entity) -> Shape {
         },
         // The scene draws no text: an attribute's value does not matter here.
         Entity::Insert(i) => Shape::Insert {
+            // Its parameter values: the variant it draws (docs/adr/0318 §3).
+            params: (!i.parameters.is_empty()).then(|| {
+                use kentos_contracts::ParamValue as V;
+                use kentos_geometry_core::entity::ParamValue as C;
+                kentos_geometry_core::entity::Params(
+                    i.parameters
+                        .iter()
+                        .map(|(k, x)| {
+                            let value = match x {
+                                V::Flag(b) => C::Flag(*b),
+                                V::Number(n) => C::Number(*n),
+                                V::Text(t) => C::Text(t.clone()),
+                                V::Point(q) => C::Point(v(q)),
+                            };
+                            (k.clone(), value)
+                        })
+                        .collect(),
+                )
+            }),
             block: i.block.to_text(),
             p: v(&i.p),
             scale: i.scale,

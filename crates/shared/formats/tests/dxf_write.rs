@@ -1564,6 +1564,7 @@ fn block_id(n: u8) -> BlockId {
 
 fn insert(layer: &str, block: u8, p: Vec2, scale: f64, rotation: f64, mirror: bool) -> Entity {
     Entity::Insert(InsertEntity {
+        parameters: Default::default(),
         attribute_places: Default::default(),
         base: base(layer),
         block: block_id(block),
@@ -1577,6 +1578,7 @@ fn insert(layer: &str, block: u8, p: Vec2, scale: f64, rotation: f64, mirror: bo
 
 fn definition(n: u8, name: &str, base_point: Vec2, entities: Vec<Entity>) -> BlockDefinition {
     BlockDefinition {
+        dynamic: None,
         card: None,
         id: block_id(n),
         name: name.into(),

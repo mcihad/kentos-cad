@@ -164,7 +164,7 @@ pub fn label(operation: BlockEditOperation) -> &'static str {
         BlockEditOperation::Sync => crate::blocks_sync::SYNC,
         BlockEditOperation::Fields => crate::blocks_sync::FIELDS,
         BlockEditOperation::Place => crate::blocks_sync::PLACE,
-        BlockEditOperation::Card => labels::BLOCK_CHANGE,
+        BlockEditOperation::Card | BlockEditOperation::Dynamic => labels::BLOCK_CHANGE,
     }
 }
 
@@ -282,7 +282,8 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         | BlockEditOperation::Import
         | BlockEditOperation::Sync
         | BlockEditOperation::Fields
-        | BlockEditOperation::Card => {}
+        | BlockEditOperation::Card
+        | BlockEditOperation::Dynamic => {}
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
     if input.operation == BlockEditOperation::Purge {
@@ -408,6 +409,19 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
                 )));
             }
         }
+        // Its parameters and actions (docs/adr/0318 §1): the rules, the expressions, then its inserts' values refitted.
+        BlockEditOperation::Dynamic => {
+            next.dynamic = input.dynamic.clone();
+            rules_with(doc, &next)?;
+            if let Some((path, words)) = next.dynamic.as_ref().and_then(crate::block_params::expressions_problem) {
+                return Err(Stop::failed(error(
+                    codes::INVALID_DYNAMIC_BLOCK,
+                    format!("“{}” bloğunun {words}.", old.name),
+                    Some(path),
+                )));
+            }
+            checked.sync = Some(crate::block_params::refit_inserts(doc, &next));
+        }
         BlockEditOperation::Place
         | BlockEditOperation::Purge
         | BlockEditOperation::Duplicate
@@ -415,8 +429,17 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         | BlockEditOperation::Import => {}
     }
     // A change of what it draws counts on its card (docs/adr/0317 §4): its name and card do not.
-    fn draws(b: &BlockDefinition) -> (&Vec<Entity>, kentos_contracts::Vec2, &Vec<AttributeDefinition>, Option<kentos_contracts::BlockUnits>) {
-        (&b.entities, b.base, &b.attributes, b.units)
+    #[allow(clippy::type_complexity)]
+    fn draws(
+        b: &BlockDefinition,
+    ) -> (
+        &Vec<Entity>,
+        kentos_contracts::Vec2,
+        &Vec<AttributeDefinition>,
+        Option<kentos_contracts::BlockUnits>,
+        &Option<kentos_contracts::DynamicBlock>,
+    ) {
+        (&b.entities, b.base, &b.attributes, b.units, &b.dynamic)
     }
     let redrawn = draws(&next) != draws(old);
     if redrawn

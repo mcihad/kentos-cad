@@ -505,6 +505,22 @@
    "tests": 1
   },
   {
+   "id": "block.library",
+   "kind": "command",
+   "title": "KentOS blok kitaplığı",
+   "level": "semantic",
+   "via": [
+    "cad.blocks.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.blocks.edit",
+   "mcp": "cad.blocks.edit",
+   "note": "import işlemi, name kentos-temel: KentOS'un blok kitaplığı (ADR 0318 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "block.panel",
    "kind": "command",
    "title": "Bloklar",

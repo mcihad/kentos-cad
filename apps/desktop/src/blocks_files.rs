@@ -19,6 +19,7 @@ use kentos_interaction::Level;
 
 fn input(operation: BlockEditOperation) -> BlocksEdit {
     BlocksEdit {
+        dynamic: None,
         sync: None,
         renames: None,
         remove_tags: None,
@@ -209,6 +210,29 @@ impl App {
         }
         words.push('.');
         self.say(Level::Info, words);
+    }
+
+    /// KentOS blok kitaplığı (docs/adr/0318 §4): KentOS's own blocks taken in by name, in one undo step; the names
+    /// the drawing has kept and said; the Bloklar panel shown.
+    pub(crate) fn blocks_builtin(&mut self) {
+        let edit = BlocksEdit {
+            name: Some("kentos-temel".into()),
+            ..input(BlockEditOperation::Import)
+        };
+        let Some(done) = self.blocks_command(edit) else {
+            return;
+        };
+        let mut words = format!("KentOS blok kitaplığı: {} blok alındı", done.added.len());
+        if !done.skipped.is_empty() {
+            words.push_str(&format!(
+                "; çizimde adı olan {} blok olduğu gibi kaldı ({})",
+                done.skipped.len(),
+                done.skipped.join(", ")
+            ));
+        }
+        words.push('.');
+        self.say(Level::Info, words);
+        self.show_blocks_panel();
     }
 
     /// The block a ribbon command works on: the selected insert's, else the Bloklar panel's chosen row.

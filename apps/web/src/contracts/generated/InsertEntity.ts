@@ -4,6 +4,7 @@ import type { BlockId } from "./BlockId";
 import type { LabelPin } from "./LabelPin";
 import type { LineType } from "./LineType";
 import type { LookPart } from "./LookPart";
+import type { ParamValue } from "./ParamValue";
 import type { Vec2 } from "./Vec2";
 import type { Wipeout } from "./Wipeout";
 
@@ -47,7 +48,12 @@ mirror?: boolean,
  * definition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where
  * the definition puts it.
  */
-attributePlaces?: { [key in string]: Vec2 }, id: number, layerId: string, 
+attributePlaces?: { [key in string]: Vec2 }, 
+/**
+ * Its dynamic block's parameter values that differ from their defaults (docs/adr/0318 §3), by parameter name;
+ * a lookup's is not kept (its row's values are).
+ */
+parameters?: { [key in string]: ParamValue }, id: number, layerId: string, 
 /**
  * Colour override; absent = the layer's colour ("katmana göre").
  */

@@ -278,6 +278,7 @@ fn timing() {
     let doc: Value = serde_json::from_str(CASES).expect("the cases");
     let blocks = Blocks::from_json(&parse(&doc["definitions"])).expect("the definitions");
     let shape = |sy: Option<f64>, i: usize| Shape::Insert {
+        params: None,
         block: "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4103".into(),
         p: Vec2::new((i % 100) as f64 * 10.0, (i / 100) as f64 * 10.0),
         scale: 1.5,

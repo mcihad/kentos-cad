@@ -1226,6 +1226,44 @@ impl<'d> Encoder<'d> {
         Ok(())
     }
 
+    /// A JSON value made here (a contract's part written as its JSON, docs/adr/0318): as `opaque`, keys canonical.
+    pub(super) fn json(&mut self, v: &Value) -> Result<(), KcadError> {
+        match v {
+            Value::Null => self.w.null(),
+            Value::Bool(b) => self.w.bool(*b),
+            Value::Number(n) => {
+                if let Some(u) = n.as_u64() {
+                    self.w.uint(u);
+                } else if let Some(i) = n.as_i64() {
+                    self.w.int(i);
+                } else if let Some(x) = n.as_f64() {
+                    self.float(x)?;
+                } else {
+                    return Err(self.fail(Code::BadValue, "sayı okunamadı"));
+                }
+            }
+            Value::String(s) => self.text(s)?,
+            Value::Array(list) => {
+                self.open(list.len(), false)?;
+                for v in list {
+                    self.json(v)?;
+                }
+                self.close();
+            }
+            Value::Object(map) => {
+                let mut pairs: Vec<(&String, &Value)> = map.iter().collect();
+                pairs.sort_by(|a, b| key_order(a.0, b.0));
+                self.open(pairs.len(), true)?;
+                for (k, v) in pairs {
+                    self.text(k)?;
+                    self.json(v)?;
+                }
+                self.close();
+            }
+        }
+        Ok(())
+    }
+
     fn opaque(&mut self, v: &'d Value) -> Result<(), KcadError> {
         match v {
             Value::Null => self.w.null(),
@@ -1353,6 +1391,14 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
+    }
+    // Schema 59 (docs/adr/0318): a block's dynamic part or an insert's parameter values, of the drawing or of a block.
+    let valued = |list: &[Entity]| {
+        list.iter()
+            .any(|e| matches!(e, kentos_contracts::Entity::Insert(i) if !i.parameters.is_empty()))
+    };
+    if valued(&doc.entities) || doc.blocks.iter().any(|b| b.dynamic.is_some() || valued(&b.entities)) {
+        return crate::SCHEMA_WITH_DYNAMIC_BLOCKS;
     }
     // Schema 58 (docs/adr/0317 §1, §4): an attribute definition's option, an insert's moved attribute (of the drawing
     // or of a block definition) or a block's card.
