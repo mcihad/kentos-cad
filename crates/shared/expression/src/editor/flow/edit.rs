@@ -99,6 +99,12 @@ pub enum Edit {
         tree: usize,
         at: (f64, f64),
     },
+    /// A new node from the palette (`key`, as `Add`) in `node`'s place, `node` in its first input:
+    /// `$alan` with `+` pressed becomes `$alan + ?` where `$alan` stood.
+    Wrap {
+        node: String,
+        key: String,
+    },
 }
 
 /// The trees as the edit leaves them, and the node to select.
@@ -339,6 +345,32 @@ fn apply(s: &mut State, change: &Edit) -> Result<Option<String>, String> {
             let t = new_node(key)?;
             s.trees.push((Some(t), Some(*at)));
             Ok(Some((s.trees.len() - 1).to_string()))
+        }
+        Edit::Wrap { node, key } => {
+            let r = node_ref(node)?;
+            let Ref::Node { tree, path } = r.clone() else {
+                return Err("Sonuç düğümü sarılamaz; içindeki ifadeyi seçin.".into());
+            };
+            let mut outer = new_node(key)?;
+            let inner = s.take(&r)?;
+            if fill(&mut outer, 0, inner).is_err() {
+                return Err("Bu öğe bir değer almaz; seçili düğüm onun girişine konamaz.".into());
+            }
+            match path.split_last() {
+                None => {
+                    let slot = s.trees.get_mut(tree).ok_or_else(|| missing(&r))?;
+                    slot.0 = Some(outer);
+                }
+                Some((&port, parent)) => {
+                    let parent = Ref::Node {
+                        tree,
+                        path: parent.to_vec(),
+                    };
+                    let at = s.get_mut(&parent).ok_or_else(|| missing(&parent))?;
+                    fill(at, port, outer)?;
+                }
+            }
+            Ok(Some(Ref::id(tree, &path)))
         }
         Edit::AddText { text, at } => {
             let t = read(text).map_err(|e| format!("Eklenemedi: {}", e.text()))?;

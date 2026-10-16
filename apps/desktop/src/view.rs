@@ -79,7 +79,7 @@ impl App {
         // A sheet in front: the sheet mode in place of the drawing and its docks,
         // the tabs under it (sheets.rs, docs/sheet/design.md §11).
         if self.sheets.is_active() {
-            return self.sheet_view();
+            return self.with_toasts(self.sheet_view());
         }
         // The side panels run the body's whole height; the bottom panel and the
         // command line sit under the drawing only (DESIGN.md §5.1, the web's shell).
@@ -167,7 +167,7 @@ impl App {
         // changes the layers over the window, not the window's place in the tree,
         // so its widgets keep their state (an open menu, a field, the drawing
         // area's size). The rasters' panel comes and goes by itself (rasters/jobs.rs).
-        iced::widget::Stack::with_children(layers).into()
+        self.with_toasts(iced::widget::Stack::with_children(layers).into())
     }
 
     /// The ribbon; `peek`: the folded ribbon with its tab open (drawn over the drawing).

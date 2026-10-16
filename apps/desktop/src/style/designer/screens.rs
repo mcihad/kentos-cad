@@ -212,6 +212,25 @@ fn screens() {
             },
             click: None,
         },
+        // Uygula (docs/adr/0318): the designer closes over Katman stili, a notice says where the symbol went.
+        Scene {
+            name: "uygulandi",
+            setup: |app| {
+                let _ = app.update(Message::LayerStyle(LayerEvent::Open(Some("parsel".into()))));
+                let _ = app.update(Message::LayerStyle(LayerEvent::Kind(Kind::Single)));
+                let symbol = json!({ "type": "fill", "layers": [
+                    { "id": "0", "type": "simpleFill", "color": "#4E79A7" },
+                ] });
+                let _ = app.update(Message::LayerStyle(LayerEvent::Design(
+                    SetAt::Single,
+                    GeometryClass::Fill,
+                    "Tek sembol (alan)".into(),
+                    symbol,
+                )));
+                de(app, Event::Save);
+            },
+            click: None,
+        },
         // Sembol katmanı ekleri (docs/adr/0226): a generator's steps, the effects, Katman ekle into its symbol.
         Scene {
             name: "uretici",

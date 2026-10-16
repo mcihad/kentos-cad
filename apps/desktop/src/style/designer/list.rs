@@ -11,12 +11,11 @@ use kentos_native_style::designer::{
     self as model, LayerPath, add_parent, can_move, can_remove, child_key, child_types,
     has_children, label as layer_label, layer_types, summary, texts, type_of,
 };
-use kentos_ui::icon::icon;
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::tree_view::{Check, check_box};
-use kentos_ui::widget::{Menu, MenuButton, Tip, horizontal_divider, tip};
+use kentos_ui::widget::{Menu, Tip, horizontal_divider, tip};
 use serde_json::Value;
 
 use super::parts;
@@ -77,17 +76,11 @@ pub(super) fn layer_list(d: &Designer) -> Element<'_, Message> {
     let parent_label = owner.map(|p| layer_label(type_of(p)));
     let generator = owner.is_some_and(|p| type_of(p) == "geometryGenerator");
     let child_list = owner.map(child_types).unwrap_or_default();
-    let add = MenuButton::new(
-        container(
-            row![
-                icon(parts::glyph("plus")).size(13.0),
-                label::body(texts::ADD)
-            ]
-            .spacing(5)
-            .align_y(Center),
-        )
-        .padding([4, 10])
-        .style(style::container::field_box),
+    // Katman ekle reads as the strip's menu button (style/strip.rs), the list's own toolbar.
+    let add = crate::style::strip::menu(
+        parts::glyph("plus"),
+        texts::ADD,
+        "Katman ekle: Sembole ya da seçili katmanın içine yeni katman",
         move || {
             let mut m = Menu::new().header(texts::INTO_SYMBOL);
             for t in layer_types(&kind) {
@@ -125,14 +118,7 @@ pub(super) fn layer_list(d: &Designer) -> Element<'_, Message> {
     )
     .spacing(2);
     let tool = |glyph: &str, words: &str, press: Option<Message>| -> Element<'_, Message> {
-        tip(
-            button(parts::tool_face(glyph))
-                .padding([3, 5])
-                .style(style::button::ghost)
-                .on_press_maybe(press),
-            Tip::new(words.to_owned()),
-            Position::Top,
-        )
+        crate::style::strip::icon_button(parts::glyph(glyph), words, press)
     };
     let at = d.selected;
     let exists = model::layer_at(symbol, at).is_some();

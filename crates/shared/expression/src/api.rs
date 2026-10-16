@@ -608,6 +608,10 @@ enum EditJson {
         tree: usize,
         at: [f64; 2],
     },
+    Wrap {
+        node: String,
+        key: String,
+    },
 }
 kentos_geometry_core::json_tagged!(EditJson, "op",
     Add => "add" { key, at },
@@ -628,6 +632,7 @@ kentos_geometry_core::json_tagged!(EditJson, "op",
     AddPort => "addPort" { node },
     RemovePort => "removePort" { node, port },
     Move => "move" { tree, at },
+    Wrap => "wrap" { node, key },
 );
 
 impl From<EditJson> for Edit {
@@ -651,6 +656,7 @@ impl From<EditJson> for Edit {
             EditJson::AddPort { node } => Edit::AddPort { node },
             EditJson::RemovePort { node, port } => Edit::RemovePort { node, port },
             EditJson::Move { tree, at: [x, y] } => Edit::Move { tree, at: (x, y) },
+            EditJson::Wrap { node, key } => Edit::Wrap { node, key },
         }
     }
 }

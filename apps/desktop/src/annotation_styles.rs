@@ -359,7 +359,7 @@ impl App {
         } else {
             String::new()
         };
-        self.say(
+        self.announce(
             Level::Success,
             format!("{title} stilleri kaydedildi{followed}."),
         );

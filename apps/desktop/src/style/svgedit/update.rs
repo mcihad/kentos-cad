@@ -200,6 +200,10 @@ impl App {
                     ed.say(format!("“{name}” kaydedildi."));
                 }
                 self.svgedit_saved(&id);
+                self.toast_saved(
+                    format!("“{name}” kaydedildi"),
+                    format!("{} › {}", source.label(), path.join(" › ")),
+                );
                 true
             }
             Err(e) => {
@@ -317,8 +321,11 @@ impl App {
                     }
                 }
             }
+            // Kaydet closes the editor once the drawing is in the library; the notice says where it went.
             Event::Save => {
-                self.svgedit_save();
+                if self.svgedit_save() {
+                    self.close_svg_editor();
+                }
             }
             Event::Name(t) => {
                 ed.name = t;

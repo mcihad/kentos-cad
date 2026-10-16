@@ -579,6 +579,8 @@ pub enum Message {
     /// İkinci sistem: the project's second coordinate system, how geographic
     /// values are written (second_crs.rs, docs/adr/0167 §1).
     SecondCrs(crate::second_crs::Event),
+    /// A notice closed, by its ×, its time or Tümünü kapat (toasts.rs).
+    ToastClosed(kentos_ui::widget::toast::Id),
 }
 
 /// A finished save: which opened drawing, where, and the revision written.
@@ -980,6 +982,8 @@ pub struct App {
     pub(crate) sheet_library: crate::sheet_library::SheetLibrary,
     /// What the sheet mode's tables, coordinate lists and legends were last given for (sheet_inputs.rs).
     pub(crate) sheet_data_key: Option<u64>,
+    /// The window's notices in its corner (toasts.rs): a save that closed its window, a copy.
+    pub(crate) toasts: kentos_ui::widget::Toasts<Message>,
 }
 
 impl App {
@@ -1111,6 +1115,7 @@ impl App {
             sheet_attributes: std::cell::Cell::new(false),
             sheet_library: crate::sheet_library::SheetLibrary::default(),
             sheet_data_key: None,
+            toasts: kentos_ui::widget::Toasts::new(),
             session: Session::new(),
             spatial: Spatial::new(),
             styles: crate::style::Styles::new(),
@@ -1854,6 +1859,9 @@ impl App {
             Message::Snap(event) => self.snap_event(event),
             Message::ScreenScale(event) => return self.screen_scale_event(event),
             Message::SecondCrs(event) => self.second_crs_event(event),
+            Message::ToastClosed(id) => {
+                self.toasts.dismiss(id);
+            }
         }
         Task::none()
     }

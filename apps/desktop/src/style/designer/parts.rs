@@ -10,7 +10,6 @@ use iced::widget::{button, column, row};
 use iced::{Center, Element, Fill};
 use kentos_expression::js::number;
 use kentos_native_style::designer::{Choice, LayerPath, Patch, js_value, set};
-use kentos_ui::icon::icon;
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::widget::tree_view::Check;
@@ -37,6 +36,11 @@ pub(super) struct Env<'a> {
     pub step: usize,
     /// Whether the layer takes draw effects: a symbol's own layers (docs/adr/0226 §2).
     pub effects: bool,
+    /// The fields of the layer the symbol is for (the layer style's, else the active one), with
+    /// how many objects have each: an expression's Ekle ▾ offers them.
+    pub fields: &'a [(String, usize)],
+    /// Whether ε may open the İfade oluşturucu (a drawing is open).
+    pub builder: bool,
 }
 
 /// A change of the chosen layer.
@@ -122,11 +126,10 @@ fn expression<'a>(env: &Env<'_>, key: &'static str, plain: Value) -> Element<'a,
     let at = env.at;
     let back = fallback.clone().unwrap_or(plain);
     let kept = fallback.clone();
-    let line = fields::text(
-        field_id(&format!("{key}:expr")),
+    expression_block(
+        env,
+        key,
         text,
-        "\"Alan\" ya da ifade",
-        true,
         move |t| {
             let mut v = json!({ "expr": t });
             if let (Some(o), Some(f)) = (v.as_object_mut(), &kept) {
@@ -134,14 +137,39 @@ fn expression<'a>(env: &Env<'_>, key: &'static str, plain: Value) -> Element<'a,
             }
             edit(at, key, None, Some(set(key, v)))
         },
+        fields::fx(true, edit(at, key, None, Some(set(key, back)))),
+    )
+}
+
+/// An ƒ value's expression (`key`: the layer's key, or `step.i.field` of a generator's step): its
+/// line with the pressed ƒ beside it, Ekle ▾ and İfade oluşturucu… under it, and the fallback's note.
+pub(super) fn expression_block<'a>(
+    env: &Env<'_>,
+    key: &str,
+    text: &str,
+    on_input: impl Fn(String) -> Message + 'a,
+    fx: Element<'a, Message>,
+) -> Element<'a, Message> {
+    let at = env.at;
+    let (k1, k2) = (key.to_owned(), key.to_owned());
+    let (line, aids) = fields::expression(
+        field_id(&format!("{key}:expr")),
+        text,
+        "Alan ya da ifade",
+        env.fields,
+        on_input,
+        move |t| {
+            ev(Event::ExprInsert {
+                at,
+                key: k1.clone(),
+                text: t,
+            })
+        },
+        env.builder.then(|| ev(Event::OpenBuilder { at, key: k2 })),
     );
     column![
-        row![
-            line,
-            fields::fx(true, edit(at, key, None, Some(set(key, back))))
-        ]
-        .spacing(6)
-        .align_y(Center),
+        row![line, fx].spacing(6).align_y(Center),
+        aids,
         fields::hint("İfade boş sonuç verirse sabit değer kullanılır.")
     ]
     .spacing(4)
@@ -525,9 +553,4 @@ pub(super) fn plain_color<'a>(
 /// A small helper for the icon of a tool.
 pub(super) fn glyph(name: &str) -> kentos_ui::icon::Icon {
     crate::icons::from_web(Some(name))
-}
-
-/// A tool's face: its icon.
-pub(super) fn tool_face<'a>(name: &str) -> Element<'a, Message> {
-    icon(glyph(name)).size(15.0).into()
 }

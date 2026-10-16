@@ -27,6 +27,7 @@ pub mod scene;
 mod scene_tests;
 #[cfg(test)]
 mod screens;
+pub mod strip;
 pub mod svg;
 pub mod svgedit;
 pub mod thumbs;

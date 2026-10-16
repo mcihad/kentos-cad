@@ -385,7 +385,7 @@ impl App {
         self.networks.window = None;
         self.dialog = None;
         self.networks_follow();
-        self.say(Level::Info, format!("Ağlar kaydedildi: {} ağ.", now.len()));
+        self.announce(Level::Info, format!("Ağlar kaydedildi: {} ağ.", now.len()));
         Task::none()
     }
 

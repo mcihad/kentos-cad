@@ -31,11 +31,15 @@ mod attribute_table;
 mod attribute_values;
 #[cfg(test)]
 mod audit_scenes;
+#[cfg(test)]
+mod block_attr_scenes;
 mod block_attributes;
-mod blocks;
 mod block_card;
 mod block_editor;
+#[cfg(test)]
+mod block_scenes;
 mod block_schedule;
+mod blocks;
 mod blocks_files;
 mod blocks_panel;
 mod bottom;
@@ -102,10 +106,6 @@ mod icons;
 mod image_scenes;
 #[cfg(test)]
 mod impact_scenes;
-#[cfg(test)]
-mod block_attr_scenes;
-#[cfg(test)]
-mod block_scenes;
 #[cfg(test)]
 mod imperial_scenes;
 mod info_card;
@@ -308,6 +308,7 @@ mod text_field;
 mod text_file;
 #[cfg(test)]
 mod text_scenes;
+mod toasts;
 #[cfg(test)]
 mod tools_scenes;
 #[cfg(test)]

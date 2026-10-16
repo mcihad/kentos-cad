@@ -697,7 +697,7 @@ impl App {
                 },
             );
         }
-        self.say(
+        self.announce(
             Level::Success,
             "Proje ayarları kaydedildi. Proje dosyasıyla birlikte saklanacak.",
         );

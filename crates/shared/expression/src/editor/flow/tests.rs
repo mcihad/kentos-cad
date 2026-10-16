@@ -442,3 +442,42 @@ fn every_palette_entry_makes_a_node() {
         }
     }
 }
+
+/// Sar: a node from the palette takes a node's place, the node in its first input.
+#[test]
+fn wrapping_puts_the_node_into_the_new_one_s_first_input() {
+    let wrap = |trees: &[Tree], node: &str, key: &str| {
+        edit(
+            trees,
+            &Edit::Wrap {
+                node: node.into(),
+                key: key.into(),
+            },
+            &schema(),
+        )
+    };
+    // The result's expression, with + : `$alan + ?`, the new node chosen.
+    let (t, focus) = wrap(&one("$alan"), "0", "op:+").expect("wrapped");
+    assert_eq!(texts(&t), ["$alan + ?"]);
+    assert_eq!(focus.as_deref(), Some("0"));
+    // A node inside: its parent's input holds the new node.
+    let (t, focus) = wrap(&one("yuvarla($alan * 2, 1)"), "0.0", "func:abs").expect("wrapped");
+    assert_eq!(texts(&t), ["yuvarla(mutlak($alan * 2), 1)"]);
+    assert_eq!(focus.as_deref(), Some("0.0"));
+    // An optional last input wrapped stays where it was.
+    let (t, _) = wrap(&one("yuvarla($alan, 1)"), "0.1", "op:+").expect("wrapped");
+    assert_eq!(texts(&t), ["yuvarla($alan, 1 + ?)"]);
+    // A tree apart keeps its place.
+    let trees = vec![Tree::new("", None), Tree::new("Ada", Some((-300.0, 40.0)))];
+    let (t, focus) = wrap(&trees, "1", "func:büyük").expect("wrapped");
+    assert_eq!(texts(&t), ["", "büyük(Ada)"]);
+    assert_eq!(t[1].at, Some((-300.0, 40.0)));
+    assert_eq!(focus.as_deref(), Some("1"));
+    // Nothing that takes no value, and not the result itself.
+    assert!(wrap(&one("$alan"), "0", "lit:number").is_err());
+    assert!(wrap(&one("$alan"), "0", "field:Ada").is_err());
+    assert!(wrap(&one("$alan"), "r", "op:+").is_err());
+    // The texts it writes read back to the same trees.
+    let (t, _) = wrap(&one("Kat > 2"), "0.1", "op:*").expect("wrapped");
+    assert_eq!(texts(&t), ["Kat > 2 * ?"]);
+}

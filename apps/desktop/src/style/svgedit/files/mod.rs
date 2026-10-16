@@ -574,15 +574,17 @@ impl App {
                 ed.name = name.clone();
                 ed.path_text = parts.join(" / ");
                 ed.saved();
-                ed.say(format!(
-                    "“{name}” {} kitaplığına kaydedildi.",
-                    if form.to == Source::User {
-                        "Kitaplığım"
-                    } else {
-                        "Proje"
-                    }
-                ));
+                let shelf = if form.to == Source::User {
+                    "Kitaplığım"
+                } else {
+                    "Proje"
+                };
+                ed.say(format!("“{name}” {shelf} kitaplığına kaydedildi."));
                 self.svgedit_saved(&id);
+                self.toast_saved(
+                    format!("“{name}” kaydedildi"),
+                    format!("{shelf} › {}", parts.join(" › ")),
+                );
             }
             Err(e) => {
                 if let Some(ed) = self.styles.svg_editor.as_mut() {

@@ -5,13 +5,9 @@
 //! with its kinds, the rulers' switch, and the zoom. Every entry says its
 //! key; a menu that does not fit the window scrolls.
 
-use iced::widget::{Row, button, container, row, space};
-use iced::{Center, Element, Fill, Theme};
-use kentos_ui::icon::{Icon, Tone, icon};
-use kentos_ui::label;
-use kentos_ui::style as ui_style;
-use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::{Menu, MenuButton, Tip, tip};
+use iced::Element;
+use kentos_ui::icon::Icon;
+use kentos_ui::widget::Menu;
 
 use super::actions::{Action, PathOp, Restack, Same};
 use super::files::{self, FileCmd};
@@ -19,64 +15,6 @@ use super::icons::svg_icon;
 use super::state::{SNAP_KINDS, SvgEditor, Tab};
 use super::{Event, change, ev};
 use crate::app::Message;
-
-/// A button of the bar: an icon, words and a chevron when it opens a menu.
-fn face<'a>(glyph: Icon, words: &str, chevron: bool) -> Element<'a, Message> {
-    let mut r = row![
-        icon(glyph).size(14.0),
-        label::body(words.to_owned()).wrapping(iced::widget::text::Wrapping::None)
-    ]
-    .spacing(6)
-    .align_y(Center);
-    if chevron {
-        r = r.push(icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted));
-    }
-    container(r).padding([3, 8]).into()
-}
-
-fn bar_button<'a>(
-    glyph: Icon,
-    words: &str,
-    tip_text: &str,
-    press: Message,
-    pressed: bool,
-) -> Element<'a, Message> {
-    tip(
-        button(face(glyph, words, false))
-            .padding(0)
-            .style(move |t: &Theme, s| {
-                if pressed {
-                    ui_style::button::tool(true)(t, s)
-                } else {
-                    ui_style::button::secondary(t, s)
-                }
-            })
-            .on_press(press),
-        Tip::new(tip_text.to_owned()),
-        iced::widget::tooltip::Position::Bottom,
-    )
-}
-
-fn menu_button<'a>(
-    glyph: Icon,
-    words: &str,
-    tip_text: &str,
-    menu: impl Fn() -> Menu<Message> + 'a,
-) -> Element<'a, Message> {
-    let b = container(face(glyph, words, true)).style(|t: &Theme| container::Style {
-        border: iced::Border {
-            color: Tokens::of(t).border,
-            width: 1.0,
-            radius: kentos_ui::theme::shape::radius(4.0).into(),
-        },
-        ..container::Style::default()
-    });
-    tip(
-        MenuButton::new(b, menu),
-        Tip::new(tip_text.to_owned()),
-        iced::widget::tooltip::Position::Bottom,
-    )
-}
 
 fn path_menu(ed: &SvgEditor) -> Menu<Message> {
     let offset = kentos_expression::js::number::to_string(ed.ui.offset);
@@ -351,171 +289,100 @@ fn snap_menu(ed: &SvgEditor) -> Menu<Message> {
     )
 }
 
-/// The bar over the canvas; it wraps to a second line on a narrow middle.
+/// The bar over the canvas (style/strip.rs): the file's group, the drawing's menus, then history, the
+/// aids and the zoom; it wraps group after group on a narrow middle.
 pub fn bar<'a>(ed: &'a SvgEditor) -> Element<'a, Message> {
+    use crate::style::strip;
     let snap_on = ed.options.snap_objects;
     let rulers_on = ed.options.rulers;
-    let snap = row![
-        bar_button(
-            Icon::Magnet,
-            "Kenet",
-            "Şekillere, kılavuzlara ve tuvale kenetle (%)",
-            change(move |ed| {
-                ed.options.snap_objects = !snap_on;
-                ed.snapper.reset();
-            }),
-            snap_on,
-        ),
-        tip(
-            MenuButton::new(
-                container(icon(Icon::ChevronDown).size(12.0))
-                    .center_x(typography::scaled(20.0))
-                    .center_y(typography::scaled(28.0)),
-                move || snap_menu(ed),
-            ),
-            Tip::new("Kenet türleri".to_owned()),
-            iced::widget::tooltip::Position::Bottom,
-        ),
-    ]
-    .spacing(0)
-    .align_y(Center);
-    let zoom_btn = |glyph: Icon, words: &str, press: Message| {
-        tip(
-            button(
-                container(icon(glyph).size(14.0))
-                    .center_x(typography::scaled(26.0))
-                    .center_y(typography::scaled(26.0)),
-            )
-            .padding(0)
-            .style(ui_style::button::ghost)
-            .on_press(press),
-            Tip::new(words.to_owned()),
-            iced::widget::tooltip::Position::Bottom,
-        )
-    };
-    let files_group: Vec<Element<'a, Message>> = vec![
-        menu_button(
+    let items: Vec<Element<'a, Message>> = vec![
+        strip::menu(
             Icon::Folder,
             "Dosya",
-            "Aç, kitaplıktan aç, panodan al, dışa aktar, farklı kaydet, belge özellikleri",
+            "Dosya: Aç, kitaplıktan aç, panodan al, dışa aktar, farklı kaydet, belge özellikleri",
             move || files::file_menu(ed),
         ),
-        bar_button(
+        strip::icon_button(
             crate::icons::from_web(Some("layers")),
-            "Altlık…",
-            "İzleme altlığı: PNG, JPEG ya da SVG görüntüsünü kilitli, yarı saydam arka plan olarak koyar",
-            ev(Event::File(files::Event::Cmd(FileCmd::AddReference))),
-            false,
+            "Altlık…: PNG, JPEG ya da SVG görüntüsünü kilitli, yarı saydam izleme altlığı olarak koyar",
+            Some(ev(Event::File(files::Event::Cmd(FileCmd::AddReference)))),
         ),
-        bar_button(
+        strip::icon_button(
             crate::icons::from_web(Some("spline")),
-            "Bitmap izle…",
-            "Bir görüntüyü (altlığı ya da dosyayı) delikli yollara çevirir",
-            ev(Event::File(files::Event::Cmd(FileCmd::Trace))),
-            false,
+            "Bitmap izle…: Bir görüntüyü (altlığı ya da dosyayı) delikli yollara çevirir",
+            Some(ev(Event::File(files::Event::Cmd(FileCmd::Trace)))),
         ),
-        bar_button(
+        strip::icon_button(
             Icon::Export,
-            "Dışa aktar…",
-            "SVG (sembol ya da düz renkli) ya da PNG olarak kaydet veya panoya kopyala (Ctrl+Shift+E)",
-            ev(Event::File(files::Event::Cmd(FileCmd::Export))),
-            false,
+            "Dışa aktar…: SVG (sembol ya da düz renkli) ya da PNG olarak kaydet veya panoya kopyala (Ctrl+Shift+E)",
+            Some(ev(Event::File(files::Event::Cmd(FileCmd::Export)))),
         ),
-        bar_button(
+        strip::icon_toggle(
             Icon::Terminal,
-            "Kaynak",
-            "SVG kaynağı: seçilen şeklin öğesi vurgulanır; düzenleyip Uygula ile çizime aktarın (Ctrl+Shift+X)",
-            ev(Event::File(files::Event::Cmd(FileCmd::ToggleSource))),
+            "Kaynak: SVG kaynağı; seçilen şeklin öğesi vurgulanır, düzenleyip Uygula ile çizime aktarın (Ctrl+Shift+X)",
             ed.files.source.is_some(),
+            ev(Event::File(files::Event::Cmd(FileCmd::ToggleSource))),
         ),
-    ];
-    let edit_group: Vec<Element<'a, Message>> = vec![
-        menu_button(
+        strip::divider(),
+        strip::menu(
             Icon::Svg(svg_icon("pathUnion")),
             "Yol",
-            "Yol işlemleri: birleşim, fark, kesişim, çizgiyi yola çevir, küçült/büyüt, sadeleştir",
+            "Yol: Birleşim, fark, kesişim, çizgiyi yola çevir, küçült/büyüt, sadeleştir",
             move || path_menu(ed),
         ),
-        menu_button(
+        strip::menu(
             Icon::Svg(svg_icon("alignLeft")),
             "Nesne",
-            "Hizala, dönüştür, dizi, sıra, grup",
+            "Nesne: Hizala, dönüştür, dizi, sıra, grup",
             object_menu,
         ),
-        menu_button(
+        strip::menu(
             Icon::Svg(svg_icon("selectSame")),
             "Seç",
-            "Tümünü seç, ters çevir, benzerini seç",
+            "Seç: Tümünü seç, ters çevir, benzerini seç",
             select_menu,
         ),
-    ];
-    let history = |glyph: Icon, words: &str, press: Option<Message>| {
-        tip(
-            button(
-                container(icon(glyph).size(14.0))
-                    .center_x(typography::scaled(26.0))
-                    .center_y(typography::scaled(26.0)),
-            )
-            .padding(0)
-            .style(ui_style::button::ghost)
-            .on_press_maybe(press),
-            Tip::new(words.to_owned()),
-            iced::widget::tooltip::Position::Bottom,
-        )
-    };
-    let view_group: Vec<Element<'a, Message>> = vec![
-        history(
+        strip::divider(),
+        strip::icon_button(
             Icon::Undo,
             "Geri al (Ctrl+Z)",
             ed.can_undo().then(|| ev(Event::Undo)),
         ),
-        history(
+        strip::icon_button(
             Icon::Redo,
             "Yinele (Ctrl+Y)",
             ed.can_redo().then(|| ev(Event::Redo)),
         ),
-        snap.into(),
-        bar_button(
+        strip::divider(),
+        strip::split_toggle(
+            Icon::Magnet,
+            "Kenet: Şekillere, kılavuzlara ve tuvale kenetle (%)",
+            snap_on,
+            change(move |ed| {
+                ed.options.snap_objects = !snap_on;
+                ed.snapper.reset();
+            }),
+            "Kenet türleri",
+            move || snap_menu(ed),
+        ),
+        strip::icon_toggle(
             Icon::Svg(svg_icon("rulers")),
-            "Cetvel",
-            "Cetveller: kılavuz çekmek için cetvelden sürükleyin",
+            "Cetvel: Kılavuz çekmek için cetvelden sürükleyin",
+            rulers_on,
             change(move |ed| {
                 ed.options.rulers = !rulers_on;
                 ed.touch();
             }),
-            rulers_on,
         ),
-        zoom_btn(Icon::ZoomOut, "Uzaklaş (−)", ev(Event::ZoomBy(1.0 / 1.25))),
-        container(label::body(ed.camera.percent()).font(typography::mono()))
-            .center_x(typography::scaled(52.0))
-            .into(),
-        zoom_btn(Icon::ZoomIn, "Yakınlaş (+)", ev(Event::ZoomBy(1.25))),
-        zoom_btn(Icon::ZoomExtents, "Tuvale sığdır (0)", ev(Event::Fit)),
+        strip::divider(),
+        strip::icon_button(
+            Icon::ZoomOut,
+            "Uzaklaş (−)",
+            Some(ev(Event::ZoomBy(1.0 / 1.25))),
+        ),
+        strip::readout(ed.camera.percent(), "Görünümün ölçeği", 46.0),
+        strip::icon_button(Icon::ZoomIn, "Yakınlaş (+)", Some(ev(Event::ZoomBy(1.25)))),
+        strip::icon_button(Icon::ZoomExtents, "Tuvale sığdır (0)", Some(ev(Event::Fit))),
     ];
-    let sep = || -> Element<'a, Message> {
-        container(space())
-            .width(1)
-            .height(typography::scaled(18.0))
-            .style(|t: &Theme| container::Style {
-                background: Some(iced::Background::Color(Tokens::of(t).border)),
-                ..container::Style::default()
-            })
-            .into()
-    };
-    // One row that wraps button by button on a narrow middle (the web's bar).
-    let mut items = files_group;
-    items.push(sep());
-    items.extend(edit_group);
-    items.push(sep());
-    items.extend(view_group);
-    container(
-        Row::with_children(items)
-            .spacing(6)
-            .align_y(Center)
-            .wrap()
-            .vertical_spacing(6),
-    )
-    .padding([8, 10])
-    .width(Fill)
-    .into()
+    iced::widget::column![strip::strip(items), strip::rule()].into()
 }

@@ -295,9 +295,10 @@ fn functions_menu(field: &Field) -> Menu<Message> {
     })
 }
 
-/// An expression: one line in mono, and menus that put in the layer's
-/// fields (with how many objects have each), the variables and functions.
-/// `compact`: the three menus behind one ƒ (a rule's condition).
+/// An expression: one line in mono, then Ekle ▾ (the layer's fields with how many objects have
+/// each, the variables and the functions) and Oluşturucu… for the İfade oluşturucu, as the
+/// symbol designer's ƒ values have them (style/fields.rs). `compact`: all of it behind one ƒ (a
+/// rule's condition, in a row of the rules' table).
 pub(super) fn expression<'a>(
     field: Field,
     text: &str,
@@ -314,29 +315,29 @@ pub(super) fn expression<'a>(
         .style(style::field::validated(invalid))
         .on_input(move |t| ev(Event::Expr(on.clone(), t)))
         .width(Fill);
-    let fields = fields.to_vec();
     if compact {
+        let fields = fields.to_vec();
         let menu = move || {
             Menu::new()
                 .submenu("Alanlar", fields_menu(&field, &fields))
                 .submenu("Değişkenler", variables_menu(&field))
                 .submenu("İşlevler", functions_menu(&field))
+                .separator()
+                .item("İfade oluşturucu…", ev(Event::OpenBuilder(field.clone())))
+                .icon(crate::icons::from_web(Some("expression")))
         };
         return row![line, MenuButton::new(menu_face("ƒ"), menu)]
             .spacing(2)
             .align_y(Center)
             .into();
     }
-    let (f1, f2, f3) = (field.clone(), field.clone(), field);
-    row![
-        line,
-        MenuButton::new(menu_face("Alanlar"), move || fields_menu(&f1, &fields)),
-        MenuButton::new(menu_face("Değişkenler"), move || variables_menu(&f2)),
-        MenuButton::new(menu_face("İşlevler"), move || functions_menu(&f3)),
-    ]
-    .spacing(2)
-    .align_y(Center)
-    .into()
+    let put = field.clone();
+    let aids = crate::style::fields::expression_aids(
+        fields,
+        move |t| ev(Event::Insert(put.clone(), t)),
+        Some(ev(Event::OpenBuilder(field))),
+    );
+    row![line, aids].spacing(4).align_y(Center).into()
 }
 
 /// A problem under a field, in the danger colour.
