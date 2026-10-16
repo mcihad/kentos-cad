@@ -3678,6 +3678,330 @@
             ],
             "type": "object"
           },
+          "FormBody": {
+            "additionalProperties": false,
+            "description": "A form's content: its items and the draft's revision (each kept change adds one).",
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/$defs/FormItem"
+                },
+                "type": "array"
+              },
+              "revision": {
+                "description": "Raised by one with every saved change to the draft: an update names the revision it was made on.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "revision",
+              "items"
+            ],
+            "type": "object"
+          },
+          "FormCheck": {
+            "additionalProperties": false,
+            "description": "A check of a field: an expression that must be true when the field is shown and filled, and what\nthe form says when it is not.",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "rule": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule",
+              "message"
+            ],
+            "type": "object"
+          },
+          "FormItem": {
+            "description": "An item of a form: a tab (only at the top), a group, a field or a note.",
+            "oneOf": [
+              {
+                "description": "A tab: its items show when it is chosen. Tabs stand at the top only, and then the top holds\nnothing but tabs.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "items": {
+                    "items": {
+                      "$ref": "#/$defs/FormItem"
+                    },
+                    "type": "array"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "tab",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "label",
+                  "items"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
+                "properties": {
+                  "columns": {
+                    "description": "1 or 2; none: 1.",
+                    "format": "uint8",
+                    "maximum": 255,
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "count"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "items": {
+                    "items": {
+                      "$ref": "#/$defs/FormItem"
+                    },
+                    "type": "array"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "group",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "items"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "A field of the layer.",
+                "properties": {
+                  "checks": {
+                    "description": "What the record must satisfy, in order.",
+                    "items": {
+                      "$ref": "#/$defs/FormCheck"
+                    },
+                    "type": "array"
+                  },
+                  "default": {
+                    "description": "The value an empty field shows when the form opens, in the field's canonical text; written\nonly when the record is saved.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "field": {
+                    "description": "The layer field's key ([`LayerField::key`](crate::LayerField::key)): its stable id or its name.",
+                    "type": "string"
+                  },
+                  "help": {
+                    "description": "A line under the field.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "id": {
+                    "description": "The item's id, unique in the form.",
+                    "type": "string"
+                  },
+                  "label": {
+                    "description": "The label; none: the field's alias or name.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "placeholder": {
+                    "description": "The empty box's hint.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "readOnly": {
+                    "description": "Shown, never edited; written only as `true`.",
+                    "type": "boolean"
+                  },
+                  "readOnlyWhen": {
+                    "description": "Locked when this expression is true.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "required": {
+                    "description": "May not be left empty while shown; written only as `true`. The layer field's own `required`\nholds as well.",
+                    "type": "boolean"
+                  },
+                  "requiredWhen": {
+                    "description": "Required when this expression is true (and the field is shown).",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "field",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "description": "Shown only when this expression is true (the record's fields by name).",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "widget": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/FormWidget"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "How it is edited; none: the field kind's own."
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "field"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A line of text: a hint for whoever fills the form.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "note",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "text"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "FormRelease": {
+            "additionalProperties": false,
+            "description": "A frozen copy of a form's body: what data entry and the write profile use.",
+            "properties": {
+              "body": {
+                "$ref": "#/$defs/FormBody"
+              },
+              "digest": {
+                "description": "The first 32 hex digits of the SHA-256 of the body's canonical JSON ([`body_digest`]).",
+                "type": "string"
+              },
+              "note": {
+                "description": "What changed, as the publisher wrote it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "version": {
+                "description": "1, 2, …: one more than the release before.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "version",
+              "digest",
+              "body"
+            ],
+            "type": "object"
+          },
+          "FormWidget": {
+            "description": "How a field is edited.",
+            "oneOf": [
+              {
+                "const": "text",
+                "description": "One line of text.",
+                "type": "string"
+              },
+              {
+                "const": "textArea",
+                "description": "Several lines of text.",
+                "type": "string"
+              },
+              {
+                "const": "number",
+                "description": "A number: integer or decimal fields.",
+                "type": "string"
+              },
+              {
+                "const": "date",
+                "description": "A date (YYYY-AA-GG).",
+                "type": "string"
+              },
+              {
+                "const": "check",
+                "description": "A check box: yes or no fields.",
+                "type": "string"
+              },
+              {
+                "const": "switch",
+                "description": "A switch: yes or no fields.",
+                "type": "string"
+              },
+              {
+                "const": "list",
+                "description": "A drop-down list: fields with a value list.",
+                "type": "string"
+              },
+              {
+                "const": "radio",
+                "description": "Radio buttons: fields with a value list.",
+                "type": "string"
+              },
+              {
+                "const": "segmented",
+                "description": "A segmented choice: fields with a short value list.",
+                "type": "string"
+              }
+            ]
+          },
           "GeographicDefinition": {
             "description": "Latitude and longitude on a datum.",
             "properties": {
@@ -5375,6 +5699,13 @@
               },
               "default": {
                 "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
                 "type": [
                   "string",
                   "null"
@@ -7997,6 +8328,46 @@
             ],
             "type": "string"
           },
+          "ProjectForm": {
+            "additionalProperties": false,
+            "description": "A form of the project.",
+            "properties": {
+              "draft": {
+                "$ref": "#/$defs/FormBody",
+                "description": "The draft the designer edits."
+              },
+              "enforce": {
+                "description": "The latest release's rules hold for every attribute write on the layer (the write profile);\nwritten only as `true`, and only with a release.",
+                "type": "boolean"
+              },
+              "id": {
+                "description": "Stable, unique in the project: letters, digits, `-`, `_` and `.`; 1–64 characters.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The layer the form edits: a layer's id (not a group's).",
+                "type": "string"
+              },
+              "name": {
+                "description": "What the lists show; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "releases": {
+                "description": "The frozen releases, oldest first; data entry uses the last.",
+                "items": {
+                  "$ref": "#/$defs/FormRelease"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "layer",
+              "draft"
+            ],
+            "type": "object"
+          },
           "ProjectPatch": {
             "description": "Metadata to replace; absent fields stay. Needs `expectedVersions[\"@project\"]`.",
             "properties": {
@@ -8151,6 +8522,13 @@
                   }
                 ],
                 "description": "A local project's unit (docs/adr/0165 §2); absent: metres. Only a\nproject without a coordinate system (SRID 0) has another."
+              },
+              "forms": {
+                "description": "The project's forms, in the order they were made (docs/adr/0401).",
+                "items": {
+                  "$ref": "#/$defs/ProjectForm"
+                },
+                "type": "array"
               },
               "layerStates": {
                 "description": "The project's named layer states (docs/adr/0177 §4), in the menu's order.",
@@ -12672,6 +13050,330 @@
             ],
             "type": "object"
           },
+          "FormBody": {
+            "additionalProperties": false,
+            "description": "A form's content: its items and the draft's revision (each kept change adds one).",
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/$defs/FormItem"
+                },
+                "type": "array"
+              },
+              "revision": {
+                "description": "Raised by one with every saved change to the draft: an update names the revision it was made on.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "revision",
+              "items"
+            ],
+            "type": "object"
+          },
+          "FormCheck": {
+            "additionalProperties": false,
+            "description": "A check of a field: an expression that must be true when the field is shown and filled, and what\nthe form says when it is not.",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "rule": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule",
+              "message"
+            ],
+            "type": "object"
+          },
+          "FormItem": {
+            "description": "An item of a form: a tab (only at the top), a group, a field or a note.",
+            "oneOf": [
+              {
+                "description": "A tab: its items show when it is chosen. Tabs stand at the top only, and then the top holds\nnothing but tabs.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "items": {
+                    "items": {
+                      "$ref": "#/$defs/FormItem"
+                    },
+                    "type": "array"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "tab",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "label",
+                  "items"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
+                "properties": {
+                  "columns": {
+                    "description": "1 or 2; none: 1.",
+                    "format": "uint8",
+                    "maximum": 255,
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "count"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "items": {
+                    "items": {
+                      "$ref": "#/$defs/FormItem"
+                    },
+                    "type": "array"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "group",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "items"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "A field of the layer.",
+                "properties": {
+                  "checks": {
+                    "description": "What the record must satisfy, in order.",
+                    "items": {
+                      "$ref": "#/$defs/FormCheck"
+                    },
+                    "type": "array"
+                  },
+                  "default": {
+                    "description": "The value an empty field shows when the form opens, in the field's canonical text; written\nonly when the record is saved.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "field": {
+                    "description": "The layer field's key ([`LayerField::key`](crate::LayerField::key)): its stable id or its name.",
+                    "type": "string"
+                  },
+                  "help": {
+                    "description": "A line under the field.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "id": {
+                    "description": "The item's id, unique in the form.",
+                    "type": "string"
+                  },
+                  "label": {
+                    "description": "The label; none: the field's alias or name.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "placeholder": {
+                    "description": "The empty box's hint.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "readOnly": {
+                    "description": "Shown, never edited; written only as `true`.",
+                    "type": "boolean"
+                  },
+                  "readOnlyWhen": {
+                    "description": "Locked when this expression is true.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "required": {
+                    "description": "May not be left empty while shown; written only as `true`. The layer field's own `required`\nholds as well.",
+                    "type": "boolean"
+                  },
+                  "requiredWhen": {
+                    "description": "Required when this expression is true (and the field is shown).",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "field",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "description": "Shown only when this expression is true (the record's fields by name).",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "widget": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/FormWidget"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "How it is edited; none: the field kind's own."
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "field"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A line of text: a hint for whoever fills the form.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "note",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "text"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "FormRelease": {
+            "additionalProperties": false,
+            "description": "A frozen copy of a form's body: what data entry and the write profile use.",
+            "properties": {
+              "body": {
+                "$ref": "#/$defs/FormBody"
+              },
+              "digest": {
+                "description": "The first 32 hex digits of the SHA-256 of the body's canonical JSON ([`body_digest`]).",
+                "type": "string"
+              },
+              "note": {
+                "description": "What changed, as the publisher wrote it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "version": {
+                "description": "1, 2, …: one more than the release before.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "version",
+              "digest",
+              "body"
+            ],
+            "type": "object"
+          },
+          "FormWidget": {
+            "description": "How a field is edited.",
+            "oneOf": [
+              {
+                "const": "text",
+                "description": "One line of text.",
+                "type": "string"
+              },
+              {
+                "const": "textArea",
+                "description": "Several lines of text.",
+                "type": "string"
+              },
+              {
+                "const": "number",
+                "description": "A number: integer or decimal fields.",
+                "type": "string"
+              },
+              {
+                "const": "date",
+                "description": "A date (YYYY-AA-GG).",
+                "type": "string"
+              },
+              {
+                "const": "check",
+                "description": "A check box: yes or no fields.",
+                "type": "string"
+              },
+              {
+                "const": "switch",
+                "description": "A switch: yes or no fields.",
+                "type": "string"
+              },
+              {
+                "const": "list",
+                "description": "A drop-down list: fields with a value list.",
+                "type": "string"
+              },
+              {
+                "const": "radio",
+                "description": "Radio buttons: fields with a value list.",
+                "type": "string"
+              },
+              {
+                "const": "segmented",
+                "description": "A segmented choice: fields with a short value list.",
+                "type": "string"
+              }
+            ]
+          },
           "GeographicDefinition": {
             "description": "Latitude and longitude on a datum.",
             "properties": {
@@ -13602,6 +14304,13 @@
               },
               "default": {
                 "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
                 "type": [
                   "string",
                   "null"
@@ -14736,6 +15445,46 @@
             ],
             "type": "string"
           },
+          "ProjectForm": {
+            "additionalProperties": false,
+            "description": "A form of the project.",
+            "properties": {
+              "draft": {
+                "$ref": "#/$defs/FormBody",
+                "description": "The draft the designer edits."
+              },
+              "enforce": {
+                "description": "The latest release's rules hold for every attribute write on the layer (the write profile);\nwritten only as `true`, and only with a release.",
+                "type": "boolean"
+              },
+              "id": {
+                "description": "Stable, unique in the project: letters, digits, `-`, `_` and `.`; 1–64 characters.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The layer the form edits: a layer's id (not a group's).",
+                "type": "string"
+              },
+              "name": {
+                "description": "What the lists show; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "releases": {
+                "description": "The frozen releases, oldest first; data entry uses the last.",
+                "items": {
+                  "$ref": "#/$defs/FormRelease"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "layer",
+              "draft"
+            ],
+            "type": "object"
+          },
           "ProjectSettings": {
             "description": "Project settings (`ProjectSettingsData`): saved with the drawing, the same for everyone who opens it.",
             "properties": {
@@ -14822,6 +15571,13 @@
                   }
                 ],
                 "description": "A local project's unit (docs/adr/0165 §2); absent: metres. Only a\nproject without a coordinate system (SRID 0) has another."
+              },
+              "forms": {
+                "description": "The project's forms, in the order they were made (docs/adr/0401).",
+                "items": {
+                  "$ref": "#/$defs/ProjectForm"
+                },
+                "type": "array"
               },
               "layerStates": {
                 "description": "The project's named layer states (docs/adr/0177 §4), in the menu's order.",
@@ -19766,6 +20522,330 @@
             ],
             "type": "object"
           },
+          "FormBody": {
+            "additionalProperties": false,
+            "description": "A form's content: its items and the draft's revision (each kept change adds one).",
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/$defs/FormItem"
+                },
+                "type": "array"
+              },
+              "revision": {
+                "description": "Raised by one with every saved change to the draft: an update names the revision it was made on.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "revision",
+              "items"
+            ],
+            "type": "object"
+          },
+          "FormCheck": {
+            "additionalProperties": false,
+            "description": "A check of a field: an expression that must be true when the field is shown and filled, and what\nthe form says when it is not.",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "rule": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule",
+              "message"
+            ],
+            "type": "object"
+          },
+          "FormItem": {
+            "description": "An item of a form: a tab (only at the top), a group, a field or a note.",
+            "oneOf": [
+              {
+                "description": "A tab: its items show when it is chosen. Tabs stand at the top only, and then the top holds\nnothing but tabs.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "items": {
+                    "items": {
+                      "$ref": "#/$defs/FormItem"
+                    },
+                    "type": "array"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "tab",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "label",
+                  "items"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
+                "properties": {
+                  "columns": {
+                    "description": "1 or 2; none: 1.",
+                    "format": "uint8",
+                    "maximum": 255,
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "count"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "items": {
+                    "items": {
+                      "$ref": "#/$defs/FormItem"
+                    },
+                    "type": "array"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "group",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "items"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "A field of the layer.",
+                "properties": {
+                  "checks": {
+                    "description": "What the record must satisfy, in order.",
+                    "items": {
+                      "$ref": "#/$defs/FormCheck"
+                    },
+                    "type": "array"
+                  },
+                  "default": {
+                    "description": "The value an empty field shows when the form opens, in the field's canonical text; written\nonly when the record is saved.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "field": {
+                    "description": "The layer field's key ([`LayerField::key`](crate::LayerField::key)): its stable id or its name.",
+                    "type": "string"
+                  },
+                  "help": {
+                    "description": "A line under the field.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "id": {
+                    "description": "The item's id, unique in the form.",
+                    "type": "string"
+                  },
+                  "label": {
+                    "description": "The label; none: the field's alias or name.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "placeholder": {
+                    "description": "The empty box's hint.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "readOnly": {
+                    "description": "Shown, never edited; written only as `true`.",
+                    "type": "boolean"
+                  },
+                  "readOnlyWhen": {
+                    "description": "Locked when this expression is true.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "required": {
+                    "description": "May not be left empty while shown; written only as `true`. The layer field's own `required`\nholds as well.",
+                    "type": "boolean"
+                  },
+                  "requiredWhen": {
+                    "description": "Required when this expression is true (and the field is shown).",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "field",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "description": "Shown only when this expression is true (the record's fields by name).",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "widget": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/FormWidget"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "How it is edited; none: the field kind's own."
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "field"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A line of text: a hint for whoever fills the form.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "note",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "text"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "FormRelease": {
+            "additionalProperties": false,
+            "description": "A frozen copy of a form's body: what data entry and the write profile use.",
+            "properties": {
+              "body": {
+                "$ref": "#/$defs/FormBody"
+              },
+              "digest": {
+                "description": "The first 32 hex digits of the SHA-256 of the body's canonical JSON ([`body_digest`]).",
+                "type": "string"
+              },
+              "note": {
+                "description": "What changed, as the publisher wrote it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "version": {
+                "description": "1, 2, …: one more than the release before.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "version",
+              "digest",
+              "body"
+            ],
+            "type": "object"
+          },
+          "FormWidget": {
+            "description": "How a field is edited.",
+            "oneOf": [
+              {
+                "const": "text",
+                "description": "One line of text.",
+                "type": "string"
+              },
+              {
+                "const": "textArea",
+                "description": "Several lines of text.",
+                "type": "string"
+              },
+              {
+                "const": "number",
+                "description": "A number: integer or decimal fields.",
+                "type": "string"
+              },
+              {
+                "const": "date",
+                "description": "A date (YYYY-AA-GG).",
+                "type": "string"
+              },
+              {
+                "const": "check",
+                "description": "A check box: yes or no fields.",
+                "type": "string"
+              },
+              {
+                "const": "switch",
+                "description": "A switch: yes or no fields.",
+                "type": "string"
+              },
+              {
+                "const": "list",
+                "description": "A drop-down list: fields with a value list.",
+                "type": "string"
+              },
+              {
+                "const": "radio",
+                "description": "Radio buttons: fields with a value list.",
+                "type": "string"
+              },
+              {
+                "const": "segmented",
+                "description": "A segmented choice: fields with a short value list.",
+                "type": "string"
+              }
+            ]
+          },
           "GeographicDefinition": {
             "description": "Latitude and longitude on a datum.",
             "properties": {
@@ -21463,6 +22543,13 @@
               },
               "default": {
                 "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
                 "type": [
                   "string",
                   "null"
@@ -24108,6 +25195,46 @@
             ],
             "type": "object"
           },
+          "ProjectForm": {
+            "additionalProperties": false,
+            "description": "A form of the project.",
+            "properties": {
+              "draft": {
+                "$ref": "#/$defs/FormBody",
+                "description": "The draft the designer edits."
+              },
+              "enforce": {
+                "description": "The latest release's rules hold for every attribute write on the layer (the write profile);\nwritten only as `true`, and only with a release.",
+                "type": "boolean"
+              },
+              "id": {
+                "description": "Stable, unique in the project: letters, digits, `-`, `_` and `.`; 1–64 characters.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The layer the form edits: a layer's id (not a group's).",
+                "type": "string"
+              },
+              "name": {
+                "description": "What the lists show; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "releases": {
+                "description": "The frozen releases, oldest first; data entry uses the last.",
+                "items": {
+                  "$ref": "#/$defs/FormRelease"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "layer",
+              "draft"
+            ],
+            "type": "object"
+          },
           "ProjectPermission": {
             "description": "A permission in a project. The names are fixed: commands (`permissions`\nin the catalog), the web, the desktop, Python and AI use them as they are.",
             "oneOf": [
@@ -24268,6 +25395,13 @@
                   }
                 ],
                 "description": "A local project's unit (docs/adr/0165 §2); absent: metres. Only a\nproject without a coordinate system (SRID 0) has another."
+              },
+              "forms": {
+                "description": "The project's forms, in the order they were made (docs/adr/0401).",
+                "items": {
+                  "$ref": "#/$defs/ProjectForm"
+                },
+                "type": "array"
               },
               "layerStates": {
                 "description": "The project's named layer states (docs/adr/0177 §4), in the menu's order.",
@@ -123478,6 +124612,13 @@
                   "null"
                 ]
               },
+              "id": {
+                "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "kind": {
                 "$ref": "#/$defs/LayerFieldKind"
               },
@@ -131957,6 +133098,13 @@
               },
               "default": {
                 "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
                 "type": [
                   "string",
                   "null"
@@ -140564,6 +141712,13 @@
               },
               "default": {
                 "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
                 "type": [
                   "string",
                   "null"
@@ -266963,6 +268118,7 @@
           "unknown_asset",
           "line_type_not_found",
           "constant_attribute",
+          "form_rules",
           "invalid_revision",
           "revision_conflict"
         ],
@@ -294083,6 +295239,13 @@
                   "null"
                 ]
               },
+              "id": {
+                "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "kind": {
                 "$ref": "#/$defs/LayerFieldKind"
               },
@@ -295671,6 +296834,13 @@
               },
               "default": {
                 "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
                 "type": [
                   "string",
                   "null"
@@ -299633,6 +300803,13 @@
                   "null"
                 ]
               },
+              "id": {
+                "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "kind": {
                 "$ref": "#/$defs/LayerFieldKind"
               },
@@ -301972,6 +303149,13 @@
                   "null"
                 ]
               },
+              "id": {
+                "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "kind": {
                 "$ref": "#/$defs/LayerFieldKind"
               },
@@ -304072,6 +305256,13 @@
                   "null"
                 ]
               },
+              "id": {
+                "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "kind": {
                 "$ref": "#/$defs/LayerFieldKind"
               },
@@ -306142,6 +307333,13 @@
               },
               "default": {
                 "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
                 "type": [
                   "string",
                   "null"
@@ -308998,6 +310196,13 @@
                   "null"
                 ]
               },
+              "id": {
+                "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "kind": {
                 "$ref": "#/$defs/LayerFieldKind"
               },
@@ -311386,6 +312591,13 @@
                   "null"
                 ]
               },
+              "id": {
+                "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "kind": {
                 "$ref": "#/$defs/LayerFieldKind"
               },
@@ -312489,6 +313701,13 @@
               },
               "default": {
                 "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
                 "type": [
                   "string",
                   "null"
@@ -321397,6 +322616,2058 @@
             "edit": {
               "kind": "delete",
               "name": "Ada 112 kuzey"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.forms.edit",
+      "version": 1,
+      "title": "Formlar",
+      "summary": "Projenin formlarını düzenler. Form bir katmanın veri giriş ekranıdır: sekmeler, gruplar ve katmanın alanlarına kararlı anahtarlarıyla (alanın id'si, yoksa adı) bağlı alan öğeleri; bir alanı gösteren (visibleWhen), zorunlu kılan (requiredWhen) ve kilitleyen (readOnlyWhen) kurallar ve kaydın geçmesi gereken denetimler (checks); kurallar İfadeyle seç'in dilindedir. edit.kind: create (katmanın formu; body verilmezse katmanın alanlarından, id verilmezse adından üretilir), update (taslağı değiştirir; body.revision taslağın şimdiki sürümü olmalı, değilse form_draft_changed; saklanan taslak bir sonraki sürümdür), rename, remove, publish (taslağı sıradaki yayın olarak dondurur; ön denetimde hata varsa form_preflight; en çok 50 yayın, fazlası en eskiyi düşürür: form_release_dropped), enforce (on: son yayının kuralları katmanın her öznitelik yazmasında uygulanır, cad.entities.set'te form_rules; yayın yoksa form_unpublished). Çıktının issues'u taslağın ön denetimidir (form_field_unknown, form_widget_unfit, form_rule_invalid, form_required_hidden …; uyarılar da). Proje ayarıdır, geri alma adımı değildir; nesneler değişmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "FormBody": {
+            "additionalProperties": false,
+            "description": "A form's content: its items and the draft's revision (each kept change adds one).",
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/$defs/FormItem"
+                },
+                "type": "array"
+              },
+              "revision": {
+                "description": "Raised by one with every saved change to the draft: an update names the revision it was made on.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "revision",
+              "items"
+            ],
+            "type": "object"
+          },
+          "FormCheck": {
+            "additionalProperties": false,
+            "description": "A check of a field: an expression that must be true when the field is shown and filled, and what\nthe form says when it is not.",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "rule": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule",
+              "message"
+            ],
+            "type": "object"
+          },
+          "FormItem": {
+            "description": "An item of a form: a tab (only at the top), a group, a field or a note.",
+            "oneOf": [
+              {
+                "description": "A tab: its items show when it is chosen. Tabs stand at the top only, and then the top holds\nnothing but tabs.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "items": {
+                    "items": {
+                      "$ref": "#/$defs/FormItem"
+                    },
+                    "type": "array"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "tab",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "label",
+                  "items"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
+                "properties": {
+                  "columns": {
+                    "description": "1 or 2; none: 1.",
+                    "format": "uint8",
+                    "maximum": 255,
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "count"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "items": {
+                    "items": {
+                      "$ref": "#/$defs/FormItem"
+                    },
+                    "type": "array"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "group",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "items"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "A field of the layer.",
+                "properties": {
+                  "checks": {
+                    "description": "What the record must satisfy, in order.",
+                    "items": {
+                      "$ref": "#/$defs/FormCheck"
+                    },
+                    "type": "array"
+                  },
+                  "default": {
+                    "description": "The value an empty field shows when the form opens, in the field's canonical text; written\nonly when the record is saved.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "field": {
+                    "description": "The layer field's key ([`LayerField::key`](crate::LayerField::key)): its stable id or its name.",
+                    "type": "string"
+                  },
+                  "help": {
+                    "description": "A line under the field.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "id": {
+                    "description": "The item's id, unique in the form.",
+                    "type": "string"
+                  },
+                  "label": {
+                    "description": "The label; none: the field's alias or name.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "placeholder": {
+                    "description": "The empty box's hint.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "readOnly": {
+                    "description": "Shown, never edited; written only as `true`.",
+                    "type": "boolean"
+                  },
+                  "readOnlyWhen": {
+                    "description": "Locked when this expression is true.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "required": {
+                    "description": "May not be left empty while shown; written only as `true`. The layer field's own `required`\nholds as well.",
+                    "type": "boolean"
+                  },
+                  "requiredWhen": {
+                    "description": "Required when this expression is true (and the field is shown).",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "field",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "description": "Shown only when this expression is true (the record's fields by name).",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "widget": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/FormWidget"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "How it is edited; none: the field kind's own."
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "field"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A line of text: a hint for whoever fills the form.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "note",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "text"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "FormWidget": {
+            "description": "How a field is edited.",
+            "oneOf": [
+              {
+                "const": "text",
+                "description": "One line of text.",
+                "type": "string"
+              },
+              {
+                "const": "textArea",
+                "description": "Several lines of text.",
+                "type": "string"
+              },
+              {
+                "const": "number",
+                "description": "A number: integer or decimal fields.",
+                "type": "string"
+              },
+              {
+                "const": "date",
+                "description": "A date (YYYY-AA-GG).",
+                "type": "string"
+              },
+              {
+                "const": "check",
+                "description": "A check box: yes or no fields.",
+                "type": "string"
+              },
+              {
+                "const": "switch",
+                "description": "A switch: yes or no fields.",
+                "type": "string"
+              },
+              {
+                "const": "list",
+                "description": "A drop-down list: fields with a value list.",
+                "type": "string"
+              },
+              {
+                "const": "radio",
+                "description": "Radio buttons: fields with a value list.",
+                "type": "string"
+              },
+              {
+                "const": "segmented",
+                "description": "A segmented choice: fields with a short value list.",
+                "type": "string"
+              }
+            ]
+          },
+          "FormsOp": {
+            "description": "What `cad.forms.edit` does.",
+            "oneOf": [
+              {
+                "description": "Yeni form: a form of a layer. No body: one made of the layer's fields; no id: one made of the\nname.",
+                "properties": {
+                  "body": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/FormBody"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "id": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "kind": {
+                    "const": "create",
+                    "type": "string"
+                  },
+                  "layer": {
+                    "description": "The layer's id.",
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "name",
+                  "layer"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Kaydet: the draft replaced. `body.revision` is the draft's revision it was made on; the draft\nkept is one past it.",
+                "properties": {
+                  "body": {
+                    "$ref": "#/$defs/FormBody"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "update",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "id",
+                  "body"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Yeniden adlandır.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "rename",
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "id",
+                  "name"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Sil.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "remove",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "id"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Yayınla: the draft frozen as the next release (its preflight without an error).",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "publish",
+                    "type": "string"
+                  },
+                  "note": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "id"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Kuralları uygula: whether the latest release is the layer's write profile.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "enforce",
+                    "type": "string"
+                  },
+                  "on": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "id",
+                  "on"
+                ],
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.forms.edit` v1.\n\nRefusals (`CommandError.code`), checked in this order: `invalid_form_id`, `invalid_form_name`,\n`invalid_form`; `invalid_revision`, `revision_conflict` (status `conflict`); `unknown_form`,\n`form_exists`, `too_many_forms`, `layer_not_found`, `not_a_layer`, `form_draft_changed` (status\n`conflict`), `form_preflight`, `form_unpublished`. Warnings: `form_release_dropped`.",
+        "properties": {
+          "edit": {
+            "$ref": "#/$defs/FormsOp"
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "edit"
+        ],
+        "title": "FormsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "FormBody": {
+            "additionalProperties": false,
+            "description": "A form's content: its items and the draft's revision (each kept change adds one).",
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/$defs/FormItem"
+                },
+                "type": "array"
+              },
+              "revision": {
+                "description": "Raised by one with every saved change to the draft: an update names the revision it was made on.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "revision",
+              "items"
+            ],
+            "type": "object"
+          },
+          "FormCheck": {
+            "additionalProperties": false,
+            "description": "A check of a field: an expression that must be true when the field is shown and filled, and what\nthe form says when it is not.",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "rule": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule",
+              "message"
+            ],
+            "type": "object"
+          },
+          "FormIssue": {
+            "additionalProperties": false,
+            "description": "What a form's preflight or a record's validation found (docs/adr/0401 §4, §6): a stable code,\nwhere (the item, the field's key, the rule) and the sentence that says it.",
+            "properties": {
+              "code": {
+                "description": "`form_field_unknown`, `form_required`, … (the forms core's `codes`).",
+                "type": "string"
+              },
+              "field": {
+                "description": "The layer field's key it is about.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "item": {
+                "description": "The item it is about.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "message": {
+                "type": "string"
+              },
+              "rule": {
+                "description": "The rule it is about: `visibleWhen`, `requiredWhen`, `readOnlyWhen`, `default`, `checks/0` …",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "severity": {
+                "$ref": "#/$defs/FormSeverity"
+              }
+            },
+            "required": [
+              "code",
+              "severity",
+              "message"
+            ],
+            "type": "object"
+          },
+          "FormItem": {
+            "description": "An item of a form: a tab (only at the top), a group, a field or a note.",
+            "oneOf": [
+              {
+                "description": "A tab: its items show when it is chosen. Tabs stand at the top only, and then the top holds\nnothing but tabs.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "items": {
+                    "items": {
+                      "$ref": "#/$defs/FormItem"
+                    },
+                    "type": "array"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "tab",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "label",
+                  "items"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
+                "properties": {
+                  "columns": {
+                    "description": "1 or 2; none: 1.",
+                    "format": "uint8",
+                    "maximum": 255,
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "count"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "items": {
+                    "items": {
+                      "$ref": "#/$defs/FormItem"
+                    },
+                    "type": "array"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "group",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "items"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "A field of the layer.",
+                "properties": {
+                  "checks": {
+                    "description": "What the record must satisfy, in order.",
+                    "items": {
+                      "$ref": "#/$defs/FormCheck"
+                    },
+                    "type": "array"
+                  },
+                  "default": {
+                    "description": "The value an empty field shows when the form opens, in the field's canonical text; written\nonly when the record is saved.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "field": {
+                    "description": "The layer field's key ([`LayerField::key`](crate::LayerField::key)): its stable id or its name.",
+                    "type": "string"
+                  },
+                  "help": {
+                    "description": "A line under the field.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "id": {
+                    "description": "The item's id, unique in the form.",
+                    "type": "string"
+                  },
+                  "label": {
+                    "description": "The label; none: the field's alias or name.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "placeholder": {
+                    "description": "The empty box's hint.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "readOnly": {
+                    "description": "Shown, never edited; written only as `true`.",
+                    "type": "boolean"
+                  },
+                  "readOnlyWhen": {
+                    "description": "Locked when this expression is true.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "required": {
+                    "description": "May not be left empty while shown; written only as `true`. The layer field's own `required`\nholds as well.",
+                    "type": "boolean"
+                  },
+                  "requiredWhen": {
+                    "description": "Required when this expression is true (and the field is shown).",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "field",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "description": "Shown only when this expression is true (the record's fields by name).",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "widget": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/FormWidget"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "How it is edited; none: the field kind's own."
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "field"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A line of text: a hint for whoever fills the form.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "note",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "text"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "FormRelease": {
+            "additionalProperties": false,
+            "description": "A frozen copy of a form's body: what data entry and the write profile use.",
+            "properties": {
+              "body": {
+                "$ref": "#/$defs/FormBody"
+              },
+              "digest": {
+                "description": "The first 32 hex digits of the SHA-256 of the body's canonical JSON ([`body_digest`]).",
+                "type": "string"
+              },
+              "note": {
+                "description": "What changed, as the publisher wrote it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "version": {
+                "description": "1, 2, …: one more than the release before.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "version",
+              "digest",
+              "body"
+            ],
+            "type": "object"
+          },
+          "FormSeverity": {
+            "description": "How much an issue weighs: an error stops a save or a publish, a warning is said.",
+            "enum": [
+              "error",
+              "warning"
+            ],
+            "type": "string"
+          },
+          "FormSummary": {
+            "description": "A form as the lists show it.",
+            "properties": {
+              "enforce": {
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "revision": {
+                "description": "The draft's revision.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              },
+              "version": {
+                "description": "The latest release's version; none: never published.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "layer",
+              "revision"
+            ],
+            "type": "object"
+          },
+          "FormWidget": {
+            "description": "How a field is edited.",
+            "oneOf": [
+              {
+                "const": "text",
+                "description": "One line of text.",
+                "type": "string"
+              },
+              {
+                "const": "textArea",
+                "description": "Several lines of text.",
+                "type": "string"
+              },
+              {
+                "const": "number",
+                "description": "A number: integer or decimal fields.",
+                "type": "string"
+              },
+              {
+                "const": "date",
+                "description": "A date (YYYY-AA-GG).",
+                "type": "string"
+              },
+              {
+                "const": "check",
+                "description": "A check box: yes or no fields.",
+                "type": "string"
+              },
+              {
+                "const": "switch",
+                "description": "A switch: yes or no fields.",
+                "type": "string"
+              },
+              {
+                "const": "list",
+                "description": "A drop-down list: fields with a value list.",
+                "type": "string"
+              },
+              {
+                "const": "radio",
+                "description": "Radio buttons: fields with a value list.",
+                "type": "string"
+              },
+              {
+                "const": "segmented",
+                "description": "A segmented choice: fields with a short value list.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectForm": {
+            "additionalProperties": false,
+            "description": "A form of the project.",
+            "properties": {
+              "draft": {
+                "$ref": "#/$defs/FormBody",
+                "description": "The draft the designer edits."
+              },
+              "enforce": {
+                "description": "The latest release's rules hold for every attribute write on the layer (the write profile);\nwritten only as `true`, and only with a release.",
+                "type": "boolean"
+              },
+              "id": {
+                "description": "Stable, unique in the project: letters, digits, `-`, `_` and `.`; 1–64 characters.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The layer the form edits: a layer's id (not a group's).",
+                "type": "string"
+              },
+              "name": {
+                "description": "What the lists show; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "releases": {
+                "description": "The frozen releases, oldest first; data entry uses the last.",
+                "items": {
+                  "$ref": "#/$defs/FormRelease"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "layer",
+              "draft"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.forms.edit` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "description": "Whether the settings changed.",
+            "type": "boolean"
+          },
+          "form": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProjectForm"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The form created, saved, renamed, published or enforced, as kept; none for a remove."
+          },
+          "forms": {
+            "description": "The project's forms afterwards, in order.",
+            "items": {
+              "$ref": "#/$defs/FormSummary"
+            },
+            "type": "array"
+          },
+          "issues": {
+            "description": "The draft's preflight afterwards (none for a remove).",
+            "items": {
+              "$ref": "#/$defs/FormIssue"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made against).",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "forms",
+          "issues",
+          "changed",
+          "revision"
+        ],
+        "title": "FormsEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "FormBody": {
+            "additionalProperties": false,
+            "description": "A form's content: its items and the draft's revision (each kept change adds one).",
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/$defs/FormItem"
+                },
+                "type": "array"
+              },
+              "revision": {
+                "description": "Raised by one with every saved change to the draft: an update names the revision it was made on.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "revision",
+              "items"
+            ],
+            "type": "object"
+          },
+          "FormCheck": {
+            "additionalProperties": false,
+            "description": "A check of a field: an expression that must be true when the field is shown and filled, and what\nthe form says when it is not.",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "rule": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule",
+              "message"
+            ],
+            "type": "object"
+          },
+          "FormIssue": {
+            "additionalProperties": false,
+            "description": "What a form's preflight or a record's validation found (docs/adr/0401 §4, §6): a stable code,\nwhere (the item, the field's key, the rule) and the sentence that says it.",
+            "properties": {
+              "code": {
+                "description": "`form_field_unknown`, `form_required`, … (the forms core's `codes`).",
+                "type": "string"
+              },
+              "field": {
+                "description": "The layer field's key it is about.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "item": {
+                "description": "The item it is about.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "message": {
+                "type": "string"
+              },
+              "rule": {
+                "description": "The rule it is about: `visibleWhen`, `requiredWhen`, `readOnlyWhen`, `default`, `checks/0` …",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "severity": {
+                "$ref": "#/$defs/FormSeverity"
+              }
+            },
+            "required": [
+              "code",
+              "severity",
+              "message"
+            ],
+            "type": "object"
+          },
+          "FormItem": {
+            "description": "An item of a form: a tab (only at the top), a group, a field or a note.",
+            "oneOf": [
+              {
+                "description": "A tab: its items show when it is chosen. Tabs stand at the top only, and then the top holds\nnothing but tabs.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "items": {
+                    "items": {
+                      "$ref": "#/$defs/FormItem"
+                    },
+                    "type": "array"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "tab",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "label",
+                  "items"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
+                "properties": {
+                  "columns": {
+                    "description": "1 or 2; none: 1.",
+                    "format": "uint8",
+                    "maximum": 255,
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "count"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "items": {
+                    "items": {
+                      "$ref": "#/$defs/FormItem"
+                    },
+                    "type": "array"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "group",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "items"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "A field of the layer.",
+                "properties": {
+                  "checks": {
+                    "description": "What the record must satisfy, in order.",
+                    "items": {
+                      "$ref": "#/$defs/FormCheck"
+                    },
+                    "type": "array"
+                  },
+                  "default": {
+                    "description": "The value an empty field shows when the form opens, in the field's canonical text; written\nonly when the record is saved.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "field": {
+                    "description": "The layer field's key ([`LayerField::key`](crate::LayerField::key)): its stable id or its name.",
+                    "type": "string"
+                  },
+                  "help": {
+                    "description": "A line under the field.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "id": {
+                    "description": "The item's id, unique in the form.",
+                    "type": "string"
+                  },
+                  "label": {
+                    "description": "The label; none: the field's alias or name.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "placeholder": {
+                    "description": "The empty box's hint.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "readOnly": {
+                    "description": "Shown, never edited; written only as `true`.",
+                    "type": "boolean"
+                  },
+                  "readOnlyWhen": {
+                    "description": "Locked when this expression is true.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "required": {
+                    "description": "May not be left empty while shown; written only as `true`. The layer field's own `required`\nholds as well.",
+                    "type": "boolean"
+                  },
+                  "requiredWhen": {
+                    "description": "Required when this expression is true (and the field is shown).",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "field",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "description": "Shown only when this expression is true (the record's fields by name).",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "widget": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/FormWidget"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "How it is edited; none: the field kind's own."
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "field"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A line of text: a hint for whoever fills the form.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "note",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "text"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "FormRelease": {
+            "additionalProperties": false,
+            "description": "A frozen copy of a form's body: what data entry and the write profile use.",
+            "properties": {
+              "body": {
+                "$ref": "#/$defs/FormBody"
+              },
+              "digest": {
+                "description": "The first 32 hex digits of the SHA-256 of the body's canonical JSON ([`body_digest`]).",
+                "type": "string"
+              },
+              "note": {
+                "description": "What changed, as the publisher wrote it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "version": {
+                "description": "1, 2, …: one more than the release before.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "version",
+              "digest",
+              "body"
+            ],
+            "type": "object"
+          },
+          "FormSeverity": {
+            "description": "How much an issue weighs: an error stops a save or a publish, a warning is said.",
+            "enum": [
+              "error",
+              "warning"
+            ],
+            "type": "string"
+          },
+          "FormSummary": {
+            "description": "A form as the lists show it.",
+            "properties": {
+              "enforce": {
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "revision": {
+                "description": "The draft's revision.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              },
+              "version": {
+                "description": "The latest release's version; none: never published.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "layer",
+              "revision"
+            ],
+            "type": "object"
+          },
+          "FormWidget": {
+            "description": "How a field is edited.",
+            "oneOf": [
+              {
+                "const": "text",
+                "description": "One line of text.",
+                "type": "string"
+              },
+              {
+                "const": "textArea",
+                "description": "Several lines of text.",
+                "type": "string"
+              },
+              {
+                "const": "number",
+                "description": "A number: integer or decimal fields.",
+                "type": "string"
+              },
+              {
+                "const": "date",
+                "description": "A date (YYYY-AA-GG).",
+                "type": "string"
+              },
+              {
+                "const": "check",
+                "description": "A check box: yes or no fields.",
+                "type": "string"
+              },
+              {
+                "const": "switch",
+                "description": "A switch: yes or no fields.",
+                "type": "string"
+              },
+              {
+                "const": "list",
+                "description": "A drop-down list: fields with a value list.",
+                "type": "string"
+              },
+              {
+                "const": "radio",
+                "description": "Radio buttons: fields with a value list.",
+                "type": "string"
+              },
+              {
+                "const": "segmented",
+                "description": "A segmented choice: fields with a short value list.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectForm": {
+            "additionalProperties": false,
+            "description": "A form of the project.",
+            "properties": {
+              "draft": {
+                "$ref": "#/$defs/FormBody",
+                "description": "The draft the designer edits."
+              },
+              "enforce": {
+                "description": "The latest release's rules hold for every attribute write on the layer (the write profile);\nwritten only as `true`, and only with a release.",
+                "type": "boolean"
+              },
+              "id": {
+                "description": "Stable, unique in the project: letters, digits, `-`, `_` and `.`; 1–64 characters.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The layer the form edits: a layer's id (not a group's).",
+                "type": "string"
+              },
+              "name": {
+                "description": "What the lists show; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "releases": {
+                "description": "The frozen releases, oldest first; data entry uses the last.",
+                "items": {
+                  "$ref": "#/$defs/FormRelease"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "layer",
+              "draft"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.forms.edit` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "description": "Whether the settings changed.",
+            "type": "boolean"
+          },
+          "form": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProjectForm"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The form created, saved, renamed, published or enforced, as kept; none for a remove."
+          },
+          "forms": {
+            "description": "The project's forms afterwards, in order.",
+            "items": {
+              "$ref": "#/$defs/FormSummary"
+            },
+            "type": "array"
+          },
+          "issues": {
+            "description": "The draft's preflight afterwards (none for a remove).",
+            "items": {
+              "$ref": "#/$defs/FormIssue"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made against).",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "forms",
+          "issues",
+          "changed",
+          "revision"
+        ],
+        "title": "FormsEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_form_id",
+          "invalid_form_name",
+          "invalid_form",
+          "invalid_revision",
+          "revision_conflict",
+          "unknown_form",
+          "form_exists",
+          "too_many_forms",
+          "layer_not_found",
+          "not_a_layer",
+          "form_draft_changed",
+          "form_preflight",
+          "form_unpublished"
+        ],
+        "warnings": [
+          "form_release_dropped"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bina katmanının alanlarından “Bina denetimi” formunu oluştur",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "layer": "bina",
+              "name": "Bina denetimi"
+            }
+          }
+        },
+        {
+          "title": "Taslağı yayınla",
+          "input": {
+            "edit": {
+              "id": "bina-denetimi",
+              "kind": "publish",
+              "note": "İlk yayın"
+            }
+          }
+        },
+        {
+          "title": "Son yayının kurallarını katmanda uygula",
+          "input": {
+            "edit": {
+              "id": "bina-denetimi",
+              "kind": "enforce",
+              "on": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.forms.validate",
+      "version": 1,
+      "title": "Formu denetle",
+      "summary": "Bir formun ve bir kaydın durumunu söyler, hiçbir şey yazmaz. Formun ön denetimi (olmayan alan, uymayan öğe, okunamayan kural, gizlenebilen zorunlu alan; uyarılar da); uid verilirse o nesnenin öğeleri (gösterilen, zorunlu, salt okunur) ve values (alan anahtarlarıyla) yazılmış gibi kaydın sorunları: zorunlu alan boş (form_required), değer alanın kuralına uymuyor (form_value_invalid), denetim tutmuyor (form_check_failed), gizli ya da salt okunur alan değişti (form_hidden, form_read_only). draft: son yayın yerine taslak (tasarımcının önizlemesi); defaults: formun varsayılanları kaydın boş alanlarına önce yazılır (yeni kayıt). Ön denetimde hata olan form reddedilmez, kaydı sorulmaz.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.forms.validate` v1: a form, and a record to ask it about.\n\nRefusals: `invalid_uid`; `unknown_form`, `form_unpublished`, `entity_not_found`,\n`form_layer_mismatch`.",
+        "properties": {
+          "defaults": {
+            "description": "The form's defaults in the record's empty fields first (a new record).",
+            "type": "boolean"
+          },
+          "draft": {
+            "description": "Its draft instead of its latest release (the designer's preview).",
+            "type": "boolean"
+          },
+          "form": {
+            "description": "The form's id.",
+            "type": "string"
+          },
+          "uid": {
+            "description": "An object of the form's layer (lowercase UUID text with hyphens); none: the form alone.",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "values": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Values by the layer fields' keys, as a submit would write them (empty: no value); asked of\nthe record afterwards.",
+            "type": "object"
+          }
+        },
+        "required": [
+          "form"
+        ],
+        "title": "FormsValidate",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "FormIssue": {
+            "additionalProperties": false,
+            "description": "What a form's preflight or a record's validation found (docs/adr/0401 §4, §6): a stable code,\nwhere (the item, the field's key, the rule) and the sentence that says it.",
+            "properties": {
+              "code": {
+                "description": "`form_field_unknown`, `form_required`, … (the forms core's `codes`).",
+                "type": "string"
+              },
+              "field": {
+                "description": "The layer field's key it is about.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "item": {
+                "description": "The item it is about.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "message": {
+                "type": "string"
+              },
+              "rule": {
+                "description": "The rule it is about: `visibleWhen`, `requiredWhen`, `readOnlyWhen`, `default`, `checks/0` …",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "severity": {
+                "$ref": "#/$defs/FormSeverity"
+              }
+            },
+            "required": [
+              "code",
+              "severity",
+              "message"
+            ],
+            "type": "object"
+          },
+          "FormItemState": {
+            "additionalProperties": false,
+            "description": "An item's state for a record: shown (its own rule and its group's), required, read-only.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "readOnly": {
+                "type": "boolean"
+              },
+              "required": {
+                "type": "boolean"
+              },
+              "shown": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "shown"
+            ],
+            "type": "object"
+          },
+          "FormSeverity": {
+            "description": "How much an issue weighs: an error stops a save or a publish, a warning is said.",
+            "enum": [
+              "error",
+              "warning"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.forms.validate` v1.",
+        "properties": {
+          "attrs": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The record's attributes afterwards; none without a record.",
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "issues": {
+            "description": "The preflight's issues, then the record's.",
+            "items": {
+              "$ref": "#/$defs/FormIssue"
+            },
+            "type": "array"
+          },
+          "items": {
+            "description": "The record's items, in the form's order; empty without a record.",
+            "items": {
+              "$ref": "#/$defs/FormItemState"
+            },
+            "type": "array"
+          },
+          "valid": {
+            "description": "Whether the record (or the form alone) has no error.",
+            "type": "boolean"
+          },
+          "version": {
+            "description": "The release asked; none: the draft.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "version"
+          }
+        },
+        "required": [
+          "issues",
+          "valid",
+          "items"
+        ],
+        "title": "FormsValidated",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "FormIssue": {
+            "additionalProperties": false,
+            "description": "What a form's preflight or a record's validation found (docs/adr/0401 §4, §6): a stable code,\nwhere (the item, the field's key, the rule) and the sentence that says it.",
+            "properties": {
+              "code": {
+                "description": "`form_field_unknown`, `form_required`, … (the forms core's `codes`).",
+                "type": "string"
+              },
+              "field": {
+                "description": "The layer field's key it is about.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "item": {
+                "description": "The item it is about.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "message": {
+                "type": "string"
+              },
+              "rule": {
+                "description": "The rule it is about: `visibleWhen`, `requiredWhen`, `readOnlyWhen`, `default`, `checks/0` …",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "severity": {
+                "$ref": "#/$defs/FormSeverity"
+              }
+            },
+            "required": [
+              "code",
+              "severity",
+              "message"
+            ],
+            "type": "object"
+          },
+          "FormItemState": {
+            "additionalProperties": false,
+            "description": "An item's state for a record: shown (its own rule and its group's), required, read-only.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "readOnly": {
+                "type": "boolean"
+              },
+              "required": {
+                "type": "boolean"
+              },
+              "shown": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "shown"
+            ],
+            "type": "object"
+          },
+          "FormSeverity": {
+            "description": "How much an issue weighs: an error stops a save or a publish, a warning is said.",
+            "enum": [
+              "error",
+              "warning"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.forms.validate` v1.",
+        "properties": {
+          "attrs": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The record's attributes afterwards; none without a record.",
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "issues": {
+            "description": "The preflight's issues, then the record's.",
+            "items": {
+              "$ref": "#/$defs/FormIssue"
+            },
+            "type": "array"
+          },
+          "items": {
+            "description": "The record's items, in the form's order; empty without a record.",
+            "items": {
+              "$ref": "#/$defs/FormItemState"
+            },
+            "type": "array"
+          },
+          "valid": {
+            "description": "Whether the record (or the form alone) has no error.",
+            "type": "boolean"
+          },
+          "version": {
+            "description": "The release asked; none: the draft.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "version"
+          }
+        },
+        "required": [
+          "issues",
+          "valid",
+          "items"
+        ],
+        "title": "FormsValidated",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_uid",
+          "unknown_form",
+          "form_unpublished",
+          "entity_not_found",
+          "form_layer_mismatch"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bir binanın kaydını “ek inceleme gerekli” yazılmış gibi denetle",
+          "input": {
+            "form": "bina-denetimi",
+            "uid": "0192f5a1-25a0-7000-8000-000000000201",
+            "values": {
+              "Durum": "inceleme"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.forms.submit",
+      "version": 1,
+      "title": "Formla kaydet",
+      "summary": "Bir nesnenin kaydını formla yazar: values alan anahtarlarıyla (boş değer özniteliği kaldırır); formun kuralları ve alanların kuralları geçerse bütün kayıt, geçmezse hiçbir şey (form_invalid: ilk sorun, path onu veren değer). Gizli alanın değeri silinmez; gösterilmeyen, gizli ya da salt okunur alana yazılmaz. Varsayılan olarak son yayın kullanılır; draft: taslak (yayınlanmamış form). defaults: formun varsayılanları kaydın boş alanlarına önce yazılır (yeni kayıt). Tek geri alma adımı: “Form: <ad>”. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.forms.submit` v1.\n\nRefusals: `invalid_uid`; `invalid_revision`, `revision_conflict` (status `conflict`);\n`unknown_form`, `form_unpublished`, `form_preflight`, `entity_not_found`, `form_layer_mismatch`,\n`layer_locked`, `form_invalid` (the first issue, `path` its field's value).",
+        "properties": {
+          "defaults": {
+            "description": "The form's defaults in the record's empty fields first (a new record).",
+            "type": "boolean"
+          },
+          "draft": {
+            "description": "Through its draft instead of its latest release (a form not yet published).",
+            "type": "boolean"
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "form": {
+            "description": "The form's id.",
+            "type": "string"
+          },
+          "uid": {
+            "description": "The object (lowercase UUID text with hyphens).",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "values": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Values by the layer fields' keys (empty: no value).",
+            "type": "object"
+          }
+        },
+        "required": [
+          "form",
+          "uid"
+        ],
+        "title": "FormsSubmit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.forms.submit` v1, and what plan says it would do.",
+        "properties": {
+          "attrs": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The record's attributes afterwards.",
+            "type": "object"
+          },
+          "changed": {
+            "description": "Whether the object changed.",
+            "type": "boolean"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made against).",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uid": {
+            "type": "string"
+          },
+          "version": {
+            "description": "The release written through; none: the draft.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "version"
+          }
+        },
+        "required": [
+          "uid",
+          "attrs",
+          "changed",
+          "revision"
+        ],
+        "title": "FormsSubmitted",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.forms.submit` v1, and what plan says it would do.",
+        "properties": {
+          "attrs": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The record's attributes afterwards.",
+            "type": "object"
+          },
+          "changed": {
+            "description": "Whether the object changed.",
+            "type": "boolean"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made against).",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uid": {
+            "type": "string"
+          },
+          "version": {
+            "description": "The release written through; none: the draft.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "version"
+          }
+        },
+        "required": [
+          "uid",
+          "attrs",
+          "changed",
+          "revision"
+        ],
+        "title": "FormsSubmitted",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_uid",
+          "invalid_revision",
+          "revision_conflict",
+          "unknown_form",
+          "form_unpublished",
+          "form_preflight",
+          "entity_not_found",
+          "form_layer_mismatch",
+          "layer_locked",
+          "form_invalid"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bir binanın durumunu ve notunu formla yaz",
+          "input": {
+            "form": "bina-denetimi",
+            "uid": "0192f5a1-25a0-7000-8000-000000000201",
+            "values": {
+              "Durum": "inceleme",
+              "Not": "Çatı arası ayrıca bakılmalı."
             }
           }
         }
@@ -345766,6 +349037,84 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Aynı adlı görünümün yerine yenisi kaydedildi."
+    },
+    {
+      "code": "invalid_form_id",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Form kimliği 1–64 harf, rakam, -, _ ya da . olmalı."
+    },
+    {
+      "code": "invalid_form_name",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Form adı boş, 64 karakterden uzun ya da denetim karakterli."
+    },
+    {
+      "code": "invalid_form",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Formun yapısı kurallarına uymuyor (öğe kimlikleri, sekmeler, derinlik, uzunluklar)."
+    },
+    {
+      "code": "unknown_form",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikle bir form yok."
+    },
+    {
+      "code": "form_exists",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikle başka bir form var."
+    },
+    {
+      "code": "too_many_forms",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede en çok 100 form olur."
+    },
+    {
+      "code": "form_draft_changed",
+      "kind": "conflict",
+      "retryable": true,
+      "meaning": "Formun taslağı girdi hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Taslağı yeniden okuyun."
+    },
+    {
+      "code": "form_preflight",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Formun ön denetiminde hata var (olmayan alan, uymayan öğe, okunamayan kural, gizlenebilen zorunlu alan)."
+    },
+    {
+      "code": "form_unpublished",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Form hiç yayınlanmadı; önce yayınlayın ya da taslağı kullanın."
+    },
+    {
+      "code": "form_layer_mismatch",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesne formun katmanında değil."
+    },
+    {
+      "code": "form_invalid",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kayıt formun kurallarına uymuyor: zorunlu alan boş, değer ya da denetim uymuyor, gizli ya da salt okunur alan değişti."
+    },
+    {
+      "code": "form_rules",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Yazma, katmanın uyguladığı formun kurallarına uymuyor."
+    },
+    {
+      "code": "form_release_dropped",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Form en çok 50 yayın tutar; en eskisi kaldırıldı."
     },
     {
       "code": "empty_text",

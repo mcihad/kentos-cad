@@ -568,6 +568,10 @@ fn command_tool(c: &Value) -> Value {
             | "cad.ucs.set"
             // Its delete takes a named view away, its save writes over one (docs/adr/0285 §1).
             | "cad.views.edit"
+            // Its remove takes a form away, its update writes over the draft (docs/adr/0401 §9).
+            | "cad.forms.edit"
+            // It writes over a record's attributes (docs/adr/0401 §9).
+            | "cad.forms.submit"
             // It removes sheets and their items as the designer does (docs/adr/0252 §2).
             | "cad.sheets.edit"
             // A change set runs any of these (docs/adr/0253 §8).

@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `59`'a bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-60.kcad`) |
+| `version` | tam sayı | `2`'den `60`'a bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-61.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -307,9 +307,11 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 54**, şema 53'ün kendisi ve alanın maskesidir (ADR 0310): alanın (`polygon`) `wipeout`'u (§6.6), AutoCAD'in WIPEOUT'u. Yazıcı `54`'ü **yalnız çizimin ya da bir blok tanımının bir alanı maskeyken** yazar. Başka her çizim şema 2–53'tür ve eskisiyle bayt bayt aynıdır. Şema 2–53 yükünde `wipeout` bilinmeyen alandır (`unknown_field`, `broken/wipeouts-in-schema-53.kcad`): eski okuyucu maskeyi sıradan alan gibi açmaz, dosyayı açmaz. Şema 54 şema 53'ü kapsar. Örnek dosya `wipeouts.kcad`.
 
+**Şema 60**, şema 59'un kendisi ve formlardır (ADR 0401): ayarların `forms`'u (§6.4.13) ve katman alanının kararlı `id`'si (§6.5). Yazıcı `60`'ı **yalnız projede form varken ya da bir alanın kimliği varken** yazar. Başka her çizim şema 2–59'dur ve eskisiyle bayt bayt aynıdır. Şema 2–59 yükünde bu anahtarlar bilinmeyen alandır (`unknown_field`, `broken/forms-in-schema-59.kcad`, `broken/field-id-in-schema-59.kcad`): eski okuyucu formu ya da formun alana bağını sessizce düşürmez, dosyayı açmaz. Şema 60 şema 59'u kapsar. Örnek dosya `forms.kcad`.
+
 **Yeni şema eklemenin kuralı** (ADR 0265 §2): her yeni şema `n` için (1) yazıcı `n`'yi yalnız yeni özellik varken yazar; (2) `n`'de yazılmış geçerli bir örnek, bağımsız Python yazıcısıyla; (3) özelliğin `n − 1`'de yazılmış bozuk örneği (`broken/…-in-schema-<n−1>.kcad`) ve `broken/schema-version-<n+1>.kcad`; (4) önceki örneklerin hepsi okunmaya devam eder; (5) `tools/kcad/kcad.py` aynı kuralı okur; (6) örnek kodekten, tipli sütunlardan, bulutun kaynağından ve Python'un tipli katmanından geçer. Bir şema numarası yeniden kullanılmaz. `kentos-kcad`'in `schemas` testi (1)–(3)'ü zorlar.
 
-Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: çizgi tipi, çizgi tipi ölçeği ya da desen anan katmanı, durumu ya da nesnesi olan çizim 56, dondurulmuş düğümü ya da dondurmayı saklayan katman durumu olan çizim 55, maskeli alanı olan çizim 54, ilişkili dizisi olan çizim 53, adlı görünümü olan proje 52, bir ölçüsünün başvurusu eğri üzerinde ya da blok içinde olan çizim 51, inç ya da ayak birimli ya da uzunluk biçimli çizim 50, geçerli UCS'i dünya olmayan ya da adlı UCS'i olan çizim 49, bir nesnesinin kendi görünüşü (çizgi tipi, ölçeği, saydamlık, çizim sırası, katmana göre parçalar) ya da yazdırılmayan katmanı olan çizim 48, NURBS eğrisi olan çizim 47, kapalı ya da genişlikli çoklu çizgisi olan çizim 46, istek yürütmüş çizim 45, pafta kitabı olan proje 44, başvurulu ölçüsü olan çizim 43, adres verisi olan proje 42, katman çizimi olan çizim 41, eki, eylemi ya da bilgi kartı olan çizim 40, köşe ölçüsü olan çizim 39, veri setli ya da ağ çizgili rasteri olan çizim 38, değişkeni olan proje 37, etiket motorunun bir alanı (etiket stilinin motor anahtarı, katmanın etiketlemesi ya da bir nesnenin etiket iğnesi) olan çizim 36, süzgeçli katmanı olan çizim 35, zaman ayarı, senaryosu ya da senaryo katmanı olan çizim 34, ağı olan proje 33, servis katmanı, servisten alınan katmanı ya da bağlantısı olan çizim 32, nokta bulutu ya da adresten okunan rasteri olan çizim 31, yazı yüksekliği, ölçü çizgisi, kılavuz ok boyu ya da yeni kılavuz oku olan çizim 30, rasteri olan çizim 29, ölçme ayarlarında önsel doğruluk olan çizim 28, topoloji ayarı olan çizim 27, alanı olan katmanı olan çizim 26, eğri boyunca yazısı olan çizim 25, resmi olan çizim 24, deseni çizgi aileli ya da degrade olan ya da nesnelere bağlı taraması olan çizim 23, tablosu olan çizim 22, projede yazı ya da ölçü stili olan ya da bir yazısının yüzü ya da bir ölçüsünün görünüşü olan çizim 21, kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
+Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: formu ya da kimlikli alanı olan çizim 60, dinamik bloğu ya da parametre değerli yerleştirmesi olan çizim 59, çizgi tipi çizgi tipi ölçeği ya da desen anan katmanı, durumu ya da nesnesi olan çizim 56, dondurulmuş düğümü ya da dondurmayı saklayan katman durumu olan çizim 55, maskeli alanı olan çizim 54, ilişkili dizisi olan çizim 53, adlı görünümü olan proje 52, bir ölçüsünün başvurusu eğri üzerinde ya da blok içinde olan çizim 51, inç ya da ayak birimli ya da uzunluk biçimli çizim 50, geçerli UCS'i dünya olmayan ya da adlı UCS'i olan çizim 49, bir nesnesinin kendi görünüşü (çizgi tipi, ölçeği, saydamlık, çizim sırası, katmana göre parçalar) ya da yazdırılmayan katmanı olan çizim 48, NURBS eğrisi olan çizim 47, kapalı ya da genişlikli çoklu çizgisi olan çizim 46, istek yürütmüş çizim 45, pafta kitabı olan proje 44, başvurulu ölçüsü olan çizim 43, adres verisi olan proje 42, katman çizimi olan çizim 41, eki, eylemi ya da bilgi kartı olan çizim 40, köşe ölçüsü olan çizim 39, veri setli ya da ağ çizgili rasteri olan çizim 38, değişkeni olan proje 37, etiket motorunun bir alanı (etiket stilinin motor anahtarı, katmanın etiketlemesi ya da bir nesnenin etiket iğnesi) olan çizim 36, süzgeçli katmanı olan çizim 35, zaman ayarı, senaryosu ya da senaryo katmanı olan çizim 34, ağı olan proje 33, servis katmanı, servisten alınan katmanı ya da bağlantısı olan çizim 32, nokta bulutu ya da adresten okunan rasteri olan çizim 31, yazı yüksekliği, ölçü çizgisi, kılavuz ok boyu ya da yeni kılavuz oku olan çizim 30, rasteri olan çizim 29, ölçme ayarlarında önsel doğruluk olan çizim 28, topoloji ayarı olan çizim 27, alanı olan katmanı olan çizim 26, eğri boyunca yazısı olan çizim 25, resmi olan çizim 24, deseni çizgi aileli ya da degrade olan ya da nesnelere bağlı taraması olan çizim 23, tablosu olan çizim 22, projede yazı ya da ölçü stili olan ya da bir yazısının yüzü ya da bir ölçüsünün görünüşü olan çizim 21, kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -381,6 +383,7 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 | `ucs` | harita (§6.4.11) | | şema 49'da: geçerli kullanıcı koordinat sistemi (ADR 0261 §1); yoksa dünya, dünya yazılmaz |
 | `namedUcs` | dizi (§6.4.11) | | şema 49'da: adlı UCS'ler, kaydedildikleri sırayla; boş dizi yazılmaz |
 | `namedViews` | dizi (§6.4.12) | | şema 52'de: adlı görünümler, kaydedildikleri sırayla; boş dizi yazılmaz |
+| `forms` | dizi (§6.4.13) | | şema 60'ta: projenin formları, oluşturuldukları sırayla (ADR 0401 §3); boş dizi yazılmaz (`broken/forms-empty.kcad`) |
 | `datumTransforms` | dizi (§6.4.1) | | şema 13'te: projenin datum seçimleri, kayıttaki her datum çifti için en çok biri (ADR 0168 §3); değilse `bad_value` (`broken/datum-transform-twice.kcad`) |
 | `secondCustomCrs` | harita (§6.4.1) | | şema 13'te: ikinci sistem bir tanımsa o (ADR 0168 §1); `secondSrid` ile birlikte bulunmaz, projenin bir sistemi olmalıdır (`srid` ya da `customCrs`); değilse `bad_value` (`broken/second-custom-with-second-srid.kcad`, `broken/second-custom-without-system.kcad`) |
 
@@ -610,6 +613,26 @@ haritadır, anahtarları `name` < `twist` < `width` < `center` < `height`, hepsi
 (`broken/named-views-empty.kcad`); bilinmeyen anahtar `unknown_field`'dır (`broken/named-views-unknown-field.kcad`). Öbürleri
 `bad_value`'dur. Görünüme gitmek kameranındır, çizim değişmez. Örnek dosya `views.kcad`.
 
+#### 6.4.13 Formlar
+
+Şema 60'ta (ADR 0401 §3). `forms`'un her öğesi sözleşmenin `ProjectForm`'unun JSON'udur (opak değerler gibi, §6.7: sayılar
+tam sayı, anahtarlar kanonik sırada). Yazıcı varsayılan değerindeki alanı yazmaz (boş liste, `false`); okuyucu öyle yazılmış
+öğeyi `bad_value` sayar. Bilinmeyen anahtar `unknown_field`'dır (`broken/forms-unknown-field.kcad`).
+
+- **Form:** `id` (harf, rakam, `-`, `_`, `.`; 1–64; projede tekil), `name` (kırpılmış, 1–64, denetim karaktersiz), `layer` (katman
+  düğümünün kimliği; ağaçta bulunması gerekmez), `draft` (gövde), `releases` (yayınlar, en çok 50), `enforce` (yalnız `true`:
+  komutlar son yayının kurallarını uygular; yayın yoksa `bad_value`, `broken/forms-enforce-unreleased.kcad`). En çok 100 form.
+- **Gövde:** `revision` (u32; her kayıtla artar) ve `items` (öğeler). Öğenin türü `type`'tadır: `tab` (yalnız üstte; üstte
+  sekme varsa hepsi sekme; `broken/forms-tab-in-group.kcad`), `group` (`label`, `columns` 1 ya da 2, `visibleWhen`), `field`
+  (`field` alanın anahtarı: kimliği ya da adı; `label`, `help`, `placeholder`, `widget`, `readOnly`, `required`, `visibleWhen`,
+  `requiredWhen`, `readOnlyWhen`, `default`, `checks`: `rule` ve `message`, en çok 20), `note` (`text`). Her öğenin `id`'si
+  form içinde tekildir; en çok 4 düzey, 500 öğe; kurallar İfadeyle seç'in dilindedir, en çok 2000 karakter.
+- **Yayın:** `version` (1'den ya da ilk yayının numarasından sırayla), `digest` (gövdenin kanonik JSON'unun, ADR 0253 §2,
+  SHA-256'sının ilk 32 onaltılık hanesi; içeriğe uymayan özet `bad_value`, `broken/forms-digest.kcad`), `body`, `note`.
+
+Kuralları sözleşmenin `forms_problem`'idir (`kentos_contracts::forms`). Dosya biçimi alanların varlığını ve ifadeleri denetlemez;
+onlar formun ön denetimidir (ADR 0401 §4). Örnek dosya `forms.kcad`.
+
 ### 6.5 Katman ağacı
 
 **Katman** (grup ya da katman):
@@ -697,6 +720,7 @@ Açık düğme yazılmaz (`broken/card-switch-on.kcad`); boş alan listesi (`bro
 
 | Anahtar | Tür | Zorunlu | Anlamı |
 |---|---|---|---|
+| `id` | metin | | şema 60'ta: alanın kararlı kimliği; formlar alana onunla bağlanır, ad değişince kalır (ADR 0401 §2); yoksa anahtar addır |
 | `max` | metin | | sayı alanının en büyük değeri, türünün tek biçiminde |
 | `min` | metin | | sayı alanının en küçük değeri, türünün tek biçiminde |
 | `kind` | numaralı metin | evet | `text`, `integer`, `decimal`, `date`, `boolean` |
@@ -708,7 +732,7 @@ Açık düğme yazılmaz (`broken/card-switch-on.kcad`); boş alan listesi (`bro
 | `default` | metin | | yeni nesnenin değeri, alanın kurallarına uyan tek biçimde |
 | `required` | bool | | yalnız `true`: nesne alanı boş bırakamaz |
 
-Anahtarlar kodlanmış sırasıyladır. Tek biçimler ve alan listesinin kuralları ADR 0199 §1'dedir (`kentos_contracts::fields`): ad boş değil, başında ya da sonunda boşluk yok, en çok 64 karakter, denetim karakteri yok, Türkçe katlanarak bir kez; takma ad boş değil, en çok 64 karakter; uzunluk yalnız metinde, ondalık basamak yalnız ondalıkta, aralık yalnız sayılarda (uçları tek biçimde, en az en çoktan büyük değil), değer listesi yalnız metin ve sayılarda (boş değil, kodlar boş değil ve sayılarda tek biçimde, kodlar ve katlanmış etiketler bir kez); varsayılan alanın kurallarına uyan tek biçim. Kuralı kıran liste, boş liste, `required: false`, bilinmeyen tür ve negatif sayı `bad_value`'dur; bilinmeyen anahtar `unknown_field`, türü ya da etiketi olmayan `missing_field`'dır (`fixtures/kcad/v2/broken/layer-fields-*.kcad`).
+Anahtarlar kodlanmış sırasıyladır. Tek biçimler ve alan listesinin kuralları ADR 0199 §1'dedir (`kentos_contracts::fields`): ad boş değil, başında ya da sonunda boşluk yok, en çok 64 karakter, denetim karakteri yok, Türkçe katlanarak bir kez; takma ad boş değil, en çok 64 karakter; uzunluk yalnız metinde, ondalık basamak yalnız ondalıkta, aralık yalnız sayılarda (uçları tek biçimde, en az en çoktan büyük değil), değer listesi yalnız metin ve sayılarda (boş değil, kodlar boş değil ve sayılarda tek biçimde, kodlar ve katlanmış etiketler bir kez); varsayılan alanın kurallarına uyan tek biçim; kimlik boş değil, başında ya da sonunda boşluk yok, en çok 64 karakter, denetim karakteri yok ve alanların anahtarları (kimlik, yoksa ad) bir kez (`broken/field-id-twice.kcad`). Kuralı kıran liste, boş liste, `required: false`, bilinmeyen tür ve negatif sayı `bad_value`'dur; bilinmeyen anahtar `unknown_field`, türü ya da etiketi olmayan `missing_field`'dır (`fixtures/kcad/v2/broken/layer-fields-*.kcad`).
 
 **Servis** (şema 32; ADR 0208 §2): katmanın çizildiği harita servisi. Anahtarlar kodlanmış sırasıyladır; bayraklar yalnız `true` iken, diziler yalnız boş değilken yazılır (`broken/service-yflip-false.kcad`, `broken/service-layers-empty.kcad`, `broken/service-params-empty.kcad`).
 

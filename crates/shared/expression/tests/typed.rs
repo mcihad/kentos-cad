@@ -473,3 +473,60 @@ fn check_cases(cases: &[Json]) -> usize {
     }
     checked
 }
+
+/// One object whose layer keeps its values as text, as a layer does (docs/adr/0401 §5).
+struct Kept<'a>(&'a [Option<&'a str>]);
+
+impl Scope for Kept<'_> {
+    fn field(&self, i: usize) -> Option<&str> {
+        self.0.get(i).copied().flatten()
+    }
+    fn measured(&self) -> Measured {
+        Measured::default()
+    }
+    fn vertices(&self) -> Option<f64> {
+        None
+    }
+    fn kind(&self) -> &str {
+        "Kapalı alan"
+    }
+    fn layer(&self) -> &str {
+        "Parsel"
+    }
+    fn label(&self) -> Option<&str> {
+        None
+    }
+    fn index(&self) -> f64 {
+        1.0
+    }
+    fn id(&self) -> f64 {
+        1.0
+    }
+    fn scale(&self) -> Option<f64> {
+        None
+    }
+}
+
+#[test]
+fn typed_fields_kept_as_text_are_read_as_their_type() {
+    let s = schema();
+    let one = |src: &str, values: &[Option<&str>]| {
+        let e = compile_with(src, &s).unwrap_or_else(|e| panic!("{src}: {}", e.text()));
+        let scope = Kept(values);
+        e.evaluate(&scope).into_owned()
+    };
+    // A yes/no field's single forms are true and false; “false” is not true.
+    assert_eq!(one("Satıldı = doğru", &[Some("true")]), Value::Bool(true));
+    assert_eq!(one("Satıldı = doğru", &[Some("false")]), Value::Bool(false));
+    assert_eq!(
+        one("Satıldı ve doğru", &[Some("false")]),
+        Value::Bool(false)
+    );
+    assert_eq!(one("değil Satıldı", &[Some("false")]), Value::Bool(true));
+    assert_eq!(one("boş(Satıldı)", &[None]), Value::Bool(true));
+    // A number field's text is a number: added, not joined; empty where it is not one.
+    assert_eq!(one("Kat + 1", &[Some("3")]), Value::Num(4.0));
+    assert_eq!(one("boş(Kat)", &[Some("üç")]), Value::Bool(true));
+    // A text attribute stays text.
+    assert_eq!(one("Nitelik || 1", &[Some("3")]), Value::text("31"));
+}

@@ -107,7 +107,41 @@ impl Resolver<'_> {
             }
             Node::IsNull(x, negated) => Node::IsNull(b(x), negated),
             Node::Var(v) => self.var(v),
-            n @ (Node::Lit(_) | Node::Field(_) | Node::World(..)) => n,
+            Node::Field(i) => self.field(i),
+            n @ (Node::Lit(_) | Node::World(..)) => n,
+        }
+    }
+
+    /// A field the user defined with a type is read as that type (docs/adr/0401 §5): a yes/no field
+    /// is true or false (its single form `true`, `false`; anything else empty), a number field a
+    /// number (empty where it is not one). A text field, a date (ISO text compares as it is) and an
+    /// attribute stay text.
+    fn field(&self, i: usize) -> Node {
+        let Some(name) = self.fields.get(i) else {
+            return Node::Field(i);
+        };
+        let r = self.schema.resolve(name);
+        match (r.source, r.ty) {
+            (FieldSource::User, FieldType::Bool) => {
+                // The text a layer keeps first; then the true or false a typed host gives.
+                let is = |v: Value<'static>| {
+                    Node::Bin(BinOp::Eq, Box::new(Node::Field(i)), Box::new(Node::Lit(v)))
+                };
+                let text = |t: &str| Value::Text(std::borrow::Cow::Owned(t.to_owned()));
+                Node::Case(
+                    vec![
+                        (is(text("true")), Node::Lit(Value::Bool(true))),
+                        (is(text("false")), Node::Lit(Value::Bool(false))),
+                        (is(Value::Bool(true)), Node::Lit(Value::Bool(true))),
+                        (is(Value::Bool(false)), Node::Lit(Value::Bool(false))),
+                    ],
+                    None,
+                )
+            }
+            (FieldSource::User, FieldType::Number) => {
+                Node::Call(Func::Number, vec![Node::Field(i)])
+            }
+            _ => Node::Field(i),
         }
     }
 

@@ -447,6 +447,14 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
             })
         })
         .collect();
+    // A layer's enforcing forms are its write profile (docs/adr/0401 §8): an attribute change that
+    // breaks one is refused.
+    for c in &changes {
+        if let Some(old) = doc.get(c.slot) {
+            let after = c.entity.base();
+            crate::forms::enforced(doc, c.slot, old, &after.layer_id, &after.attrs, "attrs")?;
+        }
+    }
     // On a hidden layer they vanish from the drawing: said when at least one moves there.
     let mut warnings: Vec<CommandWarning> = locked.into_iter().collect();
     if let Some((id, name)) = target

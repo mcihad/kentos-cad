@@ -223,6 +223,7 @@ mod tests {
             length_style: None,
             named_ucs: Vec::new(),
             named_views: Vec::new(),
+            forms: Vec::new(),
             ucs: None,
             srid,
             length_decimals: 3,

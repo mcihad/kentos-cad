@@ -1,0 +1,277 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Formlar",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis",
+    "forms": [
+      {
+        "id": "bina-denetim",
+        "name": "Bina denetimi",
+        "layer": "bina",
+        "draft": {
+          "revision": 4,
+          "items": [
+            {
+              "type": "tab",
+              "id": "genel",
+              "label": "Genel",
+              "items": [
+                {
+                  "type": "field",
+                  "id": "durum",
+                  "field": "Durum",
+                  "widget": "list",
+                  "required": true
+                },
+                {
+                  "type": "field",
+                  "id": "kat",
+                  "field": "kat-sayisi",
+                  "label": "Kat sayısı",
+                  "help": "Zemin ve çatı katı dahil."
+                },
+                {
+                  "type": "field",
+                  "id": "not",
+                  "field": "Not",
+                  "widget": "textArea",
+                  "visibleWhen": "Durum = 'inceleme'",
+                  "requiredWhen": "Durum = 'inceleme'",
+                  "checks": [
+                    {
+                      "rule": "uzunluk(Not) >= 10",
+                      "message": "Not en az 10 karakter olmalı."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tab",
+              "id": "ayrinti",
+              "label": "Ayrıntı",
+              "items": [
+                {
+                  "type": "group",
+                  "id": "denetim",
+                  "label": "Denetim",
+                  "columns": 2,
+                  "items": [
+                    {
+                      "type": "field",
+                      "id": "tarih",
+                      "field": "Tarih",
+                      "default": "2026-10-16"
+                    },
+                    {
+                      "type": "field",
+                      "id": "onay",
+                      "field": "Onaylı",
+                      "widget": "switch",
+                      "readOnlyWhen": "Durum = 'iyi'"
+                    }
+                  ]
+                },
+                {
+                  "type": "note",
+                  "id": "bilgi",
+                  "text": "Denetimi yapan kişi kaydeder."
+                }
+              ]
+            }
+          ]
+        },
+        "releases": [
+          {
+            "version": 1,
+            "digest": "7e0794d3d651195fcafe47866c0b551f",
+            "body": {
+              "revision": 3,
+              "items": [
+                {
+                  "type": "tab",
+                  "id": "genel",
+                  "label": "Genel",
+                  "items": [
+                    {
+                      "type": "field",
+                      "id": "durum",
+                      "field": "Durum",
+                      "widget": "list",
+                      "required": true
+                    },
+                    {
+                      "type": "field",
+                      "id": "kat",
+                      "field": "kat-sayisi",
+                      "label": "Kat sayısı",
+                      "help": "Zemin kat dahil."
+                    },
+                    {
+                      "type": "field",
+                      "id": "not",
+                      "field": "Not",
+                      "widget": "textArea",
+                      "visibleWhen": "Durum = 'inceleme'",
+                      "requiredWhen": "Durum = 'inceleme'",
+                      "checks": [
+                        {
+                          "rule": "uzunluk(Not) >= 10",
+                          "message": "Not en az 10 karakter olmalı."
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "tab",
+                  "id": "ayrinti",
+                  "label": "Ayrıntı",
+                  "items": [
+                    {
+                      "type": "group",
+                      "id": "denetim",
+                      "label": "Denetim",
+                      "columns": 2,
+                      "items": [
+                        {
+                          "type": "field",
+                          "id": "tarih",
+                          "field": "Tarih",
+                          "default": "2026-10-16"
+                        },
+                        {
+                          "type": "field",
+                          "id": "onay",
+                          "field": "Onaylı",
+                          "widget": "switch",
+                          "readOnlyWhen": "Durum = 'iyi'"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "note",
+                      "id": "bilgi",
+                      "text": "Denetimi yapan kişi kaydeder."
+                    }
+                  ]
+                }
+              ]
+            },
+            "note": "İlk yayın"
+          }
+        ],
+        "enforce": true
+      },
+      {
+        "id": "bos",
+        "name": "Taslak form",
+        "layer": "bina",
+        "draft": {
+          "revision": 0,
+          "items": []
+        }
+      }
+    ]
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+        {
+          "name": "Durum",
+          "kind": "text",
+          "values": [
+            {
+              "code": "iyi",
+              "label": "İyi"
+            },
+            {
+              "code": "inceleme",
+              "label": "Ek inceleme gerekli"
+            }
+          ]
+        },
+        {
+          "id": "kat-sayisi",
+          "name": "Kat",
+          "kind": "integer",
+          "min": "1"
+        },
+        {
+          "name": "Not",
+          "kind": "text",
+          "length": 500
+        },
+        {
+          "name": "Tarih",
+          "kind": "date"
+        },
+        {
+          "name": "Onaylı",
+          "kind": "boolean"
+        }
+      ]
+    }
+  ],
+  "activeLayer": "bina",
+  "uids": [
+    "0192f5a1-25a0-7000-8000-000000000201"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "attrs": {
+        "Durum": "inceleme",
+        "Kat": "3",
+        "Not": "Çatı arası ayrıca bakılmalı."
+      },
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 12.0,
+          "y": 0.0
+        },
+        {
+          "x": 12.0,
+          "y": 9.0
+        },
+        {
+          "x": 0.0,
+          "y": 9.0
+        }
+      ]
+    }
+  ]
+}

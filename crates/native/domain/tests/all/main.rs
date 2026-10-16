@@ -6,6 +6,7 @@ mod arrays;
 mod dimension_ties;
 mod exchange;
 mod external;
+mod field_ids;
 mod fixtures;
 mod identity;
 mod layer_fields;

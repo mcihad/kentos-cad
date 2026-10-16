@@ -326,6 +326,8 @@ def settings(s):
                 # Schema 56 (docs/adr/0313 §1): the project's line types with patterns and its line type scale.
                 "lineTypes": (line_types, False),
                 "lineTypeScale": (line_type_scale, False),
+                # Schema 60 (docs/adr/0401 §3): the project's forms, as their JSON.
+                "forms": (opaque, False),
             },
             "settings",
         )
@@ -790,6 +792,8 @@ def layer_field(f):
     assert f.get("required", True) is True, f"alan {f.get('name')}: required yalnız true yazılır"
     choice = lambda c: cmap(fields(c, {"code": (text, True), "label": (text, True)}, "değer"))
     table = {
+        # Schema 60 (docs/adr/0401 §2): the field's stable id, when it has one.
+        "id": (text, False),
         "name": (text, True),
         "alias": (text, False),
         "kind": (enum(FIELD_KINDS), True),
@@ -1954,6 +1958,12 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def line_patterned(nodes):
         return any("linePattern" in n.get("style", {}) or line_patterned(n.get("children", [])) for n in nodes)
 
+    # Schema 60 (docs/adr/0401): a form of the project, or a layer field's stable id.
+    def keyed(nodes):
+        return any(any("id" in f for f in n.get("fields", [])) or keyed(n.get("children", [])) for n in nodes)
+
+    if (settings or {}).get("forms") or keyed(layers):
+        return 60
     # Schema 59 (docs/adr/0318): a block's dynamic part or an insert's parameter values.
     valued = lambda es: any(e["kind"] == "insert" and "parameters" in e for e in es)  # noqa: E731
     if valued(entities) or any("dynamic" in b or valued(b["entities"]) for b in blocks or []):
@@ -2306,7 +2316,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-60.kcad"] = container(root(cmap(parts), version=uint(60)))
+    files["schema-version-61.kcad"] = container(root(cmap(parts), version=uint(61)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -3629,6 +3639,35 @@ def build():
     out["broken/parameters-unknown.kcad"] = dynamic_broken(lambda d: d["entities"][1]["parameters"].update({"Renk": 1.0}))
     out["broken/parameters-empty.kcad"] = dynamic_broken(lambda d: d["entities"][0].update(parameters={}))
     out["broken/parameters-not-dynamic.kcad"] = dynamic_broken(lambda d: d["blocks"][0].pop("dynamic"))
+    out["forms.kcad"] = container(document(load("forms.json")))
+    # The forms and a field's id are schema 60's (docs/adr/0401): in schema 59 an unknown field; an empty list, a
+    # release whose body was changed after its digest, enforcing without a release, an unknown key, a tab in a group,
+    # two fields with one key refused.
+    payload = document(load("forms.json"))
+    assert payload.count(b"\x67version\x18\x3c") == 1
+    out["broken/forms-in-schema-59.kcad"] = container(payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
+
+    def forms_broken(change):
+        d = copy.deepcopy(load("forms.json"))
+        change(d)
+        return container(document(d))
+
+    def keyed_only(d):
+        d["settings"].pop("forms")
+
+    keyed = copy.deepcopy(load("forms.json"))
+    keyed_only(keyed)
+    keyed_payload = document(keyed)
+    assert keyed_payload.count(b"\x67version\x18\x3c") == 1, "a field's id alone is schema 60"
+    out["broken/field-id-in-schema-59.kcad"] = container(keyed_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
+    form = lambda d: d["settings"]["forms"][0]  # noqa: E731
+    out["broken/forms-empty.kcad"] = forms_broken(lambda d: d["settings"].update(forms=[]))
+    out["broken/forms-digest.kcad"] = forms_broken(lambda d: form(d)["releases"][0]["body"].update(revision=9))
+    out["broken/forms-enforce-unreleased.kcad"] = forms_broken(lambda d: form(d).pop("releases"))
+    out["broken/forms-unknown-field.kcad"] = forms_broken(lambda d: form(d).update(color="#FF0000"))
+    out["broken/forms-tab-in-group.kcad"] = forms_broken(
+        lambda d: form(d)["draft"]["items"][1]["items"][0]["items"].append({"type": "tab", "id": "ic", "label": "İç", "items": []}))
+    out["broken/field-id-twice.kcad"] = forms_broken(lambda d: d["layers"][0]["fields"][2].update(id="kat-sayisi"))
     out["block-cards.kcad"] = container(document(load("block-cards.json")))
     payload = document(load("block-cards.json"))
     assert payload.count(b"\x67version\x18\x3a") == 1

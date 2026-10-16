@@ -368,6 +368,7 @@ impl<'d> Encoder<'d> {
             + usize::from(s.ucs.is_some())
             + usize::from(!s.named_ucs.is_empty())
             + usize::from(!s.named_views.is_empty())
+            + usize::from(!s.forms.is_empty())
             + usize::from(!s.line_types.is_empty())
             + usize::from(s.line_type_scale.is_some());
         self.open(n, true)?;
@@ -377,6 +378,17 @@ impl<'d> Encoder<'d> {
         }
         self.key("srid");
         self.w.uint(u64::from(s.srid));
+        if !s.forms.is_empty() {
+            self.key("forms");
+            self.at(Seg::Name("forms"), |e| {
+                if let Some(problem) = kentos_contracts::forms_problem(&s.forms) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(&s.forms)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
+        }
         if let Some(v) = &s.survey {
             self.key("survey");
             self.at(Seg::Name("survey"), |e| e.survey(v))?;
@@ -1087,6 +1099,7 @@ impl<'d> Encoder<'d> {
     /// values (6), default (7), required (8); only what it has.
     fn layer_field(&mut self, f: &'d LayerField) -> Result<(), KcadError> {
         let n = 2
+            + usize::from(f.id.is_some())
             + usize::from(f.max.is_some())
             + usize::from(f.min.is_some())
             + usize::from(f.alias.is_some())
@@ -1096,6 +1109,10 @@ impl<'d> Encoder<'d> {
             + usize::from(f.default.is_some())
             + usize::from(f.required);
         self.open(n, true)?;
+        if let Some(id) = &f.id {
+            self.key("id");
+            self.at(Seg::Name("id"), |e| e.text(id))?;
+        }
         if let Some(max) = &f.max {
             self.key("max");
             self.at(Seg::Name("max"), |e| e.text(max))?;
@@ -1264,6 +1281,45 @@ impl<'d> Encoder<'d> {
         Ok(())
     }
 
+    /// A value the contract serialized for the file (the project's forms): written as [`opaque`]
+    /// writes it, its place named by the key above it only.
+    fn plain(&mut self, v: &Value) -> Result<(), KcadError> {
+        match v {
+            Value::Null => self.w.null(),
+            Value::Bool(b) => self.w.bool(*b),
+            Value::Number(n) => {
+                if let Some(u) = n.as_u64() {
+                    self.w.uint(u);
+                } else if let Some(i) = n.as_i64() {
+                    self.w.int(i);
+                } else if let Some(x) = n.as_f64() {
+                    self.float(x)?;
+                } else {
+                    return Err(self.fail(Code::BadValue, "sayı okunamadı"));
+                }
+            }
+            Value::String(s) => self.text(s)?,
+            Value::Array(list) => {
+                self.open(list.len(), false)?;
+                for v in list {
+                    self.plain(v)?;
+                }
+                self.close();
+            }
+            Value::Object(map) => {
+                let mut pairs: Vec<(&String, &Value)> = map.iter().collect();
+                pairs.sort_by(|a, b| key_order(a.0, b.0));
+                self.open(pairs.len(), true)?;
+                for (k, v) in pairs {
+                    self.text(k)?;
+                    self.plain(v)?;
+                }
+                self.close();
+            }
+        }
+        Ok(())
+    }
+
     fn opaque(&mut self, v: &'d Value) -> Result<(), KcadError> {
         match v {
             Value::Null => self.w.null(),
@@ -1391,6 +1447,15 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
+    }
+    // Schema 60 (docs/adr/0401): a form of the project, or a layer field's stable id.
+    fn keyed(nodes: &[LayerNode]) -> bool {
+        nodes
+            .iter()
+            .any(|n| n.fields.iter().any(|f| f.id.is_some()) || keyed(&n.children))
+    }
+    if !doc.settings.forms.is_empty() || keyed(&doc.layers) {
+        return crate::SCHEMA_WITH_FORMS;
     }
     // Schema 59 (docs/adr/0318): a block's dynamic part or an insert's parameter values, of the drawing or of a block.
     let valued = |list: &[Entity]| {
@@ -1877,6 +1942,7 @@ mod tests {
             ],
             &[
                 "srid",
+                "forms",
                 "survey",
                 "areaUnit",
                 "angleUnit",
@@ -1903,7 +1969,7 @@ mod tests {
             &["off", "kinds"],
             // A layer's field and its value list's entry (docs/adr/0199 §1).
             &[
-                "max", "min", "kind", "name", "alias", "scale", "length", "values", "default",
+                "id", "max", "min", "kind", "name", "alias", "scale", "length", "values", "default",
                 "required",
             ],
             &["code", "label"],

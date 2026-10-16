@@ -214,6 +214,8 @@ pub(super) struct Features {
     pub(super) block_cards: bool,
     /// Schema 59: a block definition's `dynamic` and an insert's `parameters` (docs/adr/0318).
     pub(super) dynamic_blocks: bool,
+    /// Schema 60: the settings' `forms` and a layer field's `id` (docs/adr/0401).
+    pub(super) forms: bool,
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
     pub(super) look: bool,
@@ -288,6 +290,7 @@ impl Features {
             block_extras: schema >= crate::SCHEMA_WITH_BLOCK_EXTRAS,
             block_cards: schema >= crate::SCHEMA_WITH_BLOCK_CARDS,
             dynamic_blocks: schema >= crate::SCHEMA_WITH_DYNAMIC_BLOCKS,
+            forms: schema >= crate::SCHEMA_WITH_FORMS,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,

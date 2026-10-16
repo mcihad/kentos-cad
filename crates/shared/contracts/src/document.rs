@@ -287,6 +287,10 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::NamedView>>", optional))]
     pub named_views: Vec<crate::NamedView>,
+    /// The project's forms, in the order they were made (docs/adr/0401).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ProjectForm>>", optional))]
+    pub forms: Vec<crate::ProjectForm>,
     /// How lengths are written (docs/adr/0262 §2): none, decimal; the others
     /// only in an inch or foot drawing.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -727,6 +731,7 @@ impl ProjectSettings {
         }
         self.named_ucs = crate::sanitized_named_ucs(std::mem::take(&mut self.named_ucs));
         self.named_views = crate::sanitized_named_views(std::mem::take(&mut self.named_views));
+        self.forms = crate::sanitized_forms(std::mem::take(&mut self.forms));
         // A feet-and-inches style is an inch or foot drawing's; decimal is no setting (docs/adr/0262 §2).
         if self.length_style == Some(LengthStyle::Decimal) || !self.unit().imperial() {
             self.length_style = None;

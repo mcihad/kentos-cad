@@ -23,6 +23,8 @@ members = [
     "crates/shared/raster",
     # The expression language (docs/adr/0100): processing tools, styles and filters.
     "crates/shared/expression",
+    # The forms core (docs/adr/0401): a form's preflight, rules and a record's validation.
+    "crates/shared/forms",
     # Sheet layouts, pafta düzeni (docs/sheet/design.md): one core for the web and the desktop.
     "crates/shared/sheet",
     "crates/shared/style-core",
@@ -95,6 +97,7 @@ default-members = [
     "crates/shared/services",
     "crates/shared/raster",
     "crates/shared/expression",
+    "crates/shared/forms",
     "crates/shared/sheet",
     "crates/shared/style-core",
     "crates/shared/svg-core",

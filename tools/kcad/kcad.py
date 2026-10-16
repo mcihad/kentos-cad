@@ -196,6 +196,8 @@ SCHEMA_WITH_BLOCK_CARDS = 58
 # Schema 59: a block definition's `dynamic` part (parameters and actions, as their JSON) and an insert's `parameters`
 # (docs/adr/0318).
 SCHEMA_WITH_DYNAMIC_BLOCKS = 59
+# Schema 60: the settings' `forms` (the project's forms) and a layer field's stable `id` (docs/adr/0401).
+SCHEMA_WITH_FORMS = 60
 # A definition opens into at most a million pieces (kentos_contracts::blocks::MAX_BLOCK_PIECES, docs/adr/0316 §4).
 MAX_BLOCK_PIECES = 1_000_000
 # A pattern has at most 12 elements (AutoCAD's LIN, kentos_contracts::MAX_PATTERN_ELEMENTS).
@@ -377,7 +379,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_FORMS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1366,6 +1368,7 @@ def fields_problem(fields):
     if not fields:
         return "katmanın alan listesi boş olamaz"
     seen = set()
+    keys = set()
     for f in fields:
         name, kind = f["name"], f["kind"]
         if not name.strip(JS_SPACE) or name.strip(JS_SPACE) != name or len(name) > 64:
@@ -1400,6 +1403,166 @@ def fields_problem(fields):
         if key in seen:
             return f"“{name}” adlı iki alan var"
         seen.add(key)
+        # Schema 60 (docs/adr/0401 §2): the stable id, and no field's key (its id, else its name) twice.
+        if "id" in f:
+            fid = f["id"]
+            if not fid.strip(JS_SPACE) or fid.strip(JS_SPACE) != fid or len(fid) > 64 or any(ord(c) < 32 or 127 <= ord(c) < 160 for c in fid):
+                return f"“{name}” alanının kimliği geçersiz"
+        stable = f.get("id", name)
+        if stable in keys:
+            return f"“{stable}” kimliği iki alanda var"
+        keys.add(stable)
+    return None
+
+
+# The forms' bounds (kentos_contracts::forms).
+MOST_FORMS = 100
+MOST_FORM_ITEMS = 500
+MOST_FORM_RELEASES = 50
+MOST_FORM_NAME = 64
+MOST_FORM_TEXT = 1000
+MOST_FORM_RULE = 2000
+MOST_FORM_CHECKS = 20
+MOST_FORM_DEPTH = 4
+
+
+def canonical_json(v):
+    """The canonical JSON of docs/adr/0253 §2 for the values a form holds (texts, whole numbers, true, lists, maps): no
+    white space, keys by their UTF-8 bytes (code points), only the escapes JSON requires."""
+    if v is True:
+        return "true"
+    if v is False:
+        return "false"
+    if v is None:
+        return "null"
+    if type(v) is int:
+        return str(v)
+    if type(v) is str:
+        out = ['"']
+        for c in v:
+            o = ord(c)
+            if c == '"':
+                out.append('\\"')
+            elif c == "\\":
+                out.append("\\\\")
+            elif c in "\b\f\n\r\t":
+                out.append({"\b": "\\b", "\f": "\\f", "\n": "\\n", "\r": "\\r", "\t": "\\t"}[c])
+            elif o < 0x20:
+                out.append("\\u%04x" % o)
+            else:
+                out.append(c)
+        out.append('"')
+        return "".join(out)
+    if type(v) is list:
+        return "[" + ",".join(canonical_json(x) for x in v) + "]"
+    if type(v) is dict:
+        return "{" + ",".join(canonical_json(k) + ":" + canonical_json(v[k]) for k in sorted(v, key=lambda k: k.encode("utf-8"))) + "}"
+    raise ValueError(f"formda beklenmeyen değer: {v!r}")
+
+
+def _form_id_ok(i):
+    return 1 <= len(i) <= MOST_FORM_NAME and all(c.isalnum() or c in "-_." for c in i)
+
+
+def _form_name_ok(n):
+    t = n.strip()
+    return bool(t) and t == n and len(n) <= MOST_FORM_NAME and not any(unicodedata.category(c) == "Cc" for c in n)
+
+
+def _form_text_ok(t, most):
+    return len(t) <= most and not any(unicodedata.category(c) == "Cc" and c != "\n" for c in t)
+
+
+def _rule_ok(r):
+    return bool(r.strip()) and _form_text_ok(r, MOST_FORM_RULE)
+
+
+def body_problem(body):
+    """The contract's `body_problem`: unique ids that hold, tabs only at the top and alone there, four levels, 500 items,
+    names, texts and rules within their lengths, one or two columns, checks with a rule and a message."""
+    walked = []
+
+    def walk(items, depth):
+        for i in items:
+            walked.append((depth, i))
+            walk(i.get("items", []), depth + 1)
+
+    walk(body["items"], 0)
+    if len(walked) > MOST_FORM_ITEMS:
+        return "formda çok öğe var"
+    tops = [i for i in body["items"] if i["type"] == "tab"]
+    if tops and len(tops) != len(body["items"]):
+        return "formun üstünde sekmelerle başka öğeler var"
+    seen = set()
+    for depth, i in walked:
+        iid = i["id"]
+        if not _form_id_ok(iid):
+            return f"“{iid}” bir öğe kimliği olamaz"
+        if iid in seen:
+            return f"“{iid}” kimliği iki kez kullanılmış"
+        seen.add(iid)
+        if depth >= MOST_FORM_DEPTH:
+            return f"“{iid}” çok derinde"
+        t = i["type"]
+        if t == "tab" and (depth > 0 or not _form_name_ok(i["label"])):
+            return f"“{iid}” sekmesi yalnız üstte ve adlı olur"
+        if t == "group":
+            if "label" in i and not _form_name_ok(i["label"]):
+                return f"“{iid}” grubunun adı geçersiz"
+            if "columns" in i and i["columns"] not in (1, 2):
+                return f"“{iid}” grubu bir ya da iki sütun olur"
+            if "visibleWhen" in i and not _rule_ok(i["visibleWhen"]):
+                return f"“{iid}” grubunun kuralı geçersiz"
+        if t == "note" and (not i["text"].strip() or not _form_text_ok(i["text"], MOST_FORM_TEXT)):
+            return f"“{iid}” notu geçersiz"
+        if t == "field":
+            if not i["field"].strip() or len(i["field"]) > MOST_FORM_NAME:
+                return f"“{iid}” öğesinin alanı yazılmamış"
+            if "label" in i and not _form_name_ok(i["label"]):
+                return f"“{iid}” alanının etiketi geçersiz"
+            if any(k in i and not _form_text_ok(i[k], MOST_FORM_TEXT) for k in ("help", "placeholder", "default")):
+                return f"“{iid}” alanının bir metni çok uzun"
+            if any(k in i and not _rule_ok(i[k]) for k in ("visibleWhen", "requiredWhen", "readOnlyWhen")):
+                return f"“{iid}” öğesinin kuralı geçersiz"
+            checks = i.get("checks", [])
+            if len(checks) > MOST_FORM_CHECKS or any(not _rule_ok(c["rule"]) or not c["message"].strip() or not _form_text_ok(c["message"], MOST_FORM_TEXT) for c in checks):
+                return f"“{iid}” alanının denetimi geçersiz"
+    return None
+
+
+def forms_problem(forms):
+    """The contract's `forms_problem`: at most 100 forms with ids and names that hold, ids unique, a layer, bodies that
+    hold, releases numbered on from the first with their body's digest (the first 32 hex digits of the SHA-256 of its
+    canonical JSON), at most 50, `enforce` only with a release."""
+    if len(forms) > MOST_FORMS:
+        return "projede çok form var"
+    ids = set()
+    for f in forms:
+        if not _form_id_ok(f["id"]) or f["id"] in ids:
+            return f"“{f['id']}” bir form kimliği olamaz ya da iki kez kullanılmış"
+        ids.add(f["id"])
+        if not _form_name_ok(f["name"]):
+            return f"“{f['id']}” formunun adı geçersiz"
+        if not f["layer"].strip():
+            return f"“{f['name']}” formunun katmanı yazılmamış"
+        problem = body_problem(f["draft"])
+        if problem:
+            return problem
+        releases = f.get("releases", [])
+        if len(releases) > MOST_FORM_RELEASES:
+            return f"“{f['name']}” formunun çok yayını var"
+        for k, r in enumerate(releases):
+            if r["version"] == 0 or r["version"] != releases[0]["version"] + k:
+                return f"“{f['name']}” formunun yayınları sırayla numaralanmamış"
+            problem = body_problem(r["body"])
+            if problem:
+                return problem
+            if r["digest"] != hashlib.sha256(canonical_json(r["body"]).encode("utf-8")).hexdigest()[:32]:
+                return f"“{f['name']}” formunun {r['version']}. yayınının özeti içeriğine uymuyor"
+            if "note" in r and not _form_text_ok(r["note"], MOST_FORM_TEXT):
+                return f"“{f['name']}” formunun yayın notu çok uzun"
+        if f.get("enforce") and not releases:
+            return f"“{f['name']}” formu yayınlanmadan kuralları uygulanamaz"
     return None
 
 
@@ -1882,6 +2045,7 @@ class _Schema:
         self.block_extras = version >= SCHEMA_WITH_BLOCK_EXTRAS
         self.block_cards = version >= SCHEMA_WITH_BLOCK_CARDS
         self.dynamic_blocks = version >= SCHEMA_WITH_DYNAMIC_BLOCKS
+        self.forms = version >= SCHEMA_WITH_FORMS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -2205,6 +2369,7 @@ class _Schema:
                 **({"lengthStyle": (self.enum(("architectural", "engineering", "fractional")), False)} if self.imperial else {}),
                 **({"namedViews": (self.named_views_, False)} if self.views else {}),
                 **({"lineTypes": (self.line_types_, False), "lineTypeScale": (self.line_type_scale_, False)} if self.patterns else {}),
+                **({"forms": (self.forms_, False)} if self.forms else {}),
             }
         )(v)
         # A second coordinate system is another system than the project's own; a project without one has none (a
@@ -3013,6 +3178,7 @@ class _Schema:
         true; the list checked whole."""
         field = self.fields(
             {
+                **({"id": (self.text, False)} if self.forms else {}),
                 "max": (self.text, False),
                 "min": (self.text, False),
                 "kind": (self.enum(FIELD_KINDS), True),
@@ -3029,6 +3195,86 @@ class _Schema:
         if any(f.get("required") is False for f in all_):
             self.fail("bad_value", "required yalnız true yazılır")
         problem = fields_problem(all_)
+        if problem:
+            self.fail("bad_value", problem)
+        return all_
+
+    # The project's forms (schema 60, spec §6.11, docs/adr/0401).
+
+    def forms_(self, v):
+        """The project's forms: each its id, name, layer, draft, releases and `enforce` (true only), each item by its
+        type's fields; the list checked whole (`forms_problem`)."""
+
+        def true_(x):
+            if self.bool(x) is not True:
+                self.fail("bad_value", "yalnız true yazılır")
+            return True
+
+        def nonempty(read):
+            def check(x):
+                lst = read(x)
+                if not lst:
+                    self.fail("bad_value", "boş liste yazılmaz")
+                return lst
+            return check
+
+        widgets = ("text", "textArea", "number", "date", "check", "switch", "list", "radio", "segmented")
+        check = self.fields({"rule": (self.text, True), "message": (self.text, True)})
+
+        def item(x):
+            if type(x) is not dict:
+                self.fail("wrong_type", "harita olmalı")
+            shapes = {
+                "tab": {"id": (self.text, True), "label": (self.text, True), "items": (items, True)},
+                "group": {
+                    "id": (self.text, True),
+                    "label": (self.text, False),
+                    "columns": (self.uint(8), False),
+                    "visibleWhen": (self.text, False),
+                    "items": (items, True),
+                },
+                "field": {
+                    "id": (self.text, True),
+                    "field": (self.text, True),
+                    "label": (self.text, False),
+                    "help": (self.text, False),
+                    "placeholder": (self.text, False),
+                    "widget": (self.enum(widgets), False),
+                    "readOnly": (true_, False),
+                    "required": (true_, False),
+                    "visibleWhen": (self.text, False),
+                    "requiredWhen": (self.text, False),
+                    "readOnlyWhen": (self.text, False),
+                    "default": (self.text, False),
+                    "checks": (nonempty(self.array(check)), False),
+                },
+                "note": {"id": (self.text, True), "text": (self.text, True)},
+            }
+            kind = x.get("type")
+            if kind not in shapes:
+                self.path.append("type")
+                self.fail("bad_value", f"“{kind}” bilinmiyor ({', '.join(shapes)})")
+            return {"type": kind, **self.fields({"type": (self.text, True), **shapes[kind]})(x)}
+
+        def items(x):
+            return self.array(item)(x)
+
+        body = self.fields({"revision": (self.uint(32), True), "items": (items, True)})
+        release = self.fields(
+            {"version": (self.uint(32), True), "digest": (self.text, True), "body": (body, True), "note": (self.text, False)}
+        )
+        form = self.fields(
+            {
+                "id": (self.text, True),
+                "name": (self.text, True),
+                "layer": (self.text, True),
+                "draft": (body, True),
+                "releases": (nonempty(self.array(release)), False),
+                "enforce": (true_, False),
+            }
+        )
+        all_ = nonempty(self.array(form))(v)
+        problem = forms_problem(all_)
         if problem:
             self.fail("bad_value", problem)
         return all_

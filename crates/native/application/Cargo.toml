@@ -20,6 +20,8 @@ kentos-project = { path = "../project" }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
 # Katman süzgeci (docs/adr/0211 §3): the expression language, evaluated as İfadeyle seç evaluates a condition.
 kentos-expression = { path = "../../shared/expression" }
+# The forms core (docs/adr/0401): a form's preflight, rules and a record's validation.
+kentos-forms = { path = "../../shared/forms" }
 # Katman stili's renderers (docs/adr/0213 §5): the style core's rules of a renderer, the web's through WASM.
 kentos-style-core = { path = "../../shared/style-core" }
 # The style library and its .kstil file (cad.library.edit, docs/adr/0314 §3).

@@ -162,6 +162,10 @@ pub mod trim;
 pub mod ucs_set;
 pub mod units_change;
 pub mod views_edit;
+pub mod forms;
+pub mod forms_edit;
+pub mod forms_submit;
+pub mod forms_validate;
 pub mod widths;
 
 pub use context::ExecutionContext;
@@ -215,6 +219,19 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_VIEWS_EDIT,
         kentos_contracts::CAD_VIEWS_EDIT_VERSION,
+    ),
+    // The project's forms ([`forms_edit`], [`forms_validate`], [`forms_submit`], docs/adr/0401).
+    (
+        kentos_contracts::CAD_FORMS_EDIT,
+        kentos_contracts::CAD_FORMS_EDIT_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_FORMS_VALIDATE,
+        kentos_contracts::CAD_FORMS_VALIDATE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_FORMS_SUBMIT,
+        kentos_contracts::CAD_FORMS_SUBMIT_VERSION,
     ),
     // Öne getir and Arkaya gönder ([`entities_order`], docs/adr/0260 §5).
     (

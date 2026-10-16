@@ -3978,6 +3978,98 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // The project's forms (docs/adr/0401), held together by fixtures/commands/v1/cad.forms.*.json.
+        // The web is paused (docs/adr/0228).
+        CommandDescriptor {
+            id: crate::CAD_FORMS_EDIT.into(),
+            version: crate::CAD_FORMS_EDIT_VERSION,
+            title: "Formlar".into(),
+            summary: "Projenin formlarını düzenler. Form bir katmanın veri giriş ekranıdır: sekmeler, gruplar ve katmanın alanlarına kararlı anahtarlarıyla (alanın id'si, yoksa adı) bağlı alan öğeleri; bir alanı gösteren (visibleWhen), zorunlu kılan (requiredWhen) ve kilitleyen (readOnlyWhen) kurallar ve kaydın geçmesi gereken denetimler (checks); kurallar İfadeyle seç'in dilindedir. \
+                      edit.kind: create (katmanın formu; body verilmezse katmanın alanlarından, id verilmezse adından üretilir), update (taslağı değiştirir; body.revision taslağın şimdiki sürümü olmalı, değilse form_draft_changed; saklanan taslak bir sonraki sürümdür), rename, remove, publish (taslağı sıradaki yayın olarak dondurur; ön denetimde hata varsa form_preflight; en çok 50 yayın, fazlası en eskiyi düşürür: form_release_dropped), enforce (on: son yayının kuralları katmanın her öznitelik yazmasında uygulanır, cad.entities.set'te form_rules; yayın yoksa form_unpublished). \
+                      Çıktının issues'u taslağın ön denetimidir (form_field_unknown, form_widget_unfit, form_rule_invalid, form_required_hidden …; uyarılar da). Proje ayarıdır, geri alma adımı değildir; nesneler değişmez. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::FormsEdit>(),
+            output: schema::<crate::FormsEdited>(),
+            plan: Some(schema::<crate::FormsEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bina katmanının alanlarından “Bina denetimi” formunu oluştur".into(),
+                    input: json!({ "edit": { "kind": "create", "name": "Bina denetimi", "layer": "bina" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Taslağı yayınla".into(),
+                    input: json!({ "edit": { "kind": "publish", "id": "bina-denetimi", "note": "İlk yayın" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Son yayının kurallarını katmanda uygula".into(),
+                    input: json!({ "edit": { "kind": "enforce", "id": "bina-denetimi", "on": true } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_FORMS_VALIDATE.into(),
+            version: crate::CAD_FORMS_VALIDATE_VERSION,
+            title: "Formu denetle".into(),
+            summary: "Bir formun ve bir kaydın durumunu söyler, hiçbir şey yazmaz. Formun ön denetimi (olmayan alan, uymayan öğe, okunamayan kural, gizlenebilen zorunlu alan; uyarılar da); uid verilirse o nesnenin öğeleri (gösterilen, zorunlu, salt okunur) ve values (alan anahtarlarıyla) yazılmış gibi kaydın sorunları: zorunlu alan boş (form_required), değer alanın kuralına uymuyor (form_value_invalid), denetim tutmuyor (form_check_failed), gizli ya da salt okunur alan değişti (form_hidden, form_read_only). \
+                      draft: son yayın yerine taslak (tasarımcının önizlemesi); defaults: formun varsayılanları kaydın boş alanlarına önce yazılır (yeni kayıt). Ön denetimde hata olan form reddedilmez, kaydı sorulmaz."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::FormsValidate>(),
+            output: schema::<crate::FormsValidated>(),
+            plan: Some(schema::<crate::FormsValidated>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir binanın kaydını “ek inceleme gerekli” yazılmış gibi denetle".into(),
+                input: json!({ "form": "bina-denetimi", "uid": "0192f5a1-25a0-7000-8000-000000000201", "values": { "Durum": "inceleme" } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_FORMS_SUBMIT.into(),
+            version: crate::CAD_FORMS_SUBMIT_VERSION,
+            title: "Formla kaydet".into(),
+            summary: "Bir nesnenin kaydını formla yazar: values alan anahtarlarıyla (boş değer özniteliği kaldırır); formun kuralları ve alanların kuralları geçerse bütün kayıt, geçmezse hiçbir şey (form_invalid: ilk sorun, path onu veren değer). Gizli alanın değeri silinmez; gösterilmeyen, gizli ya da salt okunur alana yazılmaz. \
+                      Varsayılan olarak son yayın kullanılır; draft: taslak (yayınlanmamış form). defaults: formun varsayılanları kaydın boş alanlarına önce yazılır (yeni kayıt). Tek geri alma adımı: “Form: <ad>”. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::FormsSubmit>(),
+            output: schema::<crate::FormsSubmitted>(),
+            plan: Some(schema::<crate::FormsSubmitted>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir binanın durumunu ve notunu formla yaz".into(),
+                input: json!({ "form": "bina-denetimi", "uid": "0192f5a1-25a0-7000-8000-000000000201", "values": { "Durum": "inceleme", "Not": "Çatı arası ayrıca bakılmalı." } }),
+                output: None,
+            }],
+        },
         // A local project's unit, keeping the sizes or the numbers (docs/adr/0256 §1), held together
         // by fixtures/commands/v1/cad.units.change.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -5011,6 +5103,15 @@ mod tests {
                     crate::CAD_VIEWS_EDIT => {
                         serde_json::from_value::<crate::ViewsEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_FORMS_EDIT => {
+                        serde_json::from_value::<crate::FormsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_FORMS_VALIDATE => {
+                        serde_json::from_value::<crate::FormsValidate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_FORMS_SUBMIT => {
+                        serde_json::from_value::<crate::FormsSubmit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SHEETS_EDIT => {
                         serde_json::from_value::<crate::SheetsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -5289,6 +5390,18 @@ mod tests {
                         }
                         crate::CAD_VIEWS_EDIT => {
                             serde_json::from_value::<crate::ViewsEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_FORMS_EDIT => {
+                            serde_json::from_value::<crate::FormsEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_FORMS_VALIDATE => {
+                            serde_json::from_value::<crate::FormsValidated>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_FORMS_SUBMIT => {
+                            serde_json::from_value::<crate::FormsSubmitted>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_SHEETS_EDIT => {

@@ -232,6 +232,35 @@ codes! {
     /// A named view kept over one of the same name (docs/adr/0285 §1).
     VIEW_REPLACED = "view_replaced", Warning, false, "Aynı adlı görünümün yerine yenisi kaydedildi.";
 
+    // ── Forms (docs/adr/0401) ───────────────────────────────────────────
+    /// A form id that is not 1–64 letters, digits, `-`, `_` or `.`.
+    INVALID_FORM_ID = "invalid_form_id", Failed, false, "Form kimliği 1–64 harf, rakam, -, _ ya da . olmalı.";
+    /// A form name empty, longer than 64 characters or with control characters.
+    INVALID_FORM_NAME = "invalid_form_name", Failed, false, "Form adı boş, 64 karakterden uzun ya da denetim karakterli.";
+    /// A form body that breaks the contract's rules (ids, tabs, depth, lengths).
+    INVALID_FORM = "invalid_form", Failed, false, "Formun yapısı kurallarına uymuyor (öğe kimlikleri, sekmeler, derinlik, uzunluklar).";
+    /// A form the project has not.
+    UNKNOWN_FORM = "unknown_form", Failed, false, "Bu kimlikle bir form yok.";
+    /// A new form with the id of another.
+    FORM_EXISTS = "form_exists", Failed, false, "Bu kimlikle başka bir form var.";
+    /// A 101st form.
+    TOO_MANY_FORMS = "too_many_forms", Failed, false, "Projede en çok 100 form olur.";
+    /// A draft saved over a revision it was not made on.
+    FORM_DRAFT_CHANGED = "form_draft_changed", Conflict, true, "Formun taslağı girdi hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Taslağı yeniden okuyun.";
+    /// A form whose preflight has an error: it is not published, a record is not written through it.
+    FORM_PREFLIGHT = "form_preflight", Failed, false, "Formun ön denetiminde hata var (olmayan alan, uymayan öğe, okunamayan kural, gizlenebilen zorunlu alan).";
+    /// A form never published, where a release is needed.
+    FORM_UNPUBLISHED = "form_unpublished", Failed, false, "Form hiç yayınlanmadı; önce yayınlayın ya da taslağı kullanın.";
+    /// An object that is not on the form's layer.
+    FORM_LAYER_MISMATCH = "form_layer_mismatch", Failed, false, "Nesne formun katmanında değil.";
+    /// A record the form refuses: a required field empty, a value or a check that does not hold, a
+    /// hidden or read-only field changed.
+    FORM_INVALID = "form_invalid", Failed, false, "Kayıt formun kurallarına uymuyor: zorunlu alan boş, değer ya da denetim uymuyor, gizli ya da salt okunur alan değişti.";
+    /// An attribute write that breaks the rules of a form the layer enforces (`cad.entities.set`).
+    FORM_RULES = "form_rules", Failed, false, "Yazma, katmanın uyguladığı formun kurallarına uymuyor.";
+    /// A release past the fiftieth: the oldest was dropped.
+    FORM_RELEASE_DROPPED = "form_release_dropped", Warning, false, "Form en çok 50 yayın tutar; en eskisi kaldırıldı.";
+
     // ── Properties, texts, links ────────────────────────────────────────
     /// A text whose text is empty or only white space.
     EMPTY_TEXT = "empty_text", Failed, false, "Yazının metni boş ya da yalnız boşluk.";

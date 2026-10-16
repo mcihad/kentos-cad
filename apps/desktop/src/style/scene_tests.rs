@@ -131,6 +131,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
             length_style: None,
             named_ucs: Vec::new(),
             named_views: Vec::new(),
+            forms: Vec::new(),
             ucs: None,
             srid: 5256,
             length_decimals: 3,

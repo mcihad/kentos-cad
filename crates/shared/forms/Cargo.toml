@@ -1,0 +1,15 @@
+[package]
+name = "kentos-forms"
+description = "The KentOS forms core (docs/adr/0401): a form's preflight, its rules over a record and the record's validation; shared by the desktop, the headless server, Python and MCP"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure dependencies only (CLAUDE.md §14): the contracts' shapes and the expression language.
+[dependencies]
+kentos-contracts = { path = "../contracts" }
+kentos-expression = { path = "../expression" }
+
+[dev-dependencies]
+serde_json = { workspace = true }

@@ -445,6 +445,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut address_locators = Vec::new();
     let (mut ucs, mut named_ucs) = (None, Vec::new());
     let mut named_views = Vec::new();
+    let mut forms = Vec::new();
     let mut length_style = None;
     let (mut text_styles, mut dimension_styles) = (Vec::new(), Vec::new());
     let (mut workspace, mut drawing_font, mut area_decimals, mut length_decimals) =
@@ -469,6 +470,40 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 )?)
             }
             "plotScale" => plot_scale = Some(r.float()?),
+            // Schema 60 (docs/adr/0401 §3): the project's forms, read whole and checked.
+            "forms" if has.forms => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let list: Vec<kentos_contracts::ProjectForm> =
+                    serde_json::from_value(value.clone()).map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(code, at, &format!("formlar okunamadı: {words}"))
+                    })?;
+                // Read back exactly as the writer writes it: no field at its default.
+                if serde_json::to_value(&list).ok().as_ref() != Some(&value) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "formlar yazıcının biçiminde değil (varsayılan değerinde bir alan yazılmış)",
+                    ));
+                }
+                if list.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boş liste yazılmaz; form yoksa alan hiç yazılmaz",
+                    ));
+                }
+                if let Some(problem) = kentos_contracts::forms_problem(&list) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                forms = list;
+            }
             // Schema 56 (docs/adr/0313 §1): the project's line types and line type scale.
             "lineTypes" if has.patterns => {
                 let at = r.position();
@@ -664,6 +699,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         ucs,
         named_ucs,
         named_views,
+        forms,
         length_style,
     })
 }
@@ -989,7 +1025,7 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
             "scenario" if has.temporal => scenario = Some(temporal::scenario(r)?),
             "replaces" if has.temporal => replaces = Some(text(r)?),
             "snap" if has.layer_snap => snap = Some(layer_snap(r)?),
-            "fields" if has.layer_fields => fields = Some(layer_fields(r)?),
+            "fields" if has.layer_fields => fields = Some(layer_fields(r, has.forms)?),
             "service" if has.services => service = Some(services::service_layer(r)?),
             "feed" if has.services => feed = Some(services::feature_feed(r)?),
             "type" => {
@@ -1132,21 +1168,24 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
 /// Schema 26's fields of a layer (docs/adr/0199 §1), checked whole
 /// (`layer_fields_problem`): a list that is not empty, each field by its
 /// kind's rules, no name twice.
-fn layer_fields(r: &mut Reader<'_>) -> Result<Vec<LayerField>, KcadError> {
+fn layer_fields(r: &mut Reader<'_>, ids: bool) -> Result<Vec<LayerField>, KcadError> {
     let at = r.position();
-    let all = list(r, |r, _| layer_field(r))?;
+    let all = list(r, |r, _| layer_field(r, ids))?;
     match layer_fields_problem(&all) {
         Some(problem) => Err(r.fail_at(Code::BadValue, at, &problem)),
         None => Ok(all),
     }
 }
 
-fn layer_field(r: &mut Reader<'_>) -> Result<LayerField, KcadError> {
+/// A layer's field; `ids`: schema 60's stable `id` is read (docs/adr/0401 §2).
+fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
+    let mut id = None;
     let (mut name, mut kind, mut alias, mut length, mut scale) = (None, None, None, None, None);
     let (mut min, mut max, mut values, mut default, mut must) = (None, None, None, None, None);
     let count = |r: &mut Reader<'_>| r.uint(u64::from(u32::MAX)).map(|n| n as u32);
     map(r, |r, key| {
         match key {
+            "id" if ids => id = Some(text(r)?),
             "max" => max = Some(text(r)?),
             "min" => min = Some(text(r)?),
             "kind" => kind = Some(named(r, &LayerFieldKind::ALL.map(|k| (k.name(), k)))?),
@@ -1168,6 +1207,7 @@ fn layer_field(r: &mut Reader<'_>) -> Result<LayerField, KcadError> {
         ));
     }
     Ok(LayerField {
+        id,
         name: required(r, name, "name")?,
         alias,
         kind: required(r, kind, "kind")?,

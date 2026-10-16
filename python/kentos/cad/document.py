@@ -35,6 +35,7 @@ from .types import (
     LayerNode,
     LayerNodeType,
     NamedView,
+    ProjectForm,
     ProjectSettings,
     SheetInfo,
     Workspace,
@@ -679,6 +680,15 @@ class Document:
         the desktop's camera, not the drawing's."""
         raw = json.loads(self._session.summary())["settings"].get("namedViews") or []
         return [NamedView.from_json(v) for v in raw]
+
+    @property
+    def forms(self) -> list[ProjectForm]:
+        """The project's forms, in the order they were made (docs/adr/0401): each its layer, draft, releases and
+        whether its latest release is the layer's write profile. Make, save, publish and enforce them with
+        ``kentos.cad.forms.edit``; ask about a record with ``kentos.cad.forms.validate`` and write one with
+        ``kentos.cad.forms.submit``."""
+        raw = json.loads(self._session.summary())["settings"].get("forms") or []
+        return [ProjectForm.from_json(f) for f in raw]
 
     def _ucs_of(self, ucs: UcsFrame | str | None) -> UcsFrame:
         if ucs is None:

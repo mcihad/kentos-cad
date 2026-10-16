@@ -39,6 +39,8 @@ use crate::{
     snap_find, stretch, styles_edit, styles_impact, transform, ucs_set, units_change, views_edit,
 };
 use crate::blocks_insert;
+use crate::{forms_edit, forms_submit, forms_validate};
+use kentos_contracts::{FormsEdit, FormsSubmit, FormsValidate};
 
 /// Why a command was not run: not a refusal of the command (that is its
 /// `CommandResult`), but a command this host does not run or input that is
@@ -112,6 +114,9 @@ macro_rules! by_command {
             kentos_contracts::CAD_ENTITIES_ORDER => $then!(entities_order, EntitiesOrder),
             kentos_contracts::CAD_UCS_SET => $then!(ucs_set, UcsSet),
             kentos_contracts::CAD_VIEWS_EDIT => $then!(views_edit, ViewsEdit),
+            kentos_contracts::CAD_FORMS_EDIT => $then!(forms_edit, FormsEdit),
+            kentos_contracts::CAD_FORMS_VALIDATE => $then!(forms_validate, FormsValidate),
+            kentos_contracts::CAD_FORMS_SUBMIT => $then!(forms_submit, FormsSubmit),
             kentos_contracts::CAD_ENTITIES_TRIM => $then!(entities_trim, EntitiesTrim),
             kentos_contracts::CAD_ENTITIES_EXTEND => $then!(entities_extend, EntitiesTrim),
             kentos_contracts::CAD_ENTITIES_FILLET => $then!(entities_fillet, EntitiesFillet),

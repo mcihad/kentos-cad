@@ -5,7 +5,12 @@ import type { LayerFieldKind } from "./LayerFieldKind";
 /**
  * A field of a layer (docs/adr/0199 §1): its name is the attribute's key.
  */
-export type LayerField = { name: string, 
+export type LayerField = { 
+/**
+ * The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a
+ * rename writes the old name here so a binding holds. Unique among the layer's fields' keys.
+ */
+id?: string, name: string, 
 /**
  * The name the table and the form show.
  */

@@ -100,6 +100,11 @@ pub struct FieldChoice {
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerField {
+    /// The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a
+    /// rename writes the old name here so a binding holds. Unique among the layer's fields' keys.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub id: Option<String>,
     pub name: String,
     /// The name the table and the form show.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -142,6 +147,7 @@ impl LayerField {
     /// A field of `kind` named `name`, with no other rule.
     pub fn new(name: impl Into<String>, kind: LayerFieldKind) -> LayerField {
         LayerField {
+            id: None,
             name: name.into(),
             alias: None,
             kind,
@@ -153,6 +159,11 @@ impl LayerField {
             required: false,
             default: None,
         }
+    }
+
+    /// The field's key: its stable id, else its name (what a form binds to, docs/adr/0401 §2).
+    pub fn key(&self) -> &str {
+        self.id.as_deref().unwrap_or(&self.name)
     }
 
     /// The name a message, the table and the form give it: its alias when
@@ -534,6 +545,17 @@ fn canonical_of(field: &LayerField, v: &str) -> bool {
 /// words the Alanlar window, the project file and the server say it.
 pub fn field_problem(field: &LayerField) -> Option<String> {
     let name = &field.name;
+    if let Some(id) = &field.id {
+        let bad = js_trim(id).is_empty()
+            || js_trim(id) != id
+            || id.chars().count() > MAX_NAME
+            || id.chars().any(char::is_control);
+        if bad {
+            return Some(format!(
+                "“{name}” alanının kimliği boş olamaz, en çok {MAX_NAME} karakterdir, boşlukla başlayıp bitmez ve denetim karakteri içermez."
+            ));
+        }
+    }
     if js_trim(name).is_empty() {
         return Some("Alanın adı boş olamaz.".to_owned());
     }
@@ -672,9 +694,16 @@ pub fn field_problem(field: &LayerField) -> Option<String> {
 /// twice (folded the Turkish way).
 pub fn fields_problem(fields: &[LayerField]) -> Option<String> {
     let mut seen = std::collections::HashSet::new();
+    let mut keys = std::collections::HashSet::new();
     for f in fields {
         if let Some(p) = field_problem(f) {
             return Some(p);
+        }
+        if !keys.insert(f.key()) {
+            return Some(format!(
+                "“{}” kimliği iki alanda var; bir alanın kimliği ya da adı başka alanın kimliği olamaz.",
+                f.key()
+            ));
         }
         if !seen.insert(fold(&f.name)) {
             return Some(format!(

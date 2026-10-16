@@ -197,6 +197,12 @@ impl Document {
                 node.name
             )));
         }
+        let fields = keep_field_ids(
+            &node.fields,
+            fields,
+            renames,
+            &kentos_contracts::forms_of_layer(&self.settings.forms, id),
+        );
         if let Some(problem) = fields_problem(&fields) {
             return Err(Refusal(problem));
         }
@@ -943,4 +949,48 @@ pub(crate) fn base_mut(entity: &mut Entity) -> &mut EntityBase {
 /// Gives `entity` the slot `slot` as its id.
 pub(crate) fn set_slot(entity: &mut Entity, slot: Slot) {
     base_mut(entity).id = slot.0;
+}
+
+/// A layer's new fields keep their stable ids (docs/adr/0401 §2): a field keeps the id it had (found
+/// by its rename's source or by its name); a field a form of the layer binds by its name gets that
+/// name as its id when it is renamed, so the form still finds it. A new field whose name a kept id
+/// already holds gets a fresh id, the name and a number. A field given an id keeps it.
+pub(crate) fn keep_field_ids(
+    before: &[LayerField],
+    mut fields: Vec<LayerField>,
+    renames: &[(String, String)],
+    forms: &[&kentos_contracts::ProjectForm],
+) -> Vec<LayerField> {
+    let bound: HashSet<&str> = forms.iter().flat_map(|f| f.bound_keys()).collect();
+    for f in fields.iter_mut().filter(|f| f.id.is_none()) {
+        let source = renames
+            .iter()
+            .find(|(_, new)| *new == f.name)
+            .map_or(f.name.as_str(), |(old, _)| old.as_str());
+        let Some(old) = before.iter().find(|b| b.name == source) else {
+            continue;
+        };
+        if old.id.is_some() {
+            f.id.clone_from(&old.id);
+        } else if old.name != f.name && bound.contains(old.name.as_str()) {
+            f.id = Some(old.name.clone());
+        }
+    }
+    // A key held twice: the field whose name it is (a new or untouched field) moves to a fresh id.
+    let ids: HashSet<String> = fields.iter().filter_map(|f| f.id.clone()).collect();
+    let mut taken: HashSet<String> = fields.iter().map(|f| f.key().to_owned()).collect();
+    for f in fields
+        .iter_mut()
+        .filter(|f| f.id.is_none() && ids.contains(&f.name))
+    {
+        // Within the contract's 64 characters: the name cut to leave room for the number.
+        let stem: String = f.name.chars().take(58).collect();
+        let fresh = (2..100_000)
+            .map(|n| format!("{stem}-{n}"))
+            .find(|k| !taken.contains(k))
+            .unwrap_or_else(|| f.name.clone());
+        taken.insert(fresh.clone());
+        f.id = Some(fresh);
+    }
+    fields
 }

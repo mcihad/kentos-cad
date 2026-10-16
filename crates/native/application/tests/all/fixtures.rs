@@ -55,6 +55,8 @@ use kentos_native_application::{
     block_params, blocks_insert, blocks_query, blocks_replace, file_import_block, library_edit, line_types_edit,
     styles_impact,
 };
+use kentos_domain::contracts::{FormsEdit, FormsSubmit, FormsValidate};
+use kentos_native_application::{forms_edit, forms_submit, forms_validate};
 use serde_json::{Value, json};
 
 type Outcome<T> = Result<T, String>;
@@ -333,6 +335,25 @@ fn bulge_number<'a>(bulges: &'a mut Option<Vec<f64>>, rest: &str) -> Option<&'a 
 trait Input {
     /// The number at an error path; `None` when the input has no such place.
     fn number(&mut self, path: &str) -> Option<&mut f64>;
+}
+
+// The forms' inputs have no number a case makes NaN (docs/adr/0401 §9).
+impl Input for FormsEdit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for FormsValidate {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for FormsSubmit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
 }
 
 impl Input for PolygonCreate {
@@ -2067,6 +2088,9 @@ fn run_op(
         kentos_domain::contracts::CAD_SETTINGS_SET => run!(settings_set, SettingsSet),
         kentos_domain::contracts::CAD_UCS_SET => run!(ucs_set, UcsSet),
         kentos_domain::contracts::CAD_VIEWS_EDIT => run!(views_edit, ViewsEdit),
+        kentos_domain::contracts::CAD_FORMS_EDIT => run!(forms_edit, FormsEdit),
+        kentos_domain::contracts::CAD_FORMS_VALIDATE => run!(forms_validate, FormsValidate),
+        kentos_domain::contracts::CAD_FORMS_SUBMIT => run!(forms_submit, FormsSubmit),
         kentos_domain::contracts::CAD_UNITS_CHANGE => run!(units_change, UnitsChange),
         kentos_domain::contracts::FILE_IMPORT_DXF => run!(file_import, ImportDxf),
         kentos_domain::contracts::CAD_SHEETS_EDIT => run!(sheets_edit, SheetsEdit),

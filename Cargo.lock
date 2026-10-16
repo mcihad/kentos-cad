@@ -2661,6 +2661,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-forms"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-expression",
+ "serde_json",
+]
+
+[[package]]
 name = "kentos-geometry-core"
 version = "0.1.0"
 dependencies = [
@@ -2739,6 +2748,7 @@ dependencies = [
  "kentos-domain",
  "kentos-expression",
  "kentos-formats",
+ "kentos-forms",
  "kentos-geometry-core",
  "kentos-kcad",
  "kentos-project",

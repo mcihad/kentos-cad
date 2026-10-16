@@ -107,6 +107,8 @@ fn a_modern_client_discovers_lists_and_draws_a_measured_polygon_it_saves_and_rea
         "cad.styles.edit",
         "cad.settings.set",
         "cad.views.edit",
+        "cad.forms.edit",
+        "cad.forms.submit",
     ] {
         let tool = tools
             .iter()
@@ -1447,4 +1449,72 @@ fn an_agent_sets_a_ucs_and_turns_its_points_explicitly() {
         json!({ "drawing": drawing, "layerId": layer, "a": { "x": 100.0, "y": 200.0 }, "b": { "x": 100.0, "y": 210.0 } }),
     );
     assert_eq!(line["isError"], false, "{line}");
+}
+
+#[test]
+fn an_agent_makes_publishes_and_uses_a_form() {
+    // docs/adr/0401 §9: a layer's form through the catalog's commands, as the desktop's window and Python.
+    let mut server = Server::new();
+    let made = call(
+        &mut server,
+        "drawing.new",
+        json!({ "name": "Mahalle", "workspace": "gis", "srid": 5256 }),
+    );
+    let drawing = made["structuredContent"]["drawing"]
+        .as_str()
+        .expect("a handle")
+        .to_owned();
+    let added = call(
+        &mut server,
+        "cad.layers.edit",
+        json!({ "drawing": drawing, "operation": "add", "name": "Bina", "activate": true }),
+    );
+    assert_eq!(added["isError"], false, "{added}");
+    let layer = added["structuredContent"]["output"]["layer"]
+        .as_str()
+        .expect("the new layer")
+        .to_owned();
+    let fields = call(
+        &mut server,
+        "cad.layers.edit",
+        json!({ "drawing": drawing, "operation": "fields", "layer": layer, "fields": [
+            { "name": "Durum", "kind": "text", "required": true },
+            { "name": "Kat", "kind": "integer", "min": "1" }
+        ] }),
+    );
+    assert_eq!(fields["isError"], false, "{fields}");
+    let form = call(
+        &mut server,
+        "cad.forms.edit",
+        json!({ "drawing": drawing, "edit": { "kind": "create", "name": "Bina denetimi", "layer": layer } }),
+    );
+    assert_eq!(form["isError"], false, "{form}");
+    assert_eq!(
+        form["structuredContent"]["output"]["form"]["id"],
+        "bina-denetimi"
+    );
+    let published = call(
+        &mut server,
+        "cad.forms.edit",
+        json!({ "drawing": drawing, "edit": { "kind": "publish", "id": "bina-denetimi" } }),
+    );
+    assert_eq!(
+        published["structuredContent"]["output"]["forms"][0]["version"],
+        1
+    );
+    let asked = call(
+        &mut server,
+        "cad.forms.validate",
+        json!({ "drawing": drawing, "form": "bina-denetimi" }),
+    );
+    assert_eq!(
+        asked["structuredContent"]["output"]["valid"], true,
+        "{asked}"
+    );
+    let refused = call(
+        &mut server,
+        "cad.forms.submit",
+        json!({ "drawing": drawing, "form": "yok", "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6dffff" }),
+    );
+    assert_eq!(refused["isError"], true, "{refused}");
 }

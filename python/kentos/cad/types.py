@@ -868,6 +868,44 @@ FileUnitName = Literal["mm", "cm", "dm", "m", "km", "yd", "mi", "in", "ft", "usF
 """The names of :class:`FileUnit`, for a plain string."""
 
 
+class FormSeverity(_StrEnum):
+    """How much an issue weighs: an error stops a save or a publish, a warning is said."""
+    ERROR = "error"
+    WARNING = "warning"
+
+
+FormSeverityName = Literal["error", "warning"]
+"""The names of :class:`FormSeverity`, for a plain string."""
+
+
+class FormWidget(_StrEnum):
+    """How a field is edited.
+
+    - ``text``: One line of text.
+    - ``textArea``: Several lines of text.
+    - ``number``: A number: integer or decimal fields.
+    - ``date``: A date (YYYY-AA-GG).
+    - ``check``: A check box: yes or no fields.
+    - ``switch``: A switch: yes or no fields.
+    - ``list``: A drop-down list: fields with a value list.
+    - ``radio``: Radio buttons: fields with a value list.
+    - ``segmented``: A segmented choice: fields with a short value list.
+    """
+    TEXT = "text"
+    TEXT_AREA = "textArea"
+    NUMBER = "number"
+    DATE = "date"
+    CHECK = "check"
+    SWITCH = "switch"
+    LIST = "list"
+    RADIO = "radio"
+    SEGMENTED = "segmented"
+
+
+FormWidgetName = Literal["text", "textArea", "number", "date", "check", "switch", "list", "radio", "segmented"]
+"""The names of :class:`FormWidget`, for a plain string."""
+
+
 class GradientShape(_StrEnum):
     """How a gradient runs over its hatch (docs/adr/0186 §3).
 
@@ -2719,6 +2757,58 @@ class FeatureChange(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> FeatureChange:
         return _variant(_FEATURE_CHANGE, "FeatureChange", "op", data).from_json(data)
+
+
+class FormItem(_Union):
+    """An item of a form: a tab (only at the top), a group, a field or a note.
+
+    One of:
+
+    - :class:`TabFormItem` (``type: tab``)
+    - :class:`GroupFormItem` (``type: group``)
+    - :class:`FieldFormItem` (``type: field``)
+    - :class:`NoteFormItem` (``type: note``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "type"
+
+    if TYPE_CHECKING:
+        # Every variant has these.
+        id: str
+
+    @property
+    def type(self) -> str:
+        """The name of the variant (``type`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormItem:
+        return _variant(_FORM_ITEM, "FormItem", "type", data).from_json(data)
+
+
+class FormsOp(_Union):
+    """What `cad.forms.edit` does.
+
+    One of:
+
+    - :class:`CreateFormsOp` (``kind: create``)
+    - :class:`UpdateFormsOp` (``kind: update``)
+    - :class:`RenameFormsOp` (``kind: rename``)
+    - :class:`RemoveFormsOp` (``kind: remove``)
+    - :class:`PublishFormsOp` (``kind: publish``)
+    - :class:`EnforceFormsOp` (``kind: enforce``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsOp:
+        return _variant(_FORMS_OP, "FormsOp", "kind", data).from_json(data)
 
 
 class HatchRegion(_Union):
@@ -10383,6 +10473,423 @@ class FileCommitted(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FormBody(_Model):
+    """A form's content: its items and the draft's revision (each kept change adds one).
+    Attributes:
+        revision: Raised by one with every saved change to the draft: an update names the revision it was made on. Unit: version.
+    """
+    revision: int
+    items: list[FormItem]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["revision"] = self.revision
+        out["items"] = [e0.to_json() for e0 in self.items]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormBody:
+        return cls(
+            revision=data["revision"],
+            items=[FormItem.from_json(e0) for e0 in data["items"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormCheck(_Model):
+    """A check of a field: an expression that must be true when the field is shown and filled, and what
+    the form says when it is not.
+    """
+    rule: str
+    message: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rule"] = self.rule
+        out["message"] = self.message
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormCheck:
+        return cls(
+            rule=data["rule"],
+            message=data["message"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormIssue(_Model):
+    """What a form's preflight or a record's validation found (docs/adr/0401 §4, §6): a stable code,
+    where (the item, the field's key, the rule) and the sentence that says it.
+    Attributes:
+        code: `form_field_unknown`, `form_required`, … (the forms core's `codes`).
+        field: The layer field's key it is about.
+        item: The item it is about.
+        rule: The rule it is about: `visibleWhen`, `requiredWhen`, `readOnlyWhen`, `default`, `checks/0` …
+    """
+    code: str
+    severity: FormSeverity | FormSeverityName
+    message: str
+    field: str | None | Unset = UNSET
+    item: str | None | Unset = UNSET
+    rule: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["code"] = self.code
+        out["severity"] = _enum_out(self.severity)
+        out["message"] = self.message
+        if self.field is not UNSET:
+            out["field"] = self.field
+        if self.item is not UNSET:
+            out["item"] = self.item
+        if self.rule is not UNSET:
+            out["rule"] = self.rule
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormIssue:
+        return cls(
+            code=data["code"],
+            severity=_enum_in(FormSeverity, data["severity"]),
+            message=data["message"],
+            field=data.get("field", UNSET),
+            item=data.get("item", UNSET),
+            rule=data.get("rule", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormItemState(_Model):
+    """An item's state for a record: shown (its own rule and its group's), required, read-only."""
+    id: str
+    shown: bool
+    read_only: bool | Unset = UNSET
+    required: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["shown"] = self.shown
+        if self.read_only is not UNSET:
+            out["readOnly"] = self.read_only
+        if self.required is not UNSET:
+            out["required"] = self.required
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormItemState:
+        return cls(
+            id=data["id"],
+            shown=data["shown"],
+            read_only=data.get("readOnly", UNSET),
+            required=data.get("required", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormRelease(_Model):
+    """A frozen copy of a form's body: what data entry and the write profile use.
+    Attributes:
+        version: 1, 2, …: one more than the release before. Unit: version.
+        digest: The first 32 hex digits of the SHA-256 of the body's canonical JSON ([`body_digest`]).
+        note: What changed, as the publisher wrote it.
+    """
+    version: int
+    digest: str
+    body: FormBody
+    note: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["version"] = self.version
+        out["digest"] = self.digest
+        out["body"] = self.body.to_json()
+        if self.note is not UNSET:
+            out["note"] = self.note
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormRelease:
+        return cls(
+            version=data["version"],
+            digest=data["digest"],
+            body=FormBody.from_json(data["body"]),
+            note=data.get("note", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormSummary(_Model):
+    """A form as the lists show it.
+    Attributes:
+        revision: The draft's revision. Unit: version.
+        version: The latest release's version; none: never published. Unit: version.
+    """
+    id: str
+    name: str
+    layer: str
+    revision: int
+    enforce: bool | Unset = UNSET
+    version: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["layer"] = self.layer
+        out["revision"] = self.revision
+        if self.enforce is not UNSET:
+            out["enforce"] = self.enforce
+        if self.version is not UNSET:
+            out["version"] = self.version
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormSummary:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            layer=data["layer"],
+            revision=data["revision"],
+            enforce=data.get("enforce", UNSET),
+            version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormsEdit(_Model):
+    """Input of `cad.forms.edit` v1.
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_form_id`, `invalid_form_name`,
+    `invalid_form`; `invalid_revision`, `revision_conflict` (status `conflict`); `unknown_form`,
+    `form_exists`, `too_many_forms`, `layer_not_found`, `not_a_layer`, `form_draft_changed` (status
+    `conflict`), `form_preflight`, `form_unpublished`. Warnings: `form_release_dropped`.
+    Attributes:
+        expected_revision: The document revision the input was prepared against, as decimal text.
+    """
+    edit: FormsOp
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["edit"] = self.edit.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsEdit:
+        return cls(
+            edit=FormsOp.from_json(data["edit"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormsEdited(_Model):
+    """Output of `cad.forms.edit` v1, and what plan says it would do.
+    Attributes:
+        forms: The project's forms afterwards, in order.
+        issues: The draft's preflight afterwards (none for a remove).
+        changed: Whether the settings changed.
+        revision: The document's revision afterwards (plan: the one it was made against).
+        form: The form created, saved, renamed, published or enforced, as kept; none for a remove.
+    """
+    forms: list[FormSummary]
+    issues: list[FormIssue]
+    changed: bool
+    revision: str
+    form: ProjectForm | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["forms"] = [e0.to_json() for e0 in self.forms]
+        out["issues"] = [e0.to_json() for e0 in self.issues]
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        if self.form is not UNSET:
+            out["form"] = None if self.form is None else self.form.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsEdited:
+        return cls(
+            forms=[FormSummary.from_json(e0) for e0 in data["forms"]],
+            issues=[FormIssue.from_json(e0) for e0 in data["issues"]],
+            changed=data["changed"],
+            revision=data["revision"],
+            form=UNSET if "form" not in data else None if data["form"] is None else ProjectForm.from_json(data["form"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormsSubmit(_Model):
+    """Input of `cad.forms.submit` v1.
+
+    Refusals: `invalid_uid`; `invalid_revision`, `revision_conflict` (status `conflict`);
+    `unknown_form`, `form_unpublished`, `form_preflight`, `entity_not_found`, `form_layer_mismatch`,
+    `layer_locked`, `form_invalid` (the first issue, `path` its field's value).
+    Attributes:
+        form: The form's id.
+        uid: The object (lowercase UUID text with hyphens).
+        defaults: The form's defaults in the record's empty fields first (a new record).
+        draft: Through its draft instead of its latest release (a form not yet published).
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        values: Values by the layer fields' keys (empty: no value).
+    """
+    form: str
+    uid: str
+    defaults: bool | Unset = UNSET
+    draft: bool | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    values: dict[str, str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["form"] = self.form
+        out["uid"] = self.uid
+        if self.defaults is not UNSET:
+            out["defaults"] = self.defaults
+        if self.draft is not UNSET:
+            out["draft"] = self.draft
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.values is not UNSET:
+            out["values"] = dict(self.values)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsSubmit:
+        return cls(
+            form=data["form"],
+            uid=data["uid"],
+            defaults=data.get("defaults", UNSET),
+            draft=data.get("draft", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            values=dict(data["values"]) if "values" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormsSubmitted(_Model):
+    """Output of `cad.forms.submit` v1, and what plan says it would do.
+    Attributes:
+        attrs: The record's attributes afterwards.
+        changed: Whether the object changed.
+        revision: The document's revision afterwards (plan: the one it was made against).
+        version: The release written through; none: the draft. Unit: version.
+    """
+    uid: str
+    attrs: dict[str, str]
+    changed: bool
+    revision: str
+    version: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["attrs"] = dict(self.attrs)
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        if self.version is not UNSET:
+            out["version"] = self.version
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsSubmitted:
+        return cls(
+            uid=data["uid"],
+            attrs=dict(data["attrs"]),
+            changed=data["changed"],
+            revision=data["revision"],
+            version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormsValidate(_Model):
+    """Input of `cad.forms.validate` v1: a form, and a record to ask it about.
+
+    Refusals: `invalid_uid`; `unknown_form`, `form_unpublished`, `entity_not_found`,
+    `form_layer_mismatch`.
+    Attributes:
+        form: The form's id.
+        defaults: The form's defaults in the record's empty fields first (a new record).
+        draft: Its draft instead of its latest release (the designer's preview).
+        uid: An object of the form's layer (lowercase UUID text with hyphens); none: the form alone.
+        values: Values by the layer fields' keys, as a submit would write them (empty: no value); asked of
+            the record afterwards.
+    """
+    form: str
+    defaults: bool | Unset = UNSET
+    draft: bool | Unset = UNSET
+    uid: str | None | Unset = UNSET
+    values: dict[str, str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["form"] = self.form
+        if self.defaults is not UNSET:
+            out["defaults"] = self.defaults
+        if self.draft is not UNSET:
+            out["draft"] = self.draft
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        if self.values is not UNSET:
+            out["values"] = dict(self.values)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsValidate:
+        return cls(
+            form=data["form"],
+            defaults=data.get("defaults", UNSET),
+            draft=data.get("draft", UNSET),
+            uid=data.get("uid", UNSET),
+            values=dict(data["values"]) if "values" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormsValidated(_Model):
+    """Output of `cad.forms.validate` v1.
+    Attributes:
+        issues: The preflight's issues, then the record's.
+        valid: Whether the record (or the form alone) has no error.
+        items: The record's items, in the form's order; empty without a record.
+        attrs: The record's attributes afterwards; none without a record.
+        version: The release asked; none: the draft. Unit: version.
+    """
+    issues: list[FormIssue]
+    valid: bool
+    items: list[FormItemState]
+    attrs: dict[str, str] | None | Unset = UNSET
+    version: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["issues"] = [e0.to_json() for e0 in self.issues]
+        out["valid"] = self.valid
+        out["items"] = [e0.to_json() for e0 in self.items]
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.version is not UNSET:
+            out["version"] = self.version
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsValidated:
+        return cls(
+            issues=[FormIssue.from_json(e0) for e0 in data["issues"]],
+            valid=data["valid"],
+            items=[FormItemState.from_json(e0) for e0 in data["items"]],
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FoundSnap(_Model):
     """A snap point as a command reads it.
     Attributes:
@@ -12109,6 +12616,8 @@ class LayerField(_Model):
     Attributes:
         alias: The name the table and the form show.
         default: The value a new object takes, in its canonical text.
+        id: The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a
+            rename writes the old name here so a binding holds. Unique among the layer's fields' keys.
         length: A text's most characters (1–10 000). Unit: count.
         max: A number's greatest value, in its canonical text; included.
         min: A number's least value, in its canonical text; included.
@@ -12120,6 +12629,7 @@ class LayerField(_Model):
     kind: LayerFieldKind | LayerFieldKindName
     alias: str | None | Unset = UNSET
     default: str | None | Unset = UNSET
+    id: str | None | Unset = UNSET
     length: int | None | Unset = UNSET
     max: str | None | Unset = UNSET
     min: str | None | Unset = UNSET
@@ -12135,6 +12645,8 @@ class LayerField(_Model):
             out["alias"] = self.alias
         if self.default is not UNSET:
             out["default"] = self.default
+        if self.id is not UNSET:
+            out["id"] = self.id
         if self.length is not UNSET:
             out["length"] = self.length
         if self.max is not UNSET:
@@ -12156,6 +12668,7 @@ class LayerField(_Model):
             kind=_enum_in(LayerFieldKind, data["kind"]),
             alias=data.get("alias", UNSET),
             default=data.get("default", UNSET),
+            id=data.get("id", UNSET),
             length=data.get("length", UNSET),
             max=data.get("max", UNSET),
             min=data.get("min", UNSET),
@@ -17245,6 +17758,49 @@ class ProjectFavorite(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProjectForm(_Model):
+    """A form of the project.
+    Attributes:
+        id: Stable, unique in the project: letters, digits, `-`, `_` and `.`; 1–64 characters.
+        name: What the lists show; trimmed, 1–64 characters.
+        layer: The layer the form edits: a layer's id (not a group's).
+        draft: The draft the designer edits.
+        enforce: The latest release's rules hold for every attribute write on the layer (the write profile);
+            written only as `true`, and only with a release.
+        releases: The frozen releases, oldest first; data entry uses the last.
+    """
+    id: str
+    name: str
+    layer: str
+    draft: FormBody
+    enforce: bool | Unset = UNSET
+    releases: list[FormRelease] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["layer"] = self.layer
+        out["draft"] = self.draft.to_json()
+        if self.enforce is not UNSET:
+            out["enforce"] = self.enforce
+        if self.releases is not UNSET:
+            out["releases"] = [e0.to_json() for e0 in self.releases]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProjectForm:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            layer=data["layer"],
+            draft=FormBody.from_json(data["draft"]),
+            enforce=data.get("enforce", UNSET),
+            releases=[FormRelease.from_json(e0) for e0 in data["releases"]] if "releases" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProjectGrant(_Model):
     """A person's grant in a project.
     Attributes:
@@ -17678,6 +18234,7 @@ class ProjectSettings(_Model):
         drawing_font: Absent in files written before drawing typefaces (read as Barlow).
         drawing_unit: A local project's unit (docs/adr/0165 §2); absent: metres. Only a
             project without a coordinate system (SRID 0) has another.
+        forms: The project's forms, in the order they were made (docs/adr/0401).
         layer_states: The project's named layer states (docs/adr/0177 §4), in the menu's order.
         length_style: How lengths are written (docs/adr/0262 §2): none, decimal; the others
             only in an inch or foot drawing.
@@ -17716,6 +18273,7 @@ class ProjectSettings(_Model):
     dimension_styles: list[DimensionStyleDef] | Unset = UNSET
     drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
+    forms: list[ProjectForm] | Unset = UNSET
     layer_states: list[LayerState] | Unset = UNSET
     length_style: LengthStyle | LengthStyleName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
@@ -17756,6 +18314,8 @@ class ProjectSettings(_Model):
             out["drawingFont"] = None if self.drawing_font is None else _enum_out(self.drawing_font)
         if self.drawing_unit is not UNSET:
             out["drawingUnit"] = None if self.drawing_unit is None else _enum_out(self.drawing_unit)
+        if self.forms is not UNSET:
+            out["forms"] = [e0.to_json() for e0 in self.forms]
         if self.layer_states is not UNSET:
             out["layerStates"] = [e0.to_json() for e0 in self.layer_states]
         if self.length_style is not UNSET:
@@ -17805,6 +18365,7 @@ class ProjectSettings(_Model):
             dimension_styles=[DimensionStyleDef.from_json(e0) for e0 in data["dimensionStyles"]] if "dimensionStyles" in data else UNSET,
             drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
+            forms=[ProjectForm.from_json(e0) for e0 in data["forms"]] if "forms" in data else UNSET,
             layer_states=[LayerState.from_json(e0) for e0 in data["layerStates"]] if "layerStates" in data else UNSET,
             length_style=UNSET if "lengthStyle" not in data else None if data["lengthStyle"] is None else _enum_in(LengthStyle, data["lengthStyle"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
@@ -24749,6 +25310,309 @@ class DeleteFeatureChange(FeatureChange):
 
 
 @dataclass(kw_only=True, slots=True)
+class TabFormItem(FormItem):
+    """A tab: its items show when it is chosen. Tabs stand at the top only, and then the top holds
+    nothing but tabs.
+    """
+    TAG_VALUE: ClassVar[str] = "tab"
+    id: str
+    label: str
+    items: list[FormItem]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "tab"}
+        out["id"] = self.id
+        out["label"] = self.label
+        out["items"] = [e0.to_json() for e0 in self.items]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TabFormItem:
+        return cls(
+            id=data["id"],
+            label=data["label"],
+            items=[FormItem.from_json(e0) for e0 in data["items"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GroupFormItem(FormItem):
+    """A group: a titled box of items, in one or two columns, that a rule may hide.
+    Attributes:
+        columns: 1 or 2; none: 1. Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "group"
+    id: str
+    items: list[FormItem]
+    columns: int | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    visible_when: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "group"}
+        out["id"] = self.id
+        out["items"] = [e0.to_json() for e0 in self.items]
+        if self.columns is not UNSET:
+            out["columns"] = self.columns
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.visible_when is not UNSET:
+            out["visibleWhen"] = self.visible_when
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GroupFormItem:
+        return cls(
+            id=data["id"],
+            items=[FormItem.from_json(e0) for e0 in data["items"]],
+            columns=data.get("columns", UNSET),
+            label=data.get("label", UNSET),
+            visible_when=data.get("visibleWhen", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FieldFormItem(FormItem):
+    """A field of the layer.
+    Attributes:
+        id: The item's id, unique in the form.
+        field: The layer field's key ([`LayerField::key`](crate::LayerField::key)): its stable id or its name.
+        checks: What the record must satisfy, in order.
+        default: The value an empty field shows when the form opens, in the field's canonical text; written
+            only when the record is saved.
+        help: A line under the field.
+        label: The label; none: the field's alias or name.
+        placeholder: The empty box's hint.
+        read_only: Shown, never edited; written only as `true`.
+        read_only_when: Locked when this expression is true.
+        required: May not be left empty while shown; written only as `true`. The layer field's own `required`
+            holds as well.
+        required_when: Required when this expression is true (and the field is shown).
+        visible_when: Shown only when this expression is true (the record's fields by name).
+        widget: How it is edited; none: the field kind's own.
+    """
+    TAG_VALUE: ClassVar[str] = "field"
+    id: str
+    field: str
+    checks: list[FormCheck] | Unset = UNSET
+    default: str | None | Unset = UNSET
+    help: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    placeholder: str | None | Unset = UNSET
+    read_only: bool | Unset = UNSET
+    read_only_when: str | None | Unset = UNSET
+    required: bool | Unset = UNSET
+    required_when: str | None | Unset = UNSET
+    visible_when: str | None | Unset = UNSET
+    widget: FormWidget | FormWidgetName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "field"}
+        out["id"] = self.id
+        out["field"] = self.field
+        if self.checks is not UNSET:
+            out["checks"] = [e0.to_json() for e0 in self.checks]
+        if self.default is not UNSET:
+            out["default"] = self.default
+        if self.help is not UNSET:
+            out["help"] = self.help
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.placeholder is not UNSET:
+            out["placeholder"] = self.placeholder
+        if self.read_only is not UNSET:
+            out["readOnly"] = self.read_only
+        if self.read_only_when is not UNSET:
+            out["readOnlyWhen"] = self.read_only_when
+        if self.required is not UNSET:
+            out["required"] = self.required
+        if self.required_when is not UNSET:
+            out["requiredWhen"] = self.required_when
+        if self.visible_when is not UNSET:
+            out["visibleWhen"] = self.visible_when
+        if self.widget is not UNSET:
+            out["widget"] = None if self.widget is None else _enum_out(self.widget)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldFormItem:
+        return cls(
+            id=data["id"],
+            field=data["field"],
+            checks=[FormCheck.from_json(e0) for e0 in data["checks"]] if "checks" in data else UNSET,
+            default=data.get("default", UNSET),
+            help=data.get("help", UNSET),
+            label=data.get("label", UNSET),
+            placeholder=data.get("placeholder", UNSET),
+            read_only=data.get("readOnly", UNSET),
+            read_only_when=data.get("readOnlyWhen", UNSET),
+            required=data.get("required", UNSET),
+            required_when=data.get("requiredWhen", UNSET),
+            visible_when=data.get("visibleWhen", UNSET),
+            widget=UNSET if "widget" not in data else None if data["widget"] is None else _enum_in(FormWidget, data["widget"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NoteFormItem(FormItem):
+    """A line of text: a hint for whoever fills the form."""
+    TAG_VALUE: ClassVar[str] = "note"
+    id: str
+    text: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "note"}
+        out["id"] = self.id
+        out["text"] = self.text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NoteFormItem:
+        return cls(
+            id=data["id"],
+            text=data["text"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CreateFormsOp(FormsOp):
+    """Yeni form: a form of a layer. No body: one made of the layer's fields; no id: one made of the
+    name.
+    Attributes:
+        layer: The layer's id.
+    """
+    TAG_VALUE: ClassVar[str] = "create"
+    name: str
+    layer: str
+    body: FormBody | None | Unset = UNSET
+    id: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "create"}
+        out["name"] = self.name
+        out["layer"] = self.layer
+        if self.body is not UNSET:
+            out["body"] = None if self.body is None else self.body.to_json()
+        if self.id is not UNSET:
+            out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CreateFormsOp:
+        return cls(
+            name=data["name"],
+            layer=data["layer"],
+            body=UNSET if "body" not in data else None if data["body"] is None else FormBody.from_json(data["body"]),
+            id=data.get("id", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UpdateFormsOp(FormsOp):
+    """Kaydet: the draft replaced. `body.revision` is the draft's revision it was made on; the draft
+    kept is one past it.
+    """
+    TAG_VALUE: ClassVar[str] = "update"
+    id: str
+    body: FormBody
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "update"}
+        out["id"] = self.id
+        out["body"] = self.body.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UpdateFormsOp:
+        return cls(
+            id=data["id"],
+            body=FormBody.from_json(data["body"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RenameFormsOp(FormsOp):
+    """Yeniden adlandır."""
+    TAG_VALUE: ClassVar[str] = "rename"
+    id: str
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "rename"}
+        out["id"] = self.id
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RenameFormsOp:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveFormsOp(FormsOp):
+    """Sil."""
+    TAG_VALUE: ClassVar[str] = "remove"
+    id: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "remove"}
+        out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveFormsOp:
+        return cls(
+            id=data["id"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PublishFormsOp(FormsOp):
+    """Yayınla: the draft frozen as the next release (its preflight without an error)."""
+    TAG_VALUE: ClassVar[str] = "publish"
+    id: str
+    note: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "publish"}
+        out["id"] = self.id
+        if self.note is not UNSET:
+            out["note"] = self.note
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PublishFormsOp:
+        return cls(
+            id=data["id"],
+            note=data.get("note", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EnforceFormsOp(FormsOp):
+    """Kuralları uygula: whether the latest release is the layer's write profile."""
+    TAG_VALUE: ClassVar[str] = "enforce"
+    id: str
+    on: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "enforce"}
+        out["id"] = self.id
+        out["on"] = self.on
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EnforceFormsOp:
+        return cls(
+            id=data["id"],
+            on=data["on"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PointHatchRegion(HatchRegion):
     """The region around `at`.
     Attributes:
@@ -26738,6 +27602,12 @@ _EXPLODE_DENSITY: dict[str, type[ExplodeDensity]] = {"count": CountExplodeDensit
 _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange, "update": UpdateFeatureChange, "delete": DeleteFeatureChange}
 
 
+_FORM_ITEM: dict[str, type[FormItem]] = {"tab": TabFormItem, "group": GroupFormItem, "field": FieldFormItem, "note": NoteFormItem}
+
+
+_FORMS_OP: dict[str, type[FormsOp]] = {"create": CreateFormsOp, "update": UpdateFormsOp, "rename": RenameFormsOp, "remove": RemoveFormsOp, "publish": PublishFormsOp, "enforce": EnforceFormsOp}
+
+
 _HATCH_REGION: dict[str, type[HatchRegion]] = {"point": PointHatchRegion, "objects": ObjectsHatchRegion}
 
 
@@ -26958,6 +27828,7 @@ __all__ = [
     "CountExplodeDensity",
     "CreateBlockChange",
     "CreateFeatureChange",
+    "CreateFormsOp",
     "CreateOperation",
     "CreateOperationName",
     "CrossingSelectRegion",
@@ -27029,6 +27900,7 @@ __all__ = [
     "Ellipsoid",
     "EmptyInput",
     "EndSubPlace",
+    "EnforceFormsOp",
     "EntitiesArray",
     "EntitiesArrayPlan",
     "EntitiesArrayed",
@@ -27100,6 +27972,7 @@ __all__ = [
     "FeedKindName",
     "FenceSelectRegion",
     "FieldChoice",
+    "FieldFormItem",
     "FieldNetworkDirection",
     "FieldRename",
     "FileCommit",
@@ -27111,6 +27984,24 @@ __all__ = [
     "FitNurbsBy",
     "FlipBlockAction",
     "FlipBlockParameter",
+    "FormBody",
+    "FormCheck",
+    "FormIssue",
+    "FormItem",
+    "FormItemState",
+    "FormRelease",
+    "FormSeverity",
+    "FormSeverityName",
+    "FormSummary",
+    "FormWidget",
+    "FormWidgetName",
+    "FormsEdit",
+    "FormsEdited",
+    "FormsOp",
+    "FormsSubmit",
+    "FormsSubmitted",
+    "FormsValidate",
+    "FormsValidated",
     "FoundSnap",
     "FrameUcsTo",
     "GeographicCrsSystem",
@@ -27121,6 +28012,7 @@ __all__ = [
     "GrantRoleName",
     "GridArrayLayout",
     "GridChoice",
+    "GroupFormItem",
     "HatchAssoc",
     "HatchEntity",
     "HatchEntityGeometry",
@@ -27316,6 +28208,7 @@ __all__ = [
     "NetworkLayer",
     "NewObject",
     "NodeSubPlace",
+    "NoteFormItem",
     "NumberRule",
     "NurbsBy",
     "NurbsCreate",
@@ -27410,6 +28303,7 @@ __all__ = [
     "ProjectDuplicate",
     "ProjectDuplicated",
     "ProjectFavorite",
+    "ProjectForm",
     "ProjectGrant",
     "ProjectImport",
     "ProjectImported",
@@ -27440,6 +28334,7 @@ __all__ = [
     "ProjectiveTransform",
     "PropertiesOperation",
     "PropertiesOperationName",
+    "PublishFormsOp",
     "RadiusDimensionMeasure",
     "RasterDataset",
     "RasterEntity",
@@ -27467,6 +28362,8 @@ __all__ = [
     "RemoveControlCurveEdit",
     "RemoveEntityEdit",
     "RemoveFitCurveEdit",
+    "RemoveFormsOp",
+    "RenameFormsOp",
     "RenameViewsOp",
     "RenamedBlock",
     "ReplaceArrayEdit",
@@ -27550,6 +28447,7 @@ __all__ = [
     "SubPlace",
     "SubRef",
     "SurveySettings",
+    "TabFormItem",
     "TableAlign",
     "TableAlignName",
     "TableEntity",
@@ -27607,6 +28505,7 @@ __all__ = [
     "UpdateBlockChange",
     "UpdateEntityEdit",
     "UpdateFeatureChange",
+    "UpdateFormsOp",
     "VariableKind",
     "VariableKindName",
     "VariableValue",
