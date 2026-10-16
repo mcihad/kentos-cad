@@ -1570,6 +1570,18 @@ def body_problem(body):
             checks = i.get("checks", [])
             if len(checks) > MOST_FORM_CHECKS or any(not _rule_ok(c["rule"]) or not c["message"].strip() or not _form_text_ok(c["message"], MOST_FORM_TEXT) for c in checks):
                 return f"“{iid}” alanının denetimi geçersiz"
+    # docs/adr/0420: at most 50 scenarios, each named once, 1–64 characters, no white space at its ends.
+    tests = body.get("tests", [])
+    if len(tests) > 50:
+        return f"Bir formda en çok 50 senaryo olur; {len(tests)} var."
+    names = set()
+    for t in tests:
+        n = t["name"]
+        if not n.strip() or n.strip() != n or len(n) > 64:
+            return f"“{n}” bir senaryo adı olamaz"
+        if n in names:
+            return f"“{n}” senaryosu formda iki kez var."
+        names.add(n)
     return None
 
 
@@ -3408,7 +3420,15 @@ class _Schema:
         def items(x):
             return self.array(item)(x)
 
-        body = self.fields({"revision": (self.uint(32), True), "items": (items, True), "clearHidden": (true_, False)})
+        # docs/adr/0420: the designer's scenarios.
+        strings = self.attrs
+        expect = self.fields({"attrs": (strings, False), "shown": (self.array(self.text), False),
+                              "required": (self.array(self.text), False), "readOnly": (self.array(self.text), False),
+                              "issues": (self.array(self.text), False)})
+        scenario = self.fields({"name": (self.text, True), "values": (strings, False), "new": (true_, False),
+                                "expect": (expect, True)})
+        body = self.fields({"revision": (self.uint(32), True), "items": (items, True), "clearHidden": (true_, False),
+                            "tests": (nonempty(self.array(scenario)), False)})
         release = self.fields(
             {"version": (self.uint(32), True), "digest": (self.text, True), "body": (body, True), "note": (self.text, False)}
         )

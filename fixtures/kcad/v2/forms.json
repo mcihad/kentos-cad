@@ -115,7 +115,33 @@
               ]
             }
           ],
-          "clearHidden": true
+          "clearHidden": true,
+          "tests": [
+            {
+              "name": "iyi bina",
+              "values": {
+                "Durum": "iyi"
+              },
+              "new": true,
+              "expect": {
+                "attrs": {
+                  "Durum": "iyi"
+                },
+                "shown": [
+                  "genel",
+                  "durum",
+                  "kat",
+                  "ayrinti"
+                ],
+                "required": [
+                  "durum"
+                ],
+                "issues": [
+                  "form_required@kat"
+                ]
+              }
+            }
+          ]
         },
         "releases": [
           {

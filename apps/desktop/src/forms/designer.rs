@@ -153,10 +153,16 @@ pub struct Window {
     pub(crate) previewing: bool,
     /// Why the preview cannot be shown (the copy's preflight error).
     pub(crate) preview_error: Option<String>,
+    /// The name a new scenario takes (docs/adr/0420).
+    pub(crate) scenario_name: String,
 }
 
 #[derive(Debug, Clone)]
 pub enum Event {
+    /// Senaryolar (docs/adr/0420): the preview's values kept as a scenario, its name typed, one removed.
+    SaveScenario,
+    ScenarioName(String),
+    RemoveScenario(usize),
     Choose(String),
     NewForm,
     NewName(String),
@@ -499,7 +505,7 @@ impl App {
         }
     }
 
-    pub(super) fn chosen_form(&self) -> Option<&ProjectForm> {
+    pub(crate) fn chosen_form(&self) -> Option<&ProjectForm> {
         let id = self.forms_window.as_ref()?.chosen.as_deref()?;
         self.project_forms().iter().find(|f| f.id == id)
     }
@@ -1030,6 +1036,41 @@ impl App {
                             f.unique = on;
                         }
                     });
+                }
+            }
+            Event::ScenarioName(text) => w.scenario_name = text,
+            Event::RemoveScenario(i) => {
+                edited(&mut w, &|b| {
+                    if i < b.tests.len() {
+                        b.tests.remove(i);
+                    }
+                });
+            }
+            Event::SaveScenario => {
+                let typed = self.form_preview.as_ref().map(|e| e.typed());
+                let form = self.chosen_form().cloned();
+                if let (Some((values, new)), Some(form), Some(body), Some(doc)) =
+                    (typed, form, w.body.clone(), self.document.as_ref())
+                {
+                    let name = match w.scenario_name.trim() {
+                        "" => format!("Senaryo {}", body.tests.len() + 1),
+                        n => n.to_owned(),
+                    };
+                    match kentos_native_application::forms_test::prepared_for(
+                        &doc.model, &form, &body,
+                    ) {
+                        Ok(prepared) if !body.tests.iter().any(|t| t.name == name) => {
+                            let test =
+                                kentos_forms::scenario::capture(&prepared, &name, values, new);
+                            edited(&mut w, &|b| b.tests.push(test.clone()));
+                            w.scenario_name.clear();
+                        }
+                        Ok(_) => self.say(
+                            Level::Warn,
+                            format!("“{name}” adlı bir senaryo var; başka bir ad verin."),
+                        ),
+                        Err(why) => self.say(Level::Warn, why),
+                    }
                 }
             }
             Event::Overridable(on) => {

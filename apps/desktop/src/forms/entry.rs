@@ -397,6 +397,12 @@ impl Entry {
         self.items.iter().find(|s| s.id == id)
     }
 
+    /// The values typed, by the fields' keys, and whether the record is new: a scenario's input
+    /// (docs/adr/0420).
+    pub(crate) fn typed(&self) -> (BTreeMap<String, String>, bool) {
+        (self.values.clone(), self.new_record)
+    }
+
     /// The record's slot in the open drawing.
     pub(crate) fn uid_slot(&self, app: &App) -> Option<Slot> {
         app.document

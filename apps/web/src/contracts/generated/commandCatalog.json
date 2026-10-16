@@ -3736,6 +3736,13 @@
                 "minimum": 0,
                 "type": "integer",
                 "x-unit": "version"
+              },
+              "tests": {
+                "description": "The designer's scenarios (docs/adr/0420): values typed into a record and what the form made of\nthem, run again whenever the form changes.",
+                "items": {
+                  "$ref": "#/$defs/FormTest"
+                },
+                "type": "array"
               }
             },
             "required": [
@@ -4180,6 +4187,75 @@
               "digest",
               "body"
             ],
+            "type": "object"
+          },
+          "FormTest": {
+            "additionalProperties": false,
+            "description": "A scenario of a form (docs/adr/0420): a record's typed values and what the form showed, required,\nlocked, wrote and said for them.",
+            "properties": {
+              "expect": {
+                "$ref": "#/$defs/FormTestExpect"
+              },
+              "name": {
+                "description": "Unique in the form; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "new": {
+                "description": "A new record: the form's defaults fill it. Written only as `true`.",
+                "type": "boolean"
+              },
+              "values": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "The values typed, by the layer fields' keys, onto an empty record.",
+                "type": "object"
+              }
+            },
+            "required": [
+              "name",
+              "expect"
+            ],
+            "type": "object"
+          },
+          "FormTestExpect": {
+            "additionalProperties": false,
+            "description": "What a scenario expects.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "The record after the form: its attributes by the fields' names.",
+                "type": "object"
+              },
+              "issues": {
+                "description": "What the form said: each issue's code, `@` and its item when it has one (`form_required@not`).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "readOnly": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "required": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "shown": {
+                "description": "The items shown, required and read-only, by their ids in the form's order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
             "type": "object"
           },
           "FormWidget": {
@@ -13732,6 +13808,13 @@
                 "minimum": 0,
                 "type": "integer",
                 "x-unit": "version"
+              },
+              "tests": {
+                "description": "The designer's scenarios (docs/adr/0420): values typed into a record and what the form made of\nthem, run again whenever the form changes.",
+                "items": {
+                  "$ref": "#/$defs/FormTest"
+                },
+                "type": "array"
               }
             },
             "required": [
@@ -14176,6 +14259,75 @@
               "digest",
               "body"
             ],
+            "type": "object"
+          },
+          "FormTest": {
+            "additionalProperties": false,
+            "description": "A scenario of a form (docs/adr/0420): a record's typed values and what the form showed, required,\nlocked, wrote and said for them.",
+            "properties": {
+              "expect": {
+                "$ref": "#/$defs/FormTestExpect"
+              },
+              "name": {
+                "description": "Unique in the form; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "new": {
+                "description": "A new record: the form's defaults fill it. Written only as `true`.",
+                "type": "boolean"
+              },
+              "values": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "The values typed, by the layer fields' keys, onto an empty record.",
+                "type": "object"
+              }
+            },
+            "required": [
+              "name",
+              "expect"
+            ],
+            "type": "object"
+          },
+          "FormTestExpect": {
+            "additionalProperties": false,
+            "description": "What a scenario expects.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "The record after the form: its attributes by the fields' names.",
+                "type": "object"
+              },
+              "issues": {
+                "description": "What the form said: each issue's code, `@` and its item when it has one (`form_required@not`).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "readOnly": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "required": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "shown": {
+                "description": "The items shown, required and read-only, by their ids in the form's order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
             "type": "object"
           },
           "FormWidget": {
@@ -21678,6 +21830,13 @@
                 "minimum": 0,
                 "type": "integer",
                 "x-unit": "version"
+              },
+              "tests": {
+                "description": "The designer's scenarios (docs/adr/0420): values typed into a record and what the form made of\nthem, run again whenever the form changes.",
+                "items": {
+                  "$ref": "#/$defs/FormTest"
+                },
+                "type": "array"
               }
             },
             "required": [
@@ -22122,6 +22281,75 @@
               "digest",
               "body"
             ],
+            "type": "object"
+          },
+          "FormTest": {
+            "additionalProperties": false,
+            "description": "A scenario of a form (docs/adr/0420): a record's typed values and what the form showed, required,\nlocked, wrote and said for them.",
+            "properties": {
+              "expect": {
+                "$ref": "#/$defs/FormTestExpect"
+              },
+              "name": {
+                "description": "Unique in the form; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "new": {
+                "description": "A new record: the form's defaults fill it. Written only as `true`.",
+                "type": "boolean"
+              },
+              "values": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "The values typed, by the layer fields' keys, onto an empty record.",
+                "type": "object"
+              }
+            },
+            "required": [
+              "name",
+              "expect"
+            ],
+            "type": "object"
+          },
+          "FormTestExpect": {
+            "additionalProperties": false,
+            "description": "What a scenario expects.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "The record after the form: its attributes by the fields' names.",
+                "type": "object"
+              },
+              "issues": {
+                "description": "What the form said: each issue's code, `@` and its item when it has one (`form_required@not`).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "readOnly": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "required": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "shown": {
+                "description": "The items shown, required and read-only, by their ids in the form's order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
             "type": "object"
           },
           "FormWidget": {
@@ -334899,6 +335127,13 @@
                 "minimum": 0,
                 "type": "integer",
                 "x-unit": "version"
+              },
+              "tests": {
+                "description": "The designer's scenarios (docs/adr/0420): values typed into a record and what the form made of\nthem, run again whenever the form changes.",
+                "items": {
+                  "$ref": "#/$defs/FormTest"
+                },
+                "type": "array"
               }
             },
             "required": [
@@ -335310,6 +335545,75 @@
               "layer",
               "key"
             ],
+            "type": "object"
+          },
+          "FormTest": {
+            "additionalProperties": false,
+            "description": "A scenario of a form (docs/adr/0420): a record's typed values and what the form showed, required,\nlocked, wrote and said for them.",
+            "properties": {
+              "expect": {
+                "$ref": "#/$defs/FormTestExpect"
+              },
+              "name": {
+                "description": "Unique in the form; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "new": {
+                "description": "A new record: the form's defaults fill it. Written only as `true`.",
+                "type": "boolean"
+              },
+              "values": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "The values typed, by the layer fields' keys, onto an empty record.",
+                "type": "object"
+              }
+            },
+            "required": [
+              "name",
+              "expect"
+            ],
+            "type": "object"
+          },
+          "FormTestExpect": {
+            "additionalProperties": false,
+            "description": "What a scenario expects.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "The record after the form: its attributes by the fields' names.",
+                "type": "object"
+              },
+              "issues": {
+                "description": "What the form said: each issue's code, `@` and its item when it has one (`form_required@not`).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "readOnly": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "required": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "shown": {
+                "description": "The items shown, required and read-only, by their ids in the form's order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
             "type": "object"
           },
           "FormWidget": {
@@ -335607,6 +335911,13 @@
                 "minimum": 0,
                 "type": "integer",
                 "x-unit": "version"
+              },
+              "tests": {
+                "description": "The designer's scenarios (docs/adr/0420): values typed into a record and what the form made of\nthem, run again whenever the form changes.",
+                "items": {
+                  "$ref": "#/$defs/FormTest"
+                },
+                "type": "array"
               }
             },
             "required": [
@@ -336143,6 +336454,75 @@
               "layer",
               "revision"
             ],
+            "type": "object"
+          },
+          "FormTest": {
+            "additionalProperties": false,
+            "description": "A scenario of a form (docs/adr/0420): a record's typed values and what the form showed, required,\nlocked, wrote and said for them.",
+            "properties": {
+              "expect": {
+                "$ref": "#/$defs/FormTestExpect"
+              },
+              "name": {
+                "description": "Unique in the form; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "new": {
+                "description": "A new record: the form's defaults fill it. Written only as `true`.",
+                "type": "boolean"
+              },
+              "values": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "The values typed, by the layer fields' keys, onto an empty record.",
+                "type": "object"
+              }
+            },
+            "required": [
+              "name",
+              "expect"
+            ],
+            "type": "object"
+          },
+          "FormTestExpect": {
+            "additionalProperties": false,
+            "description": "What a scenario expects.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "The record after the form: its attributes by the fields' names.",
+                "type": "object"
+              },
+              "issues": {
+                "description": "What the form said: each issue's code, `@` and its item when it has one (`form_required@not`).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "readOnly": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "required": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "shown": {
+                "description": "The items shown, required and read-only, by their ids in the form's order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
             "type": "object"
           },
           "FormWidget": {
@@ -336359,6 +336739,13 @@
                 "minimum": 0,
                 "type": "integer",
                 "x-unit": "version"
+              },
+              "tests": {
+                "description": "The designer's scenarios (docs/adr/0420): values typed into a record and what the form made of\nthem, run again whenever the form changes.",
+                "items": {
+                  "$ref": "#/$defs/FormTest"
+                },
+                "type": "array"
               }
             },
             "required": [
@@ -336895,6 +337282,75 @@
               "layer",
               "revision"
             ],
+            "type": "object"
+          },
+          "FormTest": {
+            "additionalProperties": false,
+            "description": "A scenario of a form (docs/adr/0420): a record's typed values and what the form showed, required,\nlocked, wrote and said for them.",
+            "properties": {
+              "expect": {
+                "$ref": "#/$defs/FormTestExpect"
+              },
+              "name": {
+                "description": "Unique in the form; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "new": {
+                "description": "A new record: the form's defaults fill it. Written only as `true`.",
+                "type": "boolean"
+              },
+              "values": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "The values typed, by the layer fields' keys, onto an empty record.",
+                "type": "object"
+              }
+            },
+            "required": [
+              "name",
+              "expect"
+            ],
+            "type": "object"
+          },
+          "FormTestExpect": {
+            "additionalProperties": false,
+            "description": "What a scenario expects.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "The record after the form: its attributes by the fields' names.",
+                "type": "object"
+              },
+              "issues": {
+                "description": "What the form said: each issue's code, `@` and its item when it has one (`form_required@not`).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "readOnly": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "required": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "shown": {
+                "description": "The items shown, required and read-only, by their ids in the form's order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
             "type": "object"
           },
           "FormWidget": {
@@ -338156,6 +338612,182 @@
           "input": {
             "form": "bina-denetimi",
             "warnings": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.forms.test",
+      "version": 1,
+      "title": "Form senaryolarını çalıştır",
+      "summary": "Formun senaryolarını yeniden çalıştırır, hiçbir şey yazmaz: her senaryonun değerleri boş bir kayda yazılır (new ile varsayılanlarıyla), formun yaptığı (kaydın değerleri, gösterilen, zorunlu ve salt okunur öğeler, sorunlar) senaryonun beklediğiyle karşılaştırılır. draft taslağın senaryolarını taslakla, yoksa son yayının senaryolarını o yayınla; names yalnız verilenleri sırasıyla. Senaryolar anı ve kişiyi okumaz.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.forms.test` v1 (docs/adr/0420): a form's scenarios run again, writing nothing.\n\nRefusals, in this order: `unknown_form`, `form_unpublished` (without `draft`, a form never\npublished), `form_preflight` (the body has an error), `unknown_test` (a name the body has not).",
+        "properties": {
+          "draft": {
+            "description": "Its draft's scenarios on its draft, instead of its latest release's on that release.",
+            "type": "boolean"
+          },
+          "form": {
+            "description": "The form's id.",
+            "type": "string"
+          },
+          "names": {
+            "description": "Only these scenarios, by name, in this order; empty: all, in the body's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "form"
+        ],
+        "title": "FormsTest",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "FormTestResult": {
+            "description": "One scenario's result.",
+            "properties": {
+              "differences": {
+                "description": "What differs from what it expects, one sentence each.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "name": {
+                "type": "string"
+              },
+              "passed": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "passed"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.forms.test` v1.",
+        "properties": {
+          "passed": {
+            "description": "How many passed and how many there were.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/$defs/FormTestResult"
+            },
+            "type": "array"
+          },
+          "total": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "results",
+          "passed",
+          "total"
+        ],
+        "title": "FormsTested",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "FormTestResult": {
+            "description": "One scenario's result.",
+            "properties": {
+              "differences": {
+                "description": "What differs from what it expects, one sentence each.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "name": {
+                "type": "string"
+              },
+              "passed": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "passed"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.forms.test` v1.",
+        "properties": {
+          "passed": {
+            "description": "How many passed and how many there were.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/$defs/FormTestResult"
+            },
+            "type": "array"
+          },
+          "total": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "results",
+          "passed",
+          "total"
+        ],
+        "title": "FormsTested",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "unknown_form",
+          "form_unpublished",
+          "form_preflight",
+          "unknown_test"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bina formunun taslağındaki senaryoları çalıştır",
+          "input": {
+            "draft": true,
+            "form": "bina-denetimi"
           }
         }
       ]
@@ -369616,6 +370248,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Bu kimlikle bir form yok."
+    },
+    {
+      "code": "unknown_test",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Formda bu adla bir senaryo yok."
     },
     {
       "code": "form_exists",

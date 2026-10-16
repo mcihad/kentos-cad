@@ -22,6 +22,7 @@ mod lookup;
 mod object;
 mod preflight;
 mod record;
+pub mod scenario;
 mod session;
 
 pub use generate::{generate, item_id_of, widget_of};

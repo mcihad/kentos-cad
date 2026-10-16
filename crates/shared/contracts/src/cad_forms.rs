@@ -38,6 +38,9 @@ pub const CAD_RELATIONS_EDIT_VERSION: u32 = 1;
 /// Writes the same values to many records through a form.
 pub const CAD_FORMS_FILL: &str = "cad.forms.fill";
 pub const CAD_FORMS_FILL_VERSION: u32 = 1;
+/// Runs a form's scenarios (docs/adr/0420).
+pub const CAD_FORMS_TEST: &str = "cad.forms.test";
+pub const CAD_FORMS_TEST_VERSION: u32 = 1;
 
 /// What `cad.forms.edit` does.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -467,4 +470,56 @@ pub struct FormsAudited {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub more: bool,
+}
+
+/// Input of `cad.forms.test` v1 (docs/adr/0420): a form's scenarios run again, writing nothing.
+///
+/// Refusals, in this order: `unknown_form`, `form_unpublished` (without `draft`, a form never
+/// published), `form_preflight` (the body has an error), `unknown_test` (a name the body has not).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormsTest {
+    /// The form's id.
+    pub form: String,
+    /// Its draft's scenarios on its draft, instead of its latest release's on that release.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub draft: bool,
+    /// Only these scenarios, by name, in this order; empty: all, in the body's order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub names: Vec<String>,
+}
+
+/// One scenario's result.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormTestResult {
+    pub name: String,
+    pub passed: bool,
+    /// What differs from what it expects, one sentence each.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub differences: Vec<String>,
+}
+
+/// Output of `cad.forms.test` v1.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormsTested {
+    pub results: Vec<FormTestResult>,
+    /// How many passed and how many there were.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub passed: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub total: u32,
 }

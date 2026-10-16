@@ -10732,10 +10732,13 @@ class FormBody(_Model):
         revision: Raised by one with every saved change to the draft: an update names the revision it was made on. Unit: version.
         clear_hidden: A write through the form empties the fields the record hides (docs/adr/0402 §3); written only
             as `true`. Without it a hidden field keeps its value.
+        tests: The designer's scenarios (docs/adr/0420): values typed into a record and what the form made of
+            them, run again whenever the form changes.
     """
     revision: int
     items: list[FormItem]
     clear_hidden: bool | Unset = UNSET
+    tests: list[FormTest] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -10743,6 +10746,8 @@ class FormBody(_Model):
         out["items"] = [e0.to_json() for e0 in self.items]
         if self.clear_hidden is not UNSET:
             out["clearHidden"] = self.clear_hidden
+        if self.tests is not UNSET:
+            out["tests"] = [e0.to_json() for e0 in self.tests]
         return out
 
     @classmethod
@@ -10751,6 +10756,7 @@ class FormBody(_Model):
             revision=data["revision"],
             items=[FormItem.from_json(e0) for e0 in data["items"]],
             clear_hidden=data.get("clearHidden", UNSET),
+            tests=[FormTest.from_json(e0) for e0 in data["tests"]] if "tests" in data else UNSET,
         )
 
 
@@ -10990,6 +10996,106 @@ class FormSummary(_Model):
             revision=data["revision"],
             enforce=data.get("enforce", UNSET),
             version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormTest(_Model):
+    """A scenario of a form (docs/adr/0420): a record's typed values and what the form showed, required,
+    locked, wrote and said for them.
+    Attributes:
+        name: Unique in the form; trimmed, 1–64 characters.
+        new: A new record: the form's defaults fill it. Written only as `true`.
+        values: The values typed, by the layer fields' keys, onto an empty record.
+    """
+    name: str
+    expect: FormTestExpect
+    new: bool | Unset = UNSET
+    values: dict[str, str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["expect"] = self.expect.to_json()
+        if self.new is not UNSET:
+            out["new"] = self.new
+        if self.values is not UNSET:
+            out["values"] = dict(self.values)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormTest:
+        return cls(
+            name=data["name"],
+            expect=FormTestExpect.from_json(data["expect"]),
+            new=data.get("new", UNSET),
+            values=dict(data["values"]) if "values" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormTestExpect(_Model):
+    """What a scenario expects.
+    Attributes:
+        attrs: The record after the form: its attributes by the fields' names.
+        issues: What the form said: each issue's code, `@` and its item when it has one (`form_required@not`).
+        shown: The items shown, required and read-only, by their ids in the form's order.
+    """
+    attrs: dict[str, str] | Unset = UNSET
+    issues: list[str] | Unset = UNSET
+    read_only: list[str] | Unset = UNSET
+    required: list[str] | Unset = UNSET
+    shown: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.attrs is not UNSET:
+            out["attrs"] = dict(self.attrs)
+        if self.issues is not UNSET:
+            out["issues"] = list(self.issues)
+        if self.read_only is not UNSET:
+            out["readOnly"] = list(self.read_only)
+        if self.required is not UNSET:
+            out["required"] = list(self.required)
+        if self.shown is not UNSET:
+            out["shown"] = list(self.shown)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormTestExpect:
+        return cls(
+            attrs=dict(data["attrs"]) if "attrs" in data else UNSET,
+            issues=list(data["issues"]) if "issues" in data else UNSET,
+            read_only=list(data["readOnly"]) if "readOnly" in data else UNSET,
+            required=list(data["required"]) if "required" in data else UNSET,
+            shown=list(data["shown"]) if "shown" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormTestResult(_Model):
+    """One scenario's result.
+    Attributes:
+        differences: What differs from what it expects, one sentence each.
+    """
+    name: str
+    passed: bool
+    differences: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["passed"] = self.passed
+        if self.differences is not UNSET:
+            out["differences"] = list(self.differences)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormTestResult:
+        return cls(
+            name=data["name"],
+            passed=data["passed"],
+            differences=list(data["differences"]) if "differences" in data else UNSET,
         )
 
 
@@ -11327,6 +11433,66 @@ class FormsSubmitted(_Model):
             changed=data["changed"],
             revision=data["revision"],
             version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormsTest(_Model):
+    """Input of `cad.forms.test` v1 (docs/adr/0420): a form's scenarios run again, writing nothing.
+
+    Refusals, in this order: `unknown_form`, `form_unpublished` (without `draft`, a form never
+    published), `form_preflight` (the body has an error), `unknown_test` (a name the body has not).
+    Attributes:
+        form: The form's id.
+        draft: Its draft's scenarios on its draft, instead of its latest release's on that release.
+        names: Only these scenarios, by name, in this order; empty: all, in the body's order.
+    """
+    form: str
+    draft: bool | Unset = UNSET
+    names: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["form"] = self.form
+        if self.draft is not UNSET:
+            out["draft"] = self.draft
+        if self.names is not UNSET:
+            out["names"] = list(self.names)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsTest:
+        return cls(
+            form=data["form"],
+            draft=data.get("draft", UNSET),
+            names=list(data["names"]) if "names" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormsTested(_Model):
+    """Output of `cad.forms.test` v1.
+    Attributes:
+        passed: How many passed and how many there were. Unit: count.
+        total: Unit: count.
+    """
+    results: list[FormTestResult]
+    passed: int
+    total: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["results"] = [e0.to_json() for e0 in self.results]
+        out["passed"] = self.passed
+        out["total"] = self.total
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsTested:
+        return cls(
+            results=[FormTestResult.from_json(e0) for e0 in data["results"]],
+            passed=data["passed"],
+            total=data["total"],
         )
 
 
@@ -29287,6 +29453,9 @@ __all__ = [
     "FormSeverity",
     "FormSeverityName",
     "FormSummary",
+    "FormTest",
+    "FormTestExpect",
+    "FormTestResult",
     "FormWidget",
     "FormWidgetName",
     "FormsAudit",
@@ -29298,6 +29467,8 @@ __all__ = [
     "FormsOp",
     "FormsSubmit",
     "FormsSubmitted",
+    "FormsTest",
+    "FormsTested",
     "FormsValidate",
     "FormsValidated",
     "FoundSnap",

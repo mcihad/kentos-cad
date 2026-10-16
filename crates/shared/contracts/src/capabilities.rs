@@ -1680,6 +1680,17 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.forms.test",
+        refusals: &[&[
+            "unknown_form",
+            "form_unpublished",
+            "form_preflight",
+            "unknown_test",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.relations.edit",
         refusals: &[
             &["invalid_relation"],

@@ -516,6 +516,40 @@ fn retired_list(app: &mut App) {
     )));
 }
 
+/// Formlar's preview with two scenarios (docs/adr/0420): kept, then the floor count made required, so
+/// that one fails and says why.
+fn scenarios(app: &mut App) {
+    designer_links(app);
+    designer(app, designer::Event::Preview(true));
+    let typed = |app: &mut App, key: &str, v: &str| {
+        let _ = app.update(Message::FormPreview(entry::Event::Value(
+            key.into(),
+            v.into(),
+        )));
+    };
+    typed(app, "Durum", "iyi");
+    typed(app, "Kat", "8");
+    designer(
+        app,
+        designer::Event::ScenarioName("Sekiz katlı iyi bina".into()),
+    );
+    designer(app, designer::Event::SaveScenario);
+    typed(app, "Kat", "");
+    designer(app, designer::Event::ScenarioName("Katsız kayıt".into()));
+    designer(app, designer::Event::SaveScenario);
+    // The form changes: a building has fewer than five floors.
+    designer(app, designer::Event::SelectItem("kat".into()));
+    designer(
+        app,
+        designer::Event::RuleText(designer::Rule::Check("kat".into(), 0), "Kat < 5".into()),
+    );
+    designer(
+        app,
+        designer::Event::Text(designer::Text::CheckMessage(0), "En çok dört kat.".into()),
+    );
+    designer(app, designer::Event::Preview(true));
+}
+
 /// Formlar on the survey form, the floor count chosen: what reads it (plan FORM-DESIGN-09).
 fn designer_links(app: &mut App) {
     buildings_with_a_form(app);
@@ -1219,6 +1253,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-cogalt", duplicated),
         ("form-gorunumu", form_view),
         ("form-baglar", designer_links),
+        ("form-senaryolar", scenarios),
         ("form-hesap-degistir", overridden_height),
         ("form-kalkmis-deger", retired_list),
         ("form-alan-politika", field_policies),
@@ -1397,6 +1432,36 @@ mod tests {
         assert_eq!(
             attrs(&app, 1).get("Yükseklik").map(String::as_str),
             Some("18")
+        );
+    }
+
+    #[test]
+    fn a_scenario_is_kept_and_fails_when_the_form_changes() {
+        let mut app = crate::files_testing::app_with_drawing();
+        scenarios(&mut app);
+        let w = app.forms_window.as_ref().unwrap();
+        let body = w.body.as_ref().unwrap();
+        assert_eq!(body.tests.len(), 2);
+        assert_eq!(
+            body.tests[0].values.get("Kat").map(String::as_str),
+            Some("8")
+        );
+        let form = app.chosen_form().unwrap();
+        let prepared = kentos_native_application::forms_test::prepared_for(
+            &app.document.as_ref().unwrap().model,
+            form,
+            body,
+        )
+        .unwrap();
+        let failed = kentos_forms::scenario::run(&prepared, &body.tests[0]);
+        assert_eq!(
+            failed,
+            ["Sorunlar: beklenen hiçbiri, bulunan form_check_failed@kat."],
+            "eight floors break the new check"
+        );
+        assert!(
+            kentos_forms::scenario::run(&prepared, &body.tests[1]).is_empty(),
+            "no floors: no check"
         );
     }
 

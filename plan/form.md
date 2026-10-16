@@ -454,7 +454,7 @@ QGIS'in tab/group/relation/widget yaklaşımı ve ArcGIS Field Maps'in visible/r
 - [ ] **FORM-DESIGN-21:** Eklenen action yalnız kayıtlı descriptor'dan seçilsin; raw SQL/URL/script normal field property'ye yazılamasın.
 - [ ] **FORM-DESIGN-22:** Tasarım çıktısı portable JSON olsun; bütün formu platforma özel Python/TS UI kodu olarak saklama.
 - [ ] **FORM-DESIGN-23:** AI tasarım önerisi düzenlenebilir draft/diff olsun; doğrudan published formu değiştirmesin.
-- [ ] **FORM-DESIGN-24:** Kullanıcı kendi form test senaryolarını kaydedebilsin; replay values/validation/action görünürlüğünü otomatik karşılaştırsın.
+- [x] **FORM-DESIGN-24:** Kullanıcı kendi form test senaryolarını kaydedebilsin; replay values/validation/action görünürlüğünü otomatik karşılaştırsın. — *Yapıldı (16 Ekim; ADR 0420: senaryolar, `cad.forms.test`, tasarımcıda Senaryolar).*
 
 **Kabul:** Tasarımcı aynı formda sekme, master–detail, domain, cascading lookup ve calculated summary kurar; üç platform preview'da bütün field/rule kimlikleri aynıdır. Published form ayrı draft açılmadan değişmez.
 

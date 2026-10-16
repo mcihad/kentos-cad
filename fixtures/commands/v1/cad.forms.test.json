@@ -1,0 +1,1299 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.forms.test",
+  "commandVersion": 1,
+  "title": "Form senaryolarını çalıştır",
+  "note": "Written by scripts/fixtures/forms_test_cases.py from docs/adr/0420; do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Form senaryoları",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "gis",
+      "drawingFont": "barlow",
+      "forms": [
+        {
+          "id": "bina",
+          "name": "Bina denetimi",
+          "layer": "bina",
+          "draft": {
+            "revision": 2,
+            "items": [
+              {
+                "type": "field",
+                "id": "durum",
+                "field": "Durum",
+                "required": true
+              },
+              {
+                "type": "field",
+                "id": "kat",
+                "field": "kat-sayisi"
+              },
+              {
+                "type": "field",
+                "id": "kod",
+                "field": "Kod",
+                "defaultExpr": "'B-' || Kat"
+              },
+              {
+                "type": "field",
+                "id": "yukseklik",
+                "field": "Yükseklik",
+                "calculate": "Kat * 3"
+              },
+              {
+                "type": "field",
+                "id": "aciklama",
+                "field": "Açıklama",
+                "visibleWhen": "Durum = 'inceleme'",
+                "requiredWhen": "Durum = 'inceleme'",
+                "checks": [
+                  {
+                    "rule": "uzunluk(Açıklama) >= 10",
+                    "message": "Açıklama en az 10 karakter olmalı."
+                  }
+                ]
+              }
+            ],
+            "tests": [
+              {
+                "name": "iyi bina",
+                "values": {
+                  "Durum": "iyi",
+                  "kat-sayisi": "3"
+                },
+                "expect": {
+                  "attrs": {
+                    "Durum": "iyi",
+                    "Kat": "3",
+                    "Yükseklik": "9"
+                  },
+                  "shown": [
+                    "durum",
+                    "kat",
+                    "kod",
+                    "yukseklik"
+                  ],
+                  "required": [
+                    "durum"
+                  ],
+                  "readOnly": [
+                    "yukseklik"
+                  ]
+                }
+              },
+              {
+                "name": "yeni kayıt varsayılanlarıyla",
+                "values": {
+                  "Durum": "iyi",
+                  "kat-sayisi": "4"
+                },
+                "new": true,
+                "expect": {
+                  "attrs": {
+                    "Durum": "iyi",
+                    "Kat": "4",
+                    "Kod": "B-4",
+                    "Yükseklik": "12"
+                  },
+                  "shown": [
+                    "durum",
+                    "kat",
+                    "kod",
+                    "yukseklik"
+                  ],
+                  "required": [
+                    "durum"
+                  ],
+                  "readOnly": [
+                    "yukseklik"
+                  ]
+                }
+              },
+              {
+                "name": "incelemede açıklama zorunlu",
+                "values": {
+                  "Durum": "inceleme",
+                  "kat-sayisi": "2"
+                },
+                "expect": {
+                  "attrs": {
+                    "Durum": "inceleme",
+                    "Kat": "2",
+                    "Yükseklik": "6"
+                  },
+                  "shown": [
+                    "durum",
+                    "kat",
+                    "kod",
+                    "yukseklik",
+                    "aciklama"
+                  ],
+                  "required": [
+                    "durum",
+                    "aciklama"
+                  ],
+                  "readOnly": [
+                    "yukseklik"
+                  ],
+                  "issues": [
+                    "form_required@aciklama"
+                  ]
+                }
+              },
+              {
+                "name": "kısa açıklama denetime takılır",
+                "values": {
+                  "Açıklama": "Kısa",
+                  "Durum": "inceleme",
+                  "kat-sayisi": "2"
+                },
+                "expect": {
+                  "attrs": {
+                    "Açıklama": "Kısa",
+                    "Durum": "inceleme",
+                    "Kat": "2",
+                    "Yükseklik": "6"
+                  },
+                  "shown": [
+                    "durum",
+                    "kat",
+                    "kod",
+                    "yukseklik",
+                    "aciklama"
+                  ],
+                  "required": [
+                    "durum",
+                    "aciklama"
+                  ],
+                  "readOnly": [
+                    "yukseklik"
+                  ],
+                  "issues": [
+                    "form_check_failed@aciklama"
+                  ]
+                }
+              },
+              {
+                "name": "boş kayıt",
+                "expect": {
+                  "shown": [
+                    "durum",
+                    "kat",
+                    "kod",
+                    "yukseklik"
+                  ],
+                  "required": [
+                    "durum"
+                  ],
+                  "readOnly": [
+                    "yukseklik"
+                  ],
+                  "issues": [
+                    "form_required@durum"
+                  ]
+                }
+              },
+              {
+                "name": "eski hesap",
+                "values": {
+                  "Durum": "iyi",
+                  "kat-sayisi": "3"
+                },
+                "expect": {
+                  "attrs": {
+                    "Durum": "iyi",
+                    "Kat": "3",
+                    "Yükseklik": "6"
+                  },
+                  "shown": [
+                    "durum",
+                    "kat",
+                    "kod",
+                    "yukseklik"
+                  ],
+                  "required": [
+                    "durum"
+                  ],
+                  "readOnly": [
+                    "yukseklik"
+                  ]
+                }
+              },
+              {
+                "name": "açıklama görünmüyor sanılmış",
+                "values": {
+                  "Durum": "inceleme",
+                  "kat-sayisi": "2"
+                },
+                "expect": {
+                  "attrs": {
+                    "Durum": "inceleme",
+                    "Kat": "2",
+                    "Yükseklik": "6"
+                  },
+                  "shown": [
+                    "durum",
+                    "kat",
+                    "kod",
+                    "yukseklik"
+                  ],
+                  "required": [
+                    "durum",
+                    "aciklama"
+                  ],
+                  "readOnly": [
+                    "yukseklik"
+                  ],
+                  "issues": [
+                    "form_required@aciklama"
+                  ]
+                }
+              },
+              {
+                "name": "zorunluluk eksik sanılmış",
+                "values": {
+                  "Durum": "inceleme",
+                  "kat-sayisi": "2"
+                },
+                "expect": {
+                  "attrs": {
+                    "Durum": "inceleme",
+                    "Kat": "2",
+                    "Yükseklik": "6"
+                  },
+                  "shown": [
+                    "durum",
+                    "kat",
+                    "kod",
+                    "yukseklik",
+                    "aciklama"
+                  ],
+                  "required": [
+                    "durum"
+                  ],
+                  "readOnly": [
+                    "yukseklik"
+                  ],
+                  "issues": [
+                    "form_required@aciklama"
+                  ]
+                }
+              },
+              {
+                "name": "sorun beklenmemiş",
+                "values": {
+                  "Açıklama": "Kısa",
+                  "Durum": "inceleme",
+                  "kat-sayisi": "2"
+                },
+                "expect": {
+                  "attrs": {
+                    "Açıklama": "Kısa",
+                    "Durum": "inceleme",
+                    "Kat": "2",
+                    "Yükseklik": "6"
+                  },
+                  "shown": [
+                    "durum",
+                    "kat",
+                    "kod",
+                    "yukseklik",
+                    "aciklama"
+                  ],
+                  "required": [
+                    "durum",
+                    "aciklama"
+                  ],
+                  "readOnly": [
+                    "yukseklik"
+                  ]
+                }
+              }
+            ]
+          },
+          "releases": [
+            {
+              "version": 1,
+              "digest": "4161df5c753d520e1993f448ed55043c",
+              "body": {
+                "revision": 1,
+                "items": [
+                  {
+                    "type": "field",
+                    "id": "durum",
+                    "field": "Durum",
+                    "required": true
+                  },
+                  {
+                    "type": "field",
+                    "id": "kat",
+                    "field": "kat-sayisi"
+                  },
+                  {
+                    "type": "field",
+                    "id": "kod",
+                    "field": "Kod",
+                    "defaultExpr": "'B-' || Kat"
+                  },
+                  {
+                    "type": "field",
+                    "id": "yukseklik",
+                    "field": "Yükseklik",
+                    "calculate": "Kat * 3"
+                  },
+                  {
+                    "type": "field",
+                    "id": "aciklama",
+                    "field": "Açıklama",
+                    "visibleWhen": "Durum = 'inceleme'",
+                    "requiredWhen": "Durum = 'inceleme'",
+                    "checks": [
+                      {
+                        "rule": "uzunluk(Açıklama) >= 10",
+                        "message": "Açıklama en az 10 karakter olmalı."
+                      }
+                    ]
+                  }
+                ],
+                "tests": [
+                  {
+                    "name": "iyi bina",
+                    "values": {
+                      "Durum": "iyi",
+                      "kat-sayisi": "3"
+                    },
+                    "expect": {
+                      "attrs": {
+                        "Durum": "iyi",
+                        "Kat": "3",
+                        "Yükseklik": "9"
+                      },
+                      "shown": [
+                        "durum",
+                        "kat",
+                        "kod",
+                        "yukseklik"
+                      ],
+                      "required": [
+                        "durum"
+                      ],
+                      "readOnly": [
+                        "yukseklik"
+                      ]
+                    }
+                  },
+                  {
+                    "name": "yeni kayıt varsayılanlarıyla",
+                    "values": {
+                      "Durum": "iyi",
+                      "kat-sayisi": "4"
+                    },
+                    "new": true,
+                    "expect": {
+                      "attrs": {
+                        "Durum": "iyi",
+                        "Kat": "4",
+                        "Kod": "B-4",
+                        "Yükseklik": "12"
+                      },
+                      "shown": [
+                        "durum",
+                        "kat",
+                        "kod",
+                        "yukseklik"
+                      ],
+                      "required": [
+                        "durum"
+                      ],
+                      "readOnly": [
+                        "yukseklik"
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "taslak",
+          "name": "Taslak form",
+          "layer": "bina",
+          "draft": {
+            "revision": 0,
+            "items": [
+              {
+                "type": "field",
+                "id": "durum",
+                "field": "Durum",
+                "required": true
+              },
+              {
+                "type": "field",
+                "id": "kat",
+                "field": "kat-sayisi"
+              }
+            ],
+            "tests": [
+              {
+                "name": "durum ve kat",
+                "values": {
+                  "Durum": "iyi",
+                  "kat-sayisi": "1"
+                },
+                "expect": {
+                  "attrs": {
+                    "Durum": "iyi",
+                    "Kat": "1"
+                  },
+                  "shown": [
+                    "durum",
+                    "kat"
+                  ],
+                  "required": [
+                    "durum"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "bozuk",
+          "name": "Bozuk form",
+          "layer": "bina",
+          "draft": {
+            "revision": 0,
+            "items": [
+              {
+                "type": "field",
+                "id": "yok",
+                "field": "Yok"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "origin": {
+      "x": 500000,
+      "y": 4400000
+    },
+    "layers": [
+      {
+        "id": "bina",
+        "name": "Bina",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+          {
+            "name": "Durum",
+            "kind": "text",
+            "values": [
+              {
+                "code": "iyi",
+                "label": "İyi"
+              },
+              {
+                "code": "inceleme",
+                "label": "Ek inceleme gerekli"
+              }
+            ],
+            "required": true
+          },
+          {
+            "id": "kat-sayisi",
+            "name": "Kat",
+            "kind": "integer",
+            "min": "1",
+            "max": "40"
+          },
+          {
+            "name": "Açıklama",
+            "kind": "text",
+            "length": 500
+          },
+          {
+            "name": "Yükseklik",
+            "kind": "decimal",
+            "scale": 1
+          },
+          {
+            "name": "Kod",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "activeLayer": "bina",
+    "entities": [],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "taslağın bütün senaryoları: geçenler ve farklarıyla düşenler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "form": "bina",
+            "draft": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "results": [
+                {
+                  "name": "iyi bina",
+                  "passed": true
+                },
+                {
+                  "name": "yeni kayıt varsayılanlarıyla",
+                  "passed": true
+                },
+                {
+                  "name": "incelemede açıklama zorunlu",
+                  "passed": true
+                },
+                {
+                  "name": "kısa açıklama denetime takılır",
+                  "passed": true
+                },
+                {
+                  "name": "boş kayıt",
+                  "passed": true
+                },
+                {
+                  "name": "eski hesap",
+                  "passed": false,
+                  "differences": [
+                    "“Yükseklik” değeri: beklenen “6”, bulunan “9”."
+                  ]
+                },
+                {
+                  "name": "açıklama görünmüyor sanılmış",
+                  "passed": false,
+                  "differences": [
+                    "Gösterilen öğeler: beklenen durum, kat, kod, yukseklik, bulunan durum, kat, kod, yukseklik, aciklama."
+                  ]
+                },
+                {
+                  "name": "zorunluluk eksik sanılmış",
+                  "passed": false,
+                  "differences": [
+                    "Zorunlu öğeler: beklenen durum, bulunan durum, aciklama."
+                  ]
+                },
+                {
+                  "name": "sorun beklenmemiş",
+                  "passed": false,
+                  "differences": [
+                    "Sorunlar: beklenen hiçbiri, bulunan form_check_failed@aciklama."
+                  ]
+                }
+              ],
+              "passed": 5,
+              "total": 9
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "son yayının senaryoları yayınla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "form": "bina"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "results": [
+                {
+                  "name": "iyi bina",
+                  "passed": true
+                },
+                {
+                  "name": "yeni kayıt varsayılanlarıyla",
+                  "passed": true
+                }
+              ],
+              "passed": 2,
+              "total": 2
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan aynı cevabı verir",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "form": "bina",
+            "draft": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "results": [
+                {
+                  "name": "iyi bina",
+                  "passed": true
+                },
+                {
+                  "name": "yeni kayıt varsayılanlarıyla",
+                  "passed": true
+                },
+                {
+                  "name": "incelemede açıklama zorunlu",
+                  "passed": true
+                },
+                {
+                  "name": "kısa açıklama denetime takılır",
+                  "passed": true
+                },
+                {
+                  "name": "boş kayıt",
+                  "passed": true
+                },
+                {
+                  "name": "eski hesap",
+                  "passed": false,
+                  "differences": [
+                    "“Yükseklik” değeri: beklenen “6”, bulunan “9”."
+                  ]
+                },
+                {
+                  "name": "açıklama görünmüyor sanılmış",
+                  "passed": false,
+                  "differences": [
+                    "Gösterilen öğeler: beklenen durum, kat, kod, yukseklik, bulunan durum, kat, kod, yukseklik, aciklama."
+                  ]
+                },
+                {
+                  "name": "zorunluluk eksik sanılmış",
+                  "passed": false,
+                  "differences": [
+                    "Zorunlu öğeler: beklenen durum, bulunan durum, aciklama."
+                  ]
+                },
+                {
+                  "name": "sorun beklenmemiş",
+                  "passed": false,
+                  "differences": [
+                    "Sorunlar: beklenen hiçbiri, bulunan form_check_failed@aciklama."
+                  ]
+                }
+              ],
+              "passed": 5,
+              "total": 9
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yalnız adı verilenler, verilen sırayla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "form": "bina",
+            "draft": true,
+            "names": [
+              "eski hesap",
+              "iyi bina"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "results": [
+                {
+                  "name": "eski hesap",
+                  "passed": false,
+                  "differences": [
+                    "“Yükseklik” değeri: beklenen “6”, bulunan “9”."
+                  ]
+                },
+                {
+                  "name": "iyi bina",
+                  "passed": true
+                }
+              ],
+              "passed": 1,
+              "total": 2
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hesap farkı söylenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "form": "bina",
+            "draft": true,
+            "names": [
+              "eski hesap"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "results": [
+                {
+                  "name": "eski hesap",
+                  "passed": false,
+                  "differences": [
+                    "“Yükseklik” değeri: beklenen “6”, bulunan “9”."
+                  ]
+                }
+              ],
+              "passed": 0,
+              "total": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "gösterilen öğe farkı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "form": "bina",
+            "draft": true,
+            "names": [
+              "açıklama görünmüyor sanılmış"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "results": [
+                {
+                  "name": "açıklama görünmüyor sanılmış",
+                  "passed": false,
+                  "differences": [
+                    "Gösterilen öğeler: beklenen durum, kat, kod, yukseklik, bulunan durum, kat, kod, yukseklik, aciklama."
+                  ]
+                }
+              ],
+              "passed": 0,
+              "total": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "zorunlu öğe farkı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "form": "bina",
+            "draft": true,
+            "names": [
+              "zorunluluk eksik sanılmış"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "results": [
+                {
+                  "name": "zorunluluk eksik sanılmış",
+                  "passed": false,
+                  "differences": [
+                    "Zorunlu öğeler: beklenen durum, bulunan durum, aciklama."
+                  ]
+                }
+              ],
+              "passed": 0,
+              "total": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sorun farkı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "form": "bina",
+            "draft": true,
+            "names": [
+              "sorun beklenmemiş"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "results": [
+                {
+                  "name": "sorun beklenmemiş",
+                  "passed": false,
+                  "differences": [
+                    "Sorunlar: beklenen hiçbiri, bulunan form_check_failed@aciklama."
+                  ]
+                }
+              ],
+              "passed": 0,
+              "total": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "varsayılanlarla yeni kayıt geçer",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "form": "bina",
+            "draft": true,
+            "names": [
+              "yeni kayıt varsayılanlarıyla"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "results": [
+                {
+                  "name": "yeni kayıt varsayılanlarıyla",
+                  "passed": true
+                }
+              ],
+              "passed": 1,
+              "total": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş kayıt geçer",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "form": "bina",
+            "draft": true,
+            "names": [
+              "boş kayıt"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "results": [
+                {
+                  "name": "boş kayıt",
+                  "passed": true
+                }
+              ],
+              "passed": 1,
+              "total": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yayınlanmamış formun taslağı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "form": "taslak",
+            "draft": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "results": [
+                {
+                  "name": "durum ve kat",
+                  "passed": true
+                }
+              ],
+              "passed": 1,
+              "total": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aynı ad iki kez: iki kez çalışır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "form": "bina",
+            "draft": true,
+            "names": [
+              "iyi bina",
+              "iyi bina"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "results": [
+                {
+                  "name": "iyi bina",
+                  "passed": true
+                },
+                {
+                  "name": "iyi bina",
+                  "passed": true
+                }
+              ],
+              "passed": 2,
+              "total": 2
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "senaryosu olmayan yayın: boş sonuç",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "form": "bina",
+            "names": []
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "results": [
+                {
+                  "name": "iyi bina",
+                  "passed": true
+                },
+                {
+                  "name": "yeni kayıt varsayılanlarıyla",
+                  "passed": true
+                }
+              ],
+              "passed": 2,
+              "total": 2
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "doğrulama: geçerli girdi hiçbir şey yazmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "form": "bina",
+            "draft": true
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan form",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "form": "yok"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_form",
+              "message": "“yok” kimlikli bir form yok. Formlar penceresinden var olan bir formu seçin.",
+              "path": "form"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yayınlanmamış formun yayını",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "form": "taslak"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "form_unpublished",
+              "message": "“Taslak form” formu hiç yayınlanmadı. Önce yayınlayın ya da taslağıyla çalışın.",
+              "path": "draft"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ön denetimde hatası olan form",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "form": "bozuk",
+            "draft": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "form_preflight",
+              "message": "“Bozuk form” formu kullanılamıyor: Katmanda “Yok” alanı yok. Formu tasarımcıda düzeltin.",
+              "path": "form"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan senaryo",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "form": "bina",
+            "draft": true,
+            "names": [
+              "iyi bina",
+              "yok"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_test",
+              "message": "“Bina denetimi” formunda “yok” senaryosu yok.",
+              "path": "names/1"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yayının senaryosu olmayan ad",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "form": "bina",
+            "names": [
+              "eski hesap"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_test",
+              "message": "“Bina denetimi” formunda “eski hesap” senaryosu yok.",
+              "path": "names/0"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan form, ad da yanlış: önce form",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "form": "yok",
+            "names": [
+              "x"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_form",
+              "message": "“yok” kimlikli bir form yok. Formlar penceresinden var olan bir formu seçin.",
+              "path": "form"
+            }
+          },
+          "expect": {
+            "ids": [],
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

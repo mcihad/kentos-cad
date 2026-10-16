@@ -1191,12 +1191,13 @@
    "level": "semantic",
    "via": [
     "cad.forms.edit",
-    "cad.forms.validate"
+    "cad.forms.validate",
+    "cad.forms.test"
    ],
    "operation": null,
-   "python": "kentos.cad.forms.edit, kentos.cad.forms.validate",
-   "mcp": "cad.forms.edit, cad.forms.validate",
-   "note": "Oluştur, Kaydet, Yeniden adlandır, Yayınla, Kuralları uygula ve Formu sil komuta verilir; ön denetim formun çekirdeğindendir, aynısını cad.forms.validate verir (ADR 0401).",
+   "python": "kentos.cad.forms.edit, kentos.cad.forms.validate, kentos.cad.forms.test",
+   "mcp": "cad.forms.edit, cad.forms.validate, cad.forms.test",
+   "note": "Oluştur, Kaydet, Yeniden adlandır, Yayınla, Kuralları uygula ve Formu sil komuta verilir; ön denetim formun çekirdeğindendir, aynısını cad.forms.validate verir (ADR 0401); senaryolar cad.forms.test ile çalışır (ADR 0420).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0

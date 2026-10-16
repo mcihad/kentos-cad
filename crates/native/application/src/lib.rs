@@ -172,6 +172,7 @@ pub mod records_duplicate;
 pub mod forms_edit;
 pub mod forms_fill;
 pub mod forms_submit;
+pub mod forms_test;
 pub mod forms_validate;
 pub mod relations_edit;
 pub mod widths;
@@ -240,6 +241,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_FORMS_AUDIT,
         kentos_contracts::CAD_FORMS_AUDIT_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_FORMS_TEST,
+        kentos_contracts::CAD_FORMS_TEST_VERSION,
     ),
     // Koşullu biçim ([`layers_table`], docs/adr/0413).
     (

@@ -1147,9 +1147,10 @@
       "level": "semantic",
       "via": [
         "cad.forms.edit",
-        "cad.forms.validate"
+        "cad.forms.validate",
+        "cad.forms.test"
       ],
-      "note": "Oluştur, Kaydet, Yeniden adlandır, Yayınla, Kuralları uygula ve Formu sil komuta verilir; ön denetim formun çekirdeğindendir, aynısını cad.forms.validate verir (ADR 0401)."
+      "note": "Oluştur, Kaydet, Yeniden adlandır, Yayınla, Kuralları uygula ve Formu sil komuta verilir; ön denetim formun çekirdeğindendir, aynısını cad.forms.validate verir (ADR 0401); senaryolar cad.forms.test ile çalışır (ADR 0420)."
     },
     "data.formEdit": {
       "level": "semantic",

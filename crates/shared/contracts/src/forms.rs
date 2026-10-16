@@ -10,6 +10,8 @@
 //! widget takes, expressions that compile, a required field that can be hidden) is the forms core's
 //! (`kentos-forms`).
 
+use std::collections::BTreeMap;
+
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
@@ -76,6 +78,62 @@ pub struct FormBody {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub clear_hidden: bool,
+    /// The designer's scenarios (docs/adr/0420): values typed into a record and what the form made of
+    /// them, run again whenever the form changes.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FormTest>>", optional))]
+    pub tests: Vec<FormTest>,
+}
+
+/// The most scenarios a form keeps.
+pub const MOST_FORM_TESTS: usize = 50;
+
+/// A scenario of a form (docs/adr/0420): a record's typed values and what the form showed, required,
+/// locked, wrote and said for them.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormTest {
+    /// Unique in the form; trimmed, 1–64 characters.
+    pub name: String,
+    /// The values typed, by the layer fields' keys, onto an empty record.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
+    pub values: BTreeMap<String, String>,
+    /// A new record: the form's defaults fill it. Written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub new: bool,
+    pub expect: FormTestExpect,
+}
+
+/// What a scenario expects.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormTestExpect {
+    /// The record after the form: its attributes by the fields' names.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
+    pub attrs: BTreeMap<String, String>,
+    /// The items shown, required and read-only, by their ids in the form's order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub shown: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub required: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub read_only: Vec<String>,
+    /// What the form said: each issue's code, `@` and its item when it has one (`form_required@not`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub issues: Vec<String>,
 }
 
 /// A frozen copy of a form's body: what data entry and the write profile use.
@@ -846,6 +904,25 @@ pub fn body_problem(body: &FormBody) -> Option<String> {
                     ));
                 }
             }
+        }
+    }
+    if body.tests.len() > MOST_FORM_TESTS {
+        return Some(format!(
+            "Bir formda en çok {MOST_FORM_TESTS} senaryo olur; {} var.",
+            body.tests.len()
+        ));
+    }
+    let mut names = std::collections::HashSet::new();
+    for t in &body.tests {
+        let name = t.name.trim();
+        if name.is_empty() || name != t.name || t.name.chars().count() > 64 {
+            return Some(format!(
+                "“{}” bir senaryo adı olamaz: 1–64 karakter, başında ve sonunda boşluk olmadan.",
+                t.name
+            ));
+        }
+        if !names.insert(name) {
+            return Some(format!("“{name}” senaryosu formda iki kez var."));
         }
     }
     None

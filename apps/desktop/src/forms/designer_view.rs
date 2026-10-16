@@ -1124,7 +1124,7 @@ impl App {
         let Some(e) = &self.form_preview else {
             return empty_inspector();
         };
-        let shown = self.entry_preview(e);
+        let shown = column![self.entry_preview(e), self.scenarios_box(w)].spacing(16);
         scrollable(container(shown).padding(iced::Padding {
             top: 0.0,
             right: 14.0,
@@ -1132,6 +1132,75 @@ impl App {
             left: 2.0,
         }))
         .height(Fill)
+        .into()
+    }
+}
+
+impl App {
+    /// Senaryolar (docs/adr/0420): the copy's scenarios run on it as the command runs them, the
+    /// preview's values kept as a new one.
+    fn scenarios_box<'a>(&self, w: &'a Window) -> Element<'a, Message> {
+        let mut col = Column::new().spacing(6).push(label::strong("Senaryolar"));
+        let (Some(body), Some(form), Some(doc)) = (&w.body, self.chosen_form(), &self.document)
+        else {
+            return col.into();
+        };
+        let prepared = kentos_native_application::forms_test::prepared_for(&doc.model, form, body);
+        if body.tests.is_empty() {
+            col = col.push(label::caption(
+                "Senaryo yok: önizlemeye değer yazın ve senaryo olarak kaydedin; form değişince yeniden çalışır.",
+            ).style(muted));
+        }
+        let mut passed = 0;
+        for (i, t) in body.tests.iter().enumerate() {
+            let differences = match &prepared {
+                Ok(p) => kentos_forms::scenario::run(p, t),
+                Err(why) => vec![why.clone()],
+            };
+            let ok = differences.is_empty();
+            passed += usize::from(ok);
+            let mark = if ok {
+                icon(Icon::Check).size(14.0).tone(Tone::Success)
+            } else {
+                icon(Icon::Warning).size(14.0).tone(Tone::Danger)
+            };
+            let mut line = Column::new().spacing(2).push(
+                row![
+                    mark,
+                    container(label::body(t.name.clone())).width(Fill),
+                    button(icon(Icon::Close).size(12.0))
+                        .on_press(msg(Event::RemoveScenario(i)))
+                        .padding([3, 6])
+                        .style(style::button::tool(false)),
+                ]
+                .spacing(6)
+                .align_y(Center),
+            );
+            for d in differences {
+                line = line.push(container(label::caption(d).style(muted)).padding([0, 20]));
+            }
+            col = col.push(line);
+        }
+        if !body.tests.is_empty() {
+            col = col.push(label::caption(format!(
+                "{passed} / {} senaryo geçiyor.",
+                body.tests.len()
+            )));
+        }
+        let name = text_input("Senaryonun adı", &w.scenario_name)
+            .size(typography::body())
+            .on_input(|t| msg(Event::ScenarioName(t)))
+            .on_submit(msg(Event::SaveScenario))
+            .padding([4, 8])
+            .style(style::field::input);
+        col.push(
+            row![
+                container(focus_ring(name)).width(Fill),
+                words::secondary("Senaryo olarak kaydet", Some(msg(Event::SaveScenario))),
+            ]
+            .spacing(6)
+            .align_y(Center),
+        )
         .into()
     }
 }

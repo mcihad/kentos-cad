@@ -4157,6 +4157,33 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // A form's scenarios (docs/adr/0420), held together by fixtures/commands/v1/cad.forms.test.json.
+        CommandDescriptor {
+            id: crate::CAD_FORMS_TEST.into(),
+            version: crate::CAD_FORMS_TEST_VERSION,
+            title: "Form senaryolarını çalıştır".into(),
+            summary: "Formun senaryolarını yeniden çalıştırır, hiçbir şey yazmaz: her senaryonun değerleri boş bir kayda yazılır (new ile varsayılanlarıyla), \
+                      formun yaptığı (kaydın değerleri, gösterilen, zorunlu ve salt okunur öğeler, sorunlar) senaryonun beklediğiyle karşılaştırılır. \
+                      draft taslağın senaryolarını taslakla, yoksa son yayının senaryolarını o yayınla; names yalnız verilenleri sırasıyla. Senaryolar anı ve kişiyi okumaz."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::FormsTest>(),
+            output: schema::<crate::FormsTested>(),
+            plan: Some(schema::<crate::FormsTested>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bina formunun taslağındaki senaryoları çalıştır".into(),
+                input: json!({ "form": "bina-denetimi", "draft": true }),
+                output: None,
+            }],
+        },
         // Records without a geometry, a table's rows (docs/adr/0410 §3), held together by
         // fixtures/commands/v1/cad.records.create.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -5334,6 +5361,9 @@ mod tests {
                     crate::CAD_FORMS_AUDIT => {
                         serde_json::from_value::<crate::FormsAudit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_FORMS_TEST => {
+                        serde_json::from_value::<crate::FormsTest>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_RECORDS_CREATE => {
                         serde_json::from_value::<crate::RecordsCreate>(e.input.clone()).map(|_| ())
                     }
@@ -5650,6 +5680,10 @@ mod tests {
                         }
                         crate::CAD_FORMS_AUDIT => {
                             serde_json::from_value::<crate::FormsAudited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_FORMS_TEST => {
+                            serde_json::from_value::<crate::FormsTested>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_RECORDS_CREATE => {
