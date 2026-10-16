@@ -391,7 +391,7 @@ Liste:
   vurgu dolgusu float32 yüzünden 0,25 m'ye kadar kayar; kayma yakınlaşmayla değişir, nesnenin çizgisi ve tutamaçları yerindedir.
   Seçim ve üzerine gelme kaplamaları stilli çizimin karo düzenine (ADR 0157) geçmeli. Masaüstünde yok. Yeniden üretmek için: örnek
   çizimde 0,0'a 2 × 1,5 m'lik bir alan çizip seçin ve ona yakınlaşın.
-- [ ] Stil pencereleri (ADR 0318, 16 Ekim): web'de gerekenler:
+- [ ] Stil pencereleri (ADR 0330, 16 Ekim): web'de gerekenler:
   - `style/file.ts`'in `LAYER_TYPES`'ı ve `validateSymbol`'ü: üç türde `geometryGenerator`, alanda `gradientFill`; adımların ve çizen
     sembolün denetimi. Web de geometri üreticili sembolü kaydedemiyor (masaüstündeki hatanın aynısı).
   - Sembol tasarımcısı ve SVG düzenleyicisi Kaydet'te kapanır; başarı bildirimle (web'in toast'u) söylenir.

@@ -212,7 +212,7 @@ fn screens() {
             },
             click: None,
         },
-        // Uygula (docs/adr/0318): the designer closes over Katman stili, a notice says where the symbol went.
+        // Uygula (docs/adr/0330): the designer closes over Katman stili, a notice says where the symbol went.
         Scene {
             name: "uygulandi",
             setup: |app| {

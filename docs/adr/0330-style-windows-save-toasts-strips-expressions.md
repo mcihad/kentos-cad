@@ -1,4 +1,4 @@
-# ADR 0318: Stil pencerelerinde kayıt, bildirimler, araç şeritleri ve ifade alanları
+# ADR 0330: Stil pencerelerinde kayıt, bildirimler, araç şeritleri ve ifade alanları
 
 - **Durum:** kabul edildi (2026-10-16). Sahibin isteği (16 Ekim). Altı iş:
   - Stil düzenleyicide “Geometri üretici uygulanmıyor” hatası;
