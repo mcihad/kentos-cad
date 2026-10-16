@@ -2269,6 +2269,7 @@ impl<'l> Emitter<'l> {
         // The box widens as the baseline does: its height's scale times the widening (1 unturned, unscaled).
         let along = height / f.height * widen;
         self.push(Entity::Text(TextEntity {
+            annotative: None,
             base: b,
             p,
             text,

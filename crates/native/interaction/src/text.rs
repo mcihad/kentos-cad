@@ -562,6 +562,7 @@ impl Tool for Text {
             let m = *cx.memory;
             // The defaults are no fields: the left of the baseline, a factor of 1, no mask.
             let geometry = EntityGeometry::Text {
+                annotative: None,
                 p: points::wire(p),
                 text: text.to_owned(),
                 height: cx.annotation_height(AnnotationKind::Text),

@@ -175,7 +175,10 @@ use crate::layer::LineType;
 ///    stays 53.
 /// 72 (docs/adr/0322 §5): a text's and a dimension's `overrides`: `.kcad` document schema 63; in the typed columns
 ///    the text's option 14 and its JSON text, the dimension's in its more JSON (bit 29). The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 72;
+/// 73 (docs/adr/0323): a text's, a dimension's and a leader's `annotative`: `.kcad` document schema 64; in the typed
+///    columns the text's option 15, the dimension's in its more JSON (bit 29), the leader's bit 2, each its JSON text.
+///    The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 73;
 
 // ── Every import ────────────────────────────────────────────────────────
 

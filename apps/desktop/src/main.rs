@@ -6,6 +6,8 @@
 
 #[cfg(test)]
 mod acceptance_tests;
+#[cfg(test)]
+mod annotative_sheet_tests;
 mod address;
 #[cfg(test)]
 mod address_scenes;
@@ -14,6 +16,7 @@ mod alias_profile;
 #[cfg(test)]
 mod alias_profile_scenes;
 mod annotation_scale;
+mod annotative;
 mod annotation_styles;
 mod app;
 mod app_menu;
@@ -74,6 +77,8 @@ mod data_compare;
 mod dimension_follow_scenes;
 #[cfg(test)]
 mod dimension_mark_scenes;
+#[cfg(test)]
+mod annotative_scenes;
 #[cfg(test)]
 mod dimension_option_scenes;
 #[cfg(test)]

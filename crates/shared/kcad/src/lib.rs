@@ -453,11 +453,14 @@ pub const SCHEMA_WITH_DIMENSION_MARKS: u32 = 62;
 /// Schema 63 (docs/adr/0322 §5): a text's and a dimension's `overrides`, the fields set apart from their style by
 /// hand, written only when one has them; older readers refuse the file instead of letting a style change take them.
 pub const SCHEMA_WITH_OVERRIDES: u32 = 63;
+/// Schema 64 (docs/adr/0323): a text's, a dimension's and a leader's `annotative` (its scales and what each sets
+/// apart), written only when one has them; older readers refuse the file instead of drawing every scale at one height.
+pub const SCHEMA_WITH_ANNOTATIVE: u32 = 64;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 62] = [
+pub const SCHEMAS: [u32; 63] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -520,6 +523,7 @@ pub const SCHEMAS: [u32; 62] = [
     SCHEMA_WITH_DIMENSION_OPTIONS,
     SCHEMA_WITH_DIMENSION_MARKS,
     SCHEMA_WITH_OVERRIDES,
+    SCHEMA_WITH_ANNOTATIVE,
 ];
 
 /// The file a drawing is saved as.

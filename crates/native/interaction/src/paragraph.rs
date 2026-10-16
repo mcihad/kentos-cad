@@ -365,6 +365,7 @@ impl Tool for ParagraphText {
             if !text.is_empty() {
                 let m = *cx.memory;
                 let geometry = EntityGeometry::Text {
+                    annotative: None,
                     p: points::wire(at),
                     text: text.clone(),
                     height: cx.annotation_height(AnnotationKind::Text),

@@ -55,6 +55,7 @@ fn base(id: u32) -> EntityBase {
 
 fn text(align: Option<TextAlign>, width_factor: Option<f64>, mask: bool) -> Entity {
     Entity::Text(TextEntity {
+        annotative: None,
         base: base(0),
         p: Vec2 { x: 3.0, y: 4.0 },
         text: "Ada 1284".into(),

@@ -173,6 +173,10 @@ fn positive(what: &str, v: f64) -> Result<(), String> {
 fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
     use Entity::*;
     let base = e.base();
+    // An annotation's scales (docs/adr/0323).
+    if let Some(why) = kentos_contracts::annotative_problem(e) {
+        return Err(why);
+    }
     if (base.layer_id.is_empty() && !in_block) || base.layer_id.len() > 200 {
         return Err("katman kimliği boş ya da çok uzun".into());
     }

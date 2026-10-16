@@ -39,6 +39,7 @@
 pub mod address_define;
 pub mod addresses;
 pub mod annotation_follow;
+pub mod annotations_scales;
 pub mod arc;
 pub mod array;
 mod array_assoc;
@@ -220,6 +221,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_VIEWS_EDIT,
         kentos_contracts::CAD_VIEWS_EDIT_VERSION,
+    ),
+    // Ölçekli açıklamalar ([`annotations_scales`], docs/adr/0323 §4).
+    (
+        kentos_contracts::CAD_ANNOTATIONS_SCALES,
+        kentos_contracts::CAD_ANNOTATIONS_SCALES_VERSION,
     ),
     // Öne getir and Arkaya gönder ([`entities_order`], docs/adr/0260 §5).
     (

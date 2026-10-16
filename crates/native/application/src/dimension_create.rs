@@ -985,6 +985,7 @@ fn wire(p: Vec2) -> Point {
 fn objects(input: &DimensionsCreate, m: &Measured) -> kentos_contracts::EntitiesCreate {
     let g = &m.geom;
     let geometry = EntityGeometry::Dimension {
+        annotative: None,
         text_shift: None,
         breaks: Vec::new(),
         a: wire(g.a),

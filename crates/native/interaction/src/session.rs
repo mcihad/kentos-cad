@@ -190,6 +190,7 @@ pub const TOOLS: &[&str] = &[
     crate::dimension_marks::CENTER_MARK_ID,
     crate::dimension_marks::CENTER_LINE_ID,
     crate::dimension_marks::ELEVATION_ID,
+    crate::annotative::PLACE_ID,
     // docs/adr/0147 §7: Hızlı ölçü.
     quick_dimension::ID,
     // Phase 3: the array along a path (Çit, İki yana and Kaynağı sil are options of existing tools).
@@ -548,6 +549,7 @@ impl Session {
             crate::dimension_marks::ELEVATION_ID => {
                 Box::new(crate::dimension_marks::DimensionMarks::elevation())
             }
+            crate::annotative::PLACE_ID => Box::new(crate::annotative::AnnotativePlace::new()),
             quick_dimension::ID => Box::new(crate::quick_dimension::QuickDimension::tool()),
             array_path::ID => Box::new(crate::array_path::ArrayPath::tool()),
             station_offset::ID => Box::new(station_offset::StationOffset::new()),

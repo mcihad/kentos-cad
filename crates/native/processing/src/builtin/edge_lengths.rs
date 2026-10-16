@@ -159,6 +159,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, _feedback: &mut dyn Feedback) -> 
         .iter()
         .map(|l| {
             Entity::Text(TextEntity {
+                annotative: None,
                 base: EntityBase {
                     look: Default::default(),
                     id: 0,

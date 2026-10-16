@@ -105,6 +105,54 @@
    "tests": 0
   },
   {
+   "id": "annotation.make",
+   "kind": "command",
+   "title": "Ölçekli yap",
+   "level": "semantic",
+   "via": [
+    "cad.annotations.scales"
+   ],
+   "operation": null,
+   "python": "kentos.cad.annotations.scales",
+   "mcp": "cad.annotations.scales",
+   "note": "Seçimin kimlikleri komutun make işlemine verilir; nesne projenin çizim ölçeğinde ölçekli olur (ADR 0323).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "annotation.reset",
+   "kind": "command",
+   "title": "Ölçeği sıfırla",
+   "level": "semantic",
+   "via": [
+    "cad.annotations.scales"
+   ],
+   "operation": null,
+   "python": "kentos.cad.annotations.scales",
+   "mcp": "cad.annotations.scales",
+   "note": "Seçimin kimlikleri komutun reset işlemine verilir (ADR 0323).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "annotation.unmake",
+   "kind": "command",
+   "title": "Ölçekliliği kaldır",
+   "level": "semantic",
+   "via": [
+    "cad.annotations.scales"
+   ],
+   "operation": null,
+   "python": "kentos.cad.annotations.scales",
+   "mcp": "cad.annotations.scales",
+   "note": "Seçimin kimlikleri komutun unmake işlemine verilir (ADR 0323).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "attachment.add",
    "kind": "command",
    "title": "Dosya ekle…",
@@ -6909,6 +6957,22 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "tool.annotativePlace",
+   "kind": "command",
+   "title": "Ölçekteki yeri",
+   "level": "semantic",
+   "via": [
+    "cad.annotations.scales"
+   ],
+   "operation": null,
+   "python": "kentos.cad.annotations.scales",
+   "mcp": "cad.annotations.scales",
+   "note": "Tıklanan nesnenin kimliği, seçilen ölçek ve tıklanan yer (ölçüde çizginin uzaklığı) komutun set işlemine verilir; önizleme o ölçeğin temsilidir (ADR 0323).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.arc",

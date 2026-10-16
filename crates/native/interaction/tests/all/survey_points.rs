@@ -307,6 +307,7 @@ fn named_point_gives_the_running_tool_its_place_as_if_clicked() {
     add_point(&mut b, [8.0, 8.0], Some("102"));
     b.doc
         .add(Entity::Text(TextEntity {
+            annotative: None,
             base: common::base("cizim"),
             p: kentos_contracts::Vec2 {
                 x: E + 1.0,

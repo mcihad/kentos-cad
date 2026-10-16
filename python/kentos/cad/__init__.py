@@ -30,7 +30,7 @@ from .errors import *  # noqa: F403
 from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 
-from . import addresses, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, file, labels, layers, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, rectangle, scenarios, settings, sheets, snap, standards, styles, ucs, units, views  # noqa: E402  isort: skip
+from . import addresses, annotations, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, file, labels, layers, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, rectangle, scenarios, settings, sheets, snap, standards, styles, ucs, units, views  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -61,6 +61,13 @@ __all__ = [
     "AnnotationHeights",
     "AnnotationStyleKind",
     "AnnotationStyleKindName",
+    "AnnotationsScaled",
+    "AnnotationsScales",
+    "AnnotationsScalesPlan",
+    "Annotative",
+    "AnnotativeOperation",
+    "AnnotativeOperationName",
+    "AnnotativeScale",
     "ArcConstructedCurve",
     "ArcContinueCurveConstruction",
     "ArcCreate",
@@ -972,6 +979,7 @@ __all__ = [
     "XlineEntity",
     "XlineEntityGeometry",
     "addresses",
+    "annotations",
     "arc",
     "arrays",
     "blocks",

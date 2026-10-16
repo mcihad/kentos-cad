@@ -222,6 +222,8 @@ pub(super) struct Features {
     dimension_marks: bool,
     /// Schema 63: a text's and a dimension's `overrides` (docs/adr/0322 §5).
     overrides: bool,
+    /// Schema 64: a text's, a dimension's and a leader's `annotative` (docs/adr/0323).
+    annotative: bool,
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
     pub(super) look: bool,
@@ -300,6 +302,7 @@ impl Features {
             dimension_options: schema >= crate::SCHEMA_WITH_DIMENSION_OPTIONS,
             dimension_marks: schema >= crate::SCHEMA_WITH_DIMENSION_MARKS,
             overrides: schema >= crate::SCHEMA_WITH_OVERRIDES,
+            annotative: schema >= crate::SCHEMA_WITH_ANNOTATIVE,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,
@@ -372,6 +375,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                         && matches!(key, "textStyle" | "font" | "bold" | "italic" | "oblique"))
                     || (has.text_paths && key == "path")
                     || (has.overrides && key == "overrides")
+                    || (has.annotative && key == "annotative")
             }
             Kind::Dimension => {
                 matches!(
@@ -409,6 +413,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                     || (has.dimension_refs && has.uids && key == "refs")
                     || (has.dimension_options && matches!(key, "options" | "textShift" | "breaks"))
                     || (has.overrides && key == "overrides")
+                    || (has.annotative && key == "annotative")
             }
             // A hatch's tie names objects: only the drawing's hatches (docs/adr/0186 §6).
             Kind::Hatch => {
@@ -426,6 +431,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                     key,
                     "pts" | "text" | "height" | "rotation" | "arrow" | "mask"
                 ) || (has.annotation && key == "arrowSize")
+                    || (has.annotative && key == "annotative")
             }
             Kind::Table => matches!(
                 key,
@@ -505,6 +511,8 @@ struct CloudRead {
 
 #[derive(Default)]
 struct Fields {
+    /// An annotation's scales (docs/adr/0323).
+    annotative: Option<Box<kentos_contracts::Annotative>>,
     raster: RasterRead,
     cloud: CloudRead,
     url: Option<String>,
@@ -1100,6 +1108,11 @@ pub(super) fn object(
                     has.dimension_marks,
                 )?)
             }
+            // Schema 64 (docs/adr/0323): the scales, as their JSON; the whole object's rule is checked once it is read.
+            "annotative" => {
+                let (a, _): (kentos_contracts::Annotative, usize) = json_part(r, "ölçekler")?;
+                f.annotative = Some(Box::new(a));
+            }
             // Schema 63 (docs/adr/0322 §5): the fields set apart from the style, by name, as their JSON.
             "overrides" => {
                 let (o, at): (Vec<String>, usize) = json_part(r, "geçersiz kılınanlar")?;
@@ -1491,6 +1504,10 @@ pub(super) fn object(
     {
         return Err(r.fail(Code::BadValue, &why));
     }
+    // An annotation's scales (docs/adr/0323).
+    if let Some(why) = kentos_contracts::annotative_problem(&entity) {
+        return Err(r.fail(Code::BadValue, &why));
+    }
     let uid = if has.uids {
         Some(required(r, f.uid, "uid")?)
     } else {
@@ -1678,6 +1695,7 @@ fn build(
                 return Err(r.fail_at(Code::BadValue, f.path_at, &words));
             }
             Entity::Text(TextEntity {
+                annotative: f.annotative.take(),
                 base,
                 p: required(r, f.p, "p")?,
                 text,
@@ -1748,6 +1766,7 @@ fn build(
                 ));
             }
             Entity::Dimension(DimensionEntity {
+                annotative: f.annotative.take(),
                 text_shift: f.text_shift.take(),
                 breaks: std::mem::take(&mut f.breaks),
                 base,
@@ -1794,6 +1813,7 @@ fn build(
             })
         }
         Kind::Leader => Entity::Leader(LeaderEntity {
+            annotative: f.annotative.take(),
             base,
             pts: required(r, f.pts.take(), "pts")?,
             text: f.text.take(),

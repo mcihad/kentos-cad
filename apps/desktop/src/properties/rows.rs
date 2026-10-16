@@ -1276,6 +1276,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 locked,
             ));
             geo.extend(override_rows(&[&d.look.overrides], &ids, locked));
+            geo.extend(scale_rows(&[e], &ids, locked));
             geo.extend([
                 metres("Yazı yüksekliği", d.height).editor(number(Field::DimensionHeight(slot))),
                 Row::text("Yazı", d.text.clone().unwrap_or_default())
@@ -1309,6 +1310,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 locked,
             ));
             geo.extend(override_rows(&[&t.face.overrides], &ids, locked));
+            geo.extend(scale_rows(&[e], &ids, locked));
             geo.extend([
                 // A multi-line text's lines and formats are its editor's (a double click,
                 // docs/adr/0182 §4): here they only show, ⏎ its breaks.
@@ -1474,6 +1476,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         // Its note, height, turn, arrowhead and mask, its corners and length (docs/adr/0146 §7).
         Entity::Leader(l) => {
             geo.extend(leader_rows(&[l], &ids, locked, &f));
+            geo.extend(scale_rows(&[e], &ids, locked));
             geo.push(Row::figure("Köşe sayısı", l.pts.len().to_string()));
             geo.push(metres("Uzunluk", length_of.unwrap_or(0.0)));
         }
@@ -1666,6 +1669,99 @@ fn field_rows(
                 ..Row::note(&refused.message)
             });
         }
+    }
+    rows
+}
+
+/// Ölçekli, Kendi ölçeği, Öbür ölçekler and Ayrı değerler (docs/adr/0323 §4): whether the texts, dimensions or
+/// leaders are annotative, the scale their own geometry is drawn at, their other scales (one that sets something
+/// apart with an asterisk; typed to add or remove) and Sıfırla; none when none of them can be (a text along a curve,
+/// a linked text).
+fn scale_rows(objects: &[&Entity], slots: &[Slot], locked: bool) -> Vec<Row> {
+    use kentos_contracts::{annotative_of, why_not_annotative};
+    if objects.iter().all(|e| why_not_annotative(e).is_some()) {
+        return Vec::new();
+    }
+    let on = objects.iter().filter(|e| annotative_of(e).is_some()).count();
+    let state = match on {
+        0 => "Hayır",
+        n if n == objects.len() => "Evet",
+        _ => "Çeşitli",
+    };
+    let pick = |label: &str, value: bool| Choice::Pick {
+        label: label.to_owned(),
+        swatch: None,
+        icon: None,
+        wide: false,
+        chosen: state == label,
+        enabled: true,
+        message: Message::Properties(Event::Annotative(slots.to_vec(), value)),
+    };
+    let editor = Editor::Select {
+        text: state.to_owned(),
+        swatch: None,
+        icon: None,
+        items: vec![pick("Evet", true), pick("Hayır", false)],
+    };
+    let mut rows = vec![Row::text("Ölçekli", state).editor((!locked).then_some(editor))];
+    if on != objects.len() {
+        return rows;
+    }
+    let common = |texts: Vec<String>| {
+        if texts.iter().all(|t| *t == texts[0]) {
+            texts[0].clone()
+        } else {
+            "Çeşitli".to_owned()
+        }
+    };
+    let own = common(
+        objects
+            .iter()
+            .filter_map(|e| annotative_of(e))
+            .map(|a| kentos_interaction::annotative::ratio(a.at))
+            .collect(),
+    );
+    let others = common(
+        objects
+            .iter()
+            .filter_map(|e| kentos_interaction::annotative::others_text(e))
+            .collect(),
+    );
+    rows.push(Row::text("Kendi ölçeği", own));
+    rows.push(
+        Row::text("Öbür ölçekler", others)
+            .editor((!locked).then_some(Editor::Text(Field::AnnotativeScales(slots.to_vec())))),
+    );
+    let apart: Vec<String> = objects
+        .iter()
+        .filter_map(|e| annotative_of(e))
+        .flat_map(|a| a.scales.iter().filter(|s| !s.is_plain()).map(|s| s.scale))
+        .fold(Vec::<f64>::new(), |mut all, s| {
+            if !all.contains(&s) {
+                all.push(s);
+            }
+            all
+        })
+        .into_iter()
+        .map(kentos_interaction::annotative::ratio)
+        .collect();
+    if !apart.is_empty() {
+        let text = apart.join(", ");
+        let editor = Editor::Select {
+            text: text.clone(),
+            swatch: None,
+            icon: None,
+            items: vec![Choice::Pick {
+                label: "Sıfırla".to_owned(),
+                swatch: None,
+                icon: None,
+                wide: false,
+                chosen: false,
+                enabled: true,
+                message: Message::Properties(Event::AnnotativeReset(slots.to_vec())),
+            }],
+        };
+        rows.push(Row::text("Ayrı değerler", text).editor((!locked).then_some(editor)));
     }
     rows
 }
@@ -2298,6 +2394,27 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
     }];
     if let Some(attrs) = shared_attributes(objects, &ids, all_locked) {
         sections.push(attrs);
+    }
+    // Ölçekli açıklamalar (docs/adr/0323 §4): the selection's texts, dimensions and leaders together.
+    let scaled: Vec<&Entity> = objects
+        .iter()
+        .copied()
+        .filter(|e| matches!(e, Entity::Text(_) | Entity::Dimension(_) | Entity::Leader(_)))
+        .collect();
+    if !scaled.is_empty() {
+        let slots: Vec<Slot> = scaled
+            .iter()
+            .filter(|e| open.contains(&e.base().id))
+            .map(|e| Slot(e.base().id))
+            .collect();
+        let rows = scale_rows(&scaled, &slots, slots.is_empty());
+        if !rows.is_empty() {
+            sections.push(Section {
+                id: "scales",
+                title: "Ölçekli açıklama".into(),
+                rows,
+            });
+        }
     }
     // The selection's texts: their Hiza, Genişlik çarpanı and Zemin, common or Çeşitli (docs/adr/0145 §6).
     let texts: Vec<&kentos_contracts::TextEntity> = objects

@@ -1122,6 +1122,15 @@ impl<'d> Encoder<'d> {
                 }
             }
         }
+        // An annotation's scales (docs/adr/0323), as their JSON.
+        if let Some(a) = kentos_contracts::annotative_of(entity) {
+            if let Some(words) = kentos_contracts::annotative_problem(entity) {
+                self.path.push(Seg::Name(kind));
+                self.path.push(Seg::Name("annotative"));
+                return Err(self.fail(Code::BadValue, &words));
+            }
+            f.push(("annotative", Val::Json(serde_json::to_value(a).unwrap_or_default())));
+        }
         f.sort_by(|a, b| key_order(a.0, b.0));
         self.open(1, true)?;
         self.key(kind);

@@ -1352,6 +1352,7 @@ mod tests {
 
     fn text_in(layer: &str, style: &str) -> Entity {
         Entity::Text(kentos_contracts::TextEntity {
+            annotative: None,
             base: base(layer),
             p: Vec2 { x: 0.0, y: 0.0 },
             text: "Ada 101".into(),

@@ -113,6 +113,10 @@ pub enum Event {
     DimensionEdit(Vec<Slot>, DimensionOp),
     /// Stile döndür (docs/adr/0322 §5): the objects take their style's values again.
     RestoreStyle(Vec<Slot>),
+    /// Ölçekli (docs/adr/0323 §4): the annotations made annotative (true) or one height again.
+    Annotative(Vec<Slot>, bool),
+    /// Ayrı değerler › Sıfırla: nothing set apart at their other scales.
+    AnnotativeReset(Vec<Slot>),
     /// A dimension's line's colour (`#RRGGBB`; none: the object's), weight
     /// on paper (mm; none: a hairline) and type (none: continuous): the
     /// dimension line's and its arrowheads', the extension lines', the
@@ -133,6 +137,8 @@ pub enum Event {
 /// The value a cell edits.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Field {
+    /// Ölçekler (docs/adr/0323 §4): the annotations' other scales, typed.
+    AnnotativeScales(Vec<Slot>),
     /// A point's Y (east) and X (north).
     PointX(Slot),
     PointY(Slot),
@@ -654,6 +660,22 @@ impl App {
                 properties::apply_text_style(model, &slots, id.as_deref())
             }
             Event::RestoreStyle(slots) => properties::restore_styles(model, &slots),
+            Event::Annotative(slots, on) => kentos_interaction::annotative::run(
+                model,
+                &slots,
+                if on {
+                    kentos_contracts::AnnotativeOperation::Make
+                } else {
+                    kentos_contracts::AnnotativeOperation::Unmake
+                },
+                Vec::new(),
+            ),
+            Event::AnnotativeReset(slots) => kentos_interaction::annotative::run(
+                model,
+                &slots,
+                kentos_contracts::AnnotativeOperation::Reset,
+                Vec::new(),
+            ),
             Event::DimensionStyle(slots, id) => {
                 properties::apply_dimension_style(model, &slots, id.as_deref())
             }
@@ -826,6 +848,12 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             };
         }
         // A box: emptied, none; a number, the command refuses one not over 0 (docs/adr/0182 §4).
+        Field::AnnotativeScales(slots) => {
+            return match kentos_interaction::annotative::parse_scales(text) {
+                Ok(wanted) => kentos_interaction::annotative::set_scales(model, slots, &wanted),
+                Err(words) => vec![words],
+            };
+        }
         Field::TextBox(slots) => {
             let t = kentos_interaction::js_trim(text);
             if t.is_empty() || t == "Kutusuz" {
@@ -1025,6 +1053,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::Elevations(_)
         | Field::TextWidth(_)
         | Field::TextBox(_)
+        | Field::AnnotativeScales(_)
         | Field::TextSpacing(_)
         | Field::LeaderNote(_)
         | Field::LeaderHeight(_)

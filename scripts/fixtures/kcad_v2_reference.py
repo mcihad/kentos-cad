@@ -1414,6 +1414,8 @@ KINDS = {
         "path": (lambda c: cmap(fields(c, {"pts": (points, True), "bulges": (lambda b: array([f64(x) for x in b]), False)}, "eğri")), False),
         # Schema 63 (docs/adr/0322 §5): the fields set apart from its style, by name.
         "overrides": (lambda o: opaque(o) if o else None, False),
+        # Schema 64 (docs/adr/0323): its scales, as their JSON.
+        "annotative": (opaque, False),
     },
     # Schema 9 (docs/adr/0147): five more kinds by name, `mask` only when true, a slope's two elevations.
     "dimension": {
@@ -1452,6 +1454,8 @@ KINDS = {
         "breaks": (lambda b: opaque(b) if b else None, False),
         # Schema 63 (docs/adr/0322 §5): the fields set apart from its style, by name.
         "overrides": (lambda o: opaque(o) if o else None, False),
+        # Schema 64 (docs/adr/0323): its scales, as their JSON.
+        "annotative": (opaque, False),
     },
     # Schema 23 (docs/adr/0186): a pattern's name, scale and families, a gradient; the objects it follows, only in the drawing.
     "hatch": {
@@ -1540,6 +1544,8 @@ KINDS = {
         "arrow": (enum(LEADER_ARROWS + LEADER_ARROWS_30), False),
         "mask": (lambda b: boolean(b) if b is True else None, False),
         "arrowSize": (leader_arrow_size, False),
+        # Schema 64 (docs/adr/0323): its scales, as their JSON.
+        "annotative": (opaque, False),
     },
 }
 
@@ -1969,6 +1975,10 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def line_patterned(nodes):
         return any("linePattern" in n.get("style", {}) or line_patterned(n.get("children", [])) for n in nodes)
 
+    # Schema 64 (docs/adr/0323): an annotative text, dimension or leader.
+    scaled = lambda es: any(e["kind"] in ("text", "dimension", "leader") and "annotative" in e for e in es)  # noqa: E731
+    if scaled(entities) or any(scaled(b["entities"]) for b in blocks or []):
+        return 64
     # Schema 63 (docs/adr/0322 §5): a text's or a dimension's overrides.
     overridden = lambda es: any(e["kind"] in ("text", "dimension") and e.get("overrides") for e in es)  # noqa: E731
     if overridden(entities) or any(overridden(b["entities"]) for b in blocks or []):
@@ -2337,7 +2347,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-64.kcad"] = container(root(cmap(parts), version=uint(64)))
+    files["schema-version-65.kcad"] = container(root(cmap(parts), version=uint(65)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2677,6 +2687,13 @@ def broken(minimal_content, minimal_file):
     files["dimension-overrides-empty.kcad"] = in_schema(63, plain(overrides=array([])))
     files["dimension-overrides-unknown.kcad"] = in_schema(63, plain(overrides=array([text("bold")])))
     files["dimension-overrides-twice.kcad"] = in_schema(63, plain(overrides=array([text("arrow"), text("arrow")])))
+    # Scales are schema 64's (docs/adr/0323): in schema 63 an unknown field; a scale over 0, the own scale not repeated,
+    # ascending, a dimension's scale without a point, a text along a curve not annotative.
+    files["annotative-in-schema-63.kcad"] = in_schema(63, plain(annotative=cmap({"at": f64(100.0)})))
+    files["annotative-scale-zero.kcad"] = in_schema(64, plain(annotative=cmap({"at": f64(0.0)})))
+    files["annotative-own-repeated.kcad"] = in_schema(64, plain(annotative=cmap({"at": f64(100.0), "scales": array([cmap({"scale": f64(100.0)})])})))
+    files["annotative-not-ascending.kcad"] = in_schema(64, plain(annotative=cmap({"at": f64(100.0), "scales": array([cmap({"scale": f64(200.0)}), cmap({"scale": f64(50.0)})])})))
+    files["annotative-dimension-point.kcad"] = in_schema(64, plain(annotative=cmap({"at": f64(100.0), "scales": array([cmap({"scale": f64(50.0), "point": cmap({"x": f64(1.0), "y": f64(2.0)})})])})))
     files["dimension-text-shift-in-schema-60.kcad"] = in_schema(60, plain(textShift=cmap({"along": f64(1.0), "across": f64(0.0)})))
     files["dimension-refs-in-block.kcad"] = with_blocks([block(1, "Ölçü", [cmap({"dimension": cmap({"attrs": cmap({}), "layerId": text("0"), **dim_body, "refs": cmap({"a": corner(0)})})})])], version=43)
     # A closed and a wide polyline are schema 46's (docs/adr/0258): in schema 45 unknown fields; an area has neither;
@@ -3638,6 +3655,7 @@ def build():
     out["dimension-options.kcad"] = container(document(load("dimension-options.json")))
     out["dimension-marks.kcad"] = container(document(load("dimension-marks.json")))
     out["overrides.kcad"] = container(document(load("overrides.json")))
+    out["annotative.kcad"] = container(document(load("annotative.json")))
     out["sheets.kcad"] = container(document(load("sheets.json")))
     out["requests.kcad"] = container(document(load("requests.json")))
     out["polyline-extras.kcad"] = container(document(load("polyline-extras.json")))

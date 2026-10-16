@@ -317,6 +317,7 @@ fn objects() -> Vec<Entity> {
             dir: v(0.0, -1.0),
         }),
         Entity::Text(TextEntity {
+            annotative: None,
             base: with("yazi", |b| b.color = Some("ink".into())),
             p: tm(5.0, 5.0),
             text: "Ada 12 / Parsel 3 çğıöşüİ ^ %%d 100%".into(),
@@ -332,6 +333,7 @@ fn objects() -> Vec<Entity> {
             path: None,
         }),
         Entity::Text(TextEntity {
+            annotative: None,
             base: base("yazi"),
             p: tm(6.0, 6.0),
             text: " boşluklu ".into(),
@@ -387,6 +389,7 @@ fn objects() -> Vec<Entity> {
 fn dimensions() -> Vec<Entity> {
     let dim = |id: u32, style, a, b, offset, angle, c, text: Option<&str>| {
         Entity::Dimension(DimensionEntity {
+            annotative: None,
             text_shift: None,
             breaks: Vec::new(),
             base: with("yazi", |b| {
@@ -988,6 +991,7 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
             zb: None,
         }),
         Entity::Text(TextEntity {
+            annotative: None,
             base: base("yazi"),
             p: tm(0.0, 0.0),
             text: "iki\nsatır".into(),

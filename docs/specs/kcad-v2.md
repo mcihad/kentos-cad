@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `63`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-64.kcad`) |
+| `version` | tam sayı | `2`'den `64`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-65.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -314,6 +314,8 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 **Şema 62**, şema 61'in kendisi ve ölçünün işaret türleridir (ADR 0322 §1): `style`'ın `centerMark`, `centerLine` ve `elevation`'ı (kotun `za`'sı zorunlu, `zb`'si yok) ve başvuruların `rule`'ünün `pair`'i; sütunlarda türler 10–12, kural maskesinin 3. ve 4. bitleri birlikte. Yazıcı `62`'yi **yalnız bunlardan biri varken** yazar. Şema 2–61 yükünde bu türler ve kural bilinmeyen değerdir (`bad_value`, `broken/dimension-center-mark-in-schema-61.kcad`, `broken/dimension-rule-pair-in-schema-61.kcad`); kotsuz kot `missing_field`, `zb`'li kot `bad_value`'dur. Örnek dosya `dimension-marks.kcad`.
 
 **Şema 63**, şema 62'nin kendisi ve stilden ayrılan alanlardır (ADR 0322 §3): yazının ve ölçünün `overrides`'ı (alan adlarının listesi, JSON'u gibi; yazının `font`, `bold`, `italic`, `oblique`, `widthFactor`, `height`; ölçünün görünüş alanları ve `height`); boş liste yazılmaz; sütunlarda yazının 14. seçeneği ve ölçünün “more” JSON'u. Yazıcı `63`'ü **yalnız böyle bir liste varken** yazar. Şema 2–62 yükünde `overrides` bilinmeyen alandır (`unknown_field`, `broken/dimension-overrides-in-schema-62.kcad`); boş liste, türün alanı olmayan ad ve iki kez geçen ad `bad_value`'dur. Örnek dosya `overrides.kcad`.
+
+**Şema 64**, şema 63'ün kendisi ve ölçekli açıklamalardır (ADR 0323): yazının, ölçünün ve kılavuzun `annotative`'i, JSON'u gibi bir harita: `at` (nesnenin kendi geometrisinin ölçeği, 1:N'nin N'si, sıfırdan büyük, en çok 1 000 000) ve isteğe bağlı `scales` (öbür ölçekler küçükten büyüğe, birer kez, `at` olmadan, en çok 32; boş liste yazılmaz); her öğe `scale` ve o ölçeğin ayrı değerleri: yazı ve kılavuzda `point` (`{x, y}`) ve `rotation`, ölçüde `offset` ve `textShift` (`{along, across}`). Eğri boyunca ve nesneye bağlı yazı ölçekli olmaz. Sütunlarda yazının 15. seçeneği, kılavuzun 4. seçeneği (JSON metni) ve ölçünün “more” JSON'u. Yazıcı `64`'ü **yalnız ölçekli bir nesne varken** yazar. Şema 2–63 yükünde `annotative` bilinmeyen alandır (`unknown_field`, `broken/annotative-in-schema-63.kcad`); sıfır ölçek, yinelenen kendi ölçeği, sırasız ölçekler ve türün almadığı değer `bad_value`'dur (`annotative-scale-zero`, `-own-repeated`, `-not-ascending`, `-dimension-point`). Örnek dosya `annotative.kcad`.
 
 **Yeni şema eklemenin kuralı** (ADR 0265 §2): her yeni şema `n` için (1) yazıcı `n`'yi yalnız yeni özellik varken yazar; (2) `n`'de yazılmış geçerli bir örnek, bağımsız Python yazıcısıyla; (3) özelliğin `n − 1`'de yazılmış bozuk örneği (`broken/…-in-schema-<n−1>.kcad`) ve `broken/schema-version-<n+1>.kcad`; (4) önceki örneklerin hepsi okunmaya devam eder; (5) `tools/kcad/kcad.py` aynı kuralı okur; (6) örnek kodekten, tipli sütunlardan, bulutun kaynağından ve Python'un tipli katmanından geçer. Bir şema numarası yeniden kullanılmaz. `kentos-kcad`'in `schemas` testi (1)–(3)'ü zorlar.
 

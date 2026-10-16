@@ -1820,6 +1820,59 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Ölçekli açıklamalar (docs/adr/0323 §4), held together by
+        // fixtures/commands/v1/cad.annotations.scales.json. The web is paused (docs/adr/0228).
+        CommandDescriptor {
+            id: crate::CAD_ANNOTATIONS_SCALES.into(),
+            version: crate::CAD_ANNOTATIONS_SCALES_VERSION,
+            title: "Açıklamanın ölçekleri".into(),
+            summary: "Kalıcı kimlikleriyle verilen yazı, ölçü ve kılavuzları ölçekli yapar ve ölçeklerini düzenler; tek geri alma adımıdır. \
+                      Ölçekli nesne katıldığı her ölçekte kâğıtta aynı yükseklikte çizilir: kendi geometrisi annotative.at ölçeğindeki (yapıldığında projenin çizim ölçeği) temsilidir, öbür ölçeklerde ölçek/at kadar büyür, \
+                      o ölçeğin ayrı değerleriyle (yazının ve notun yeri ve doğrultusu, ölçünün çizgisinin uzaklığı ve değerinin yeri); katılmadığı ölçekte çizilmez. Paftanın haritası her nesneyi kendi ölçeğinde çizer. \
+                      make (Ölçekli yap; scales eklenir), unmake (tek yükseklik, nesnenin kendisi), add ve remove (scales; kendi ölçeği kaldırılmaz: own_scale), \
+                      set (scale ölçeğinde point, rotation; ölçüde offset, textShift), reset (scales ya da bütün öbür ölçeklerde ayrı değer kalmaz). \
+                      Ölçekli olmayan ya da olamayan nesne (eğri boyunca yazı, bağlı yazı, öbür türler) not_annotative uyarısıyla atlanır, hiçbiri kalmazsa ret; kilitli katmandakiler layer_locked uyarısıyla atlanır. \
+                      Çizim ölçeği değişince ölçekli nesnenin kendi geometrisi yeni ölçeğin temsili olur, eski ölçeği öbür ölçeklerine geçer; ölçekli olmayan nesneler eskisi gibi izler. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::AnnotationsScales>(),
+            output: schema::<crate::AnnotationsScaled>(),
+            plan: Some(schema::<crate::AnnotationsScalesPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bir yazıyı 1:100'de ve 1:50'de aynı kâğıt yüksekliğinde çizdirmek".into(),
+                    input: json!({
+                        "operation": "make",
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "scales": [50.0]
+                    }),
+                    output: Some(json!({
+                        "changed": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "ids": [12],
+                        "revision": "38"
+                    })),
+                },
+                CommandExample {
+                    title: "1:50 paftasında yazının yerini ayırmak".into(),
+                    input: json!({
+                        "operation": "set",
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "scale": 50.0,
+                        "point": { "x": 500012.5, "y": 4400020.0 }
+                    }),
+                    output: None,
+                },
+            ],
+        },
         // Denetim noktalı and Geçiş noktalı eğri's command (docs/adr/0259 §3), held together by
         // fixtures/commands/v1/cad.nurbs.create.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -5002,6 +5055,9 @@ mod tests {
                     crate::CAD_ENTITIES_ORDER => {
                         serde_json::from_value::<crate::EntitiesOrder>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ANNOTATIONS_SCALES => {
+                        serde_json::from_value::<crate::AnnotationsScales>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_ENTITIES_OFFSET => {
                         serde_json::from_value::<crate::EntitiesOffset>(e.input.clone()).map(|_| ())
                     }
@@ -5266,6 +5322,10 @@ mod tests {
                         }
                         crate::CAD_ENTITIES_ORDER => {
                             serde_json::from_value::<crate::EntitiesOrdered>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ANNOTATIONS_SCALES => {
+                            serde_json::from_value::<crate::AnnotationsScaled>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ENTITIES_OFFSET => {

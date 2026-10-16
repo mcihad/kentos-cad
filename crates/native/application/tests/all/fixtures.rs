@@ -14,7 +14,7 @@ use kentos_domain::contracts::ChangesetApply;
 use kentos_domain::contracts::{
     AddressesDefine, BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT,
     CAD_ENTITIES_SET, DimensionsReassociate, EntitiesChamfer, EntitiesCreate, EntitiesFillet,
-    EntitiesOffset, EntitiesOrder, EntitiesSetProperties, EntitiesTrim, LabelsPin, LayersCompose,
+    AnnotationsScales, EntitiesOffset, EntitiesOrder, EntitiesSetProperties, EntitiesTrim, LabelsPin, LayersCompose,
     LayersEdit, LayersFilter, LayersFind, LayersInfo, LayersLabels, LayersRenderer, LayersService,
     LayersSet, LayersStates, LayersTime, LayersTranslate, LibraryEdit, LineTypesEdit,
     NetworkDefine, NurbsCreate, OffsetBy, ScenariosEdit, SettingsSet, SheetsEdit, StandardsApply,
@@ -35,7 +35,7 @@ use kentos_domain::contracts::{
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
 use kentos_native_application::{
-    DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, blocks_define, blocks_edit,
+    DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, blocks_define, blocks_edit,
     circle, curves_construct, delete, dimensions_edit, dimensions_query, dimensions_reassociate,
     edit, entities_chamfer, entities_extend, entities_fillet, entities_order, entities_pick,
     entities_select, entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit,
@@ -436,6 +436,23 @@ impl Input for kentos_domain::contracts::NurbsCreate {
                 .or_else(|| list_number(weights.as_deref_mut()?, "weights", rest))
                 .or_else(|| list_number(knots.as_deref_mut()?, "knots", rest)),
             NurbsBy::Fit { pts, .. } => named_point(pts, "pts", rest),
+        }
+    }
+}
+
+impl Input for AnnotationsScales {
+    /// `scale`, `rotation`, `offset`, `scales[i]`, `point.x` (which the step's input must give).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "scale" => self.scale.as_mut(),
+            "rotation" => self.rotation.as_mut(),
+            "offset" => self.offset.as_mut(),
+            "point.x" => self.point.as_mut().map(|p| &mut p.x),
+            "point.y" => self.point.as_mut().map(|p| &mut p.y),
+            _ => {
+                let i: usize = path.strip_prefix("scales[")?.strip_suffix(']')?.parse().ok()?;
+                self.scales.get_mut(i)
+            }
         }
     }
 }
@@ -2070,6 +2087,7 @@ fn run_op(
         kentos_domain::contracts::CAD_ENTITIES_CREATE => run!(create, EntitiesCreate),
         kentos_domain::contracts::CAD_NURBS_CREATE => run!(nurbs, NurbsCreate),
         kentos_domain::contracts::CAD_ENTITIES_ORDER => run!(entities_order, EntitiesOrder),
+        kentos_domain::contracts::CAD_ANNOTATIONS_SCALES => run!(annotations_scales, AnnotationsScales),
         CAD_ENTITIES_SET => run!(set, EntitiesSetProperties),
         CAD_BLOCKS_DEFINE => run!(blocks_define, BlocksDefine),
         CAD_BLOCKS_EDIT => run!(blocks_edit, BlocksEdit),

@@ -362,6 +362,7 @@ impl Emitter<'_> {
             None => self.arrow_ratio(style.arrow_length(), text_height, LEADER, e.line),
         };
         let mut leader = LeaderEntity {
+            annotative: None,
             base: b,
             pts,
             text: None,
@@ -521,6 +522,7 @@ impl Emitter<'_> {
             None
         };
         let mut leader = LeaderEntity {
+            annotative: None,
             base: b.clone(),
             pts,
             text: None,

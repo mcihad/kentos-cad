@@ -834,6 +834,25 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.annotations.scales",
+        refusals: &[
+            OBJECTS,
+            &[
+                "no_scales",
+                "no_scale",
+                "invalid_scale",
+                "no_value",
+                "not_annotative",
+                "own_scale",
+                "scale_not_taken",
+                "invalid_annotative",
+            ],
+            REVISION,
+        ],
+        warnings: &["layer_locked", "not_annotative"],
+        targets: || vec![target(None, &["text", "dimension", "leader"], &[], Some("not_annotative"), None)],
+    },
+    Entry {
         id: "cad.entities.order",
         refusals: &[
             OBJECTS,

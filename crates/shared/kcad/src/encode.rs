@@ -1392,6 +1392,11 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 64 (docs/adr/0323): an annotative text, dimension or leader (of the drawing or of a block).
+    let scaled = |list: &[Entity]| list.iter().any(|e| kentos_contracts::annotative_of(e).is_some());
+    if scaled(&doc.entities) || doc.blocks.iter().any(|b| scaled(&b.entities)) {
+        return crate::SCHEMA_WITH_ANNOTATIVE;
+    }
     // Schema 63 (docs/adr/0322 §5): a text's or a dimension's overrides (of the drawing or of a block).
     let overridden = |list: &[Entity]| {
         list.iter().any(|e| match e {

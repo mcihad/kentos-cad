@@ -363,6 +363,7 @@ impl Leader {
         let m = *cx.memory;
         // The defaults are no fields: a filled arrow, no mask (a mask without a note masks nothing).
         let geometry = EntityGeometry::Leader {
+            annotative: None,
             pts: self.typing.iter().map(|p| points::wire(*p)).collect(),
             text: text.map(str::to_owned),
             height: cx.annotation_height(AnnotationKind::Leader),

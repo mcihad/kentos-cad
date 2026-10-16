@@ -828,6 +828,61 @@
       "shortcuts": [],
       "category": "Açıklama",
       "status": "implemented"
+    },
+    {
+      "id": "annotation.make",
+      "title": "Ölçekli yap",
+      "short": "Ölçekli",
+      "icon": "annotationMake",
+      "description": "Seçili yazı, ölçü ve kılavuzları ölçekli yapar: kâğıtta aynı yükseklikte, katıldıkları her ölçekte çizilirler; kendileri projenin çizim ölçeğindeki temsilleridir. Öbür ölçekler Öznitelikler › Ölçekler'den eklenir; paftanın haritası her nesneyi kendi ölçeğinde çizer (cad.annotations.scales, make; AutoCAD'in ANNOTATIVE'i).",
+      "aliases": [
+        "ANNOTATIVE",
+        "OLCEKLIYAP"
+      ],
+      "shortcuts": [],
+      "category": "Açıklama",
+      "status": "implemented"
+    },
+    {
+      "id": "annotation.unmake",
+      "title": "Ölçekliliği kaldır",
+      "short": "Kaldır",
+      "icon": "annotationUnmake",
+      "description": "Seçili ölçekli açıklamaları tek yükseklikli yapar: kendileri kalır, öbür ölçekleri ve oradaki yerleri gider (cad.annotations.scales, unmake).",
+      "aliases": [
+        "OLCEKLIKALDIR"
+      ],
+      "shortcuts": [],
+      "category": "Açıklama",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.annotativePlace",
+      "title": "Ölçekteki yeri",
+      "short": "Yeri",
+      "icon": "annotativePlace",
+      "description": "Ölçekli bir yazının, kılavuzun ya da ölçünün başka bir ölçekteki yerini verir: nesneye tıklanır, Ölçek (Ö) ile ölçek seçilir, yeni yer tıklanır; yazının noktası, kılavuzun notu, ölçünün çizgisi o ölçekte orada çizilir, öbür ölçekler değişmez (cad.annotations.scales, set; AutoCAD'in ANNORESET'inin tersi).",
+      "aliases": [
+        "OLCEKTEKIYERI",
+        "ANNOPLACE"
+      ],
+      "shortcuts": [],
+      "category": "Açıklama",
+      "status": "implemented"
+    },
+    {
+      "id": "annotation.reset",
+      "title": "Ölçeği sıfırla",
+      "short": "Sıfırla",
+      "icon": "annotationReset",
+      "description": "Seçili ölçekli açıklamaların öbür ölçeklerindeki ayrı yerleri ve değerleri kaldırır: her ölçekte nesnenin kendi yerinde, ölçekle büyüyerek çizilirler (cad.annotations.scales, reset; AutoCAD'in ANNORESET'i).",
+      "aliases": [
+        "ANNORESET",
+        "OLCEKSIFIRLA"
+      ],
+      "shortcuts": [],
+      "category": "Açıklama",
+      "status": "implemented"
     }
   ],
   "icons": {
@@ -919,7 +974,11 @@
     "blockFreeze": "<rect x=\"2.5\" y=\"4.5\" width=\"9\" height=\"11\" rx=\"0.8\"/><path d=\"M5 4.5v11M5 8.5h3.6\"/><rect x=\"11.8\" y=\"11\" width=\"6\" height=\"5.5\" rx=\"0.9\"/><path d=\"M13.3 11V9.4a1.5 1.5 0 0 1 3 0V11\"/>",
     "centerMark": "<circle cx=\"10\" cy=\"10\" r=\"5.5\"/><path d=\"M10 8v4M8 10h4\"/><path d=\"M10 1.5v3M10 15.5v3M1.5 10h3M15.5 10h3\"/>",
     "centerLine": "<path d=\"M3 4.5h14M3 15.5h14\"/><path d=\"M1.5 10h4M7.5 10h1.5M11 10h1.5M14.5 10h4\"/>",
-    "dimElevation": "<path d=\"M6 16.5 2.8 11h6.4z\"/><path d=\"M2.8 11h14.7\"/><path d=\"M13.5 3.5v5M11 6h5\"/>"
+    "dimElevation": "<path d=\"M6 16.5 2.8 11h6.4z\"/><path d=\"M2.8 11h14.7\"/><path d=\"M13.5 3.5v5M11 6h5\"/>",
+    "annotationMake": "<path d=\"M2.5 15.5 6.5 4.5l4 11\"/><path d=\"M4 11.5h5\"/><path d=\"M12.5 15.5l2.25-6 2.25 6\"/><path d=\"M13.3 13.3h2.9\"/>",
+    "annotationUnmake": "<path d=\"M2.5 15.5 6.5 4.5l4 11\"/><path d=\"M4 11.5h5\"/><path d=\"M12.5 9l5 5M17.5 9l-5 5\"/>",
+    "annotativePlace": "<path d=\"M2.5 16.5 5.25 9 8 16.5\"/><path d=\"M3.5 14h3.5\"/><path d=\"M14 3v9M9.5 7.5h9\"/><path d=\"M12.5 4.5 14 3l1.5 1.5M12.5 10.5 14 12l1.5-1.5\"/>",
+    "annotationReset": "<path d=\"M2.5 15.5 6.5 4.5l4 11\"/><path d=\"M4 11.5h5\"/><path d=\"M17.5 12a3.5 3.5 0 1 1-1.1-2.6\"/><path d=\"M16.8 6.6v2.9h-2.9\"/>"
   },
   "ribbon": [
     {
@@ -1468,6 +1527,33 @@
         },
         {
           "command": "block.export",
+          "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "annotate",
+      "label": "Ölçek",
+      "icon": "annotationMake",
+      "after": "Ölçü",
+      "items": [
+        {
+          "command": "annotation.make",
+          "size": "large"
+        },
+        {
+          "command": "tool.annotativePlace",
+          "size": "small"
+        },
+        {
+          "command": "annotation.reset",
+          "size": "small"
+        },
+        {
+          "command": "annotation.unmake",
           "size": "small"
         }
       ]

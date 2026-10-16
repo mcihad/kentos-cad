@@ -395,6 +395,11 @@ pub struct TextEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<TextPath>,
+    /// Its scales: drawn at the paper height it was given at every scale it takes part in, hidden
+    /// at others (docs/adr/0323); absent: one height.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub annotative: Option<Box<crate::Annotative>>,
 }
 
 /// The curve a text's letters stand on (docs/adr/0196 §1). Its vertices are
@@ -1280,6 +1285,11 @@ pub struct DimensionEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
     pub look: crate::DimensionLook,
+    /// Its scales: drawn at the paper height it was given at every scale it takes part in, hidden
+    /// at others (docs/adr/0323); absent: one height.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub annotative: Option<Box<crate::Annotative>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1346,6 +1356,11 @@ pub struct LeaderEntity {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub mask: bool,
+    /// Its scales: drawn at the paper height it was given at every scale it takes part in, hidden
+    /// at others (docs/adr/0323); absent: one height.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub annotative: Option<Box<crate::Annotative>>,
 }
 
 /// The shortest and the longest a leader's arrowhead may be, times its

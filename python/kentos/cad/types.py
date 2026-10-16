@@ -121,6 +121,28 @@ AnnotationStyleKindName = Literal["text", "dimension"]
 """The names of :class:`AnnotationStyleKind`, for a plain string."""
 
 
+class AnnotativeOperation(_StrEnum):
+    """What the command does.
+
+    - ``make``: Ölçekli yap: the objects' own geometry is their representation at the project's plot scale;
+    - ``unmake``: Ölçekliliği kaldır: one height again, the object's own; its other scales are dropped. “Ölçekliliği kaldır”.
+    - ``add``: Ölçek ekle: the objects take part in `scales` too, as their own scale draws them, scaled. “Ölçek ekle”.
+    - ``remove``: Ölçek kaldır: the objects are not drawn at `scales` any more; their own scale stays (`own_scale`). “Ölçek kaldır”.
+    - ``set``: Ölçekteki yeri: at `scale`, the given values (`point`, `rotation`; a dimension's `offset`,
+    - ``reset``: Ölçeği sıfırla: at `scales` (none: every other scale) nothing set apart. “Ölçeği sıfırla”.
+    """
+    MAKE = "make"
+    UNMAKE = "unmake"
+    ADD = "add"
+    REMOVE = "remove"
+    SET = "set"
+    RESET = "reset"
+
+
+AnnotativeOperationName = Literal["make", "unmake", "add", "remove", "set", "reset"]
+"""The names of :class:`AnnotativeOperation`, for a plain string."""
+
+
 class AreaLabelMode(_StrEnum):
     """Where an area's label goes.
 
@@ -3496,6 +3518,201 @@ class AnnotationHeights(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AnnotationsScaled(_Model):
+    """Output of `cad.annotations.scales` v1.
+    Attributes:
+        changed: The objects written, in the input's order.
+        ids: Their slots in the open document (`Entity.id`), in the same order. Unit: id.
+        revision: The document's revision after the write (the same when nothing changed; in a plan, now).
+    """
+    changed: list[str]
+    ids: list[int]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = list(self.changed)
+        out["ids"] = list(self.ids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AnnotationsScaled:
+        return cls(
+            changed=list(data["changed"]),
+            ids=list(data["ids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AnnotationsScales(_Model):
+    """Input of `cad.annotations.scales` v1 (docs/adr/0323 §4). The command reads
+    no selection (TODOS.md CMD-07): the Properties panel and the tool give the ids.
+
+    Objects that are not texts, dimensions or leaders (or are texts along a
+    curve, or linked to an object) are left out with the warning
+    `not_annotative`, as are those not annotative for every other operation
+    but `make`; when none is left, it is the refusal. What is on a locked layer
+    is left out with the warning `layer_locked` (docs/adr/0278). An object that
+    would not change is not written.
+
+    Refusals (`CommandError.code`), checked in this order: `no_entities`,
+    `invalid_uid`, `no_scales` (`add` and `remove` without `scales`), `no_scale`
+    (`set` without `scale`), `invalid_scale` (a scale not over 0, not finite, or
+    past 1:1 000 000), `no_value` (`set` without a value), `invalid_revision`,
+    `revision_conflict` (status `conflict`), `entity_not_found`, `layer_locked`,
+    `not_annotative`, `own_scale` (removing or setting an object's own scale),
+    `scale_not_taken` (`set` at a scale an object does not take part in),
+    `invalid_annotative` (a value its kind does not have: a text's offset, a
+    dimension's point; more than 32 scales).
+    Attributes:
+        uids: The objects' persistent ids, at least one; a repeated one counts once.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        offset: `set`: a dimension's line offset. Unit: length.
+        point: `set`: a text's point, a leader's landing start. Unit: length.
+        rotation: `set`: a text's or a note's direction, degrees counter-clockwise from east. Unit: deg.
+        scale: `set`: the scale whose values are given. Unit: scale.
+        scales: `make`, `add`, `remove`, `reset`: the scales, 1:N's N. Unit: scale.
+        text_shift: `set`: a dimension's value moved from its place.
+    """
+    operation: AnnotativeOperation | AnnotativeOperationName
+    uids: list[str]
+    expected_revision: str | None | Unset = UNSET
+    offset: float | None | Unset = UNSET
+    point: Vec2 | None | Unset = UNSET
+    rotation: float | None | Unset = UNSET
+    scale: float | None | Unset = UNSET
+    scales: list[float] | Unset = UNSET
+    text_shift: TextShift | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        out["uids"] = list(self.uids)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else float(self.offset)
+        if self.point is not UNSET:
+            out["point"] = None if self.point is None else _vec2_out(self.point)
+        if self.rotation is not UNSET:
+            out["rotation"] = None if self.rotation is None else float(self.rotation)
+        if self.scale is not UNSET:
+            out["scale"] = None if self.scale is None else float(self.scale)
+        if self.scales is not UNSET:
+            out["scales"] = [float(e0) for e0 in self.scales]
+        if self.text_shift is not UNSET:
+            out["textShift"] = None if self.text_shift is None else self.text_shift.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AnnotationsScales:
+        return cls(
+            operation=_enum_in(AnnotativeOperation, data["operation"]),
+            uids=list(data["uids"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
+            point=UNSET if "point" not in data else None if data["point"] is None else Vec2.from_json(data["point"]),
+            rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
+            scales=[float(e0) for e0 in data["scales"]] if "scales" in data else UNSET,
+            text_shift=UNSET if "textShift" not in data else None if data["textShift"] is None else TextShift.from_json(data["textShift"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AnnotationsScalesPlan(_Model):
+    """What `cad.annotations.scales` would write (plan mode); nothing is written.
+    Attributes:
+        changed: The objects that would change, each as execute would write it, with its own slot (`id`).
+        revision: The document revision the plan was made against.
+    """
+    changed: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = [e0.to_json() for e0 in self.changed]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AnnotationsScalesPlan:
+        return cls(
+            changed=[Entity.from_json(e0) for e0 in data["changed"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class Annotative(_Model):
+    """An object's scales (docs/adr/0323 §1).
+    Attributes:
+        at: The scale (1:at) its own geometry is drawn at. Unit: scale.
+        scales: The other scales it takes part in, ascending, each with what it sets apart.
+    """
+    at: float
+    scales: list[AnnotativeScale] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = float(self.at)
+        if self.scales is not UNSET:
+            out["scales"] = [e0.to_json() for e0 in self.scales]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> Annotative:
+        return cls(
+            at=float(data["at"]),
+            scales=[AnnotativeScale.from_json(e0) for e0 in data["scales"]] if "scales" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AnnotativeScale(_Model):
+    """One of an object's other scales and what it sets apart from the object's
+    own values; a field not given is the object's own (`textShift` scaled with
+    the height).
+    Attributes:
+        scale: 1:scale. Unit: scale.
+        offset: A dimension's line offset. Unit: length.
+        point: A text's point; a leader's landing start (its last point: the points after the arrow's tip move with it). Unit: length.
+        rotation: A text's or a leader's note's direction, degrees counter-clockwise from east. Unit: deg.
+        text_shift: A dimension's value moved from its place (0 and 0: in its place).
+    """
+    scale: float
+    offset: float | None | Unset = UNSET
+    point: Vec2 | None | Unset = UNSET
+    rotation: float | None | Unset = UNSET
+    text_shift: TextShift | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["scale"] = float(self.scale)
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else float(self.offset)
+        if self.point is not UNSET:
+            out["point"] = None if self.point is None else _vec2_out(self.point)
+        if self.rotation is not UNSET:
+            out["rotation"] = None if self.rotation is None else float(self.rotation)
+        if self.text_shift is not UNSET:
+            out["textShift"] = None if self.text_shift is None else self.text_shift.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AnnotativeScale:
+        return cls(
+            scale=float(data["scale"]),
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
+            point=UNSET if "point" not in data else None if data["point"] is None else Vec2.from_json(data["point"]),
+            rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
+            text_shift=UNSET if "textShift" not in data else None if data["textShift"] is None else TextShift.from_json(data["textShift"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ArcCreate(_Model):
     """Input of `cad.arc.create` v1: one circular arc on a named layer, as the
     document stores it (centre, radius, and the angles it runs between counter-
@@ -6548,6 +6765,8 @@ class DimensionEntity(Entity):
         offset: Unit: length.
         height: Unit: length.
         angle: Linear: measured direction in degrees (0 = ΔY, 90 = ΔX). Unit: deg.
+        annotative: Its scales: drawn at the paper height it was given at every scale it takes part in, hidden
+            at others (docs/adr/0323); absent: one height.
         arrow: Its arrowheads; absent: oblique ticks.
         arrow_size: The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,
             `DEFAULT_ARROW` for the others. Unit: 1.
@@ -6614,6 +6833,7 @@ class DimensionEntity(Entity):
     offset: float
     height: float
     angle: float | None | Unset = UNSET
+    annotative: Annotative | None | Unset = UNSET
     arrow: DimensionArrow | DimensionArrowName | None | Unset = UNSET
     arrow_size: float | None | Unset = UNSET
     attachments: list[Attachment] | Unset = UNSET
@@ -6669,6 +6889,8 @@ class DimensionEntity(Entity):
         out["height"] = float(self.height)
         if self.angle is not UNSET:
             out["angle"] = None if self.angle is None else float(self.angle)
+        if self.annotative is not UNSET:
+            out["annotative"] = None if self.annotative is None else self.annotative.to_json()
         if self.arrow is not UNSET:
             out["arrow"] = None if self.arrow is None else _enum_out(self.arrow)
         if self.arrow_size is not UNSET:
@@ -6768,6 +6990,7 @@ class DimensionEntity(Entity):
             offset=float(data["offset"]),
             height=float(data["height"]),
             angle=UNSET if "angle" not in data else None if data["angle"] is None else float(data["angle"]),
+            annotative=UNSET if "annotative" not in data else None if data["annotative"] is None else Annotative.from_json(data["annotative"]),
             arrow=UNSET if "arrow" not in data else None if data["arrow"] is None else _enum_in(DimensionArrow, data["arrow"]),
             arrow_size=UNSET if "arrowSize" not in data else None if data["arrowSize"] is None else float(data["arrowSize"]),
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
@@ -14742,6 +14965,8 @@ class LeaderEntity(Entity):
         height: The note's height, metres, finite and over 0; the arrowhead and the
             landing are measured by it. Unit: length.
         rotation: The note's and the landing's direction, degrees counter-clockwise from east. Unit: deg.
+        annotative: Its scales: drawn at the paper height it was given at every scale it takes part in, hidden
+            at others (docs/adr/0323); absent: one height.
         arrow: The arrowhead; absent: a filled arrow.
         arrow_size: The arrowhead's length, times the note's height (docs/adr/0205 §7);
             absent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`. Unit: 1.
@@ -14779,6 +15004,7 @@ class LeaderEntity(Entity):
     pts: list[Vec2]
     height: float
     rotation: float
+    annotative: Annotative | None | Unset = UNSET
     arrow: LeaderArrow | LeaderArrowName | None | Unset = UNSET
     arrow_size: float | None | Unset = UNSET
     attachments: list[Attachment] | Unset = UNSET
@@ -14805,6 +15031,8 @@ class LeaderEntity(Entity):
         out["pts"] = [_vec2_out(e0) for e0 in self.pts]
         out["height"] = float(self.height)
         out["rotation"] = float(self.rotation)
+        if self.annotative is not UNSET:
+            out["annotative"] = None if self.annotative is None else self.annotative.to_json()
         if self.arrow is not UNSET:
             out["arrow"] = None if self.arrow is None else _enum_out(self.arrow)
         if self.arrow_size is not UNSET:
@@ -14850,6 +15078,7 @@ class LeaderEntity(Entity):
             pts=[Vec2.from_json(e0) for e0 in data["pts"]],
             height=float(data["height"]),
             rotation=float(data["rotation"]),
+            annotative=UNSET if "annotative" not in data else None if data["annotative"] is None else Annotative.from_json(data["annotative"]),
             arrow=UNSET if "arrow" not in data else None if data["arrow"] is None else _enum_in(LeaderArrow, data["arrow"]),
             arrow_size=UNSET if "arrowSize" not in data else None if data["arrowSize"] is None else float(data["arrowSize"]),
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
@@ -21168,6 +21397,8 @@ class TextEntity(Entity):
         height: Metres. Unit: length.
         rotation: Degrees, counter-clockwise from east. Unit: deg.
         align: Where `p` is on the text; absent: the left of the baseline (docs/adr/0145).
+        annotative: Its scales: drawn at the paper height it was given at every scale it takes part in, hidden
+            at others (docs/adr/0323); absent: one height.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
         box_width: Metres, finite and over 0: the lines wrap word by word to this width.
@@ -21224,6 +21455,7 @@ class TextEntity(Entity):
     height: float
     rotation: float
     align: TextAlign | TextAlignName | None | Unset = UNSET
+    annotative: Annotative | None | Unset = UNSET
     attachments: list[Attachment] | Unset = UNSET
     bold: bool | Unset = UNSET
     box_width: float | None | Unset = UNSET
@@ -21263,6 +21495,8 @@ class TextEntity(Entity):
         out["rotation"] = float(self.rotation)
         if self.align is not UNSET:
             out["align"] = None if self.align is None else _enum_out(self.align)
+        if self.annotative is not UNSET:
+            out["annotative"] = None if self.annotative is None else self.annotative.to_json()
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.bold is not UNSET:
@@ -21330,6 +21564,7 @@ class TextEntity(Entity):
             height=float(data["height"]),
             rotation=float(data["rotation"]),
             align=UNSET if "align" not in data else None if data["align"] is None else _enum_in(TextAlign, data["align"]),
+            annotative=UNSET if "annotative" not in data else None if data["annotative"] is None else Annotative.from_json(data["annotative"]),
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             bold=data.get("bold", UNSET),
             box_width=UNSET if "boxWidth" not in data else None if data["boxWidth"] is None else float(data["boxWidth"]),
@@ -25075,6 +25310,8 @@ class TextEntityGeometry(EntityGeometry):
         height: Unit: length.
         rotation: Unit: deg.
         align: Where `p` is on the text; absent: the left of its baseline (docs/adr/0145).
+        annotative: Its scales (docs/adr/0323 §4); absent: an object updated keeps its own (only
+            `cad.annotations.scales` takes them away), a new one has none.
         box_width: A multi-line text's box width, metres (docs/adr/0182 §1); absent: no box. Unit: length.
         font: Its typeface; absent: the project's, in the look of docs/adr/0055.
         line_spacing: Its line spacing, times 5/3 of the height; absent: 1. From 0.25 to 4. Unit: 1.
@@ -25093,6 +25330,7 @@ class TextEntityGeometry(EntityGeometry):
     height: float
     rotation: float
     align: TextAlign | TextAlignName | None | Unset = UNSET
+    annotative: Annotative | None | Unset = UNSET
     bold: bool | Unset = UNSET
     box_width: float | None | Unset = UNSET
     font: DrawingFont | DrawingFontName | None | Unset = UNSET
@@ -25114,6 +25352,8 @@ class TextEntityGeometry(EntityGeometry):
         out["rotation"] = float(self.rotation)
         if self.align is not UNSET:
             out["align"] = None if self.align is None else _enum_out(self.align)
+        if self.annotative is not UNSET:
+            out["annotative"] = None if self.annotative is None else self.annotative.to_json()
         if self.bold is not UNSET:
             out["bold"] = self.bold
         if self.box_width is not UNSET:
@@ -25148,6 +25388,7 @@ class TextEntityGeometry(EntityGeometry):
             height=float(data["height"]),
             rotation=float(data["rotation"]),
             align=UNSET if "align" not in data else None if data["align"] is None else _enum_in(TextAlign, data["align"]),
+            annotative=UNSET if "annotative" not in data else None if data["annotative"] is None else Annotative.from_json(data["annotative"]),
             bold=data.get("bold", UNSET),
             box_width=UNSET if "boxWidth" not in data else None if data["boxWidth"] is None else float(data["boxWidth"]),
             font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
@@ -25178,6 +25419,8 @@ class DimensionEntityGeometry(EntityGeometry):
         offset: Unit: length.
         height: Unit: length.
         angle: Unit: deg.
+        annotative: Its scales (docs/adr/0323 §4); absent: an object updated keeps its own (only
+            `cad.annotations.scales` takes them away), a new one has none.
         arrow: Its arrowheads; absent: oblique ticks.
         arrow_size: The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,
             `DEFAULT_ARROW` for the others. Unit: 1.
@@ -25217,6 +25460,7 @@ class DimensionEntityGeometry(EntityGeometry):
     offset: float
     height: float
     angle: float | None | Unset = UNSET
+    annotative: Annotative | None | Unset = UNSET
     arrow: DimensionArrow | DimensionArrowName | None | Unset = UNSET
     arrow_size: float | None | Unset = UNSET
     breaks: list[DimensionBreak] | Unset = UNSET
@@ -25256,6 +25500,8 @@ class DimensionEntityGeometry(EntityGeometry):
         out["height"] = float(self.height)
         if self.angle is not UNSET:
             out["angle"] = None if self.angle is None else float(self.angle)
+        if self.annotative is not UNSET:
+            out["annotative"] = None if self.annotative is None else self.annotative.to_json()
         if self.arrow is not UNSET:
             out["arrow"] = None if self.arrow is None else _enum_out(self.arrow)
         if self.arrow_size is not UNSET:
@@ -25326,6 +25572,7 @@ class DimensionEntityGeometry(EntityGeometry):
             offset=float(data["offset"]),
             height=float(data["height"]),
             angle=UNSET if "angle" not in data else None if data["angle"] is None else float(data["angle"]),
+            annotative=UNSET if "annotative" not in data else None if data["annotative"] is None else Annotative.from_json(data["annotative"]),
             arrow=UNSET if "arrow" not in data else None if data["arrow"] is None else _enum_in(DimensionArrow, data["arrow"]),
             arrow_size=UNSET if "arrowSize" not in data else None if data["arrowSize"] is None else float(data["arrowSize"]),
             breaks=[DimensionBreak.from_json(e0) for e0 in data["breaks"]] if "breaks" in data else UNSET,
@@ -25449,6 +25696,8 @@ class LeaderEntityGeometry(EntityGeometry):
         pts: At least two: the arrow's tip first. Unit: length.
         height: Unit: length.
         rotation: Unit: deg.
+        annotative: Its scales (docs/adr/0323 §4); absent: an object updated keeps its own (only
+            `cad.annotations.scales` takes them away), a new one has none.
         arrow: The arrowhead; absent: a filled arrow.
         arrow_size: The arrowhead's length, times the note's height (docs/adr/0205
             §7); absent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`. Unit: 1.
@@ -25459,6 +25708,7 @@ class LeaderEntityGeometry(EntityGeometry):
     pts: list[Vec2]
     height: float
     rotation: float
+    annotative: Annotative | None | Unset = UNSET
     arrow: LeaderArrow | LeaderArrowName | None | Unset = UNSET
     arrow_size: float | None | Unset = UNSET
     mask: bool | Unset = UNSET
@@ -25469,6 +25719,8 @@ class LeaderEntityGeometry(EntityGeometry):
         out["pts"] = [_vec2_out(e0) for e0 in self.pts]
         out["height"] = float(self.height)
         out["rotation"] = float(self.rotation)
+        if self.annotative is not UNSET:
+            out["annotative"] = None if self.annotative is None else self.annotative.to_json()
         if self.arrow is not UNSET:
             out["arrow"] = None if self.arrow is None else _enum_out(self.arrow)
         if self.arrow_size is not UNSET:
@@ -25485,6 +25737,7 @@ class LeaderEntityGeometry(EntityGeometry):
             pts=[Vec2.from_json(e0) for e0 in data["pts"]],
             height=float(data["height"]),
             rotation=float(data["rotation"]),
+            annotative=UNSET if "annotative" not in data else None if data["annotative"] is None else Annotative.from_json(data["annotative"]),
             arrow=UNSET if "arrow" not in data else None if data["arrow"] is None else _enum_in(LeaderArrow, data["arrow"]),
             arrow_size=UNSET if "arrowSize" not in data else None if data["arrowSize"] is None else float(data["arrowSize"]),
             mask=data.get("mask", UNSET),
@@ -27829,6 +28082,13 @@ __all__ = [
     "AnnotationHeights",
     "AnnotationStyleKind",
     "AnnotationStyleKindName",
+    "AnnotationsScaled",
+    "AnnotationsScales",
+    "AnnotationsScalesPlan",
+    "Annotative",
+    "AnnotativeOperation",
+    "AnnotativeOperationName",
+    "AnnotativeScale",
     "ArcConstructedCurve",
     "ArcContinueCurveConstruction",
     "ArcCreate",

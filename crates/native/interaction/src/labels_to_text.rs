@@ -238,6 +238,7 @@ impl LabelsToText {
                     label_of,
                     label_scale,
                     ..bare(EntityGeometry::Text {
+                        annotative: None,
                         p: v(t.p),
                         text: t.text.clone(),
                         height: t.height,

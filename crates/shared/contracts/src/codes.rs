@@ -298,7 +298,7 @@ codes! {
 
     // ── Blocks ──────────────────────────────────────────────────────────
     /// An insert's scale that is not above zero (docs/adr/0144).
-    INVALID_SCALE = "invalid_scale", Failed, false, "Yerleştirmenin ölçeği sıfırdan büyük olmalı.";
+    INVALID_SCALE = "invalid_scale", Failed, false, "Ölçek sıfırdan büyük olmalı: yerleştirmenin ya da ölçekli açıklamanın (en çok 1:1 000 000).";
     /// A block the drawing does not define.
     UNKNOWN_BLOCK = "unknown_block", Failed, false, "Adı geçen blok çizimde tanımlı değil.";
     /// A block name empty or only white space.
@@ -673,7 +673,7 @@ codes! {
     /// A node moved into itself or a group under it.
     MOVE_INTO_ITSELF = "move_into_itself", Failed, false, "Düğüm kendine ya da altındaki bir gruba taşınıyor.";
     /// Visible or locked without its value.
-    NO_VALUE = "no_value", Failed, false, "Görünürlük ya da kilit değersiz verildi.";
+    NO_VALUE = "no_value", Failed, false, "Değer verilmedi: görünürlük, kilit ya da ölçekli açıklamanın ölçekteki değerleri.";
     /// A layer state's operation without its state.
     NO_STATE = "no_state", Failed, false, "Katman durumu işleminin durumu verilmedi.";
     /// A layer state the project does not have.
@@ -718,6 +718,18 @@ codes! {
     NO_TARGETS = "no_targets", Failed, false, "Sembolün verileceği nesne ya da katman verilmedi.";
     /// A library item against the file's rules.
     INVALID_LIBRARY_ITEM = "invalid_library_item", Failed, false, "Kitaplık öğesi kurallara uymuyor.";
+    /// An object that is not, or cannot be, annotative (docs/adr/0323 §4).
+    NOT_ANNOTATIVE = "not_annotative", FailedOrWarning, false, "Nesne ölçekli değil ya da olamaz (yalnız yazı, ölçü ve kılavuz; eğri boyunca ve bağlı yazı değil): bazılarında uyarı, hiçbirinde ret.";
+    /// An annotative object's own scale named where another is meant.
+    OWN_SCALE = "own_scale", Failed, false, "Bu ölçek nesnenin kendi ölçeği: kaldırılamaz, değerleri nesnenin kendisidir; nesneyi düzenleyin.";
+    /// Scales to add or remove not given.
+    NO_SCALES = "no_scales", Failed, false, "Eklenecek ya da kaldırılacak ölçek verilmedi.";
+    /// A scale's values set without the scale.
+    NO_SCALE = "no_scale", Failed, false, "Değerleri yazılacak ölçek verilmedi.";
+    /// A scale's values set at a scale the object does not take part in.
+    SCALE_NOT_TAKEN = "scale_not_taken", Failed, false, "Nesne bu ölçekte değil: önce ölçeği ekleyin.";
+    /// An annotative object's scales against their rules.
+    INVALID_ANNOTATIVE = "invalid_annotative", Failed, false, "Ölçekli nesnenin ölçekleri kurallarına uymuyor.";
     /// A .kstil file that does not read.
     INVALID_KSTIL = "invalid_kstil", Failed, false, ".kstil dosyası okunamadı.";
     /// An id the project's library has.

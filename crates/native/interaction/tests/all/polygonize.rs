@@ -61,6 +61,7 @@ fn text(b: &mut Bench, at: [f64; 2], value: &str) -> Slot {
     add(
         b,
         Entity::Text(TextEntity {
+            annotative: None,
             base: common::base("cizim"),
             p: pt(at[0], at[1]),
             text: value.into(),

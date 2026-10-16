@@ -518,6 +518,12 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   (`kentos.annotation-styles`, stil pencerelerinde Dışa aktar… ve Al…); yazının ve ölçünün stilden ayrılan alanları `overrides`
   (adımın elle değiştirdikleri, `kentos_domain::style_overrides`; stil değişince korunur; `.kcad` şema 63, `FORMATS_VERSION` 72),
   Öznitelikler'de Stilden ayrılan ve Stile döndür (ADR 0322);
+  ölçekli açıklamalar: yazının, ölçünün ve kılavuzun `annotative`'i (kendi ölçeği `at`, öbür ölçekler ve her birinin ayrı yeri,
+  doğrultusu, ölçünün uzaklığı ve değerinin yeri; `.kcad` şema 64, `FORMATS_VERSION` 73), temsil kuralı sözleşmede (`at_scale`,
+  `rebase_annotative`), paftanın haritası ölçeğindeki kopyayı çizer (`Document::at_scale`, masaüstünün pafta kipi ve başsız PDF), çizim
+  ölçeği değişince ölçekli nesne yeni ölçeğe taşınır (açık göç: eskiler değişmez); `cad.annotations.scales` (make, unmake, add, remove,
+  set, reset), Öznitelikler'de Ölçekli, Kendi ölçeği, Öbür ölçekler, Ayrı değerler; CAD › Açıklama › Ölçek ve Ölçekteki yeri aracı
+  (`kentos_interaction::annotative`); kâğıttaki ölçünün kuralı (ölçek bir kez) (ADR 0323);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);
@@ -1062,6 +1068,8 @@ python3 scripts/fixtures/dimension_value_cases.py --check; python3 scripts/fixtu
 KENTOS_SHOTS_ONLY=olcu-secenekler,olcu-aralik,olcu-kirma cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # ölçü seçenekleri ve Öznitelikler, aralık, kırma (.run/shots/arac-olcu-secenekler-*, -aralik-*, -kirma-*; ADR 0321)
 python3 scripts/fixtures/style_edit_command_cases.py --check; python3 scripts/fixtures/annotation_style_cases.py --check   # stillerin dışa ve içe aktarması ve stilden ayrılan alanlar (elle değiştirme, stil değişince korunma, stile dönme, silme, geri alma) KentOS kodu olmadan; durumlar fixtures/commands/v1/cad.styles.edit.json, fixtures/text/v1/styles.json (ADR 0322)
 KENTOS_SHOTS_ONLY=olcu-isaretler,olcu-isaret-onizleme,olcu-isaret-izleme,stil-dosya,stil-gecersiz cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # merkez işareti, eksen çizgisi ve kot, izlemeleri, stil penceresinin Dışa aktar…/Al…'ı ve Stilden ayrılan (ADR 0322)
+python3 scripts/fixtures/annotative_cases.py --check   # ölçekli açıklamaların komut durumlarını (altı işlem, retler, çizim ölçeğinin değişmesi, taşıma) ve temsillerini (her ölçekte çizilen, gizlenen, yeni ölçeğe taşınan) KentOS kodu olmadan denetle; durumlar fixtures/commands/v1/cad.annotations.scales.json, fixtures/annotative/v1/cases.json (ADR 0323)
+cargo test -p kentos-desktop annotative_sheet; KENTOS_SHOTS_ONLY=olcekli-oznitelik,olcekli-yeri cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # kabul odasının 1:50 ve 1:100 paftaları masaüstünün PDF'iyle, değerin yüksekliği pdftotext -bbox ile; Öznitelikler'in ölçek satırları ve Ölçekteki yeri, .run/shots/arac-olcekli-* (ADR 0323)
 KENTOS_SHOTS_ONLY=olcu-bag,olcu-izleme,olcu-zincir cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # bağ vurgusu, izleyen ölçüler ve zincir, .run/shots/arac-olcu-bag-*, -izleme-*, -zincir-* (ADR 0320)
 KENTOS_SHOTS_ONLY=blok-dinamik,blok-kitaplik,blok-kitaplik-kategori cargo test -p kentos-desktop tools_screens -- --ignored --nocapture; cargo test -p kentos-geometry-core --test all block_dynamic   # KentOS blok kitaplığı ve dinamik blokların değerleri (.run/shots/arac-blok-*), varyantlar çekirdekte (ADR 0318)
 KENTOS_SHOTS_ONLY=blok-tutamac,blok-parametreler,blok-sabit cargo test -p kentos-desktop tools_screens -- --ignored --nocapture; cargo test -p kentos-interaction --test all param_grips; cargo test -p kentos-headless --test headless a_varied   # dinamik bloğun tutamaçları, Öznitelikler'deki değerleri ve Sabit bloğa çevir (.run/shots/arac-blok-tutamac-*, -parametreler-*, -sabit-*), tutamakla yazma, DXF'e varyant (ADR 0319)

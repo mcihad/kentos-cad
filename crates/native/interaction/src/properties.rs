@@ -576,7 +576,7 @@ pub fn override_names(overrides: &[String]) -> Vec<&'static str> {
         .collect()
 }
 
-fn said<T>(result: CommandResult<T>) -> Vec<String> {
+pub(crate) fn said<T>(result: CommandResult<T>) -> Vec<String> {
     match result {
         CommandResult::Completed { warnings, .. } => {
             warnings.into_iter().map(|w| w.message).collect()

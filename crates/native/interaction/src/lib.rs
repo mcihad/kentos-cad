@@ -131,6 +131,7 @@ pub mod data_search;
 pub mod dimension;
 pub mod dimension_bonds;
 pub mod dimension_chain;
+pub mod annotative;
 pub mod dimension_marks;
 pub mod dimension_reassociate;
 pub mod divide;

@@ -266,7 +266,53 @@ fn moved(height: f64, (was, now): (f64, f64)) -> Option<f64> {
 /// (Standart: Ölçü), a table its text style's fixed height or Tablo, its
 /// rows, columns and frame growing with it about its corner. A linked text
 /// (docs/adr/0175) and any other kind stay.
+///
+/// An annotative object (docs/adr/0323 §3) keeps its paper height: when the
+/// plot scale changes, its own geometry becomes its representation at the new
+/// scale (`rebase_annotative`), the old one kept among its scales; the
+/// height it then has is the one this rule gives when it was at its kind's
+/// height, so a changed kind height follows too.
 pub fn follow_annotation_scale(
+    e: &Entity,
+    change: &ScaleChange,
+    text_styles: &[TextStyleDef],
+    dimension_styles: &[DimensionStyleDef],
+) -> Option<Entity> {
+    let followed = follow_height(e, change, text_styles, dimension_styles);
+    if crate::annotative_of(e).is_none() {
+        return followed;
+    }
+    let rebased = crate::rebase_annotative(e, change.to_scale);
+    let Some(height) = followed.as_ref().map(height_of) else {
+        return rebased;
+    };
+    let mut out = rebased.unwrap_or_else(|| e.clone());
+    let factor = height / height_of(&out);
+    match &mut out {
+        Entity::Text(t) => {
+            t.height = height;
+            t.paragraph.box_width = t.paragraph.box_width.map(|w| w * factor);
+        }
+        Entity::Leader(l) => l.height = height,
+        Entity::Dimension(d) => d.height = height,
+        _ => {}
+    }
+    (out != *e).then_some(out)
+}
+
+/// An annotation's height (texts, leaders, dimensions, tables).
+fn height_of(e: &Entity) -> f64 {
+    match e {
+        Entity::Text(t) => t.height,
+        Entity::Leader(l) => l.height,
+        Entity::Dimension(d) => d.height,
+        Entity::Table(t) => t.height,
+        _ => 1.0,
+    }
+}
+
+/// The height rule of docs/adr/0205 §3 alone.
+fn follow_height(
     e: &Entity,
     change: &ScaleChange,
     text_styles: &[TextStyleDef],

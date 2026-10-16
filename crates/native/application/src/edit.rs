@@ -508,6 +508,16 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
                 {
                     now.refs = was.refs.clone();
                 }
+                // An annotation keeps its scales (docs/adr/0323 §4): cad.annotations.scales changes them,
+                // and one that cannot be annotative any more (a text given a curve) has none.
+                if let Some(scales) = kentos_contracts::annotative_of(entity)
+                    && std::mem::discriminant(entity) == std::mem::discriminant(&next)
+                    && kentos_contracts::why_not_annotative(&next).is_none()
+                    && let Some(field) = kentos_contracts::annotative_field(&mut next)
+                    && field.is_none()
+                {
+                    *field = Some(Box::new(scales.clone()));
+                }
                 checked.changed.push(Changed {
                     slot,
                     uid: uid.clone(),

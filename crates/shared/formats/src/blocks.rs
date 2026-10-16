@@ -129,6 +129,7 @@ impl Placing {
                 Some((
                     tag,
                     TextEntity {
+                        annotative: None,
                         base,
                         p: back(p),
                         text,
@@ -874,6 +875,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             arrow_size,
             mask,
         } => Entity::Leader(LeaderEntity {
+            annotative: None,
             base,
             pts: points_back(pts),
             text: text.clone(),
@@ -897,6 +899,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             face,
             path,
         } => Entity::Text(TextEntity {
+            annotative: None,
             base,
             path: path.clone().map(contract_curve),
             p: back(*p),
@@ -929,6 +932,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             zb,
             look,
         } => Entity::Dimension(DimensionEntity {
+            annotative: None,
             text_shift: None,
             breaks: Vec::new(),
             base,

@@ -8,7 +8,7 @@ use crate::{
     block_params, blocks_freeze, blocks_proxy, blocks_query, blocks_replace, file_import_block,
 };
 use kentos_contracts::{
-    AddressesDefine, ArcCreate, ArraysEdit, BlocksDefine, BlocksEdit, CallOp, ChangesetApply,
+    AddressesDefine, AnnotationsScales, ArcCreate, ArraysEdit, BlocksDefine, BlocksEdit, CallOp, ChangesetApply,
     CircleCreate, CurvesConstruct, CurvesEdit, DimensionsCreate, DimensionsEdit, DimensionsQuery, DimensionsReassociate,
     DrawingAudit, EntitiesArray, EntitiesBoundary, EntitiesBreak, EntitiesChamfer, EntitiesCleanup,
     EntitiesCopy, EntitiesCreate, EntitiesDelete, EntitiesDivide, EntitiesEdit, EntitiesExplode,
@@ -31,7 +31,7 @@ use serde_json::Value;
 use crate::blocks_insert;
 use crate::standards::{apply as standards_apply, check as standards_check};
 use crate::{
-    DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, arrays_edit, blocks_define,
+    DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, arrays_edit, blocks_define,
     blocks_edit, changeset, circle, create, curves_construct, curves_edit, delete,
     dimensions_create, dimensions_edit, dimensions_query, dimensions_reassociate, divide, drawing_audit, edit, entities_boundary,
     entities_break, entities_chamfer, entities_cleanup, entities_copy, entities_explode,
@@ -114,6 +114,7 @@ macro_rules! by_command {
             kentos_contracts::CAD_RECTANGLE_CREATE => $then!(rectangle_create, RectangleCreate),
             kentos_contracts::CAD_POLYGON_REGULAR => $then!(polygon_regular, RegularPolygonCreate),
             kentos_contracts::CAD_NURBS_CREATE => $then!(nurbs, NurbsCreate),
+            kentos_contracts::CAD_ANNOTATIONS_SCALES => $then!(annotations_scales, AnnotationsScales),
             kentos_contracts::CAD_ENTITIES_ORDER => $then!(entities_order, EntitiesOrder),
             kentos_contracts::CAD_UCS_SET => $then!(ucs_set, UcsSet),
             kentos_contracts::CAD_VIEWS_EDIT => $then!(views_edit, ViewsEdit),

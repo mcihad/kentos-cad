@@ -2388,6 +2388,14 @@ impl App {
             // The user coordinate system (ucs.rs, docs/adr/0261).
             "ucs.world" => self.ucs_world(),
             "ucs.previous" => self.ucs_previous(),
+            // Ölçekli açıklamalar (annotative.rs, docs/adr/0323 §4).
+            "annotation.make" => self.annotative_selection(kentos_contracts::AnnotativeOperation::Make),
+            "annotation.unmake" => {
+                self.annotative_selection(kentos_contracts::AnnotativeOperation::Unmake)
+            }
+            "annotation.reset" => {
+                self.annotative_selection(kentos_contracts::AnnotativeOperation::Reset)
+            }
             // Sırala (draw_order.rs, docs/adr/0260 §5).
             "edit.bringToFront" => self.order_selection(kentos_contracts::OrderTo::Front),
             "edit.sendToBack" => self.order_selection(kentos_contracts::OrderTo::Back),

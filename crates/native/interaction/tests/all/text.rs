@@ -161,6 +161,7 @@ fn a_texts_extras_stay_when_its_words_change() {
     let mut b = Bench::new("text");
     let aligned = |text: &str, width_factor: f64| {
         Entity::Text(kentos_contracts::TextEntity {
+            annotative: None,
             base: common::base("cizim"),
             p: kentos_contracts::Vec2 {
                 x: common::E + 3.0,

@@ -340,6 +340,7 @@ pub fn read_back(g: &Groups, k: &DimMeta, base: EntityBase, mask: bool) -> Optio
     let slope = style == Some(DimensionStyle::Slope);
     let level = style == Some(DimensionStyle::Elevation);
     let d = DimensionEntity {
+        annotative: None,
         text_shift: None,
         breaks: Vec::new(),
         base,
@@ -390,6 +391,7 @@ pub fn foreign(g: &Groups, base: EntityBase, height: f64, mask: bool) -> Foreign
                 angle: Option<f64>,
                 c: Option<Vec2>| {
         DimensionEntity {
+            annotative: None,
             text_shift: None,
             breaks: Vec::new(),
             base: base.clone(),

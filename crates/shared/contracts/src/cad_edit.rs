@@ -445,6 +445,11 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         path: Option<crate::TextPath>,
+        /// Its scales (docs/adr/0323 §4); absent: an object updated keeps its own (only
+        /// `cad.annotations.scales` takes them away), a new one has none.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        annotative: Option<Box<crate::Annotative>>,
     },
     /// A dimension from `a` to `b` (an angular one's vertex is `c`), its line
     /// `offset` metres away, its text `height` metres high; `text` replaces
@@ -505,6 +510,11 @@ pub enum EntityGeometry {
         #[serde(flatten)]
         #[cfg_attr(feature = "ts", ts(flatten))]
         look: crate::DimensionLook,
+        /// Its scales (docs/adr/0323 §4); absent: an object updated keeps its own (only
+        /// `cad.annotations.scales` takes them away), a new one has none.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        annotative: Option<Box<crate::Annotative>>,
     },
     /// A hatched area: its ring, its holes when it has any, and its pattern.
     Hatch {
@@ -572,6 +582,11 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         mask: bool,
+        /// Its scales (docs/adr/0323 §4); absent: an object updated keeps its own (only
+        /// `cad.annotations.scales` takes them away), a new one has none.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        annotative: Option<Box<crate::Annotative>>,
     },
     /// A table (docs/adr/0184 §1): rows and columns of one-line cells
     /// hanging from `p`, its top left corner, turned by `rotation` (degrees

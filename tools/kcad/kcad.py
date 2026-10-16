@@ -207,6 +207,10 @@ SCHEMA_WITH_DIMENSION_OPTIONS = 61
 SCHEMA_WITH_DIMENSION_MARKS = 62
 # Schema 63: schema 62, a text's and a dimension's `overrides`: the fields set apart from their style (docs/adr/0322 §5).
 SCHEMA_WITH_OVERRIDES = 63
+# Schema 64: schema 63, a text's, a dimension's and a leader's `annotative`: its scales (docs/adr/0323).
+SCHEMA_WITH_ANNOTATIVE = 64
+MAX_ANNOTATIVE_SCALES = 32
+MAX_ANNOTATIVE_SCALE = 1.0e6
 TEXT_OVERRIDES = ("font", "bold", "italic", "oblique", "widthFactor", "height")
 DIMENSION_OVERRIDES = ("arrow", "arrowSize", "extOffset", "extBeyond", "textGap", "textPlace", "decimals", "unit", "prefix", "suffix",
                        "font", "dimLineColor", "dimLineWeight", "dimLineType", "extColor", "extWeight", "extLineType", "textColor",
@@ -393,7 +397,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1902,6 +1906,7 @@ class _Schema:
         self.dim_options = version >= SCHEMA_WITH_DIMENSION_OPTIONS
         self.dim_marks = version >= SCHEMA_WITH_DIMENSION_MARKS
         self.overrides = version >= SCHEMA_WITH_OVERRIDES
+        self.annotative = version >= SCHEMA_WITH_ANNOTATIVE
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -3393,6 +3398,10 @@ class _Schema:
                 self.path.append("runs")
                 self.runs_rules(fields["text"], fields["runs"])
                 self.path.pop()
+            # A text along a curve or linked to an object is not annotative (docs/adr/0323 §1).
+            if kind == "text" and "annotative" in fields and ("path" in fields or "labelOf" in fields):
+                self.path.append("annotative")
+                self.fail("bad_value", "eğri boyunca ve nesneye bağlı yazı ölçekli olamaz")
             if kind == "text" and "path" in fields:
                 self.path.append("path")
                 self.text_path_rules(fields)
@@ -3709,6 +3718,51 @@ class _Schema:
         if self.bool(v) is not True:
             self.fail("bad_value", "zemin false yazılmaz; zeminsiz ölçüde alan yoktur")
         return True
+
+    def annotative_of(self, kind):
+        """An annotation's scales (docs/adr/0323): its own scale, the others ascending, each with what its kind sets apart."""
+        values = ("offset", "textShift") if kind == "dimension" else ("point", "rotation")
+
+        def scale(v):
+            x = self.float(v)
+            if not (math.isfinite(x) and 0.0 < x <= MAX_ANNOTATIVE_SCALE):
+                self.fail("bad_value", f"ölçek {x} olamaz: sıfırdan büyük, en çok {MAX_ANNOTATIVE_SCALE:g}")
+            return x
+
+        def entry(v):
+            # A point as JSON writes it: {x, y} (the scales are their JSON, as the writer writes them).
+            xy = self.fields({"x": (self.float, True), "y": (self.float, True)})
+            table = {"scale": (scale, True), "point": (xy, False), "rotation": (self.float, False),
+                     "offset": (self.float, False), "textShift": (self.text_shift, False)}
+            e = self.fields(table)(v)
+            for key in e:
+                if key != "scale" and key not in values:
+                    self.path.append(key)
+                    self.fail("bad_value", f"{key} bu nesnenin ölçeğinde olmaz")
+            for key in ("rotation", "offset"):
+                if key in e and not math.isfinite(e[key]):
+                    self.path.append(key)
+                    self.fail("bad_value", "sonlu bir sayı olmalı")
+            return e
+
+        def read(v):
+            a = self.fields({"at": (scale, True), "scales": (self.array(entry), False)})(v)
+            scales = a.get("scales")
+            if scales is not None:
+                if not scales:
+                    self.fail("bad_value", "boş ölçek listesi yazılmaz")
+                if len(scales) > MAX_ANNOTATIVE_SCALES:
+                    self.fail("bad_value", f"kendi ölçeğinden başka en çok {MAX_ANNOTATIVE_SCALES} ölçek olur")
+                last = None
+                for e in scales:
+                    if abs(e["scale"] - a["at"]) <= 1e-9 * max(e["scale"], a["at"]):
+                        self.fail("bad_value", "nesnenin kendi ölçeği öbür ölçeklerde yinelenmez")
+                    if last is not None and (e["scale"] <= last or abs(e["scale"] - last) <= 1e-9 * e["scale"]):
+                        self.fail("bad_value", "ölçekler küçükten büyüğe ve birer kez yazılır")
+                    last = e["scale"]
+            return a
+
+        return read
 
     def overrides_of(self, names):
         """A text's or a dimension's overrides (docs/adr/0322 §5): not empty, each one of the kind's names, once."""
@@ -4765,6 +4819,8 @@ ENTITY_KINDS = {
         **({"path": (s.text_path, False)} if s.text_paths else {}),
         # Schema 63 (docs/adr/0322 §5): the fields set apart from its style.
         **({"overrides": (s.overrides_of(TEXT_OVERRIDES), False)} if s.overrides else {}),
+        # Schema 64 (docs/adr/0323): its scales.
+        **({"annotative": (s.annotative_of("text"), False)} if s.annotative else {}),
     },
     # Schema 9 (docs/adr/0147): five more kinds, `mask` only when true, a slope's two elevations.
     "dimension": lambda s: {
@@ -4818,6 +4874,8 @@ ENTITY_KINDS = {
            if s.dim_options else {}),
         # Schema 63 (docs/adr/0322 §5): the fields set apart from its style.
         **({"overrides": (s.overrides_of(DIMENSION_OVERRIDES), False)} if s.overrides else {}),
+        # Schema 64 (docs/adr/0323): its scales.
+        **({"annotative": (s.annotative_of("dimension"), False)} if s.annotative else {}),
     },
     # Schema 23 (docs/adr/0186): a pattern's name, scale and families, a gradient; the objects it follows, only in the
     # drawing (a block definition's objects have no persistent ids to name).
@@ -4904,6 +4962,8 @@ ENTITY_KINDS = {
         "arrow": (s.enum(LEADER_ARROWS_30 if s.annotation else LEADER_ARROWS), False),
         "mask": (s.mask, False),
         **({"arrowSize": (s.leader_arrow_size, False)} if s.annotation else {}),
+        # Schema 64 (docs/adr/0323): its scales.
+        **({"annotative": (s.annotative_of("leader"), False)} if s.annotative else {}),
     },
 }
 

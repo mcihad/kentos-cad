@@ -338,6 +338,7 @@ impl Fields {
             "xline" => Entity::Xline(construction(base, self.p, self.dir)?),
             "ray" => Entity::Ray(construction(base, self.p, self.dir)?),
             "text" => Entity::Text(TextEntity {
+                annotative: None,
                 base,
                 p: need(self.p, "p")?,
                 text: need(self.text, "text")?,
@@ -365,6 +366,7 @@ impl Fields {
                 path: self.path,
             }),
             "dimension" => Entity::Dimension(DimensionEntity {
+                annotative: None,
                 text_shift: None,
                 breaks: Vec::new(),
                 base,
@@ -429,6 +431,7 @@ impl Fields {
                 mirror: self.mirror.unwrap_or(false),
             }),
             "leader" => Entity::Leader(LeaderEntity {
+                annotative: None,
                 base,
                 pts: need(self.pts, "pts")?,
                 text: self.text,

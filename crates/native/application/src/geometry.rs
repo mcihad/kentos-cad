@@ -1407,6 +1407,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
         EntityGeometry::Ray { p, dir } => Entity::Ray(ConstructionEntity { base, p, dir }),
         // A width factor of 1 is no width factor (docs/adr/0145): one spelling.
         EntityGeometry::Text {
+            annotative,
             p,
             text,
             height,
@@ -1420,6 +1421,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             face,
             path,
         } => Entity::Text(TextEntity {
+            annotative,
             base,
             p,
             text,
@@ -1441,6 +1443,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             face,
         }),
         EntityGeometry::Dimension {
+            annotative,
             text_shift,
             breaks,
             a,
@@ -1457,6 +1460,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             refs,
             look,
         } => Entity::Dimension(DimensionEntity {
+            annotative,
             text_shift,
             breaks,
             base,
@@ -1506,6 +1510,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             mirror,
         }),
         EntityGeometry::Leader {
+            annotative,
             pts,
             text,
             height,
@@ -1514,6 +1519,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             arrow_size,
             mask,
         } => Entity::Leader(LeaderEntity {
+            annotative,
             base,
             pts,
             text,
@@ -1565,6 +1571,21 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
 /// geometry fields, float64 bit for bit; a polyline's holes are left out.
 /// None for a dimension style, a hatch pattern or a block id the contract
 /// does not know (the core carries them as names).
+/// `geometry` of `entity` with the object's scales (docs/adr/0323 §4): a core shape has none.
+pub fn edit_geometry_of(entity: &Entity, shape: Shape) -> Option<EntityGeometry> {
+    let mut g = edit_geometry(shape)?;
+    if let (
+        Some(scales),
+        EntityGeometry::Text { annotative, .. }
+        | EntityGeometry::Dimension { annotative, .. }
+        | EntityGeometry::Leader { annotative, .. },
+    ) = (kentos_contracts::annotative_of(entity), &mut g)
+    {
+        *annotative = Some(Box::new(scales.clone()));
+    }
+    Some(g)
+}
+
 pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
     Some(match shape {
         Shape::Point { p: at, z, parts } => EntityGeometry::Point {
@@ -1676,6 +1697,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             face,
             path,
         } => EntityGeometry::Text {
+            annotative: None,
             p: p(at),
             text,
             height,
@@ -1705,6 +1727,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
         } => {
             let (text_shift, breaks) = place_of(&look);
             EntityGeometry::Dimension {
+                annotative: None,
                 text_shift,
                 breaks,
                 a: p(a),
@@ -1750,6 +1773,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             arrow_size,
             mask,
         } => EntityGeometry::Leader {
+            annotative: None,
             pts: back(pts),
             text,
             height,

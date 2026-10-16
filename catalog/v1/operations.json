@@ -1188,6 +1188,34 @@
         "cad.dimensions.create"
       ],
       "note": "Noktanın yeri (kenetle oturduğu köşe), yazılan kot ve değerin yeri komutun elevation ölçüsüne verilir; köşeyi ve kotunu izler (ADR 0322)."
+    },
+    "annotation.make": {
+      "level": "semantic",
+      "via": [
+        "cad.annotations.scales"
+      ],
+      "note": "Seçimin kimlikleri komutun make işlemine verilir; nesne projenin çizim ölçeğinde ölçekli olur (ADR 0323)."
+    },
+    "annotation.unmake": {
+      "level": "semantic",
+      "via": [
+        "cad.annotations.scales"
+      ],
+      "note": "Seçimin kimlikleri komutun unmake işlemine verilir (ADR 0323)."
+    },
+    "annotation.reset": {
+      "level": "semantic",
+      "via": [
+        "cad.annotations.scales"
+      ],
+      "note": "Seçimin kimlikleri komutun reset işlemine verilir (ADR 0323)."
+    },
+    "tool.annotativePlace": {
+      "level": "semantic",
+      "via": [
+        "cad.annotations.scales"
+      ],
+      "note": "Tıklanan nesnenin kimliği, seçilen ölçek ve tıklanan yer (ölçüde çizginin uzaklığı) komutun set işlemine verilir; önizleme o ölçeğin temsilidir (ADR 0323)."
     }
   },
   "tools": {

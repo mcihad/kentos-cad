@@ -443,6 +443,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
                 r: rng.float(),
             }),
             4 => Entity::Text(TextEntity {
+                annotative: None,
                 base: b,
                 p: point(rng),
                 text: rng.text(),
