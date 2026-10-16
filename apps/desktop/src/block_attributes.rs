@@ -387,7 +387,7 @@ impl App {
         self.block_attributes = None;
         self.dialog = None;
         for (level, line) in said {
-            self.say(level, line);
+            self.announce(level, line);
         }
     }
 
@@ -500,13 +500,14 @@ impl App {
     }
 }
 
-
 /// The rows' options (docs/adr/0317 §1): a line for each row, its tag, the six options, a multiline one's box width
 /// and its field template.
 fn options_view(w: &Window) -> Element<'_, Message> {
     use iced::widget::{row, text_input};
     use kentos_ui::widget::tree_view::{Check, check_box};
-    let mut list = Column::new().spacing(6).push(kentos_ui::label::caption("Seçenekler"));
+    let mut list = Column::new()
+        .spacing(6)
+        .push(kentos_ui::label::caption("Seçenekler"));
     for (r, item) in w.rows.iter().enumerate() {
         let tag = kentos_interaction::js_trim(&item.cells[table::TAG]);
         let name = if tag.is_empty() {
@@ -514,7 +515,9 @@ fn options_view(w: &Window) -> Element<'_, Message> {
         } else {
             tag.to_owned()
         };
-        let mut line = row![text(name).size(13).width(110)].spacing(10).align_y(iced::Center);
+        let mut line = row![text(name).size(13).width(110)]
+            .spacing(10)
+            .align_y(iced::Center);
         for opt in Opt::ALL {
             let on = opt.of(&item.options);
             line = line.push(
@@ -539,11 +542,14 @@ fn options_view(w: &Window) -> Element<'_, Message> {
             );
         }
         line = line.push(
-            text_input("Alan şablonu, ör. {NO}/{TUR}", item.options.field.as_deref().unwrap_or(""))
-                .on_input(move |t| msg(Event::Field(r, t)))
-                .padding([3, 6])
-                .width(iced::Fill)
-                .style(style::field::input),
+            text_input(
+                "Alan şablonu, ör. {NO}/{TUR}",
+                item.options.field.as_deref().unwrap_or(""),
+            )
+            .on_input(move |t| msg(Event::Field(r, t)))
+            .padding([3, 6])
+            .width(iced::Fill)
+            .style(style::field::input),
         );
         list = list.push(line);
     }

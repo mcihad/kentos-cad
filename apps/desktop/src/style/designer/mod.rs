@@ -141,6 +141,66 @@ pub enum Event {
     /// Yeni çizim… and Düzenle… for an image field: the SVG editor, whose Kaydet gives the field its drawing.
     DrawSvg(String, Option<String>),
     AssetPicked(String, Option<(String, Vec<u8>)>),
+    /// Ekle ▾ of an ƒ value's expression (`key`: the layer's key or `step.i.field`): a field, a
+    /// variable or a function put where the text ends.
+    ExprInsert {
+        at: LayerPath,
+        key: String,
+        text: String,
+    },
+    /// ε of an ƒ value's expression: the İfade oluşturucu on its text.
+    OpenBuilder {
+        at: LayerPath,
+        key: String,
+    },
+    /// The İfade oluşturucu's Tamam: the expression's new text.
+    ExprSet {
+        at: LayerPath,
+        key: String,
+        text: String,
+    },
+}
+
+/// The value at an ƒ field's `key`: the layer's own, or `step.i.field` of a generator's step.
+pub(crate) fn value_at<'v>(layer: &'v Value, key: &str) -> Option<&'v Value> {
+    match key.strip_prefix("step.") {
+        Some(rest) => {
+            let (i, field) = rest.split_once('.')?;
+            let i: usize = i.parse().ok()?;
+            layer.get("steps")?.get(i)?.get(field)
+        }
+        None => layer.get(key),
+    }
+}
+
+/// An ƒ field's expression text, when its value is one.
+pub(crate) fn expr_text_at(layer: &Value, key: &str) -> Option<String> {
+    value_at(layer, key)?
+        .as_object()?
+        .get("expr")
+        .map(|e| e.as_str().unwrap_or("").to_owned())
+}
+
+/// The patch giving the ƒ field at `key` the expression `text`, its fallback kept; None when the
+/// value there is not an expression.
+pub(crate) fn expr_patch(layer: &Value, key: &str, text: &str) -> Option<Patch> {
+    let current = value_at(layer, key)?.as_object()?;
+    current.get("expr")?;
+    let mut v = serde_json::json!({ "expr": text });
+    if let (Some(o), Some(f)) = (v.as_object_mut(), current.get("fallback")) {
+        o.insert("fallback".into(), f.clone());
+    }
+    match key.strip_prefix("step.") {
+        Some(rest) => {
+            let (i, field) = rest.split_once('.')?;
+            let i: usize = i.parse().ok()?;
+            let mut step = layer.get("steps")?.get(i)?.clone();
+            step.as_object_mut()?.insert(field.to_owned(), v);
+            let next = kentos_native_style::designer::steps::put_step(layer, i, step);
+            Some(model::set("steps", next.get("steps").cloned()?))
+        }
+        None => Some(model::set(key, v)),
+    }
 }
 
 /// Which field holds the keyboard: its id, and whether any does.

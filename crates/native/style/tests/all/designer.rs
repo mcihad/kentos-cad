@@ -414,3 +414,42 @@ fn effects() {
         );
     }
 }
+
+/// Every layer the designer offers, with every step a generator takes, is a symbol the library saves: Geometri
+/// üretici was refused on saving (““marker” sembolünde “geometryGenerator” katmanı olamaz”) in all three classes.
+#[test]
+fn what_the_designer_makes_the_library_saves() {
+    use kentos_native_style::designer::steps::{STEP_KINDS, add_step};
+    use kentos_style_library::file::validate_symbol;
+    for kind in ["fill", "line", "marker"] {
+        for layer_type in layer_types(kind) {
+            let mut layer = new_layer(layer_type, "0", kind);
+            if *layer_type == "geometryGenerator" {
+                for step in STEP_KINDS {
+                    layer = add_step(&layer, step);
+                }
+            }
+            let symbol = json!({ "type": kind, "layers": [layer] });
+            let issues = validate_symbol(&symbol, "sembol");
+            assert!(issues.is_empty(), "{kind} › {layer_type}: {issues:?}");
+        }
+    }
+    // A gradient from a hatch's fill (docs/adr/0186 §3) saves too.
+    let gradient = json!({ "type": "fill", "layers": [new_layer("gradientFill", "0", "fill")] });
+    assert_eq!(validate_symbol(&gradient, "sembol"), Vec::<String>::new());
+    // What is wrong in a generator is still said, where it is.
+    let bad = json!({ "type": "marker", "layers": [{
+        "id": "0", "type": "geometryGenerator",
+        "steps": [{ "kind": "spiral" }, { "kind": "circle", "radius": "üç" }],
+        "symbol": { "type": "fill", "layers": [{ "id": "0", "type": "shape" }] },
+    }] });
+    assert_eq!(
+        validate_symbol(&bad, "sembol"),
+        vec![
+            "sembol › katman 1 › adım 1: bilinmeyen adım “spiral”".to_owned(),
+            "sembol › katman 1 › adım 2: yarıçap bir sayı olmalı".to_owned(),
+            "sembol › katman 1 › çizen sembol › katman 1: “fill” sembolünde “shape” katmanı olamaz"
+                .to_owned(),
+        ]
+    );
+}

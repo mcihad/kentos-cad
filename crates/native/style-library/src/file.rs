@@ -11,8 +11,8 @@ use kentos_style_core::js::number;
 use kentos_style_core::js::text::{is_space, trim};
 use serde_json::{Map, Value, json};
 
-use crate::number::js_number;
 use crate::library::{ItemKind, Source, StyleLibrary, assets_of_symbol, new_item_id};
+use crate::number::js_number;
 use crate::object_template::template_issues;
 
 pub const STYLE_FORMAT: &str = "kentos-style";
@@ -124,22 +124,67 @@ const PLACEMENTS: [&str; 7] = [
     "segmentCenter",
 ];
 
+/// The layer types a kind of symbol may have. Geometri üretici is in all three (docs/adr/0226 §1), and a
+/// fill takes a gradient (a hatch's, docs/adr/0186 §3): a symbol the designer made was refused on saving.
 fn layer_types(kind: &str) -> Option<&'static [&'static str]> {
     match kind {
-        "marker" => Some(&["shape", "svg", "text", "raster"]),
-        "line" => Some(&["simpleLine", "markerLine"]),
+        "marker" => Some(&["shape", "svg", "text", "raster", "geometryGenerator"]),
+        "line" => Some(&["simpleLine", "markerLine", "geometryGenerator"]),
         "fill" => Some(&[
             "simpleFill",
             "hatchFill",
+            "gradientFill",
             "patternFill",
             "imageFill",
             "centroidMarker",
             "simpleLine",
             "markerLine",
+            "geometryGenerator",
         ]),
         _ => None,
     }
 }
+
+/// Geometri üretici's steps and the numbers each takes, with their names (docs/adr/0226 §1;
+/// `kentos_style_core`'s `Step`).
+const STEPS: &[(&str, &[(&str, &str)])] = &[
+    ("centroid", &[]),
+    ("pointOnSurface", &[]),
+    ("vertices", &[]),
+    ("boundary", &[]),
+    ("offset", &[("distance", "uzaklık")]),
+    (
+        "extend",
+        &[("start", "baştaki uzama"), ("end", "sondaki uzama")],
+    ),
+    ("buffer", &[("distance", "uzaklık")]),
+    ("envelope", &[]),
+    ("hull", &[]),
+    ("circle", &[("radius", "yarıçap")]),
+    (
+        "wedge",
+        &[
+            ("direction", "yön"),
+            ("width", "genişlik"),
+            ("radius", "yarıçap"),
+            ("inner", "iç yarıçap"),
+        ],
+    ),
+    (
+        "polygon",
+        &[
+            ("sides", "köşe sayısı"),
+            ("radius", "yarıçap"),
+            ("rotation", "dönüş"),
+        ],
+    ),
+    (
+        "translate",
+        &[("dx", "doğuya öteleme"), ("dy", "kuzeye öteleme")],
+    ),
+    ("rotate", &[("angle", "açı")]),
+    ("scale", &[("x", "yatay ölçek"), ("y", "düşey ölçek")]),
+];
 
 /// `String(v)` of JavaScript, for what a message quotes (absent is `undefined`).
 fn js_str(v: Option<&Value>) -> String {
@@ -436,6 +481,43 @@ impl Check {
                     self.num(&lw, g("tileSize"), "döşeme boyu", tiny());
                 }
                 "centroidMarker" => self.walk(g("marker"), &format!("{lw} › işaret")),
+                "gradientFill" => {
+                    self.color(&lw, g("color"), "renk", false);
+                    self.color(&lw, g("color2"), "ikinci renk", false);
+                    self.num(&lw, g("angle"), "açı", Num::default());
+                }
+                "geometryGenerator" => {
+                    match g("steps") {
+                        None => {}
+                        Some(Value::Array(steps)) => {
+                            for (k, step) in steps.iter().enumerate() {
+                                let sw = format!("{lw} › adım {}", k + 1);
+                                let kind = js_str(step.get("kind"));
+                                let Some((_, numbers)) = STEPS.iter().find(|(n, _)| *n == kind)
+                                else {
+                                    self.bad(&sw, format!("bilinmeyen adım “{kind}”"));
+                                    continue;
+                                };
+                                for (key, name) in *numbers {
+                                    self.num(
+                                        &sw,
+                                        step.get(*key),
+                                        name,
+                                        Num {
+                                            dd: true,
+                                            ..Num::default()
+                                        },
+                                    );
+                                }
+                            }
+                        }
+                        Some(_) => self.bad(&lw, "adımlar bir liste olmalı"),
+                    }
+                    match g("symbol") {
+                        Some(symbol) => self.walk(Some(symbol), &format!("{lw} › çizen sembol")),
+                        None => self.bad(&lw, "çizen sembol yok"),
+                    }
+                }
                 _ => {}
             }
             if let Some(m) = g("marker").filter(|m| m.is_object())

@@ -531,12 +531,12 @@ impl App {
         match layers_labels::execute(&mut ExecutionContext::new(model), w.input()) {
             CommandResult::Completed { output, .. } => {
                 if output.changed {
-                    self.say(
+                    self.announce(
                         Level::Success,
                         format!("“{name}” katmanının etiketlemesi yazıldı."),
                     );
                 } else {
-                    self.say(
+                    self.announce(
                         Level::Info,
                         format!("“{name}” katmanının etiketlemesi zaten böyle."),
                     );

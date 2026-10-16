@@ -252,12 +252,12 @@ impl App {
         match layers_info::execute(&mut ExecutionContext::new(&mut doc.model), input) {
             CommandResult::Completed { output, .. } => {
                 if output.changed {
-                    self.say(
+                    self.announce(
                         Level::Success,
                         format!("“{name}” katmanının bilgi kartı ve eylemleri yazıldı."),
                     );
                 } else {
-                    self.say(
+                    self.announce(
                         Level::Info,
                         format!("“{name}” katmanının bilgi kartı ve eylemleri zaten böyle."),
                     );

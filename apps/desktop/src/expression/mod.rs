@@ -84,6 +84,13 @@ pub(crate) enum Target {
     LayerFilter,
     /// Etiketler's class condition or label text (labelling/, docs/adr/0212 §4).
     Labels(crate::labelling::Field),
+    /// An expression field of Katman stili (style/layer_style/): its value, a class's, a rule's.
+    LayerStyle(crate::style::layer_style::Field),
+    /// A Sembol tasarımcısı ƒ value's expression (`key`: the layer's key or `step.i.field`).
+    Symbol {
+        at: kentos_native_style::designer::LayerPath,
+        key: String,
+    },
 }
 
 /// A field's values listed in the help.
@@ -451,6 +458,23 @@ impl Builder {
         self.help = Some(h);
     }
 
+    /// Chooses `start..end` (UTF-16 units; the cursor at `end`).
+    fn select_units(&mut self, start: usize, end: usize) {
+        let (l0, c0) = units::to_line_byte(&self.source, start);
+        let (l1, c1) = units::to_line_byte(&self.source, end.max(start));
+        self.content.move_to(Cursor {
+            position: Position {
+                line: l1,
+                column: c1,
+            },
+            selection: (start != end).then_some(Position {
+                line: l0,
+                column: c0,
+            }),
+        });
+        self.moved(true);
+    }
+
     /// Replaces `start..end` (UTF-16 units) with `text`, the cursor at `caret` in it.
     fn replace(&mut self, start: usize, end: usize, text: &str, caret: usize) {
         let src = &self.source;
@@ -613,6 +637,25 @@ impl Builder {
             )
         })
     }
+}
+
+/// A layer's fields first (its typed ones), then its objects' other keys, each with how many of
+/// the first 2000 objects have it.
+fn layer_field_counts(model: &kentos_domain::Document, layer: &str) -> Vec<(String, usize)> {
+    let mut counts: Vec<(String, usize)> = model
+        .layers()
+        .get(layer)
+        .map(|n| n.fields.iter().map(|f| (f.name.clone(), 0)).collect())
+        .unwrap_or_default();
+    for e in model.by_layer(layer).take(2000) {
+        for k in e.base().attrs.keys() {
+            match counts.iter_mut().find(|(n, _)| n == k) {
+                Some((_, c)) => *c += 1,
+                None => counts.push((k.clone(), 1)),
+            }
+        }
+    }
+    counts
 }
 
 impl App {
@@ -808,20 +851,7 @@ impl App {
             .take(5000)
             .map(|e| Slot(e.base().id))
             .collect();
-        let mut counts: Vec<(String, usize)> = doc
-            .model
-            .layers()
-            .get(layer)
-            .map(|n| n.fields.iter().map(|f| (f.name.clone(), 0)).collect())
-            .unwrap_or_default();
-        for e in doc.model.by_layer(layer).take(2000) {
-            for k in e.base().attrs.keys() {
-                match counts.iter_mut().find(|(n, _)| n == k) {
-                    Some((_, c)) => *c += 1,
-                    None => counts.push((k.clone(), 1)),
-                }
-            }
-        }
+        let counts = layer_field_counts(&doc.model, layer);
         let unit = reading_unit(doc.model.settings());
         let mut builder = Builder::new(
             target,
@@ -836,6 +866,71 @@ impl App {
         }
         self.builder = Some(builder);
         iced::widget::operation::focus(EDITOR)
+    }
+
+    /// Sembol tasarımcısı's ε beside an ƒ value: the builder on its expression, over the layer
+    /// the symbol is for (`designer_layer`).
+    pub(crate) fn open_builder_for_symbol(
+        &mut self,
+        at: kentos_native_style::designer::LayerPath,
+        key: &str,
+    ) -> Task<Message> {
+        let Some(d) = &self.styles.designer else {
+            return Task::none();
+        };
+        let Some(value) = kentos_native_style::designer::layer_at(&d.draft.symbol, at)
+            .and_then(|l| crate::style::designer::expr_text_at(l, key))
+        else {
+            return Task::none();
+        };
+        let Some(layer) = self.designer_layer() else {
+            return Task::none();
+        };
+        let context = format!("{} · İfade", d.title().trim_end_matches(" •"));
+        self.open_builder_on_layer(
+            Target::Symbol {
+                at,
+                key: key.to_owned(),
+            },
+            context,
+            &layer,
+            &value,
+        )
+    }
+
+    /// Katman stili's Oluşturucu…: the builder on one of its expressions, over its layer.
+    pub(crate) fn open_builder_for_layer_style(
+        &mut self,
+        field: crate::style::layer_style::Field,
+    ) -> Task<Message> {
+        let Some(w) = &self.styles.layer_style else {
+            return Task::none();
+        };
+        let (layer, value) = (w.layer.clone(), w.expr_text(&field));
+        let context = "Katman stili · İfade".to_owned();
+        self.open_builder_on_layer(Target::LayerStyle(field), context, &layer, &value)
+    }
+
+    /// The layer a symbol in the designer is for: the Katman stili window's when the symbol is
+    /// one of its slots, else the drawing's active layer.
+    pub(crate) fn designer_layer(&self) -> Option<String> {
+        let doc = self.document.as_ref()?;
+        let from_style = matches!(
+            self.styles.designer.as_ref().map(|d| &d.target),
+            Some(crate::style::designer::Target::Slot { .. })
+        );
+        match (&self.styles.layer_style, from_style) {
+            (Some(w), true) => Some(w.layer.clone()),
+            _ => Some(doc.model.layers().active().to_owned()),
+        }
+    }
+
+    /// The designer layer's fields with how many objects have each (an expression's Ekle ▾).
+    pub(crate) fn symbol_layer_fields(&self) -> Vec<(String, usize)> {
+        match (&self.document, self.designer_layer()) {
+            (Some(doc), Some(layer)) => layer_field_counts(&doc.model, &layer),
+            _ => Vec::new(),
+        }
     }
 
     pub(crate) fn builder_event(&mut self, e: Event) -> Task<Message> {
@@ -924,8 +1019,16 @@ impl App {
                 }
             }
             Event::Mode(mode) => {
+                let from_flow = b.view_mode == ViewMode::Flow;
                 b.set_mode(mode);
                 focus = mode == ViewMode::Text;
+                // Back from a flow that could not read the text: the error's span chosen.
+                if focus
+                    && from_flow
+                    && let Some(e) = b.check.error.clone()
+                {
+                    b.select_units(e.start, e.end);
+                }
             }
             Event::Flow(e) => return self.flow_event(e),
             Event::Carry(i) => {
@@ -1113,6 +1216,16 @@ impl App {
             }
             Target::Labels(field) => {
                 return self.labelling_event(crate::labelling::Event::Expression(field, text));
+            }
+            Target::LayerStyle(field) => {
+                return self.layer_style_event(crate::style::layer_style::Event::Expr(field, text));
+            }
+            Target::Symbol { at, key } => {
+                return self.designer_event(crate::style::designer::Event::ExprSet {
+                    at,
+                    key,
+                    text,
+                });
             }
         }
         Task::none()

@@ -137,6 +137,15 @@ impl FlowState {
         text.trim().is_empty().then(|| ("r".to_owned(), 0))
     }
 
+    /// The node a new operator or function wraps: the chosen one (the result: its expression).
+    fn wrapped(&self) -> Option<String> {
+        let sel = self.selected.as_ref().and_then(|s| self.node(s))?;
+        if sel.id == "r" {
+            return sel.ports.first()?.from.clone();
+        }
+        Some(sel.id.clone())
+    }
+
     /// Where a new node goes when nothing says: left of the input it goes
     /// into, else under everything, below the middle of the view.
     fn free(&self, text: &str) -> (f64, f64) {
@@ -327,8 +336,23 @@ impl Builder {
         }
     }
 
-    /// A palette entry (a double click in the tree, an operator button).
+    /// A palette entry (a double click in the tree, an operator button). With a node chosen
+    /// whose inputs are all full, an operator or a function wraps it (`$alan`, then `+`:
+    /// `$alan + ?`); what takes no value goes where `free` says.
     pub(crate) fn flow_add(&mut self, key: &str) {
+        if self.flow.target(&self.source).is_none()
+            && let Some(node) = self.flow.wrapped()
+        {
+            let before = self.flow.trees(&self.source);
+            let wrap = Edit::Wrap {
+                node,
+                key: key.to_owned(),
+            };
+            if let Ok((trees, focus)) = core::edit(&before, &wrap, &self.schema) {
+                self.flow_commit(before, trees, focus);
+                return;
+            }
+        }
         let at = self.flow.free(&self.source);
         self.flow_put(
             Edit::Add {

@@ -148,13 +148,10 @@ impl App {
                     self.close_designer();
                 }
             }
+            // Kaydet (Uygula) closes the window once the symbol is written; the notice says where it went.
+            // What stops a save stays in the window's foot, by the fields.
             Event::Save => {
-                if self.save_design()
-                    && matches!(
-                        self.styles.designer.as_ref().map(|d| &d.target),
-                        Some(Target::Slot { .. })
-                    )
-                {
+                if self.save_design() {
                     self.close_designer();
                 }
             }
@@ -274,6 +271,40 @@ impl App {
             }
             Event::AssetPicked(_, None) => {}
             Event::AssetPicked(key, Some((name, bytes))) => self.take_asset(&key, &name, &bytes),
+            Event::ExprInsert { at, key, text } => {
+                let Some(layer) = model::layer_at(&d.draft.symbol, at) else {
+                    return Task::none();
+                };
+                let before = super::expr_text_at(layer, &key).unwrap_or_default();
+                let text = crate::style::fields::appended(&before, &text);
+                if let Some(patch) = super::expr_patch(layer, &key, &text) {
+                    d.edit(Edit {
+                        at,
+                        key: key.clone(),
+                        text: None,
+                        patch: Some(patch),
+                        focus: None,
+                    });
+                    return iced::widget::operation::focus(field_id(&format!("{key}:expr")));
+                }
+            }
+            Event::ExprSet { at, key, text } => {
+                let Some(layer) = model::layer_at(&d.draft.symbol, at) else {
+                    return Task::none();
+                };
+                if let Some(patch) = super::expr_patch(layer, &key, &text) {
+                    // The builder's text is a step of its own, not part of the typing before it.
+                    d.last = None;
+                    d.edit(Edit {
+                        at,
+                        key,
+                        text: None,
+                        patch: Some(patch),
+                        focus: None,
+                    });
+                }
+            }
+            Event::OpenBuilder { at, key } => return self.open_builder_for_symbol(at, &key),
         }
         Task::none()
     }
@@ -298,6 +329,10 @@ impl App {
                 if let Some(window) = &mut self.styles.layer_style {
                     window.put_symbol(&at, class, Some(symbol));
                 }
+                self.toast_saved(
+                    "Sembol katman stiline uygulandı",
+                    "Katman stili penceresinde Uygula ile çizime geçer.",
+                );
                 return true;
             }
             Target::Library { id, source } => (id, source),
@@ -338,6 +373,10 @@ impl App {
                 }
                 // Stil yöneticisi shows it where it now is (`onSaved`).
                 self.reveal_in_manager(&saved);
+                self.toast_saved(
+                    format!("“{name}” kaydedildi"),
+                    format!("{} › {}", source.label(), path.join(" › ")),
+                );
                 true
             }
             Err(e) => {

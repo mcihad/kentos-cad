@@ -606,7 +606,7 @@ impl App {
                 for w in warnings {
                     self.warn(w.message);
                 }
-                self.say(Level::Success, "Tablo kaydedildi. Ctrl+Z geri alır.");
+                self.announce(Level::Success, "Tablo kaydedildi. Ctrl+Z geri alır.");
                 self.table_editor = None;
                 self.dialog = None;
             }

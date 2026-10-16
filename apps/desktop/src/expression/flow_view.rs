@@ -122,19 +122,27 @@ pub(crate) fn area(b: &Builder, mode: Mode) -> Element<'_, Message> {
         None
     };
     if let Some((glyph, tone, words)) = note {
+        let mut line = row![
+            icon(glyph).size(15.0).tone(tone),
+            label::caption(words).width(Fill)
+        ]
+        .spacing(8)
+        .align_y(Alignment::Start);
+        // An expression the flow cannot show: one press back to Metin, at the error.
+        if flow.error.is_some() {
+            line = line.push(
+                button(label::caption("Metin'de düzelt"))
+                    .padding([3, 8])
+                    .style(style::button::secondary)
+                    .on_press(ev(Event::Mode(super::ViewMode::Text))),
+            );
+        }
         layers = layers.push(
             container(
-                container(
-                    row![
-                        icon(glyph).size(15.0).tone(tone),
-                        label::caption(words).width(Fill)
-                    ]
-                    .spacing(8)
-                    .align_y(Alignment::Start),
-                )
-                .padding([7, 10])
-                .width(Fill)
-                .style(style::container::bordered),
+                container(line.align_y(Center))
+                    .padding([7, 10])
+                    .width(Fill)
+                    .style(style::container::bordered),
             )
             .padding(10)
             .width(Fill),

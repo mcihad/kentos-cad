@@ -231,7 +231,7 @@ impl App {
                     ),
                     (None, true) => format!("“{name}” katmanının zamanı kaldırıldı."),
                 };
-                self.say(
+                self.announce(
                     if output.changed {
                         Level::Success
                     } else {
