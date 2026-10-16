@@ -389,6 +389,8 @@ __all__ = [
     "FormWidgetName",
     "FormsEdit",
     "FormsEdited",
+    "FormsFill",
+    "FormsFilled",
     "FormsOp",
     "FormsSubmit",
     "FormsSubmitted",

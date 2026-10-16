@@ -164,6 +164,7 @@ pub mod units_change;
 pub mod views_edit;
 pub mod forms;
 pub mod forms_edit;
+pub mod forms_fill;
 pub mod forms_submit;
 pub mod forms_validate;
 pub mod widths;
@@ -232,6 +233,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_FORMS_SUBMIT,
         kentos_contracts::CAD_FORMS_SUBMIT_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_FORMS_FILL,
+        kentos_contracts::CAD_FORMS_FILL_VERSION,
     ),
     // Öne getir and Arkaya gönder ([`entities_order`], docs/adr/0260 §5).
     (

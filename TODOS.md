@@ -188,6 +188,9 @@ Liste:
   katmanın izlemesi (`form_follow.rs`'in kuralı, `cad.polygon.create.forms.json` ve `cad.entities.set.forms.json` durumları);
   Formla düzenle'de hesaplanan alanların kilidi, süzülen listeler, sarı uyarı, kapalı grup, son değer; tasarımcının yeni
   denetçi satırları; kapalı girişin soluk görünüşü ve `Form`'un uyarı satırı web'in form bileşenlerinde.
+- [ ] `FORM-G` tasarımcı ve giriş ekleri (ADR 0403, 16 Ekim): web'de gerekenler: `cad.forms.fill`'in TS işleyicisi
+  (`fixtures/commands/v1/cad.forms.fill.json`), tasarımcının geri alması, ağaçta sürükleme ve canlı önizlemesi, çizilen nesnenin
+  formu (`drafting.formOnCreate`), Formla düzenle'nin toplu kipi ve sürüm denetimi.
 - [ ] `CAD-BLOCK-13`, `14`, `15`, `16` dinamik bloklar ve KentOS blok kitaplığı (ADR 0318, 16 Ekim): web'de gerekenler: `.kcad`
   şema 59'un tanım `dynamic`'i ve yerleştirme `parameters`'ı (web'in kopyası 55'te), deponun ve stilli çizimin varyantları (çekirdeğin
   `block_dynamic`'i WASM'la; yerleştirmenin değerleri depoya), `cad.blocks.parameters`'ın ve `cad.blocks.edit` `dynamic`'inin TS
@@ -1406,8 +1409,10 @@ burada aşamaları izlenir.
   `$köşe_sayısı`'sı nesnenin şeklinden çizim biriminde, `@tarih`, `@simdi`, `@kullanici` komutun `moment` ve `user`'ından; belge
   kurallarını uygulayan formun katmanındaki her yazmayı aynı adımda tamamlar (çizim araçları, Python, MCP, içe aktarma);
   Formla düzenle ve tasarımcının denetçisi. — **16 Ekim, [ADR 0402](docs/adr/0402-form-rules-calculations-and-choices.md).**
-- [ ] `FORM-G` Tasarımcı ve giriş ekleri: tasarımcının kendi geri alması ve öğeleri sürükleyerek taşıma, formun önizlemesi bir
-  örnek kayıtta, formu uygulanan katmanda çizilen nesnenin formunun açılması (kullanıcının tercihiyle), çoklu düzenleme.
+- [x] `FORM-G` Tasarımcı ve giriş ekleri: tasarımcının kendi geri alması (Ctrl+Z, Ctrl+Y) ve öğeleri ağaçta sürükleyerek taşıma,
+  formun canlı önizlemesi (seçili nesnede ya da yeni kayıtta), çizim aracının yeni nesnesinde formun açılması
+  (`drafting.formOnCreate`), çoklu düzenleme ve `cad.forms.fill`, Formla düzenle'nin sürüm denetimi. — **16 Ekim,
+  [ADR 0403](docs/adr/0403-form-designer-and-entry-extras.md).**
 - [ ] `FORM-H` İlişkiler ve ana–ayrıntı (`relations/1`): başka katmandan seçenek listesi (QGIS'in Value Relation'ı), ilişki
   başvurusu, ayrıntı tablosu formun içinde.
 - [ ] `FORM-F` Merkezi yayın ve izinler (FM2, plan `FORM-FIRST-14`–`17`): bulutta form taslağı, yayın ve dağıtım kaynakları,

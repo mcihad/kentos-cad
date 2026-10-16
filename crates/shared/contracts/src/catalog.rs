@@ -4071,6 +4071,34 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Many records through a form at once (docs/adr/0403 §5), held together by
+        // fixtures/commands/v1/cad.forms.fill.json. The web is paused (docs/adr/0228).
+        CommandDescriptor {
+            id: crate::CAD_FORMS_FILL.into(),
+            version: crate::CAD_FORMS_FILL_VERSION,
+            title: "Formla toplu yaz".into(),
+            summary: "Aynı değerleri birden çok kayda formla yazar (formun toplu kipi): uids aynı katmandaki nesneler (yinelenen bir kez yazılır), values alan anahtarlarıyla. Her kayıt kendi değerleri ve şekliyle formun kurallarından ve hesaplarından geçer; biri geçmezse hiçbiri yazılmaz (form_invalid: ilk sorunlu kaydın ilk sorunu, path onu veren değer, uids o kayıt). Tekil alana birden çok kayıtta aynı değer yazılamaz. \
+                      moment ve user cad.forms.submit'teki gibidir. Uyarı denetimi yazmayı durdurmaz (form_check_warning). Tek geri alma adımı: “Form: <ad> (n nesne)”; changed değişen kayıtlar. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::FormsFill>(),
+            output: schema::<crate::FormsFilled>(),
+            plan: Some(schema::<crate::FormsFilled>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "İki binayı aynı denetim durumuyla işaretle".into(),
+                input: json!({ "form": "bina-denetimi", "uids": ["0192f5a1-25a0-7000-8000-000000000201", "0192f5a1-25a0-7000-8000-000000000202"], "values": { "Durum": "iyi" } }),
+                output: None,
+            }],
+        },
         // A local project's unit, keeping the sizes or the numbers (docs/adr/0256 §1), held together
         // by fixtures/commands/v1/cad.units.change.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -5113,6 +5141,9 @@ mod tests {
                     crate::CAD_FORMS_SUBMIT => {
                         serde_json::from_value::<crate::FormsSubmit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_FORMS_FILL => {
+                        serde_json::from_value::<crate::FormsFill>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SHEETS_EDIT => {
                         serde_json::from_value::<crate::SheetsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -5403,6 +5434,10 @@ mod tests {
                         }
                         crate::CAD_FORMS_SUBMIT => {
                             serde_json::from_value::<crate::FormsSubmitted>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_FORMS_FILL => {
+                            serde_json::from_value::<crate::FormsFilled>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_SHEETS_EDIT => {

@@ -229,6 +229,21 @@
       "apply": "live"
     },
     {
+      "key": "drafting.formOnCreate",
+      "type": "boolean",
+      "default": true,
+      "scope": "user",
+      "hosts": [
+        "desktop"
+      ],
+      "version": 1,
+      "group": "drafting",
+      "title": "Çizilen nesnenin formu",
+      "description": "Formu yayınlanmış bir katmana çizim aracıyla tek nesne çizilince formu açılır. Nesne çizilmiş kalır; formun Vazgeç'i yalnız kaydı bırakır.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
       "key": "drafting.snap",
       "type": "boolean",
       "default": true,

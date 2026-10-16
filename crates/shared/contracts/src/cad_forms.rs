@@ -7,6 +7,8 @@
 //!   preflight, the record's items (shown, required, read-only) and its issues.
 //! - `cad.forms.submit` writes a record through a form: the values by the layer fields' keys, checked
 //!   by the form's rules and its fields', one undo step.
+//! - `cad.forms.fill` writes the same values to many records through a form, each checked and
+//!   completed by itself, every record or none, one undo step (docs/adr/0403 §5).
 
 use std::collections::BTreeMap;
 
@@ -27,6 +29,9 @@ pub const CAD_FORMS_VALIDATE_VERSION: u32 = 1;
 /// Writes a record through a form.
 pub const CAD_FORMS_SUBMIT: &str = "cad.forms.submit";
 pub const CAD_FORMS_SUBMIT_VERSION: u32 = 1;
+/// Writes the same values to many records through a form.
+pub const CAD_FORMS_FILL: &str = "cad.forms.fill";
+pub const CAD_FORMS_FILL_VERSION: u32 = 1;
 
 /// What `cad.forms.edit` does.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -264,6 +269,65 @@ pub struct FormsSubmitted {
     pub attrs: BTreeMap<String, String>,
     /// Whether the object changed.
     pub changed: bool,
+    /// The document's revision afterwards (plan: the one it was made against).
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// Input of `cad.forms.fill` v1 (docs/adr/0403 §5).
+///
+/// Refusals: `no_entities`, `invalid_uid` (at `uids[i]`), `invalid_moment`, `invalid_user`;
+/// `invalid_revision`, `revision_conflict` (status `conflict`); `unknown_form`, `form_unpublished`,
+/// `form_preflight`, `entity_not_found` and `form_layer_mismatch` (at `uids[i]`), `layer_locked`,
+/// `form_invalid` (the first record's first issue: `path` its field's value, `uids` the record).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormsFill {
+    /// The form's id.
+    pub form: String,
+    /// Through its draft instead of its latest release (a form not yet published).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub draft: bool,
+    /// The objects, each once (lowercase UUID texts with hyphens; a repeated one is written once).
+    #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+    pub uids: Vec<String>,
+    /// Values by the layer fields' keys (empty: no value), the same for every record.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
+    pub values: BTreeMap<String, String>,
+    /// The moment the rules' `@tarih` and `@simdi` read (as `cad.forms.submit`'s).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub moment: Option<String>,
+    /// The person the rules' `@kullanici` reads (as `cad.forms.submit`'s).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub user: Option<String>,
+    /// The document revision the input was prepared against, as decimal text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `cad.forms.fill` v1, and what plan says it would do.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormsFilled {
+    /// The records that changed, in the input's order.
+    pub changed: Vec<String>,
+    /// The release written through; none: the draft.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub version: Option<u32>,
     /// The document's revision afterwards (plan: the one it was made against).
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,

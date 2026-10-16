@@ -167,6 +167,22 @@ class FormsTests(unittest.TestCase):
             cad.forms.validate(doc, form="bina", moment="dün")
         self.assertEqual(moment.exception.code, "invalid_moment")
 
+    def test_many_records_are_written_at_once(self) -> None:
+        """docs/adr/0403 §5: the same values to many records, each checked by itself, every record or none."""
+        doc, layer = drawing()
+        cad.forms.edit(doc, edit=cad.CreateFormsOp(name="Bina", layer=layer, id="bina"))
+        cad.forms.edit(doc, edit=cad.PublishFormsOp(id="bina"))
+        square = lambda x: [cad.Vec2(x, 0.0), cad.Vec2(x + 10.0, 0.0), cad.Vec2(x + 10.0, 8.0)]  # noqa: E731
+        uids = [cad.polygon.create(doc, pts=square(x), layer_id=layer).uid for x in (0.0, 20.0, 40.0)]
+        done = cad.forms.fill(doc, form="bina", uids=uids, values={"Durum": "iyi", "Kat": "2"})
+        self.assertEqual(done.changed, uids)
+        self.assertEqual({doc.entity(u).entity.attrs.get("Kat") for u in uids}, {"2"})
+        with self.assertRaises(cad.CommandFailed) as refused:
+            cad.forms.fill(doc, form="bina", uids=uids, values={"Kat": "0"})
+        self.assertEqual(refused.exception.code, "form_invalid")
+        doc.undo()
+        self.assertEqual({doc.entity(u).entity.attrs.get("Kat") for u in uids}, {None})
+
 
 if __name__ == "__main__":
     unittest.main()

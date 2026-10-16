@@ -324989,6 +324989,185 @@
       ]
     },
     {
+      "id": "cad.forms.fill",
+      "version": 1,
+      "title": "Formla toplu yaz",
+      "summary": "Aynı değerleri birden çok kayda formla yazar (formun toplu kipi): uids aynı katmandaki nesneler (yinelenen bir kez yazılır), values alan anahtarlarıyla. Her kayıt kendi değerleri ve şekliyle formun kurallarından ve hesaplarından geçer; biri geçmezse hiçbiri yazılmaz (form_invalid: ilk sorunlu kaydın ilk sorunu, path onu veren değer, uids o kayıt). Tekil alana birden çok kayıtta aynı değer yazılamaz. moment ve user cad.forms.submit'teki gibidir. Uyarı denetimi yazmayı durdurmaz (form_check_warning). Tek geri alma adımı: “Form: <ad> (n nesne)”; changed değişen kayıtlar. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.forms.fill` v1 (docs/adr/0403 §5).\n\nRefusals: `no_entities`, `invalid_uid` (at `uids[i]`), `invalid_moment`, `invalid_user`;\n`invalid_revision`, `revision_conflict` (status `conflict`); `unknown_form`, `form_unpublished`,\n`form_preflight`, `entity_not_found` and `form_layer_mismatch` (at `uids[i]`), `layer_locked`,\n`form_invalid` (the first record's first issue: `path` its field's value, `uids` the record).",
+        "properties": {
+          "draft": {
+            "description": "Through its draft instead of its latest release (a form not yet published).",
+            "type": "boolean"
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "form": {
+            "description": "The form's id.",
+            "type": "string"
+          },
+          "moment": {
+            "description": "The moment the rules' `@tarih` and `@simdi` read (as `cad.forms.submit`'s).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "uids": {
+            "description": "The objects, each once (lowercase UUID texts with hyphens; a repeated one is written once).",
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "user": {
+            "description": "The person the rules' `@kullanici` reads (as `cad.forms.submit`'s).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "values": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Values by the layer fields' keys (empty: no value), the same for every record.",
+            "type": "object"
+          }
+        },
+        "required": [
+          "form",
+          "uids"
+        ],
+        "title": "FormsFill",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.forms.fill` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "description": "The records that changed, in the input's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made against).",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "version": {
+            "description": "The release written through; none: the draft.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "version"
+          }
+        },
+        "required": [
+          "changed",
+          "revision"
+        ],
+        "title": "FormsFilled",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.forms.fill` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "description": "The records that changed, in the input's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made against).",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "version": {
+            "description": "The release written through; none: the draft.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "version"
+          }
+        },
+        "required": [
+          "changed",
+          "revision"
+        ],
+        "title": "FormsFilled",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_entities",
+          "invalid_uid",
+          "invalid_moment",
+          "invalid_user",
+          "invalid_revision",
+          "revision_conflict",
+          "unknown_form",
+          "form_unpublished",
+          "form_preflight",
+          "entity_not_found",
+          "form_layer_mismatch",
+          "layer_locked",
+          "form_invalid"
+        ],
+        "warnings": [
+          "form_check_warning"
+        ]
+      },
+      "examples": [
+        {
+          "title": "İki binayı aynı denetim durumuyla işaretle",
+          "input": {
+            "form": "bina-denetimi",
+            "uids": [
+              "0192f5a1-25a0-7000-8000-000000000201",
+              "0192f5a1-25a0-7000-8000-000000000202"
+            ],
+            "values": {
+              "Durum": "iyi"
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.units.change",
       "version": 1,
       "title": "Birimi değiştir",

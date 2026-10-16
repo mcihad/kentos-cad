@@ -10748,6 +10748,89 @@ class FormsEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FormsFill(_Model):
+    """Input of `cad.forms.fill` v1 (docs/adr/0403 §5).
+
+    Refusals: `no_entities`, `invalid_uid` (at `uids[i]`), `invalid_moment`, `invalid_user`;
+    `invalid_revision`, `revision_conflict` (status `conflict`); `unknown_form`, `form_unpublished`,
+    `form_preflight`, `entity_not_found` and `form_layer_mismatch` (at `uids[i]`), `layer_locked`,
+    `form_invalid` (the first record's first issue: `path` its field's value, `uids` the record).
+    Attributes:
+        form: The form's id.
+        uids: The objects, each once (lowercase UUID texts with hyphens; a repeated one is written once).
+        draft: Through its draft instead of its latest release (a form not yet published).
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        moment: The moment the rules' `@tarih` and `@simdi` read (as `cad.forms.submit`'s).
+        user: The person the rules' `@kullanici` reads (as `cad.forms.submit`'s).
+        values: Values by the layer fields' keys (empty: no value), the same for every record.
+    """
+    form: str
+    uids: list[str]
+    draft: bool | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    moment: str | None | Unset = UNSET
+    user: str | None | Unset = UNSET
+    values: dict[str, str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["form"] = self.form
+        out["uids"] = list(self.uids)
+        if self.draft is not UNSET:
+            out["draft"] = self.draft
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.moment is not UNSET:
+            out["moment"] = self.moment
+        if self.user is not UNSET:
+            out["user"] = self.user
+        if self.values is not UNSET:
+            out["values"] = dict(self.values)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsFill:
+        return cls(
+            form=data["form"],
+            uids=list(data["uids"]),
+            draft=data.get("draft", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            moment=data.get("moment", UNSET),
+            user=data.get("user", UNSET),
+            values=dict(data["values"]) if "values" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormsFilled(_Model):
+    """Output of `cad.forms.fill` v1, and what plan says it would do.
+    Attributes:
+        changed: The records that changed, in the input's order.
+        revision: The document's revision afterwards (plan: the one it was made against).
+        version: The release written through; none: the draft. Unit: version.
+    """
+    changed: list[str]
+    revision: str
+    version: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = list(self.changed)
+        out["revision"] = self.revision
+        if self.version is not UNSET:
+            out["version"] = self.version
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsFilled:
+        return cls(
+            changed=list(data["changed"]),
+            revision=data["revision"],
+            version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FormsSubmit(_Model):
     """Input of `cad.forms.submit` v1.
 
@@ -28082,6 +28165,8 @@ __all__ = [
     "FormWidgetName",
     "FormsEdit",
     "FormsEdited",
+    "FormsFill",
+    "FormsFilled",
     "FormsOp",
     "FormsSubmit",
     "FormsSubmitted",

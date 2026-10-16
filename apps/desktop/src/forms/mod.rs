@@ -24,6 +24,33 @@ use crate::app::{App, Message};
 /// The commands this module runs.
 pub const COMMANDS: [&str; 2] = ["data.forms", "data.formEdit"];
 
+/// The drawing tools whose one new object opens its layer's form (docs/adr/0403 §4); a copy, an
+/// array, a paste or an import does not.
+pub const DRAWING_TOOLS: [&str; 19] = [
+    "polygon",
+    "polyline",
+    "area",
+    "parcel",
+    "point",
+    "spot",
+    "circle",
+    "arc",
+    "ellipse",
+    "rectangle",
+    "rectangle3",
+    "regularPolygon",
+    "spline",
+    "nurbs",
+    "line",
+    "sector",
+    "revcloud",
+    "adjoin",
+    "donut",
+];
+
+/// The preference that opens a drawn object's form (docs/adr/0403 §4).
+pub const ON_CREATE: &str = "drafting.formOnCreate";
+
 /// Why the forms may not change here.
 pub const FORMS_LOCKED: &str = "Bu projede formları değiştirme yetkiniz yok (project.edit); proje sahibinden ya da yöneticisinden isteyin.";
 
@@ -80,34 +107,94 @@ impl App {
             .then_some((slot, layer))
     }
 
+    /// The object a drawing tool has just written opens its form (docs/adr/0403 §4): when the
+    /// preference is on, no window is open and the object's layer has a published form; the record
+    /// opens as a new one, its defaults and calculations already written by the drawing's step.
+    pub(crate) fn open_form_on_create(&mut self) -> Task<Message> {
+        let Some(slot) = self.form_on_create.take() else {
+            return Task::none();
+        };
+        if !self.settings.bool(ON_CREATE) || self.dialog.is_some() {
+            return Task::none();
+        }
+        let Some(layer) = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.get(slot))
+            .map(|e| e.base().layer_id.clone())
+        else {
+            return Task::none();
+        };
+        let form = self
+            .project_forms()
+            .iter()
+            .find(|f| f.layer == layer && !f.releases.is_empty())
+            .map(|f| f.id.clone());
+        match form {
+            Some(id) => self.open_entry(slot, &id),
+            None => Task::none(),
+        }
+    }
+
+    /// The layer's first published form, else its first form (a draft).
+    fn form_of_layer(&self, layer: &str) -> Option<String> {
+        let forms: Vec<&ProjectForm> = self
+            .project_forms()
+            .iter()
+            .filter(|f| f.layer == layer)
+            .collect();
+        forms
+            .iter()
+            .find(|f| !f.releases.is_empty())
+            .or(forms.first())
+            .map(|f| f.id.clone())
+    }
+
     /// Formla düzenle: the chosen object's record through its layer's form.
     fn open_form_entry(&mut self) -> Task<Message> {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return Task::none();
         }
+        // Many objects of one layer with a form: the many-record mode (docs/adr/0403 §6).
+        if self.selection.len() > 1 {
+            let slots: Vec<Slot> = self.selection.ids().to_vec();
+            let layers: std::collections::BTreeSet<String> = self
+                .document
+                .as_ref()
+                .map(|d| {
+                    slots
+                        .iter()
+                        .filter_map(|s| d.model.get(*s).map(|e| e.base().layer_id.clone()))
+                        .collect()
+                })
+                .unwrap_or_default();
+            let form = match &layers.iter().collect::<Vec<_>>()[..] {
+                [layer] => self.form_of_layer(layer),
+                _ => None,
+            };
+            return match form {
+                Some(id) => self.open_entry_many(&slots, &id),
+                None => {
+                    self.say(
+                        Level::Warn,
+                        "Birden çok nesneyi formla düzenlemek için aynı, formu olan katmandan nesneler seçin.",
+                    );
+                    Task::none()
+                }
+            };
+        }
         let Some((slot, layer)) = self.form_target() else {
             let chosen = self.selection.len();
             let why = if chosen != 1 {
-                "Formla düzenlemek için tek bir nesne seçin."
+                "Formla düzenlemek için bir nesne seçin."
             } else {
                 "Seçili nesnenin katmanının formu yok. Formlar penceresinden katmana bir form oluşturun."
             };
             self.say(Level::Warn, why);
             return Task::none();
         };
-        // The layer's first published form, else its first form (a draft).
-        let forms: Vec<&ProjectForm> = self
-            .project_forms()
-            .iter()
-            .filter(|f| f.layer == layer)
-            .collect();
-        let form = forms
-            .iter()
-            .find(|f| !f.releases.is_empty())
-            .or(forms.first())
-            .map(|f| f.id.clone());
-        match form {
+        match self.form_of_layer(&layer) {
             Some(id) => self.open_entry(slot, &id),
             None => Task::none(),
         }

@@ -454,6 +454,8 @@ pub enum Message {
     Forms(crate::forms::designer::Event),
     /// Formla düzenle (forms/entry.rs, docs/adr/0401).
     FormEntry(crate::forms::entry::Event),
+    /// An event of Formlar's preview (forms/entry.rs, docs/adr/0403 §3).
+    FormPreview(crate::forms::entry::Event),
     AnnotationStyles(crate::annotation_styles::Event),
     LayerPurge(crate::layer_purge::Event),
     LayerList(crate::layer_list::Event),
@@ -880,6 +882,10 @@ pub struct App {
     pub(crate) form_entry: Option<crate::forms::entry::Entry>,
     /// What the session remembers of the forms: the "reuse last" values (forms/entry.rs, docs/adr/0402 §7).
     pub(crate) form_memory: crate::forms::entry::Memory,
+    /// Formlar's preview of its copy (forms/entry.rs, docs/adr/0403 §3).
+    pub(crate) form_preview: Option<crate::forms::entry::Entry>,
+    /// The object a drawing tool has just written: its form opens (forms/mod.rs, docs/adr/0403 §4).
+    pub(crate) form_on_create: Option<kentos_domain::Slot>,
     /// Yazı stilleri or Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5).
     pub(crate) annotation_styles: Option<crate::annotation_styles::Window>,
     /// Kullanılmayanları temizle's window (layer_purge.rs, docs/adr/0177 §5).
@@ -1175,6 +1181,8 @@ impl App {
             forms_window: None,
             form_entry: None,
             form_memory: Default::default(),
+            form_preview: None,
+            form_on_create: None,
             annotation_styles: None,
             layer_purge: None,
             take_from: None,
@@ -1422,6 +1430,8 @@ impl App {
             self.find_replace_tasks(),
             self.text_file_tasks(),
             self.image_file_tasks(),
+            // A drawn object's form (forms/mod.rs, docs/adr/0403 §4).
+            self.open_form_on_create(),
             // The attachments' photos the shell shows, decoded off the thread (attachments.rs).
             self.photo_tasks(),
             self.raster_values_tasks(),
@@ -1700,6 +1710,7 @@ impl App {
             Message::Views(event) => return self.views_event(event),
             Message::Forms(event) => return self.forms_event(event),
             Message::FormEntry(event) => return self.form_entry_event(event),
+            Message::FormPreview(event) => return self.form_preview_event(event),
             Message::AnnotationStyles(event) => return self.annotation_styles_event(event),
             Message::LayerPurge(event) => return self.layer_purge_event(event),
             Message::DrawingExchange(event) => return self.drawing_exchange_event(event),

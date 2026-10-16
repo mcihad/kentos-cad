@@ -115,6 +115,7 @@ impl App {
             .is_some_and(|run| !run.members.is_empty())
             .then(|| doc.model.begin_group(kentos_domain::labels::ADD));
         let from = doc.model.next_slot();
+        let tool = self.session.tool_id();
         let mut log = Vec::new();
         let mut changes = Vec::new();
         let view = CameraView(&self.viewport.camera);
@@ -136,6 +137,16 @@ impl App {
                 template: self.template.as_ref().map(|run| &run.stamp),
             },
         );
+        // A drawing tool's one new object on a layer with a form: its form opens (docs/adr/0403 §4).
+        if crate::forms::DRAWING_TOOLS.contains(&tool) {
+            let made: Vec<Slot> = (from..doc.model.next_slot())
+                .filter_map(|s| u32::try_from(s).ok().map(Slot))
+                .filter(|s| doc.model.get(*s).is_some())
+                .collect();
+            if let [one] = made[..] {
+                self.form_on_create = Some(one);
+            }
+        }
         // Geçici izleme noktası (docs/adr/0270 §3): the point given is a tracking point now.
         if let Some(p) = self.session.take_track_point() {
             self.tracking.acquire_point(p);
@@ -588,6 +599,13 @@ impl App {
             if self.dialog == Some(crate::app::Dialog::ModelDesigner)
                 && press.named() != Some(Named::Escape)
                 && let Some(task) = self.model_designer_key(&press)
+            {
+                return task;
+            }
+            // Formlar: the designer's own undo and Kaydet (forms/designer.rs, docs/adr/0403 §1).
+            if self.dialog == Some(crate::app::Dialog::Forms)
+                && press.named() != Some(Named::Escape)
+                && let Some(task) = self.forms_key(&press)
             {
                 return task;
             }

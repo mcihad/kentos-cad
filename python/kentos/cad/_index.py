@@ -55,6 +55,7 @@ COMMANDS: dict[str, Any] = {
     "cad.entities.trim": entities.trim,
     "cad.entities.vertex": entities.vertex,
     "cad.forms.edit": forms.edit,
+    "cad.forms.fill": forms.fill,
     "cad.forms.submit": forms.submit,
     "cad.forms.validate": forms.validate,
     "cad.labels.pin": labels.pin,

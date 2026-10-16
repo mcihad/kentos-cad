@@ -2,7 +2,7 @@
 //! its toolbar and the preflight's issues, the chosen item's inspector and the footer.
 
 use iced::widget::{Column, Row, button, column, container, row, scrollable, space, text_input};
-use iced::{Center, Element, Fill, Length};
+use iced::{Center, Element, Fill};
 use kentos_contracts::{
     FormBody, FormIssue, FormItem, FormSeverity, FormWidget, LayerField, LayerNodeType, ProjectForm,
 };
@@ -12,9 +12,12 @@ use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Dialog as Frame, Elided, Segmented, focus_ring, overlay};
 use kentos_ui::{label, style};
 
+use kentos_ui::widget::tree_view::{self, Node, TreeView};
+
 use super::designer::{
-    ADD_GROUP, ADD_NOTE, ADD_TAB, CANCEL, CREATE, DOWN, ENFORCE, Event, NAME, NEW_FORM, PUBLISH,
-    REMOVE_FORM, REMOVE_ITEM, Rule, SAVE, TITLE, Text, UP, Window, bound, find, issues_of, msg,
+    ADD_GROUP, ADD_NOTE, ADD_TAB, CANCEL, CREATE, DOWN, ENFORCE, Event, NAME, NEW_FORM, PREVIEW,
+    PROPERTIES, PUBLISH, REDO, REMOVE_FORM, REMOVE_ITEM, Rule, SAVE, TITLE, Text, UNDO, UP, Window,
+    bound, find, issues_of, msg,
 };
 use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
@@ -43,6 +46,9 @@ fn item_face(item: &FormItem, fields: &[LayerField]) -> (Icon, String, bool) {
             let ruled = f.visible_when.is_some()
                 || f.required_when.is_some()
                 || f.read_only_when.is_some()
+                || f.default_expr.is_some()
+                || f.calculate.is_some()
+                || f.choice_filter.is_some()
                 || !f.checks.is_empty();
             let mut words = name;
             if f.required || layer.is_some_and(|l| l.required) {
@@ -78,17 +84,30 @@ impl App {
             .padding(16)
             .into(),
         };
-        let inspector = match (&w.body, &w.item) {
-            (Some(body), Some(id)) => match find(&body.items, id) {
-                Some(item) => self.forms_inspector(item, &fields, &issues),
-                None => empty_inspector(),
-            },
-            _ => empty_inspector(),
+        let inspector = if w.previewing {
+            self.forms_preview(w)
+        } else {
+            match (&w.body, &w.item) {
+                (Some(body), Some(id)) => match find(&body.items, id) {
+                    Some(item) => self.forms_inspector(item, &fields, &issues),
+                    None => empty_inspector(),
+                },
+                _ => empty_inspector(),
+            }
         };
+        // Özellikler | Önizleme over the third column (docs/adr/0403 §3).
+        let side = Segmented::new(
+            [PROPERTIES, PREVIEW],
+            if w.previewing { PREVIEW } else { PROPERTIES },
+            |t| msg(Event::Preview(t == PREVIEW)),
+        );
+        let inspector: Element<'_, Message> = column![side, inspector].spacing(8).into();
         let main = row![
             container(left).width(220).height(Fill),
             container(center).width(Fill).height(Fill),
-            container(inspector).width(340).height(Fill),
+            container(inspector)
+                .width(if w.previewing { 400 } else { 340 })
+                .height(Fill),
         ]
         .spacing(12)
         .height(typography::scaled(390.0));
@@ -266,76 +285,108 @@ impl App {
             .padding([4, 8])
             .style(style::button::tool(false))
         };
+        let icon_tool = |words: &'static str, glyph: Icon, event: Option<Event>| {
+            kentos_ui::widget::tip(
+                button(icon(glyph).size(14.0))
+                    .on_press_maybe(event.map(msg))
+                    .padding([4, 7])
+                    .style(style::button::tool(false)),
+                words.into(),
+                iced::widget::tooltip::Position::Bottom,
+            )
+        };
         let has_item = chosen.is_some();
         let toolbar = row![
             tool(ADD_TAB, Icon::Tabs, Some(Event::AddTab)),
             tool(ADD_GROUP, Icon::Layout, Some(Event::AddGroup)),
             tool(ADD_NOTE, Icon::Info, Some(Event::AddNote)),
             space::horizontal().width(8),
-            tool(UP, Icon::ChevronUp, has_item.then_some(Event::Move(-1))),
-            tool(DOWN, Icon::ChevronDown, has_item.then_some(Event::Move(1))),
-            tool(
+            icon_tool(UP, Icon::ChevronUp, has_item.then_some(Event::Move(-1))),
+            icon_tool(DOWN, Icon::ChevronDown, has_item.then_some(Event::Move(1))),
+            icon_tool(
                 REMOVE_ITEM,
                 Icon::Eraser,
                 has_item.then_some(Event::RemoveItem)
+            ),
+            space::horizontal().width(Fill),
+            icon_tool(
+                UNDO,
+                Icon::Undo,
+                (!w.undo.is_empty()).then_some(Event::Undo)
+            ),
+            icon_tool(
+                REDO,
+                Icon::Redo,
+                (!w.redo.is_empty()).then_some(Event::Redo)
             ),
         ]
         .spacing(4)
         .align_y(Center);
 
-        let mut lines: Vec<Element<'_, Message>> = Vec::new();
-        fn walk(
-            items: &[FormItem],
-            depth: usize,
-            chosen: Option<&str>,
+        // The items as a tree: dragged before, after or into a tab or group (docs/adr/0403 §2).
+        fn node<'a>(
+            item: &FormItem,
+            next: &mut usize,
+            w: &Window,
             fields: &[LayerField],
             issues: &[FormIssue],
-            lines: &mut Vec<Element<'_, Message>>,
-        ) {
-            for item in items {
-                let (glyph, words, ruled) = item_face(item, fields);
-                let errored = issues.iter().any(|i| {
-                    i.item.as_deref() == Some(item.id()) && i.severity == FormSeverity::Error
-                });
-                let mut face = Row::new()
-                    .spacing(6)
-                    .align_y(Center)
-                    .push(space::horizontal().width(Length::Fixed(14.0 * depth as f32)))
-                    .push(icon(glyph).size(13.0).tone(Tone::Muted))
-                    .push(
-                        Elided::new(words)
-                            .size(typography::body())
-                            .font(typography::ui())
-                            .width(Fill),
-                    );
-                if ruled {
-                    face = face.push(label::caption("ƒ").style(muted));
-                }
-                if errored {
-                    face = face.push(icon(Icon::Warning).size(12.0).tone(Tone::Warning));
-                }
-                lines.push(
-                    button(face)
-                        .on_press(msg(Event::SelectItem(item.id().to_owned())))
-                        .padding([3, 8])
-                        .width(Fill)
-                        .style(style::button::row(chosen == Some(item.id())))
-                        .into(),
-                );
-                walk(item.items(), depth + 1, chosen, fields, issues, lines);
+        ) -> Node<'a, Message> {
+            let (glyph, words, ruled) = item_face(item, fields);
+            let errored = issues
+                .iter()
+                .any(|i| i.item.as_deref() == Some(item.id()) && i.severity == FormSeverity::Error);
+            let mut marks = Row::new().spacing(4).align_y(Center);
+            if ruled {
+                marks = marks.push(label::caption("ƒ").style(muted));
             }
+            if errored {
+                marks = marks.push(icon(Icon::Warning).size(12.0).tone(Tone::Warning));
+            }
+            let mut n = Node::new(words)
+                .icon(icon(glyph).size(13.0).tone(Tone::Muted))
+                .id(*next)
+                .cells([marks.into()])
+                .selected(w.item.as_deref() == Some(item.id()))
+                .on_press(msg(Event::SelectItem(item.id().to_owned())));
+            *next += 1;
+            if matches!(item, FormItem::Tab { .. } | FormItem::Group { .. }) {
+                let open = !w.folded.contains(item.id());
+                n = n
+                    .folder()
+                    .expanded(open, msg(Event::Fold(item.id().to_owned())));
+                // A folded one's children keep their places in the order.
+                for child in item.items() {
+                    let made = node(child, next, w, fields, issues);
+                    if open {
+                        n = n.push(made);
+                    }
+                }
+            }
+            n
         }
-        if body.items.is_empty() {
-            lines.push(
-                container(label::caption(
-                    "Form boş. Soldaki alanlardan birine basın ya da sekme, grup ve not ekleyin.",
-                ))
-                .padding(10)
-                .into(),
-            );
-        }
-        walk(&body.items, 0, chosen, fields, issues, &mut lines);
-        let rows = Column::with_children(lines).spacing(1).padding(2);
+        let mut next = 0;
+        let nodes: Vec<Node<'_, Message>> = body
+            .items
+            .iter()
+            .map(|i| node(i, &mut next, w, fields, issues))
+            .collect();
+        let tree: Element<'_, Message> = if body.items.is_empty() {
+            container(label::caption(
+                "Form boş. Soldaki alanlardan birine basın ya da sekme, grup ve not ekleyin.",
+            ))
+            .padding(10)
+            .into()
+        } else {
+            TreeView::new([
+                tree_view::Column::new("Öğe").width(Fill),
+                tree_view::Column::new("").width(36),
+            ])
+            .header(false)
+            .extend(nodes)
+            .on_move(|from, to, place| msg(Event::Drop(from, to, place)))
+            .height(Fill)
+            .into()
+        };
 
         let mut problems = Column::new().spacing(2);
         for i in issues.iter().take(8) {
@@ -360,7 +411,7 @@ impl App {
         }
         let mut col = column![
             toolbar,
-            container(scrollable(rows).height(Fill))
+            container(tree)
                 .style(style::container::field_box)
                 .width(Fill)
                 .height(Fill),
@@ -712,6 +763,33 @@ impl App {
         .spacing(8)
         .align_y(Center);
         column![top, actions].spacing(10).into()
+    }
+}
+
+impl App {
+    /// The preview of the copy: the form as Formla düzenle shows it, on the chosen object of its
+    /// layer or a new record; typed values are not written.
+    fn forms_preview<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
+        if let Some(why) = &w.preview_error {
+            return container(words::summary(vec![words::text_line(
+                Kind::Warn,
+                why.clone(),
+            )]))
+            .padding(8)
+            .into();
+        }
+        let Some(e) = &self.form_preview else {
+            return empty_inspector();
+        };
+        let shown = self.entry_preview(e);
+        scrollable(container(shown).padding(iced::Padding {
+            top: 0.0,
+            right: 14.0,
+            bottom: 0.0,
+            left: 2.0,
+        }))
+        .height(Fill)
+        .into()
     }
 }
 

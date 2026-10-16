@@ -271,6 +271,55 @@ pub fn record_screen(
     made.map_err(|stop: Stop| Box::new(stop.into_error()))
 }
 
+/// The screen of a body not yet kept (the designer's copy: docs/adr/0403 §3) for the object `uid`,
+/// or for a new, empty record without a shape; the commands' refusal when it cannot be.
+pub fn preview_screen(
+    doc: &Document,
+    form: &str,
+    body: &FormBody,
+    uid: Option<&str>,
+    moment: Option<&str>,
+    user: Option<&str>,
+) -> Result<RecordScreen, Box<kentos_contracts::CommandError>> {
+    let made = (|| {
+        let variables = variables_given(doc, moment, user)?;
+        let form = self::form(doc.settings(), form, "form")?;
+        let prepared = prepared(doc, form, body, &variables, "form")?;
+        let layer_name = doc
+            .layers()
+            .get(&form.layer)
+            .map_or("", |n| n.name.as_str());
+        let (object, attrs, uid) = match uid {
+            Some(uid) => {
+                uid_text(uid, "uid")?;
+                let (slot, e) = record(doc, form, uid, "uid")?;
+                (
+                    object(doc, slot, e),
+                    e.base().attrs.clone(),
+                    doc.uid(slot).unwrap_or_default(),
+                )
+            }
+            None => (
+                Object {
+                    layer: layer_name.to_owned(),
+                    ..Object::default()
+                },
+                Attrs::new(),
+                Uuid::nil(),
+            ),
+        };
+        Ok(RecordScreen {
+            prepared,
+            object,
+            attrs,
+            version: None,
+            layer: form.layer.clone(),
+            uid,
+        })
+    })();
+    made.map_err(|stop: Stop| Box::new(stop.into_error()))
+}
+
 /// The issues of the screen's unique fields for `attrs` against the layer's other objects.
 pub fn unique_on_layer(doc: &Document, screen: &RecordScreen, attrs: &Attrs) -> Vec<FormIssue> {
     if screen.prepared.unique_keys().is_empty() {

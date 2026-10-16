@@ -5,7 +5,7 @@
 //!
 //! ```text
 //! KENTOS_SHOTS_ONLY=form-tasarim,form-tasarim-sorun,form-yeni,form-duzenle,form-duzenle-sorun,form-duzenle-sekme,form-oznitelikler cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
-//! KENTOS_SHOTS_ONLY=form-hesap-tasarim,form-hesap-duzenle,form-hesap-sorun cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=form-hesap-tasarim,form-hesap-duzenle,form-hesap-sorun,form-onizleme,form-tasarim-tasima,form-toplu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! docs/adr/0402's: the calculating form in the designer (the material's choice filter), Formla
@@ -304,6 +304,57 @@ fn calc_issues(app: &mut App) {
     entry(app, entry::Event::Save);
 }
 
+/// Formlar's preview (docs/adr/0403 §3) of the calculating form on a new building: storeys typed,
+/// the calculations' group opened; the copy's change (a note's text) follows at once.
+fn calc_preview(app: &mut App) {
+    calc_buildings(app);
+    run(app, "data.forms");
+    designer(app, designer::Event::Preview(true));
+    let _ = app.update(Message::FormPreview(entry::Event::Value(
+        "kat-sayisi".into(),
+        "7".into(),
+    )));
+    let _ = app.update(Message::FormPreview(entry::Event::Group("hesap".into())));
+    designer(app, designer::Event::SelectItem("toplam".into()));
+    designer(
+        app,
+        designer::Event::Text(
+            designer::Text::Note,
+            "Taban {Taban} m², toplam {Kat * Taban} m².".into(),
+        ),
+    );
+}
+
+/// Formlar: an item dragged in the tree (the description into the second tab), the history's buttons.
+fn designing_moved(app: &mut App) {
+    buildings(app, true);
+    run(app, "data.forms");
+    let order: Vec<String> = app
+        .forms_window
+        .as_ref()
+        .and_then(|w| w.body.clone())
+        .map(|b| (0..9).filter_map(|i| designer::id_at(&b, i)).collect())
+        .unwrap_or_default();
+    let at = |id: &str| order.iter().position(|x| x == id).unwrap_or(0);
+    designer(
+        app,
+        designer::Event::Drop(
+            at("aciklama"),
+            at("ayrinti"),
+            kentos_ui::widget::tree_view::Place::Into,
+        ),
+    );
+}
+
+/// Formla düzenle on three buildings at once (docs/adr/0403 §6): the status they differ in shows
+/// “Çeşitli değerler”, the storeys typed go to all of them.
+fn calc_many(app: &mut App) {
+    calc_buildings(app);
+    app.selection.set([Slot(1), Slot(2), Slot(3)]);
+    run(app, "data.formEdit");
+    entry(app, entry::Event::Value("kat-sayisi".into(), "5".into()));
+}
+
 /// Öznitelikler on the first building: the Form row with Formla düzenle, then the fields (the general
 /// and geometry sections closed so the fields show).
 fn properties(app: &mut App) {
@@ -325,6 +376,9 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-hesap-tasarim", calc_designing),
         ("form-hesap-duzenle", calc_editing),
         ("form-hesap-sorun", calc_issues),
+        ("form-onizleme", calc_preview),
+        ("form-tasarim-tasima", designing_moved),
+        ("form-toplu", calc_many),
     ]
 }
 
@@ -478,6 +532,188 @@ mod tests {
             app.form_entry
                 .as_ref()
                 .is_some_and(|e| !e.is_closed("hesap"))
+        );
+    }
+
+    /// docs/adr/0403 §1–§2: typing into one label is one step; Geri al and Yinele walk the copy; an
+    /// item dragged into another tab moves, a drop the shape does not take is refused.
+    #[test]
+    fn the_designer_takes_steps_back_and_items_are_dragged() {
+        use kentos_ui::widget::tree_view::Place;
+        let mut app = crate::files_testing::app_with_drawing();
+        buildings(&mut app, true);
+        run(&mut app, "data.forms");
+        designer(&mut app, designer::Event::SelectItem("kat".into()));
+        for typed in ["K", "Ka", "Kat adedi"] {
+            designer(
+                &mut app,
+                designer::Event::Text(designer::Text::Label, typed.into()),
+            );
+        }
+        let label = |app: &App| match app
+            .forms_window
+            .as_ref()
+            .and_then(|w| w.body.as_ref())
+            .and_then(|b| designer::find(&b.items, "kat"))
+        {
+            Some(kentos_contracts::FormItem::Field(f)) => f.label.clone(),
+            _ => None,
+        };
+        assert_eq!(label(&app).as_deref(), Some("Kat adedi"));
+        assert_eq!(app.forms_window.as_ref().map(|w| w.undo.len()), Some(1));
+        designer(&mut app, designer::Event::Undo);
+        assert_eq!(label(&app).as_deref(), Some("Kat sayısı"));
+        assert!(
+            !app.forms_window.as_ref().is_some_and(|w| w.dirty),
+            "back to the saved draft"
+        );
+        designer(&mut app, designer::Event::Redo);
+        assert_eq!(label(&app).as_deref(), Some("Kat adedi"));
+
+        // genel[durum, kat, aciklama], ayrinti[denetim[tarih, onay], bilgi]: the note into Ayrıntı.
+        let order = |app: &App| {
+            let b = app
+                .forms_window
+                .as_ref()
+                .and_then(|w| w.body.clone())
+                .expect("a copy");
+            (0..9)
+                .filter_map(|i| designer::id_at(&b, i))
+                .collect::<Vec<_>>()
+        };
+        let at = |app: &App, id: &str| order(app).iter().position(|x| x == id).expect(id);
+        let (from, to) = (at(&app, "aciklama"), at(&app, "ayrinti"));
+        designer(&mut app, designer::Event::Drop(from, to, Place::Into));
+        assert_eq!(
+            order(&app),
+            [
+                "genel", "durum", "kat", "ayrinti", "denetim", "tarih", "onay", "bilgi", "aciklama"
+            ]
+        );
+        let (from, to) = (at(&app, "ayrinti"), at(&app, "denetim"));
+        designer(&mut app, designer::Event::Drop(from, to, Place::Into));
+        assert_eq!(at(&app, "ayrinti"), 3, "a tab does not go into a group");
+        designer(&mut app, designer::Event::Undo);
+        assert_eq!(at(&app, "aciklama"), 3, "the move is one step");
+    }
+
+    /// docs/adr/0403 §3: the preview shows the copy, typed values and all, and follows its changes;
+    /// nothing is written.
+    #[test]
+    fn the_preview_follows_the_copy_and_writes_nothing() {
+        let mut app = crate::files_testing::app_with_drawing();
+        calc_buildings(&mut app);
+        run(&mut app, "data.forms");
+        designer(&mut app, designer::Event::Preview(true));
+        let before = attrs(&app, 2);
+        let _ = app.update(Message::FormPreview(entry::Event::Value(
+            "kat-sayisi".into(),
+            "7".into(),
+        )));
+        let p = app.form_preview.as_ref().expect("the preview");
+        assert_eq!(p.value_of("Yükseklik").as_deref(), Some("21"));
+        assert_eq!(p.value_of("Kod").as_deref(), Some("B-7"));
+        designer(&mut app, designer::Event::SelectItem("yukseklik".into()));
+        designer(
+            &mut app,
+            designer::Event::RuleText(
+                designer::Rule::Calculate("yukseklik".into()),
+                "Kat * 3.5".into(),
+            ),
+        );
+        let p = app.form_preview.as_ref().expect("the preview");
+        assert_eq!(
+            p.value_of("Yükseklik").as_deref(),
+            Some("24.5"),
+            "the typed storeys stay"
+        );
+        let _ = app.update(Message::FormPreview(entry::Event::Save));
+        assert_eq!(attrs(&app, 2), before);
+        // A rule that does not read: the preview says why instead.
+        designer(
+            &mut app,
+            designer::Event::RuleText(
+                designer::Rule::Calculate("yukseklik".into()),
+                "Kat *".into(),
+            ),
+        );
+        assert!(app.form_preview.is_none());
+        assert!(
+            app.forms_window
+                .as_ref()
+                .is_some_and(|w| w.preview_error.is_some())
+        );
+    }
+
+    /// docs/adr/0403 §4: a rectangle drawn on the form's layer opens its form as a new record, its
+    /// calculations written by the drawing's step; Vazgeç leaves the drawn object; with the
+    /// preference off nothing opens.
+    #[test]
+    fn a_drawn_object_opens_its_form() {
+        let mut app = crate::files_testing::app_with_drawing();
+        calc_buildings(&mut app);
+        let count = |app: &App| app.document.as_ref().map_or(0, |d| d.model.len());
+        let before = count(&app);
+        run(&mut app, "tool.rectangle");
+        crate::tools_scenes::typed(&mut app, &format!("{},{}", E + 44.0, N));
+        crate::tools_scenes::typed(&mut app, &format!("{},{}", E + 54.0, N + 8.0));
+        // The command line's Enter is an update of its own: its tasks run after it.
+        crate::tools_scenes::forget(&mut app);
+        assert_eq!(count(&app), before + 1);
+        let e = app.form_entry.as_ref().expect("the form opens");
+        assert_eq!(e.value_of("Taban").as_deref(), Some("80"));
+        entry(&mut app, entry::Event::Cancel);
+        assert_eq!(count(&app), before + 1, "Vazgeç keeps the object");
+
+        let _ = app
+            .settings
+            .choose(&[(crate::forms::ON_CREATE, serde_json::Value::Bool(false))]);
+        run(&mut app, "tool.rectangle");
+        crate::tools_scenes::typed(&mut app, &format!("{},{}", E + 44.0, N + 20.0));
+        crate::tools_scenes::typed(&mut app, &format!("{},{}", E + 54.0, N + 28.0));
+        crate::tools_scenes::forget(&mut app);
+        assert_eq!(count(&app), before + 2);
+        assert!(app.form_entry.is_none());
+    }
+
+    /// docs/adr/0403 §6: three buildings through one window: the values they differ in are mixed, the
+    /// values typed go to all of them in one step, each completed by itself; a unique code typed for
+    /// all of them is refused.
+    #[test]
+    fn many_records_are_written_through_the_form_at_once() {
+        let mut app = crate::files_testing::app_with_drawing();
+        calc_buildings(&mut app);
+        app.selection.set([Slot(1), Slot(2), Slot(3)]);
+        run(&mut app, "data.formEdit");
+        let e = app.form_entry.as_ref().expect("the window");
+        assert!(e.is_mixed("Durum"));
+        entry(&mut app, entry::Event::Value("Kod".into(), "X-1".into()));
+        entry(&mut app, entry::Event::Value("Durum".into(), "iyi".into()));
+        entry(&mut app, entry::Event::Save);
+        assert!(
+            app.form_entry.is_some(),
+            "one code for three buildings: refused"
+        );
+        assert_eq!(attrs(&app, 2), std::collections::BTreeMap::new());
+        entry(&mut app, entry::Event::Value("Kod".into(), "".into()));
+        entry(
+            &mut app,
+            entry::Event::Value("kat-sayisi".into(), "5".into()),
+        );
+        entry(&mut app, entry::Event::Save);
+        assert!(app.form_entry.is_none());
+        for slot in [1, 2, 3] {
+            let a = attrs(&app, slot);
+            assert_eq!(a.get("Kat").map(String::as_str), Some("5"), "{slot}");
+            assert_eq!(a.get("Yükseklik").map(String::as_str), Some("15"), "{slot}");
+            assert_eq!(a.get("Durum").map(String::as_str), Some("iyi"), "{slot}");
+        }
+        assert_eq!(attrs(&app, 1).get("Kod").map(String::as_str), Some("B-3"));
+        run(&mut app, "edit.undo");
+        assert_eq!(
+            attrs(&app, 2),
+            std::collections::BTreeMap::new(),
+            "one undo step"
         );
     }
 

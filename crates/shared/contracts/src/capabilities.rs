@@ -1614,6 +1614,24 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.forms.fill",
+        refusals: &[
+            &["no_entities", "invalid_uid", "invalid_moment", "invalid_user"],
+            REVISION,
+            &[
+                "unknown_form",
+                "form_unpublished",
+                "form_preflight",
+                "entity_not_found",
+                "form_layer_mismatch",
+                "layer_locked",
+                "form_invalid",
+            ],
+        ],
+        warnings: &["form_check_warning"],
+        targets: none,
+    },
+    Entry {
         id: "cad.units.change",
         refusals: &[
             &["same_unit"],

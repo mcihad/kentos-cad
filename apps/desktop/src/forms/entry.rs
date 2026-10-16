@@ -29,6 +29,7 @@ use std::fmt;
 
 use iced::widget::{Column, Row, container, row, scrollable, space, text_editor, text_input};
 use iced::{Center, Element, Fill, Task};
+use kentos_contracts::FormsFill;
 use kentos_contracts::{
     FormBody, FormIssue, FormItem, FormItemState, FormSeverity, FormWidget, FormsSubmit,
     LayerField, LayerFieldKind,
@@ -36,8 +37,10 @@ use kentos_contracts::{
 use kentos_domain::{Document, Slot};
 use kentos_forms::Attrs;
 use kentos_interaction::Level;
-use kentos_native_application::forms::{RecordScreen, record_screen, unique_on_layer};
-use kentos_native_application::{ExecutionContext, forms_submit};
+use kentos_native_application::forms::{
+    RecordScreen, preview_screen, record_screen, unique_on_layer,
+};
+use kentos_native_application::{ExecutionContext, forms_fill, forms_submit};
 use kentos_ui::attribute::Date;
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::theme::{Tokens, typography};
@@ -91,6 +94,11 @@ pub struct Entry {
     /// The moment and the person the rules read (`@tarih`, `@simdi`, `@kullanici`).
     moment: Option<String>,
     user: Option<String>,
+    /// The drawing's revision when the window opened: Kaydet writes only onto it (a change made
+    /// meanwhile is a conflict, the window and its values stay).
+    revision: String,
+    /// The designer's preview (docs/adr/0403 §3): nothing is written.
+    pub(crate) preview: bool,
     /// A record without any of the form's fields: the defaults fill it.
     new_record: bool,
     /// The values typed, by the fields' keys.
@@ -108,6 +116,39 @@ pub struct Entry {
     /// The unique fields' values last asked, and what the layer said.
     unique_asked: Vec<Option<String>>,
     unique: Vec<FormIssue>,
+    /// Many records at once (docs/adr/0403 §6): each with its attributes and shape; empty for one.
+    members: Vec<Member>,
+    /// The fields whose values differ among the records (“Çeşitli değerler”).
+    mixed: BTreeSet<String>,
+}
+
+/// A record of the many-record mode.
+#[derive(Debug, Clone)]
+struct Member {
+    uid: String,
+    attrs: Attrs,
+    object: kentos_forms::Object,
+}
+
+/// What every record has the same: a name with one value in all of them; the others named apart.
+fn common(all: &[&Attrs]) -> (Attrs, BTreeSet<String>) {
+    let mut names: BTreeSet<&String> = BTreeSet::new();
+    for a in all {
+        names.extend(a.keys());
+    }
+    let mut same = Attrs::new();
+    let mut mixed = BTreeSet::new();
+    for name in names {
+        let first = all.first().and_then(|a| a.get(name));
+        if all.iter().all(|a| a.get(name) == first) {
+            if let Some(v) = first {
+                same.insert(name.clone(), v.clone());
+            }
+        } else {
+            mixed.insert(name.clone());
+        }
+    }
+    (same, mixed)
 }
 
 impl fmt::Debug for Entry {
@@ -134,6 +175,17 @@ pub enum Event {
 
 fn msg(event: Event) -> Message {
     Message::FormEntry(event)
+}
+
+impl Entry {
+    /// An event of this window: the preview's go to the designer's preview.
+    fn msg(&self, event: Event) -> Message {
+        if self.preview {
+            Message::FormPreview(event)
+        } else {
+            Message::FormEntry(event)
+        }
+    }
 }
 
 /// The id of a field's text input, for the keyboard to go to it.
@@ -163,6 +215,10 @@ impl Entry {
     /// The record as the form sees it now: the values typed, a new record's defaults, the
     /// calculations; the unique fields asked of the layer only when their values changed.
     fn recompute(&mut self, doc: &Document) {
+        if !self.members.is_empty() {
+            self.recompute_many();
+            return;
+        }
         let prepared = &self.screen.prepared;
         let (after, mut issues) = prepared.assess(
             &self.before,
@@ -190,6 +246,52 @@ impl Entry {
         self.issues = issues;
     }
 
+    /// Many records (docs/adr/0403 §6): each takes the values typed and is completed by itself; an
+    /// item shows, is required or locked when it is so for any record, a list offers what every
+    /// record's filter offers; the issues are the first record's that has an error (its warnings
+    /// else). The record shown is what all of them have the same.
+    fn recompute_many(&mut self) {
+        let prepared = &self.screen.prepared;
+        let written = self.written();
+        let mut afters = Vec::with_capacity(self.members.len());
+        let mut merged: Option<Vec<FormItemState>> = None;
+        let mut issues: Option<Vec<FormIssue>> = None;
+        for m in &self.members {
+            let (after, found) = prepared.assess(&m.attrs, &written, &m.object, false);
+            let states = prepared.described(&after, &m.object);
+            merged = Some(match merged {
+                None => states,
+                Some(mut all) => {
+                    for (a, s) in all.iter_mut().zip(states) {
+                        a.shown |= s.shown;
+                        a.required |= s.required;
+                        a.read_only |= s.read_only;
+                        a.choices = match (a.choices.take(), s.choices) {
+                            (Some(x), Some(y)) => {
+                                Some(x.into_iter().filter(|c| y.contains(c)).collect())
+                            }
+                            (x, y) => x.or(y),
+                        };
+                    }
+                    all
+                }
+            });
+            let errored = kentos_forms::has_errors(&found);
+            if issues.is_none()
+                || errored && !issues.as_deref().is_some_and(kentos_forms::has_errors)
+            {
+                issues = Some(found);
+            }
+            afters.push(after);
+        }
+        let all: Vec<&Attrs> = afters.iter().collect();
+        let (same, mixed) = common(&all);
+        self.items = merged.unwrap_or_default();
+        self.issues = issues.unwrap_or_default();
+        self.after = same;
+        self.mixed = mixed;
+    }
+
     /// A field's name by its key.
     fn name_of(&self, key: &str) -> Option<&String> {
         self.fields.iter().find(|f| f.key() == key).map(|f| &f.name)
@@ -213,6 +315,12 @@ impl Entry {
         self.state(item).and_then(|s| s.choices.clone())
     }
 
+    /// Whether a field's values differ among the records now (the many-record mode).
+    #[cfg(test)]
+    pub(crate) fn is_mixed(&self, name: &str) -> bool {
+        self.mixed.contains(name)
+    }
+
     /// Whether a group is closed now.
     #[cfg(test)]
     pub(crate) fn is_closed(&self, group: &str) -> bool {
@@ -224,6 +332,9 @@ impl Entry {
     }
 
     fn dirty(&self) -> bool {
+        if !self.members.is_empty() {
+            return !self.values.is_empty();
+        }
         self.after != self.before
     }
 
@@ -261,7 +372,6 @@ impl App {
         let Some(uid) = doc.model.uid(slot).map(|u| u.to_string()) else {
             return Task::none();
         };
-        let fields = self.layer_fields_of(&f.layer);
         let (body, draft) = match f.releases.last() {
             Some(r) => (r.body.clone(), false),
             None => (f.draft.clone(), true),
@@ -281,6 +391,117 @@ impl App {
                 return Task::none();
             }
         };
+        let entry = self.entry_of(
+            &f,
+            body,
+            draft,
+            uid,
+            screen,
+            moment,
+            user,
+            false,
+            BTreeMap::new(),
+        );
+        self.form_entry = Some(entry);
+        self.dialog = Some(Dialog::FormEntry);
+        Task::none()
+    }
+
+    /// Formla düzenle on many records of one layer (docs/adr/0403 §6): what they have the same shows,
+    /// a value typed goes to all of them through `cad.forms.fill`.
+    pub(crate) fn open_entry_many(&mut self, slots: &[Slot], form: &str) -> Task<Message> {
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
+        let Some(f) = self.project_forms().iter().find(|f| f.id == form).cloned() else {
+            return Task::none();
+        };
+        let uids: Vec<String> = slots
+            .iter()
+            .filter_map(|s| doc.model.uid(*s).map(|u| u.to_string()))
+            .collect();
+        let (body, draft) = match f.releases.last() {
+            Some(r) => (r.body.clone(), false),
+            None => (f.draft.clone(), true),
+        };
+        let (moment, user) = self.form_moment();
+        let mut screens = Vec::new();
+        for uid in &uids {
+            match record_screen(
+                &doc.model,
+                &f.id,
+                uid,
+                draft,
+                moment.as_deref(),
+                user.as_deref(),
+            ) {
+                Ok(s) => screens.push((uid.clone(), s)),
+                Err(error) => {
+                    self.say(Level::Warn, error.message);
+                    return Task::none();
+                }
+            }
+        }
+        let members: Vec<Member> = screens
+            .iter()
+            .map(|(uid, s)| Member {
+                uid: uid.clone(),
+                attrs: s.attrs.clone(),
+                object: s.object.clone(),
+            })
+            .collect();
+        let Some((uid, screen)) = screens.into_iter().next() else {
+            return Task::none();
+        };
+        let mut entry = self.entry_of(
+            &f,
+            body,
+            draft,
+            uid,
+            screen,
+            moment,
+            user,
+            false,
+            BTreeMap::new(),
+        );
+        let all: Vec<&Attrs> = members.iter().map(|m| &m.attrs).collect();
+        let (same, _) = common(&all);
+        entry.before = same;
+        entry.new_record = false;
+        entry.values.clear();
+        entry.members = members;
+        if let Some(doc) = &self.document {
+            entry.recompute(&doc.model);
+        }
+        for (key, content) in entry.notes.iter_mut() {
+            if let Some(f) = entry.fields.iter().find(|f| f.key() == key) {
+                *content = text_editor::Content::with_text(
+                    entry.after.get(&f.name).map_or("", String::as_str),
+                );
+            }
+        }
+        self.form_entry = Some(entry);
+        self.dialog = Some(Dialog::FormEntry);
+        Task::none()
+    }
+
+    /// The window's state for a record through `body`: a new record's defaults and last values, its
+    /// groups as the form starts them, the record as the form completes it (`typed`: values kept
+    /// from a preview being built again).
+    #[allow(clippy::too_many_arguments)]
+    fn entry_of(
+        &self,
+        f: &kentos_contracts::ProjectForm,
+        body: FormBody,
+        draft: bool,
+        uid: String,
+        screen: RecordScreen,
+        moment: Option<String>,
+        user: Option<String>,
+        preview: bool,
+        typed: BTreeMap<String, String>,
+    ) -> Entry {
+        let fields = self.layer_fields_of(&f.layer);
         let before = screen.attrs.clone();
         let new_record = !screen.prepared.keys().iter().any(|k| {
             fields
@@ -297,14 +518,16 @@ impl App {
                 }
             }
         }
+        values.extend(typed);
         let closed = collapsed_groups(&body.items);
         let mut notes = BTreeMap::new();
-        for (key, name) in fields.iter().map(|f| (f.key().to_owned(), f.name.clone())) {
-            notes.insert(
-                key,
-                text_editor::Content::with_text(before.get(&name).map_or("", String::as_str)),
-            );
+        for key in fields.iter().map(|f| f.key().to_owned()) {
+            notes.insert(key, text_editor::Content::new());
         }
+        let revision = self
+            .document
+            .as_ref()
+            .map_or_else(String::new, |d| d.model.revision().to_string());
         let mut entry = Entry {
             form: f.id.clone(),
             name: f.name.clone(),
@@ -316,6 +539,8 @@ impl App {
             before,
             moment,
             user,
+            revision,
+            preview,
             new_record,
             values,
             notes,
@@ -328,8 +553,12 @@ impl App {
             closed,
             unique_asked: Vec::new(),
             unique: Vec::new(),
+            members: Vec::new(),
+            mixed: BTreeSet::new(),
         };
-        entry.recompute(&doc.model);
+        if let Some(doc) = &self.document {
+            entry.recompute(&doc.model);
+        }
         // The editors of the long texts start with the values the record shows.
         for (key, content) in entry.notes.iter_mut() {
             if let Some(f) = entry.fields.iter().find(|f| f.key() == key) {
@@ -338,9 +567,68 @@ impl App {
                 );
             }
         }
-        self.form_entry = Some(entry);
-        self.dialog = Some(Dialog::FormEntry);
-        Task::none()
+        entry
+    }
+
+    /// The designer's preview of its copy (docs/adr/0403 §3) on the chosen object of the form's
+    /// layer, else on a new, empty record; the values typed into the last one kept. The reason it
+    /// cannot be shown otherwise.
+    pub(crate) fn rebuild_preview(&mut self, body: &FormBody, form: &str) -> Result<(), String> {
+        let Some(doc) = &self.document else {
+            return Err("Açık çizim yok.".into());
+        };
+        let Some(f) = self.project_forms().iter().find(|f| f.id == form).cloned() else {
+            return Err("Form yok.".into());
+        };
+        let uid = self
+            .selection
+            .ids()
+            .first()
+            .filter(|_| self.selection.len() == 1)
+            .and_then(|slot| {
+                let e = doc.model.get(*slot)?;
+                (e.base().layer_id == f.layer).then(|| doc.model.uid(*slot))?
+            })
+            .map(|u| u.to_string());
+        let (moment, user) = self.form_moment();
+        let screen = preview_screen(
+            &doc.model,
+            &f.id,
+            body,
+            uid.as_deref(),
+            moment.as_deref(),
+            user.as_deref(),
+        )
+        .map_err(|e| e.message)?;
+        let kept = self.form_preview.as_ref().map(|e| {
+            // The collapsed groups the designer opened.
+            let opened: BTreeSet<String> = collapsed_groups(&e.body.items)
+                .difference(&e.closed)
+                .cloned()
+                .collect();
+            (e.values.clone(), e.tab, e.touched.clone(), opened)
+        });
+        let mut entry = self.entry_of(
+            &f,
+            body.clone(),
+            true,
+            uid.unwrap_or_default(),
+            screen,
+            moment,
+            user,
+            true,
+            kept.as_ref().map(|k| k.0.clone()).unwrap_or_default(),
+        );
+        if let Some((_, tab, touched, opened)) = kept {
+            entry.tab = tab;
+            entry.touched = touched;
+            // A group the designer opened stays open; a new collapsed one starts closed.
+            entry.closed.retain(|g| !opened.contains(g));
+        }
+        // The designer sees every issue the rules give, touched or not.
+        entry.tried = true;
+        self.form_preview = Some(entry);
+        Ok(())
     }
 
     /// The moment and the person a form's rules read (docs/adr/0402 §5): this device's clock in its
@@ -368,7 +656,24 @@ impl App {
     }
 
     pub(crate) fn form_entry_event(&mut self, event: Event) -> Task<Message> {
-        let (Some(e), Some(doc)) = (self.form_entry.as_mut(), self.document.as_ref()) else {
+        self.entry_event(false, event)
+    }
+
+    /// An event of the designer's preview: typing, tabs and groups; nothing is written.
+    pub(crate) fn form_preview_event(&mut self, event: Event) -> Task<Message> {
+        match event {
+            Event::Save | Event::Cancel | Event::FirstIssue => Task::none(),
+            event => self.entry_event(true, event),
+        }
+    }
+
+    fn entry_event(&mut self, preview: bool, event: Event) -> Task<Message> {
+        let slot = if preview {
+            &mut self.form_preview
+        } else {
+            &mut self.form_entry
+        };
+        let (Some(e), Some(doc)) = (slot.as_mut(), self.document.as_ref()) else {
             return Task::none();
         };
         match event {
@@ -380,7 +685,15 @@ impl App {
                     *content = text_editor::Content::with_text(&text);
                 }
                 e.touched.insert(key.clone());
-                e.values.insert(key, text);
+                // Many records: emptying a field they had no one value in leaves it as it was.
+                let untouched = !e.members.is_empty()
+                    && text.is_empty()
+                    && e.name_of(&key).is_some_and(|n| !e.before.contains_key(n));
+                if untouched {
+                    e.values.remove(&key);
+                } else {
+                    e.values.insert(key, text);
+                }
                 e.recompute(&doc.model);
             }
             Event::Note(key, action) => {
@@ -457,6 +770,9 @@ impl App {
             );
             return self.go_to_first_issue();
         }
+        if !e.members.is_empty() {
+            return self.save_many();
+        }
         // Only what changed goes in; a new record's defaults with it.
         let values: BTreeMap<String, String> = e
             .values
@@ -479,7 +795,7 @@ impl App {
             defaults: e.new_record,
             moment: e.moment.clone(),
             user: e.user.clone(),
-            expected_revision: None,
+            expected_revision: Some(e.revision.clone()),
         };
         let name = e.name.clone();
         let form = e.form.clone();
@@ -525,6 +841,48 @@ impl App {
         }
     }
 
+    /// Kaydet on many records: the values typed go to every one through `cad.forms.fill`.
+    fn save_many(&mut self) -> Task<Message> {
+        let Some(e) = self.form_entry.as_ref() else {
+            return Task::none();
+        };
+        let input = FormsFill {
+            form: e.form.clone(),
+            draft: e.draft,
+            uids: e.members.iter().map(|m| m.uid.clone()).collect(),
+            values: e.values.clone(),
+            moment: e.moment.clone(),
+            user: e.user.clone(),
+            expected_revision: Some(e.revision.clone()),
+        };
+        let (name, count) = (e.name.clone(), e.members.len());
+        if let Some(locked) = self.forms_locked() {
+            self.warn(locked);
+            return Task::none();
+        }
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let result = forms_fill::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        match self.answered(result) {
+            Some(done) => {
+                self.form_entry = None;
+                self.dialog = None;
+                let said = if done.changed.is_empty() {
+                    "Kayıtlarda değişiklik yok.".to_owned()
+                } else {
+                    format!(
+                        "“{name}” formuyla {} / {count} kayıt yazıldı.",
+                        done.changed.len()
+                    )
+                };
+                self.say(Level::Success, said);
+                Task::none()
+            }
+            None => self.go_to_first_issue(),
+        }
+    }
+
     pub(crate) fn form_entry_view(&self) -> Element<'_, Message> {
         let Some(e) = &self.form_entry else {
             return iced::widget::text("").into();
@@ -535,7 +893,15 @@ impl App {
                 .as_ref()
                 .is_some_and(|d| d.model.layers().is_locked(&e.screen.layer));
         let mut body = Column::new().spacing(12);
-        let mut head = format!("{} · {}", e.screen.object.kind, e.screen.object.layer);
+        let mut head = if e.members.is_empty() {
+            format!("{} · {}", e.screen.object.kind, e.screen.object.layer)
+        } else {
+            format!(
+                "{} nesne · {} · değiştirdiğiniz alanlar hepsine yazılır",
+                e.members.len(),
+                e.screen.object.layer
+            )
+        };
         if e.draft {
             head.push_str(" · form yayınlanmadı, taslağıyla");
         }
@@ -546,54 +912,7 @@ impl App {
                 "Katman kilitli ya da yetkiniz yok: kayıt yalnız görüntülenir.",
             )]));
         }
-        let tabbed = matches!(e.body.items.first(), Some(FormItem::Tab { .. }));
-        if tabbed {
-            let tabs: Vec<Tab<'_>> = e
-                .body
-                .items
-                .iter()
-                .filter(|t| e.state(t.id()).is_some_and(|s| s.shown))
-                .map(|t| {
-                    let label = match t {
-                        FormItem::Tab { label, .. } => label.clone(),
-                        _ => String::new(),
-                    };
-                    let count = if e.tried {
-                        e.issues
-                            .iter()
-                            .filter(|i| {
-                                i.item
-                                    .as_deref()
-                                    .is_some_and(|id| kentos_forms_find(t.items(), id))
-                            })
-                            .count()
-                    } else {
-                        0
-                    };
-                    Tab::new(label).badge(count).closable(false)
-                })
-                .collect();
-            body = body.push(Tabs::new(tabs, e.tab, |i| msg(Event::Tab(i))));
-            let shown: Vec<&FormItem> = e
-                .body
-                .items
-                .iter()
-                .filter(|t| e.state(t.id()).is_some_and(|s| s.shown))
-                .collect();
-            if let Some(tab) = shown.get(e.tab.min(shown.len().saturating_sub(1))) {
-                body = body.push(
-                    scrollable(
-                        container(self.entry_block(e, tab.items(), locked)).padding(SCROLLED),
-                    )
-                    .height(typography::scaled(380.0)),
-                );
-            }
-        } else {
-            body = body.push(
-                scrollable(container(self.entry_block(e, &e.body.items, locked)).padding(SCROLLED))
-                    .height(typography::scaled(380.0)),
-            );
-        }
+        body = self.entry_pages(e, locked, body, Some(380.0));
         let (errors, warnings) = if e.tried {
             (e.errors().count(), e.issues.len() - e.errors().count())
         } else {
@@ -603,15 +922,15 @@ impl App {
         if errors > 0 {
             footer = footer
                 .push(words::text_line(Kind::Error, format!("{errors} sorun")))
-                .push(words::ghost(FIRST_ISSUE, Some(msg(Event::FirstIssue))));
+                .push(words::ghost(FIRST_ISSUE, Some(e.msg(Event::FirstIssue))));
         }
         if warnings > 0 {
             footer = footer.push(words::text_line(Kind::Warn, format!("{warnings} uyarı")));
         }
         footer = footer
             .push(space::horizontal().width(Fill))
-            .push(words::secondary(CANCEL, Some(msg(Event::Cancel))))
-            .push(words::primary(SAVE, (!locked).then(|| msg(Event::Save))));
+            .push(words::secondary(CANCEL, Some(e.msg(Event::Cancel))))
+            .push(words::primary(SAVE, (!locked).then(|| e.msg(Event::Save))));
         body = body.push(footer);
         let title = if e.dirty() {
             format!("{TITLE} · {} ●", e.name)
@@ -620,13 +939,102 @@ impl App {
         };
         overlay::modal(
             Frame::new(title).push(body).width(620.0),
-            msg(Event::Cancel),
+            e.msg(Event::Cancel),
         )
+    }
+
+    /// The form's pages under `body`: its tabs and the chosen one's items, or its items; scrolled
+    /// `height` high, else as tall as they are (the designer's preview scrolls them itself).
+    fn entry_pages<'a>(
+        &'a self,
+        e: &'a Entry,
+        locked: bool,
+        mut body: Column<'a, Message>,
+        height: Option<f32>,
+    ) -> Column<'a, Message> {
+        let scrolled = |content: Element<'a, Message>| -> Element<'a, Message> {
+            match height {
+                Some(h) => scrollable(container(content).padding(SCROLLED))
+                    .height(typography::scaled(h))
+                    .into(),
+                None => content,
+            }
+        };
+        let tabbed = matches!(e.body.items.first(), Some(FormItem::Tab { .. }));
+        if !tabbed {
+            return body.push(scrolled(self.entry_block(e, &e.body.items, locked)));
+        }
+        let shown: Vec<&FormItem> = e
+            .body
+            .items
+            .iter()
+            .filter(|t| e.state(t.id()).is_some_and(|s| s.shown))
+            .collect();
+        let tabs: Vec<Tab<'_>> = shown
+            .iter()
+            .map(|t| {
+                let label = match t {
+                    FormItem::Tab { label, .. } => label.clone(),
+                    _ => String::new(),
+                };
+                let count = if e.tried {
+                    e.issues
+                        .iter()
+                        .filter(|i| {
+                            i.item
+                                .as_deref()
+                                .is_some_and(|id| kentos_forms_find(t.items(), id))
+                        })
+                        .count()
+                } else {
+                    0
+                };
+                Tab::new(label).badge(count).closable(false)
+            })
+            .collect();
+        body = body.push(Tabs::new(tabs, e.tab, |i| e.msg(Event::Tab(i))));
+        if let Some(tab) = shown.get(e.tab.min(shown.len().saturating_sub(1))) {
+            body = body.push(scrolled(self.entry_block(e, tab.items(), locked)));
+        }
+        body
+    }
+
+    /// The designer's preview of its copy (docs/adr/0403 §3): what the record is, the pages, and
+    /// what is wrong with it; nothing here writes.
+    pub(crate) fn entry_preview<'a>(&'a self, e: &'a Entry) -> Element<'a, Message> {
+        let head = if e.uid.is_empty() {
+            format!("Yeni kayıt · {}", e.screen.object.layer)
+        } else {
+            format!(
+                "Seçili nesne · {} · {}",
+                e.screen.object.kind, e.screen.object.layer
+            )
+        };
+        let mut body = Column::new()
+            .spacing(10)
+            .push(label::caption(head).style(muted));
+        body = self.entry_pages(e, false, body, None);
+        let errors = e.errors().count();
+        let warnings = e.issues.len() - errors;
+        let mut summary = Vec::new();
+        if errors > 0 {
+            summary.push(words::text_line(Kind::Error, format!("{errors} sorun")));
+        }
+        if warnings > 0 {
+            summary.push(words::text_line(Kind::Warn, format!("{warnings} uyarı")));
+        }
+        if summary.is_empty() {
+            summary.push(words::text_line(
+                Kind::Ok,
+                "Kayıt formun kurallarına uyuyor.",
+            ));
+        }
+        body.push(Row::with_children(summary).spacing(12)).into()
     }
 
     /// The items of a tab or of the top: fields and notes in a form, a group under its title, two
     /// columns side by side.
-    fn entry_block<'a>(
+    pub(crate) fn entry_block<'a>(
         &'a self,
         e: &'a Entry,
         items: &'a [FormItem],
@@ -675,7 +1083,7 @@ impl App {
                         )
                         .padding([2, 4])
                         .style(style::button::ghost)
-                        .on_press(msg(Event::Group(id.clone())));
+                        .on_press(e.msg(Event::Group(id.clone())));
                         if closed {
                             out = out.push(
                                 container(head)
@@ -690,19 +1098,21 @@ impl App {
                         .iter()
                         .filter(|i| e.state(i.id()).is_some_and(|s| s.shown))
                         .collect();
-                    let content: Element<'a, Message> = if *columns == Some(2) && shown.len() > 1 {
-                        let half = shown.len().div_ceil(2);
-                        row![
-                            container(self.entry_form_in(e, &shown[..half], locked, 80.0))
-                                .width(Fill),
-                            container(self.entry_form_in(e, &shown[half..], locked, 80.0))
-                                .width(Fill),
-                        ]
-                        .spacing(16)
-                        .into()
-                    } else {
-                        self.entry_form(e, &shown, locked)
-                    };
+                    // The designer's narrow preview keeps one column.
+                    let content: Element<'a, Message> =
+                        if *columns == Some(2) && shown.len() > 1 && !e.preview {
+                            let half = shown.len().div_ceil(2);
+                            row![
+                                container(self.entry_form_in(e, &shown[..half], locked, 80.0))
+                                    .width(Fill),
+                                container(self.entry_form_in(e, &shown[half..], locked, 80.0))
+                                    .width(Fill),
+                            ]
+                            .spacing(16)
+                            .into()
+                        } else {
+                            self.entry_form(e, &shown, locked)
+                        };
                     let mut group = Column::new().spacing(8);
                     if *collapsed {
                         group = group.push(
@@ -718,7 +1128,7 @@ impl App {
                             )
                             .padding([2, 4])
                             .style(style::button::ghost)
-                            .on_press(msg(Event::Group(id.clone()))),
+                            .on_press(e.msg(Event::Group(id.clone()))),
                         );
                     } else if let Some(t) = title {
                         group = group.push(label::strong(t.clone()));
@@ -874,9 +1284,13 @@ fn entry_control<'a>(
         .unwrap_or_default();
     let set = {
         let key = key.clone();
-        move |v: String| msg(Event::Value(key.clone(), v))
+        move |v: String| e.msg(Event::Value(key.clone(), v))
     };
-    let placeholder = item.placeholder.clone().unwrap_or_default();
+    let placeholder = if e.mixed.contains(&field.name) && !e.values.contains_key(&key) {
+        "Çeşitli değerler".to_owned()
+    } else {
+        item.placeholder.clone().unwrap_or_default()
+    };
     // What the item's choice filter offers for the record; every listed value without one.
     let offered = e.state(&item.id).and_then(|s| s.choices.as_ref());
     let choices: Vec<(String, String)> = match &field.values {
@@ -997,7 +1411,7 @@ fn entry_control<'a>(
                 Some(content) => text_editor(content)
                     .id(input_id(&key))
                     .size(typography::body())
-                    .on_action(move |a| msg(Event::Note(k.clone(), a)))
+                    .on_action(move |a| e.msg(Event::Note(k.clone(), a)))
                     .placeholder(placeholder)
                     .height(typography::scaled(72.0))
                     .padding([5, 8])
@@ -1020,7 +1434,7 @@ fn entry_control<'a>(
             if read_only {
                 input.into()
             } else {
-                focus_ring(input.on_input(set).on_submit(msg(Event::Save))).into()
+                focus_ring(input.on_input(set).on_submit(e.msg(Event::Save))).into()
             }
         }
     }

@@ -165,6 +165,14 @@ fn settings() -> Vec<SettingDescriptor> {
                 "AutoCAD takma adları",
                 "Komut satırına AutoCAD'in İngilizce komut adları ve kısaltmaları da yazılabilir (RECTANG, LA, JOG, DT…). KentOS'un kendi adları ve tek harf kısayolları her zaman önce gelir: KentOS'ta başka bir işi olan ad (T, S, P, CP, POLYGON…) eklenmez.",
             ),
+        // On by default (docs/adr/0403 §4): a drawing tool's new object on a layer with a
+        // published form opens its form; the desktop only while the web waits (ADR 0228).
+        boolean("drafting.formOnCreate", true)
+            .hosts(&[Desktop])
+            .text(
+                "Çizilen nesnenin formu",
+                "Formu yayınlanmış bir katmana çizim aracıyla tek nesne çizilince formu açılır. Nesne çizilmiş kalır; formun Vazgeç'i yalnız kaydı bırakır.",
+            ),
         boolean("drafting.snap", true)
             .scope(SettingScope::Session)
             .hosts(&[Web, Desktop])

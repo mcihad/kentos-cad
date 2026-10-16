@@ -1140,13 +1140,14 @@
    "title": "Formla düzenle",
    "level": "semantic",
    "via": [
+    "cad.forms.fill",
     "cad.forms.submit",
     "cad.forms.validate"
    ],
    "operation": null,
-   "python": "kentos.cad.forms.submit, kentos.cad.forms.validate",
-   "mcp": "cad.forms.submit, cad.forms.validate",
-   "note": "Kayıt cad.forms.submit ile tek adımda yazılır; pencerenin canlı denetimi cad.forms.validate'in çekirdeğidir (ADR 0401).",
+   "python": "kentos.cad.forms.fill, kentos.cad.forms.submit, kentos.cad.forms.validate",
+   "mcp": "cad.forms.fill, cad.forms.submit, cad.forms.validate",
+   "note": "Kayıt cad.forms.submit ile, birden çok kayıt cad.forms.fill ile tek adımda yazılır; pencerenin canlı denetimi cad.forms.validate'in çekirdeğidir (ADR 0401, 0403).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0

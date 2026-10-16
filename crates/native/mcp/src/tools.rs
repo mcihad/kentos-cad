@@ -572,6 +572,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.forms.edit"
             // It writes over a record's attributes (docs/adr/0401 §9).
             | "cad.forms.submit"
+            // It writes over many records' attributes (docs/adr/0403 §5).
+            | "cad.forms.fill"
             // It removes sheets and their items as the designer does (docs/adr/0252 §2).
             | "cad.sheets.edit"
             // A change set runs any of these (docs/adr/0253 §8).

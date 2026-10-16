@@ -9,7 +9,7 @@
 Bu belge araştırma, ürün sözleşmesi ve yapılacak iş listesidir; uygulama kodu değildir. API adları, JSON örneği, izin aileleri ve profiller öneridir. Kaynak incelemesi ile hedef kabul testleri ayrıdır; burada hedeflenen form özelliklerinin bugün çalıştığı veya test edildiği iddia edilmez.
 
 **İlerleme (16 Ekim 2026):** işaretli maddeler masaüstünde, çekirdekte, komutlarda, Python'da ve MCP'de yapıldı
-(ADR 0400, 0401, 0402; TODOS.md §16.6). Web ertelendiği için (ADR 0228) web'in tarafı TODOS.md §0.2'dedir; web isteyen
+(ADR 0400–0403; TODOS.md §16.6). Web ertelendiği için (ADR 0228) web'in tarafı TODOS.md §0.2'dedir; web isteyen
 maddeler web gelene dek işaretsiz kalır.
 
 ## 1. Ürün hedefi ve kesin şartlar
@@ -84,7 +84,7 @@ Yerel masaüstü/web dilimi erken denenebilir. **Merkezi saha kullanımı için 
 - [x] **FORM-FIRST-08:** İlk tasarımcıda field paleti, sekme/grup ekleme, taşıma/sıralama, label/help/widget ve required/read-only özellik düzenleyicisini çıkar. — *Yapıldı (16 Ekim; ADR 0401 §10, masaüstü).*
 - [x] **FORM-FIRST-09:** Text/textarea, integer, decimal, date, boolean ve basit kodlu seçim renderer'larını mevcut KentOS UI/web bileşenleriyle bağla. — *Yapıldı (16 Ekim; ADR 0400, 0401 §10, masaüstü; web TODOS.md §0.2).*
 - [x] **FORM-FIRST-10:** Saf visible/required/default/validate kurallarını mevcut expression çekirdeğinde sınırlandırılmış profille çalıştır; dependency cycle ve gizli-zorunlu çelişkisini preflight'ta yakala. — *Yapıldı (16 Ekim; ADR 0401 §4, ADR 0402).*
-- [ ] **FORM-FIRST-11:** Record edit session; base revision, projection, tek draft owner, dirty state, kaydet/vazgeç, hata alanına gitme ve uygun kullanıcı undo davranışı taşısın.
+- [x] **FORM-FIRST-11:** Record edit session; base revision, projection, tek draft owner, dirty state, kaydet/vazgeç, hata alanına gitme ve uygun kullanıcı undo davranışı taşısın. — *Yapıldı (16 Ekim; ADR 0401 §10, ADR 0403 §7: sürüm, kaydedilmemiş işaret, Kaydet/Vazgeç, ilk soruna git, tek geri alma adımı).*
 - [x] **FORM-FIRST-12:** Kaydetme tek semantic command/changeset kullansın; schema/constraint/policy bütünlüğü final commit'te doğrulansın. Validation ve revision conflict'te belge kısmen değişmesin. — *Yapıldı (16 Ekim; ADR 0401 §8–§9).*
 - [ ] **FORM-FIRST-13:** Aynı core tanımını desktop/web'de aç; aynı input/validation sonucu, focus/draft preservation ve responsive sekme/grup davranışı için ortak fixture kullan.
 - [ ] **FORM-FIRST-14:** Bulutta form metadata için draft/release/deployment kaynakları oluştur; published snapshot immutable ve dataset binding server-owned olsun.
@@ -443,7 +443,7 @@ QGIS'in tab/group/relation/widget yaklaşımı ve ArcGIS Field Maps'in visible/r
 - [ ] **FORM-DESIGN-10:** Rules/sections için reuse/template desteği olsun; nested component version ve binding parametreleri açık olsun.
 - [ ] **FORM-DESIGN-11:** Conditional section/tab, subtype bazlı view, record status bazlı read-only ve task mode tasarlanabilsin.
 - [ ] **FORM-DESIGN-12:** Layout pixel çizimi yerine responsive constraints/layout hints taşısın; desktop/web/mobile preview aynı kaynak tanımı kullansın.
-- [ ] **FORM-DESIGN-13:** Tasarımcı mock/test record ve seçilmiş gerçek yetkili record ile preview sunsun; test verisi production kaydına yazılmasın.
+- [x] **FORM-DESIGN-13:** Tasarımcı mock/test record ve seçilmiş gerçek yetkili record ile preview sunsun; test verisi production kaydına yazılmasın. — *Yapıldı (16 Ekim; ADR 0403 §3: seçili gerçek kayıtta ya da yeni kayıtta önizleme, hiçbir şey yazılmaz).*
 - [ ] **FORM-DESIGN-14:** Role/task preview sunucunun effective grant modelini simüle etsin; designer rolü gerçek saha kullanıcısına impersonation yetkisi vermesin.
 - [ ] **FORM-DESIGN-15:** Validation preflight; missing field/domain/action, unsupported mobile widget, rule cycle, required-hidden conflict ve source izin ihtiyaçlarını listelesin.
 - [ ] **FORM-DESIGN-16:** Theme tokens, accessibility labels, error location, tab/focus order ve localization editörü olsun.

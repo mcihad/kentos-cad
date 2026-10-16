@@ -20,6 +20,11 @@
 //! `rename` when the name changed) and closes the window; Yayınla writes it and publishes it,
 //! the window stays; Vazgeç forgets the copy and closes. Kuralları uygula and Formu sil write at
 //! once. Another form is chosen only when the copy is saved or given up.
+//!
+//! The copy keeps its own history (docs/adr/0403 §1): Geri al and Yinele (Ctrl+Z, Ctrl+Y) step
+//! through it, typing into one text runs as one step; Kaydet or another form forgets it. Items are
+//! dragged in the tree before, after or into a tab or group (§2); a drop the form's shape does not
+//! take is said and does nothing.
 
 use iced::Task;
 use kentos_contracts::{
@@ -48,6 +53,12 @@ pub(super) const ADD_NOTE: &str = "Not";
 pub(super) const UP: &str = "Yukarı";
 pub(super) const DOWN: &str = "Aşağı";
 pub(super) const REMOVE_ITEM: &str = "Öğeyi sil";
+pub(super) const UNDO: &str = "Geri al";
+pub(super) const PREVIEW: &str = "Önizleme";
+pub(super) const PROPERTIES: &str = "Özellikler";
+pub(super) const REDO: &str = "Yinele";
+/// The steps the copy's history keeps.
+const HISTORY: usize = 200;
 
 /// A rule of an item the window edits (the expression builder writes it back).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -121,6 +132,17 @@ pub struct Window {
     pub(crate) item: Option<String>,
     pub(crate) dirty: bool,
     pub(crate) new_form: Option<NewForm>,
+    /// The copy before each step, and the steps taken back (docs/adr/0403 §1).
+    pub(crate) undo: Vec<FormBody>,
+    pub(crate) redo: Vec<FormBody>,
+    /// The text being typed into: its steps run as one.
+    pub(crate) typing: Option<String>,
+    /// The tabs and groups folded in the tree.
+    pub(crate) folded: std::collections::BTreeSet<String>,
+    /// The third column shows the preview instead of the chosen item's properties (§3).
+    pub(crate) previewing: bool,
+    /// Why the preview cannot be shown (the copy's preflight error).
+    pub(crate) preview_error: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -137,6 +159,14 @@ pub enum Event {
     AddNote,
     AddField(String),
     Move(i32),
+    /// An item dragged onto another in the tree, by their places in the tree's order.
+    Drop(usize, usize, kentos_ui::widget::tree_view::Place),
+    /// A tab or group folded or unfolded in the tree.
+    Fold(String),
+    Undo,
+    Redo,
+    /// The third column: the properties (`false`) or the preview.
+    Preview(bool),
     RemoveItem,
     Text(Text, String),
     Widget(Option<FormWidget>),
@@ -302,6 +332,73 @@ fn shift(body: &mut FormBody, id: &str, by: i32) {
     }
 }
 
+/// Moves `source` before, after or into `target` (docs/adr/0403 §2), or says why the form's shape
+/// does not take it.
+pub(super) fn move_item(
+    body: &mut FormBody,
+    source: &str,
+    target: &str,
+    place: kentos_ui::widget::tree_view::Place,
+) -> Result<(), &'static str> {
+    use kentos_ui::widget::tree_view::Place;
+    if source == target {
+        return Err("Öğe kendi üstüne bırakılamaz.");
+    }
+    let moved = find(&body.items, source).ok_or("Taşınan öğe formda yok.")?;
+    if find(moved.items(), target).is_some() {
+        return Err("Bir sekme ya da grup kendi içine taşınamaz.");
+    }
+    let is_tab = matches!(moved, FormItem::Tab { .. });
+    let tabbed = has_tabs(body);
+    let target_item = find(&body.items, target).ok_or("Hedef öğe formda yok.")?;
+    let target_top = body.items.iter().any(|i| i.id() == target);
+    match place {
+        Place::Into => {
+            if !matches!(target_item, FormItem::Tab { .. } | FormItem::Group { .. }) {
+                return Err("Öğe yalnız bir sekmenin ya da grubun içine bırakılır.");
+            }
+            if is_tab {
+                return Err("Sekme yalnız en üstte, sekmeler arasında olur.");
+            }
+        }
+        Place::Before | Place::After => {
+            if is_tab && !target_top {
+                return Err("Sekme yalnız en üstte, sekmeler arasında olur.");
+            }
+            if tabbed && !is_tab && target_top {
+                return Err("Sekmeli formda öğeler bir sekmenin içinde olur.");
+            }
+        }
+    }
+    let item = {
+        let (xs, at) = holder_mut(&mut body.items, source).ok_or("Taşınan öğe formda yok.")?;
+        xs.remove(at)
+    };
+    match place {
+        Place::Into => {
+            find_mut(&mut body.items, target)
+                .and_then(FormItem::items_mut)
+                .ok_or("Hedef öğe formda yok.")?
+                .push(item);
+        }
+        Place::Before | Place::After => {
+            let (xs, at) = holder_mut(&mut body.items, target).ok_or("Hedef öğe formda yok.")?;
+            xs.insert(if place == Place::After { at + 1 } else { at }, item);
+        }
+    }
+    Ok(())
+}
+
+/// The id of the item at `index` in the tree's order (depth first).
+pub(crate) fn id_at(body: &FormBody, index: usize) -> Option<String> {
+    ids(&body.items).into_iter().nth(index)
+}
+
+/// Two copies of a form's draft are the same form, whatever their revision.
+fn same_form(a: &FormBody, b: &FormBody) -> bool {
+    a.items == b.items && a.clear_hidden == b.clear_hidden
+}
+
 fn remove(body: &mut FormBody, id: &str) {
     if let Some((xs, at)) = holder_mut(&mut body.items, id) {
         xs.remove(at);
@@ -354,6 +451,9 @@ impl App {
             w.item = None;
             w.dirty = false;
             w.new_form = None;
+            w.undo.clear();
+            w.redo.clear();
+            w.typing = None;
         }
     }
 
@@ -421,7 +521,105 @@ impl App {
         true
     }
 
+    /// An event of the window, its copy's change kept in the history (docs/adr/0403 §1).
     pub(crate) fn forms_event(&mut self, event: Event) -> Task<Message> {
+        match event {
+            Event::Undo => return self.forms_history(true),
+            Event::Redo => return self.forms_history(false),
+            _ => {}
+        }
+        let typing = match &event {
+            Event::Text(which, _) => Some(format!(
+                "{:?}:{which:?}",
+                self.forms_window.as_ref().and_then(|w| w.item.clone())
+            )),
+            Event::RuleText(rule, _) => Some(format!("{rule:?}")),
+            _ => None,
+        };
+        let before = self
+            .forms_window
+            .as_ref()
+            .and_then(|w| Some((w.chosen.clone(), w.body.clone()?)));
+        let task = self.forms_step(event);
+        self.refresh_preview();
+        if let Some(w) = self.forms_window.as_mut() {
+            match before {
+                Some((chosen, old))
+                    if w.dirty
+                        && w.chosen == chosen
+                        && w.body.as_ref().is_some_and(|b| !same_form(b, &old)) =>
+                {
+                    if typing.is_none() || w.typing != typing {
+                        w.undo.push(old);
+                        if w.undo.len() > HISTORY {
+                            w.undo.remove(0);
+                        }
+                    }
+                    w.redo.clear();
+                    w.typing = typing;
+                }
+                _ => {
+                    if typing.is_none() {
+                        w.typing = None;
+                    }
+                }
+            }
+        }
+        task
+    }
+
+    /// Geri al (`back`) or Yinele on the copy.
+    fn forms_history(&mut self, back: bool) -> Task<Message> {
+        let saved = self.chosen_form().map(|f| f.draft.clone());
+        let Some(w) = self.forms_window.as_mut() else {
+            return Task::none();
+        };
+        let Some(now) = w.body.clone() else {
+            return Task::none();
+        };
+        let (from, to) = if back {
+            (&mut w.undo, &mut w.redo)
+        } else {
+            (&mut w.redo, &mut w.undo)
+        };
+        let Some(then) = from.pop() else {
+            return Task::none();
+        };
+        to.push(now);
+        w.dirty = saved.as_ref().is_none_or(|s| !same_form(s, &then));
+        if w.item
+            .as_deref()
+            .is_some_and(|id| find(&then.items, id).is_none())
+        {
+            w.item = None;
+        }
+        w.body = Some(then);
+        w.typing = None;
+        self.refresh_preview();
+        Task::none()
+    }
+
+    /// The preview follows the copy (docs/adr/0403 §3).
+    fn refresh_preview(&mut self) {
+        let Some(w) = self.forms_window.as_ref() else {
+            self.form_preview = None;
+            return;
+        };
+        let (true, Some(body), Some(form)) = (w.previewing, w.body.clone(), w.chosen.clone())
+        else {
+            self.form_preview = None;
+            return;
+        };
+        let error = self.rebuild_preview(&body, &form).err();
+        if error.is_some() {
+            self.form_preview = None;
+        }
+        if let Some(w) = self.forms_window.as_mut() {
+            w.preview_error = error;
+        }
+    }
+
+    fn forms_step(&mut self, event: Event) -> Task<Message> {
         let Some(mut w) = self.forms_window.clone() else {
             return Task::none();
         };
@@ -546,6 +744,34 @@ impl App {
             Event::Move(by) => {
                 if let Some(id) = chosen_item.clone() {
                     edited(&mut w, &|b| shift(b, &id, by));
+                }
+            }
+            Event::Drop(from, to, place) => {
+                let ids = w.body.as_ref().map(|b| (id_at(b, from), id_at(b, to)));
+                if let Some((Some(source), Some(target))) = ids
+                    && let Some(body) = w.body.as_mut()
+                {
+                    let mut moved = body.clone();
+                    match move_item(&mut moved, &source, &target, place) {
+                        Ok(()) => {
+                            *body = moved;
+                            w.dirty = true;
+                            w.item = Some(source);
+                        }
+                        Err(why) => self.say(Level::Warn, why),
+                    }
+                }
+            }
+            Event::Fold(id) => {
+                if !w.folded.remove(&id) {
+                    w.folded.insert(id);
+                }
+            }
+            Event::Undo | Event::Redo => {}
+            Event::Preview(on) => {
+                w.previewing = on;
+                if !on {
+                    self.form_preview = None;
                 }
             }
             Event::RemoveItem => {
@@ -747,6 +973,7 @@ impl App {
             }
             Event::Cancel => {
                 self.forms_window = None;
+                self.form_preview = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -771,6 +998,8 @@ impl App {
             Control::Press(ADD_GROUP) => Some(msg(Event::AddGroup)),
             Control::Press(ADD_NOTE) => Some(msg(Event::AddNote)),
             Control::Press(ENFORCE) => self.chosen_form().map(|f| msg(Event::Enforce(!f.enforce))),
+            Control::Press(UNDO) => Some(msg(Event::Undo)),
+            Control::Press(REDO) => Some(msg(Event::Redo)),
             Control::Press(words) => {
                 if let Some(f) = self.project_forms().iter().find(|f| f.name == words) {
                     Some(msg(Event::Choose(f.id.clone())))
@@ -782,6 +1011,17 @@ impl App {
             }
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
+    }
+
+    /// The window's keys (docs/adr/0403 §1): Ctrl+Z and Ctrl+Y step through the copy's history,
+    /// Ctrl+S is Kaydet.
+    pub(crate) fn forms_key(&mut self, press: &crate::keys::KeyPress) -> Option<Task<Message>> {
+        match crate::keys::chord(press).as_deref() {
+            Some("Ctrl+Z") => Some(self.forms_event(Event::Undo)),
+            Some("Ctrl+Y" | "Ctrl+Shift+Z") => Some(self.forms_event(Event::Redo)),
+            Some("Ctrl+S") => Some(self.forms_event(Event::Save)),
+            _ => None,
+        }
     }
 
     /// The expression builder's Tamam: a rule's text back into the window's copy.
@@ -901,6 +1141,58 @@ mod tests {
         remove(&mut b, "kat");
         assert_eq!(bound(&b.items), ["Durum"]);
         assert!(kentos_contracts::body_problem(&b).is_none());
+    }
+
+    /// docs/adr/0403 §2: the drops the form's shape takes, and the ones it does not.
+    #[test]
+    fn items_are_moved_by_the_form_s_shape() {
+        use kentos_ui::widget::tree_view::Place;
+        let mut b = body();
+        let second = add_tab(&mut b);
+        let group = FormItem::Group {
+            id: "g".into(),
+            label: None,
+            columns: None,
+            visible_when: None,
+            collapsed: false,
+            items: Vec::new(),
+        };
+        place(&mut b, Some("genel"), group);
+        // genel[durum, kat, g], second[]
+        assert_eq!(move_item(&mut b, "kat", "g", Place::Into), Ok(()));
+        assert_eq!(
+            ids(&b.items),
+            ["genel", "durum", "g", "kat", second.as_str()]
+        );
+        assert_eq!(move_item(&mut b, "durum", &second, Place::Into), Ok(()));
+        assert_eq!(
+            ids(&b.items),
+            ["genel", "g", "kat", second.as_str(), "durum"]
+        );
+        assert_eq!(move_item(&mut b, &second, "genel", Place::Before), Ok(()));
+        assert_eq!(ids(&b.items)[0], second);
+        assert!(
+            move_item(&mut b, "g", "kat", Place::Into).is_err(),
+            "into a field"
+        );
+        assert!(
+            move_item(&mut b, "g", "kat", Place::After).is_err(),
+            "into itself"
+        );
+        assert!(
+            move_item(&mut b, "kat", "genel", Place::After).is_err(),
+            "beside a tab"
+        );
+        assert!(
+            move_item(&mut b, "genel", "g", Place::Into).is_err(),
+            "a tab into a group"
+        );
+        assert!(
+            move_item(&mut b, "genel", "kat", Place::Before).is_err(),
+            "a tab deep"
+        );
+        assert!(kentos_contracts::body_problem(&b).is_none());
+        assert_eq!(id_at(&b, 0).as_deref(), Some(second.as_str()));
     }
 
     #[test]

@@ -1152,10 +1152,11 @@
     "data.formEdit": {
       "level": "semantic",
       "via": [
+        "cad.forms.fill",
         "cad.forms.submit",
         "cad.forms.validate"
       ],
-      "note": "Kayıt cad.forms.submit ile tek adımda yazılır; pencerenin canlı denetimi cad.forms.validate'in çekirdeğidir (ADR 0401)."
+      "note": "Kayıt cad.forms.submit ile, birden çok kayıt cad.forms.fill ile tek adımda yazılır; pencerenin canlı denetimi cad.forms.validate'in çekirdeğidir (ADR 0401, 0403)."
     }
   },
   "tools": {

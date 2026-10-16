@@ -77,7 +77,7 @@ impl Section {
     pub fn lead(self) -> &'static str {
         match self {
             Self::Appearance => {
-                "Tema, vurgu rengi, yazı tipi, yazı boyutu, çizim zemini, artı imleç, coğrafi koordinatlar, fare yardımcıları ve komut satırının AutoCAD adları."
+                "Tema, vurgu rengi, yazı tipi, yazı boyutu, çizim zemini, artı imleç, coğrafi koordinatlar, fare yardımcıları, komut satırının AutoCAD adları ve çizilen nesnenin formu."
             }
             Self::Snap => {
                 "İmlecin hangi noktalara yapışacağı ve nesneleri ne kadar yakından yakalayacağı; bu oturumun çizim yardımcıları."
@@ -112,6 +112,7 @@ impl Section {
                 "drafting.commandBar",
                 "drafting.hoverInfo",
                 "drafting.autocadAliases",
+                "drafting.formOnCreate",
                 "appearance.startScreen",
             ],
             Self::Snap => &[

@@ -1844,6 +1844,153 @@ def set_cases():
     return cases
 
 
+FILL_ENTITIES = CALC_ENTITIES + [
+    {"kind": "polygon", "id": 5, "layerId": "bina", "attrs": {"Durum": "iyi", "Kat": "2", "Kod": "B-2"}, "pts": square(60, 0)},
+    {"kind": "polygon", "id": 6, "layerId": "bina",
+     "attrs": {"Durum": "inceleme", "Kat": "5", "Açıklama": "Çatı akıyor ve duvarlar çatlak."}, "pts": square(80, 0)},
+]
+FILL_IDS = [e["id"] for e in FILL_ENTITIES]
+NO_RECORDS = "Formla yazılacak kayıt verilmedi. En az bir nesnenin kalıcı kimliğini verin."
+UIDS_INVALID = ("“{}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir "
+                "(01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.")
+
+
+def fill_cases():
+    """cad.forms.fill (docs/adr/0403 §5): the same values to many records, each checked and completed by itself, every
+    record or none; a unique field takes no value twice."""
+    cases = []
+    attrs_of = {e["id"]: e["attrs"] for e in FILL_ENTITIES}
+    layer_of = {e["id"]: e["layerId"] for e in FILL_ENTITIES}
+
+    def slot_of(u):
+        return int(u.split(":")[1])
+
+    def fill(inp, form=CALC_FORM, body=CALC_BODY, fields=CALC_FIELDS, variables=(), op="execute", undo=0, before=None):
+        """The step and the records afterwards, by the rule; `before` the records' attributes now."""
+        now = dict(before or attrs_of)
+        f = Form(body, fields, variables)
+        values = utf8_sorted(dict(inp.get("values", {})))
+        seen, slots = set(), []
+        for u in inp["uids"]:
+            if u not in seen:
+                seen.add(u)
+                slots.append(slot_of(u))
+        new, warnings = {}, []
+        for k in slots:
+            after, issues = f.assess(dict(now[k]), values, OBJECT_OF.get(k, SQUARE), False)
+            errs = errors(issues)
+            if errs:
+                return failed_step(inp, errs, k, now, undo)
+            for i in issues:
+                if i["severity"] == "warning":
+                    w = {"code": i["code"], "message": ANY, "path": f"values.{i['field']}"}
+                    if not any(x["code"] == w["code"] and x["path"] == w["path"] for x in warnings):
+                        warnings.append(w)
+            new[k] = after
+        for k in slots:
+            others = [now[j] for j in FILL_IDS if layer_of[j] == "bina" and j not in slots] + \
+                     [new[j] for j in slots if j != k]
+            taken = f.unique_issues(new[k], OBJECT_OF.get(k, SQUARE), others)
+            if taken:
+                return failed_step(inp, taken, k, now, undo)
+        changed = [k for k in slots if new[k] != now[k]]
+        out = {"changed": [f"$uidOf:{k}" for k in changed], "version": 1 if not inp.get("draft") else None,
+               "revision": "$current"}
+        if out["version"] is None:
+            del out["version"]
+        after_all = {**now, **{k: new[k] for k in changed}}
+        if op == "plan":
+            expect = {"ids": FILL_IDS, "fields": {str(k): {"attrs": now[k]} for k in slots}, "canUndo": undo > 0,
+                      "canRedo": False, "revision": "same"}
+            return {"op": "plan", "input": inp, "result": {"status": "completed", "output": out, "warnings": warnings},
+                    "expect": expect}, now
+        expect = {"ids": FILL_IDS, "fields": {str(k): {"attrs": after_all[k]} for k in slots},
+                  "canUndo": undo + bool(changed) > 0, "canRedo": False}
+        expect.update({"dirty": True, "revision": "changed"} if changed else {"revision": "same"})
+        return {"op": "execute", "input": inp, "result": {"status": "completed", "output": out, "warnings": warnings},
+                "expect": expect}, after_all
+
+    def failed_step(inp, issues, k, now, undo):
+        first = errors(issues)[0]
+        path = f"values.{first['field']}" if first.get("field") in inp.get("values", {}) else "values"
+        result = failed("form_invalid", ANY, path)
+        result["error"]["uids"] = [f"$uidOf:{k}"]
+        return refused(inp, result, undo), now
+
+    def refused(inp, result, undo=0):
+        expect = {"ids": FILL_IDS, "canUndo": undo > 0, "canRedo": False, "revision": "same"}
+        if not undo:
+            expect["dirty"] = False
+        return {"op": "execute", "input": inp, "result": result, "expect": expect}
+
+    def case(name, steps, forms=None):
+        cases.append({"name": name, "setup": setup(forms or [CALC_FORM], CALC_FIELDS, FILL_ENTITIES), "steps": steps})
+
+    v = {"Durum": "iyi", "kat-sayisi": "4"}
+    one, _ = fill({"form": "hesap", "uids": ["$uidOf:2", "$uidOf:5"], "values": v})
+    case("iki kayda aynı değerler: her biri kendi hesaplarıyla, tek adımda", [one])
+    one, after = fill({"form": "hesap", "uids": ["$uidOf:2", "$uidOf:5", "$uidOf:6"], "values": {"Durum": "iyi"}})
+    two, _ = fill({"form": "hesap", "uids": ["$uidOf:2", "$uidOf:5", "$uidOf:6"], "values": {"Durum": "iyi"}}, before=after, undo=1)
+    case("aynısını yeniden yazmak değiştirmez: changed boş, sürüm aynı", [one, two])
+    one, _ = fill({"form": "hesap", "uids": ["$uidOf:5", "$uidOf:2", "$uidOf:5"], "values": {"kat-sayisi": "6", "Durum": "iyi"}})
+    case("yinelenen kimlik bir kez yazılır; changed girdinin sırasıyla", [one])
+    one, _ = fill({"form": "hesap", "uids": ["$uidOf:2", "$uidOf:5"], "values": {"Durum": "iyi", "kat-sayisi": "3"}}, op="plan")
+    case("plan yazmaz, değişecekleri söyler", [one])
+    one, _ = fill({"form": "hesap", "uids": ["$uidOf:2", "$uidOf:5"], "values": {"Durum": "iyi", "Kod": "X-1"}})
+    case("tekil alana iki kayıtta aynı değer: girdideki ilk kayıt söylenir", [one])
+    one, _ = fill({"form": "hesap", "uids": ["$uidOf:2"], "values": {"Durum": "iyi", "Kod": "B-3"}})
+    case("tekil alanın değeri katmanın başka nesnesinde", [one])
+    one, _ = fill({"form": "hesap", "uids": ["$uidOf:1", "$uidOf:5"], "values": {"Kod": "B-3"}})
+    case("tekil alan: bir kaydın kendi değeri de iki kayda yazılamaz", [one])
+    one, _ = fill({"form": "hesap", "uids": ["$uidOf:5", "$uidOf:2"], "values": {"kat-sayisi": "3"}})
+    case("bir kaydın zorunlu alanı boş kalırsa hiçbiri yazılmaz; path values", [one])
+    one, _ = fill({"form": "hesap", "uids": ["$uidOf:2", "$uidOf:5"], "values": {"Durum": "iyi", "kat-sayisi": "kırk"}})
+    case("alanın kuralına uymayan değer", [one])
+    one, _ = fill({"form": "hesap", "uids": ["$uidOf:1", "$uidOf:5"], "values": {"Yükseklik": "99"}})
+    case("hesaplanan alana başka değer yazılamaz", [one])
+    one, _ = fill({"form": "hesap", "uids": ["$uidOf:1", "$uidOf:5"], "values": {"Tür": "sanayi", "Malzeme": "ahsap"}})
+    case("süzgecin sunmadığı seçenek", [one])
+    one, _ = fill({"form": "hesap", "uids": ["$uidOf:1", "$uidOf:6"], "values": {"Durum": "inceleme", "Açıklama": "Kısa ama yeter"}})
+    case("uyarı denetimi yazmayı durdurmaz; iki kayıtta bir uyarı", [one])
+    v = {"Durum": "iyi", "kat-sayisi": "2"}
+    one, _ = fill({"form": "hesap", "uids": ["$uidOf:2"], "values": v, **MOMENT_GIVEN}, variables=GIVEN)
+    case("an ve kullanıcı verilir; var olan kayıt varsayılan almaz", [one])
+    draft_form = {"id": "taslak", "name": "Taslak", "layer": "bina", "draft": copy.deepcopy(CALC_BODY)}
+    one, _ = fill({"form": "taslak", "draft": True, "uids": ["$uidOf:2"], "values": {"Durum": "iyi"}}, form=draft_form)
+    case("yayınlanmamış form taslakla yazar; taslaksız reddedilir", [
+        refused({"form": "taslak", "uids": ["$uidOf:2"], "values": {"Durum": "iyi"}}, unpublished("Taslak", "draft")), one],
+         forms=[draft_form])
+    case("kayıt verilmedi", [refused({"form": "hesap", "uids": []}, failed("no_entities", NO_RECORDS, "uids"))])
+    case("kimliklerden biri geçersiz: yeri uids[1]", [
+        refused({"form": "hesap", "uids": ["$uidOf:2", "A-1"]}, failed("invalid_uid", UIDS_INVALID.format("A-1"), "uids[1]"))])
+    case("çizimde olmayan kayıt", [
+        refused({"form": "hesap", "uids": ["$uidOf:2", UNKNOWN_UID]}, failed("entity_not_found", NOT_FOUND.format(UNKNOWN_UID), "uids[1]"))])
+    case("formun katmanında olmayan kayıt", [
+        refused({"form": "hesap", "uids": ["$uidOf:2", "$uidOf:3"]},
+                failed("form_layer_mismatch", "Nesne “Bina hesabı” formunun katmanında değil. Formun katmanındaki nesneleri seçin.", "uids[1]"))])
+    locked_form = {"id": "kilit", "name": "Kilitli bina", "layer": "kilitli", "draft": copy.deepcopy(BODY),
+                   "releases": [release_of(BODY, 1)]}
+    case("kilitli katman", [refused({"form": "kilit", "uids": ["$uidOf:4"], "values": {"Durum": "iyi"}},
+                                    failed("layer_locked", "“Kilitli bina” katmanı kilitli; kayıtlar değiştirilemez. Kilidi Katmanlar panelinden açın.", "uids"))],
+         forms=[CALC_FORM, locked_form])
+    case("olmayan form; geçersiz an ve kullanıcı formdan önce", [
+        refused({"form": "yok", "uids": ["$uidOf:2"]}, unknown_form("yok", "form")),
+        refused({"form": "yok", "uids": ["$uidOf:2"], "moment": "dün"},
+                failed("invalid_moment", "“dün” bir an değil. Bir tarih (2026-10-16) ya da tarih ve yerel saat (2026-10-16T14:30:00) yazın.", "moment")),
+        refused({"form": "yok", "uids": ["$uidOf:2"], "user": " Ayşe"},
+                failed("invalid_user", "Kullanıcının adı boş olamaz, başında ve sonunda boşluk olmaz, en çok 64 karakterdir.", "user"))])
+    case("beklenen sürüm: geçersiz ve çakışan", [
+        refused({"form": "hesap", "uids": ["$uidOf:2"], "values": {"Durum": "iyi"}, "expectedRevision": "07"},
+                failed("invalid_revision", REVISION, "expectedRevision")),
+        refused({"form": "hesap", "uids": ["$uidOf:2"], "values": {"Durum": "iyi"}, "expectedRevision": "999"},
+                failed("revision_conflict", CONFLICT, "expectedRevision", "conflict"))])
+    broken = {**copy.deepcopy(CALC_FORM), "draft": BROKEN, "releases": []}
+    case("ön denetimde hata olan formla yazılmaz", [
+        refused({"form": "hesap", "draft": True, "uids": ["$uidOf:2"], "values": {"Durum": "iyi"}}, failed("form_preflight", ANY, "form"))],
+         forms=[broken])
+    return cases
+
+
 def create_cases():
     """cad.polygon.create on a layer whose form enforces its rules (docs/adr/0402 §4): the document gives the new
     object the form's defaults and calculations in the same step; its missing required values are not refused."""
@@ -1935,6 +2082,10 @@ def commands():
             "cad.entities.set", "Öznitelikler ve formun kuralları",
             "ADR 0401 §8, ADR 0402 §4: katmanın kurallarını uyguladığı formun son yayını, öznitelik yazmasının profilidir; "
             "belge yazılan kaydın hesaplarını aynı adımda yeniler.", set_cases()),
+        d / "cad.forms.fill.json": command_file(
+            "cad.forms.fill", "Formla toplu yaz",
+            "ADR 0403 §5: aynı değerler birden çok kayda formla yazılır; her kayıt kendi değerleri ve şekliyle denetlenir ve "
+            "tamamlanır, biri geçmezse hiçbiri yazılmaz.", fill_cases()),
         d / "cad.polygon.create.forms.json": {**command_file(
             "cad.polygon.create", "Alan çiz ve formun kuralları",
             "ADR 0402 §4: kurallarını uygulayan formun katmanına çizilen alan, aynı adımda formun varsayılanlarını ve "
