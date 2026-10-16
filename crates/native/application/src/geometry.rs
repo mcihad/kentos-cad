@@ -761,6 +761,12 @@ pub fn shape(entity: &Entity) -> Shape {
         },
         Entity::Circle(c) => Shape::Circle { c: v(&c.c), r: c.r },
         Entity::Leader(l) => Shape::Leader {
+            blocks: (!l.blocks.is_empty()).then(|| {
+                l.blocks.iter().map(|b| kentos_domain::Uuid::from_bytes(b.0).to_string()).collect()
+            }),
+            arms: (!l.arms.is_empty()).then(|| {
+                l.arms.iter().map(|a| kentos_geometry_core::geom::leader::Arm { pts: points(&a.pts) }).collect()
+            }),
             pts: points(&l.pts),
             text: l.text.clone(),
             height: l.height,
@@ -1234,6 +1240,8 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
         (
             Entity::Leader(e),
             Shape::Leader {
+                arms,
+                blocks: _,
                 pts,
                 text,
                 height,
@@ -1244,6 +1252,14 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
             },
         ) => {
             // The arrowhead is the object's own: the core carries its name and size through unchanged.
+            // Its arms' points; each arm keeps what its tip follows (docs/adr/0326 §1).
+            let tips: Vec<Option<kentos_contracts::SubRef>> = e.arms.iter().map(|a| a.tip.clone()).collect();
+            e.arms = arms
+                .unwrap_or_default()
+                .into_iter()
+                .enumerate()
+                .map(|(i, a)| kentos_contracts::LeaderArm { pts: back(a.pts), tip: tips.get(i).cloned().flatten() })
+                .collect();
             e.pts = back(pts);
             e.text = text;
             e.height = height;
@@ -1557,6 +1573,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             mirror,
         }),
         EntityGeometry::Leader {
+            arms,
             annotative,
             pts,
             text,
@@ -1566,6 +1583,14 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             arrow_size,
             mask,
         } => Entity::Leader(LeaderEntity {
+            tip: None,
+            leader_style: None,
+            blocks: Vec::new(),
+            arms: arms
+                .unwrap_or_default()
+                .into_iter()
+                .map(|pts| kentos_contracts::LeaderArm { pts, tip: None })
+                .collect(),
             annotative,
             base,
             pts,
@@ -1814,6 +1839,8 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
         },
         // An arrowhead the contract does not name is none of a leader's (docs/adr/0146 §1).
         Shape::Leader {
+            arms,
+            blocks: _,
             pts,
             text,
             height,
@@ -1822,6 +1849,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             arrow_size,
             mask,
         } => EntityGeometry::Leader {
+            arms: arms.map(|list| list.into_iter().map(|a| back(a.pts)).collect()),
             annotative: None,
             pts: back(pts),
             text,

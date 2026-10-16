@@ -662,6 +662,8 @@ fn common<M: Map + ?Sized>(
             })
         }
         Shape::Leader {
+            arms,
+            blocks,
             pts,
             text,
             height,
@@ -672,7 +674,21 @@ fn common<M: Map + ?Sized>(
         } => {
             let last = *pts.last().unwrap_or(&Vec2::new(0.0, 0.0));
             let (height, rotation, _) = text_rule(&m.jac(last)?, *height, *rotation, None);
+            let arms = match arms {
+                Some(list) => {
+                    let mut out = Vec::with_capacity(list.len());
+                    for a in list {
+                        out.push(crate::geom::leader::Arm {
+                            pts: a.pts.iter().map(|&p| m.at(p)).collect::<Result<Vec<_>, _>>()?,
+                        });
+                    }
+                    Some(out)
+                }
+                None => None,
+            };
             kept(Shape::Leader {
+                arms,
+                blocks: blocks.clone(),
                 pts: pts
                     .iter()
                     .map(|&p| m.at(p))

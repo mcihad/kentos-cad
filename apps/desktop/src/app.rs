@@ -221,6 +221,9 @@ pub enum Dialog {
     FieldInsert,
     TextNumber,
     TextCheck,
+    /// Hizala and Kılavuz stilleri (leader_tools.rs, docs/adr/0326 §5); the windows are `App::leader_tools`.
+    LeaderAlign,
+    LeaderStyles,
     /// Ölçek yaz… (annotation_scale.rs, docs/adr/0205 §4); the field is `App::plot_scale_field`.
     PlotScale,
     /// Veri karşılaştır (data_compare.rs, docs/adr/0179); the window is `App::data_compare`.
@@ -457,6 +460,7 @@ pub enum Message {
     LayerList(crate::layer_list::Event),
     FontReport(crate::font_report::Event),
     TextTools(crate::text_tools::Event),
+    LeaderTools(crate::leader_tools::Event),
     /// Ölçek yaz…'s window (annotation_scale.rs, docs/adr/0205 §4).
     PlotScale(crate::annotation_scale::Event),
     /// Seçilenleri dosyaya kaydet, Başka çizimden al and Dosyadan blok ekle (drawing_exchange.rs).
@@ -670,6 +674,8 @@ pub struct App {
     pub(crate) find_replace: Option<crate::find_replace::Window>,
     /// Alan ekle, Numarala and Yazı denetimi (text_tools.rs, docs/adr/0325 §4).
     pub(crate) text_tools: crate::text_tools::TextTools,
+    /// Kol ekle, Kol sil, Hizala and Kılavuz stilleri (leader_tools.rs, docs/adr/0326 §5).
+    pub(crate) leader_tools: crate::leader_tools::LeaderTools,
     /// Metin dosyası yerleştir asked for its file: the dialog opens after the update (text_file.rs).
     pub(crate) text_file_wanted: bool,
     /// Koordinat oku's points whose rasters' values are to be read (docs/adr/0204 §8).
@@ -1060,6 +1066,7 @@ impl App {
             block_schedule: None,
             find_replace: None,
             text_tools: Default::default(),
+            leader_tools: Default::default(),
             text_file_wanted: false,
             raster_values_wanted: Vec::new(),
             rasters: crate::rasters::Windows::default(),
@@ -1703,6 +1710,7 @@ impl App {
             Message::LayerList(event) => return self.layer_list_event(event),
             Message::FontReport(event) => return self.font_report_event(event),
             Message::TextTools(event) => return self.text_tools_event(event),
+            Message::LeaderTools(event) => return self.leader_tools_event(event),
             Message::PlotScale(event) => return self.plot_scale_event(event),
             Message::DataCompare(event) => return self.data_compare_event(event),
             Message::Cogo(event) => return self.cogo_event(event),
@@ -2465,6 +2473,8 @@ impl App {
             "text.fonts" => self.open_font_report(),
             // Alanlar and the text commands (text_tools.rs, docs/adr/0325 §4).
             id if self.text_tools_run(id) => {}
+            // Çok kollu kılavuz (leader_tools.rs, docs/adr/0326 §5).
+            id if self.leader_tools_run(id) => {}
             // Katman süzgeci (layer_filters.rs, docs/adr/0211 §4): the active layer's; Katmanlar's menu names its
             // layer (layering.rs).
             "layer.filter" => return self.open_layer_filter(None),

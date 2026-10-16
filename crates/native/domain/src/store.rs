@@ -113,6 +113,19 @@ fn ties_of(stored: &Stored) -> Vec<Uuid> {
             of.dedup();
             of
         }),
+        // A leader's tips while they follow their places, and its content blocks (docs/adr/0326 §2, §3).
+        Entity::Leader(l) => {
+            let mut of: Vec<Uuid> = std::iter::once(l.tip.as_ref())
+                .chain(l.arms.iter().map(|a| a.tip.as_ref()))
+                .flatten()
+                .filter(|t| t.live())
+                .map(|t| Uuid::from_bytes(t.uid.0))
+                .chain(l.blocks.iter().map(|b| Uuid::from_bytes(b.0)))
+                .collect();
+            of.sort_unstable();
+            of.dedup();
+            of
+        }
         _ => Vec::new(),
     }
 }

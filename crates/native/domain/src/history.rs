@@ -615,6 +615,9 @@ impl Document {
         // After the hatches: an array's items and path (docs/adr/0300 §3), before the dimensions tied to the items.
         let arrays = self.follow_arrays(ops);
         ops.extend(arrays);
+        // After the arrays: the leaders' tips and content blocks (docs/adr/0326 §2, §3), before the dimensions tied to them.
+        let leaders = self.follow_leaders(ops);
+        ops.extend(leaders);
         // After the hatches: a dimension follows the places its points name.
         let relocated = std::mem::take(&mut self.relocated);
         let ends = std::mem::take(&mut self.relocated_ends);

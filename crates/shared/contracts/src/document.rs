@@ -240,6 +240,10 @@ pub struct ProjectSettings {
         ts(as = "Option<Vec<crate::DimensionStyleDef>>", optional)
     )]
     pub dimension_styles: Vec<crate::DimensionStyleDef>,
+    /// The project's named leader styles (docs/adr/0326 §4).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::LeaderStyleDef>>", optional))]
+    pub leader_styles: Vec<crate::LeaderStyleDef>,
     /// The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

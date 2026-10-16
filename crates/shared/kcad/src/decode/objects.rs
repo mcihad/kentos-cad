@@ -228,6 +228,8 @@ pub(super) struct Features {
     paragraph_layout: bool,
     /// Schema 66: a text's `fields` (docs/adr/0325).
     text_fields: bool,
+    /// Schema 67: a leader's `arms`, `tip`, `blocks` and `leaderStyle` (docs/adr/0326).
+    pub(super) multileader: bool,
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
     pub(super) look: bool,
@@ -309,6 +311,7 @@ impl Features {
             annotative: schema >= crate::SCHEMA_WITH_ANNOTATIVE,
             paragraph_layout: schema >= crate::SCHEMA_WITH_PARAGRAPH_LAYOUT,
             text_fields: schema >= crate::SCHEMA_WITH_TEXT_FIELDS,
+            multileader: schema >= crate::SCHEMA_WITH_MULTILEADER,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,
@@ -440,6 +443,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                     "pts" | "text" | "height" | "rotation" | "arrow" | "mask"
                 ) || (has.annotation && key == "arrowSize")
                     || (has.annotative && key == "annotative")
+                    || (has.multileader && matches!(key, "arms" | "tip" | "blocks" | "leaderStyle"))
             }
             Kind::Table => matches!(
                 key,
@@ -634,6 +638,12 @@ struct Fields {
     runs_at: usize,
     layout_at: usize,
     fields_at: usize,
+    /// A leader's schema 67 fields (docs/adr/0326) and where they began.
+    leader_arms: Vec<kentos_contracts::LeaderArm>,
+    leader_tip: Option<kentos_contracts::SubRef>,
+    leader_blocks: Vec<kentos_contracts::EntityId>,
+    leader_style: Option<String>,
+    leader_at: usize,
     /// A table's own fields (docs/adr/0184), and where each is (for a refusal).
     rows: Option<Vec<f64>>,
     columns: Option<Vec<f64>>,
@@ -1124,6 +1134,29 @@ pub(super) fn object(
                 f.layout_at = at;
                 f.paragraph.layout = Some(Box::new(l));
             }
+            // Schema 67 (docs/adr/0326): a leader's arms, tip, blocks and style; checked together.
+            "arms" if kind == Kind::Leader => {
+                let (l, at): (Vec<kentos_contracts::LeaderArm>, usize) = json_part(r, "kılavuzun kolları")?;
+                if l.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş kol listesi yazılmaz"));
+                }
+                f.leader_at = at;
+                f.leader_arms = l;
+            }
+            "tip" if kind == Kind::Leader => {
+                let (t, at): (kentos_contracts::SubRef, usize) = json_part(r, "kılavuzun ucu")?;
+                f.leader_at = at;
+                f.leader_tip = Some(t);
+            }
+            "blocks" if kind == Kind::Leader => {
+                let (b, at): (Vec<kentos_contracts::EntityId>, usize) = json_part(r, "kılavuzun blokları")?;
+                if b.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş blok listesi yazılmaz"));
+                }
+                f.leader_at = at;
+                f.leader_blocks = b;
+            }
+            "leaderStyle" if kind == Kind::Leader => f.leader_style = Some(text(r)?),
             // Schema 66 (docs/adr/0325 §1): a text's fields, as their JSON; checked with its letters.
             "fields" => {
                 let (l, at): (Vec<kentos_contracts::TextField>, usize) = json_part(r, "yazının alanları")?;
@@ -1854,7 +1887,12 @@ fn build(
                 mirror: f.mirror.unwrap_or(false),
             })
         }
-        Kind::Leader => Entity::Leader(LeaderEntity {
+        Kind::Leader => {
+            let leader = LeaderEntity {
+            tip: f.leader_tip.take(),
+            leader_style: f.leader_style.take(),
+            blocks: std::mem::take(&mut f.leader_blocks),
+            arms: std::mem::take(&mut f.leader_arms),
             annotative: f.annotative.take(),
             base,
             pts: required(r, f.pts.take(), "pts")?,
@@ -1864,7 +1902,12 @@ fn build(
             arrow: f.arrow,
             arrow_size: f.arrow_size,
             mask: f.mask.unwrap_or(false),
-        }),
+            };
+            if let Some((_, words)) = kentos_contracts::leader_problem(&leader) {
+                return Err(r.fail_at(Code::BadValue, f.leader_at, &words));
+            }
+            Entity::Leader(leader)
+        }
         Kind::Table => {
             // Bold, italic and a slant need a typeface (docs/adr/0183 §2).
             if let Some((_, words)) = f.face.problem() {

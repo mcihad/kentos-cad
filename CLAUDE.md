@@ -535,6 +535,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   belge kayıttan önce yeniler (`kentos_domain::text_fields`: kaynağı değişen, elle düzenlenen, döngü ve kopuk `####`), `cad.fields.edit`
   (insert, remove, format, update), `cad.texts.edit` (replace, number, combine, split; Bul ve değiştir onunla), salt okunur
   `cad.texts.check`; Alan ekle, Alanları yenile, Numarala, Birleştir, Satırlara ayır, Yazı denetimi, Öznitelikler'in Alan satırları (ADR 0325);
+  çok kollu kılavuz: kılavuzun `arms`'ı (ek kollar ortak kolun başına), `blocks`'u (blok içerik: kolun ucunda sıra hâlinde duran
+  yerleştirmeler), uçların `tip` bağı ve `leaderStyle`'ı, projenin `leaderStyles`'ı (`.kcad` şema 67, `FORMATS_VERSION` 76); belge
+  kayıttan önce uçları ve blokları izler (`kentos_domain::leader_ties`); `cad.leaders.edit` (addArm, removeArm, align, collect,
+  content, blocks, look, style, bind), `cad.styles.edit`'in `leader` türü; Kol ekle, Kol sil, Hizala, Topla, Blok içerik, Kılavuz
+  stilleri penceresi, Öznitelikler'de kollar ve uç bağları; DXF'in MULTILEADER kolları ve LEADER olarak kollar (ADR 0326);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);
@@ -1081,6 +1086,8 @@ python3 scripts/fixtures/style_edit_command_cases.py --check; python3 scripts/fi
 KENTOS_SHOTS_ONLY=olcu-isaretler,olcu-isaret-onizleme,olcu-isaret-izleme,stil-dosya,stil-gecersiz cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # merkez işareti, eksen çizgisi ve kot, izlemeleri, stil penceresinin Dışa aktar…/Al…'ı ve Stilden ayrılan (ADR 0322)
 python3 scripts/fixtures/annotative_cases.py --check   # ölçekli açıklamaların komut durumlarını (altı işlem, retler, çizim ölçeğinin değişmesi, taşıma) ve temsillerini (her ölçekte çizilen, gizlenen, yeni ölçeğe taşınan) KentOS kodu olmadan denetle; durumlar fixtures/commands/v1/cad.annotations.scales.json, fixtures/annotative/v1/cases.json (ADR 0323)
 cargo test -p kentos-desktop annotative_sheet; KENTOS_SHOTS_ONLY=olcekli-oznitelik,olcekli-yeri cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # kabul odasının 1:50 ve 1:100 paftaları masaüstünün PDF'iyle, değerin yüksekliği pdftotext -bbox ile; Öznitelikler'in ölçek satırları ve Ölçekteki yeri, .run/shots/arac-olcekli-* (ADR 0323)
+python3 scripts/fixtures/leader_command_cases.py --check   # cad.leaders.edit durumlarını (kollar, hizala, topla, blok içeriğin yerleri, uçların bağı ve izlemesi, silmeler, retler) KentOS kodu olmadan denetle; durumlar fixtures/commands/v1/cad.leaders.edit.json (ADR 0326)
+KENTOS_SHOTS_ONLY=kilavuz-kollar,kilavuz-hizala,kilavuz-stilleri cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # çok kollu kılavuzun resimleri, .run/shots/arac-kilavuz-* (ADR 0326)
 python3 scripts/fixtures/text_command_cases.py --check   # alanların (değerler, kayma, izleme, döngü, kopuk) ve yazının komutlarının (Bul ve değiştir, Numarala, Birleştir, Satırlara ayır, Yazı denetimi) durumlarını KentOS kodu olmadan denetle; durumlar fixtures/commands/v1/cad.{fields.edit,texts.edit,texts.check}.json (ADR 0325)
 KENTOS_SHOTS_ONLY=yazi-alanlar,yazi-alan-ekle,yazi-numarala,yazi-denetimi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # alanların ve yazı komutlarının resimleri, .run/shots/arac-yazi-* (ADR 0325)
 python3 scripts/fixtures/paragraph_cases.py --check; python3 scripts/fixtures/font_report_cases.py --check   # yazının düzeninin yerleşimini (girintiler, asılı liste, sekmeler, kesirler, sütunlar) ve cad.fonts.report durumlarını KentOS kodu olmadan denetle; durumlar fixtures/text/v1/paragraph.json, fixtures/commands/v1/cad.fonts.report.json (ADR 0324)

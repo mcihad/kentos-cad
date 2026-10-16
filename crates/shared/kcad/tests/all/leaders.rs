@@ -38,6 +38,10 @@ fn v(x: f64, y: f64) -> Vec2 {
 
 fn leader(pts: Vec<Vec2>) -> LeaderEntity {
     LeaderEntity {
+        tip: None,
+        leader_style: None,
+        blocks: Vec::new(),
+        arms: Vec::new(),
         annotative: None,
         base: EntityBase {
             look: Default::default(),

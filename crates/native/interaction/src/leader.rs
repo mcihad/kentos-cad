@@ -245,6 +245,8 @@ fn on_off(on: bool) -> &'static str {
 /// size, its note's place when `note`.
 fn layout(pts: &[Vec2], height: f64, m: &Memory, note: bool) -> Option<LeaderLayout> {
     leader::layout_of(&Shape::Leader {
+        blocks: None,
+        arms: None,
         pts: pts.to_vec(),
         text: note.then(|| "Not".to_owned()),
         height,
@@ -363,6 +365,7 @@ impl Leader {
         let m = *cx.memory;
         // The defaults are no fields: a filled arrow, no mask (a mask without a note masks nothing).
         let geometry = EntityGeometry::Leader {
+            arms: None,
             annotative: None,
             pts: self.typing.iter().map(|p| points::wire(*p)).collect(),
             text: text.map(str::to_owned),

@@ -185,6 +185,7 @@ impl App {
                 // Çizimden: the point goes to the window that asked, which opens again (calc/).
                 ViewChange::Picked(p) => {
                     if !self.processing_picked(p)
+                        && !self.leader_tools_picked(p)
                         && !self.blocks_picked(p)
                         && !self.service_info_picked(p)
                     {

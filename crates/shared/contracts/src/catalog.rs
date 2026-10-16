@@ -2152,6 +2152,49 @@ pub fn catalog() -> CommandCatalog {
                 })),
             }],
         },
+        // Çok kollu kılavuz (docs/adr/0326 §5), held together by fixtures/commands/v1/cad.leaders.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_LEADERS_EDIT.into(),
+            version: crate::CAD_LEADERS_EDIT_VERSION,
+            title: "Kılavuzları düzenle".into(),
+            summary: "Kılavuzlarda tek bir düzenleme yapar; tek geri alma adımı düzenlemenin adıyla. Kılavuzun ilk kolu pts'idir (ucu ilk köşe, ortak kolun başı son köşe); \
+                      ek kolları arms (her biri ucundan kırıklarından geçerek son köşeye), blok içeriği blocks (notun yerinde, ortak kolun ucunda sırayla duran yerleştirmeler; notsuz), \
+                      uçların bağı tip (ilişkili ölçünün başvurusu gibi: nesne değişince uç yerin gittiği yere gider, silinince kopar). \
+                      addArm ucu pts[0] olan kol ekler (tip verilirse uç yerin noktasına); removeArm arm'ı (0 ilk kol) kaldırır, ilk kol kalkınca ilk ek kol ilk kol olur, tek kol kalkmaz; \
+                      align (MLEADERALIGN) ilkini yerinde bırakır, diğerlerinin son köşelerini ilkinin son köşesinden angle doğrultusundaki doğruya izdüşümüyle, spacing verilirse önde ve arkada sırayla eşit aralıkla indirir; \
+                      collect (MLEADERCOLLECT) blok içerikli kılavuzları ilkinde toplar (diğerlerinin kolları ek kol, blokları ilkinin ardına; diğerleri silinir, blokları kalır); \
+                      content notu yazar ya da kaldırır; blocks içerik bloklarını yazar (not kalkar); look ok başını (filled ya da LeaderArrow adı), ok boyunu, yüksekliği, zemini; \
+                      style bir kılavuz stilini izletir (değerleri yazılır) ya da bırakır; bind arm'ın ucunu bir yere bağlar ya da serbest bırakır. \
+                      Kilitli katmandaki kılavuz reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LeadersEdit>(),
+            output: schema::<crate::LeadersEdited>(),
+            plan: Some(schema::<crate::LeadersPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Kılavuza ikinci boruyu gösteren bir kol ekle".into(),
+                    input: json!({ "edit": { "kind": "addArm", "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+                                             "pts": [{ "x": 487012.5, "y": 4420003.0 }] } }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"], "revision": "12" })),
+                },
+                CommandExample {
+                    title: "Üç notu yatay bir hizaya, 3 m aralıkla diz".into(),
+                    input: json!({ "edit": { "kind": "align",
+                                             "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3003"],
+                                             "angle": 0, "spacing": 3 } }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3003"], "revision": "13" })),
+                },
+            ],
+        },
         // Alanlar (docs/adr/0325 §1–§3), held together by fixtures/commands/v1/cad.fields.edit.json.
         CommandDescriptor {
             id: crate::CAD_FIELDS_EDIT.into(),
@@ -5224,6 +5267,9 @@ mod tests {
                     crate::CAD_FIELDS_EDIT => {
                         serde_json::from_value::<crate::FieldsEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_LEADERS_EDIT => {
+                        serde_json::from_value::<crate::LeadersEdit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_TEXTS_EDIT => {
                         serde_json::from_value::<crate::TextsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -5483,6 +5529,9 @@ mod tests {
                         }
                         crate::CAD_FIELDS_EDIT => {
                             serde_json::from_value::<crate::FieldsEdited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_LEADERS_EDIT => {
+                            serde_json::from_value::<crate::LeadersEdited>(output.clone()).map(|_| ())
                         }
                         crate::CAD_TEXTS_EDIT => {
                             serde_json::from_value::<crate::TextsEdited>(output.clone()).map(|_| ())

@@ -506,6 +506,7 @@ fn command_tool(c: &Value) -> Value {
             | "cad.dimensions.reassociate"
             | "cad.dimensions.edit"
             | "cad.fields.edit"
+            | "cad.leaders.edit"
             | "cad.texts.edit"
             // It takes an object's scales away (docs/adr/0323 §4).
             | "cad.annotations.scales"

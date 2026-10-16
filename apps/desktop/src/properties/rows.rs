@@ -1478,6 +1478,8 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         // Its note, height, turn, arrowhead and mask, its corners and length (docs/adr/0146 §7).
         Entity::Leader(l) => {
             geo.extend(leader_rows(&[l], &ids, locked, &f));
+            // Its style, arms, tips and content blocks (docs/adr/0326).
+            geo.extend(multileader_rows(&doc.model, &[l], &ids, locked));
             geo.extend(scale_rows(&[e], &ids, locked));
             geo.push(Row::figure("Köşe sayısı", l.pts.len().to_string()));
             geo.push(metres("Uzunluk", length_of.unwrap_or(0.0)));
@@ -2120,6 +2122,71 @@ fn text_field_rows(model: &kentos_domain::Document, t: &kentos_contracts::TextEn
         .collect()
 }
 
+/// A leader's style, arms, tips and content blocks (docs/adr/0326): Kılavuz stili (a menu of the project's leader
+/// styles, Yok first), and for one leader its arm count, each bound tip with Bağı çöz, its content blocks' count.
+fn multileader_rows(
+    model: &kentos_domain::Document,
+    leaders: &[&kentos_contracts::LeaderEntity],
+    slots: &[Slot],
+    locked: bool,
+) -> Vec<Row> {
+    use crate::leader_tools::Event as L;
+    let styles = &model.settings().leader_styles;
+    let mut rows = Vec::new();
+    let common = leaders.first().map(|l| l.leader_style.clone()).filter(|s| leaders.iter().all(|l| &l.leader_style == s));
+    let name_of = |id: &Option<String>| match id {
+        Some(id) => styles.iter().find(|s| &s.id == id).map_or("Silinmiş stil".to_owned(), |s| s.name.clone()),
+        None => "Yok".to_owned(),
+    };
+    let value = common.as_ref().map_or_else(|| "Çeşitli".to_owned(), name_of);
+    if !styles.is_empty() || leaders.iter().any(|l| l.leader_style.is_some()) {
+        let pick = |label: String, id: Option<String>| Choice::Pick {
+            label,
+            swatch: None,
+            icon: None,
+            wide: false,
+            chosen: common.as_ref() == Some(&id),
+            enabled: !locked,
+            message: Message::LeaderTools(L::Style(slots.to_vec(), id)),
+        };
+        let mut items = vec![pick("Yok".to_owned(), None)];
+        items.extend(styles.iter().map(|s| pick(s.name.clone(), Some(s.id.clone()))));
+        rows.push(Row::text("Kılavuz stili", value.clone()).editor(Some(Editor::Select { text: value, swatch: None, icon: None, items })));
+    }
+    let [l] = leaders else {
+        return rows;
+    };
+    let slot = Slot(l.base.id);
+    rows.push(Row::figure("Kollar", (l.arms.len() + 1).to_string()));
+    let tips = std::iter::once(l.tip.as_ref()).chain(l.arms.iter().map(|a| a.tip.as_ref()));
+    for (k, t) in tips.enumerate() {
+        let Some(t) = t else { continue };
+        let of = model.slot_of(kentos_domain::Uuid::from_bytes(t.uid.0)).and_then(|s| model.get(s));
+        let what = match (&t.broken, of) {
+            (Some(why), _) => format!("Kopuk: {why}"),
+            (None, Some(e)) => format!("Bağlı: {}", kind_title(e.kind())),
+            (None, None) => "Kopuk".to_owned(),
+        };
+        let items = vec![Choice::Pick {
+            label: "Bağı çöz".to_owned(),
+            swatch: None,
+            icon: None,
+            wide: false,
+            chosen: false,
+            enabled: !locked,
+            message: Message::LeaderTools(L::Unbind(slot, k as u32)),
+        }];
+        let label = if k == 0 { "Ucu".to_owned() } else { format!("{}. kolun ucu", k + 1) };
+        let mut row = Row::text(label, what.clone()).editor(Some(Editor::Select { text: what, swatch: None, icon: None, items }));
+        row.warn = t.broken.is_some();
+        rows.push(row);
+    }
+    if !l.blocks.is_empty() {
+        rows.push(Row::figure("Blok içerik", l.blocks.len().to_string()));
+    }
+    rows
+}
+
 /// A hatch's rows (docs/adr/0186 §7): Desen (every choice with its icon,
 /// its Ölçek and Açı carried over), Açı, Ölçek (a pattern's, on the paper),
 /// Aralık (user lines'), İkinci renk, Degrade biçimi and Ters (a
@@ -2587,7 +2654,7 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
             } else {
                 format!("Kılavuzlar ({})", leaders.len()).into()
             },
-            rows: leader_rows(&leaders, &slots, any_locked, &f),
+            rows: [leader_rows(&leaders, &slots, any_locked, &f), multileader_rows(&doc.model, &leaders, &slots, any_locked)].concat(),
         });
     }
     // The selection's dimensions: their Zemin, and an ordinate's axis, a slope's elevations, common or “Çeşitli” (docs/adr/0147 §7).

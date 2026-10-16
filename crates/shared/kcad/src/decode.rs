@@ -447,6 +447,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut named_views = Vec::new();
     let mut length_style = None;
     let (mut text_styles, mut dimension_styles) = (Vec::new(), Vec::new());
+    let mut leader_styles = Vec::new();
     let (mut workspace, mut drawing_font, mut area_decimals, mut length_decimals) =
         (None, None, None, None);
     map(r, |r, key| {
@@ -579,6 +580,15 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "namedUcs" if has.ucs => named_ucs = ucs::named_ucs(r)?,
             "namedViews" if has.views => named_views = views::named_views(r)?,
             "textStyles" if has.styles => text_styles = styles::text_styles(r)?,
+            // Schema 67 (docs/adr/0326 §4): the leader styles, as their JSON.
+            "leaderStyles" if has.multileader => {
+                let (l, at): (Vec<kentos_contracts::LeaderStyleDef>, usize) =
+                    objects::json_part(r, "kılavuz stilleri")?;
+                if let Some((field, words)) = l.iter().find_map(kentos_contracts::LeaderStyleDef::problem) {
+                    return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));
+                }
+                leader_styles = l;
+            }
             "dimensionStyles" if has.styles => {
                 dimension_styles =
                     styles::dimension_styles(r, has.annotation, has.dimension_options)?
@@ -656,6 +666,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         layer_states,
         text_styles,
         dimension_styles,
+        leader_styles,
         topology,
         annotation,
         connections,

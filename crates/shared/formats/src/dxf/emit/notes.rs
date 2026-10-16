@@ -309,6 +309,10 @@ impl Emitter<'_> {
         else {
             return;
         };
+        // Another arm of a leader KentOS wrote (docs/adr/0326 §1): that leader's data has it.
+        if e.meta.as_ref().is_some_and(|m| m.arm) {
+            return;
+        }
         let pts: Vec<Vec2> = pts.iter().map(|p| ctx.tf.apply(xy(*p))).collect();
         if pts.len() < 2 {
             return self.skip(LEADER, "iki noktası yok", e.line);
@@ -361,7 +365,25 @@ impl Emitter<'_> {
             Some(k) => Some(k),
             None => self.arrow_ratio(style.arrow_length(), text_height, LEADER, e.line),
         };
+        // Its other arms from KentOS's data, placed as its vertices are (docs/adr/0326 §1).
+        let arms: Vec<kentos_contracts::LeaderArm> = meta
+            .and_then(|m| m.arms.as_deref())
+            .and_then(|json| serde_json::from_str::<Vec<Vec<[f64; 2]>>>(json).ok())
+            .map(|list| {
+                list.into_iter()
+                    .filter(|a| !a.is_empty())
+                    .map(|a| kentos_contracts::LeaderArm {
+                        pts: a.iter().map(|p| ctx.tf.apply(Vec2 { x: p[0], y: p[1] })).collect(),
+                        tip: None,
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
         let mut leader = LeaderEntity {
+            tip: None,
+            leader_style: None,
+            blocks: Vec::new(),
+            arms,
             annotative: None,
             base: b,
             pts,
@@ -486,16 +508,25 @@ impl Emitter<'_> {
         if pts.len() < 2 {
             return self.skip(MLEADER, "iki noktası yok", e.line);
         }
-        if m.lines.len() > 1 {
-            self.note(
-                MLEADER,
-                &format!(
-                    "ilk ok çizgisi alındı; öbür {} ok çizgisi alınmadı",
-                    m.lines.len() - 1
-                ),
-                e.line,
-            );
-        }
+        // Its other leader lines are its arms (docs/adr/0326 §1): each to the first's last vertex, its own last left out
+        // when it is that vertex.
+        let last = pts.last().copied();
+        let arms: Vec<kentos_contracts::LeaderArm> = m.lines[1..]
+            .iter()
+            .filter_map(|line| {
+                let mut a: Vec<Vec2> = Vec::with_capacity(line.len());
+                for p in line {
+                    let q = ctx.tf.apply(xy(*p));
+                    if a.last() != Some(&q) {
+                        a.push(q);
+                    }
+                }
+                if a.len() > 1 && a.last().copied() == last {
+                    a.pop();
+                }
+                (!a.is_empty()).then_some(kentos_contracts::LeaderArm { pts: a, tip: None })
+            })
+            .collect();
         if m.spline {
             self.note(MLEADER, "eğri ok çizgisi kırık çizgi olarak alındı", e.line);
         }
@@ -522,6 +553,10 @@ impl Emitter<'_> {
             None
         };
         let mut leader = LeaderEntity {
+            tip: None,
+            leader_style: None,
+            blocks: Vec::new(),
+            arms,
             annotative: None,
             base: b.clone(),
             pts,

@@ -359,6 +359,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.layer_states.is_empty())
             + usize::from(!s.text_styles.is_empty())
             + usize::from(!s.dimension_styles.is_empty())
+            + usize::from(!s.leader_styles.is_empty())
             + usize::from(s.topology.is_some())
             + usize::from(has_heights(s))
             + usize::from(!s.connections.is_empty())
@@ -481,6 +482,16 @@ impl<'d> Encoder<'d> {
         }
         self.key("areaDecimals");
         self.w.uint(u64::from(s.area_decimals));
+        // Schema 67 (docs/adr/0326 §4): the leader styles, as their JSON.
+        if !s.leader_styles.is_empty() {
+            self.key("leaderStyles");
+            self.at(Seg::Name("leaderStyles"), |e| {
+                if let Some((field, words)) = s.leader_styles.iter().find_map(kentos_contracts::LeaderStyleDef::problem) {
+                    return Err(e.fail(Code::BadValue, &format!("{field}: {words}")));
+                }
+                e.json(&serde_json::to_value(&s.leader_styles).unwrap_or_default())
+            })?;
+        }
         if let Some(scale) = s.line_type_scale {
             self.key("lineTypeScale");
             self.at(Seg::Name("lineTypeScale"), |e| {
@@ -1391,6 +1402,19 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
+    }
+    // Schema 67 (docs/adr/0326): a leader's arms, tip, blocks or style, or the project's leader styles.
+    let multi = |list: &[Entity]| {
+        list.iter().any(|e| {
+            matches!(e, Entity::Leader(l)
+                if !l.arms.is_empty() || l.tip.is_some() || !l.blocks.is_empty() || l.leader_style.is_some())
+        })
+    };
+    if multi(&doc.entities)
+        || doc.blocks.iter().any(|b| multi(&b.entities))
+        || !doc.settings.leader_styles.is_empty()
+    {
+        return crate::SCHEMA_WITH_MULTILEADER;
     }
     // Schema 66 (docs/adr/0325): a text's fields (of the drawing or of a block).
     let fielded = |list: &[Entity]| {

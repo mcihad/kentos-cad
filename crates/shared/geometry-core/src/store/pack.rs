@@ -619,7 +619,7 @@ impl Reader<'_> {
                     assoc,
                 }
             }
-            15 => {
+            15 | 24 => {
                 let pts = self.points()?;
                 let height = self.num()?;
                 let rotation = self.num()?;
@@ -627,7 +627,20 @@ impl Reader<'_> {
                 let arrow = self.string()?;
                 let mask = self.flag()?.then_some(true);
                 let size = self.num()?;
+                // docs/adr/0326: kind 24, a leader with arms or content blocks: its other arms' points, then how many
+                // content blocks (their ids are the host's). Kind 15 stays the record the web packs.
+                let (mut arms, mut blocks) = (Vec::new(), 0);
+                if kind == 24.0 {
+                    let n = self.count()?;
+                    arms.reserve(n.min(64));
+                    for _ in 0..n {
+                        arms.push(crate::geom::leader::Arm { pts: self.points()? });
+                    }
+                    blocks = self.count()?;
+                }
                 Shape::Leader {
+                    arms: (!arms.is_empty()).then_some(arms),
+                    blocks: (blocks > 0).then(|| vec![String::new(); blocks.min(1024)]),
                     pts,
                     height,
                     rotation,
@@ -1236,6 +1249,8 @@ impl Packer {
             }
             // docs/adr/0146: the vertices, height and turn, the note and the arrowhead's name, the mask.
             Shape::Leader {
+                arms,
+                blocks,
                 pts,
                 text,
                 height,
@@ -1244,7 +1259,10 @@ impl Packer {
                 arrow_size,
                 mask,
             } => {
-                self.put(&[15.0]);
+                let list = arms.as_deref().unwrap_or_default();
+                let held = blocks.as_ref().map_or(0, Vec::len);
+                let multi = !list.is_empty() || held > 0;
+                self.put(&[if multi { 24.0 } else { 15.0 }]);
                 self.points(pts);
                 let t = self.maybe_string(text.as_deref());
                 let a = self.maybe_string(arrow.as_deref());
@@ -1256,6 +1274,13 @@ impl Packer {
                     flag(*mask == Some(true)),
                     arrow_size.unwrap_or(f64::NAN),
                 ]);
+                if multi {
+                    self.put(&[list.len() as f64]);
+                    for a in list {
+                        self.points(&a.pts);
+                    }
+                    self.put(&[held as f64]);
+                }
             }
             // docs/adr/0207, as the reader's kind 21 says.
             Shape::PointCloud {

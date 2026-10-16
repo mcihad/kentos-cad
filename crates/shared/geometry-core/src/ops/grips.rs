@@ -101,9 +101,11 @@ pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
         // Its control points (docs/adr/0259 §2): AutoCAD's control vertex grips.
         Shape::Nurbs { ctrl, .. } => ctrl.clone(),
         // Its vertices, then the middle of each segment, as a polyline's (docs/adr/0146 §4).
-        Shape::Leader { pts, .. } => {
+        // Then its other arms' vertices (docs/adr/0326 §1).
+        Shape::Leader { pts, arms, .. } => {
             let mut out = pts.clone();
             out.extend(pts.windows(2).map(|s| segment_mid(s[0], s[1], 0.0)));
+            out.extend(arms.iter().flatten().flat_map(|a| a.pts.iter().copied()));
             out
         }
         Shape::Hatch { ring, .. } => ring.clone(),
@@ -325,6 +327,8 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
         }
         // A vertex moves; a segment's middle becomes a new vertex there (docs/adr/0146 §4).
         Shape::Leader {
+            arms,
+            blocks,
             pts,
             text,
             height,
@@ -333,6 +337,35 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             arrow_size,
             mask,
         } => {
+            // An arm's vertex (after the first arm's vertices and mid grips).
+            let first = pts.len() + pts.len().saturating_sub(1);
+            if index >= first {
+                let mut arms = arms.clone().unwrap_or_default();
+                let mut k = index - first;
+                let arm = arms.iter_mut().find(|a| {
+                    if k < a.pts.len() {
+                        true
+                    } else {
+                        k -= a.pts.len();
+                        false
+                    }
+                })?;
+                arm.pts[k] = p;
+                return Some(Entity {
+                    shape: Shape::Leader {
+                        arms: Some(arms),
+                        blocks: blocks.clone(),
+                        pts: pts.clone(),
+                        text: text.clone(),
+                        height: *height,
+                        rotation: *rotation,
+                        arrow: arrow.clone(),
+                        arrow_size: *arrow_size,
+                        mask: *mask,
+                    },
+                    rest: e.rest.clone(),
+                });
+            }
             let pts = match mid_grip_segment(&e.shape, index) {
                 Some(seg) => {
                     let mut out = pts[..seg + 1].to_vec();
@@ -344,6 +377,8 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
                 None => return None,
             };
             Shape::Leader {
+                arms: arms.clone(),
+                blocks: blocks.clone(),
                 pts,
                 text: text.clone(),
                 height: *height,

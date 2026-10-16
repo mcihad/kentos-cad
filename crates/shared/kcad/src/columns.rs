@@ -1502,6 +1502,10 @@ impl Packer {
                 }
             }
             Entity::Leader(LeaderEntity {
+                tip,
+                leader_style,
+                arms,
+                blocks,
                 annotative,
                 base: _,
                 pts,
@@ -1534,6 +1538,11 @@ impl Packer {
                 if let Some(a) = annotative {
                     flags |= OPT[4];
                     self.text(&serde_json::to_string(a).unwrap_or_default());
+                }
+                // Its arms, tip, blocks and style (docs/adr/0326), as one JSON object of those it has.
+                if !arms.is_empty() || tip.is_some() || !blocks.is_empty() || leader_style.is_some() {
+                    flags |= OPT[5];
+                    self.text(&multileader_json(arms, tip.as_ref(), blocks, leader_style.as_deref()));
                 }
             }
             Entity::Table(TableEntity {
@@ -2069,7 +2078,8 @@ fn allowed(kind: u8) -> u32 {
         // Schema 63's overrides (docs/adr/0322 §5), schema 64's scales (docs/adr/0323), schema 65's layout
         // (docs/adr/0324), schema 66's fields (docs/adr/0325).
         10 => OPT[..18].iter().fold(0, |m, b| m | b),
-        14 => OPT[0] | OPT[1] | OPT[2] | OPT[3] | OPT[4],
+        // Schema 67's arms, tip, blocks and style (docs/adr/0326).
+        14 => OPT[0] | OPT[1] | OPT[2] | OPT[3] | OPT[4] | OPT[5],
         // A dimension: text, style, angle, c, schema 9's mask, za, zb (docs/adr/0147), schema 21's look,
         // schema 30's lines (docs/adr/0205 §6).
         11 => OPT.iter().fold(0, |m, b| m | b) | LINES | REFS | MORE,
@@ -3288,7 +3298,17 @@ fn geometry(
             } else {
                 None
             };
+            let more: Multileader = if has(5) {
+                let t = c.text(|| place("arms"))?;
+                serde_json::from_str(&t).map_err(|_| broken("kılavuzun kolları"))?
+            } else {
+                Multileader::default()
+            };
             Entity::Leader(LeaderEntity {
+                tip: more.tip,
+                leader_style: more.leader_style,
+                blocks: more.blocks,
+                arms: more.arms,
                 annotative,
                 base,
                 pts,
@@ -3301,6 +3321,35 @@ fn geometry(
             })
         }
     })
+}
+
+/// A leader's schema 67 fields (docs/adr/0326) as the columns carry them: one JSON object.
+#[derive(Default, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct Multileader {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    arms: Vec<kentos_contracts::LeaderArm>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    tip: Option<kentos_contracts::SubRef>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    blocks: Vec<kentos_contracts::EntityId>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    leader_style: Option<String>,
+}
+
+fn multileader_json(
+    arms: &[kentos_contracts::LeaderArm],
+    tip: Option<&kentos_contracts::SubRef>,
+    blocks: &[kentos_contracts::EntityId],
+    style: Option<&str>,
+) -> String {
+    serde_json::to_string(&Multileader {
+        arms: arms.to_vec(),
+        tip: tip.cloned(),
+        blocks: blocks.to_vec(),
+        leader_style: style.map(str::to_owned),
+    })
+    .unwrap_or_default()
 }
 
 // ── Comparing ───────────────────────────────────────────────────────────

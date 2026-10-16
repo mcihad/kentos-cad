@@ -244,15 +244,25 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
         }
         // Its line on to its landing's end and its arrowhead's lines; its arrowhead's area (docs/adr/0146 §5,
         // 0205 §7).
+        // Its other arms, each its line and arrowhead (docs/adr/0326 §1).
         Shape::Leader { pts, .. } => match leader::layout_of(s) {
             Some(l) => {
-                out.extend([MIXED, (1 + l.head.lines.len()) as f64]);
+                let arms = leader::arm_layouts(s);
+                let lines = 1 + l.head.lines.len() + arms.iter().map(|(_, h)| 1 + h.lines.len()).sum::<usize>();
+                out.extend([MIXED, lines as f64]);
                 path(out, false, &leader::drawn_path(pts, &l));
                 for line in &l.head.lines {
                     path(out, line.closed, &line.pts);
                 }
-                out.push(l.head.fills.len() as f64);
-                for r in &l.head.fills {
+                for (p, h) in &arms {
+                    path(out, false, p);
+                    for line in &h.lines {
+                        path(out, line.closed, &line.pts);
+                    }
+                }
+                let fills = l.head.fills.len() + arms.iter().map(|(_, h)| h.fills.len()).sum::<usize>();
+                out.push(fills as f64);
+                for r in l.head.fills.iter().chain(arms.iter().flat_map(|(_, h)| &h.fills)) {
                     ring(out, r, false, oriented.then_some(true));
                 }
             }

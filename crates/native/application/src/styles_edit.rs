@@ -9,9 +9,9 @@
 //! `fixtures/commands/v1/cad.styles.edit.json`.
 
 use kentos_contracts::{
-    ANNOTATION_STYLES_FORMAT, AnnotationStyleKind, CommandResult, DimensionStyleDef,
+    ANNOTATION_STYLES_FORMAT, AnnotationStyleKind, CommandResult, DimensionStyleDef, LeaderStyleDef,
     StyleEditOperation, StylesEdit, StylesEdited, TextStyleDef, dimension_styles_problem,
-    text_styles_problem,
+    leader_styles_problem, text_styles_problem,
 };
 use kentos_domain::{Document, Uuid};
 
@@ -28,6 +28,7 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
 enum Table {
     Text(Vec<TextStyleDef>),
     Dimension(Vec<DimensionStyleDef>),
+    Leader(Vec<LeaderStyleDef>),
 }
 
 impl Table {
@@ -35,6 +36,7 @@ impl Table {
         match self {
             Table::Text(t) => t.iter().map(|s| s.id.as_str()).collect(),
             Table::Dimension(t) => t.iter().map(|s| s.id.as_str()).collect(),
+            Table::Leader(t) => t.iter().map(|s| s.id.as_str()).collect(),
         }
     }
 
@@ -42,6 +44,7 @@ impl Table {
         match self {
             Table::Text(t) => text_styles_problem(t),
             Table::Dimension(t) => dimension_styles_problem(t),
+            Table::Leader(t) => leader_styles_problem(t),
         }
     }
 }
@@ -54,10 +57,12 @@ fn next_table(doc: &Document, input: &StylesEdit, fresh: &str) -> Result<(Table,
     let (path, what) = match input.kind {
         AnnotationStyleKind::Text => ("text", "yazı stili"),
         AnnotationStyleKind::Dimension => ("dimension", "ölçü stili"),
+        AnnotationStyleKind::Leader => ("leader", "kılavuz stili"),
     };
     let mut table = match input.kind {
         AnnotationStyleKind::Text => Table::Text(settings.text_styles.clone()),
         AnnotationStyleKind::Dimension => Table::Dimension(settings.dimension_styles.clone()),
+        AnnotationStyleKind::Leader => Table::Leader(settings.leader_styles.clone()),
     };
     let not_found = |id: &str, at: &str| {
         fail(
@@ -70,6 +75,7 @@ fn next_table(doc: &Document, input: &StylesEdit, fresh: &str) -> Result<(Table,
         Op::Create | Op::Update => match input.kind {
             AnnotationStyleKind::Text => input.text.as_ref().map(|s| s.id.clone()),
             AnnotationStyleKind::Dimension => input.dimension.as_ref().map(|s| s.id.clone()),
+            AnnotationStyleKind::Leader => input.leader.as_ref().map(|s| s.id.clone()),
         }
         .unwrap_or_default(),
         Op::Rename | Op::Remove => input.style.clone().unwrap_or_default(),
@@ -105,6 +111,23 @@ fn next_table(doc: &Document, input: &StylesEdit, fresh: &str) -> Result<(Table,
                 t.push(s);
             }
         }
+        (Table::Leader(t), Op::Create) => {
+            if let Some(mut s) = input.leader.clone() {
+                s.id.clone_from(&id);
+                t.push(s);
+            }
+        }
+        (Table::Leader(t), Op::Update) => {
+            if let (Some(s), Some(at)) = (input.leader.clone(), t.iter().position(|s| s.id == id)) {
+                t[at] = s;
+            }
+        }
+        (Table::Leader(t), Op::Rename) => {
+            if let Some(s) = t.iter_mut().find(|s| s.id == id) {
+                s.name.clone_from(&name);
+            }
+        }
+        (Table::Leader(t), Op::Remove) => t.retain(|s| s.id != id),
         (Table::Text(t), Op::Update) => {
             if let (Some(s), Some(at)) = (input.text.clone(), t.iter().position(|s| s.id == id)) {
                 t[at] = s;
@@ -141,6 +164,7 @@ fn next_table(doc: &Document, input: &StylesEdit, fresh: &str) -> Result<(Table,
         let kind = match input.kind {
             AnnotationStyleKind::Text => "Yazı stilleri",
             AnnotationStyleKind::Dimension => "Ölçü stilleri",
+            AnnotationStyleKind::Leader => "Kılavuz stilleri",
         };
         return Err(fail(
             codes::INVALID_STYLE,
@@ -179,6 +203,7 @@ fn kind_name(kind: AnnotationStyleKind) -> &'static str {
     match kind {
         AnnotationStyleKind::Text => "text",
         AnnotationStyleKind::Dimension => "dimension",
+        AnnotationStyleKind::Leader => "leader",
     }
 }
 
@@ -219,6 +244,15 @@ fn export(doc: &Document, input: &StylesEdit) -> Result<Planned, Stop> {
                 chosen.iter().map(|s| s.id.clone()).collect(),
                 serde_json::json!(chosen),
             )
+        }
+        AnnotationStyleKind::Leader => {
+            let all = &settings.leader_styles;
+            let chosen: Vec<&LeaderStyleDef> =
+                picked(all.iter().map(|s| s.id.as_str()), input, "kılavuz stili")?
+                    .into_iter()
+                    .map(|i| &all[i])
+                    .collect();
+            (chosen.iter().map(|s| s.id.clone()).collect(), serde_json::json!(chosen))
         }
     };
     let file = serde_json::json!({
@@ -343,11 +377,13 @@ fn import(
         AnnotationStyleKind::Dimension => {
             Table::Dimension(merge!(settings.dimension_styles, DimensionStyleDef))
         }
+        AnnotationStyleKind::Leader => Table::Leader(merge!(settings.leader_styles, LeaderStyleDef)),
     };
     if let Some(problem) = table.problem() {
         let what = match input.kind {
             AnnotationStyleKind::Text => "Yazı stilleri",
             AnnotationStyleKind::Dimension => "Ölçü stilleri",
+            AnnotationStyleKind::Leader => "Kılavuz stilleri",
         };
         return Err(fail(
             codes::INVALID_STYLE,
@@ -371,11 +407,13 @@ fn check_input(input: &StylesEdit) -> Result<(), Stop> {
     let has = match input.kind {
         AnnotationStyleKind::Text => input.text.is_some(),
         AnnotationStyleKind::Dimension => input.dimension.is_some(),
+        AnnotationStyleKind::Leader => input.leader.is_some(),
     };
     if matches!(op, Op::Create | Op::Update) && !has {
         let path = match input.kind {
             AnnotationStyleKind::Text => "text",
             AnnotationStyleKind::Dimension => "dimension",
+            AnnotationStyleKind::Leader => "leader",
         };
         return Err(fail(
             codes::NO_DEFINITION,
@@ -479,6 +517,10 @@ fn write(doc: &mut Document, planned: Planned) -> StylesEdited {
         }
         Some(Table::Dimension(t)) => {
             let saved = style_tables::save_dimension_styles(doc, t);
+            (saved.changed, saved.locked)
+        }
+        Some(Table::Leader(t)) => {
+            let saved = style_tables::save_leader_styles(doc, t);
             (saved.changed, saved.locked)
         }
         None => (0, 0),

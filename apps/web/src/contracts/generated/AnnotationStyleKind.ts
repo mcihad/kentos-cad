@@ -3,4 +3,4 @@
 /**
  * Which table `cad.styles.edit` changes.
  */
-export type AnnotationStyleKind = "text" | "dimension";
+export type AnnotationStyleKind = "text" | "dimension" | "leader";

@@ -309,6 +309,8 @@ def settings(s):
                 "layerStates": (layer_states, False),
                 "textStyles": (text_styles, False),
                 "dimensionStyles": (dimension_styles, False),
+                # Schema 67 (docs/adr/0326 §4): the leader styles, as their JSON.
+                "leaderStyles": (opaque, False),
                 "topology": (topology, False),
                 "annotation": (annotation, False),
                 # Schema 32 (docs/adr/0208 §2): the project's connections to map services, without their secrets.
@@ -1550,6 +1552,11 @@ KINDS = {
         "arrowSize": (leader_arrow_size, False),
         # Schema 64 (docs/adr/0323): its scales, as their JSON.
         "annotative": (opaque, False),
+        # Schema 67 (docs/adr/0326): its arms, tip and content blocks as their JSON, its style's id.
+        "arms": (opaque, False),
+        "tip": (opaque, False),
+        "blocks": (opaque, False),
+        "leaderStyle": (text, False),
     },
 }
 
@@ -1979,6 +1986,10 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def line_patterned(nodes):
         return any("linePattern" in n.get("style", {}) or line_patterned(n.get("children", [])) for n in nodes)
 
+    # Schema 67 (docs/adr/0326): a leader's arms, tip, blocks or style, or the leader styles.
+    multi = lambda es: any(e["kind"] == "leader" and any(k in e for k in ("arms", "tip", "blocks", "leaderStyle")) for e in es)  # noqa: E731
+    if multi(entities) or any(multi(b["entities"]) for b in blocks or []) or (settings or {}).get("leaderStyles"):
+        return 67
     # Schema 66 (docs/adr/0325): a text's fields.
     fielded = lambda es: any(e["kind"] == "text" and "fields" in e for e in es)  # noqa: E731
     if fielded(entities) or any(fielded(b["entities"]) for b in blocks or []):
@@ -2359,7 +2370,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-67.kcad"] = container(root(cmap(parts), version=uint(67)))
+    files["schema-version-68.kcad"] = container(root(cmap(parts), version=uint(68)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2572,6 +2583,17 @@ def broken(minimal_content, minimal_file):
     files["text-fields-overlapping.kcad"] = in_schema(66, text_of(fields=array([fld(0, 3), fld(2, 4)])))
     files["text-field-attribute-nameless.kcad"] = in_schema(66, text_of(fields=array([fld(0, 2, source=cmap({"kind": text("object"), "uid": text("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"), "value": text("attribute")}))])))
     files["text-field-broken-letters.kcad"] = in_schema(66, text_of(fields=array([fld(0, 2, broken=text("removed"))])))
+    # A leader's arms, tip, blocks and style and the leader styles are schema 67's (docs/adr/0326): in schema 66 unknown
+    # fields; not empty, an arm with its tip, blocks without a note, a style's height over 0.
+    lead = lambda **extra: cmap({"leader": cmap({**common, "pts": array([point({"x": 1.0, "y": 1.0}), point({"x": 3.0, "y": 3.0})]),  # noqa: E731
+                                                 "height": f64(2.5), "rotation": f64(0.0), **extra})})
+    arm = lambda *pts: cmap({"pts": array([cmap({"x": f64(x), "y": f64(y)}) for x, y in pts])})  # noqa: E731
+    files["leader-arms-in-schema-66.kcad"] = in_schema(66, lead(arms=array([arm((0.0, 2.0))])))
+    files["leader-arms-empty.kcad"] = in_schema(67, lead(arms=array([])))
+    files["leader-arm-tipless.kcad"] = in_schema(67, lead(arms=array([arm()])))
+    files["leader-blocks-with-note.kcad"] = in_schema(67, lead(text=text("Not"), blocks=array([text("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001")])))
+    files["leader-style-height-zero.kcad"] = container(root(cmap({**parts, "settings": cmap({**settings_parts(m["settings"]),
+        "leaderStyles": array([cmap({"id": text("s"), "name": text("Not"), "height": f64(0.0)})])})}), version=uint(67)))
     files["text-field-source-unknown.kcad"] = in_schema(66, text_of(fields=array([fld(0, 2, source=cmap({"kind": text("sheet"), "value": text("name")}))])))
     files["paragraph-run-empty-color.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, color=text(""))])))
     files["paragraph-run-script-unknown.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, script=text("upper"))])))
@@ -3693,6 +3715,7 @@ def build():
     out["annotative.kcad"] = container(document(load("annotative.json")))
     out["paragraph-layout.kcad"] = container(document(load("paragraph-layout.json")))
     out["text-fields.kcad"] = container(document(load("text-fields.json")))
+    out["multileader.kcad"] = container(document(load("multileader.json")))
     out["sheets.kcad"] = container(document(load("sheets.json")))
     out["requests.kcad"] = container(document(load("requests.json")))
     out["polyline-extras.kcad"] = container(document(load("polyline-extras.json")))

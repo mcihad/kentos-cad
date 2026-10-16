@@ -1971,10 +1971,13 @@ fn leaders_come_with_their_notes_arrowheads_and_heights() {
         ]
     );
     assert_eq!(size(&vana.entities[1]), Some(5.0));
-    assert!(said(
-        "Çoklu kılavuz (MULTILEADER)",
-        "öbür 1 ok çizgisi alınmadı"
-    ));
+    // Its second leader line is its arm (docs/adr/0326 §1).
+    assert_eq!(
+        e.iter()
+            .filter(|x| matches!(x, Entity::Leader(l) if l.arms.len() == 1))
+            .count(),
+        1
+    );
     assert!(said("Çoklu kılavuz (MULTILEADER)", "blok içeriği alınmadı"));
     assert!(said("Çoklu kılavuz (MULTILEADER)", "eğri ok çizgisi"));
     assert!(r.report.skipped.is_empty(), "{:?}", r.report.skipped);

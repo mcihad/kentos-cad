@@ -47,6 +47,7 @@ mod integrity;
 pub mod layer_purge;
 pub mod layer_states;
 mod layers;
+pub mod leader_ties;
 mod linked;
 mod patch;
 mod snapshot;

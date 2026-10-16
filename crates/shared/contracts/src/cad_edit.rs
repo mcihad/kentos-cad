@@ -592,6 +592,12 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         annotative: Option<Box<crate::Annotative>>,
+        /// Its other arms' points, each its tip first (docs/adr/0326 §1); absent: an object updated keeps its own, a new
+        /// one has none; an arm kept keeps what its tip follows.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        arms: Option<Vec<Vec<Vec2>>>,
     },
     /// A table (docs/adr/0184 §1): rows and columns of one-line cells
     /// hanging from `p`, its top left corner, turned by `rotation` (degrees

@@ -443,6 +443,10 @@ mod tests {
         let slot = doc
             .model
             .add(Entity::Leader(kentos_contracts::LeaderEntity {
+                tip: None,
+                leader_style: None,
+                blocks: Vec::new(),
+                arms: Vec::new(),
                 annotative: None,
                 base: kentos_contracts::EntityBase {
                     look: Default::default(),

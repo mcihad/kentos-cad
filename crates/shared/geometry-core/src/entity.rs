@@ -398,6 +398,10 @@ pub enum Shape {
         arrow_size: Option<f64>,
         /// `Some(true)`: the note's box is filled with the drawing area's colour first.
         mask: Option<bool>,
+        /// Its other arms, each from its tip to the last vertex (docs/adr/0326 §1).
+        arms: Option<Vec<crate::geom::leader::Arm>>,
+        /// Its content blocks' ids (docs/adr/0326 §2): with some, it has a landing and no note.
+        blocks: Option<Vec<String>>,
     },
     /// A table (docs/adr/0184): rows and columns of one-line cells hanging
     /// from `p`, its top left corner, turned `rotation` degrees; its rows'
@@ -492,7 +496,7 @@ crate::json_tagged!(Shape, "kind",
     Dimension => "dimension" { a, b, offset, height, text, style, angle, c, mask, za, zb & look: crate::geom::dimension::Look },
     Hatch => "hatch" { ring, holes, pattern, assoc },
     Insert => "insert" { block, p, scale, y_scale => "yScale", rotation, mirror; attrs, places, params },
-    Leader => "leader" { pts, text, height, rotation, arrow, arrow_size => "arrowSize", mask },
+    Leader => "leader" { pts, text, height, rotation, arrow, arrow_size => "arrowSize", mask, arms, blocks },
     Table => "table" { p, rotation, height, rows, columns, cells, merges, aligns, header, grid, frame, source & face: crate::text::face::Face },
     Image => "image" { p, width, height, rotation, mirror, asset, file, clip, opacity },
     Raster => "raster" { affine, width, height, bands, sample, asset, file, url, srid, style, opacity, dataset },
@@ -1557,9 +1561,15 @@ pub fn entity_bounds_in(e: &Shape, font: Font) -> Bounds {
             extend_bounds(&mut b, *p, 0.0);
             return b;
         }
-        // Its vertices, its arrowhead, its landing and its note's box (docs/adr/0146 §4).
+        // Its vertices, its arrowhead, its landing and its note's box (docs/adr/0146 §4); its other arms and their
+        // arrowheads (docs/adr/0326 §1).
         Shape::Leader { pts, .. } => {
             let laid = leader::layout_of(e);
+            for (path, head) in leader::arm_layouts(e) {
+                for q in path.into_iter().chain(head.reach()) {
+                    extend_bounds(&mut b, q, 0.0);
+                }
+            }
             let reach = laid.iter().flat_map(leader::head_reach);
             let landing = laid.iter().filter_map(|l| l.landing.map(|[_, end]| end));
             let note = leader::note_place(e).map(|t| t.outline(font));
@@ -1729,7 +1739,19 @@ pub fn entity_length(e: &Shape) -> Option<f64> {
         Shape::Spline { pts, closed } => Some(spline_length(pts, *closed)),
         Shape::Nurbs { .. } => crate::geom::nurbs::of(e).map(|n| n.length()),
         // Its vertices' length; the landing does not count (docs/adr/0146 §2).
-        Shape::Leader { pts, .. } => Some(path_length(pts, false)),
+        // Its arms' too (docs/adr/0326 §1).
+        Shape::Leader { pts, arms, .. } => Some(
+            path_length(pts, false)
+                + arms
+                    .iter()
+                    .flatten()
+                    .map(|a| {
+                        let mut all = a.pts.clone();
+                        all.extend(pts.last());
+                        path_length(&all, false)
+                    })
+                    .sum::<f64>(),
+        ),
         // The measured value when it is a length (an angle has none).
         Shape::Dimension { .. } => layout_of(e).filter(|l| l.unit == "length").map(|l| l.value),
         _ => None,

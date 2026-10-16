@@ -26,6 +26,8 @@ pub const CAD_STYLES_EDIT_VERSION: u32 = 1;
 pub enum AnnotationStyleKind {
     Text,
     Dimension,
+    /// A leader style (docs/adr/0326 §4).
+    Leader,
 }
 
 /// What `cad.styles.edit` does.
@@ -110,6 +112,10 @@ pub struct StylesEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub dimension: Option<DimensionStyleDef>,
+    /// Create's and update's leader style (docs/adr/0326 §4).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub leader: Option<crate::LeaderStyleDef>,
     /// Export's styles, by id; absent: every style of the kind.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

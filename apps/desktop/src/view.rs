@@ -1788,6 +1788,8 @@ impl App {
             Asking::FieldInsert => self.field_insert_view(),
             Asking::TextNumber => self.text_number_view(),
             Asking::TextCheck => self.text_check_view(),
+            Asking::LeaderAlign => self.leader_align_view(),
+            Asking::LeaderStyles => self.leader_styles_view(),
             Asking::DataCompare => self.data_compare_view(),
             Asking::RasterAdd => self.raster_add_view(),
             Asking::RasterStyle => self.raster_look_view(),

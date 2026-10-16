@@ -479,6 +479,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::annotative_scenes::scenes());
     all.extend(crate::paragraph_layout_scenes::scenes());
     all.extend(crate::text_field_scenes::scenes());
+    all.extend(crate::multileader_scenes::scenes());
     all.extend(crate::style_override_scenes::scenes());
     all.extend(crate::match_scenes::scenes());
     all.extend(crate::cleanup_scenes::scenes());

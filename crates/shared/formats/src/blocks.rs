@@ -591,6 +591,13 @@ pub(crate) fn shape(e: &Entity) -> Shape {
             r: c.r,
         },
         Entity::Leader(l) => Shape::Leader {
+            blocks: (!l.blocks.is_empty()).then(|| l.blocks.iter().map(|b| uuid_text(b.0)).collect()),
+            arms: (!l.arms.is_empty()).then(|| {
+                l.arms
+                    .iter()
+                    .map(|a| kentos_geometry_core::geom::leader::Arm { pts: points(&a.pts) })
+                    .collect()
+            }),
             pts: points(&l.pts),
             text: l.text.clone(),
             height: l.height,
@@ -908,7 +915,10 @@ fn entity(s: &Shape) -> Option<Entity> {
             tangents: tangents.map(|[a, b]| [a.map(back), b.map(back)]),
             fit_tolerance: *fit_tolerance,
         }),
+        // The arms' points; what their tips follow, the blocks and the style are the object's, not the shape's.
         Shape::Leader {
+            arms,
+            blocks: _,
             pts,
             text,
             height,
@@ -917,6 +927,14 @@ fn entity(s: &Shape) -> Option<Entity> {
             arrow_size,
             mask,
         } => Entity::Leader(LeaderEntity {
+            tip: None,
+            leader_style: None,
+            blocks: Vec::new(),
+            arms: arms
+                .iter()
+                .flatten()
+                .map(|a| kentos_contracts::LeaderArm { pts: points_back(&a.pts), tip: None })
+                .collect(),
             annotative: None,
             base,
             pts: points_back(pts),
@@ -1053,6 +1071,12 @@ pub fn core_params(
                 .collect(),
         )
     })
+}
+
+/// A persistent id's text: lowercase, with hyphens.
+fn uuid_text(b: [u8; 16]) -> String {
+    let h: String = b.iter().map(|x| format!("{x:02x}")).collect();
+    format!("{}-{}-{}-{}-{}", &h[0..8], &h[8..12], &h[12..16], &h[16..20], &h[20..])
 }
 
 #[cfg(test)]

@@ -3037,6 +3037,102 @@
    "tests": 1
   },
   {
+   "id": "leader.addArm",
+   "kind": "command",
+   "title": "Kol ekle",
+   "level": "semantic",
+   "via": [
+    "cad.leaders.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.leaders.edit",
+   "mcp": "cad.leaders.edit",
+   "note": "Seçili kılavuzun kimliği, çizimden seçilen uç ve orada kenetin verdiği yer addArm işlemine verilir (ADR 0326).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "leader.align",
+   "kind": "command",
+   "title": "Kılavuzları hizala",
+   "level": "semantic",
+   "via": [
+    "cad.leaders.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.leaders.edit",
+   "mcp": "cad.leaders.edit",
+   "note": "Seçili kılavuzların kimlikleri seçim sırasıyla, pencerenin doğrultusu ve aralığı align işlemine verilir (ADR 0326).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "leader.blocks",
+   "kind": "command",
+   "title": "Blok içerik",
+   "level": "semantic",
+   "via": [
+    "cad.leaders.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.leaders.edit",
+   "mcp": "cad.leaders.edit",
+   "note": "Seçili kılavuzun ve yerleştirmelerin kimlikleri blocks işlemine verilir (ADR 0326).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "leader.collect",
+   "kind": "command",
+   "title": "Kılavuzları topla",
+   "level": "semantic",
+   "via": [
+    "cad.leaders.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.leaders.edit",
+   "mcp": "cad.leaders.edit",
+   "note": "Seçili kılavuzların kimlikleri seçim sırasıyla collect işlemine verilir (ADR 0326).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "leader.removeArm",
+   "kind": "command",
+   "title": "Kol sil",
+   "level": "semantic",
+   "via": [
+    "cad.leaders.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.leaders.edit",
+   "mcp": "cad.leaders.edit",
+   "note": "Ucu seçilen noktaya en yakın kolun sırası removeArm işlemine verilir (ADR 0326).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "leader.styles",
+   "kind": "command",
+   "title": "Kılavuz stilleri",
+   "level": "semantic",
+   "via": [
+    "cad.styles.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.styles.edit",
+   "mcp": "cad.styles.edit",
+   "note": "Pencerenin tablosu cad.styles.edit'in leader türüyle (oluştur, güncelle, sil) yazılır (ADR 0326).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "lineTypes.manage",
    "kind": "command",
    "title": "Çizgi tipleri",

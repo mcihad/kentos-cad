@@ -112,12 +112,18 @@ AngleUnitName = Literal["grad", "deg"]
 
 
 class AnnotationStyleKind(_StrEnum):
-    """Which table `cad.styles.edit` changes."""
+    """Which table `cad.styles.edit` changes.
+
+    - ``text``
+    - ``dimension``
+    - ``leader``: A leader style (docs/adr/0326 §4).
+    """
     TEXT = "text"
     DIMENSION = "dimension"
+    LEADER = "leader"
 
 
-AnnotationStyleKindName = Literal["text", "dimension"]
+AnnotationStyleKindName = Literal["text", "dimension", "leader"]
 """The names of :class:`AnnotationStyleKind`, for a plain string."""
 
 
@@ -3098,6 +3104,34 @@ class HatchRegion(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> HatchRegion:
         return _variant(_HATCH_REGION, "HatchRegion", "kind", data).from_json(data)
+
+
+class LeaderEdit(_Union):
+    """One edit of `cad.leaders.edit`.
+
+    One of:
+
+    - :class:`AddArmLeaderEdit` (``kind: addArm``)
+    - :class:`RemoveArmLeaderEdit` (``kind: removeArm``)
+    - :class:`AlignLeaderEdit` (``kind: align``)
+    - :class:`CollectLeaderEdit` (``kind: collect``)
+    - :class:`ContentLeaderEdit` (``kind: content``)
+    - :class:`BlocksLeaderEdit` (``kind: blocks``)
+    - :class:`LookLeaderEdit` (``kind: look``)
+    - :class:`StyleLeaderEdit` (``kind: style``)
+    - :class:`BindLeaderEdit` (``kind: bind``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LeaderEdit:
+        return _variant(_LEADER_EDIT, "LeaderEdit", "kind", data).from_json(data)
 
 
 class LengthenChange(_Union):
@@ -15304,6 +15338,31 @@ class LayersTranslated(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LeaderArm(_Model):
+    """A leader's arm after its first (docs/adr/0326 §1).
+    Attributes:
+        pts: At least one: its tip first, then its bends; it ends at the leader's last vertex. Unit: length.
+        tip: The place on an object its tip follows; absent: a free tip.
+    """
+    pts: list[Vec2]
+    tip: SubRef | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        if self.tip is not UNSET:
+            out["tip"] = None if self.tip is None else self.tip.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LeaderArm:
+        return cls(
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            tip=UNSET if "tip" not in data else None if data["tip"] is None else SubRef.from_json(data["tip"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LeaderEntity(Entity):
     """A leader (docs/adr/0146): an arrowhead at its first vertex, a line
     through its vertices and, with a note, a landing from its last vertex
@@ -15318,17 +15377,22 @@ class LeaderEntity(Entity):
         rotation: The note's and the landing's direction, degrees counter-clockwise from east. Unit: deg.
         annotative: Its scales: drawn at the paper height it was given at every scale it takes part in, hidden
             at others (docs/adr/0323); absent: one height.
+        arms: Its other arms (docs/adr/0326 §1): each from its own tip through its bends to the leader's last vertex, where
+            the landing starts; the arrowhead, the note and the look the first arm's.
         arrow: The arrowhead; absent: a filled arrow.
         arrow_size: The arrowhead's length, times the note's height (docs/adr/0205 §7);
             absent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`. Unit: 1.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        blocks: Its content blocks (docs/adr/0326 §2): inserts standing in a row at its landing's end, by persistent id; a
+            leader with blocks has no note.
         by_layer: On a block's object, the parts without a value of their own that
             follow the object's layer instead of the insert; in order, once each,
             never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        leader_style: The leader style it follows (docs/adr/0326 §4), by its id.
         line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
             `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
@@ -15344,6 +15408,7 @@ class LeaderEntity(Entity):
         symbol: Library symbol overriding the layer's style.
         text: The note, one line; absent: the arrow alone, no landing and no note.
             Never empty: no note is the field's absence.
+        tip: The place on an object its first arm's tip follows (docs/adr/0326 §3); absent: a free tip.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
@@ -15356,13 +15421,16 @@ class LeaderEntity(Entity):
     height: float
     rotation: float
     annotative: Annotative | None | Unset = UNSET
+    arms: list[LeaderArm] | Unset = UNSET
     arrow: LeaderArrow | LeaderArrowName | None | Unset = UNSET
     arrow_size: float | None | Unset = UNSET
     attachments: list[Attachment] | Unset = UNSET
+    blocks: list[str] | Unset = UNSET
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    leader_style: str | None | Unset = UNSET
     line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
@@ -15371,6 +15439,7 @@ class LeaderEntity(Entity):
     order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     text: str | None | Unset = UNSET
+    tip: SubRef | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
     wipeout: Wipeout | None | Unset = UNSET
 
@@ -15384,12 +15453,16 @@ class LeaderEntity(Entity):
         out["rotation"] = float(self.rotation)
         if self.annotative is not UNSET:
             out["annotative"] = None if self.annotative is None else self.annotative.to_json()
+        if self.arms is not UNSET:
+            out["arms"] = [e0.to_json() for e0 in self.arms]
         if self.arrow is not UNSET:
             out["arrow"] = None if self.arrow is None else _enum_out(self.arrow)
         if self.arrow_size is not UNSET:
             out["arrowSize"] = None if self.arrow_size is None else float(self.arrow_size)
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.blocks is not UNSET:
+            out["blocks"] = list(self.blocks)
         if self.by_layer is not UNSET:
             out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
@@ -15398,6 +15471,8 @@ class LeaderEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.leader_style is not UNSET:
+            out["leaderStyle"] = self.leader_style
         if self.line_pattern is not UNSET:
             out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
@@ -15414,6 +15489,8 @@ class LeaderEntity(Entity):
             out["symbol"] = self.symbol
         if self.text is not UNSET:
             out["text"] = self.text
+        if self.tip is not UNSET:
+            out["tip"] = None if self.tip is None else self.tip.to_json()
         if self.transparency is not UNSET:
             out["transparency"] = None if self.transparency is None else float(self.transparency)
         if self.wipeout is not UNSET:
@@ -15430,13 +15507,16 @@ class LeaderEntity(Entity):
             height=float(data["height"]),
             rotation=float(data["rotation"]),
             annotative=UNSET if "annotative" not in data else None if data["annotative"] is None else Annotative.from_json(data["annotative"]),
+            arms=[LeaderArm.from_json(e0) for e0 in data["arms"]] if "arms" in data else UNSET,
             arrow=UNSET if "arrow" not in data else None if data["arrow"] is None else _enum_in(LeaderArrow, data["arrow"]),
             arrow_size=UNSET if "arrowSize" not in data else None if data["arrowSize"] is None else float(data["arrowSize"]),
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            blocks=list(data["blocks"]) if "blocks" in data else UNSET,
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            leader_style=data.get("leaderStyle", UNSET),
             line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
@@ -15445,8 +15525,131 @@ class LeaderEntity(Entity):
             order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
             text=data.get("text", UNSET),
+            tip=UNSET if "tip" not in data else None if data["tip"] is None else SubRef.from_json(data["tip"]),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LeaderStyleDef(_Model):
+    """A named leader style (docs/adr/0326 §4): its arrowhead, the arrowhead's length in the note's height, the note's
+    height on paper (mm) and its mask.
+    Attributes:
+        id: One of its kind among the project's leader styles (a UUIDv7).
+        name: As a text style's.
+        height: The note's height on paper, mm. Unit: paper-mm.
+        arrow: Absent: a filled arrow.
+        arrow_size: Times the note's height; absent: 1. Unit: 1.
+    """
+    id: str
+    name: str
+    height: float
+    arrow: LeaderArrow | LeaderArrowName | None | Unset = UNSET
+    arrow_size: float | None | Unset = UNSET
+    mask: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["height"] = float(self.height)
+        if self.arrow is not UNSET:
+            out["arrow"] = None if self.arrow is None else _enum_out(self.arrow)
+        if self.arrow_size is not UNSET:
+            out["arrowSize"] = None if self.arrow_size is None else float(self.arrow_size)
+        if self.mask is not UNSET:
+            out["mask"] = self.mask
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LeaderStyleDef:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            height=float(data["height"]),
+            arrow=UNSET if "arrow" not in data else None if data["arrow"] is None else _enum_in(LeaderArrow, data["arrow"]),
+            arrow_size=UNSET if "arrowSize" not in data else None if data["arrowSize"] is None else float(data["arrowSize"]),
+            mask=data.get("mask", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LeadersEdit(_Model):
+    """Input of `cad.leaders.edit` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_leader`, `layer_locked`,
+    `no_entities`, `too_few_objects`, `arm_not_found`, `invalid_leader`, `not_an_insert`, `style_not_found`,
+    `no_such_place`, `not_finite`, `empty_text`.
+    """
+    edit: LeaderEdit
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["edit"] = self.edit.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LeadersEdit:
+        return cls(
+            edit=LeaderEdit.from_json(data["edit"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LeadersEdited(_Model):
+    """Output of `cad.leaders.edit` v1.
+    Attributes:
+        changed: The leaders that changed, by their persistent ids.
+        removed: The leaders Topla took away.
+    """
+    changed: list[str]
+    revision: str
+    removed: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = list(self.changed)
+        out["revision"] = self.revision
+        if self.removed is not UNSET:
+            out["removed"] = list(self.removed)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LeadersEdited:
+        return cls(
+            changed=list(data["changed"]),
+            revision=data["revision"],
+            removed=list(data["removed"]) if "removed" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LeadersPlan(_Model):
+    """What `cad.leaders.edit` would write (plan mode).
+    Attributes:
+        leaders: The leaders as execute would write them.
+    """
+    leaders: list[Entity]
+    revision: str
+    removed: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["leaders"] = [e0.to_json() for e0 in self.leaders]
+        out["revision"] = self.revision
+        if self.removed is not UNSET:
+            out["removed"] = list(self.removed)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LeadersPlan:
+        return cls(
+            leaders=[Entity.from_json(e0) for e0 in data["leaders"]],
+            revision=data["revision"],
+            removed=list(data["removed"]) if "removed" in data else UNSET,
         )
 
 
@@ -18952,6 +19155,7 @@ class ProjectSettings(_Model):
         drawing_unit: A local project's unit (docs/adr/0165 §2); absent: metres. Only a
             project without a coordinate system (SRID 0) has another.
         layer_states: The project's named layer states (docs/adr/0177 §4), in the menu's order.
+        leader_styles: The project's named leader styles (docs/adr/0326 §4).
         length_style: How lengths are written (docs/adr/0262 §2): none, decimal; the others
             only in an inch or foot drawing.
         line_type_scale: The project's line type scale (AutoCAD's LTSCALE, docs/adr/0313 §3): every pattern's lengths times it, above 0;
@@ -18990,6 +19194,7 @@ class ProjectSettings(_Model):
     drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
     layer_states: list[LayerState] | Unset = UNSET
+    leader_styles: list[LeaderStyleDef] | Unset = UNSET
     length_style: LengthStyle | LengthStyleName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_types: list[LineTypeDef] | Unset = UNSET
@@ -19031,6 +19236,8 @@ class ProjectSettings(_Model):
             out["drawingUnit"] = None if self.drawing_unit is None else _enum_out(self.drawing_unit)
         if self.layer_states is not UNSET:
             out["layerStates"] = [e0.to_json() for e0 in self.layer_states]
+        if self.leader_styles is not UNSET:
+            out["leaderStyles"] = [e0.to_json() for e0 in self.leader_styles]
         if self.length_style is not UNSET:
             out["lengthStyle"] = None if self.length_style is None else _enum_out(self.length_style)
         if self.line_type_scale is not UNSET:
@@ -19079,6 +19286,7 @@ class ProjectSettings(_Model):
             drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
             layer_states=[LayerState.from_json(e0) for e0 in data["layerStates"]] if "layerStates" in data else UNSET,
+            leader_styles=[LeaderStyleDef.from_json(e0) for e0 in data["leaderStyles"]] if "leaderStyles" in data else UNSET,
             length_style=UNSET if "lengthStyle" not in data else None if data["lengthStyle"] is None else _enum_in(LengthStyle, data["lengthStyle"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_types=[LineTypeDef.from_json(e0) for e0 in data["lineTypes"]] if "lineTypes" in data else UNSET,
@@ -21376,6 +21584,7 @@ class StylesEdit(_Model):
     Attributes:
         dimension: Create's and update's dimension style.
         expected_revision: The document revision the input was prepared against, as decimal text.
+        leader: Create's and update's leader style (docs/adr/0326 §4).
         library: Import's `kentos.annotation-styles` file's text.
         name: Rename's new name, trimmed.
         replace: Import: true, a style whose name the table has is updated from the file.
@@ -21387,6 +21596,7 @@ class StylesEdit(_Model):
     operation: StyleEditOperation | StyleEditOperationName
     dimension: DimensionStyleDef | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    leader: LeaderStyleDef | None | Unset = UNSET
     library: str | None | Unset = UNSET
     name: str | None | Unset = UNSET
     replace: bool | None | Unset = UNSET
@@ -21402,6 +21612,8 @@ class StylesEdit(_Model):
             out["dimension"] = None if self.dimension is None else self.dimension.to_json()
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.leader is not UNSET:
+            out["leader"] = None if self.leader is None else self.leader.to_json()
         if self.library is not UNSET:
             out["library"] = self.library
         if self.name is not UNSET:
@@ -21423,6 +21635,7 @@ class StylesEdit(_Model):
             operation=_enum_in(StyleEditOperation, data["operation"]),
             dimension=UNSET if "dimension" not in data else None if data["dimension"] is None else DimensionStyleDef.from_json(data["dimension"]),
             expected_revision=data.get("expectedRevision", UNSET),
+            leader=UNSET if "leader" not in data else None if data["leader"] is None else LeaderStyleDef.from_json(data["leader"]),
             library=data.get("library", UNSET),
             name=data.get("name", UNSET),
             replace=data.get("replace", UNSET),
@@ -26408,6 +26621,8 @@ class LeaderEntityGeometry(EntityGeometry):
         rotation: Unit: deg.
         annotative: Its scales (docs/adr/0323 §4); absent: an object updated keeps its own (only
             `cad.annotations.scales` takes them away), a new one has none.
+        arms: Its other arms' points, each its tip first (docs/adr/0326 §1); absent: an object updated keeps its own, a new
+            one has none; an arm kept keeps what its tip follows. Unit: length.
         arrow: The arrowhead; absent: a filled arrow.
         arrow_size: The arrowhead's length, times the note's height (docs/adr/0205
             §7); absent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`. Unit: 1.
@@ -26419,6 +26634,7 @@ class LeaderEntityGeometry(EntityGeometry):
     height: float
     rotation: float
     annotative: Annotative | None | Unset = UNSET
+    arms: list[list[Vec2]] | None | Unset = UNSET
     arrow: LeaderArrow | LeaderArrowName | None | Unset = UNSET
     arrow_size: float | None | Unset = UNSET
     mask: bool | Unset = UNSET
@@ -26431,6 +26647,8 @@ class LeaderEntityGeometry(EntityGeometry):
         out["rotation"] = float(self.rotation)
         if self.annotative is not UNSET:
             out["annotative"] = None if self.annotative is None else self.annotative.to_json()
+        if self.arms is not UNSET:
+            out["arms"] = None if self.arms is None else [[_vec2_out(e1) for e1 in e0] for e0 in self.arms]
         if self.arrow is not UNSET:
             out["arrow"] = None if self.arrow is None else _enum_out(self.arrow)
         if self.arrow_size is not UNSET:
@@ -26448,6 +26666,7 @@ class LeaderEntityGeometry(EntityGeometry):
             height=float(data["height"]),
             rotation=float(data["rotation"]),
             annotative=UNSET if "annotative" not in data else None if data["annotative"] is None else Annotative.from_json(data["annotative"]),
+            arms=UNSET if "arms" not in data else None if data["arms"] is None else [[Vec2.from_json(e1) for e1 in e0] for e0 in data["arms"]],
             arrow=UNSET if "arrow" not in data else None if data["arrow"] is None else _enum_in(LeaderArrow, data["arrow"]),
             arrow_size=UNSET if "arrowSize" not in data else None if data["arrowSize"] is None else float(data["arrowSize"]),
             mask=data.get("mask", UNSET),
@@ -26964,6 +27183,244 @@ class ObjectsHatchRegion(HatchRegion):
             associative=data.get("associative", UNSET),
             islands=data.get("islands", UNSET),
             texts=data.get("texts", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddArmLeaderEdit(LeaderEdit):
+    """Kol ekle: an arm whose tip is `pts[0]` (its bends after it) to the leader's last vertex; `tip` what the tip
+    follows.
+    Attributes:
+        pts: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "addArm"
+    uid: str
+    pts: list[Vec2]
+    tip: SubRef | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "addArm"}
+        out["uid"] = self.uid
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        if self.tip is not UNSET:
+            out["tip"] = None if self.tip is None else self.tip.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddArmLeaderEdit:
+        return cls(
+            uid=data["uid"],
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            tip=UNSET if "tip" not in data else None if data["tip"] is None else SubRef.from_json(data["tip"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveArmLeaderEdit(LeaderEdit):
+    """Kol sil: arm `arm` (0 the first) taken away; without its first arm the next is first. The last arm stays.
+    Attributes:
+        arm: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "removeArm"
+    uid: str
+    arm: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "removeArm"}
+        out["uid"] = self.uid
+        out["arm"] = self.arm
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveArmLeaderEdit:
+        return cls(
+            uid=data["uid"],
+            arm=data["arm"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignLeaderEdit(LeaderEdit):
+    """Hizala (MLEADERALIGN): the first leader stays; the others' last vertices go onto the line through its last
+    vertex at `angle` (degrees counter-clockwise from east), where they fall on it, or `spacing` metres apart from
+    it in that order.
+    Attributes:
+        angle: Unit: deg.
+        spacing: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "align"
+    uids: list[str]
+    angle: float
+    spacing: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "align"}
+        out["uids"] = list(self.uids)
+        out["angle"] = float(self.angle)
+        if self.spacing is not UNSET:
+            out["spacing"] = None if self.spacing is None else float(self.spacing)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignLeaderEdit:
+        return cls(
+            uids=list(data["uids"]),
+            angle=float(data["angle"]),
+            spacing=UNSET if "spacing" not in data else None if data["spacing"] is None else float(data["spacing"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CollectLeaderEdit(LeaderEdit):
+    """Topla (MLEADERCOLLECT): block content leaders into the first: the others' arms its arms, their blocks after its
+    own; the others taken away, their blocks kept.
+    """
+    TAG_VALUE: ClassVar[str] = "collect"
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "collect"}
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CollectLeaderEdit:
+        return cls(
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ContentLeaderEdit(LeaderEdit):
+    """The note written (null: taken away)."""
+    TAG_VALUE: ClassVar[str] = "content"
+    uid: str
+    text: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "content"}
+        out["uid"] = self.uid
+        if self.text is not UNSET:
+            out["text"] = self.text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ContentLeaderEdit:
+        return cls(
+            uid=data["uid"],
+            text=data.get("text", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksLeaderEdit(LeaderEdit):
+    """The content blocks (inserts, by persistent id; empty: none): they stand in a row at the landing's end."""
+    TAG_VALUE: ClassVar[str] = "blocks"
+    uid: str
+    blocks: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "blocks"}
+        out["uid"] = self.uid
+        out["blocks"] = list(self.blocks)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksLeaderEdit:
+        return cls(
+            uid=data["uid"],
+            blocks=list(data["blocks"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LookLeaderEdit(LeaderEdit):
+    """The leaders' look, each field given set apart from their style: the arrowhead (`filled` or a `LeaderArrow`
+    name), its length in the note's height, the note's height in metres, the mask.
+    Attributes:
+        arrow_size: Unit: 1.
+        height: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "look"
+    uids: list[str]
+    arrow: str | None | Unset = UNSET
+    arrow_size: float | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    mask: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "look"}
+        out["uids"] = list(self.uids)
+        if self.arrow is not UNSET:
+            out["arrow"] = self.arrow
+        if self.arrow_size is not UNSET:
+            out["arrowSize"] = None if self.arrow_size is None else float(self.arrow_size)
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.mask is not UNSET:
+            out["mask"] = self.mask
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LookLeaderEdit:
+        return cls(
+            uids=list(data["uids"]),
+            arrow=data.get("arrow", UNSET),
+            arrow_size=UNSET if "arrowSize" not in data else None if data["arrowSize"] is None else float(data["arrowSize"]),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            mask=data.get("mask", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StyleLeaderEdit(LeaderEdit):
+    """The leaders follow the leader style `style` (its values written into them; null: they keep their look and
+    follow none).
+    """
+    TAG_VALUE: ClassVar[str] = "style"
+    uids: list[str]
+    style: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "style"}
+        out["uids"] = list(self.uids)
+        if self.style is not UNSET:
+            out["style"] = self.style
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StyleLeaderEdit:
+        return cls(
+            uids=list(data["uids"]),
+            style=data.get("style", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BindLeaderEdit(LeaderEdit):
+    """Arm `arm`'s tip bound to `tip` (it goes to the place's point) or (null) freed.
+    Attributes:
+        arm: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "bind"
+    uid: str
+    arm: int
+    tip: SubRef | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "bind"}
+        out["uid"] = self.uid
+        out["arm"] = self.arm
+        if self.tip is not UNSET:
+            out["tip"] = None if self.tip is None else self.tip.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BindLeaderEdit:
+        return cls(
+            uid=data["uid"],
+            arm=data["arm"],
+            tip=UNSET if "tip" not in data else None if data["tip"] is None else SubRef.from_json(data["tip"]),
         )
 
 
@@ -29004,6 +29461,9 @@ _FIELD_SOURCE: dict[str, type[FieldSource]] = {"object": ObjectFieldSource, "pro
 _HATCH_REGION: dict[str, type[HatchRegion]] = {"point": PointHatchRegion, "objects": ObjectsHatchRegion}
 
 
+_LEADER_EDIT: dict[str, type[LeaderEdit]] = {"addArm": AddArmLeaderEdit, "removeArm": RemoveArmLeaderEdit, "align": AlignLeaderEdit, "collect": CollectLeaderEdit, "content": ContentLeaderEdit, "blocks": BlocksLeaderEdit, "look": LookLeaderEdit, "style": StyleLeaderEdit, "bind": BindLeaderEdit}
+
+
 _LENGTHEN_CHANGE: dict[str, type[LengthenChange]] = {"delta": DeltaLengthenChange, "percent": PercentLengthenChange, "total": TotalLengthenChange, "dynamic": DynamicLengthenChange}
 
 
@@ -29058,6 +29518,7 @@ _VIEWS_OP: dict[str, type[ViewsOp]] = {"save": SaveViewsOp, "rename": RenameView
 __all__ = [
     "AccessSource",
     "AccessSourceName",
+    "AddArmLeaderEdit",
     "AddEntityEdit",
     "AddFitCurveEdit",
     "AddressLocator",
@@ -29067,6 +29528,7 @@ __all__ = [
     "AddressesDefined",
     "AffineCrsPlane",
     "AffineTransform",
+    "AlignLeaderEdit",
     "AlignTransform",
     "AlignedDimensionMeasure",
     "AllCornerPick",
@@ -29143,6 +29605,7 @@ __all__ = [
     "AuthKindName",
     "AzimuthDimensionMeasure",
     "BaselineDimensionMeasure",
+    "BindLeaderEdit",
     "BlendMode",
     "BlendModeName",
     "BlockAction",
@@ -29174,6 +29637,7 @@ __all__ = [
     "BlocksFrozen",
     "BlocksInsert",
     "BlocksInsertPlan",
+    "BlocksLeaderEdit",
     "BlocksParameters",
     "BlocksParametersOut",
     "BlocksProxied",
@@ -29229,11 +29693,13 @@ __all__ = [
     "CloudRender",
     "CloudRenderName",
     "CloudSource",
+    "CollectLeaderEdit",
     "CombineTextEdit",
     "CommitResult",
     "ConstructedCurve",
     "ConstructionEntity",
     "ContainingSelectRegion",
+    "ContentLeaderEdit",
     "ContinueDimensionMeasure",
     "ControlNurbsBy",
     "Convention",
@@ -29567,10 +30033,16 @@ __all__ = [
     "LayersTranslate",
     "LayersTranslated",
     "LayoutArrayEdit",
+    "LeaderArm",
     "LeaderArrow",
     "LeaderArrowName",
+    "LeaderEdit",
     "LeaderEntity",
     "LeaderEntityGeometry",
+    "LeaderStyleDef",
+    "LeadersEdit",
+    "LeadersEdited",
+    "LeadersPlan",
     "LengthStyle",
     "LengthStyleName",
     "LengthenChange",
@@ -29603,6 +30075,7 @@ __all__ = [
     "LinesCornerPick",
     "LocalCrsSystem",
     "LocalDefinition",
+    "LookLeaderEdit",
     "LookPart",
     "LookPartName",
     "LookupBlockParameter",
@@ -29798,6 +30271,7 @@ __all__ = [
     "RegistryDatumName",
     "RegularFrame",
     "RegularPolygonCreate",
+    "RemoveArmLeaderEdit",
     "RemoveArrayEdit",
     "RemoveControlCurveEdit",
     "RemoveEntityEdit",
@@ -29884,6 +30358,7 @@ __all__ = [
     "StyleEditOperationName",
     "StyleFont",
     "StyleImpact",
+    "StyleLeaderEdit",
     "StylesEdit",
     "StylesEdited",
     "StylesImpact",

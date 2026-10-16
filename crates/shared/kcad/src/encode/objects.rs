@@ -1128,6 +1128,22 @@ impl<'d> Encoder<'d> {
                 if e.mask {
                     f.push(("mask", Val::Bool(true)));
                 }
+                // Schema 67 (docs/adr/0326): its arms, tip, content blocks and style, as their JSON.
+                if let Some((field, words)) = kentos_contracts::leader_problem(e) {
+                    return refuse(self, field, &words);
+                }
+                if !e.arms.is_empty() {
+                    f.push(("arms", Val::Json(serde_json::to_value(&e.arms).unwrap_or_default())));
+                }
+                if let Some(t) = &e.tip {
+                    f.push(("tip", Val::Json(serde_json::to_value(t).unwrap_or_default())));
+                }
+                if !e.blocks.is_empty() {
+                    f.push(("blocks", Val::Json(serde_json::to_value(&e.blocks).unwrap_or_default())));
+                }
+                if let Some(s) = &e.leader_style {
+                    f.push(("leaderStyle", Val::Text(s)));
+                }
             }
         }
         // An annotation's scales (docs/adr/0323), as their JSON.

@@ -437,6 +437,10 @@ impl Fields {
                 mirror: self.mirror.unwrap_or(false),
             }),
             "leader" => Entity::Leader(LeaderEntity {
+                tip: None,
+                leader_style: None,
+                blocks: Vec::new(),
+                arms: Vec::new(),
                 annotative: None,
                 base,
                 pts: need(self.pts, "pts")?,

@@ -1305,6 +1305,26 @@ const ENTRIES: &[Entry] = &[
         targets: || vec![target(None, &["text"], &[], Some("not_a_text"), None)],
     },
     Entry {
+        id: "cad.leaders.edit",
+        refusals: &[
+            OBJECTS,
+            &[
+                "not_a_leader",
+                "too_few_objects",
+                "arm_not_found",
+                "invalid_leader",
+                "not_an_insert",
+                "style_not_found",
+                "no_such_place",
+                "not_finite",
+                "empty_text",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: || vec![target(None, &["leader"], &[], Some("not_a_leader"), None)],
+    },
+    Entry {
         id: "cad.fonts.report",
         refusals: &[&["empty_name", "invalid_name"]],
         warnings: &["font_substituted"],

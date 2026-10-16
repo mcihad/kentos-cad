@@ -3216,3 +3216,40 @@ fn an_attribute_s_options_are_its_flags() {
     let at = plain.find("AcDbAttributeDefinition").expect("an ATTDEF");
     assert!(plain[at..at + 120].contains(" 70\r\n0\r\n"));
 }
+
+/// A leader's other arms (docs/adr/0326 §1) go out each as a LEADER of its own (other programs draw them) and in the
+/// leader's KentOS data; they come back as its arms, the arm LEADERs left out. Content blocks and tips' bindings are
+/// not written, and that is said.
+#[test]
+fn a_leaders_arms_read_back_as_they_were() {
+    let input = fixture_input("leaders");
+    let mut first = input
+        .entities
+        .iter()
+        .find_map(|e| match e {
+            Entity::Leader(l) if l.text.is_some() => Some(l.clone()),
+            _ => None,
+        })
+        .expect("a noted leader");
+    let p = first.pts[0];
+    first.arms = vec![
+        kentos_contracts::LeaderArm { pts: vec![v(p.x + 3.0, p.y - 2.0)], tip: None },
+        kentos_contracts::LeaderArm { pts: vec![v(p.x - 1.5, p.y + 4.0), v(p.x + 0.5, p.y + 5.0)], tip: None },
+    ];
+    let one = DxfWriteInput { entities: vec![Entity::Leader(first.clone())], blocks: Vec::new(), ..input };
+    let (text, report) = write(&one);
+    assert_eq!(entities_of(&pairs(&text), "LEADER").len(), 3);
+    assert!(report.notes.is_empty(), "{:?}", report.notes);
+    let r = read(&text);
+    let leaders: Vec<&kentos_contracts::LeaderEntity> = r
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Leader(l) => Some(l),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(leaders.len(), 1);
+    assert_eq!(leaders[0].arms, first.arms);
+    assert_eq!(leaders[0].pts, first.pts);
+}

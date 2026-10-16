@@ -4116,6 +4116,1456 @@
           }
         }
       ]
+    },
+    {
+      "name": "Kılavuz stili oluştur",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Stiller",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "name": "Ada no",
+              "font": "arimo",
+              "bold": true,
+              "height": 3.5
+            },
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+              "name": "Yol adı",
+              "font": "overpass",
+              "italic": true,
+              "oblique": 15.0,
+              "widthFactor": 0.8
+            }
+          ],
+          "dimensionStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+              "name": "Mimari",
+              "height": 3.5,
+              "arrow": "closed",
+              "arrowSize": 3.5,
+              "extOffset": 1.0,
+              "extBeyond": 1.75,
+              "textGap": 0.875,
+              "decimals": 1,
+              "unit": "cm",
+              "prefix": "~",
+              "suffix": " cm",
+              "font": "arimo"
+            }
+          ],
+          "leaderStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01",
+              "name": "Kılavuz",
+              "height": 2.5,
+              "arrow": "dot",
+              "mask": true
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "101",
+            "height": 3.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+            "font": "arimo",
+            "bold": true
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "102",
+            "height": 3.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+            "font": "barlow",
+            "bold": true
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400000
+            },
+            "text": "103",
+            "height": 3.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+            "font": "arimo",
+            "bold": true
+          },
+          {
+            "kind": "text",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500060,
+              "y": 4400000
+            },
+            "text": "Atatürk Caddesi",
+            "height": 2.0,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+            "font": "overpass",
+            "italic": true,
+            "oblique": 15.0,
+            "widthFactor": 0.8
+          },
+          {
+            "kind": "dimension",
+            "id": 5,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400050
+            },
+            "b": {
+              "x": 500024.5,
+              "y": 4400050
+            },
+            "offset": -2,
+            "height": 3.5,
+            "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+            "arrow": "closed",
+            "extOffset": 0.2857142857142857,
+            "textGap": 0.25,
+            "decimals": 1,
+            "unit": "cm",
+            "prefix": "~",
+            "suffix": " cm",
+            "font": "arimo"
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500080,
+              "y": 4400000
+            },
+            "text": "Not",
+            "height": 2.0,
+            "rotation": 0
+          },
+          {
+            "kind": "leader",
+            "id": 7,
+            "layerId": "yazi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400000
+              },
+              {
+                "x": 500003,
+                "y": 4400003
+              }
+            ],
+            "text": "Not",
+            "height": 2.5,
+            "rotation": 0,
+            "arrow": "dot",
+            "mask": true,
+            "leaderStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01"
+          },
+          {
+            "kind": "leader",
+            "id": 8,
+            "layerId": "yazi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500010,
+                "y": 4400000
+              },
+              {
+                "x": 500013,
+                "y": 4400003
+              }
+            ],
+            "text": "Not",
+            "height": 2.5,
+            "rotation": 0,
+            "arrow": "open",
+            "mask": true,
+            "leaderStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01"
+          },
+          {
+            "kind": "leader",
+            "id": 9,
+            "layerId": "kilitli",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500020,
+                "y": 4400000
+              },
+              {
+                "x": 500023,
+                "y": 4400003
+              }
+            ],
+            "text": "Not",
+            "height": 2.5,
+            "rotation": 0,
+            "arrow": "dot",
+            "mask": true,
+            "leaderStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01"
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "leader",
+            "operation": "create",
+            "leader": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d02",
+              "name": "Etiket",
+              "height": 1.8,
+              "arrowSize": 1.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d02",
+              "changed": true,
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "leaderStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01",
+                  "name": "Kılavuz",
+                  "height": 2.5,
+                  "arrow": "dot",
+                  "mask": true
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d02",
+                  "name": "Etiket",
+                  "height": 1.8,
+                  "arrowSize": 1.5
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kılavuz stilini güncelle: eski değerdeki alanlar yenisini alır, ayrılan ok kalır, kilitli katmandaki sayılır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Stiller",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "name": "Ada no",
+              "font": "arimo",
+              "bold": true,
+              "height": 3.5
+            },
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+              "name": "Yol adı",
+              "font": "overpass",
+              "italic": true,
+              "oblique": 15.0,
+              "widthFactor": 0.8
+            }
+          ],
+          "dimensionStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+              "name": "Mimari",
+              "height": 3.5,
+              "arrow": "closed",
+              "arrowSize": 3.5,
+              "extOffset": 1.0,
+              "extBeyond": 1.75,
+              "textGap": 0.875,
+              "decimals": 1,
+              "unit": "cm",
+              "prefix": "~",
+              "suffix": " cm",
+              "font": "arimo"
+            }
+          ],
+          "leaderStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01",
+              "name": "Kılavuz",
+              "height": 2.5,
+              "arrow": "dot",
+              "mask": true
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "101",
+            "height": 3.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+            "font": "arimo",
+            "bold": true
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "102",
+            "height": 3.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+            "font": "barlow",
+            "bold": true
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400000
+            },
+            "text": "103",
+            "height": 3.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+            "font": "arimo",
+            "bold": true
+          },
+          {
+            "kind": "text",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500060,
+              "y": 4400000
+            },
+            "text": "Atatürk Caddesi",
+            "height": 2.0,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+            "font": "overpass",
+            "italic": true,
+            "oblique": 15.0,
+            "widthFactor": 0.8
+          },
+          {
+            "kind": "dimension",
+            "id": 5,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400050
+            },
+            "b": {
+              "x": 500024.5,
+              "y": 4400050
+            },
+            "offset": -2,
+            "height": 3.5,
+            "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+            "arrow": "closed",
+            "extOffset": 0.2857142857142857,
+            "textGap": 0.25,
+            "decimals": 1,
+            "unit": "cm",
+            "prefix": "~",
+            "suffix": " cm",
+            "font": "arimo"
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500080,
+              "y": 4400000
+            },
+            "text": "Not",
+            "height": 2.0,
+            "rotation": 0
+          },
+          {
+            "kind": "leader",
+            "id": 7,
+            "layerId": "yazi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400000
+              },
+              {
+                "x": 500003,
+                "y": 4400003
+              }
+            ],
+            "text": "Not",
+            "height": 2.5,
+            "rotation": 0,
+            "arrow": "dot",
+            "mask": true,
+            "leaderStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01"
+          },
+          {
+            "kind": "leader",
+            "id": 8,
+            "layerId": "yazi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500010,
+                "y": 4400000
+              },
+              {
+                "x": 500013,
+                "y": 4400003
+              }
+            ],
+            "text": "Not",
+            "height": 2.5,
+            "rotation": 0,
+            "arrow": "open",
+            "mask": true,
+            "leaderStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01"
+          },
+          {
+            "kind": "leader",
+            "id": 9,
+            "layerId": "kilitli",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500020,
+                "y": 4400000
+              },
+              {
+                "x": 500023,
+                "y": 4400003
+              }
+            ],
+            "text": "Not",
+            "height": 2.5,
+            "rotation": 0,
+            "arrow": "dot",
+            "mask": true,
+            "leaderStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01"
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "leader",
+            "operation": "update",
+            "leader": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01",
+              "name": "Kılavuz",
+              "height": 5.0,
+              "mask": true,
+              "arrow": "none"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01",
+              "changed": true,
+              "followed": 2,
+              "locked": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "7": {
+                "kind": "leader",
+                "id": 7,
+                "layerId": "yazi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500003,
+                    "y": 4400003
+                  }
+                ],
+                "text": "Not",
+                "height": 5.0,
+                "rotation": 0,
+                "arrow": "none",
+                "mask": true,
+                "leaderStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01"
+              },
+              "8": {
+                "kind": "leader",
+                "id": 8,
+                "layerId": "yazi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500010,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500013,
+                    "y": 4400003
+                  }
+                ],
+                "text": "Not",
+                "height": 5.0,
+                "rotation": 0,
+                "arrow": "open",
+                "mask": true,
+                "leaderStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01"
+              }
+            },
+            "settings": {
+              "leaderStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01",
+                  "name": "Kılavuz",
+                  "height": 5.0,
+                  "mask": true,
+                  "arrow": "none"
+                }
+              ]
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kılavuz stili",
+          "expect": {
+            "entities": {
+              "7": {
+                "kind": "leader",
+                "id": 7,
+                "layerId": "yazi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500003,
+                    "y": 4400003
+                  }
+                ],
+                "text": "Not",
+                "height": 2.5,
+                "rotation": 0,
+                "arrow": "dot",
+                "mask": true,
+                "leaderStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01"
+              },
+              "8": {
+                "kind": "leader",
+                "id": 8,
+                "layerId": "yazi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500010,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500013,
+                    "y": 4400003
+                  }
+                ],
+                "text": "Not",
+                "height": 2.5,
+                "rotation": 0,
+                "arrow": "open",
+                "mask": true,
+                "leaderStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kılavuz stilini sil: kılavuzlar görünüşünü korur, bağını yitirir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Stiller",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "name": "Ada no",
+              "font": "arimo",
+              "bold": true,
+              "height": 3.5
+            },
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+              "name": "Yol adı",
+              "font": "overpass",
+              "italic": true,
+              "oblique": 15.0,
+              "widthFactor": 0.8
+            }
+          ],
+          "dimensionStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+              "name": "Mimari",
+              "height": 3.5,
+              "arrow": "closed",
+              "arrowSize": 3.5,
+              "extOffset": 1.0,
+              "extBeyond": 1.75,
+              "textGap": 0.875,
+              "decimals": 1,
+              "unit": "cm",
+              "prefix": "~",
+              "suffix": " cm",
+              "font": "arimo"
+            }
+          ],
+          "leaderStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01",
+              "name": "Kılavuz",
+              "height": 2.5,
+              "arrow": "dot",
+              "mask": true
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "101",
+            "height": 3.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+            "font": "arimo",
+            "bold": true
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "102",
+            "height": 3.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+            "font": "barlow",
+            "bold": true
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400000
+            },
+            "text": "103",
+            "height": 3.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+            "font": "arimo",
+            "bold": true
+          },
+          {
+            "kind": "text",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500060,
+              "y": 4400000
+            },
+            "text": "Atatürk Caddesi",
+            "height": 2.0,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+            "font": "overpass",
+            "italic": true,
+            "oblique": 15.0,
+            "widthFactor": 0.8
+          },
+          {
+            "kind": "dimension",
+            "id": 5,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400050
+            },
+            "b": {
+              "x": 500024.5,
+              "y": 4400050
+            },
+            "offset": -2,
+            "height": 3.5,
+            "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+            "arrow": "closed",
+            "extOffset": 0.2857142857142857,
+            "textGap": 0.25,
+            "decimals": 1,
+            "unit": "cm",
+            "prefix": "~",
+            "suffix": " cm",
+            "font": "arimo"
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500080,
+              "y": 4400000
+            },
+            "text": "Not",
+            "height": 2.0,
+            "rotation": 0
+          },
+          {
+            "kind": "leader",
+            "id": 7,
+            "layerId": "yazi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400000
+              },
+              {
+                "x": 500003,
+                "y": 4400003
+              }
+            ],
+            "text": "Not",
+            "height": 2.5,
+            "rotation": 0,
+            "arrow": "dot",
+            "mask": true,
+            "leaderStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01"
+          },
+          {
+            "kind": "leader",
+            "id": 8,
+            "layerId": "yazi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500010,
+                "y": 4400000
+              },
+              {
+                "x": 500013,
+                "y": 4400003
+              }
+            ],
+            "text": "Not",
+            "height": 2.5,
+            "rotation": 0,
+            "arrow": "open",
+            "mask": true,
+            "leaderStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01"
+          },
+          {
+            "kind": "leader",
+            "id": 9,
+            "layerId": "kilitli",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500020,
+                "y": 4400000
+              },
+              {
+                "x": 500023,
+                "y": 4400003
+              }
+            ],
+            "text": "Not",
+            "height": 2.5,
+            "rotation": 0,
+            "arrow": "dot",
+            "mask": true,
+            "leaderStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01"
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "leader",
+            "operation": "remove",
+            "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01",
+              "changed": true,
+              "followed": 2,
+              "locked": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "7": {
+                "kind": "leader",
+                "id": 7,
+                "layerId": "yazi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500003,
+                    "y": 4400003
+                  }
+                ],
+                "text": "Not",
+                "height": 2.5,
+                "rotation": 0,
+                "arrow": "dot",
+                "mask": true
+              },
+              "8": {
+                "kind": "leader",
+                "id": 8,
+                "layerId": "yazi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500010,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500013,
+                    "y": 4400003
+                  }
+                ],
+                "text": "Not",
+                "height": 2.5,
+                "rotation": 0,
+                "arrow": "open",
+                "mask": true
+              }
+            },
+            "settings": {
+              "leaderStyles": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kılavuz stilinin yüksekliği sıfır olamaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Stiller",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "name": "Ada no",
+              "font": "arimo",
+              "bold": true,
+              "height": 3.5
+            },
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+              "name": "Yol adı",
+              "font": "overpass",
+              "italic": true,
+              "oblique": 15.0,
+              "widthFactor": 0.8
+            }
+          ],
+          "dimensionStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+              "name": "Mimari",
+              "height": 3.5,
+              "arrow": "closed",
+              "arrowSize": 3.5,
+              "extOffset": 1.0,
+              "extBeyond": 1.75,
+              "textGap": 0.875,
+              "decimals": 1,
+              "unit": "cm",
+              "prefix": "~",
+              "suffix": " cm",
+              "font": "arimo"
+            }
+          ],
+          "leaderStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01",
+              "name": "Kılavuz",
+              "height": 2.5,
+              "arrow": "dot",
+              "mask": true
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "olcu",
+            "name": "Ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "101",
+            "height": 3.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+            "font": "arimo",
+            "bold": true
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "102",
+            "height": 3.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+            "font": "barlow",
+            "bold": true
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400000
+            },
+            "text": "103",
+            "height": 3.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+            "font": "arimo",
+            "bold": true
+          },
+          {
+            "kind": "text",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500060,
+              "y": 4400000
+            },
+            "text": "Atatürk Caddesi",
+            "height": 2.0,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+            "font": "overpass",
+            "italic": true,
+            "oblique": 15.0,
+            "widthFactor": 0.8
+          },
+          {
+            "kind": "dimension",
+            "id": 5,
+            "layerId": "olcu",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400050
+            },
+            "b": {
+              "x": 500024.5,
+              "y": 4400050
+            },
+            "offset": -2,
+            "height": 3.5,
+            "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+            "arrow": "closed",
+            "extOffset": 0.2857142857142857,
+            "textGap": 0.25,
+            "decimals": 1,
+            "unit": "cm",
+            "prefix": "~",
+            "suffix": " cm",
+            "font": "arimo"
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500080,
+              "y": 4400000
+            },
+            "text": "Not",
+            "height": 2.0,
+            "rotation": 0
+          },
+          {
+            "kind": "leader",
+            "id": 7,
+            "layerId": "yazi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400000
+              },
+              {
+                "x": 500003,
+                "y": 4400003
+              }
+            ],
+            "text": "Not",
+            "height": 2.5,
+            "rotation": 0,
+            "arrow": "dot",
+            "mask": true,
+            "leaderStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01"
+          },
+          {
+            "kind": "leader",
+            "id": 8,
+            "layerId": "yazi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500010,
+                "y": 4400000
+              },
+              {
+                "x": 500013,
+                "y": 4400003
+              }
+            ],
+            "text": "Not",
+            "height": 2.5,
+            "rotation": 0,
+            "arrow": "open",
+            "mask": true,
+            "leaderStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01"
+          },
+          {
+            "kind": "leader",
+            "id": 9,
+            "layerId": "kilitli",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500020,
+                "y": 4400000
+              },
+              {
+                "x": 500023,
+                "y": 4400003
+              }
+            ],
+            "text": "Not",
+            "height": 2.5,
+            "rotation": 0,
+            "arrow": "dot",
+            "mask": true,
+            "leaderStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01"
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "leader",
+            "operation": "create",
+            "leader": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d02",
+              "name": "Etiket",
+              "height": 0,
+              "arrowSize": 1.5
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_style",
+              "message": "Kılavuz stilleri: “Etiket” kılavuz stilinin not yüksekliği 0 mm; sıfırdan büyük, en çok 1000 olmalı.",
+              "path": "leader"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
     }
   ]
 }

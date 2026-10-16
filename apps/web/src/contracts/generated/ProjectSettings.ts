@@ -9,6 +9,7 @@ import type { DimensionStyleDef } from "./DimensionStyleDef";
 import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
 import type { LayerState } from "./LayerState";
+import type { LeaderStyleDef } from "./LeaderStyleDef";
 import type { LengthStyle } from "./LengthStyle";
 import type { LineTypeDef } from "./LineTypeDef";
 import type { NamedUcs } from "./NamedUcs";
@@ -90,6 +91,10 @@ textStyles?: Array<TextStyleDef>,
  * The project's named dimension styles (docs/adr/0183 §3).
  */
 dimensionStyles?: Array<DimensionStyleDef>, 
+/**
+ * The project's named leader styles (docs/adr/0326 §4).
+ */
+leaderStyles?: Array<LeaderStyleDef>, 
 /**
  * The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).
  */

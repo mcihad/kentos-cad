@@ -742,6 +742,7 @@ mod tests {
     #[test]
     fn a_projects_type_names_its_axes() {
         let mut settings = ProjectSettings {
+            leader_styles: Vec::new(),
             line_type_scale: None,
             line_types: Vec::new(),
             length_style: None,
@@ -825,6 +826,7 @@ mod tests {
     #[test]
     fn a_local_project_reads_in_its_unit() {
         let mut settings = ProjectSettings {
+            leader_styles: Vec::new(),
             line_type_scale: None,
             line_types: Vec::new(),
             length_style: None,

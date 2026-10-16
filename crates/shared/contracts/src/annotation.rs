@@ -724,6 +724,64 @@ pub struct TextStyleDef {
     pub font_file: Option<String>,
 }
 
+/// A named leader style (docs/adr/0326 §4): its arrowhead, the arrowhead's length in the note's height, the note's
+/// height on paper (mm) and its mask.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LeaderStyleDef {
+    /// One of its kind among the project's leader styles (a UUIDv7).
+    pub id: String,
+    /// As a text style's.
+    pub name: String,
+    /// The note's height on paper, mm.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub height: f64,
+    /// Absent: a filled arrow.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub arrow: Option<crate::LeaderArrow>,
+    /// Times the note's height; absent: 1.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub arrow_size: Option<f64>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub mask: bool,
+}
+
+impl LeaderStyleDef {
+    /// What is wrong with it: the field and the refusal's words (as the other styles say theirs).
+    pub fn problem(&self) -> Option<(&'static str, String)> {
+        let name = &self.name;
+        if !mm_holds(self.height, true) {
+            return Some((
+                "height",
+                format!(
+                    "“{name}” kılavuz stilinin not yüksekliği {} mm; sıfırdan büyük, en çok {MAX_STYLE_MM} olmalı",
+                    self.height
+                ),
+            ));
+        }
+        if let Some(s) = self.arrow_size
+            && !crate::leader_arrow_holds(s)
+        {
+            return Some((
+                "arrowSize",
+                format!(
+                    "“{name}” kılavuz stilinin ok boyu {s}; notun yüksekliğinin {} ile {} katı olmalı",
+                    crate::MIN_LEADER_ARROW,
+                    crate::MAX_LEADER_ARROW
+                ),
+            ));
+        }
+        None
+    }
+}
+
 /// A named dimension style (docs/adr/0183 §3): sizes in paper mm.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -1044,6 +1102,47 @@ pub fn text_styles_problem(styles: &[TextStyleDef]) -> Option<String> {
 }
 
 /// What is wrong with a project's dimension styles, as `text_styles_problem`.
+pub fn leader_styles_problem(styles: &[LeaderStyleDef]) -> Option<String> {
+    names_problem(
+        "kılavuz stili",
+        styles.iter().map(|s| (s.id.as_str(), s.name.as_str())),
+    )
+    .or_else(|| styles.iter().find_map(|s| s.problem().map(|(_, words)| words)))
+}
+
+/// A leader's look as leader style `now` gives it where it held `old`'s values (docs/adr/0326 §4): each of its
+/// arrowhead, arrowhead size, note height (the style's paper mm at the plot scale) and mask that was the old style's
+/// takes the new one's; one set apart stays.
+pub fn follow_leader_style(old: &LeaderStyleDef, now: &LeaderStyleDef, l: &crate::LeaderEntity, plot_scale: f64) -> crate::LeaderEntity {
+    let mut out = l.clone();
+    let height = |s: &LeaderStyleDef| s.height / 1000.0 * plot_scale;
+    if l.arrow == old.arrow {
+        out.arrow = now.arrow;
+    }
+    if l.arrow_size == old.arrow_size {
+        out.arrow_size = now.arrow_size;
+    }
+    if (l.height - height(old)).abs() <= 1e-9 * height(old).abs().max(1.0) {
+        out.height = height(now);
+    }
+    if l.mask == old.mask {
+        out.mask = now.mask;
+    }
+    out
+}
+
+/// The leader as leader style `s` writes it, its other fields kept.
+pub fn apply_leader_style(s: &LeaderStyleDef, l: &crate::LeaderEntity, plot_scale: f64) -> crate::LeaderEntity {
+    crate::LeaderEntity {
+        arrow: s.arrow,
+        arrow_size: s.arrow_size,
+        height: s.height / 1000.0 * plot_scale,
+        mask: s.mask,
+        leader_style: Some(s.id.clone()),
+        ..l.clone()
+    }
+}
+
 pub fn dimension_styles_problem(styles: &[DimensionStyleDef]) -> Option<String> {
     names_problem(
         "ölçü stili",

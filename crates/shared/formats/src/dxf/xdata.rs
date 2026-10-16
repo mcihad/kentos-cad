@@ -117,6 +117,11 @@ pub struct Meta {
     /// A text's fields as the contract's JSON (docs/adr/0325 §1): other programs read their letters, the values last
     /// written; KentOS reads the bindings back.
     pub fields: Option<String>,
+    /// A leader's other arms as their points' JSON (docs/adr/0326 §1); each is also a LEADER of its own, which a
+    /// reader of KentOS's data leaves out (`arm`).
+    pub arms: Option<String>,
+    /// The LEADER is another arm of a leader written before it.
+    pub arm: bool,
 }
 
 /// A STYLE record's `face` when KentOS wrote it for a styleless face
@@ -262,6 +267,12 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
     }
     if meta.line {
         item("line", &mut out, |_| {});
+    }
+    if meta.arm {
+        item("arm", &mut out, |_| {});
+    }
+    if let Some(a) = &meta.arms {
+        item("arms", &mut out, |o| string(a, o));
     }
     if let Some((a0, a1)) = meta.arc {
         item("arc", &mut out, |o| {
@@ -527,6 +538,8 @@ pub fn read(groups: &[(i32, String)]) -> Option<Meta> {
             "turn" => m.turn = real(a).or(m.turn),
             "z" => m.z = true,
             "line" => m.line = true,
+            "arm" => m.arm = true,
+            "arms" => m.arms = text(a).or(m.arms),
             "noz" => m.no_z = text(a).map(|t| mask_decode(&t)).unwrap_or_default(),
             "mask" => m.mask = true,
             "arrow" => m.arrow = text(a).or(m.arrow),
@@ -590,6 +603,8 @@ mod tests {
         let meta = Meta {
             layout: None,
             fields: Some("[]".into()),
+            arms: Some("[[[1,2]]]".into()),
+            arm: true,
             label: Some("attr".into()),
             attrs,
             symbol: Some("mpyy.konut".into()),

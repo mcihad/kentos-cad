@@ -556,6 +556,8 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
         }
         // Its vertices move; its note turns as a text does (docs/adr/0146 §4).
         Shape::Leader {
+            arms,
+            blocks,
             pts,
             text,
             height,
@@ -564,6 +566,12 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
             arrow_size,
             mask,
         } => Shape::Leader {
+            arms: arms.as_ref().map(|list| {
+                list.iter()
+                    .map(|a| crate::geom::leader::Arm { pts: a.pts.iter().map(|&p| apply(m, p)).collect() })
+                    .collect()
+            }),
+            blocks: blocks.clone(),
             pts: pts.iter().map(|&p| apply(m, p)).collect(),
             text: text.clone(),
             height: height * s,

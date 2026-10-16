@@ -1522,6 +1522,64 @@ pub struct LeaderEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub annotative: Option<Box<crate::Annotative>>,
+    /// Its other arms (docs/adr/0326 §1): each from its own tip through its bends to the leader's last vertex, where
+    /// the landing starts; the arrowhead, the note and the look the first arm's.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<LeaderArm>>", optional))]
+    pub arms: Vec<LeaderArm>,
+    /// The place on an object its first arm's tip follows (docs/adr/0326 §3); absent: a free tip.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub tip: Option<crate::SubRef>,
+    /// Its content blocks (docs/adr/0326 §2): inserts standing in a row at its landing's end, by persistent id; a
+    /// leader with blocks has no note.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::identity::EntityId>>", optional))]
+    pub blocks: Vec<crate::identity::EntityId>,
+    /// The leader style it follows (docs/adr/0326 §4), by its id.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub leader_style: Option<String>,
+}
+
+/// A leader's arm after its first (docs/adr/0326 §1).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LeaderArm {
+    /// At least one: its tip first, then its bends; it ends at the leader's last vertex.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub pts: Vec<Vec2>,
+    /// The place on an object its tip follows; absent: a free tip.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub tip: Option<crate::SubRef>,
+}
+
+/// The most arms a leader has.
+pub const MAX_LEADER_ARMS: usize = 64;
+
+/// What is wrong with a leader's arms, blocks and note together (docs/adr/0326): the field and the refusal's words.
+pub fn leader_problem(l: &LeaderEntity) -> Option<(&'static str, String)> {
+    if l.arms.len() + 1 > MAX_LEADER_ARMS {
+        return Some(("arms", format!("Bir kılavuzun en çok {MAX_LEADER_ARMS} kolu olur; {} verildi.", l.arms.len() + 1)));
+    }
+    if let Some(i) = l.arms.iter().position(|a| a.pts.is_empty()) {
+        return Some(("arms", format!("{}. kolun ucu yok: her kolun en az bir noktası olmalı.", i + 2)));
+    }
+    if l.arms.iter().flat_map(|a| &a.pts).any(|p| !(p.x.is_finite() && p.y.is_finite())) {
+        return Some(("arms", "Kolun noktaları sonlu olmalı.".to_owned()));
+    }
+    if !l.blocks.is_empty() && l.text.is_some() {
+        return Some(("blocks", "Blok içerikli kılavuzun notu olmaz: notu ya da blokları kaldırın.".to_owned()));
+    }
+    let mut seen = std::collections::HashSet::new();
+    if l.blocks.iter().any(|b| !seen.insert(*b)) {
+        return Some(("blocks", "Kılavuzun bir bloğu iki kez verilmiş.".to_owned()));
+    }
+    None
 }
 
 /// The shortest and the longest a leader's arrowhead may be, times its

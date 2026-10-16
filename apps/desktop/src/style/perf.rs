@@ -166,6 +166,7 @@ fn document(name: String, layers: Vec<LayerNode>, entities: Vec<Entity>) -> Docu
         version: 1,
         name,
         settings: ProjectSettings {
+            leader_styles: Vec::new(),
             line_type_scale: None,
             line_types: Vec::new(),
             length_style: None,

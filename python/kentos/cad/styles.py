@@ -16,6 +16,7 @@ from .types import (  # noqa: F401
     DimensionStyleDef,
     ImpactTarget,
     ImpactTargetName,
+    LeaderStyleDef,
     StyleEditOperation,
     StyleEditOperationName,
     StyleImpact,
@@ -64,6 +65,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
         operation: StyleEditOperation | StyleEditOperationName,
         dimension: DimensionStyleDef | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        leader: LeaderStyleDef | None | Unset = UNSET,
         library: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         replace: bool | None | Unset = UNSET,
@@ -95,6 +97,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             operation:
             dimension: Create's and update's dimension style.
             expected_revision: The document revision the input was prepared against, as decimal text.
+            leader: Create's and update's leader style (docs/adr/0326 §4).
             library: Import's `kentos.annotation-styles` file's text.
             name: Rename's new name, trimmed.
             replace: Import: true, a style whose name the table has is updated from the file.
@@ -118,6 +121,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             operation=operation,
             dimension=dimension,
             expected_revision=expected_revision,
+            leader=leader,
             library=library,
             name=name,
             replace=replace,
@@ -135,6 +139,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
         operation: StyleEditOperation | StyleEditOperationName,
         dimension: DimensionStyleDef | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        leader: LeaderStyleDef | None | Unset = UNSET,
         library: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         replace: bool | None | Unset = UNSET,
@@ -150,6 +155,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             operation=operation,
             dimension=dimension,
             expected_revision=expected_revision,
+            leader=leader,
             library=library,
             name=name,
             replace=replace,
@@ -167,6 +173,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
         operation: StyleEditOperation | StyleEditOperationName,
         dimension: DimensionStyleDef | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        leader: LeaderStyleDef | None | Unset = UNSET,
         library: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         replace: bool | None | Unset = UNSET,
@@ -182,6 +189,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             operation=operation,
             dimension=dimension,
             expected_revision=expected_revision,
+            leader=leader,
             library=library,
             name=name,
             replace=replace,
@@ -199,6 +207,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
         operation: StyleEditOperation | StyleEditOperationName,
         dimension: DimensionStyleDef | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        leader: LeaderStyleDef | None | Unset = UNSET,
         library: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         replace: bool | None | Unset = UNSET,
@@ -219,6 +228,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             operation=operation,
             dimension=dimension,
             expected_revision=expected_revision,
+            leader=leader,
             library=library,
             name=name,
             replace=replace,

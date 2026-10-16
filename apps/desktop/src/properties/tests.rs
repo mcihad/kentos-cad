@@ -1822,6 +1822,10 @@ fn width_factor_and_mask_are_written_to_the_texts() {
 /// Two leaders: a filled arrow with its note, an open one masked, on Çizim.
 fn two_leaders(app: &mut App) -> (u32, u32) {
     let leader = |x: f64, text: &str, arrow, mask| kentos_contracts::LeaderEntity {
+        tip: None,
+        leader_style: None,
+        blocks: Vec::new(),
+        arms: Vec::new(),
         annotative: None,
         base: base("cizim"),
         pts: vec![

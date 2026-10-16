@@ -77,6 +77,7 @@ pub mod dimension_create;
 pub mod dimensions_edit;
 pub mod dimensions_query;
 pub mod fields_edit;
+pub mod leaders_edit;
 pub mod fonts_report;
 pub mod texts_check;
 pub mod texts_edit;
@@ -225,6 +226,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_VIEWS_EDIT,
         kentos_contracts::CAD_VIEWS_EDIT_VERSION,
+    ),
+    // Çok kollu kılavuz ([`leaders_edit`], docs/adr/0326 §5).
+    (
+        kentos_contracts::CAD_LEADERS_EDIT,
+        kentos_contracts::CAD_LEADERS_EDIT_VERSION,
     ),
     // Alanlar and the text commands ([`fields_edit`], [`texts_edit`], [`texts_check`], docs/adr/0325 §3).
     (

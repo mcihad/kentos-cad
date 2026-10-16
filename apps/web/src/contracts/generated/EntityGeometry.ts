@@ -297,7 +297,12 @@ mask?: boolean,
  * Its scales (docs/adr/0323 §4); absent: an object updated keeps its own (only
  * `cad.annotations.scales` takes them away), a new one has none.
  */
-annotative?: Annotative, } | { "kind": "table", p: Vec2, rotation: number, height: number, rows: Array<number>, columns: Array<number>, cells: Array<Array<string>>, 
+annotative?: Annotative, 
+/**
+ * Its other arms' points, each its tip first (docs/adr/0326 §1); absent: an object updated keeps its own, a new
+ * one has none; an arm kept keeps what its tip follows.
+ */
+arms?: Array<Array<Vec2>>, } | { "kind": "table", p: Vec2, rotation: number, height: number, rows: Array<number>, columns: Array<number>, cells: Array<Array<string>>, 
 /**
  * Merged ranges, their words in their top left cells.
  */

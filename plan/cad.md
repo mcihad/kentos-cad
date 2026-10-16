@@ -393,9 +393,9 @@ AutoCAD'de ilişkili ölçü, ölçtüğü geometri değiştiğinde konum/yön/d
 
 ### 11.3 Multileader ve CAD tabloları
 
-- [ ] **CAD-ANNO-25:** Bir kılavuz nesnesinde birden çok ok yolu, ortak landing, MTEXT veya block content ve named style desteği ekle.
-- [ ] **CAD-ANNO-26:** Kılavuz uçlarını nesne/alt geometriye bağla; taşınan kapı/mahal etiketi ilişkiyi korusun.
-- [ ] **CAD-ANNO-27:** Leader alignment, collect, content edit, arrow add/remove ve style override işlemlerini semantik komutlara al.
+- [x] **CAD-ANNO-25:** Bir kılavuz nesnesinde birden çok ok yolu, ortak landing, MTEXT veya block content ve named style desteği ekle. — *17 Ekim; [ADR 0326](../docs/adr/0326-multileader.md) ADR 0326 §1, §2, §4: kılavuzun `arms`'ı, `blocks`'u (balon gibi blok içerik), çok satırlı not, kılavuz stilleri (`leaderStyles`, `cad.styles.edit` leader); `.kcad` şema 67.*
+- [x] **CAD-ANNO-26:** Kılavuz uçlarını nesne/alt geometriye bağla; taşınan kapı/mahal etiketi ilişkiyi korusun. — *17 Ekim; [ADR 0326](../docs/adr/0326-multileader.md) ADR 0326 §3: kolların uçları `SubRef` ile nesnenin yerine bağlı, belge izler, silinince kopar (`leader_ties.rs`); Kol ekle kenetin yerine bağlar.*
+- [x] **CAD-ANNO-27:** Leader alignment, collect, content edit, arrow add/remove ve style override işlemlerini semantik komutlara al. — *17 Ekim; [ADR 0326](../docs/adr/0326-multileader.md) ADR 0326 §5: `cad.leaders.edit` (addArm, removeArm, align, collect, content, blocks, look, style, bind); 39 ortak durum.*
 - [ ] **CAD-ANNO-28:** CAD table için cell format/style, merge, formula, field, satır/sütun büyütme ve source update davranışını tamamla.
 - [ ] **CAD-ANNO-29:** Dosya bağlantılı çizelgede path/asset, source digest, refresh, kayıp kaynak ve kullanıcı override politikası olsun.
 - [ ] **CAD-ANNO-30:** Table, dimension ve multileader'ı dışa aktarırken native entity / block görünüş / KentOS metadata seçenekleri ayrı raporlansın.

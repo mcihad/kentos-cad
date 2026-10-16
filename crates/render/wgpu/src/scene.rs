@@ -1412,6 +1412,11 @@ fn shape(entity: &Entity) -> Shape {
             face: text_face(&t.face),
         },
         Entity::Leader(l) => Shape::Leader {
+            // Its content blocks are drawn as the inserts they are; only whether it has some counts here.
+            blocks: (!l.blocks.is_empty()).then(|| vec![String::new(); l.blocks.len()]),
+            arms: (!l.arms.is_empty()).then(|| {
+                l.arms.iter().map(|a| kentos_geometry_core::geom::leader::Arm { pts: points(&a.pts) }).collect()
+            }),
             pts: points(&l.pts),
             text: l.text.clone(),
             height: l.height,

@@ -167,6 +167,80 @@ def text_problem(styles):
     return f"Yazı stilleri: {A.text_styles_problem(styles)}."
 
 
+LEADER_LABEL = "Kılavuz stili"
+KILAVUZ = {"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01", "name": "Kılavuz", "height": 2.5, "arrow": "dot", "mask": True}
+ETIKET = {"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d02", "name": "Etiket", "height": 1.8, "arrowSize": 1.5}
+
+
+def leader(id_, x, **own):
+    """A leader following Kılavuz (docs/adr/0326 §4), its look the style's at the plot scale, `own` set apart."""
+    base = {"kind": "leader", "id": id_, "layerId": "yazi", "attrs": {}, "pts": [{"x": X + x, "y": Y}, {"x": X + x + 3, "y": Y + 3}],
+            "text": "Not", "height": KILAVUZ["height"] / 1000 * SCALE, "rotation": 0, "arrow": KILAVUZ["arrow"], "mask": True,
+            "leaderStyle": KILAVUZ["id"]}
+    return {**base, **own}
+
+
+LEADERS = [leader(7, 0), leader(8, 10, arrow="open"), leader(9, 20, layerId="kilitli")]
+
+
+def leader_setup():
+    s = setup()
+    s["settings"]["leaderStyles"] = [KILAVUZ]
+    s["entities"] = s["entities"] + copy.deepcopy(LEADERS)
+    return s
+
+
+def follow_leaders(old, new):
+    """The leaders of `old` as `new` gives them (none: removed): each field that held the old value takes the new one."""
+    out, locked = {}, 0
+    for l in LEADERS:
+        if new is None:
+            after = {k: v for k, v in l.items() if k != "leaderStyle"}
+        else:
+            after = dict(l)
+            for key in ("arrow", "arrowSize", "mask"):
+                if l.get(key) == old.get(key):
+                    if key in new:
+                        after[key] = new[key]
+                    else:
+                        after.pop(key, None)
+            if abs(l["height"] - old["height"] / 1000 * SCALE) <= 1e-9 * max(1.0, old["height"] / 1000 * SCALE):
+                after["height"] = new["height"] / 1000 * SCALE
+        if after == l:
+            continue
+        if l["layerId"] == "kilitli":
+            locked += 1
+            continue
+        out[str(l["id"])] = after
+    return out, locked
+
+
+def leader_cases():
+    out = []
+    ids = IDS + [7, 8, 9]
+    out.append({"name": "Kılavuz stili oluştur", "setup": leader_setup(),
+                "steps": [step("execute", {"kind": "leader", "operation": "create", "leader": ETIKET}, done(ETIKET["id"]),
+                               {"ids": ids, "dirty": True, "revision": "changed", "canUndo": False,
+                                "settings": {"leaderStyles": [KILAVUZ, ETIKET]}})]})
+    new = {**{k: v for k, v in KILAVUZ.items() if k != "arrow"}, "height": 5.0, "arrow": "none"}
+    leaders, locked = follow_leaders(KILAVUZ, new)
+    out.append({"name": "Kılavuz stilini güncelle: eski değerdeki alanlar yenisini alır, ayrılan ok kalır, kilitli katmandaki sayılır",
+                "setup": leader_setup(),
+                "steps": [step("execute", {"kind": "leader", "operation": "update", "leader": new}, done(KILAVUZ["id"], True, len(leaders), locked),
+                               {"ids": ids, "entities": leaders, "settings": {"leaderStyles": [new]}, "canUndo": True, "dirty": True}),
+                          step("undo", returns=LEADER_LABEL, expect={"entities": {str(l["id"]): l for l in LEADERS if str(l["id"]) in leaders}})]})
+    leaders, locked = follow_leaders(KILAVUZ, None)
+    out.append({"name": "Kılavuz stilini sil: kılavuzlar görünüşünü korur, bağını yitirir", "setup": leader_setup(),
+                "steps": [step("execute", {"kind": "leader", "operation": "remove", "style": KILAVUZ["id"]}, done(KILAVUZ["id"], True, len(leaders), locked),
+                               {"entities": leaders, "settings": {"leaderStyles": None}})]})
+    bad = {**ETIKET, "height": 0}
+    out.append({"name": "Kılavuz stilinin yüksekliği sıfır olamaz", "setup": leader_setup(),
+                "steps": [step("execute", {"kind": "leader", "operation": "create", "leader": bad},
+                               failed("invalid_style", "Kılavuz stilleri: “Etiket” kılavuz stilinin not yüksekliği 0 mm; sıfırdan büyük, en çok 1000 olmalı.",
+                                      "leader"), {"revision": "same"})]})
+    return out
+
+
 def cases():
     out = []
     flags = {"ids": IDS, "dirty": True, "revision": "changed", "canUndo": False}
@@ -250,6 +324,7 @@ def cases():
                                {"revision": "same", "settings": {"textStyles": [ADA, YOL, NOT]}})]})
     out.extend(transfer_cases())
     out.extend(override_cases())
+    out.extend(leader_cases())
     return out
 
 

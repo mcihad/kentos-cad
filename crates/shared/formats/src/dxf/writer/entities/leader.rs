@@ -134,13 +134,55 @@ impl Writer<'_> {
             .filter(|t| note_read_back(t).as_deref() != Some(*t))
             .map(str::to_owned);
         meta.note_turn = (turn_read_back(l.rotation) != l.rotation).then_some(l.rotation);
+        // Its other arms (docs/adr/0326 §1): in its data, and each a LEADER of its own other programs draw.
+        if !l.arms.is_empty() {
+            let arms: Vec<Vec<[f64; 2]>> = l.arms.iter().map(|a| a.pts.iter().map(|p| [p.x, p.y]).collect()).collect();
+            meta.arms = serde_json::to_string(&arms).ok();
+        }
         self.end(meta);
         if let (Some(h), Some(text), Some(at), Some(align)) =
             (note_handle, note, laid.note_point, laid.note_align)
         {
             self.leader_note(h, me, l, text, v(at.x, at.y), align);
         }
+        if let Some(&last) = l.pts.last() {
+            for a in &l.arms {
+                self.leader_arm(l, &a.pts, last);
+            }
+        }
+        if !l.blocks.is_empty() || l.tip.is_some() || l.arms.iter().any(|a| a.tip.is_some()) {
+            self.report.note(
+                WHAT,
+                "blok içeriği ve uçların bağları DXF'e yazılmaz: bloklar kendi yerleştirmeleri olarak gider, uçlar bağsız",
+                0,
+            );
+        }
         true
+    }
+
+    /// Another arm of `l` (docs/adr/0326 §1): a LEADER from its tip through its bends to `last`, no note, its arrowhead
+    /// drawn as the leader's; KentOS's data says it is an arm.
+    fn leader_arm(&mut self, l: &LeaderEntity, pts: &[Vec2], last: Vec2) {
+        self.begin("LEADER", &l.base);
+        self.out.str(100, "AcDbLeader");
+        self.out.str(3, "Standard");
+        self.out.int(71, i64::from(l.arrow != Some(LeaderArrow::None)));
+        self.out.int(72, 0);
+        self.out.int(73, 3);
+        self.out.int(74, 1);
+        self.out.int(75, 0);
+        self.out.real(40, l.height);
+        self.out.real(41, 0.0);
+        self.out.int(76, (pts.len() + 1) as i64);
+        for p in pts.iter().copied().chain(std::iter::once(last)) {
+            self.out.xyz(10, p);
+            self.grow(p);
+        }
+        let (s, c) = sin_cos_deg(l.rotation);
+        self.out.xyz(211, v(c, s));
+        let mut meta = Self::base_meta(&l.base);
+        meta.arm = true;
+        self.end(meta);
     }
 
     /// The block record of AutoCAD's arrow block `name` for `arrow`

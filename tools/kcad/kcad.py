@@ -218,6 +218,10 @@ FIELD_PROJECT_VALUES = ("name", "scale", "unit", "crs", "variable")
 FIELD_UNITS = ("mm", "cm", "m", "km", "m2", "donum", "ha")
 FIELD_BROKEN = ("removed", "noValue", "notNamed", "cycle")
 MAX_FIELDS = 256
+# Schema 67: schema 66, a leader's `arms`, `tip`, `blocks`, `leaderStyle` and the settings' `leaderStyles` (docs/adr/0326).
+SCHEMA_WITH_MULTILEADER = 67
+MAX_LEADER_ARMS = 64
+UUID_TEXT = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
 # A layout's numbers in the text's height, at most this much; at most this many tab stops (docs/adr/0324 §1).
 MAX_PARAGRAPH_HEIGHTS = 1000.0
 MAX_TABS = 32
@@ -409,7 +413,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1921,6 +1925,7 @@ class _Schema:
         self.annotative = version >= SCHEMA_WITH_ANNOTATIVE
         self.paragraph_layout = version >= SCHEMA_WITH_PARAGRAPH_LAYOUT
         self.text_fields = version >= SCHEMA_WITH_TEXT_FIELDS
+        self.multileader = version >= SCHEMA_WITH_MULTILEADER
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -2234,6 +2239,7 @@ class _Schema:
                 **({"survey": (self.survey, False)} if self.survey_fields else {}),
                 **({"layerStates": (self.layer_states_, False)} if self.layer_states else {}),
                 **({"textStyles": (self.text_styles, False), "dimensionStyles": (self.dimension_styles, False)} if self.styles else {}),
+                **({"leaderStyles": (self.leader_styles, False)} if self.multileader else {}),
                 **({"topology": (self.topology_, False)} if self.topology else {}),
                 **({"annotation": (self.annotation_, False)} if self.annotation else {}),
                 **({"connections": (self.connections_, False)} if self.services else {}),
@@ -3416,6 +3422,10 @@ class _Schema:
                 self.path.append("layout")
                 self.layout_rules(fields["layout"], "boxWidth" in fields)
                 self.path.pop()
+            # A leader with content blocks has no note (docs/adr/0326 §2).
+            if kind == "leader" and "blocks" in fields and "text" in fields:
+                self.path.append("blocks")
+                self.fail("bad_value", "blok içerikli kılavuzun notu olmaz")
             if kind == "text" and "fields" in fields:
                 self.path.append("fields")
                 self.text_fields_rules(fields["text"], fields["fields"])
@@ -4532,6 +4542,59 @@ class _Schema:
             if not (len(c) == 7 and c[0] == "#" and all(x in "0123456789abcdefABCDEF" for x in c[1:])):
                 self.fail("bad_value", f"degradenin ikinci rengi “{c}”; #RRGGBB biçiminde olmalı")
 
+    def json_point(self, v):
+        """A point as its JSON writes it: {x, y}."""
+        return self.fields({"x": (self.float, True), "y": (self.float, True)})(v)
+
+    def json_subref(self, v):
+        """A place on an object as its JSON writes it (docs/adr/0249, 0326 §3): the object's id as text."""
+        def uid(u):
+            if type(u) is not str or not UUID_TEXT.fullmatch(u):
+                self.fail("bad_value", "başvurunun nesnesi küçük harfli, tireli bir UUID olmalı")
+            return u
+
+        def place(p):
+            if type(p) is not dict or "kind" not in p:
+                self.fail("bad_value", "başvurunun yeri bir harita olmalı")
+            return p
+
+        return self.fields({"uid": (uid, True), "place": (place, True), "path": (self.array(self.uint(32)), False),
+                            "broken": (self.text, False)})(v)
+
+    def leader_arms(self, v):
+        """A leader's other arms (docs/adr/0326 §1): some, each with its tip and bends, at most 63."""
+        arms = self.array(self.fields({"pts": (self.array(self.json_point), True), "tip": (self.json_subref, False)}))(v)
+        if not arms:
+            self.fail("bad_value", "boş kol listesi yazılmaz")
+        if len(arms) + 1 > MAX_LEADER_ARMS:
+            self.fail("bad_value", f"bir kılavuzun en çok {MAX_LEADER_ARMS} kolu olur")
+        for i, a in enumerate(arms):
+            if not a["pts"]:
+                self.fail("bad_value", f"{i + 2}. kolun ucu yok: her kolun en az bir noktası olmalı")
+        return arms
+
+    def leader_blocks(self, v):
+        """A leader's content blocks: some inserts' ids, each once."""
+        ids = self.array(self.text)(v)
+        if not ids:
+            self.fail("bad_value", "boş blok listesi yazılmaz")
+        if len(set(ids)) != len(ids):
+            self.fail("bad_value", "kılavuzun bir bloğu iki kez verilmiş")
+        for u in ids:
+            if not UUID_TEXT.fullmatch(u):
+                self.fail("bad_value", "bloğun kimliği küçük harfli, tireli bir UUID olmalı")
+        return ids
+
+    def leader_styles(self, v):
+        """The project's leader styles (docs/adr/0326 §4): the note's paper height over 0 and at most 1000 mm."""
+        styles = self.array(self.fields({"id": (self.text, True), "name": (self.text, True), "height": (self.float, True),
+                                         "arrow": (self.enum(LEADER_ARROWS_30), False), "arrowSize": (self.leader_arrow_size, False),
+                                         "mask": (self.true_flag, False)}))(v)
+        for st in styles:
+            if not 0 < st["height"] <= 1000:
+                self.fail("bad_value", f"“{st['name']}” kılavuz stilinin not yüksekliği {st['height']:g} mm; sıfırdan büyük, en çok 1000 olmalı")
+        return styles
+
     def leader_points(self, v):
         pts = self.array(self.point)(v)
         if len(pts) < 2:
@@ -5084,6 +5147,9 @@ ENTITY_KINDS = {
         **({"arrowSize": (s.leader_arrow_size, False)} if s.annotation else {}),
         # Schema 64 (docs/adr/0323): its scales.
         **({"annotative": (s.annotative_of("leader"), False)} if s.annotative else {}),
+        # Schema 67 (docs/adr/0326): its arms, tip, content blocks and style.
+        **({"arms": (s.leader_arms, False), "tip": (s.json_subref, False), "blocks": (s.leader_blocks, False),
+            "leaderStyle": (s.text, False)} if s.multileader else {}),
     },
 }
 

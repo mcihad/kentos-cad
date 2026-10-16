@@ -462,11 +462,14 @@ pub const SCHEMA_WITH_PARAGRAPH_LAYOUT: u32 = 65;
 /// Schema 66 (docs/adr/0325): a text's `fields` (ranges of its letters bound to a source), written only when a text
 /// has one; older readers refuse the file instead of losing the bindings.
 pub const SCHEMA_WITH_TEXT_FIELDS: u32 = 66;
+/// Schema 67 (docs/adr/0326): a leader's `arms`, `tip`, `blocks` and `leaderStyle`, and the settings'
+/// `leaderStyles`, written only when one has them; older readers refuse the file instead of losing them.
+pub const SCHEMA_WITH_MULTILEADER: u32 = 67;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 65] = [
+pub const SCHEMAS: [u32; 66] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -532,6 +535,7 @@ pub const SCHEMAS: [u32; 65] = [
     SCHEMA_WITH_ANNOTATIVE,
     SCHEMA_WITH_PARAGRAPH_LAYOUT,
     SCHEMA_WITH_TEXT_FIELDS,
+    SCHEMA_WITH_MULTILEADER,
 ];
 
 /// The file a drawing is saved as.

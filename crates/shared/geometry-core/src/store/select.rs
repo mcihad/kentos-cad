@@ -224,6 +224,11 @@ fn outline(e: &Shape, font: Font) -> Vec<Vec2> {
             if let Some(l) = leader::layout_of(e) {
                 out.extend(leader::head_reach(&l));
             }
+            // Its other arms (docs/adr/0326 §1).
+            for (path, head) in leader::arm_layouts(e) {
+                out.extend(path);
+                out.extend(head.reach());
+            }
             out.extend(
                 leader::note_place(e)
                     .map(|t| t.outline(font))

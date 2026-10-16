@@ -744,6 +744,14 @@ codes! {
     NOT_SPLITTABLE = "not_splittable", Failed, false, "Yazı satırlara ayrılamaz: tek paragraf, sütunlu ya da eğri boyunca.";
     /// A text Bul ve değiştir would leave blank, left as it was.
     TEXT_LEFT_BLANK = "text_left_blank", Warning, false, "Değiştirince boş kalacak yazı olduğu gibi bırakıldı.";
+    /// An object given as a leader that is not one (docs/adr/0326 §5).
+    NOT_A_LEADER = "not_a_leader", Failed, false, "Verilen nesne bir kılavuz değil.";
+    /// An arm's number a leader does not have.
+    ARM_NOT_FOUND = "arm_not_found", Failed, false, "Kılavuzda bu sırada kol yok.";
+    /// A leader's arms, blocks or note against their rules.
+    INVALID_LEADER = "invalid_leader", Failed, false, "Kılavuzun kolları, blokları ya da notu kurallarına uymuyor.";
+    /// An object given as a content block that is not a block insert.
+    NOT_AN_INSERT = "not_an_insert", Failed, false, "Verilen nesne bir blok yerleştirmesi değil.";
     /// Numarala's start, step or digits out of their bounds.
     INVALID_NUMBER = "invalid_number", Failed, false, "Numaranın başlangıcı, artışı ya da basamağı sınırlarını aşıyor.";
     /// A .kstil file that does not read.

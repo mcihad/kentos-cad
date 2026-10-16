@@ -126,6 +126,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
         version: 1,
         name: "parcalar".into(),
         settings: ProjectSettings {
+            leader_styles: Vec::new(),
             line_type_scale: None,
             line_types: Vec::new(),
             length_style: None,

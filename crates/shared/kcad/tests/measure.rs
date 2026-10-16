@@ -70,6 +70,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
         version: 2,
         name: "Ölçüm".into(),
         settings: ProjectSettings {
+            leader_styles: Vec::new(),
             line_type_scale: None,
             line_types: Vec::new(),
             length_style: None,

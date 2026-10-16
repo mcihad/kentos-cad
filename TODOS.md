@@ -191,6 +191,11 @@ Liste:
   Sütunlar satırları, düzenleyicinin Kesir ve Liste ▾'si, Yazı tipleri penceresi, PDF'in `widthFactor` ve `lean`'i (web'in PDF'i), DXF'in
   `\p`, `^I`, `\S` okuma ve yazması (biçim işçisi aynı çekirdekten). Masaüstünde de açık: paragraf başına hiza ve iki yana yaslama,
   kullanıcının kendi TTF/OTF yazı tipleri.
+- [ ] `CAD-ANNO-25`…`27` çok kollu kılavuz (ADR 0326, 17 Ekim): web'de gerekenler: `.kcad` şema 67 (`arms`, `tip`, `blocks`,
+  `leaderStyle`, `leaderStyles`), çekirdeğin kolları çizmesi ve seçmesi WASM'la (`arm_layouts`), paketli kaydın 24. türü (kollu ya da bloklu kılavuz:
+  15'inki ve ardından kollar ve blok sayısı; web'in paketleyicisi), belgenin izlemesi (`leader_ties.rs`'in ikizi), `cad.leaders.edit` ve `cad.styles.edit` leader TS işleyicileri, Kol ekle,
+  Kol sil, Hizala, Topla, Blok içerik, Kılavuz stilleri, Öznitelikler'in satırları, DXF'in kolları. Masaüstünde de açık: MULTILEADER'ın
+  blok içeriğini okumak, uçların bağlarını ve blok içeriği DXF'e yazmak.
 - [ ] `CAD-ANNO-22`…`24` alanlar ve yazının komutları (ADR 0325, 17 Ekim): web'de gerekenler: `.kcad` şema 66 (`fields`), belgenin
   alan yenilemesi (`model/` içinde `text_fields.rs`'in ikizi: kaynağı değişen, elle düzenlenen, döngü, kopuk), `cad.fields.edit`,
   `cad.texts.edit`, `cad.texts.check` TS işleyicileri (ortak durumlar `fixtures/commands/v1`), Alan ekle, Numarala, Yazı denetimi

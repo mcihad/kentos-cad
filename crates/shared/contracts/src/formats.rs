@@ -181,7 +181,7 @@ use crate::layer::LineType;
 /// 74 (docs/adr/0324): a multi-line text's `layout` (indents, tab stops, columns) and a run's `stack` script:
 ///    `.kcad` document schema 65; in the typed columns the text's option 16 (its JSON text) and a run's flags 8 and 16
 ///    together. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 75;
+pub const FORMATS_VERSION: u32 = 76;
 
 // ── Every import ────────────────────────────────────────────────────────
 

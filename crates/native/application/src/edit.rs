@@ -507,6 +507,21 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
                     // Its fields (docs/adr/0325 §2): the document keeps those the edit's letters did not touch.
                     now.paragraph.fields = was.paragraph.fields.clone();
                 }
+                // A leader keeps its tips' references, content blocks and style (docs/adr/0326); its arms when the edit
+                // gives none, else each arm kept keeps what its tip follows.
+                if let (Entity::Leader(was), Entity::Leader(now)) = (entity, &mut next) {
+                    now.tip = was.tip.clone();
+                    now.blocks = was.blocks.clone();
+                    now.leader_style = was.leader_style.clone();
+                    match geometry {
+                        EntityGeometry::Leader { arms: None, .. } => now.arms = was.arms.clone(),
+                        _ => {
+                            for (arm, old) in now.arms.iter_mut().zip(&was.arms) {
+                                arm.tip = old.tip.clone();
+                            }
+                        }
+                    }
+                }
                 // A dimension keeps its references when the edit names none (docs/adr/0249 §3): the
                 // document lets a point go when the edit moved it, its object unchanged.
                 if let (Entity::Dimension(was), Entity::Dimension(now)) = (entity, &mut next)

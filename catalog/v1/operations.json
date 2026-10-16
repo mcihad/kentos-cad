@@ -1266,6 +1266,48 @@
         "cad.texts.check"
       ],
       "note": "Pencere komutun bulgularını gösterir (ADR 0325)."
+    },
+    "leader.addArm": {
+      "level": "semantic",
+      "via": [
+        "cad.leaders.edit"
+      ],
+      "note": "Seçili kılavuzun kimliği, çizimden seçilen uç ve orada kenetin verdiği yer addArm işlemine verilir (ADR 0326)."
+    },
+    "leader.removeArm": {
+      "level": "semantic",
+      "via": [
+        "cad.leaders.edit"
+      ],
+      "note": "Ucu seçilen noktaya en yakın kolun sırası removeArm işlemine verilir (ADR 0326)."
+    },
+    "leader.align": {
+      "level": "semantic",
+      "via": [
+        "cad.leaders.edit"
+      ],
+      "note": "Seçili kılavuzların kimlikleri seçim sırasıyla, pencerenin doğrultusu ve aralığı align işlemine verilir (ADR 0326)."
+    },
+    "leader.collect": {
+      "level": "semantic",
+      "via": [
+        "cad.leaders.edit"
+      ],
+      "note": "Seçili kılavuzların kimlikleri seçim sırasıyla collect işlemine verilir (ADR 0326)."
+    },
+    "leader.blocks": {
+      "level": "semantic",
+      "via": [
+        "cad.leaders.edit"
+      ],
+      "note": "Seçili kılavuzun ve yerleştirmelerin kimlikleri blocks işlemine verilir (ADR 0326)."
+    },
+    "leader.styles": {
+      "level": "semantic",
+      "via": [
+        "cad.styles.edit"
+      ],
+      "note": "Pencerenin tablosu cad.styles.edit'in leader türüyle (oluştur, güncelle, sil) yazılır (ADR 0326)."
     }
   },
   "tools": {
