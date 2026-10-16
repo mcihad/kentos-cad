@@ -342737,6 +342737,156 @@
       ]
     },
     {
+      "id": "cad.records.duplicate",
+      "version": 1,
+      "title": "Kaydı çoğalt",
+      "summary": "Nesneleri yerlerinde, bütün özellikleri ve ekleriyle yeni kalıcı kimliklerle kopyalar; tek geri alma adımıdır. children açıkken (varsayılan) nesnenin bileşik (cascade) ilişkilerindeki alt kayıtlar da kopyalanır, alanları kopyanın kimliğini alır; alt kaydın kendi bileşik ilişkileri de izlenir, her nesne bir kez kopyalanır. Girdideki bir nesne başka bir girdinin alt kaydıysa yalnız onunla kopyalanır. Katmanın bir formunun tekil tuttuğu alan kopyada boş kalır (unique_cleared). Kilitli katmandaki nesne ve alt kayıt atlanır, uyarıda sayılır; hepsi kilitliyse reddedilir. En çok 1000 nesne. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.records.duplicate` v1: the objects to copy where they are, as one undo step\n(“Kaydı çoğalt”).\n\nRefusals, in this order: `no_entities`, `invalid_uid` (`uids[i]`), `invalid_count` (more than\n1000), `invalid_revision`, `revision_conflict` (status `conflict`), `entity_not_found`\n(`uids[i]`), `layer_locked` (every object on a locked layer). Warnings: `layer_locked` (objects and\nchildren on locked layers left out), `unique_cleared` (a field a form keeps unique left empty).",
+        "properties": {
+          "children": {
+            "description": "The records the objects' composite relations hold are copied too, their field taking the\ncopy's id; written only as `false`.",
+            "type": "boolean"
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "uids": {
+            "description": "The objects' persistent ids; an object given twice is copied once.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids"
+        ],
+        "title": "RecordsDuplicate",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "RecordCopy": {
+            "description": "One copy: the object it was made from, its persistent id and its slot.",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "id"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "uid",
+              "id"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.records.duplicate` v1: the copies, each object before the children it holds.",
+        "properties": {
+          "copies": {
+            "items": {
+              "$ref": "#/$defs/RecordCopy"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "copies",
+          "revision"
+        ],
+        "title": "RecordsDuplicated",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Plan of `cad.records.duplicate` v1: how many copies and how many of them are children.",
+        "properties": {
+          "children": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "count": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "count",
+          "children",
+          "revision"
+        ],
+        "title": "RecordsDuplicatePlan",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_entities",
+          "invalid_uid",
+          "invalid_count",
+          "entity_not_found",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_locked",
+          "unique_cleared"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bir binayı katları ve odalarıyla çoğalt",
+          "input": {
+            "uids": [
+              "0192f5a1-25a0-7000-8000-000000000201"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.relations.edit",
       "version": 1,
       "title": "İlişkiler",
@@ -369326,6 +369476,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Katmanda adı verilen alan yok."
+    },
+    {
+      "code": "unique_cleared",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Formun tekil tuttuğu alan kopyada boş bırakıldı."
     },
     {
       "code": "invalid_table_styles",

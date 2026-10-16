@@ -85,6 +85,7 @@ COMMANDS: dict[str, Any] = {
     "cad.polygon.regular": polygon.regular,
     "cad.polyline.create": polyline.create,
     "cad.records.create": records.create,
+    "cad.records.duplicate": records.duplicate,
     "cad.rectangle.create": rectangle.create,
     "cad.relations.edit": relations.edit,
     "cad.scenarios.edit": scenarios.edit,

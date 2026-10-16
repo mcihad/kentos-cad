@@ -40,10 +40,10 @@ use crate::{
 };
 use crate::blocks_insert;
 use crate::{
-    forms_audit, forms_edit, forms_fill, forms_submit, forms_validate, records, relations_edit,
+    forms_audit, forms_edit, forms_fill, forms_submit, forms_validate, records, records_duplicate, relations_edit,
 };
 use kentos_contracts::{
-    FormsAudit, FormsEdit, FormsFill, FormsSubmit, FormsValidate, RecordsCreate, RelationsEdit,
+    FormsAudit, FormsEdit, FormsFill, FormsSubmit, FormsValidate, RecordsCreate, RecordsDuplicate, RelationsEdit,
 };
 
 /// Why a command was not run: not a refusal of the command (that is its
@@ -124,6 +124,7 @@ macro_rules! by_command {
             kentos_contracts::CAD_FORMS_FILL => $then!(forms_fill, FormsFill),
             kentos_contracts::CAD_FORMS_AUDIT => $then!(forms_audit, FormsAudit),
             kentos_contracts::CAD_RECORDS_CREATE => $then!(records, RecordsCreate),
+            kentos_contracts::CAD_RECORDS_DUPLICATE => $then!(records_duplicate, RecordsDuplicate),
             kentos_contracts::CAD_RELATIONS_EDIT => $then!(relations_edit, RelationsEdit),
             kentos_contracts::CAD_ENTITIES_TRIM => $then!(entities_trim, EntitiesTrim),
             kentos_contracts::CAD_ENTITIES_EXTEND => $then!(entities_extend, EntitiesTrim),

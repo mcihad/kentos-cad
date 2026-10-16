@@ -4192,6 +4192,35 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Kaydı çoğalt (docs/adr/0415), held together by fixtures/commands/v1/cad.records.duplicate.json.
+        CommandDescriptor {
+            id: crate::CAD_RECORDS_DUPLICATE.into(),
+            version: crate::CAD_RECORDS_DUPLICATE_VERSION,
+            title: "Kaydı çoğalt".into(),
+            summary: "Nesneleri yerlerinde, bütün özellikleri ve ekleriyle yeni kalıcı kimliklerle kopyalar; tek geri alma adımıdır. \
+                      children açıkken (varsayılan) nesnenin bileşik (cascade) ilişkilerindeki alt kayıtlar da kopyalanır, alanları kopyanın kimliğini alır; alt kaydın kendi bileşik ilişkileri de izlenir, her nesne bir kez kopyalanır. \
+                      Girdideki bir nesne başka bir girdinin alt kaydıysa yalnız onunla kopyalanır. Katmanın bir formunun tekil tuttuğu alan kopyada boş kalır (unique_cleared). \
+                      Kilitli katmandaki nesne ve alt kayıt atlanır, uyarıda sayılır; hepsi kilitliyse reddedilir. En çok 1000 nesne. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RecordsDuplicate>(),
+            output: schema::<crate::RecordsDuplicated>(),
+            plan: Some(schema::<crate::RecordsDuplicatePlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir binayı katları ve odalarıyla çoğalt".into(),
+                input: json!({ "uids": ["0192f5a1-25a0-7000-8000-000000000201"] }),
+                output: None,
+            }],
+        },
         // The project's relations (docs/adr/0405 §3), held together by
         // fixtures/commands/v1/cad.relations.edit.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -5308,6 +5337,9 @@ mod tests {
                     crate::CAD_RECORDS_CREATE => {
                         serde_json::from_value::<crate::RecordsCreate>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_RECORDS_DUPLICATE => {
+                        serde_json::from_value::<crate::RecordsDuplicate>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SHEETS_EDIT => {
                         serde_json::from_value::<crate::SheetsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -5622,6 +5654,10 @@ mod tests {
                         }
                         crate::CAD_RECORDS_CREATE => {
                             serde_json::from_value::<crate::RecordsCreated>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_RECORDS_DUPLICATE => {
+                            serde_json::from_value::<crate::RecordsDuplicated>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_SHEETS_EDIT => {

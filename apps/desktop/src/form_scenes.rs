@@ -492,6 +492,85 @@ fn styles_window(app: &mut App) {
     ));
 }
 
+/// Two buildings and their floors (docs/adr/0415): the floors are records a composite relation ties
+/// to their building; the survey form keeps the building's code unique.
+fn floors(app: &mut App) {
+    let mut o = Objects::new();
+    let mut ids = Vec::new();
+    for (x, code) in [(0.0, "B-1"), (24.0, "B-2")] {
+        let id = o.path(
+            "bina",
+            &[[x, 0.0], [x + 18.0, 0.0], [x + 18.0, 14.0], [x, 14.0]],
+            true,
+        );
+        o.data(id, &[("Kod", code), ("Kat", "2")], Some(code));
+        ids.push(id);
+    }
+    let mut floors = Vec::new();
+    for (building, no, use_) in [
+        (0, "Zemin", "Dükkân"),
+        (0, "1", "Konut"),
+        (1, "Zemin", "Konut"),
+    ] {
+        let f = o.record("kat");
+        o.data(f, &[("No", no), ("Kullanım", use_)], None);
+        floors.push((f, building));
+    }
+    let form = published(
+        "bina-formu",
+        "Bina denetimi",
+        "bina",
+        json!([
+            { "type": "field", "id": "kod", "field": "Kod", "unique": true },
+            { "type": "field", "id": "kat", "field": "Kat" },
+            { "type": "related", "id": "katlar", "label": "Katlar", "layer": "kat", "field": "Bina" }
+        ]),
+    );
+    open_edited(app, o, move |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut bina = crate::tools_scenes::layer("bina", "Bina", "#3E63DD", 0.35);
+        bina["fields"] =
+            json!([{ "name": "Kod", "kind": "text" }, { "name": "Kat", "kind": "integer" }]);
+        let mut kat = crate::tools_scenes::layer("kat", "Kat planı", "#30A46C", 0.35);
+        kat["fields"] = json!([{ "name": "Bina", "kind": "text" }, { "name": "No", "kind": "text" },
+                               { "name": "Kullanım", "kind": "text" }]);
+        layers.push(bina);
+        layers.push(kat);
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("bina");
+        d["settings"]["forms"] = json!([form]);
+        d["settings"]["relations"] = json!([{ "id": "katlar", "name": "Binanın katları", "parent": "bina",
+                                              "child": "kat", "field": "Bina", "onDelete": "cascade" }]);
+    });
+    let uid = |app: &App, slot: u32| {
+        app.document
+            .as_ref()
+            .and_then(|d| d.model.uid(Slot(slot)))
+            .map(|u| u.to_string())
+            .unwrap_or_default()
+    };
+    for (f, b) in floors {
+        let (floor, building) = (uid(app, f), uid(app, ids[b]));
+        if let Some(doc) = app.document.as_mut() {
+            let _ = kentos_native_application::registry::run(
+                &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+                kentos_contracts::CAD_ENTITIES_SET,
+                kentos_contracts::CallOp::Execute,
+                json!({ "uids": [floor], "attrs": { "Bina": building }, "operation": "attributes" }),
+            );
+        }
+    }
+    app.selection.set([Slot(ids[0])]);
+}
+
+/// Çoğalt on the first building: its copy and the copies of its two floors selected, the floors' table.
+fn duplicated(app: &mut App) {
+    floors(app);
+    let _ = app.update(Message::Features(crate::features::Event::Duplicate));
+    app.features.layer = Some("kat".into());
+    let _ = app.update(Message::Run("data.featureTable"));
+}
+
 /// The owners' table (docs/adr/0410 §4): records without a geometry in the Tablo tab.
 fn owner_table(app: &mut App) {
     owners(app);
@@ -1037,6 +1116,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-kosullu-tablo", styled_buildings),
         ("form-kosullu-bicim", styles_window),
         ("form-alan-kullanim", field_usage),
+        ("form-cogalt", duplicated),
     ]
 }
 
@@ -1099,6 +1179,37 @@ mod tests {
         let undone = app.document.as_mut().unwrap().model.undo();
         assert_eq!(undone.as_deref(), Some("Koşullu biçim"));
         assert_eq!(rules(&app).len(), 4, "one step undoes it");
+    }
+
+    #[test]
+    fn a_building_is_duplicated_with_its_floors_in_one_step() {
+        let mut app = crate::files_testing::app_with_drawing();
+        floors(&mut app);
+        let before = app.document.as_ref().unwrap().model.by_layer("kat").count();
+        let _ = app.update(Message::Features(crate::features::Event::Duplicate));
+        let doc = app.document.as_ref().unwrap();
+        assert_eq!(
+            doc.model.by_layer("kat").count(),
+            before + 2,
+            "its two floors"
+        );
+        assert_eq!(doc.model.by_layer("bina").count(), 3);
+        let copy = app.selection.ids()[0];
+        let copied = doc.model.get(copy).unwrap();
+        assert!(
+            !copied.base().attrs.contains_key("Kod"),
+            "the unique code is left empty"
+        );
+        let copy_uid = doc.model.uid(copy).unwrap().to_string();
+        let held = doc
+            .model
+            .by_layer("kat")
+            .filter(|e| e.base().attrs.get("Bina") == Some(&copy_uid))
+            .count();
+        assert_eq!(held, 2, "the copied floors name the copy");
+        assert_eq!(app.selection.ids().len(), 3);
+        let undone = app.document.as_mut().unwrap().model.undo();
+        assert_eq!(undone.as_deref(), Some("Kaydı çoğalt"));
     }
 
     #[test]

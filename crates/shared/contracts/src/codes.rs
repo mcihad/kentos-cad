@@ -683,6 +683,8 @@ codes! {
     INVALID_CARD = "invalid_card", Failed, false, "Katmanın bilgi kartı kurallarına uymuyor.";
     /// A field a layer's table rule names that the layer does not have (docs/adr/0413 §2).
     FIELD_NOT_FOUND = "field_not_found", Failed, false, "Katmanda adı verilen alan yok.";
+    /// A field a form keeps unique left empty in a copy (Kaydı çoğalt, docs/adr/0415 §1).
+    UNIQUE_CLEARED = "unique_cleared", Warning, false, "Formun tekil tuttuğu alan kopyada boş bırakıldı.";
     /// A layer's table rules against their rules (Koşullu biçim, docs/adr/0413 §1).
     INVALID_TABLE_STYLES = "invalid_table_styles", Failed, false, "Katmanın koşullu biçim kuralları kurallarına uymuyor: boş koşul, #RRGGBB olmayan renk, hiçbir şey vermeyen kural ya da 50'den çok kural.";
     /// A template whose braces do not close, are empty, or whose expression

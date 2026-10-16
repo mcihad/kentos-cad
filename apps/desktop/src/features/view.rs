@@ -182,6 +182,12 @@ impl App {
                 rows.layer.is_some().then(|| msg(Event::AddRecord)),
             ),
             bar_button(
+                "copy",
+                texts::DUPLICATE,
+                texts::DUPLICATE_HINT,
+                (!self.selection.is_empty()).then(|| msg(Event::Duplicate)),
+            ),
+            bar_button(
                 "layerFields",
                 texts::FIELDS,
                 texts::FIELDS_HINT,

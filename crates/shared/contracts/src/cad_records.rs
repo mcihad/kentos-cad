@@ -90,3 +90,87 @@ pub struct RecordsPlan {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }
+
+// ── cad.records.duplicate ───────────────────────────────────────────────────
+
+/// Copies objects with the records their composite relations hold (Kaydı çoğalt, docs/adr/0415).
+pub const CAD_RECORDS_DUPLICATE: &str = "cad.records.duplicate";
+pub const CAD_RECORDS_DUPLICATE_VERSION: u32 = 1;
+
+/// The most objects one call copies.
+pub const MAX_DUPLICATES: usize = 1000;
+
+fn yes() -> bool {
+    true
+}
+
+fn is_yes(b: &bool) -> bool {
+    *b
+}
+
+/// Input of `cad.records.duplicate` v1: the objects to copy where they are, as one undo step
+/// (“Kaydı çoğalt”).
+///
+/// Refusals, in this order: `no_entities`, `invalid_uid` (`uids[i]`), `invalid_count` (more than
+/// 1000), `invalid_revision`, `revision_conflict` (status `conflict`), `entity_not_found`
+/// (`uids[i]`), `layer_locked` (every object on a locked layer). Warnings: `layer_locked` (objects and
+/// children on locked layers left out), `unique_cleared` (a field a form keeps unique left empty).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RecordsDuplicate {
+    /// The objects' persistent ids; an object given twice is copied once.
+    pub uids: Vec<String>,
+    /// The records the objects' composite relations hold are copied too, their field taking the
+    /// copy's id; written only as `false`.
+    #[serde(default = "yes", skip_serializing_if = "is_yes")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub children: bool,
+    /// The document revision the input was prepared against, as decimal text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// One copy: the object it was made from, its persistent id and its slot.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RecordCopy {
+    pub from: String,
+    pub uid: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
+    pub id: u32,
+}
+
+/// Output of `cad.records.duplicate` v1: the copies, each object before the children it holds.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RecordsDuplicated {
+    pub copies: Vec<RecordCopy>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// Plan of `cad.records.duplicate` v1: how many copies and how many of them are children.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RecordsDuplicatePlan {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub count: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub children: u32,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}

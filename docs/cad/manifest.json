@@ -1119,6 +1119,22 @@
    "tests": 1
   },
   {
+   "id": "data.duplicate",
+   "kind": "command",
+   "title": "Kaydı çoğalt",
+   "level": "semantic",
+   "via": [
+    "cad.records.duplicate"
+   ],
+   "operation": null,
+   "python": "kentos.cad.records.duplicate",
+   "mcp": "cad.records.duplicate",
+   "note": "Seçili nesneler alt kayıtlarıyla cad.records.duplicate ile tek adımda çoğaltılır (ADR 0415).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "data.featureTable",
    "kind": "command",
    "title": "Öznitelik tablosu",

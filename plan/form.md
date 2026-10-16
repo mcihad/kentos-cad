@@ -369,7 +369,7 @@ QGIS ilişkili child form gösterimi ve reference widget desteğine sahiptir. Ar
 - [ ] **FORM-REL-15:** Detail row pagination/virtualization, lazy tab loading ve aggregate count filtrelenmiş izinli veri üzerinden çalışsın.
 - [ ] **FORM-REL-16:** Child editing ve parent tab değişimi draft kaybettirmesin; kaydet/vazgeç ve validation summary bütün graph'ı kapsasın.
 - [ ] **FORM-REL-17:** Relation graph döngüsü/derinlik ve recursive form opening bütçesi tanımlansın.
-- [ ] **FORM-REL-18:** Duplicate/clone/split/merge işlemlerinde child ownership ve copying policy açık olsun; unwanted cascade copy yapma.
+- [x] **FORM-REL-18:** Duplicate/clone/split/merge işlemlerinde child ownership ve copying policy açık olsun; unwanted cascade copy yapma. — *Yapıldı (16 Ekim; ADR 0415: bileşik ilişkinin alt kayıtları kopyalanır, öbürleri kopyalanmaz; tekil alan boş kalır).*
 
 ### 6.3 Join türleri ve yazma yönlendirmesi
 

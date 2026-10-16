@@ -277,6 +277,21 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.records.duplicate",
+        refusals: &[
+            &[
+                "no_entities",
+                "invalid_uid",
+                "invalid_count",
+                "entity_not_found",
+                "layer_locked",
+            ],
+            REVISION,
+        ],
+        warnings: &["layer_locked", "unique_cleared"],
+        targets: none,
+    },
+    Entry {
         id: "cad.records.create",
         refusals: &[&["invalid_count"], LAYER, REVISION, ATTRS],
         warnings: &["layer_hidden"],

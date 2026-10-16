@@ -797,6 +797,20 @@
       "status": "implemented"
     },
     {
+      "id": "data.duplicate",
+      "title": "Kaydı çoğalt",
+      "short": "Çoğalt",
+      "icon": "copy",
+      "description": "Seçili nesneleri yerlerinde, özellikleri ve ekleriyle kopyalar; bileşik ilişkilerindeki alt kayıtlar da kopyalanır, alanları kopyanın kimliğini alır; formun tekil alanı kopyada boş kalır (cad.records.duplicate).",
+      "aliases": [
+        "COGALT",
+        "ÇOĞALT"
+      ],
+      "shortcuts": [],
+      "category": "Veri",
+      "status": "implemented"
+    },
+    {
       "id": "data.tableStyles",
       "title": "Koşullu biçim",
       "short": "Koşullu biçim",
@@ -1449,6 +1463,10 @@
         },
         {
           "command": "data.tableStyles",
+          "size": "small"
+        },
+        {
+          "command": "data.duplicate",
           "size": "small"
         }
       ]

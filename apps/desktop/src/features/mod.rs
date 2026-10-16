@@ -55,6 +55,9 @@ pub mod texts {
     pub const ADD_RECORD: &str = "Kayıt ekle";
     pub const ADD_RECORD_HINT: &str =
         "Katmana geometrisiz bir kayıt (tablo satırı) ekler; katmanın formu varsa form açılır";
+    pub const DUPLICATE: &str = "Çoğalt";
+    pub const DUPLICATE_HINT: &str =
+        "Seçili nesneleri yerlerinde kopyalar; bileşik ilişkilerindeki alt kayıtlar da kopyalanır";
     pub const FIELDS_HINT: &str =
         "Katmanın alanları: adları, türleri, kuralları, varsayılanları ve değer listeleri";
     pub const EXPORT: &str = "Dışa aktar";
@@ -128,6 +131,8 @@ pub enum Event {
     Fields,
     /// Kayıt ekle (docs/adr/0410 §4): a record without a geometry on the layer shown.
     AddRecord,
+    /// Çoğalt (docs/adr/0415): the selected objects copied with the records they hold.
+    Duplicate,
     /// Dışa aktar ▾ (docs/adr/0223 §3): the rows shown written in a format.
     Export(kentos_contracts::WorkbookFormat),
     /// A value cell double-clicked: the row and the model's column.
@@ -502,6 +507,7 @@ impl App {
             }
             Event::ZoomSelection => self.navigating(Self::zoom_selection),
             Event::AddRecord => return self.feature_add_record(),
+            Event::Duplicate => return self.duplicate_selected(),
             Event::Export(format) => {
                 let Some(doc) = &self.document else {
                     return Task::none();
@@ -738,6 +744,9 @@ impl App {
                 .layer
                 .is_some()
                 .then(|| Message::Features(Event::AddRecord)),
+            Control::Press(texts::DUPLICATE) => {
+                (!self.selection.is_empty()).then(|| Message::Features(Event::Duplicate))
+            }
             Control::Press(texts::FIELDS) => rows
                 .layer
                 .is_some()
@@ -888,24 +897,51 @@ pub(crate) fn lookup_labels(
         .iter()
         .filter(|f| f.layer == layer)
         .collect();
-    let Some(form) = forms
+    let mut out: Vec<(String, std::collections::BTreeMap<String, String>)> = Vec::new();
+    if let Some(form) = forms
         .iter()
         .find(|f| !f.releases.is_empty())
         .or(forms.first())
-    else {
-        return Vec::new();
-    };
-    let body = form.releases.last().map_or(&form.draft, |r| &r.body);
-    let world = model.form_world(body);
-    body.walk()
-        .into_iter()
-        .filter_map(|(_, item)| match item {
+    {
+        let body = form.releases.last().map_or(&form.draft, |r| &r.body);
+        let world = model.form_world(body);
+        out.extend(body.walk().into_iter().filter_map(|(_, item)| match item {
             kentos_contracts::FormItem::Field(f) => {
                 let lookup = f.lookup.as_ref()?;
                 let name = fields.iter().find(|x| x.key() == f.field)?.name.clone();
                 Some((name, kentos_forms::labels_of(lookup, &world)))
             }
             _ => None,
-        })
-        .collect()
+        }));
+    }
+    // A relation's field holds its parent's persistent id: the parent's label reads better
+    // (docs/adr/0415 §2).
+    for r in model
+        .settings()
+        .relations
+        .iter()
+        .filter(|r| r.child == layer)
+    {
+        let Some(name) = fields
+            .iter()
+            .find(|x| x.key() == r.field)
+            .map(|x| x.name.clone())
+        else {
+            continue;
+        };
+        if out.iter().any(|(n, _)| *n == name) {
+            continue;
+        }
+        let labels: std::collections::BTreeMap<String, String> = model
+            .by_layer_with_uids(&r.parent)
+            .filter_map(|(uid, e)| {
+                let label = e.base().label.as_deref().filter(|l| !l.trim().is_empty())?;
+                Some((uid.to_string(), label.to_owned()))
+            })
+            .collect();
+        if !labels.is_empty() {
+            out.push((name, labels));
+        }
+    }
+    out
 }

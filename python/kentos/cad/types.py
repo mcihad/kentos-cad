@@ -19561,6 +19561,32 @@ class RasterStyle(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RecordCopy(_Model):
+    """One copy: the object it was made from, its persistent id and its slot.
+    Attributes:
+        id: Unit: id.
+    """
+    from_: str
+    uid: str
+    id: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["uid"] = self.uid
+        out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecordCopy:
+        return cls(
+            from_=data["from"],
+            uid=data["uid"],
+            id=data["id"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RecordEntity(Entity):
     """A record without a geometry (docs/adr/0410 §1).
     Attributes:
@@ -19747,6 +19773,90 @@ class RecordsCreated(_Model):
         return cls(
             uids=list(data["uids"]),
             ids=list(data["ids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RecordsDuplicate(_Model):
+    """Input of `cad.records.duplicate` v1: the objects to copy where they are, as one undo step
+    (“Kaydı çoğalt”).
+
+    Refusals, in this order: `no_entities`, `invalid_uid` (`uids[i]`), `invalid_count` (more than
+    1000), `invalid_revision`, `revision_conflict` (status `conflict`), `entity_not_found`
+    (`uids[i]`), `layer_locked` (every object on a locked layer). Warnings: `layer_locked` (objects and
+    children on locked layers left out), `unique_cleared` (a field a form keeps unique left empty).
+    Attributes:
+        uids: The objects' persistent ids; an object given twice is copied once.
+        children: The records the objects' composite relations hold are copied too, their field taking the
+            copy's id; written only as `false`.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+    """
+    uids: list[str]
+    children: bool | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        if self.children is not UNSET:
+            out["children"] = self.children
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecordsDuplicate:
+        return cls(
+            uids=list(data["uids"]),
+            children=data.get("children", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RecordsDuplicatePlan(_Model):
+    """Plan of `cad.records.duplicate` v1: how many copies and how many of them are children.
+    Attributes:
+        count: Unit: count.
+        children: Unit: count.
+    """
+    count: int
+    children: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["count"] = self.count
+        out["children"] = self.children
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecordsDuplicatePlan:
+        return cls(
+            count=data["count"],
+            children=data["children"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RecordsDuplicated(_Model):
+    """Output of `cad.records.duplicate` v1: the copies, each object before the children it holds."""
+    copies: list[RecordCopy]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["copies"] = [e0.to_json() for e0 in self.copies]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecordsDuplicated:
+        return cls(
+            copies=[RecordCopy.from_json(e0) for e0 in data["copies"]],
             revision=data["revision"],
         )
 
@@ -29478,10 +29588,14 @@ __all__ = [
     "RasterStyle",
     "RayEntity",
     "RayEntityGeometry",
+    "RecordCopy",
     "RecordEntity",
     "RecordRow",
     "RecordsCreate",
     "RecordsCreated",
+    "RecordsDuplicate",
+    "RecordsDuplicatePlan",
+    "RecordsDuplicated",
     "RecordsPlan",
     "RectangleCorners",
     "RectangleCreate",

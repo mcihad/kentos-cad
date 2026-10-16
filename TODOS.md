@@ -194,6 +194,8 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-V` kaydı çoğaltma (ADR 0415, 16 Ekim): web'de gerekenler: `cad.records.duplicate`'in TS işleyicisi
+  (`fixtures/commands/v1/cad.records.duplicate.json`), Öznitelik tablosunda Çoğalt, ilişkinin alt alanında üst nesnenin etiketi.
 - [ ] `FORM-U` alanın kullanıldığı yerler (ADR 0414, 16 Ekim): web'de gerekenler: `cad.fields.usage`'in TS işleyicisi
   (`fixtures/commands/v1/cad.fields.usage.json`), `cad.layers.edit`'in yeniden adlandırmada başvuruları izlemesi
   (`cad.layers.edit.renames.json`; ifadenin ve şablonun adları dilin sözcükleriyle), Alanlar penceresinde Kullanıldığı yerler.
@@ -1476,6 +1478,9 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-V` Kaydı alt kayıtlarıyla çoğaltma: `cad.records.duplicate`, bileşik ilişkilerin alt kayıtları alanları kopyanın kimliğiyle,
+  tekil alan boş, kilitli katman kuralı; Öznitelik tablosunda ve Veri › Tablo'da Çoğalt. — **16 Ekim,
+  [ADR 0415](docs/adr/0415-duplicate-records.md).**
 - [x] `FORM-U` Alanın kullanıldığı yerler ve yeniden adlandırmanın izlenmesi: `cad.fields.usage`, adı değişen alanı anan ifade,
   şablon ve adlar aynı adımda, anahtarla anılan alan kimliğini tutar, yayımlanmış sürüm değişmez; Alanlar penceresinde liste ve
   silme uyarısı. — **16 Ekim, [ADR 0414](docs/adr/0414-field-usage-and-renames.md).**

@@ -25,12 +25,13 @@ use kentos_interaction::Level;
 use crate::app::{App, Message};
 
 /// The commands this module runs.
-pub const COMMANDS: [&str; 5] = [
+pub const COMMANDS: [&str; 6] = [
     "data.forms",
     "data.formEdit",
     "data.relations",
     "data.formAudit",
     "data.tableStyles",
+    "data.duplicate",
 ];
 
 /// The drawing tools whose one new object opens its layer's form (docs/adr/0403 §4); a copy, an
@@ -71,6 +72,7 @@ impl App {
             "data.relations" => self.open_relations(),
             "data.formAudit" => return self.open_form_audit(None),
             "data.tableStyles" => return self.open_table_styles(),
+            "data.duplicate" => return self.duplicate_selected(),
             _ => {}
         }
         Task::none()
