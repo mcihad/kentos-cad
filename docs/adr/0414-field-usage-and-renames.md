@@ -57,6 +57,12 @@ Alanlar penceresinde seçili alanın altında **Kullanıldığı yerler (n)**: h
 notuyla. Ad değişince satır “n yer yeni adla güncellenecek” der; kullanılan alan silinince uyarı “bu alan n yerde kullanılıyor;
 silinirse o yerler bozulur” der.
 
+### 5. Tasarımcıda Bağlar (16 Ekim eki, plan FORM-DESIGN-09)
+
+Formlar penceresinde seçili alan öğesinin başlığının altında **Bağlar**: öğenin kurallarının okuduğu öbür alanlar ve alanı okuyan
+kurallar, notlar ve katman ayarları (tasarımcıdaki taslakla; anahtar yerleri ve yayımlanmış sürümler sayılmaz). Resim `form-baglar`,
+test `the_designer_lists_what_reads_a_field`.
+
 ## Denetimler
 
 - `scripts/fixtures/field_usage_cases.py --check`: `cad.fields.usage`'in ortak durumları ve yeniden adlandırmanın durumları

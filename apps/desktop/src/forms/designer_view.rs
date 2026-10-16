@@ -685,6 +685,7 @@ impl App {
                 let layer_required = layer.is_some_and(|l| l.required);
                 col = col
                     .push(label::strong(title))
+                    .push(self.field_links(f, fields))
                     .push(words::field(
                         "Etiket",
                         input(
@@ -832,6 +833,87 @@ impl App {
         }))
         .height(Fill)
         .into()
+    }
+
+    /// Bağlar (docs/adr/0414 §4, plan FORM-DESIGN-09): the fields a field item's rules read, and the
+    /// rules, notes and layer settings that read the field, with this form as the designer has it.
+    fn field_links<'a>(
+        &self,
+        f: &kentos_contracts::FormField,
+        fields: &[LayerField],
+    ) -> Element<'a, Message> {
+        use kentos_expression::editor::fields_of;
+        let Some(field) = fields.iter().find(|x| x.key() == f.field) else {
+            return space().into();
+        };
+        let rules = [
+            &f.visible_when,
+            &f.required_when,
+            &f.read_only_when,
+            &f.default_expr,
+            &f.calculate,
+            &f.choice_filter,
+        ];
+        let mut reads: Vec<String> = Vec::new();
+        let sources = rules
+            .iter()
+            .filter_map(|r| r.as_deref())
+            .chain(f.checks.iter().map(|c| c.rule.as_str()));
+        for src in sources {
+            for name in fields_of(src) {
+                if name != field.name
+                    && fields.iter().any(|x| x.name == name)
+                    && !reads.contains(&name)
+                {
+                    reads.push(name);
+                }
+            }
+        }
+        let mut readers = Vec::new();
+        if let (Some(doc), Some(w), Some(form)) =
+            (&self.document, &self.forms_window, self.chosen_form())
+        {
+            let mut settings = doc.model.settings().clone();
+            if let (Some(body), Some(at)) =
+                (&w.body, settings.forms.iter_mut().find(|x| x.id == form.id))
+            {
+                at.draft = body.clone();
+            }
+            readers = kentos_forms::field_refs::uses(
+                &settings,
+                doc.model.layers().nodes(),
+                &form.layer,
+                field,
+            )
+            .into_iter()
+            // What the drafts and the layer read; a published release keeps its own.
+            .filter(|u| u.how != kentos_contracts::FieldUseHow::Key && !u.kept)
+            .collect();
+        }
+        let mut col = Column::new()
+            .spacing(4)
+            .push(label::caption("Bağlar").style(muted))
+            .push(label::caption(if reads.is_empty() {
+                "Kuralları başka alan okumuyor.".to_owned()
+            } else {
+                format!("Kuralları okuyor: {}", reads.join(", "))
+            }));
+        if readers.is_empty() {
+            col = col.push(label::caption(format!(
+                "“{}” alanını okuyan kural yok.",
+                field.label()
+            )));
+        } else {
+            col = col.push(label::caption(format!(
+                "“{}” alanını okuyanlar ({}):",
+                field.label(),
+                readers.len()
+            )));
+            for u in readers {
+                col = col.push(label::caption(u.place).style(muted));
+            }
+        }
+        col.into()
     }
 
     fn forms_footer(

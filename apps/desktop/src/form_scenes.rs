@@ -496,6 +496,13 @@ fn form_view(app: &mut App) {
     )));
 }
 
+/// Formlar on the survey form, the floor count chosen: what reads it (plan FORM-DESIGN-09).
+fn designer_links(app: &mut App) {
+    buildings_with_a_form(app);
+    run(app, "data.forms");
+    designer(app, designer::Event::SelectItem("kat".into()));
+}
+
 /// Koşullu biçim's window on the buildings' rules, the floor count's rule chosen.
 fn styles_window(app: &mut App) {
     styled_buildings(app);
@@ -1131,6 +1138,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-alan-kullanim", field_usage),
         ("form-cogalt", duplicated),
         ("form-gorunumu", form_view),
+        ("form-baglar", designer_links),
     ]
 }
 
@@ -1193,6 +1201,27 @@ mod tests {
         let undone = app.document.as_mut().unwrap().model.undo();
         assert_eq!(undone.as_deref(), Some("Koşullu biçim"));
         assert_eq!(rules(&app).len(), 4, "one step undoes it");
+    }
+
+    #[test]
+    fn the_designer_lists_what_reads_a_field() {
+        let mut app = crate::files_testing::app_with_drawing();
+        designer_links(&mut app);
+        let doc = app.document.as_ref().unwrap();
+        let field = doc.model.layers().get("bina").unwrap().fields[2].clone();
+        assert_eq!(field.name, "Kat");
+        let read: Vec<_> = kentos_forms::field_refs::uses(
+            doc.model.settings(),
+            doc.model.layers().nodes(),
+            "bina",
+            &field,
+        )
+        .into_iter()
+        .filter(|u| u.how != kentos_contracts::FieldUseHow::Key && !u.kept)
+        .map(|u| u.place)
+        .collect();
+        assert_eq!(read.len(), 5, "{read:#?}");
+        assert!(read[0].contains("Görünme koşulu"));
     }
 
     #[test]

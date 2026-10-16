@@ -1480,6 +1480,7 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-X` Tasarımcıda Bağlar: seçili alanın kurallarının okuduğu alanlar ve alanı okuyan kurallar. — **16 Ekim, ADR 0414 §5.**
 - [x] `FORM-W` Öznitelik tablosunda form görünümü: Tablo | Form, kayıt listesi ve gömülü form; Kaydet formu aynı kayıtta tutar. —
   **16 Ekim, [ADR 0416](docs/adr/0416-form-view-in-attribute-table.md).**
 - [x] `FORM-V` Kaydı alt kayıtlarıyla çoğaltma: `cad.records.duplicate`, bileşik ilişkilerin alt kayıtları alanları kopyanın kimliğiyle,
