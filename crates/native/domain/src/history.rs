@@ -617,7 +617,8 @@ impl Document {
         ops.extend(arrays);
         // After the hatches: a dimension follows the places its points name.
         let relocated = std::mem::take(&mut self.relocated);
-        let dims = self.follow_dimensions(ops, &relocated);
+        let ends = std::mem::take(&mut self.relocated_ends);
+        let dims = self.follow_dimensions(ops, &relocated, &ends);
         ops.extend(dims);
     }
 

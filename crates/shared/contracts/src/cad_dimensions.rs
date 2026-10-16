@@ -68,7 +68,7 @@ pub struct EdgeNear {
     pub near: Vec2,
 }
 
-/// What a dimension measures: Ölçülendirme's ten kinds (docs/adr/0061, 0147).
+/// What a dimension measures: Ölçülendirme's ten kinds (docs/adr/0061, 0147), Zincir ölçü and Baz ölçü (docs/adr/0320).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -148,23 +148,44 @@ pub enum DimensionMeasure {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         on: Vec2,
     },
+    /// Zincir ölçü (docs/adr/0320 §3): from the base dimension's second point to `to`, along the base's direction,
+    /// its line on the base's line; its first point follows what the base's second follows. The base is an aligned
+    /// or a linear dimension; `at` is not read.
+    Continue {
+        /// The base dimension's persistent id (lowercase UUID text with hyphens).
+        #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+        base: String,
+        to: MeasuredPoint,
+    },
+    /// Baz ölçü (docs/adr/0320 §3): from the base dimension's first point to `to`, along the base's direction, its
+    /// line one level (three times the base's value height) further out than the base's; its first point follows
+    /// what the base's first follows. The base is an aligned or a linear dimension; `at` is not read.
+    Baseline {
+        /// The base dimension's persistent id (lowercase UUID text with hyphens).
+        #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+        base: String,
+        to: MeasuredPoint,
+    },
 }
 
 /// Input of `cad.dimensions.create` v1: the dimension `measure` names,
 /// placed at `at` (the dimension line, its arc or its leader through it),
 /// written on `layerId` by `cad.entities.create`'s rules as one undo step
 /// “Ekle”. The dimension is the one Ölçülendirme draws for the same picks:
-/// the tool writes it with this command. The points given as places on
-/// Hizalı, Doğrusal, Koordinat, Semt and Eğim are bound: they follow their
-/// objects (docs/adr/0249).
+/// the tool writes it with this command. The points given as places are
+/// bound: they follow their objects (docs/adr/0249); an angle by edges, a
+/// radius, a diameter, a jogged radius, an arc length and an arc's angle
+/// follow their edges or their curve too (docs/adr/0320 §1). Zincir ölçü and
+/// Baz ölçü take the base's style, look and height unless a style is named.
 ///
 /// Refusals (`CommandError.code`), checked in this order: `not_finite`
 /// (`at`, `offset`, then the measure's numbers in their order),
 /// `invalid_height`, `invalid_uid` (each place's and edge's object, in
-/// order), `invalid_offset` (an `offset` for Yarıçap, Çap or Koordinat,
-/// which take none), `invalid_revision`, `revision_conflict` (status
-/// `conflict`), `entity_not_found`, `no_such_place`, `not_measurable` (the
-/// object has no edge of the kind the measure takes), `missing_elevation`
+/// order; a base's first), `invalid_offset` (an `offset` for Yarıçap, Çap,
+/// Koordinat, Zincir or Baz, which take none), `invalid_revision`,
+/// `revision_conflict` (status `conflict`), `entity_not_found`,
+/// `no_such_place`, `not_measurable` (the object has no edge of the kind the
+/// measure takes; a base not an aligned or a linear dimension), `missing_elevation`
 /// (Eğim's point with no elevation given or kept), `unknown_style`,
 /// `no_dimension` (no dimension forms there: the points meet, the edges are
 /// parallel, the arc spans nothing), then the layer's and the look's as

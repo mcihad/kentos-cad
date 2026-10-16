@@ -1074,11 +1074,13 @@ pub(crate) fn check_geometry(
             at(""),
         )));
     }
-    // A dimension's references (docs/adr/0249 §3).
+    // A dimension's references (docs/adr/0249 §3) and their rule's kinds (docs/adr/0320 §1).
     if let EntityGeometry::Dimension {
-        refs: Some(refs), ..
+        refs: Some(refs),
+        style,
+        ..
     } = g
-        && let Some(words) = refs.problem()
+        && let Some(words) = refs.problem().or_else(|| refs.rule_problem(*style))
     {
         return Err(Stop::failed(error(codes::INVALID_REFS, words, at(".refs"))));
     }

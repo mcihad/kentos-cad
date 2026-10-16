@@ -7618,14 +7618,14 @@
    "id": "tool.dimBaseline",
    "kind": "tool",
    "title": "Baz ölçü",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.dimensions.create"
    ],
-   "operation": "dimensionBaseline",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.dimensions.create",
+   "mcp": "cad.dimensions.create",
+   "note": "Temel ölçünün kimliği ve tıklanan nokta (kenetle oturduğu yer) komutun baseline ölçüsüne verilir; bir kat dışarıda, ilk noktası temelinkini izler (ADR 0320 §3).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 1
@@ -7634,14 +7634,14 @@
    "id": "tool.dimContinue",
    "kind": "tool",
    "title": "Zincir ölçü",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.dimensions.create"
    ],
-   "operation": "dimensionChain",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.dimensions.create",
+   "mcp": "cad.dimensions.create",
+   "note": "Temel ölçünün kimliği ve tıklanan nokta (kenetle oturduğu yer) komutun continue ölçüsüne verilir; ilk noktası temelinkini izler (ADR 0320 §3).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 1
@@ -7657,7 +7657,7 @@
    "operation": null,
    "python": "kentos.cad.dimensions.create",
    "mcp": "cad.dimensions.create",
-   "note": "Noktalar (kenetle oturduğu yer), tıklanan kenarlar ve yeri komuta verilir; ölçüyü komut kurar. Hizalı, Doğrusal, Koordinat, Semt ve Eğim'in yere oturan noktası nesneye bağlanır (ADR 0249, 0255).",
+   "note": "Noktalar (kenetle oturduğu yer), tıklanan kenarlar ve yeri komuta verilir; ölçüyü komut kurar. Yere oturan nokta nesneye bağlanır; kenarlardan açı, yarıçap, çap, kırıklı yarıçap, yay uzunluğu ve yaydan açı kenarlarını ya da eğrisini izler (ADR 0249, 0255, 0320).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 7

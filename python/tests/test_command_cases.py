@@ -129,7 +129,7 @@ class Case:
                 self.blocks[step["as"]] = block.id
             else:
                 raise AssertionError(f"{at}: unknown op {op}")
-            self.check(step.get("expect"), before, at)
+            self.check(step.get("expect"), before, at, step.get("within"))
 
     def command(self, step: dict[str, Any], at: str) -> None:
         # A step may run another command first (a dimension tied before it is broken, docs/adr/0296).
@@ -185,7 +185,7 @@ class Case:
             want["output"]["uid"] = uid
         same(got, self.fill(want, at), f"{at}: result", step.get("within"))
 
-    def check(self, expect: dict[str, Any] | None, before: str, at: str) -> None:
+    def check(self, expect: dict[str, Any] | None, before: str, at: str, within: float | None = None) -> None:
         if not expect:
             return
         info = self.doc.info()
@@ -196,7 +196,7 @@ class Case:
                 slots = self.slots()
                 for slot, entity in want.items():
                     record = slots.get(int(slot))
-                    same(None if record is None else record.entity.to_json(), self.block_ids(entity, at), f"{at}: object {slot}")
+                    same(None if record is None else record.entity.to_json(), self.block_ids(entity, at), f"{at}: object {slot}", within)
             elif key == "fields":
                 # Only the fields named of each object, each whole (docs/adr/0257 §3).
                 slots = self.slots()
@@ -303,7 +303,7 @@ class Case:
         """An expected object with its block ids (`$blockOf:Ad`, `$block:name`) and the persistent ids of the objects it
         names (`$uidOf:12`: a linked text's object, docs/adr/0175 §4) filled in; nothing else is a placeholder."""
         if isinstance(value, str):
-            return self.fill(value, at) if value.startswith(("$blockOf:", "$block:", "$uidOf:", "$layer:", "$$")) else value
+            return self.fill(value, at) if value.startswith(("$blockOf:", "$block:", "$uidOf:", "$uid:", "$layer:", "$$")) else value
         if isinstance(value, list):
             return [self.block_ids(v, at) for v in value]
         if isinstance(value, dict):

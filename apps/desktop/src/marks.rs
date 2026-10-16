@@ -96,6 +96,8 @@ pub struct Marks {
     pub problem: Option<crate::topology::ProblemMark>,
     /// The points of associative dimensions whose reference broke (docs/adr/0249 §3).
     pub broken: Vec<Vec2>,
+    /// What the selected associative dimensions are bound to (docs/adr/0320 §4).
+    pub bonds: Vec<kentos_interaction::dimension_bonds::Bond>,
     /// Nesne izleme's points and the alignment the cursor is locked to (tracking.rs).
     pub tracking: Option<TrackingMarks>,
     /// The crosshair at the pointer, when the pointer is over the drawing.
@@ -199,6 +201,7 @@ impl Marks {
             && self.found.is_none()
             && self.problem.is_none()
             && self.broken.is_empty()
+            && self.bonds.is_empty()
             && self.tracking.is_none()
             && self.crosshair.is_none()
             && self.locks.is_none()
@@ -226,6 +229,7 @@ impl<Message> canvas::Program<Message> for Marks {
             &self.colors,
             accent,
         );
+        bonds(&mut frame, &self.bonds, &self.camera, &self.colors, accent);
         param_grips(&mut frame, &self.params, &self.camera, &self.colors);
         marked(&mut frame, &self.marked, &self.camera, &self.colors, accent);
         if let Some((p, words)) = &self.found {
@@ -575,6 +579,70 @@ fn problem(
         frame.stroke(&shape, stroke(3.0, danger));
     }
     found(frame, m.at, &m.label, camera, colors, danger);
+}
+
+/// What a selected associative dimension is bound to (docs/adr/0320 §4): the object's edges dashed in the accent
+/// colour on a halo, under the grips, and the place a filled diamond; only what is in the view.
+fn bonds(
+    frame: &mut canvas::Frame,
+    bonds: &[kentos_interaction::dimension_bonds::Bond],
+    camera: &Camera,
+    colors: &MarkColors,
+    accent: iced::Color,
+) {
+    let size = frame.size();
+    let screen = |p: Vec2| {
+        let [x, y] = camera.world_to_screen(p);
+        Point::new(x as f32, y as f32)
+    };
+    let dash = [6.0f32, 4.0];
+    for b in bonds {
+        let path = Path::new(|p| {
+            for run in &b.edges {
+                let mut first = true;
+                for q in run {
+                    let at = screen(*q);
+                    if first {
+                        p.move_to(at);
+                        first = false;
+                    } else {
+                        p.line_to(at);
+                    }
+                }
+            }
+        });
+        frame.stroke(
+            &path,
+            Stroke::default().with_color(colors.halo).with_width(4.0),
+        );
+        frame.stroke(
+            &path,
+            Stroke {
+                line_dash: canvas::LineDash {
+                    segments: &dash,
+                    offset: 0,
+                },
+                ..Stroke::default().with_color(accent).with_width(2.0)
+            },
+        );
+        let at = screen(b.at);
+        if at.x < -10.0 || at.y < -10.0 || at.x > size.width + 10.0 || at.y > size.height + 10.0 {
+            continue;
+        }
+        let (x, y) = (at.x.round() + 0.5, at.y.round() + 0.5);
+        let diamond = Path::new(|p| {
+            p.move_to(Point::new(x, y - 6.0));
+            p.line_to(Point::new(x + 6.0, y));
+            p.line_to(Point::new(x, y + 6.0));
+            p.line_to(Point::new(x - 6.0, y));
+            p.close();
+        });
+        frame.stroke(
+            &diamond,
+            Stroke::default().with_color(colors.halo).with_width(3.0),
+        );
+        frame.fill(&diamond, accent);
+    }
 }
 
 /// A broken reference of an associative dimension (docs/adr/0249 §3): a small warning triangle, its tip over the
@@ -1068,6 +1136,18 @@ impl crate::app::App {
 }
 
 impl crate::app::App {
+    /// What the selected associative dimensions are bound to (docs/adr/0320 §4); none while a tool runs or the
+    /// selection is past the grips' limit.
+    pub(crate) fn bond_marks(&self) -> Vec<kentos_interaction::dimension_bonds::Bond> {
+        let Some(doc) = &self.document else {
+            return Vec::new();
+        };
+        if self.selection.len() > kentos_interaction::select::GRIP_LIMIT {
+            return Vec::new();
+        }
+        kentos_interaction::dimension_bonds::bonds(&doc.model, self.selection.ids())
+    }
+
     /// The points of the associative dimensions whose reference broke (docs/adr/0249 §3): from the document's index
     /// of such dimensions, not a walk over the drawing.
     pub(crate) fn broken_marks(&self) -> Vec<Vec2> {

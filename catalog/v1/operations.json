@@ -1408,7 +1408,7 @@
         "cad.dimensions.create"
       ],
       "was": "cad.entities.create",
-      "note": "Noktalar (kenetle oturduğu yer), tıklanan kenarlar ve yeri komuta verilir; ölçüyü komut kurar. Hizalı, Doğrusal, Koordinat, Semt ve Eğim'in yere oturan noktası nesneye bağlanır (ADR 0249, 0255).",
+      "note": "Noktalar (kenetle oturduğu yer), tıklanan kenarlar ve yeri komuta verilir; ölçüyü komut kurar. Yere oturan nokta nesneye bağlanır; kenarlardan açı, yarıçap, çap, kırıklı yarıçap, yay uzunluğu ve yaydan açı kenarlarını ya da eğrisini izler (ADR 0249, 0255, 0320).",
       "methods": {
         "Hizalı": "semantic",
         "Doğrusal": "semantic",
@@ -1423,12 +1423,20 @@
       }
     },
     "dimContinue": {
-      "level": "geometry",
-      "operation": "dimensionChain"
+      "level": "semantic",
+      "via": [
+        "cad.dimensions.create"
+      ],
+      "was": "cad.entities.create",
+      "note": "Temel ölçünün kimliği ve tıklanan nokta (kenetle oturduğu yer) komutun continue ölçüsüne verilir; ilk noktası temelinkini izler (ADR 0320 §3)."
     },
     "dimBaseline": {
-      "level": "geometry",
-      "operation": "dimensionBaseline"
+      "level": "semantic",
+      "via": [
+        "cad.dimensions.create"
+      ],
+      "was": "cad.entities.create",
+      "note": "Temel ölçünün kimliği ve tıklanan nokta (kenetle oturduğu yer) komutun baseline ölçüsüne verilir; bir kat dışarıda, ilk noktası temelinkini izler (ADR 0320 §3)."
     },
     "quickDimension": {
       "level": "geometry"

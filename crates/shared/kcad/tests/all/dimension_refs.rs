@@ -115,6 +115,7 @@ fn every_place_comes_back_through_the_codec_and_the_columns() {
             a: Some(r(None)),
             b: (i % 2 == 0).then(|| r(Some("ambiguous"))),
             c: Some(r(Some("object_gone"))),
+            rule: [None, Some(kentos_contracts::DimensionRule::Curve), Some(kentos_contracts::DimensionRule::Edges)][i % 3],
         }));
         let bytes = kentos_kcad::encode_verified(&doc).expect("writes");
         let back = kentos_kcad::decode(&bytes).expect("reads");
@@ -214,7 +215,7 @@ fn the_readers_errors_name_their_places() {
             Code::BadValue,
             "lost",
         ),
-        ("broken/schema-version-60.kcad", Code::SchemaVersion, ""),
+        ("broken/schema-version-61.kcad", Code::SchemaVersion, ""),
     ] {
         let e = refused(file);
         assert_eq!(e.code, code, "{file}: {e}");

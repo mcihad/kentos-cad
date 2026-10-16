@@ -180,6 +180,10 @@ Liste:
   `block_dynamic`'i WASM'la; yerleştirmenin değerleri depoya), `cad.blocks.parameters`'ın ve `cad.blocks.edit` `dynamic`'inin TS
   işleyicileri, Blok ekle'nin değerleri, KentOS blok kitaplığı komutu. Masaüstünde de açık: parametre noktalarının taşıma ve
   döndürme eylemleriyle zincirlenmesi (tutamaçlar yalnız çevirmelerin aynasını izler, ADR 0319).
+- [ ] `CAD-ANNO-03`, `04`, `07` her türün ilişkili ölçüsü (ADR 0320, 16 Ekim): web'de gerekenler: `.kcad` şema 60'ın `refs.rule`'ü,
+  belgenin kayıt öncesi izlemesinde kuralın uygulanması (`curve`: merkez ve dönen nokta; `edges`: kesişim ve kollar) ve Buda'nın
+  bağları (`relocateTiesKeepingEnds`), `cad.dimensions.create`'in kenar ve eğri bağları, `continue` ve `baseline`'ı (Zincir ve Baz
+  araçları onunla), seçili ölçünün bağ vurgusu; `cad.dimensions.follow.json` web'in çalıştırıcısında.
 - [ ] `CAD-BLOCK-17`, `18`, `19`, `20` dinamik bloğun tutamaçları, değerleri, vekil görünüşü ve DXF'i (ADR 0319, 16 Ekim): web'de
   gerekenler: seçim aracının parametre tutamaçları (çekirdeğin `Store::param_grips`, `param_value`, `varied_outlines`'ı WASM'la) ve
   çizimi, Öznitelikler'in Blok parametreleri bölümü, `cad.blocks.proxy`'nin ve `cad.blocks.freeze`'in TS işleyicileri, Sabit bloğa

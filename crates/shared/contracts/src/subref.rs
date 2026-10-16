@@ -97,6 +97,31 @@ pub struct SubRef {
     pub broken: Option<String>,
 }
 
+/// How an associative dimension's points that no place names follow (docs/adr/0320 §1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum DimensionRule {
+    /// A radius's, a diameter's, a jogged radius's, an arc length's or an arc's angle: the bound points are on one
+    /// curve (a circle, an arc, a path's arc segment); its centre (a radius's `a`, the others' `c`) is the curve's.
+    Curve,
+    /// An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where
+    /// their lines cross, each arm keeping its length and side.
+    Edges,
+}
+
+impl DimensionRule {
+    /// Its name on the wire.
+    pub fn name(self) -> &'static str {
+        match self {
+            DimensionRule::Curve => "curve",
+            DimensionRule::Edges => "edges",
+        }
+    }
+}
+
 /// An associative dimension's references: what its points `a`, `b` and `c` follow; a point without one is free.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -113,6 +138,10 @@ pub struct DimensionRefs {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub c: Option<SubRef>,
+    /// How the points no place names follow (docs/adr/0320 §1); none, each bound point follows its place alone.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub rule: Option<DimensionRule>,
 }
 
 impl SubPlace {
@@ -230,6 +259,34 @@ impl DimensionRefs {
     /// Whether no point has a reference (then the field is not written).
     pub fn is_empty(&self) -> bool {
         self.a.is_none() && self.b.is_none() && self.c.is_none()
+    }
+
+    /// What is wrong with the rule for a dimension of `style` (docs/adr/0320 §1); none when it fits: a curve's on a
+    /// radius, a diameter or a jogged radius (`b` bound, not `a`, the centre), on an arc length or an angle (`a` and
+    /// `b` bound, not `c`); edges on an angle (`a` and `b` bound, not `c`).
+    pub fn rule_problem(&self, style: Option<crate::DimensionStyle>) -> Option<String> {
+        use crate::DimensionStyle as S;
+        let rule = self.rule?;
+        let radial = matches!(style, Some(S::Radius | S::Diameter | S::Jogged));
+        let fits = match rule {
+            DimensionRule::Curve => radial || matches!(style, Some(S::ArcLength | S::Angular)),
+            DimensionRule::Edges => style == Some(S::Angular),
+        };
+        if !fits {
+            return Some(format!(
+                "“{}” kuralı bu ölçü türüne uymaz: eğri kuralı yarıçap, çap, kırıklı yarıçap, yay uzunluğu ve açıda, kenar kuralı açıda olur.",
+                rule.name()
+            ));
+        }
+        let bound = (radial && self.b.is_some() && self.a.is_none())
+            || (!radial && self.a.is_some() && self.b.is_some() && self.c.is_none());
+        (!bound).then(|| {
+            if radial {
+                "Eğri kuralındaki yarıçap ölçüsünde yalnız b (eğrinin üstündeki nokta) bağlanır; merkez eğriden gelir.".into()
+            } else {
+                "Kuralın a ve b'si bağlı olmalı; üçüncü nokta (c) kuraldan gelir.".into()
+            }
+        })
     }
 
     /// What is wrong with the references; none when they hold.

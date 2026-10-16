@@ -7,17 +7,20 @@ import type { Vec2 } from "./Vec2";
  * placed at `at` (the dimension line, its arc or its leader through it),
  * written on `layerId` by `cad.entities.create`'s rules as one undo step
  * “Ekle”. The dimension is the one Ölçülendirme draws for the same picks:
- * the tool writes it with this command. The points given as places on
- * Hizalı, Doğrusal, Koordinat, Semt and Eğim are bound: they follow their
- * objects (docs/adr/0249).
+ * the tool writes it with this command. The points given as places are
+ * bound: they follow their objects (docs/adr/0249); an angle by edges, a
+ * radius, a diameter, a jogged radius, an arc length and an arc's angle
+ * follow their edges or their curve too (docs/adr/0320 §1). Zincir ölçü and
+ * Baz ölçü take the base's style, look and height unless a style is named.
  *
  * Refusals (`CommandError.code`), checked in this order: `not_finite`
  * (`at`, `offset`, then the measure's numbers in their order),
  * `invalid_height`, `invalid_uid` (each place's and edge's object, in
- * order), `invalid_offset` (an `offset` for Yarıçap, Çap or Koordinat,
- * which take none), `invalid_revision`, `revision_conflict` (status
- * `conflict`), `entity_not_found`, `no_such_place`, `not_measurable` (the
- * object has no edge of the kind the measure takes), `missing_elevation`
+ * order; a base's first), `invalid_offset` (an `offset` for Yarıçap, Çap,
+ * Koordinat, Zincir or Baz, which take none), `invalid_revision`,
+ * `revision_conflict` (status `conflict`), `entity_not_found`,
+ * `no_such_place`, `not_measurable` (the object has no edge of the kind the
+ * measure takes; a base not an aligned or a linear dimension), `missing_elevation`
  * (Eğim's point with no elevation given or kept), `unknown_style`,
  * `no_dimension` (no dimension forms there: the points meet, the edges are
  * parallel, the arc spans nothing), then the layer's and the look's as

@@ -165,7 +165,9 @@ use crate::layer::LineType;
 /// 68 (docs/adr/0318): dynamic blocks: `.kcad` document schema 59, a definition's `dynamic` (its parameters and
 ///    actions as their JSON) and an insert's `parameters`; in the typed columns the insert's option bit 3 and the
 ///    values' JSON text. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 68;
+/// 69 (docs/adr/0320 §1): a dimension's references' `rule` (`curve`, `edges`): `.kcad` document schema 60; in the
+///    typed columns the references' mask bits 3 and 4. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 69;
 
 // ── Every import ────────────────────────────────────────────────────────
 

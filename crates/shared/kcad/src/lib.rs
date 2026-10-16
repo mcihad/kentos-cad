@@ -439,11 +439,15 @@ pub const SCHEMA_WITH_BLOCK_CARDS: u32 = 58;
 /// `parameters`, written only when the drawing has one; older readers refuse the file instead of drawing every
 /// insert of a dynamic block at its defaults.
 pub const SCHEMA_WITH_DYNAMIC_BLOCKS: u32 = 59;
+/// Schema 60 (docs/adr/0320 §1): a dimension's references' `rule` (`curve`, `edges`): how its points no place names
+/// follow, written only when a dimension has one; older readers refuse the file instead of leaving a radius's centre
+/// or an angle's vertex behind.
+pub const SCHEMA_WITH_DIMENSION_RULES: u32 = 60;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 58] = [
+pub const SCHEMAS: [u32; 59] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -502,6 +506,7 @@ pub const SCHEMAS: [u32; 58] = [
     SCHEMA_WITH_BLOCK_EXTRAS,
     SCHEMA_WITH_BLOCK_CARDS,
     SCHEMA_WITH_DYNAMIC_BLOCKS,
+    SCHEMA_WITH_DIMENSION_RULES,
 ];
 
 /// The file a drawing is saved as.

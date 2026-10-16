@@ -446,7 +446,7 @@ impl Dimension {
                     }
                 }
                 self.d.pts.push(p);
-                if self.mode().binds()
+                if self.binds()
                     && let Some(r) = snapped_place(snap, p, cx)
                 {
                     self.places.push((p, r));
@@ -460,11 +460,16 @@ impl Dimension {
         self.commit(p, None, cx);
     }
 
+    /// Whether the points taken bind to the places they snapped to: the point methods, and Açı by its vertex
+    /// (docs/adr/0320 §1).
+    fn binds(&self) -> bool {
+        self.mode().binds() || (self.mode() == Mode::Angular && self.memory.dimension_by_vertex)
+    }
+
     /// A measured point: the place it snapped to on the point methods (it
     /// follows it, docs/adr/0249 §3), else its coordinates.
     fn point(&self, p: Vec2) -> MeasuredPoint {
         let place = self
-            .mode()
             .binds()
             .then(|| self.places.iter().rev().find(|(q, _)| *q == p))
             .flatten();
@@ -521,9 +526,9 @@ impl Dimension {
                     }
                 } else if self.memory.dimension_by_vertex {
                     DimensionMeasure::AngleVertex {
-                        c: at(0)?,
-                        a: at(1)?,
-                        b: at(2)?,
+                        c: pt(0)?,
+                        a: pt(1)?,
+                        b: pt(2)?,
                     }
                 } else {
                     DimensionMeasure::Angle {

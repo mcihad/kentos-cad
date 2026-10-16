@@ -587,6 +587,20 @@ DimensionPointName = Literal["a", "b", "c"]
 """The names of :class:`DimensionPoint`, for a plain string."""
 
 
+class DimensionRule(_StrEnum):
+    """How an associative dimension's points that no place names follow (docs/adr/0320 §1).
+
+    - ``curve``: A radius's, a diameter's, a jogged radius's, an arc length's or an arc's angle: the bound points are on one
+    - ``edges``: An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where
+    """
+    CURVE = "curve"
+    EDGES = "edges"
+
+
+DimensionRuleName = Literal["curve", "edges"]
+"""The names of :class:`DimensionRule`, for a plain string."""
+
+
 class DimensionStyle(_StrEnum):
     """A dimension's kind (none: aligned). The last five came with KCAD schema 9
     (docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`
@@ -2499,7 +2513,7 @@ class CurveEdit(_Union):
 
 
 class DimensionMeasure(_Union):
-    """What a dimension measures: Ölçülendirme's ten kinds (docs/adr/0061, 0147).
+    """What a dimension measures: Ölçülendirme's ten kinds (docs/adr/0061, 0147), Zincir ölçü and Baz ölçü (docs/adr/0320).
 
     One of:
 
@@ -2515,6 +2529,8 @@ class DimensionMeasure(_Union):
     - :class:`DiameterDimensionMeasure` (``kind: diameter``)
     - :class:`ArcLengthDimensionMeasure` (``kind: arcLength``)
     - :class:`JoggedDimensionMeasure` (``kind: jogged``)
+    - :class:`ContinueDimensionMeasure` (``kind: continue``)
+    - :class:`BaselineDimensionMeasure` (``kind: baseline``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -6604,10 +6620,14 @@ class DimensionEntity(Entity):
 
 @dataclass(kw_only=True, slots=True)
 class DimensionRefs(_Model):
-    """An associative dimension's references: what its points `a`, `b` and `c` follow; a point without one is free."""
+    """An associative dimension's references: what its points `a`, `b` and `c` follow; a point without one is free.
+    Attributes:
+        rule: How the points no place names follow (docs/adr/0320 §1); none, each bound point follows its place alone.
+    """
     a: SubRef | None | Unset = UNSET
     b: SubRef | None | Unset = UNSET
     c: SubRef | None | Unset = UNSET
+    rule: DimensionRule | DimensionRuleName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -6617,6 +6637,8 @@ class DimensionRefs(_Model):
             out["b"] = None if self.b is None else self.b.to_json()
         if self.c is not UNSET:
             out["c"] = None if self.c is None else self.c.to_json()
+        if self.rule is not UNSET:
+            out["rule"] = None if self.rule is None else _enum_out(self.rule)
         return out
 
     @classmethod
@@ -6625,6 +6647,7 @@ class DimensionRefs(_Model):
             a=UNSET if "a" not in data else None if data["a"] is None else SubRef.from_json(data["a"]),
             b=UNSET if "b" not in data else None if data["b"] is None else SubRef.from_json(data["b"]),
             c=UNSET if "c" not in data else None if data["c"] is None else SubRef.from_json(data["c"]),
+            rule=UNSET if "rule" not in data else None if data["rule"] is None else _enum_in(DimensionRule, data["rule"]),
         )
 
 
@@ -6742,17 +6765,20 @@ class DimensionsCreate(_Model):
     placed at `at` (the dimension line, its arc or its leader through it),
     written on `layerId` by `cad.entities.create`'s rules as one undo step
     “Ekle”. The dimension is the one Ölçülendirme draws for the same picks:
-    the tool writes it with this command. The points given as places on
-    Hizalı, Doğrusal, Koordinat, Semt and Eğim are bound: they follow their
-    objects (docs/adr/0249).
+    the tool writes it with this command. The points given as places are
+    bound: they follow their objects (docs/adr/0249); an angle by edges, a
+    radius, a diameter, a jogged radius, an arc length and an arc's angle
+    follow their edges or their curve too (docs/adr/0320 §1). Zincir ölçü and
+    Baz ölçü take the base's style, look and height unless a style is named.
 
     Refusals (`CommandError.code`), checked in this order: `not_finite`
     (`at`, `offset`, then the measure's numbers in their order),
     `invalid_height`, `invalid_uid` (each place's and edge's object, in
-    order), `invalid_offset` (an `offset` for Yarıçap, Çap or Koordinat,
-    which take none), `invalid_revision`, `revision_conflict` (status
-    `conflict`), `entity_not_found`, `no_such_place`, `not_measurable` (the
-    object has no edge of the kind the measure takes), `missing_elevation`
+    order; a base's first), `invalid_offset` (an `offset` for Yarıçap, Çap,
+    Koordinat, Zincir or Baz, which take none), `invalid_revision`,
+    `revision_conflict` (status `conflict`), `entity_not_found`,
+    `no_such_place`, `not_measurable` (the object has no edge of the kind the
+    measure takes; a base not an aligned or a linear dimension), `missing_elevation`
     (Eğim's point with no elevation given or kept), `unknown_style`,
     `no_dimension` (no dimension forms there: the points meet, the edges are
     parallel, the arc spans nothing), then the layer's and the look's as
@@ -23620,6 +23646,58 @@ class JoggedDimensionMeasure(DimensionMeasure):
 
 
 @dataclass(kw_only=True, slots=True)
+class ContinueDimensionMeasure(DimensionMeasure):
+    """Zincir ölçü (docs/adr/0320 §3): from the base dimension's second point to `to`, along the base's direction,
+    its line on the base's line; its first point follows what the base's second follows. The base is an aligned
+    or a linear dimension; `at` is not read.
+    Attributes:
+        base: The base dimension's persistent id (lowercase UUID text with hyphens).
+    """
+    TAG_VALUE: ClassVar[str] = "continue"
+    base: str
+    to: MeasuredPoint
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "continue"}
+        out["base"] = self.base
+        out["to"] = self.to.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ContinueDimensionMeasure:
+        return cls(
+            base=data["base"],
+            to=MeasuredPoint.from_json(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BaselineDimensionMeasure(DimensionMeasure):
+    """Baz ölçü (docs/adr/0320 §3): from the base dimension's first point to `to`, along the base's direction, its
+    line one level (three times the base's value height) further out than the base's; its first point follows
+    what the base's first follows. The base is an aligned or a linear dimension; `at` is not read.
+    Attributes:
+        base: The base dimension's persistent id (lowercase UUID text with hyphens).
+    """
+    TAG_VALUE: ClassVar[str] = "baseline"
+    base: str
+    to: MeasuredPoint
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "baseline"}
+        out["base"] = self.base
+        out["to"] = self.to.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BaselineDimensionMeasure:
+        return cls(
+            base=data["base"],
+            to=MeasuredPoint.from_json(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PartsDivision(Division):
     """Into `count` equal parts (2 to 10 000): a point between each two, and
     on a closed object one at its start too.
@@ -26872,7 +26950,7 @@ _CURVE_CONSTRUCTION: dict[str, type[CurveConstruction]] = {"circleTwoPoints": Ci
 _CURVE_EDIT: dict[str, type[CurveEdit]] = {"close": CloseCurveEdit, "open": OpenCurveEdit, "decurve": DecurveCurveEdit, "toSpline": ToSplineCurveEdit, "addFit": AddFitCurveEdit, "moveFit": MoveFitCurveEdit, "removeFit": RemoveFitCurveEdit, "tangents": TangentsCurveEdit, "moveControl": MoveControlCurveEdit, "weight": WeightCurveEdit, "removeControl": RemoveControlCurveEdit, "insertKnot": InsertKnotCurveEdit, "toPolyline": ToPolylineCurveEdit}
 
 
-_DIMENSION_MEASURE: dict[str, type[DimensionMeasure]] = {"aligned": AlignedDimensionMeasure, "linear": LinearDimensionMeasure, "ordinate": OrdinateDimensionMeasure, "azimuth": AzimuthDimensionMeasure, "slope": SlopeDimensionMeasure, "angle": AngleDimensionMeasure, "angleVertex": AngleVertexDimensionMeasure, "angleArc": AngleArcDimensionMeasure, "radius": RadiusDimensionMeasure, "diameter": DiameterDimensionMeasure, "arcLength": ArcLengthDimensionMeasure, "jogged": JoggedDimensionMeasure}
+_DIMENSION_MEASURE: dict[str, type[DimensionMeasure]] = {"aligned": AlignedDimensionMeasure, "linear": LinearDimensionMeasure, "ordinate": OrdinateDimensionMeasure, "azimuth": AzimuthDimensionMeasure, "slope": SlopeDimensionMeasure, "angle": AngleDimensionMeasure, "angleVertex": AngleVertexDimensionMeasure, "angleArc": AngleArcDimensionMeasure, "radius": RadiusDimensionMeasure, "diameter": DiameterDimensionMeasure, "arcLength": ArcLengthDimensionMeasure, "jogged": JoggedDimensionMeasure, "continue": ContinueDimensionMeasure, "baseline": BaselineDimensionMeasure}
 
 
 _DIVISION: dict[str, type[Division]] = {"parts": PartsDivision, "step": StepDivision}
@@ -27023,6 +27101,7 @@ __all__ = [
     "AuthKind",
     "AuthKindName",
     "AzimuthDimensionMeasure",
+    "BaselineDimensionMeasure",
     "BlendMode",
     "BlendModeName",
     "BlockAction",
@@ -27108,6 +27187,7 @@ __all__ = [
     "ConstructedCurve",
     "ConstructionEntity",
     "ContainingSelectRegion",
+    "ContinueDimensionMeasure",
     "ControlNurbsBy",
     "Convention",
     "ConventionName",
@@ -27149,6 +27229,8 @@ __all__ = [
     "DimensionPoint",
     "DimensionPointName",
     "DimensionRefs",
+    "DimensionRule",
+    "DimensionRuleName",
     "DimensionStyle",
     "DimensionStyleDef",
     "DimensionStyleName",

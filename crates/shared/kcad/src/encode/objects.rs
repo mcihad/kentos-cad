@@ -1747,11 +1747,15 @@ impl<'d> Encoder<'d> {
                 Ok(())
             }
             Val::Refs(refs) => {
-                // a (1), b (1), c (1): each a reference.
-                self.open(refs.each().count(), true)?;
+                // a (1), b (1), c (1): each a reference; rule (4): its name (schema 60).
+                self.open(refs.each().count() + usize::from(refs.rule.is_some()), true)?;
                 for (key, r) in refs.each() {
                     self.key(key);
                     self.at(Seg::Name(key), |e| e.subref(r))?;
+                }
+                if let Some(rule) = refs.rule {
+                    self.key("rule");
+                    self.w.text(rule.name());
                 }
                 self.close();
                 Ok(())

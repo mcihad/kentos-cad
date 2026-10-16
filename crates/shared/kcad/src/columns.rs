@@ -40,7 +40,7 @@
 //! | nurbs | degree, n, m, curve flags (1 weights, 2 closed, 4 periodic, 8 fit, 16 fit tolerance, 32 start tangent, 64 end tangent), k if fit | ctrl (2n), knots (m), weights (n) if any, fit (2k) if any, fit tolerance if any, start and end tangents (2 each) if any | |
 //! | xline, ray | | p, dir | |
 //! | text | align if any (its place in `TextAlign::ALL`); r if runs, then per run: start, end, run flags; font if any (its place in `DrawingFont::ALL`); k if curved; b if its curve bends | p, height, rotation, width factor if any, label scale if linked, box width if any, line spacing if any, oblique if any, the curve's pts (2k) if curved, its bulges (b) if it bends | text, label's object if linked, each run's colour if it has one, text style if any |
-//! | dimension | style if any; arrow if any (its place in `DimensionArrow::ALL`), decimals if any, unit if any (mm, cm, m), font if any; line flags if lines, then the dimension line's type and the extension lines' type if any (their places in `LINE_TYPES`); refs' mask if refs, then per reference its place's kind (`PLACE_KINDS`), its numbers and broken (0 or 1) | a, b, offset, height, angle if any, c if any, za if any, zb if any, arrow size, ext offset, ext beyond, text gap if any; the dimension line's and the extension lines' weights if any | text if any, dimension style if any, prefix if any, suffix if any; the dimension line's, the extension lines' and the value's colours if any; per reference its object's id (UUID text) and why it broke if it did |
+//! | dimension | style if any; arrow if any (its place in `DimensionArrow::ALL`), decimals if any, unit if any (mm, cm, m), font if any; line flags if lines, then the dimension line's type and the extension lines' type if any (their places in `LINE_TYPES`); refs' mask if refs (bits 0–2 a, b, c; 3 the curve rule, 4 the edges rule), then per reference its place's kind (`PLACE_KINDS`), its numbers and broken (0 or 1) | a, b, offset, height, angle if any, c if any, za if any, zb if any, arrow size, ext offset, ext beyond, text gap if any; the dimension line's and the extension lines' weights if any | text if any, dimension style if any, prefix if any, suffix if any; the dimension line's, the extension lines' and the value's colours if any; per reference its object's id (UUID text) and why it broke if it did |
 //! | hatch | n, pattern type; h if holes, then k per hole; f if families, then per family its dash count; gradient's shape and inverted (0 or 1) if any; i, k if tied | ring (2n), pattern angle, spacing, per hole: pts (2k); scale if any; per family: angle, origin, offset, dashes; seed if tied | name if any, gradient's second colour if any, tie's outer, islands (i) and cutouts (k) ids (UUID text) if tied |
 //! | insert | | p, scale, rotation | block (its id as UUID text) |
 //! | leader | n; arrow if any (its place in `LeaderArrow::ALL`) | pts (2n), height, rotation, arrow size if any | text if any |
@@ -1043,7 +1043,13 @@ impl Packer {
                         .enumerate()
                         .filter(|(_, r)| r.is_some())
                         .fold(0, |m, (i, _)| m | 1 << i);
-                    self.int(mask);
+                    // The rule in bits 3 and 4 (docs/adr/0320 §1).
+                    let rule = match refs.rule {
+                        None => 0,
+                        Some(kentos_contracts::DimensionRule::Curve) => 1 << 3,
+                        Some(kentos_contracts::DimensionRule::Edges) => 1 << 4,
+                    };
+                    self.int(mask | rule);
                     for (_, r) in refs.each() {
                         let (kind, numbers) = match r.place {
                             SubPlace::Node { part } => (0, [part, 0, 0]),
@@ -2376,9 +2382,14 @@ fn geometry(
             // What its points follow (docs/adr/0249 §4).
             let refs = if flags & REFS != 0 {
                 let mask = c.int()?;
-                if mask & !7 != 0 {
+                if mask & !31 != 0 || mask & 24 == 24 {
                     return Err(broken(&format!("ölçünün başvuru maskesi {mask}")));
                 }
+                let rule = match mask & 24 {
+                    8 => Some(kentos_contracts::DimensionRule::Curve),
+                    16 => Some(kentos_contracts::DimensionRule::Edges),
+                    _ => None,
+                };
                 let mut slots = [None, None, None];
                 for (i, slot) in slots.iter_mut().enumerate() {
                     if mask & 1 << i == 0 {
@@ -2444,6 +2455,7 @@ fn geometry(
                     a: ra,
                     b: rb,
                     c: rc,
+                    rule,
                 })
             } else {
                 None

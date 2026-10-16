@@ -21,8 +21,18 @@ definitions (docs/adr/0061, 0147 §7, 0183, 0205, 0249), without KentOS code:
   the arc outward.
 - Kırıklı yarıçap: from the centre shown to the circle toward `on`, its jog where `at` is along the radius, as far
   as the jog fits.
-- A point given as a place is that place's point now; on Hizalı, Doğrusal, Koordinat (a only), Semt and Eğim it is
-  bound (`refs`). Eğim's elevations are given or the place's vertex's.
+- A point given as a place is that place's point now and is bound (`refs`): on Hizalı, Doğrusal, Koordinat (a only),
+  Semt, Eğim and Açı by its vertex (docs/adr/0249 §3, 0320 §1; the vertex's arms bound as they lie after the sector
+  is chosen). Eğim's elevations are given or the place's vertex's.
+- What the object kinds follow (docs/adr/0320 §1): Açı between two edges binds `a` and `b` to the edges their arms
+  lie along (the arm nearer parallel to the first edge on it), each at the fraction of its edge nearest where it was
+  clicked, with the rule `edges`; Yaydan and Yay uzunluğu their two ends on the arc, at the fractions of its sweep
+  of the ends, with the rule `curve`; Yarıçap, Çap and Kırıklı yarıçap `b` on the curve, at the fraction of the
+  point of it nearest `b` (past an arc's end, that end), with the rule `curve`.
+- Zincir ölçü and Baz ölçü (docs/adr/0320 §3): the base's direction (aligned: its own; linear: its angle), its line
+  through `a + n·offset` (n the direction's left normal); Zincir from the base's `b` to the point, its line on the
+  base's; Baz from the base's `a`, one level (three times the base's height) further out on the side the base lies.
+  Their first point follows what the base's follows; their look and height the base's.
 - Height: the style's at the project's scale (mm / 1000 × N), Standart's the project's Ölçü height (2.5 mm).
 
 The drawing's coordinates are doubles exactly and the distances whole (3-4-5 triangles), so the arithmetic is
@@ -201,6 +211,29 @@ def ref_of(p):
     return None if p["kind"] == "at" else {"uid": p["uid"], "place": p["place"]}
 
 
+def along(eid, t):
+    """An `along` place on an object's one edge or curve (docs/adr/0263 §1)."""
+    return {"uid": UID(eid), "place": {"kind": "along", "part": 0, "ring": 0, "index": 0, "t": plain(t)}}
+
+
+def t_on_segment(a, b, p):
+    """The fraction of the segment a→b at the point of it nearest p, within 0 and 1."""
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    return min(1.0, max(0.0, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy)))
+
+
+def t_on_arc(c, a0, sw, p):
+    """The fraction of a counter-clockwise sweep from a0 at the point of the arc nearest p: its angle's; past the
+    arc, the nearer end's; a full circle's angle over a turn."""
+    d = norm_angle(math.atan2(p[1] - c[1], p[0] - c[0]) - a0)
+    if sw >= 2 * math.pi - 1e-12:
+        return d / (2 * math.pi)
+    if d <= sw:
+        return min(1.0, max(0.0, d / sw))
+    return 1.0 if d - sw < 2 * math.pi - d else 0.0
+
+
+
 # ── The dimensions (see the module) ───────────────────────────────────────────────────────────────────────────────
 
 def hypot(dx, dy):
@@ -290,6 +323,9 @@ def arc_ends(between=None):
     return arc_at(min(t1, t2)), arc_at(max(t1, t2))
 
 
+ARC_SWEEP = norm_angle(math.pi / 2 - 0.0)
+
+
 def radial(c, r, loc):
     length = hypot(loc[0] - c[0], loc[1] - c[1])
     u = ((loc[0] - c[0]) / length, (loc[1] - c[1]) / length)
@@ -333,15 +369,20 @@ def refs(**points):
     return out or None
 
 
-def case(name, inp, made, warnings=(), plan=False, undo=False):
-    """`made(eid)`: the dimension written."""
+def case(name, inp, made, warnings=(), plan=False, undo=False, within=None):
+    """`made(eid)`: the dimension written; `within`, how near its transcendental numbers must be."""
     if plan:
-        return {"name": name, "steps": [{"op": "plan", "input": inp, "result": completed({"entities": [made(0)], "revision": "$current"}, warnings),
-                                         "expect": UNCHANGED}]}
+        step = {"op": "plan", "input": inp, "result": completed({"entities": [made(0)], "revision": "$current"}, warnings),
+                "expect": UNCHANGED}
+        if within is not None:
+            step["within"] = within
+        return {"name": name, "steps": [step]}
     steps = [{"op": "execute", "input": inp,
               "result": completed({"created": [UID(NEXT)], "ids": [NEXT], "revision": "$current"}, warnings),
               "expect": {"ids": IDS + [NEXT], "entities": {str(NEXT): made(NEXT)}, "revision": "changed", "canUndo": True,
                          "canRedo": False, "dirty": True}}]
+    if within is not None:
+        steps[0]["within"] = within
     if undo:
         steps.append({"op": "undo", "returns": "Ekle", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}})
     return {"name": name, "steps": steps}
@@ -403,8 +444,19 @@ def written_cases():
     m = {"kind": "angle", "first": edge(15, (X + 9, Y + 40)), "second": edge(16, (X + 5, Y + 47))}
     at = (X + 8, Y + 44)
     c, a, b = edge_arms(((X, Y + 40), (X + 10, Y + 40), (X + 9, Y + 40)), ((X + 5, Y + 36), (X + 5, Y + 48), (X + 5, Y + 47)), at)
-    out.append(case("Açı: iki düz kenar, kollar tıklanan yere kadar, yay imlecin bölgesinde", inp(m, at),
-                    lambda i: dimension(i, a, b, hypot(at[0] - c[0], at[1] - c[1]), kind="angular", c=c)))
+    first_t = t_on_segment((X, Y + 40), (X + 10, Y + 40), (X + 9, Y + 40))
+    second_t = t_on_segment((X + 5, Y + 36), (X + 5, Y + 48), (X + 5, Y + 47))
+
+    def across(p, e):
+        (ax, ay), (bx, by) = e
+        ux, uy, vx, vy = bx - ax, by - ay, p[0] - c[0], p[1] - c[1]
+        return abs(ux * vy - uy * vx) / max(hypot(ux, uy) * hypot(vx, vy), 2.2250738585072014e-308)
+
+    on_first = across(a, ((X, Y + 40), (X + 10, Y + 40))) <= across(b, ((X, Y + 40), (X + 10, Y + 40)))
+    ra, rb = (along(15, first_t), along(16, second_t)) if on_first else (along(16, second_t), along(15, first_t))
+    out.append(case("Açı: iki düz kenar, kollar tıklanan yere kadar, yay imlecin bölgesinde; kenarlara bağlı (edges)", inp(m, at),
+                    lambda i: dimension(i, a, b, hypot(at[0] - c[0], at[1] - c[1]), kind="angular", c=c,
+                                        refs={"a": ra, "b": rb, "rule": "edges"})))
     # Köşeden, both ways.
     for name, at in (("Açı: köşeden, birinci koldan saat yönünün tersine", (X + 43, Y + 44)),
                      ("Açı: köşeden, imleç öbür yanda: kollar yer değiştirir", (X + 37, Y + 36))):
@@ -412,39 +464,55 @@ def written_cases():
         vc, va, vb = vertex_arms((X + 40, Y + 40), (X + 44, Y + 40), (X + 40, Y + 43), at)
         out.append(case(name, inp(m, at), lambda i, va=va, vb=vb, vc=vc, at=at: dimension(
             i, va, vb, hypot(at[0] - vc[0], at[1] - vc[1]), kind="angular", c=vc)))
+    # Köşeden by the area's corners: the three points bound as the arms lie.
+    for name, at in (("Açı: köşeden, alanın köşeleri yerleriyle; üçü de bağlı", (X + 22, Y + 2)),
+                     ("Açı: köşeden yerlerle, imleç öbür yanda: kollar ve bağları yer değiştirir", (X + 18, Y - 2))):
+        m = {"kind": "angleVertex", "c": vertex(12, 0), "a": vertex(12, 1), "b": vertex(12, 3)}
+        vc, va, vb = vertex_arms(RECT_12[0], RECT_12[1], RECT_12[3], at)
+        ra, rb = (ref_of(m["a"]), ref_of(m["b"])) if va == RECT_12[1] else (ref_of(m["b"]), ref_of(m["a"]))
+        out.append(case(name, inp(m, at), lambda i, va=va, vb=vb, vc=vc, at=at, ra=ra, rb=rb, rc=ref_of(m["c"]): dimension(
+            i, va, vb, hypot(at[0] - vc[0], at[1] - vc[1]), kind="angular", c=vc, refs={"a": ra, "b": rb, "c": rc})))
     # Yaydan.
     m = {"kind": "angleArc", "of": edge(13, (X + 34, Y + 33))}
     at = (ARC_C[0] + 6, ARC_C[1] + 8)
     a, b = arc_ends()
-    out.append(case("Açı: yayın kendi açısı (Yaydan)", inp(m, at),
-                    lambda i: dimension(i, a, b, hypot(at[0] - ARC_C[0], at[1] - ARC_C[1]), kind="angular", c=ARC_C)))
+    arc_refs = {"a": along(13, t_on_arc(ARC_C, 0.0, ARC_SWEEP, a)), "b": along(13, t_on_arc(ARC_C, 0.0, ARC_SWEEP, b)), "rule": "curve"}
+    out.append(case("Açı: yayın kendi açısı (Yaydan); yayın iki ucuna bağlı (curve)", inp(m, at),
+                    lambda i: dimension(i, a, b, hypot(at[0] - ARC_C[0], at[1] - ARC_C[1]), kind="angular", c=ARC_C, refs=arc_refs)))
     # Yarıçap and Çap.
     at = (CIRCLE_C[0] + 6, CIRCLE_C[1] + 8)
     pb, off = radial(CIRCLE_C, R, at)
-    out.append(case("Yarıçap: daire, imlecin yönünde", inp({"kind": "radius", "of": edge(14, (X + 55, Y + 30))}, at),
-                    lambda i: dimension(i, CIRCLE_C, pb, off, kind="radius")))
+    circle_ref = {"b": along(14, t_on_arc(CIRCLE_C, 0.0, 2 * math.pi, pb)), "rule": "curve"}
+    out.append(case("Yarıçap: daire, imlecin yönünde; dairenin üstündeki noktaya bağlı (curve)",
+                    inp({"kind": "radius", "of": edge(14, (X + 55, Y + 30))}, at),
+                    lambda i: dimension(i, CIRCLE_C, pb, off, kind="radius", refs=circle_ref), within=1e-12))
     at2 = (ARC_C[0] - 6, ARC_C[1] + 8)
     pb2, off2 = radial(ARC_C, R, at2)
-    out.append(case("Çap: yayın dairesi", inp({"kind": "diameter", "of": edge(13, (X + 34, Y + 33))}, at2),
-                    lambda i: dimension(i, ARC_C, pb2, off2, kind="diameter")))
+    out.append(case("Çap: yayın dairesi; nokta yayın ötesinde, bağı yayın yakın ucunda (curve)",
+                    inp({"kind": "diameter", "of": edge(13, (X + 34, Y + 33))}, at2),
+                    lambda i: dimension(i, ARC_C, pb2, off2, kind="diameter",
+                                        refs={"b": along(13, t_on_arc(ARC_C, 0.0, ARC_SWEEP, pb2)), "rule": "curve"})))
     # Yay uzunluğu.
     at = (ARC_C[0] + 6, ARC_C[1] + 8)
     a, b = arc_ends()
-    out.append(case("Yay uzunluğu: bütün yay, imlecin uzaklığında", inp({"kind": "arcLength", "of": edge(13, (X + 34, Y + 33))}, at),
+    out.append(case("Yay uzunluğu: bütün yay, imlecin uzaklığında; yayın iki ucuna bağlı (curve)",
+                    inp({"kind": "arcLength", "of": edge(13, (X + 34, Y + 33))}, at),
                     lambda i: dimension(i, a, b, hypot(at[0] - ARC_C[0], at[1] - ARC_C[1]) - hypot(a[0] - ARC_C[0], a[1] - ARC_C[1]),
-                                        kind="arcLength", c=ARC_C)))
+                                        kind="arcLength", c=ARC_C, refs=arc_refs)))
     between = [(ARC_C[0] + 8, ARC_C[1]), (ARC_C[0] + 2, ARC_C[1] + 2)]
     ka, kb = arc_ends(between)
-    out.append(case("Yay uzunluğu: Kısmi, iki nokta arası, uzaklık yazılmış",
+    part_refs = {"a": along(13, t_on_arc(ARC_C, 0.0, ARC_SWEEP, ka)), "b": along(13, t_on_arc(ARC_C, 0.0, ARC_SWEEP, kb)), "rule": "curve"}
+    out.append(case("Yay uzunluğu: Kısmi, iki nokta arası, uzaklık yazılmış; iki ucu yayın üstünde bağlı",
                     inp({"kind": "arcLength", "of": edge(13, (X + 34, Y + 33)), "between": [P(*between[0]), P(*between[1])]}, at, offset=2),
-                    lambda i: dimension(i, ka, kb, 2, kind="arcLength", c=ARC_C)))
+                    lambda i: dimension(i, ka, kb, 2, kind="arcLength", c=ARC_C, refs=part_refs), within=1e-12))
     # Kırıklı yarıçap.
     on, shown, at = (CIRCLE_C[0] + 10, CIRCLE_C[1]), (CIRCLE_C[0] - 15, CIRCLE_C[1] + 2), (CIRCLE_C[0] - 5, CIRCLE_C[1] + 3)
     length = hypot(on[0] - CIRCLE_C[0], on[1] - CIRCLE_C[1])
     jb = (CIRCLE_C[0] + (on[0] - CIRCLE_C[0]) / length * R, CIRCLE_C[1] + (on[1] - CIRCLE_C[1]) / length * R)
-    out.append(case("Kırıklı yarıçap: gösterilen merkezden, kırığı imleçte",
+    out.append(case("Kırıklı yarıçap: gösterilen merkezden, kırığı imleçte; dairenin üstündeki noktaya bağlı (curve)",
                     inp({"kind": "jogged", "of": edge(14, (X + 55, Y + 30)), "shownCentre": P(*shown), "on": P(*on)}, at),
-                    lambda i: dimension(i, CIRCLE_C, jb, jog(CIRCLE_C, jb, shown, at), kind="jogged", c=shown)))
+                    lambda i: dimension(i, CIRCLE_C, jb, jog(CIRCLE_C, jb, shown, at), kind="jogged", c=shown,
+                                        refs={"b": along(14, t_on_arc(CIRCLE_C, 0.0, 2 * math.pi, jb)), "rule": "curve"})))
     # A style, a mask, the look, a hidden layer, a plan.
     m = {"kind": "aligned", "a": at_(X + 20, Y + 10), "b": at_(X + 26, Y + 18)}
     a, b, at = (X + 20, Y + 10), (X + 26, Y + 18), (X + 20, Y + 20)
@@ -463,6 +531,80 @@ def written_cases():
     a, b, at = LINE_11[0], LINE_11[1], (X + 6, Y + 3)
     out.append(case("Plan: ölçü yazılacağı gibi, id 0; hiçbir şey yazılmaz", inp(m, at),
                     lambda i: dimension(i, a, b, signed_offset(a, b, at), refs=refs(a=ref_of(m["a"]), b=ref_of(m["b"]))), plan=True))
+    return out
+
+
+# ── Zincir ölçü and Baz ölçü (docs/adr/0320 §3) ───────────────────────────────────────────────────────────────────
+
+LEVEL_TEXT_HEIGHTS = 3.0
+NO_BASE = "Temel ölçü hizalı ya da doğrusal bir ölçü değil: zincir ve baz ölçü yalnız hizalı ya da doğrusal ölçüden sürer."
+# The base: Hizalı along the line 11, bound to its ends, its line 3 m above (left of a→b).
+BASE_INPUT = inp({"kind": "aligned", "a": place(11, "start"), "b": place(11, "end")}, (X + 6, Y + 3))
+BASE = {"a": LINE_11[0], "b": LINE_11[1], "offset": 3.0, "kind": None, "angle": None,
+        "refs": {"a": {"uid": UID(11), "place": {"kind": "start"}}, "b": {"uid": UID(11), "place": {"kind": "end"}}}}
+
+
+def measuring(base):
+    """The base's direction in degrees from east and a point of its line."""
+    a, b = base["a"], base["b"]
+    deg = base["angle"] if base["kind"] == "linear" else math.atan2(b[1] - a[1], b[0] - a[0]) * 180.0 / math.pi
+    t = deg * math.pi / 180.0
+    n = (-sin_(t), cos_(t))
+    return deg, (a[0] + n[0] * base["offset"], a[1] + n[1] * base["offset"]), n
+
+
+def linear_through(base, a, p, extra):
+    deg, line_at, n = measuring(base)
+    offset = (line_at[0] - a[0]) * n[0] + (line_at[1] - a[1]) * n[1]
+    side = -1.0 if offset < 0.0 else 1.0
+    return {"a": a, "b": p, "offset": offset + side * extra, "angle": deg}
+
+
+def chained(name, measure, to, made_point, which):
+    """A base written first, then a Zincir or Baz to `to` from it."""
+    to_p = point_of(to)
+    g = (linear_through(BASE, BASE["b"], to_p, 0.0) if which == "continue"
+         else linear_through(BASE, BASE["a"], to_p, 1.0 * LEVEL_TEXT_HEIGHTS * STANDARD_HEIGHT))
+    first = BASE["refs"]["b" if which == "continue" else "a"]
+    made = dimension(NEXT + 1, g["a"], g["b"], g["offset"], kind="linear", angle=g["angle"],
+                     refs=refs(a=first, b=ref_of(to)))
+    base_made = dimension(NEXT, BASE["a"], BASE["b"], BASE["offset"], refs=BASE["refs"])
+    return {"name": name, "steps": [
+        {"op": "execute", "input": BASE_INPUT, "result": completed({"created": [UID(NEXT)], "ids": [NEXT], "revision": "$current"}),
+         "expect": {"entities": {str(NEXT): base_made}}},
+        {"op": "execute", "input": inp({"kind": which, "base": UID(NEXT), "to": to}, made_point),
+         "result": completed({"created": [UID(NEXT + 1)], "ids": [NEXT + 1], "revision": "$current"}),
+         "expect": {"ids": IDS + [NEXT, NEXT + 1], "entities": {str(NEXT + 1): made}, "canUndo": True}},
+        {"op": "undo", "returns": "Zincir ölçü" if which == "continue" else "Baz ölçü", "expect": {"ids": IDS + [NEXT]}}]}
+
+
+def chain_cases():
+    out = [
+        chained("Zincir ölçü: temelin ikinci noktasından alanın köşesine, temelin doğrusunda; ilk noktası temelinkini izler",
+                "continue", vertex(12, 0), (X + 99, Y + 99), "continue"),
+        chained("Zincir ölçü: koordinatla verilen nokta serbest; ilk noktası yine temelin ucuna bağlı",
+                "continue", at_(X + 16, Y + 2), (X, Y), "continue"),
+        chained("Baz ölçü: temelin ilk noktasından, bir kat (değer yüksekliğinin üç katı) dışarıda; ilk noktası temelinkini izler",
+                "baseline", vertex(12, 1), (X, Y), "baseline"),
+    ]
+    return out
+
+
+def chain_refusals():
+    radius = inp({"kind": "radius", "of": edge(14, (X + 55, Y + 30))}, (X + 56, Y + 38))
+    cont = lambda base, **extra: inp({"kind": "continue", "base": base, "to": vertex(12, 0)}, (X, Y), **extra)  # noqa: E731
+    out = [
+        refused("Zincir: temelin kimliği geçersiz", cont(BAD), "invalid_uid", bad_uid(BAD), "measure.base"),
+        refused("Zincir: temel çizimde yok", cont(MISSING), "entity_not_found", not_found(MISSING), "measure.base"),
+        refused("Zincir: temel ölçü değil (çizgi)", cont(UID(11)), "not_measurable", NO_BASE, "measure.base"),
+        refused("Zincir ve baz uzaklık almaz", cont(UID(11), offset=2), "invalid_offset",
+                "Zincir ve baz ölçü uzaklık almaz; yerini temel ölçü verir. offset'i kaldırın.", "offset"),
+    ]
+    out.append({"name": "Baz: temel yarıçap ölçüsü; zincir ve baz yalnız hizalı ya da doğrusal ölçüden", "steps": [
+        {"op": "execute", "input": radius, "result": completed({"created": [UID(NEXT)], "ids": [NEXT], "revision": "$current"})},
+        {"op": "execute", "input": inp({"kind": "baseline", "base": UID(NEXT), "to": vertex(12, 0)}, (X, Y)),
+         "result": {"status": "failed", "error": {"code": "not_measurable", "message": NO_BASE, "path": "measure.base"}},
+         "expect": {"ids": IDS + [NEXT]}}]})
     return out
 
 
@@ -552,8 +694,8 @@ def refused_cases():
 def build():
     return {
         "format": "kentos.command-cases", "version": 1, "command": "cad.dimensions.create", "commandVersion": 1, "title": "Ölçü ekle",
-        "note": "Written by scripts/fixtures/dimension_create_cases.py from Ölçülendirme's definitions (docs/adr/0061, 0147, 0183, 0205, 0249, 0255); do not edit by hand.",
-        "setup": SETUP, "cases": written_cases() + refused_cases(),
+        "note": "Written by scripts/fixtures/dimension_create_cases.py from Ölçülendirme's definitions (docs/adr/0061, 0147, 0183, 0205, 0249, 0255, 0320); do not edit by hand.",
+        "setup": SETUP, "cases": written_cases() + chain_cases() + refused_cases() + chain_refusals(),
     }
 
 

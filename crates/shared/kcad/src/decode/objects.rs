@@ -214,6 +214,8 @@ pub(super) struct Features {
     pub(super) block_cards: bool,
     /// Schema 59: a block definition's `dynamic` and an insert's `parameters` (docs/adr/0318).
     pub(super) dynamic_blocks: bool,
+    /// Schema 60: a dimension's references' `rule` (docs/adr/0320 §1).
+    dimension_rules: bool,
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
     pub(super) look: bool,
@@ -288,6 +290,7 @@ impl Features {
             block_extras: schema >= crate::SCHEMA_WITH_BLOCK_EXTRAS,
             block_cards: schema >= crate::SCHEMA_WITH_BLOCK_CARDS,
             dynamic_blocks: schema >= crate::SCHEMA_WITH_DYNAMIC_BLOCKS,
+            dimension_rules: schema >= crate::SCHEMA_WITH_DIMENSION_RULES,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,
@@ -1075,7 +1078,7 @@ pub(super) fn object(
             }
             "pattern" => f.pattern = Some(pattern(r, has)?),
             "assoc" => f.assoc = Some(hatch_assoc(r)?),
-            "refs" => f.refs = Some(dimension_refs(r, has.subref_extras)?),
+            "refs" => f.refs = Some(dimension_refs(r, has.subref_extras, has.dimension_rules)?),
             "block" => {
                 f.block_at = r.position();
                 f.block = Some(BlockId(id16(r)?));
@@ -2530,7 +2533,11 @@ fn hatch_assoc(r: &mut Reader<'_>) -> Result<HatchAssoc, KcadError> {
 
 /// What a dimension's points follow (docs/adr/0249 §4): `a`, `b` and `c`, each a reference; a point
 /// without one is not written, nor are references none of its points has.
-fn dimension_refs(r: &mut Reader<'_>, extras: bool) -> Result<DimensionRefs, KcadError> {
+fn dimension_refs(
+    r: &mut Reader<'_>,
+    extras: bool,
+    rules: bool,
+) -> Result<DimensionRefs, KcadError> {
     let at = r.position();
     let mut refs = DimensionRefs::default();
     map(r, |r, key| {
@@ -2538,6 +2545,19 @@ fn dimension_refs(r: &mut Reader<'_>, extras: bool) -> Result<DimensionRefs, Kca
             "a" => &mut refs.a,
             "b" => &mut refs.b,
             "c" => &mut refs.c,
+            // Schema 60 (docs/adr/0320 §1).
+            "rule" if rules => {
+                let here = r.position();
+                refs.rule = Some(match r.text()? {
+                    "curve" => kentos_contracts::DimensionRule::Curve,
+                    "edges" => kentos_contracts::DimensionRule::Edges,
+                    other => {
+                        let words = format!("ölçünün başvuru kuralı “{other}” bilinmiyor");
+                        return Err(r.fail_at(Code::BadValue, here, &words));
+                    }
+                });
+                return Ok(());
+            }
             _ => return Err(unknown(r)),
         };
         *slot = Some(subref(r, extras)?);

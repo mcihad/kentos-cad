@@ -316,6 +316,7 @@ impl Document {
             self.history.pending = None;
             self.history.adopt = false;
             self.relocated.clear();
+            self.relocated_ends.clear();
         }
         if reverted > 0 || restored {
             self.mark_changed();

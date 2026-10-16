@@ -95,6 +95,7 @@ fn tie(app: &mut App) {
                 a: Some(corner(a)),
                 b: Some(corner(b)),
                 c: None,
+                rule: None,
             };
             let _ = doc.update(
                 Slot(slot),

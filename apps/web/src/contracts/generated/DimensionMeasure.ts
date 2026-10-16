@@ -4,6 +4,14 @@ import type { MeasuredPoint } from "./MeasuredPoint";
 import type { Vec2 } from "./Vec2";
 
 /**
- * What a dimension measures: Ölçülendirme's ten kinds (docs/adr/0061, 0147).
+ * What a dimension measures: Ölçülendirme's ten kinds (docs/adr/0061, 0147), Zincir ölçü and Baz ölçü (docs/adr/0320).
  */
-export type DimensionMeasure = { "kind": "aligned", a: MeasuredPoint, b: MeasuredPoint, } | { "kind": "linear", a: MeasuredPoint, b: MeasuredPoint, angle?: number, } | { "kind": "ordinate", a: MeasuredPoint, angle?: number, } | { "kind": "azimuth", a: MeasuredPoint, b: MeasuredPoint, } | { "kind": "slope", a: MeasuredPoint, b: MeasuredPoint, za?: number, zb?: number, } | { "kind": "angle", first: EdgeNear, second: EdgeNear, } | { "kind": "angleVertex", c: MeasuredPoint, a: MeasuredPoint, b: MeasuredPoint, } | { "kind": "angleArc", of: EdgeNear, } | { "kind": "radius", of: EdgeNear, } | { "kind": "diameter", of: EdgeNear, } | { "kind": "arcLength", of: EdgeNear, between?: [Vec2, Vec2], } | { "kind": "jogged", of: EdgeNear, shownCentre: Vec2, on: Vec2, };
+export type DimensionMeasure = { "kind": "aligned", a: MeasuredPoint, b: MeasuredPoint, } | { "kind": "linear", a: MeasuredPoint, b: MeasuredPoint, angle?: number, } | { "kind": "ordinate", a: MeasuredPoint, angle?: number, } | { "kind": "azimuth", a: MeasuredPoint, b: MeasuredPoint, } | { "kind": "slope", a: MeasuredPoint, b: MeasuredPoint, za?: number, zb?: number, } | { "kind": "angle", first: EdgeNear, second: EdgeNear, } | { "kind": "angleVertex", c: MeasuredPoint, a: MeasuredPoint, b: MeasuredPoint, } | { "kind": "angleArc", of: EdgeNear, } | { "kind": "radius", of: EdgeNear, } | { "kind": "diameter", of: EdgeNear, } | { "kind": "arcLength", of: EdgeNear, between?: [Vec2, Vec2], } | { "kind": "jogged", of: EdgeNear, shownCentre: Vec2, on: Vec2, } | { "kind": "continue", 
+/**
+ * The base dimension's persistent id (lowercase UUID text with hyphens).
+ */
+base: string, to: MeasuredPoint, } | { "kind": "baseline", 
+/**
+ * The base dimension's persistent id (lowercase UUID text with hyphens).
+ */
+base: string, to: MeasuredPoint, };

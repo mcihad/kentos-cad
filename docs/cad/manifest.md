@@ -17,8 +17,8 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 58 | 131 | 38 | 38 | 265 |
-| geometry | 19 | 60 | 0 | 8 | 87 |
+| semantic | 60 | 131 | 38 | 38 | 267 |
+| geometry | 17 | 60 | 0 | 8 | 85 |
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 20 | 0 | 6 | 26 |
 | query | 1 | 23 | 1 | 4 | 29 |
@@ -31,9 +31,9 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 521 satırdan 133'i: geometry 79, none 20, processing 13, query 21.
+CBS'ye özgü olmayan 521 satırdan 131'i: geometry 77, none 20, processing 13, query 21.
 
-### Sonucu çağıran hesaplar (geometry) — 79
+### Sonucu çağıran hesaplar (geometry) — 77
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -57,8 +57,6 @@ CBS'ye özgü olmayan 521 satırdan 133'i: geometry 79, none 20, processing 13, 
 | `tool.coordinateLabel` | Koordinat yaz | cad | cad.entities.create `coordinates` |  |
 | `tool.coordinateVertices` | Köşelere koordinat yaz | cad | cad.entities.create `coordinates` |  |
 | `tool.copyToLayer` | Katmana kopyala | shared | cad.entities.create |  |
-| `tool.dimBaseline` | Baz ölçü | cad | cad.entities.create `dimensionBaseline` |  |
-| `tool.dimContinue` | Zincir ölçü | cad | cad.entities.create `dimensionChain` |  |
 | `tool.donut` | Halka | cad | cad.entities.create |  |
 | `tool.edgeShift` | Paralel kaydır | shared | cad.entities.edit `edgeShift` |  |
 | `tool.fourthCorner` | Dördüncü köşe | shared | cad.entities.create `fourthCorner` |  |

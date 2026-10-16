@@ -129,6 +129,7 @@ pub mod corner;
 pub mod curve_edit;
 pub mod data_search;
 pub mod dimension;
+pub mod dimension_bonds;
 pub mod dimension_chain;
 pub mod dimension_reassociate;
 pub mod divide;

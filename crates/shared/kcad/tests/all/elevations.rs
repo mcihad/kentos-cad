@@ -353,7 +353,7 @@ fn the_readers_errors_name_their_places() {
     assert_eq!(e.code, Code::UnknownField);
     assert!(e.message.contains("document/entities/0/polyline/zs"), "{e}");
     // The newest schema this codec knows is 43 (a dimension's references, docs/adr/0249).
-    let e = refused("broken/schema-version-60.kcad");
+    let e = refused("broken/schema-version-61.kcad");
     assert_eq!(e.code, Code::SchemaVersion);
     assert!(
         e.message

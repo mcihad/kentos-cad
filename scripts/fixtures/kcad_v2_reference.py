@@ -1590,9 +1590,11 @@ def subref(r):
 
 
 def dimension_refs(refs):
-    """What a dimension's points follow (schema 43, docs/adr/0249 §4): `a`, `b`, `c`; none, no field."""
-    assert refs, "boş başvurular yazılmaz"
-    return cmap(fields(refs, {"a": (subref, False), "b": (subref, False), "c": (subref, False)}, "refs"))
+    """What a dimension's points follow (schema 43, docs/adr/0249 §4): `a`, `b`, `c`; none, no field. Their `rule`
+    (schema 60, docs/adr/0320 §1): `curve` or `edges`."""
+    assert any(k in refs for k in "abc"), "boş başvurular yazılmaz"
+    assert refs.get("rule", "curve") in ("curve", "edges"), refs
+    return cmap(fields(refs, {"a": (subref, False), "b": (subref, False), "c": (subref, False), "rule": (text, False)}, "refs"))
 
 
 LOOK_PARTS = ("color", "lineType", "lineWeight", "transparency")
@@ -1954,6 +1956,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def line_patterned(nodes):
         return any("linePattern" in n.get("style", {}) or line_patterned(n.get("children", [])) for n in nodes)
 
+    # Schema 60 (docs/adr/0320 §1): a dimension's references' rule.
+    if any(e["kind"] == "dimension" and "rule" in e.get("refs", {}) for e in entities):
+        return 60
     # Schema 59 (docs/adr/0318): a block's dynamic part or an insert's parameter values.
     valued = lambda es: any(e["kind"] == "insert" and "parameters" in e for e in es)  # noqa: E731
     if valued(entities) or any("dynamic" in b or valued(b["entities"]) for b in blocks or []):
@@ -2306,7 +2311,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-60.kcad"] = container(root(cmap(parts), version=uint(60)))
+    files["schema-version-61.kcad"] = container(root(cmap(parts), version=uint(61)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2623,6 +2628,9 @@ def broken(minimal_content, minimal_file):
     files["dimension-refs-along-t-above-one.kcad"] = in_schema(51, dimension_of(cmap({"a": along(1.5)})))
     files["dimension-refs-path-empty.kcad"] = in_schema(51, dimension_of(cmap({"a": corner(0, path=array([]))})))
     files["dimension-refs-path-deep.kcad"] = in_schema(51, dimension_of(cmap({"a": corner(0, path=array([uint(0)] * 17))})))
+    # A rule is schema 60's (docs/adr/0320 §1): in schema 59 an unknown field; its name one of two.
+    files["dimension-rule-in-schema-59.kcad"] = in_schema(59, dimension_of(cmap({"a": corner(0), "rule": text("curve")})))
+    files["dimension-rule-unknown.kcad"] = in_schema(60, dimension_of(cmap({"a": corner(0), "rule": text("arc")})))
     files["dimension-refs-in-block.kcad"] = with_blocks([block(1, "Ölçü", [cmap({"dimension": cmap({"attrs": cmap({}), "layerId": text("0"), **dim_body, "refs": cmap({"a": corner(0)})})})])], version=43)
     # A closed and a wide polyline are schema 46's (docs/adr/0258): in schema 45 unknown fields; an area has neither;
     # `closed` only true; widths one pair of two numbers for each vertex, not below 0, the last pair 0 on an open
@@ -3579,6 +3587,7 @@ def build():
     out["compose.kcad"] = container(document(load("compose.json")))
     out["addresses.kcad"] = container(document(load("addresses.json")))
     out["dimension-refs.kcad"] = container(document(load("dimension-refs.json")))
+    out["dimension-rules.kcad"] = container(document(load("dimension-rules.json")))
     out["sheets.kcad"] = container(document(load("sheets.json")))
     out["requests.kcad"] = container(document(load("requests.json")))
     out["polyline-extras.kcad"] = container(document(load("polyline-extras.json")))

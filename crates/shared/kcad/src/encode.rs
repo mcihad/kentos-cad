@@ -1392,6 +1392,12 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 60 (docs/adr/0320 §1): a dimension's references' rule (in the drawing only: a block's dimensions keep none).
+    if doc.entities.iter().any(|e| {
+        matches!(e, Entity::Dimension(d) if d.refs.as_ref().is_some_and(|r| r.rule.is_some()))
+    }) {
+        return crate::SCHEMA_WITH_DIMENSION_RULES;
+    }
     // Schema 59 (docs/adr/0318): a block's dynamic part or an insert's parameter values, of the drawing or of a block.
     let valued = |list: &[Entity]| {
         list.iter()

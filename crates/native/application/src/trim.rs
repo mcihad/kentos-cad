@@ -142,8 +142,13 @@ pub fn execute(
         Ok(checked) => checked,
         Err(stop) => return stop.into(),
     };
+    let changes = checked.edit.changes.clone();
     match edit::execute(cx, checked.edit) {
-        CommandResult::Completed { output, warnings } => CommandResult::Completed {
+        CommandResult::Completed { output, warnings } => {
+            if act == Act::Trim {
+                relocate(cx.doc, &changes, &output.created);
+            }
+            CommandResult::Completed {
             output: EntitiesTrimmed {
                 changed: output.changed,
                 created: output.created,
@@ -151,8 +156,38 @@ pub fn execute(
                 revision: output.revision,
             },
             warnings: [checked.warnings, warnings].concat(),
-        },
+            }
+        }
         other => relay(other),
+    }
+}
+
+/// Buda's ties (docs/adr/0320 §2): an associative dimension's point on a cut object is looked for, where it is, on
+/// the object and the pieces made from it; one in the part cut away that was the object's end follows that end.
+fn relocate(doc: &mut Document, changes: &[EntityEdit], created: &[String]) {
+    let mut pieces = created.iter();
+    let mut onto: BTreeMap<String, Vec<Uuid>> = BTreeMap::new();
+    for change in changes {
+        match change {
+            EntityEdit::Replace { uid, .. } => {
+                if let Ok(u) = Uuid::parse_str(uid) {
+                    onto.entry(uid.clone()).or_default().insert(0, u);
+                }
+            }
+            EntityEdit::Add { from, .. } => {
+                if let Some(u) = pieces.next().and_then(|p| Uuid::parse_str(p).ok()) {
+                    onto.entry(from.clone()).or_default().push(u);
+                }
+            }
+            _ => {}
+        }
+    }
+    for (uid, list) in onto {
+        if let Ok(of) = Uuid::parse_str(&uid)
+            && list.first() == Some(&of)
+        {
+            doc.relocate_ties_keeping_ends(of, list);
+        }
     }
 }
 

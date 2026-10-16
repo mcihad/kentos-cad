@@ -249,6 +249,7 @@ fn block_ids(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<
             if text.starts_with("$blockOf:")
                 || text.starts_with("$block:")
                 || text.starts_with("$uidOf:")
+                || text.starts_with("$uid:")
                 || text.starts_with("$layer:")
                 || text.starts_with("$$") =>
         {
@@ -2284,15 +2285,25 @@ fn run_step(
         }
         other => return Err(format!("{at}: bilinmeyen işlem “{other}”")),
     }
-    check(doc, state, step.get("expect"), before, at)
+    check(
+        doc,
+        state,
+        step.get("expect"),
+        before,
+        at,
+        step.get("within").and_then(Value::as_f64),
+    )
 }
 
+/// The document after a step as `expect` says; with `within`, the objects' numbers within it (a transcendental
+/// value the reference computes in another order, docs/adr/0320).
 fn check(
     doc: &Document,
     state: &State,
     expect: Option<&Value>,
     before: u64,
     at: &str,
+    within: Option<f64>,
 ) -> Outcome<()> {
     let Some(expect) = expect else {
         return Ok(());
@@ -2320,7 +2331,15 @@ fn check(
                         .map_err(|e| format!("{at}: {e}"))?
                         .unwrap_or(Value::Null);
                     let entity = block_ids(entity, doc, state, at)?;
-                    expect_same(&got, &entity, &format!("nesne {id}"), at)?;
+                    match within {
+                        Some(w) if !close(&got, &entity, w) => {
+                            return Err(format!(
+                                "{at}: nesne {id} (±{w}): beklenen {entity}, bulunan {got}"
+                            ));
+                        }
+                        Some(_) => {}
+                        None => expect_same(&got, &entity, &format!("nesne {id}"), at)?,
+                    }
                 }
             }
             // Only the fields named of each object, each whole (docs/adr/0257 §3: a reader's
