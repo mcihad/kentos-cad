@@ -15,6 +15,7 @@ import type { NamedUcs } from "./NamedUcs";
 import type { NamedView } from "./NamedView";
 import type { NetworkDef } from "./NetworkDef";
 import type { ProjectForm } from "./ProjectForm";
+import type { ProjectRelation } from "./ProjectRelation";
 import type { ProjectVariable } from "./ProjectVariable";
 import type { ServiceConnection } from "./ServiceConnection";
 import type { SurveySettings } from "./SurveySettings";
@@ -133,6 +134,10 @@ namedViews?: Array<NamedView>,
  * The project's forms, in the order they were made (docs/adr/0401).
  */
 forms?: Array<ProjectForm>, 
+/**
+ * The project's relations (docs/adr/0405 §1).
+ */
+relations?: Array<ProjectRelation>, 
 /**
  * How lengths are written (docs/adr/0262 §2): none, decimal; the others
  * only in an inch or foot drawing.

@@ -18,7 +18,7 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
-use crate::forms::{FormBody, FormIssue, FormItemState, ProjectForm};
+use crate::forms::{FormBody, FormIssue, FormItemState, ProjectForm, ProjectRelation};
 
 /// Creates, saves, renames, removes, publishes and enforces the project's forms.
 pub const CAD_FORMS_EDIT: &str = "cad.forms.edit";
@@ -29,6 +29,9 @@ pub const CAD_FORMS_VALIDATE_VERSION: u32 = 1;
 /// Writes a record through a form.
 pub const CAD_FORMS_SUBMIT: &str = "cad.forms.submit";
 pub const CAD_FORMS_SUBMIT_VERSION: u32 = 1;
+/// Creates, updates and removes the project's relations (docs/adr/0405 §3).
+pub const CAD_RELATIONS_EDIT: &str = "cad.relations.edit";
+pub const CAD_RELATIONS_EDIT_VERSION: u32 = 1;
 /// Writes the same values to many records through a form.
 pub const CAD_FORMS_FILL: &str = "cad.forms.fill";
 pub const CAD_FORMS_FILL_VERSION: u32 = 1;
@@ -328,6 +331,60 @@ pub struct FormsFilled {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub version: Option<u32>,
+    /// The document's revision afterwards (plan: the one it was made against).
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// What `cad.relations.edit` does (docs/adr/0405 §3).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(
+    tag = "kind",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum RelationsOp {
+    /// A new relation.
+    Create { relation: ProjectRelation },
+    /// The relation of the same id replaced.
+    Update { relation: ProjectRelation },
+    /// The relation removed; its links stay in the records.
+    Remove { id: String },
+}
+
+/// Input of `cad.relations.edit` v1.
+///
+/// Refusals, in this order: `invalid_relation`; `invalid_revision`, `revision_conflict` (status
+/// `conflict`); `unknown_relation`, `relation_exists`, `too_many_relations`, `layer_not_found`,
+/// `not_a_layer`, `relation_field_unknown`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RelationsEdit {
+    pub edit: RelationsOp,
+    /// The document revision the input was prepared against, as decimal text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `cad.relations.edit` v1, and what plan says it would do.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RelationsEdited {
+    /// The project's relations afterwards, in order.
+    pub relations: Vec<ProjectRelation>,
+    /// Whether the settings changed.
+    pub changed: bool,
     /// The document's revision afterwards (plan: the one it was made against).
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,

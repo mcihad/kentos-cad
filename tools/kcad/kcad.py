@@ -1548,6 +1548,23 @@ def body_problem(body):
     return None
 
 
+def relations_problem(relations):
+    """The contract's `relations_problem` (docs/adr/0405 §1): at most 100, ids and names that hold, ids unique, the
+    layers and the field written."""
+    if len(relations) > 100:
+        return "projede çok ilişki var"
+    ids = set()
+    for r in relations:
+        if not _form_id_ok(r["id"]) or r["id"] in ids:
+            return f"“{r['id']}” bir ilişki kimliği olamaz ya da iki kez kullanılmış"
+        ids.add(r["id"])
+        if not _form_name_ok(r["name"]):
+            return f"“{r['id']}” ilişkisinin adı geçersiz"
+        if any(not r[k].strip() or len(r[k]) > MOST_FORM_NAME for k in ("parent", "child", "field")):
+            return f"“{r['id']}” ilişkisinin katmanları ve alanı yazılmalı"
+    return None
+
+
 def forms_problem(forms):
     """The contract's `forms_problem`: at most 100 forms with ids and names that hold, ids unique, a layer, bodies that
     hold, releases numbered on from the first with their body's digest (the first 32 hex digits of the SHA-256 of its
@@ -2387,7 +2404,7 @@ class _Schema:
                 **({"lengthStyle": (self.enum(("architectural", "engineering", "fractional")), False)} if self.imperial else {}),
                 **({"namedViews": (self.named_views_, False)} if self.views else {}),
                 **({"lineTypes": (self.line_types_, False), "lineTypeScale": (self.line_type_scale_, False)} if self.patterns else {}),
-                **({"forms": (self.forms_, False)} if self.forms else {}),
+                **({"forms": (self.forms_, False), "relations": (self.relations_, False)} if self.forms else {}),
             }
         )(v)
         # A second coordinate system is another system than the project's own; a project without one has none (a
@@ -3319,6 +3336,29 @@ class _Schema:
         if problem:
             self.fail("bad_value", problem)
         return all_
+
+    def relations_(self, v):
+        """Schema 60 (docs/adr/0405 §1): the project's relations; `onDelete` written only when not `unlink`."""
+        def policy(x):
+            if x not in ("keep", "cascade", "restrict"):
+                self.fail("bad_value", f"“{x}” bilinmiyor (keep, cascade, restrict; unlink yazılmaz)")
+            return x
+
+        relation = self.fields({
+            "id": (self.text, True),
+            "name": (self.text, True),
+            "parent": (self.text, True),
+            "child": (self.text, True),
+            "field": (self.text, True),
+            "onDelete": (policy, False),
+        })
+        lst = self.array(relation)(v)
+        if not lst:
+            self.fail("bad_value", "boş liste yazılmaz")
+        problem = relations_problem(lst)
+        if problem:
+            self.fail("bad_value", problem)
+        return lst
 
     # The project's coordinate systems and datum choices (schema 13, spec §6.4.1, docs/adr/0168).
 

@@ -328,6 +328,8 @@ def settings(s):
                 "lineTypeScale": (line_type_scale, False),
                 # Schema 60 (docs/adr/0401 §3): the project's forms, as their JSON.
                 "forms": (opaque, False),
+                # Schema 60 (docs/adr/0405 §1): the project's relations, as their JSON.
+                "relations": (opaque, False),
             },
             "settings",
         )
@@ -1962,7 +1964,7 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def keyed(nodes):
         return any(any("id" in f for f in n.get("fields", [])) or keyed(n.get("children", [])) for n in nodes)
 
-    if (settings or {}).get("forms") or keyed(layers):
+    if (settings or {}).get("forms") or (settings or {}).get("relations") or keyed(layers):
         return 60
     # Schema 59 (docs/adr/0318): a block's dynamic part or an insert's parameter values.
     valued = lambda es: any(e["kind"] == "insert" and "parameters" in e for e in es)  # noqa: E731

@@ -217,6 +217,42 @@ class FormsTests(unittest.TestCase):
             cad.forms.submit(doc, form="adres", draft=True, uid=poly.uid, values={"İl": "35"})
         self.assertEqual(refused.exception.code, "form_invalid")
 
+    def test_a_relation_keeps_its_children(self) -> None:
+        """docs/adr/0405: a meter refers to its building; the building deleted, its meters go with it (cascade); a
+        restricting relation keeps a building with meters."""
+        doc, layer = drawing()
+        cad.layers.edit(doc, operation="add", name="Sayaç")
+        meters = next(n.id for n in doc.layers() if n.name == "Sayaç")
+        cad.layers.edit(doc, operation="fields", layer=meters, fields=[cad.LayerField(name="bina", kind="text")])
+        made = cad.relations.edit(
+            doc,
+            edit=cad.CreateRelationsOp(
+                relation=cad.ProjectRelation(
+                    id="bina-sayac", name="Sayaçlar", parent=layer, child=meters, field="bina", on_delete="cascade"
+                )
+            ),
+        )
+        self.assertTrue(made.changed)
+        building = cad.polygon.create(
+            doc, pts=[cad.Vec2(0.0, 0.0), cad.Vec2(10.0, 0.0), cad.Vec2(10.0, 8.0)], layer_id=layer
+        ).uid
+        meter = cad.point.create(doc, p=cad.Vec2(2.0, 2.0), layer_id=meters, attrs={"bina": building}).uid
+        cad.entities.delete(doc, uids=[building])
+        self.assertEqual([r.uid for r in doc.entities(layer=meters)], [])
+        doc.undo()
+        self.assertEqual([r.uid for r in doc.entities(layer=meters)], [meter])
+        cad.relations.edit(
+            doc,
+            edit=cad.UpdateRelationsOp(
+                relation=cad.ProjectRelation(
+                    id="bina-sayac", name="Sayaçlar", parent=layer, child=meters, field="bina", on_delete="restrict"
+                )
+            ),
+        )
+        with self.assertRaises(cad.CommandFailed) as refused:
+            cad.entities.delete(doc, uids=[building])
+        self.assertEqual(refused.exception.code, "relation_restricted")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -5,7 +5,7 @@
 //!
 //! ```text
 //! KENTOS_SHOTS_ONLY=form-tasarim,form-tasarim-sorun,form-yeni,form-duzenle,form-duzenle-sorun,form-duzenle-sekme,form-oznitelikler cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
-//! KENTOS_SHOTS_ONLY=form-hesap-tasarim,form-hesap-duzenle,form-hesap-sorun,form-onizleme,form-tasarim-tasima,form-toplu,form-adres,form-adres-tasarim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=form-hesap-tasarim,form-hesap-duzenle,form-hesap-sorun,form-onizleme,form-tasarim-tasima,form-toplu,form-adres,form-adres-tasarim,form-iliskiler cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! docs/adr/0402's: the calculating form in the designer (the material's choice filter), Formla
@@ -21,7 +21,7 @@ use kentos_domain::Slot;
 use serde_json::{Value, json};
 
 use crate::app::{App, Message};
-use crate::forms::{designer, entry};
+use crate::forms::{designer, entry, relations};
 use crate::tools_scenes::{E, N, Objects, open_edited, run};
 use crate::tools_screens::Scene;
 
@@ -327,6 +327,22 @@ fn address_designing(app: &mut App) {
     designer(app, designer::Event::SelectItem("mahalle".into()));
 }
 
+/// İlişkiler (docs/adr/0405): the buildings' meters as a composition, its policy chosen.
+fn relations_window(app: &mut App) {
+    address_buildings(app);
+    run(app, "data.relations");
+    let _ = app.update(Message::Relations(relations::Event::New));
+    for event in [
+        relations::Event::Name("Binanın sayaçları".into()),
+        relations::Event::Parent("bina".into()),
+        relations::Event::Child("sayac".into()),
+        relations::Event::Field("bina".into()),
+        relations::Event::Policy(kentos_contracts::RelationDelete::Cascade),
+    ] {
+        let _ = app.update(Message::Relations(event));
+    }
+}
+
 /// A street block of four buildings, two with records; the layer's form in the project.
 fn buildings(app: &mut App, published: bool) {
     let mut o = Objects::new();
@@ -540,6 +556,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-toplu", calc_many),
         ("form-adres", address_editing),
         ("form-adres-tasarim", address_designing),
+        ("form-iliskiler", relations_window),
     ]
 }
 
@@ -937,6 +954,75 @@ mod tests {
         run(&mut app, "data.formEdit");
         entry(&mut app, entry::Event::OpenRelated(meter));
         assert!(app.form_entry.is_some(), "the meters' layer has no form");
+    }
+
+    /// docs/adr/0405: a relation made in İlişkiler and saved; a building deleted takes its meters
+    /// (cascade); a meter unlinked from and linked back to its building through the form's list.
+    #[test]
+    fn a_relation_keeps_its_children_and_the_form_links_them() {
+        let mut app = crate::files_testing::app_with_drawing();
+        relations_window(&mut app);
+        let _ = app.update(Message::Relations(relations::Event::Save));
+        assert!(app.relations_window.is_none(), "Kaydet closes the window");
+        let kept = app
+            .document
+            .as_ref()
+            .map(|d| d.model.settings().relations.clone())
+            .unwrap_or_default();
+        assert_eq!(kept.len(), 1);
+        assert_eq!(kept[0].on_delete, kentos_contracts::RelationDelete::Cascade);
+
+        app.selection.set([Slot(1)]);
+        run(&mut app, "data.formEdit");
+        let meters = app
+            .form_entry
+            .as_ref()
+            .expect("the window")
+            .related_of("sayaclar");
+        assert_eq!(meters.len(), 2);
+        entry(
+            &mut app,
+            entry::Event::Unlink("sayaclar".into(), meters[0].clone()),
+        );
+        assert_eq!(
+            app.form_entry
+                .as_ref()
+                .expect("the window")
+                .related_of("sayaclar")
+                .len(),
+            1
+        );
+        entry(
+            &mut app,
+            entry::Event::Link("sayaclar".into(), meters[0].clone()),
+        );
+        assert_eq!(
+            app.form_entry
+                .as_ref()
+                .expect("the window")
+                .related_of("sayaclar")
+                .len(),
+            2
+        );
+        entry(&mut app, entry::Event::Cancel);
+
+        let count = |app: &App| app.document.as_ref().map_or(0, |d| d.model.len());
+        let before = count(&app);
+        let building = app
+            .document
+            .as_ref()
+            .and_then(|d| d.model.uid(Slot(1)))
+            .map(|u| u.to_string())
+            .expect("the building");
+        if let Some(doc) = app.document.as_mut() {
+            let _ = kentos_native_application::registry::run(
+                &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+                kentos_contracts::CAD_ENTITIES_DELETE,
+                kentos_contracts::CallOp::Execute,
+                json!({ "uids": [building] }),
+            );
+        }
+        assert_eq!(count(&app), before - 3, "the building and its two meters");
     }
 
     /// docs/adr/0401 §9: a form made of the layer's fields, an item added, Kaydet writes the draft and

@@ -608,6 +608,10 @@ impl Document {
     /// whose form enforces its rules complete (form_follow.rs, docs/adr/0402
     /// §4) after `ops`, applied and joined to them.
     pub(crate) fn follow_into(&mut self, ops: &mut Vec<Op>) {
+        // First: the children of the parents the step deletes (docs/adr/0405 §2), so the follows
+        // below see them gone or unlinked.
+        let related = self.follow_relations(ops);
+        ops.extend(related);
         let follow = self.follow_links(ops);
         ops.extend(follow);
         // After the linked texts: a text a hatch leaves open may have moved with its object.

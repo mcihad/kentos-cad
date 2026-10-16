@@ -4071,6 +4071,34 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // The project's relations (docs/adr/0405 §3), held together by
+        // fixtures/commands/v1/cad.relations.edit.json. The web is paused (docs/adr/0228).
+        CommandDescriptor {
+            id: crate::CAD_RELATIONS_EDIT.into(),
+            version: crate::CAD_RELATIONS_EDIT_VERSION,
+            title: "İlişkiler".into(),
+            summary: "Projenin ilişkilerini oluşturur (create), değiştirir (update) ve siler (remove). İlişki: alt katmanın field alanı üst katmanın nesnesinin kalıcı kimliğini tutar; onDelete üst nesne silinince alt kayıtlara ne olacağıdır: unlink (varsayılan, alan boşalır), cascade (alt kayıtlar da silinir), restrict (alt kaydı olan üst nesne silinmez), keep (bağ kalır). \
+                      Proje ayarıdır, geri alma adımı değildir; silinen ilişkinin bağları kayıtlarda kalır. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RelationsEdit>(),
+            output: schema::<crate::RelationsEdited>(),
+            plan: Some(schema::<crate::RelationsEdited>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Sayaçları binalarına bağla; bina silinince sayaçlar da silinsin".into(),
+                input: json!({ "edit": { "kind": "create", "relation": { "id": "bina-sayac", "name": "Binanın sayaçları", "parent": "bina", "child": "sayac", "field": "bina", "onDelete": "cascade" } } }),
+                output: None,
+            }],
+        },
         // Many records through a form at once (docs/adr/0403 §5), held together by
         // fixtures/commands/v1/cad.forms.fill.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -5144,6 +5172,9 @@ mod tests {
                     crate::CAD_FORMS_FILL => {
                         serde_json::from_value::<crate::FormsFill>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_RELATIONS_EDIT => {
+                        serde_json::from_value::<crate::RelationsEdit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SHEETS_EDIT => {
                         serde_json::from_value::<crate::SheetsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -5438,6 +5469,10 @@ mod tests {
                         }
                         crate::CAD_FORMS_FILL => {
                             serde_json::from_value::<crate::FormsFilled>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_RELATIONS_EDIT => {
+                            serde_json::from_value::<crate::RelationsEdited>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_SHEETS_EDIT => {

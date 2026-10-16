@@ -55,8 +55,8 @@ use kentos_native_application::{
     block_params, blocks_insert, blocks_query, blocks_replace, file_import_block, library_edit, line_types_edit,
     styles_impact,
 };
-use kentos_domain::contracts::{FormsEdit, FormsFill, FormsSubmit, FormsValidate};
-use kentos_native_application::{forms_edit, forms_fill, forms_submit, forms_validate};
+use kentos_domain::contracts::{FormsEdit, FormsFill, FormsSubmit, FormsValidate, RelationsEdit};
+use kentos_native_application::{forms_edit, forms_fill, forms_submit, forms_validate, relations_edit};
 use serde_json::{Value, json};
 
 type Outcome<T> = Result<T, String>;
@@ -251,6 +251,8 @@ fn block_ids(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<
             if text.starts_with("$blockOf:")
                 || text.starts_with("$block:")
                 || text.starts_with("$uidOf:")
+                // A captured object's id: a relation's parent the child refers to (docs/adr/0405).
+                || text.starts_with("$uid:")
                 || text.starts_with("$layer:")
                 || text.starts_with("$$") =>
         {
@@ -357,6 +359,12 @@ impl Input for FormsSubmit {
 }
 
 impl Input for FormsFill {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for RelationsEdit {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -2098,6 +2106,7 @@ fn run_op(
         kentos_domain::contracts::CAD_FORMS_VALIDATE => run!(forms_validate, FormsValidate),
         kentos_domain::contracts::CAD_FORMS_SUBMIT => run!(forms_submit, FormsSubmit),
         kentos_domain::contracts::CAD_FORMS_FILL => run!(forms_fill, FormsFill),
+        kentos_domain::contracts::CAD_RELATIONS_EDIT => run!(relations_edit, RelationsEdit),
         kentos_domain::contracts::CAD_UNITS_CHANGE => run!(units_change, UnitsChange),
         kentos_domain::contracts::FILE_IMPORT_DXF => run!(file_import, ImportDxf),
         kentos_domain::contracts::CAD_SHEETS_EDIT => run!(sheets_edit, SheetsEdit),

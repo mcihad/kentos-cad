@@ -250,7 +250,7 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.entities.delete",
-        refusals: &[OBJECTS, REVISION],
+        refusals: &[OBJECTS, REVISION, &["relation_restricted"]],
         warnings: &["layer_locked"],
         targets: || vec![target(None, &["*"], &[], None, None)],
     },
@@ -1611,6 +1611,23 @@ const ENTRIES: &[Entry] = &[
             ],
         ],
         warnings: &["form_check_warning"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.relations.edit",
+        refusals: &[
+            &["invalid_relation"],
+            REVISION,
+            &[
+                "unknown_relation",
+                "relation_exists",
+                "too_many_relations",
+                "layer_not_found",
+                "not_a_layer",
+                "relation_field_unknown",
+            ],
+        ],
+        warnings: &[],
         targets: none,
     },
     Entry {

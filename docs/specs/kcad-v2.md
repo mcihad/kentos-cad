@@ -635,6 +635,11 @@ tam sayı, anahtarlar kanonik sırada). Yazıcı varsayılan değerindeki alanı
 - **Yayın:** `version` (1'den ya da ilk yayının numarasından sırayla), `digest` (gövdenin kanonik JSON'unun, ADR 0253 §2,
   SHA-256'sının ilk 32 onaltılık hanesi; içeriğe uymayan özet `bad_value`, `broken/forms-digest.kcad`), `body`, `note`.
 
+- **İlişki** (`relations`, ayarların ayrı anahtarı, ADR 0405 §1): `id` (formun kimlik kuralı; projede tekil), `name`, `parent`
+  ve `child` (katman kimlikleri), `field` (alt katmanın, üst nesnenin kalıcı kimliğini tutan alanının anahtarı), `onDelete`
+  (`keep`, `cascade` ya da `restrict`; `unlink` varsayılandır, yazılmaz). En çok 100 ilişki; boş liste yazılmaz. Kuralları
+  sözleşmenin `relations_problem`'idir.
+
 Kuralları sözleşmenin `forms_problem`'idir (`kentos_contracts::forms`). Dosya biçimi alanların varlığını ve ifadeleri denetlemez;
 onlar formun ön denetimidir (ADR 0401 §4). Örnek dosya `forms.kcad`.
 

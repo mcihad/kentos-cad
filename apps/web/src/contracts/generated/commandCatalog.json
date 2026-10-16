@@ -8586,6 +8586,43 @@
             },
             "type": "object"
           },
+          "ProjectRelation": {
+            "additionalProperties": false,
+            "description": "A relation of the project (docs/adr/0405 §1): the child layer's field holds the parent object's\npersistent id.",
+            "properties": {
+              "child": {
+                "description": "The child layer's id.",
+                "type": "string"
+              },
+              "field": {
+                "description": "The child field's key that holds the parent's persistent id.",
+                "type": "string"
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "onDelete": {
+                "$ref": "#/$defs/RelationDelete",
+                "description": "Written only when not `unlink`."
+              },
+              "parent": {
+                "description": "The parent layer's id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "parent",
+              "child",
+              "field"
+            ],
+            "type": "object"
+          },
           "ProjectSettings": {
             "description": "Project settings (`ProjectSettingsData`): saved with the drawing, the same for everyone who opens it.",
             "properties": {
@@ -8746,6 +8783,13 @@
                 "format": "double",
                 "type": "number",
                 "x-unit": "scale"
+              },
+              "relations": {
+                "description": "The project's relations (docs/adr/0405 §1).",
+                "items": {
+                  "$ref": "#/$defs/ProjectRelation"
+                },
+                "type": "array"
               },
               "secondCustomCrs": {
                 "anyOf": [
@@ -9361,6 +9405,31 @@
               "WGS84"
             ],
             "type": "string"
+          },
+          "RelationDelete": {
+            "description": "What happens to a relation's child records when their parent is deleted (docs/adr/0405 §1).",
+            "oneOf": [
+              {
+                "const": "keep",
+                "description": "The link stays as it is: a reference to a deleted object.",
+                "type": "string"
+              },
+              {
+                "const": "unlink",
+                "description": "The child's field is emptied.",
+                "type": "string"
+              },
+              {
+                "const": "cascade",
+                "description": "The children are deleted with their parent (a composition).",
+                "type": "string"
+              },
+              {
+                "const": "restrict",
+                "description": "A parent with children is not deleted (`relation_restricted`).",
+                "type": "string"
+              }
+            ]
           },
           "RingGeometry": {
             "description": "A closed ring in vertex + bulge form (a polygon hole).",
@@ -15785,6 +15854,43 @@
             ],
             "type": "object"
           },
+          "ProjectRelation": {
+            "additionalProperties": false,
+            "description": "A relation of the project (docs/adr/0405 §1): the child layer's field holds the parent object's\npersistent id.",
+            "properties": {
+              "child": {
+                "description": "The child layer's id.",
+                "type": "string"
+              },
+              "field": {
+                "description": "The child field's key that holds the parent's persistent id.",
+                "type": "string"
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "onDelete": {
+                "$ref": "#/$defs/RelationDelete",
+                "description": "Written only when not `unlink`."
+              },
+              "parent": {
+                "description": "The parent layer's id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "parent",
+              "child",
+              "field"
+            ],
+            "type": "object"
+          },
           "ProjectSettings": {
             "description": "Project settings (`ProjectSettingsData`): saved with the drawing, the same for everyone who opens it.",
             "properties": {
@@ -15945,6 +16051,13 @@
                 "format": "double",
                 "type": "number",
                 "x-unit": "scale"
+              },
+              "relations": {
+                "description": "The project's relations (docs/adr/0405 §1).",
+                "items": {
+                  "$ref": "#/$defs/ProjectRelation"
+                },
+                "type": "array"
               },
               "secondCustomCrs": {
                 "anyOf": [
@@ -16167,6 +16280,31 @@
               "WGS84"
             ],
             "type": "string"
+          },
+          "RelationDelete": {
+            "description": "What happens to a relation's child records when their parent is deleted (docs/adr/0405 §1).",
+            "oneOf": [
+              {
+                "const": "keep",
+                "description": "The link stays as it is: a reference to a deleted object.",
+                "type": "string"
+              },
+              {
+                "const": "unlink",
+                "description": "The child's field is emptied.",
+                "type": "string"
+              },
+              {
+                "const": "cascade",
+                "description": "The children are deleted with their parent (a composition).",
+                "type": "string"
+              },
+              {
+                "const": "restrict",
+                "description": "A parent with children is not deleted (`relation_restricted`).",
+                "type": "string"
+              }
+            ]
           },
           "ScenarioInfo": {
             "description": "A group made a scenario (docs/adr/0210 §9): its layers are an alternative\nkept apart from the field state (Mevcut durum).",
@@ -25740,6 +25878,43 @@
               }
             ]
           },
+          "ProjectRelation": {
+            "additionalProperties": false,
+            "description": "A relation of the project (docs/adr/0405 §1): the child layer's field holds the parent object's\npersistent id.",
+            "properties": {
+              "child": {
+                "description": "The child layer's id.",
+                "type": "string"
+              },
+              "field": {
+                "description": "The child field's key that holds the parent's persistent id.",
+                "type": "string"
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "onDelete": {
+                "$ref": "#/$defs/RelationDelete",
+                "description": "Written only when not `unlink`."
+              },
+              "parent": {
+                "description": "The parent layer's id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "parent",
+              "child",
+              "field"
+            ],
+            "type": "object"
+          },
           "ProjectRole": {
             "description": "A role in one project. Each has the rights of the ones before it.",
             "oneOf": [
@@ -25919,6 +26094,13 @@
                 "format": "double",
                 "type": "number",
                 "x-unit": "scale"
+              },
+              "relations": {
+                "description": "The project's relations (docs/adr/0405 §1).",
+                "items": {
+                  "$ref": "#/$defs/ProjectRelation"
+                },
+                "type": "array"
               },
               "secondCustomCrs": {
                 "anyOf": [
@@ -26570,6 +26752,31 @@
               "WGS84"
             ],
             "type": "string"
+          },
+          "RelationDelete": {
+            "description": "What happens to a relation's child records when their parent is deleted (docs/adr/0405 §1).",
+            "oneOf": [
+              {
+                "const": "keep",
+                "description": "The link stays as it is: a reference to a deleted object.",
+                "type": "string"
+              },
+              {
+                "const": "unlink",
+                "description": "The child's field is emptied.",
+                "type": "string"
+              },
+              {
+                "const": "cascade",
+                "description": "The children are deleted with their parent (a composition).",
+                "type": "string"
+              },
+              {
+                "const": "restrict",
+                "description": "A parent with children is not deleted (`relation_restricted`).",
+                "type": "string"
+              }
+            ]
           },
           "RingGeometry": {
             "description": "A closed ring in vertex + bulge form (a polygon hole).",
@@ -51968,7 +52175,8 @@
           "entity_not_found",
           "layer_locked",
           "invalid_revision",
-          "revision_conflict"
+          "revision_conflict",
+          "relation_restricted"
         ],
         "warnings": [
           "layer_locked"
@@ -325715,6 +325923,384 @@
       ]
     },
     {
+      "id": "cad.relations.edit",
+      "version": 1,
+      "title": "İlişkiler",
+      "summary": "Projenin ilişkilerini oluşturur (create), değiştirir (update) ve siler (remove). İlişki: alt katmanın field alanı üst katmanın nesnesinin kalıcı kimliğini tutar; onDelete üst nesne silinince alt kayıtlara ne olacağıdır: unlink (varsayılan, alan boşalır), cascade (alt kayıtlar da silinir), restrict (alt kaydı olan üst nesne silinmez), keep (bağ kalır). Proje ayarıdır, geri alma adımı değildir; silinen ilişkinin bağları kayıtlarda kalır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "ProjectRelation": {
+            "additionalProperties": false,
+            "description": "A relation of the project (docs/adr/0405 §1): the child layer's field holds the parent object's\npersistent id.",
+            "properties": {
+              "child": {
+                "description": "The child layer's id.",
+                "type": "string"
+              },
+              "field": {
+                "description": "The child field's key that holds the parent's persistent id.",
+                "type": "string"
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "onDelete": {
+                "$ref": "#/$defs/RelationDelete",
+                "description": "Written only when not `unlink`."
+              },
+              "parent": {
+                "description": "The parent layer's id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "parent",
+              "child",
+              "field"
+            ],
+            "type": "object"
+          },
+          "RelationDelete": {
+            "description": "What happens to a relation's child records when their parent is deleted (docs/adr/0405 §1).",
+            "oneOf": [
+              {
+                "const": "keep",
+                "description": "The link stays as it is: a reference to a deleted object.",
+                "type": "string"
+              },
+              {
+                "const": "unlink",
+                "description": "The child's field is emptied.",
+                "type": "string"
+              },
+              {
+                "const": "cascade",
+                "description": "The children are deleted with their parent (a composition).",
+                "type": "string"
+              },
+              {
+                "const": "restrict",
+                "description": "A parent with children is not deleted (`relation_restricted`).",
+                "type": "string"
+              }
+            ]
+          },
+          "RelationsOp": {
+            "description": "What `cad.relations.edit` does (docs/adr/0405 §3).",
+            "oneOf": [
+              {
+                "description": "A new relation.",
+                "properties": {
+                  "kind": {
+                    "const": "create",
+                    "type": "string"
+                  },
+                  "relation": {
+                    "$ref": "#/$defs/ProjectRelation"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "relation"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The relation of the same id replaced.",
+                "properties": {
+                  "kind": {
+                    "const": "update",
+                    "type": "string"
+                  },
+                  "relation": {
+                    "$ref": "#/$defs/ProjectRelation"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "relation"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The relation removed; its links stay in the records.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "remove",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "id"
+                ],
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.relations.edit` v1.\n\nRefusals, in this order: `invalid_relation`; `invalid_revision`, `revision_conflict` (status\n`conflict`); `unknown_relation`, `relation_exists`, `too_many_relations`, `layer_not_found`,\n`not_a_layer`, `relation_field_unknown`.",
+        "properties": {
+          "edit": {
+            "$ref": "#/$defs/RelationsOp"
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "edit"
+        ],
+        "title": "RelationsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "ProjectRelation": {
+            "additionalProperties": false,
+            "description": "A relation of the project (docs/adr/0405 §1): the child layer's field holds the parent object's\npersistent id.",
+            "properties": {
+              "child": {
+                "description": "The child layer's id.",
+                "type": "string"
+              },
+              "field": {
+                "description": "The child field's key that holds the parent's persistent id.",
+                "type": "string"
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "onDelete": {
+                "$ref": "#/$defs/RelationDelete",
+                "description": "Written only when not `unlink`."
+              },
+              "parent": {
+                "description": "The parent layer's id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "parent",
+              "child",
+              "field"
+            ],
+            "type": "object"
+          },
+          "RelationDelete": {
+            "description": "What happens to a relation's child records when their parent is deleted (docs/adr/0405 §1).",
+            "oneOf": [
+              {
+                "const": "keep",
+                "description": "The link stays as it is: a reference to a deleted object.",
+                "type": "string"
+              },
+              {
+                "const": "unlink",
+                "description": "The child's field is emptied.",
+                "type": "string"
+              },
+              {
+                "const": "cascade",
+                "description": "The children are deleted with their parent (a composition).",
+                "type": "string"
+              },
+              {
+                "const": "restrict",
+                "description": "A parent with children is not deleted (`relation_restricted`).",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.relations.edit` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "description": "Whether the settings changed.",
+            "type": "boolean"
+          },
+          "relations": {
+            "description": "The project's relations afterwards, in order.",
+            "items": {
+              "$ref": "#/$defs/ProjectRelation"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made against).",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "relations",
+          "changed",
+          "revision"
+        ],
+        "title": "RelationsEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "ProjectRelation": {
+            "additionalProperties": false,
+            "description": "A relation of the project (docs/adr/0405 §1): the child layer's field holds the parent object's\npersistent id.",
+            "properties": {
+              "child": {
+                "description": "The child layer's id.",
+                "type": "string"
+              },
+              "field": {
+                "description": "The child field's key that holds the parent's persistent id.",
+                "type": "string"
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "onDelete": {
+                "$ref": "#/$defs/RelationDelete",
+                "description": "Written only when not `unlink`."
+              },
+              "parent": {
+                "description": "The parent layer's id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "parent",
+              "child",
+              "field"
+            ],
+            "type": "object"
+          },
+          "RelationDelete": {
+            "description": "What happens to a relation's child records when their parent is deleted (docs/adr/0405 §1).",
+            "oneOf": [
+              {
+                "const": "keep",
+                "description": "The link stays as it is: a reference to a deleted object.",
+                "type": "string"
+              },
+              {
+                "const": "unlink",
+                "description": "The child's field is emptied.",
+                "type": "string"
+              },
+              {
+                "const": "cascade",
+                "description": "The children are deleted with their parent (a composition).",
+                "type": "string"
+              },
+              {
+                "const": "restrict",
+                "description": "A parent with children is not deleted (`relation_restricted`).",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.relations.edit` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "description": "Whether the settings changed.",
+            "type": "boolean"
+          },
+          "relations": {
+            "description": "The project's relations afterwards, in order.",
+            "items": {
+              "$ref": "#/$defs/ProjectRelation"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made against).",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "relations",
+          "changed",
+          "revision"
+        ],
+        "title": "RelationsEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_relation",
+          "invalid_revision",
+          "revision_conflict",
+          "unknown_relation",
+          "relation_exists",
+          "too_many_relations",
+          "layer_not_found",
+          "not_a_layer",
+          "relation_field_unknown"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Sayaçları binalarına bağla; bina silinince sayaçlar da silinsin",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "child": "sayac",
+                "field": "bina",
+                "id": "bina-sayac",
+                "name": "Binanın sayaçları",
+                "onDelete": "cascade",
+                "parent": "bina"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.forms.fill",
       "version": 1,
       "title": "Formla toplu yaz",
@@ -350329,6 +350915,42 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Yazma, katmanın uyguladığı formun kurallarına uymuyor."
+    },
+    {
+      "code": "invalid_relation",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "İlişkinin kimliği, adı, katmanları ya da alanı kurallarına uymuyor."
+    },
+    {
+      "code": "unknown_relation",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikle bir ilişki yok."
+    },
+    {
+      "code": "relation_exists",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikle başka bir ilişki var."
+    },
+    {
+      "code": "too_many_relations",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede en çok 100 ilişki olur."
+    },
+    {
+      "code": "relation_field_unknown",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "İlişkinin alanı alt katmanda yok."
+    },
+    {
+      "code": "relation_restricted",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesnenin ilişkili alt kayıtları var; ilişki silinmesine izin vermiyor."
     },
     {
       "code": "form_release_dropped",

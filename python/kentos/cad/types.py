@@ -1857,6 +1857,24 @@ RegistryDatumName = Literal["TUREF", "ED50", "WGS84"]
 """The names of :class:`RegistryDatum`, for a plain string."""
 
 
+class RelationDelete(_StrEnum):
+    """What happens to a relation's child records when their parent is deleted (docs/adr/0405 §1).
+
+    - ``keep``: The link stays as it is: a reference to a deleted object.
+    - ``unlink``: The child's field is emptied.
+    - ``cascade``: The children are deleted with their parent (a composition).
+    - ``restrict``: A parent with children is not deleted (`relation_restricted`).
+    """
+    KEEP = "keep"
+    UNLINK = "unlink"
+    CASCADE = "cascade"
+    RESTRICT = "restrict"
+
+
+RelationDeleteName = Literal["keep", "unlink", "cascade", "restrict"]
+"""The names of :class:`RelationDelete`, for a plain string."""
+
+
 class ResourceKind(_StrEnum):
     """A named resource's kind."""
     LAYER = "layer"
@@ -3037,6 +3055,28 @@ class RegularFrame(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> RegularFrame:
         return _variant(_REGULAR_FRAME, "RegularFrame", "kind", data).from_json(data)
+
+
+class RelationsOp(_Union):
+    """What `cad.relations.edit` does (docs/adr/0405 §3).
+
+    One of:
+
+    - :class:`CreateRelationsOp` (``kind: create``)
+    - :class:`UpdateRelationsOp` (``kind: update``)
+    - :class:`RemoveRelationsOp` (``kind: remove``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RelationsOp:
+        return _variant(_RELATIONS_OP, "RelationsOp", "kind", data).from_json(data)
 
 
 class SelectRegion(_Union):
@@ -18402,6 +18442,47 @@ class ProjectPurged(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProjectRelation(_Model):
+    """A relation of the project (docs/adr/0405 §1): the child layer's field holds the parent object's
+    persistent id.
+    Attributes:
+        id: Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.
+        parent: The parent layer's id.
+        child: The child layer's id.
+        field: The child field's key that holds the parent's persistent id.
+        on_delete: Written only when not `unlink`.
+    """
+    id: str
+    name: str
+    parent: str
+    child: str
+    field: str
+    on_delete: RelationDelete | RelationDeleteName | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["parent"] = self.parent
+        out["child"] = self.child
+        out["field"] = self.field
+        if self.on_delete is not UNSET:
+            out["onDelete"] = _enum_out(self.on_delete)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProjectRelation:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            parent=data["parent"],
+            child=data["child"],
+            field=data["field"],
+            on_delete=_enum_in(RelationDelete, data["onDelete"]) if "onDelete" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProjectRename(_Model):
     """Input of `project.rename` v1.
     Attributes:
@@ -18450,6 +18531,7 @@ class ProjectSettings(_Model):
         named_ucs: The project's named UCSs, in the order they were kept.
         named_views: The project's named views, in the order they were kept (docs/adr/0285 §1).
         networks: The project's networks (docs/adr/0209 §2).
+        relations: The project's relations (docs/adr/0405 §1).
         second_custom_crs: The second system when it is a definition (instead of `second_srid`).
         second_srid: The project's second coordinate system (docs/adr/0167 §1): its
             coordinates are shown beside the project's own; absent: none. Never
@@ -18487,6 +18569,7 @@ class ProjectSettings(_Model):
     named_ucs: list[NamedUcs] | Unset = UNSET
     named_views: list[NamedView] | Unset = UNSET
     networks: list[NetworkDef] | Unset = UNSET
+    relations: list[ProjectRelation] | Unset = UNSET
     second_custom_crs: CrsDefinition | None | Unset = UNSET
     second_srid: int | None | Unset = UNSET
     survey: SurveySettings | None | Unset = UNSET
@@ -18536,6 +18619,8 @@ class ProjectSettings(_Model):
             out["namedViews"] = [e0.to_json() for e0 in self.named_views]
         if self.networks is not UNSET:
             out["networks"] = [e0.to_json() for e0 in self.networks]
+        if self.relations is not UNSET:
+            out["relations"] = [e0.to_json() for e0 in self.relations]
         if self.second_custom_crs is not UNSET:
             out["secondCustomCrs"] = None if self.second_custom_crs is None else self.second_custom_crs.to_json()
         if self.second_srid is not UNSET:
@@ -18579,6 +18664,7 @@ class ProjectSettings(_Model):
             named_ucs=[NamedUcs.from_json(e0) for e0 in data["namedUcs"]] if "namedUcs" in data else UNSET,
             named_views=[NamedView.from_json(e0) for e0 in data["namedViews"]] if "namedViews" in data else UNSET,
             networks=[NetworkDef.from_json(e0) for e0 in data["networks"]] if "networks" in data else UNSET,
+            relations=[ProjectRelation.from_json(e0) for e0 in data["relations"]] if "relations" in data else UNSET,
             second_custom_crs=UNSET if "secondCustomCrs" not in data else None if data["secondCustomCrs"] is None else CrsDefinition.from_json(data["secondCustomCrs"]),
             second_srid=data.get("secondSrid", UNSET),
             survey=UNSET if "survey" not in data else None if data["survey"] is None else SurveySettings.from_json(data["survey"]),
@@ -19283,6 +19369,62 @@ class RegularPolygonCreate(_Model):
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RelationsEdit(_Model):
+    """Input of `cad.relations.edit` v1.
+
+    Refusals, in this order: `invalid_relation`; `invalid_revision`, `revision_conflict` (status
+    `conflict`); `unknown_relation`, `relation_exists`, `too_many_relations`, `layer_not_found`,
+    `not_a_layer`, `relation_field_unknown`.
+    Attributes:
+        expected_revision: The document revision the input was prepared against, as decimal text.
+    """
+    edit: RelationsOp
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["edit"] = self.edit.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RelationsEdit:
+        return cls(
+            edit=RelationsOp.from_json(data["edit"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RelationsEdited(_Model):
+    """Output of `cad.relations.edit` v1, and what plan says it would do.
+    Attributes:
+        relations: The project's relations afterwards, in order.
+        changed: Whether the settings changed.
+        revision: The document's revision afterwards (plan: the one it was made against).
+    """
+    relations: list[ProjectRelation]
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["relations"] = [e0.to_json() for e0 in self.relations]
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RelationsEdited:
+        return cls(
+            relations=[ProjectRelation.from_json(e0) for e0 in data["relations"]],
+            changed=data["changed"],
+            revision=data["revision"],
         )
 
 
@@ -26716,6 +26858,60 @@ class EdgeRegularFrame(RegularFrame):
 
 
 @dataclass(kw_only=True, slots=True)
+class CreateRelationsOp(RelationsOp):
+    """A new relation."""
+    TAG_VALUE: ClassVar[str] = "create"
+    relation: ProjectRelation
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "create"}
+        out["relation"] = self.relation.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CreateRelationsOp:
+        return cls(
+            relation=ProjectRelation.from_json(data["relation"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UpdateRelationsOp(RelationsOp):
+    """The relation of the same id replaced."""
+    TAG_VALUE: ClassVar[str] = "update"
+    relation: ProjectRelation
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "update"}
+        out["relation"] = self.relation.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UpdateRelationsOp:
+        return cls(
+            relation=ProjectRelation.from_json(data["relation"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveRelationsOp(RelationsOp):
+    """The relation removed; its links stay in the records."""
+    TAG_VALUE: ClassVar[str] = "remove"
+    id: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "remove"}
+        out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveRelationsOp:
+        return cls(
+            id=data["id"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class WindowSelectRegion(SelectRegion):
     """Pencere: wholly inside the box from `a` to `b` (an infinite line never is).
     Attributes:
@@ -27923,6 +28119,9 @@ _RECTANGLE_FRAME: dict[str, type[RectangleFrame]] = {"corners": CornersRectangle
 _REGULAR_FRAME: dict[str, type[RegularFrame]] = {"inscribed": InscribedRegularFrame, "circumscribed": CircumscribedRegularFrame, "edge": EdgeRegularFrame}
 
 
+_RELATIONS_OP: dict[str, type[RelationsOp]] = {"create": CreateRelationsOp, "update": UpdateRelationsOp, "remove": RemoveRelationsOp}
+
+
 _SELECT_REGION: dict[str, type[SelectRegion]] = {"window": WindowSelectRegion, "crossing": CrossingSelectRegion, "fence": FenceSelectRegion, "polygon": PolygonSelectRegion, "circle": CircleSelectRegion, "containing": ContainingSelectRegion, "point": PointSelectRegion, "all": AllSelectRegion, "objects": ObjectsSelectRegion, "invert": InvertSelectRegion, "similar": SimilarSelectRegion}
 
 
@@ -28116,6 +28315,7 @@ __all__ = [
     "CreateFormsOp",
     "CreateOperation",
     "CreateOperationName",
+    "CreateRelationsOp",
     "CrossingSelectRegion",
     "CrsBase",
     "CrsDefinition",
@@ -28605,6 +28805,7 @@ __all__ = [
     "ProjectPermissionName",
     "ProjectPurge",
     "ProjectPurged",
+    "ProjectRelation",
     "ProjectRename",
     "ProjectRole",
     "ProjectRoleName",
@@ -28648,11 +28849,17 @@ __all__ = [
     "RegularFrame",
     "RegularPolygonCreate",
     "RelatedFormItem",
+    "RelationDelete",
+    "RelationDeleteName",
+    "RelationsEdit",
+    "RelationsEdited",
+    "RelationsOp",
     "RemoveArrayEdit",
     "RemoveControlCurveEdit",
     "RemoveEntityEdit",
     "RemoveFitCurveEdit",
     "RemoveFormsOp",
+    "RemoveRelationsOp",
     "RenameFormsOp",
     "RenameViewsOp",
     "RenamedBlock",
@@ -28796,6 +29003,7 @@ __all__ = [
     "UpdateEntityEdit",
     "UpdateFeatureChange",
     "UpdateFormsOp",
+    "UpdateRelationsOp",
     "VariableKind",
     "VariableKindName",
     "VariableValue",

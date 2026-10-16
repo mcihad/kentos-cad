@@ -167,6 +167,7 @@ pub mod forms_edit;
 pub mod forms_fill;
 pub mod forms_submit;
 pub mod forms_validate;
+pub mod relations_edit;
 pub mod widths;
 
 pub use context::ExecutionContext;
@@ -237,6 +238,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_FORMS_FILL,
         kentos_contracts::CAD_FORMS_FILL_VERSION,
+    ),
+    // The project's relations ([`relations_edit`], docs/adr/0405).
+    (
+        kentos_contracts::CAD_RELATIONS_EDIT,
+        kentos_contracts::CAD_RELATIONS_EDIT_VERSION,
     ),
     // Öne getir and Arkaya gönder ([`entities_order`], docs/adr/0260 §5).
     (

@@ -224,6 +224,7 @@ mod tests {
             named_ucs: Vec::new(),
             named_views: Vec::new(),
             forms: Vec::new(),
+            relations: Vec::new(),
             ucs: None,
             srid,
             length_decimals: 3,

@@ -9,7 +9,7 @@
 Bu belge araştırma, ürün sözleşmesi ve yapılacak iş listesidir; uygulama kodu değildir. API adları, JSON örneği, izin aileleri ve profiller öneridir. Kaynak incelemesi ile hedef kabul testleri ayrıdır; burada hedeflenen form özelliklerinin bugün çalıştığı veya test edildiği iddia edilmez.
 
 **İlerleme (16 Ekim 2026):** işaretli maddeler masaüstünde, çekirdekte, komutlarda, Python'da ve MCP'de yapıldı
-(ADR 0400–0404; TODOS.md §16.6). Web ertelendiği için (ADR 0228) web'in tarafı TODOS.md §0.2'dedir; web isteyen
+(ADR 0400–0405; TODOS.md §16.6). Web ertelendiği için (ADR 0228) web'in tarafı TODOS.md §0.2'dedir; web isteyen
 maddeler web gelene dek işaretsiz kalır.
 
 ## 1. Ürün hedefi ve kesin şartlar
@@ -351,7 +351,7 @@ QGIS ilişkili child form gösterimi ve reference widget desteğine sahiptir. Ar
 
 - [ ] **FORM-REL-01:** 1:1, 1:N ve N:M relation; dataset IDs, PK/FK, type, optionality/min/max ve stable relation ID taşısın.
 - [ ] **FORM-REL-02:** N:M için gerçek link table; ilişki satırı kendi UUID/attributes/revision'ını taşıyabilsin.
-- [ ] **FORM-REL-03:** Association ile composition sahipliği ayrı olsun; restrict/cascade/unlink/set-null açık delete policy olarak tanımlansın.
+- [x] **FORM-REL-03:** Association ile composition sahipliği ayrı olsun; restrict/cascade/unlink/set-null açık delete policy olarak tanımlansın. — *Yapıldı (16 Ekim; ADR 0405 §1–§2: unlink, cascade (bileşik), restrict, keep; bütün silme yollarında).*
 - [ ] **FORM-REL-04:** Delete planı etkilenen children/link rows/attachments'ı saysın; cascade bütün source izinlerini ve transaction limitini doğrulasın.
 - [ ] **FORM-REL-05:** FK type/unique/orphan/cardinality kuralları server transaction ve uygun DB constraints ile uygulanmalı.
 - [ ] **FORM-REL-06:** Parent UUID unsaved create sırasında üretilebilir olsun; aynı submission'da child FK eşlemesi deterministik ve idempotent olsun.

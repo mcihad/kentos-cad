@@ -258,6 +258,18 @@ codes! {
     FORM_INVALID = "form_invalid", Failed, false, "Kayıt formun kurallarına uymuyor: zorunlu alan boş, değer ya da denetim uymuyor, gizli ya da salt okunur alan değişti.";
     /// An attribute write that breaks the rules of a form the layer enforces (`cad.entities.set`).
     FORM_RULES = "form_rules", Failed, false, "Yazma, katmanın uyguladığı formun kurallarına uymuyor.";
+    /// A relation whose id, name, layers or field break its rules (docs/adr/0405).
+    INVALID_RELATION = "invalid_relation", Failed, false, "İlişkinin kimliği, adı, katmanları ya da alanı kurallarına uymuyor.";
+    /// A relation the project has not.
+    UNKNOWN_RELATION = "unknown_relation", Failed, false, "Bu kimlikle bir ilişki yok.";
+    /// A new relation with the id of another.
+    RELATION_EXISTS = "relation_exists", Failed, false, "Bu kimlikle başka bir ilişki var.";
+    /// A 101st relation.
+    TOO_MANY_RELATIONS = "too_many_relations", Failed, false, "Projede en çok 100 ilişki olur.";
+    /// A relation's child field the child layer has not.
+    RELATION_FIELD_UNKNOWN = "relation_field_unknown", Failed, false, "İlişkinin alanı alt katmanda yok.";
+    /// A parent a `restrict` relation keeps from being deleted while it has children.
+    RELATION_RESTRICTED = "relation_restricted", Failed, false, "Nesnenin ilişkili alt kayıtları var; ilişki silinmesine izin vermiyor.";
     /// A release past the fiftieth: the oldest was dropped.
     FORM_RELEASE_DROPPED = "form_release_dropped", Warning, false, "Form en çok 50 yayın tutar; en eskisi kaldırıldı.";
     /// A moment that is not a date or a date and a local time (`cad.forms.validate`, `.submit`).

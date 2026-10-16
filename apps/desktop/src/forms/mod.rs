@@ -13,6 +13,7 @@
 pub mod designer;
 mod designer_view;
 pub mod entry;
+pub mod relations;
 
 use iced::Task;
 use kentos_contracts::{LayerField, ProjectForm};
@@ -22,7 +23,7 @@ use kentos_interaction::Level;
 use crate::app::{App, Message};
 
 /// The commands this module runs.
-pub const COMMANDS: [&str; 2] = ["data.forms", "data.formEdit"];
+pub const COMMANDS: [&str; 3] = ["data.forms", "data.formEdit", "data.relations"];
 
 /// The drawing tools whose one new object opens its layer's form (docs/adr/0403 §4); a copy, an
 /// array, a paste or an import does not.
@@ -59,6 +60,7 @@ impl App {
         match id {
             "data.forms" => self.open_forms(None),
             "data.formEdit" => return self.open_form_entry(),
+            "data.relations" => self.open_relations(),
             _ => {}
         }
         Task::none()

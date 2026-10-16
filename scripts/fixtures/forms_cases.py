@@ -2415,6 +2415,209 @@ def look_command_cases():
     return validate, submit, sets, fills
 
 
+# ── Relations (docs/adr/0405) ───────────────────────────────────────────
+
+REL_FIELDS = {"bina": [{"name": "Ad", "kind": "text"}],
+              "sayac": [{"name": "no", "kind": "text"}, {"name": "bina", "kind": "text"}],
+              "vana": [{"name": "no", "kind": "text"}, {"name": "sayac", "kind": "text"}],
+              "abone": [{"name": "ad", "kind": "text"}, {"name": "bina", "kind": "text"}]}
+# The objects: two buildings; meters of the first two and of the second one; valves of the meters; a subscriber.
+REL_OBJECTS = [(1, "bina", {"Ad": "A"}), (2, "bina", {"Ad": "B"}), (3, "sayac", {"no": "S-1"}), (4, "sayac", {"no": "S-2"}),
+               (5, "sayac", {"no": "S-3"}), (6, "vana", {"no": "V-1"}), (7, "vana", {"no": "V-2"}), (8, "abone", {"ad": "Ayşe"})]
+# Who refers to whom: a child, its field and its parent.
+REL_LINKS = [(3, "bina", 1), (4, "bina", 1), (5, "bina", 2), (6, "sayac", 3), (7, "sayac", 5), (8, "bina", 1)]
+REL_IDS = [o[0] for o in REL_OBJECTS]
+
+
+def relation(i, parent, child, field, on_delete=None, name=None):
+    r = {"id": i, "name": name or i, "parent": parent, "child": child, "field": field}
+    if on_delete and on_delete != "unlink":
+        r["onDelete"] = on_delete
+    return r
+
+
+def rel_setup(relations=(), locked=()):
+    layers = [layer(i, i.capitalize(), f, locked=i in locked) for i, f in REL_FIELDS.items()] + \
+        [layer("grup", "Grup", kind="group", children=[layer("alt", "Alt katman")])]
+    entities = [{"kind": "polygon", "id": i, "layerId": l, "attrs": a, "pts": square(12 * k, 0)}
+                for k, (i, l, a) in enumerate(REL_OBJECTS)]
+    settings = dict(SETTINGS)
+    if relations:
+        settings["relations"] = list(relations)
+    return {"format": "kentos.document", "version": 1, "name": "İlişkiler", "settings": settings, "origin": P(E0, N0),
+            "layers": layers, "activeLayer": "bina", "entities": entities, "styles": {"items": [], "categories": []}}
+
+
+def relations_edit_cases():
+    cases = []
+    base = [relation("bina-sayac", "bina", "sayac", "bina", name="Binanın sayaçları")]
+
+    def edited(name, edit, before=(), after=None, changed=True, op="execute", **more):
+        after = list(before) if after is None else after
+        inp = {"edit": edit, **more}
+        result = {"status": "completed", "output": {"relations": after, "changed": changed, "revision": "$current"},
+                  "warnings": []}
+        expect = {"ids": REL_IDS, "canUndo": False, "canRedo": False, "revision": "changed" if changed and op == "execute" else "same"}
+        if changed and op == "execute":
+            expect["dirty"] = True
+        cases.append({"name": name, "setup": rel_setup(before), "steps": [
+            {"op": op, "input": inp, "result": result, "expect": expect}]})
+
+    def refused(name, edit, result, before=(), **more):
+        cases.append({"name": name, "setup": rel_setup(before), "steps": [
+            {"op": "execute", "input": {"edit": edit, **more}, "result": result,
+             "expect": {"ids": REL_IDS, "canUndo": False, "canRedo": False, "revision": "same", "dirty": False}}]})
+
+    r = relation("bina-sayac", "bina", "sayac", "bina", name="Binanın sayaçları")
+    edited("ilişki oluşturulur; varsayılan politika unlink yazılmaz", {"kind": "create", "relation": r}, after=[r])
+    rc = relation("sayac-vana", "sayac", "vana", "sayac", "cascade", "Sayacın vanaları")
+    edited("bileşik ilişki: cascade", {"kind": "create", "relation": rc}, base, base + [rc])
+    rr = relation("bina-abone", "bina", "abone", "bina", "restrict", "Aboneler")
+    edited("restrict", {"kind": "create", "relation": rr}, base, base + [rr])
+    rk = relation("bina-abone", "bina", "abone", "bina", "keep", "Aboneler")
+    edited("keep", {"kind": "create", "relation": rk}, base, base + [rk])
+    rs = relation("sayac-ust", "sayac", "sayac", "no", name="Ana sayaç")
+    edited("katman kendisiyle ilişkilenebilir", {"kind": "create", "relation": rs}, base, base + [rs])
+    ru = {**base[0], "onDelete": "cascade", "name": "Sayaçlar"}
+    edited("ilişki değiştirilir", {"kind": "update", "relation": ru}, base, [ru])
+    edited("aynısıyla değiştirmek bir şey değiştirmez", {"kind": "update", "relation": base[0]}, base, base, False)
+    edited("ilişki silinir", {"kind": "remove", "id": "bina-sayac"}, base, [])
+    edited("plan yazmaz", {"kind": "create", "relation": rc}, base, base + [rc], op="plan")
+    refused("kimliği olan ilişki yeniden oluşturulmaz", {"kind": "create", "relation": base[0]},
+            failed("relation_exists", "“bina-sayac” kimlikli başka bir ilişki var. Başka bir kimlik verin.", "edit.relation.id"), base)
+    many = [relation(f"r{i}", "bina", "sayac", "bina") for i in range(100)]
+    refused("en çok 100 ilişki", {"kind": "create", "relation": rc},
+            failed("too_many_relations", "Projede en çok 100 ilişki olur. Kullanmadığınız birini silin.", "edit"), many)
+    refused("olmayan ilişki değiştirilmez", {"kind": "update", "relation": rc},
+            failed("unknown_relation", "“sayac-vana” kimlikli bir ilişki yok. Var olan bir ilişkinin kimliğini verin.", "edit.relation.id"), base)
+    refused("olmayan ilişki silinmez", {"kind": "remove", "id": "yok"},
+            failed("unknown_relation", "“yok” kimlikli bir ilişki yok. Var olan bir ilişkinin kimliğini verin.", "edit.id"), base)
+    refused("geçersiz kimlik", {"kind": "create", "relation": {**rc, "id": "a b"}}, failed("invalid_relation", ANY, "edit.relation"))
+    refused("boş ad", {"kind": "create", "relation": {**rc, "name": " "}}, failed("invalid_relation", ANY, "edit.relation"))
+    refused("alanı yazılmamış", {"kind": "create", "relation": {**rc, "field": ""}}, failed("invalid_relation", ANY, "edit.relation"))
+    refused("silinecek ilişkinin kimliği geçersiz", {"kind": "remove", "id": "a/b"}, failed("invalid_relation", ANY, "edit.id"))
+    refused("üst katman yok", {"kind": "create", "relation": {**rc, "parent": "yok"}},
+            failed("layer_not_found", "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "edit.relation.parent"))
+    refused("alt katman bir grup", {"kind": "create", "relation": {**rc, "child": "grup"}},
+            failed("not_a_layer", "“Grup” bir katman grubu; ilişki katmanlar arasında olur. Grubun içinden bir katman seçin.", "edit.relation.child"))
+    refused("alan alt katmanda yok", {"kind": "create", "relation": {**rc, "field": "bina"}},
+            failed("relation_field_unknown", "“Vana” katmanında “bina” alanı yok. Alt katmanın, üst nesnenin kimliğini tutacak alanını seçin.",
+                   "edit.relation.field"))
+    refused("beklenen sürüm: geçersiz", {"kind": "create", "relation": rc}, failed("invalid_revision", REVISION, "expectedRevision"),
+            expectedRevision="07")
+    refused("beklenen sürüm: çakışan", {"kind": "create", "relation": rc},
+            failed("revision_conflict", CONFLICT, "expectedRevision", "conflict"), expectedRevision="999")
+    return cases
+
+
+def delete_relation_cases():
+    """cad.entities.delete with the project's relations (docs/adr/0405 §2): the reference's own follow."""
+    cases = []
+    capture = [{"op": "captureUid", "id": i, "as": f"o{i}"} for i in REL_IDS]
+
+    def links(relations):
+        steps, state = [], {i: dict(a) for i, _, a in REL_OBJECTS}
+        for child, field, parent in REL_LINKS:
+            state[child][field] = f"$uid:o{parent}"
+            steps.append({"op": "execute", "command": "cad.entities.set",
+                          "input": {"uids": [f"$uid:o{child}"], "attrs": {field: f"$uid:o{parent}"}, "operation": "attributes"},
+                          "result": {"status": "completed", "output": {"changed": [f"$uid:o{child}"], "ids": [child],
+                                                                        "revision": "$current"}, "warnings": []},
+                          "expect": {"ids": REL_IDS, "canUndo": True, "canRedo": False, "dirty": True, "revision": "changed"}})
+        return steps, state
+
+    layer_of = {i: l for i, l, _ in REL_OBJECTS}
+
+    def follow(state, ids, relations, locked):
+        """The objects left and their attributes after deleting `ids` (each relation's policy)."""
+        gone, out = list(ids), {i: dict(a) for i, a in state.items() if i not in ids}
+        queue = list(ids)
+        while queue:
+            parent = queue.pop()
+            for r in relations:
+                pol = r.get("onDelete", "unlink")
+                if r["parent"] != layer_of[parent] or pol in ("keep", "restrict") or r["child"] in locked:
+                    continue
+                names = [f["name"] for f in REL_FIELDS[r["child"]] if f["name"] == r["field"]]
+                if not names:
+                    continue
+                for c in [c for c in out if layer_of[c] == r["child"] and out[c].get(names[0], "").strip() == f"$uid:o{parent}"]:
+                    if pol == "cascade":
+                        out.pop(c)
+                        gone.append(c)
+                        queue.append(c)
+                    else:
+                        out[c].pop(names[0])
+        return out
+
+    def restricted(state, ids, relations):
+        for k, i in enumerate(ids):
+            for r in relations:
+                if r["parent"] != layer_of[i] or r.get("onDelete") != "restrict":
+                    continue
+                if any(layer_of[c] == r["child"] and c not in ids and state[c].get(r["field"], "").strip() == f"$uid:o{i}"
+                       for c in state):
+                    return k, r["name"]
+        return None
+
+    def case(name, relations, ids, locked=(), undo=False, given=None):
+        steps, state = links(relations)
+        # A locked layer is locked after its links are written.
+        for lid in locked:
+            steps.append({"op": "execute", "command": "cad.layers.set",
+                          "input": {"operation": "locked", "layer": lid, "value": True},
+                          "result": {"status": "completed", "output": {"changed": True, "active": "bina", "revision": "$current"},
+                                     "warnings": []},
+                          "expect": {"ids": REL_IDS}})
+        given = given or ids
+        inp = {"uids": [f"$uid:o{i}" for i in given]}
+        stop = restricted(state, ids, relations)
+        if stop:
+            k, rname = stop
+            steps.append({"op": "execute", "input": inp,
+                          "result": failed("relation_restricted", f"“{rname}” ilişkisi alt kayıtları olan nesnenin silinmesine izin vermiyor. "
+                                                                    "Önce alt kayıtları silin ya da bağlarını koparın.", f"uids[{k}]"),
+                          "expect": {"ids": REL_IDS, "revision": "same"}})
+        else:
+            after = follow(state, ids, relations, locked)
+            steps.append({"op": "execute", "input": inp,
+                          "result": {"status": "completed", "output": {"removed": [f"$uid:o{i}" for i in ids], "locked": [],
+                                                                        "revision": "$current"}, "warnings": []},
+                          "expect": {"ids": sorted(after), "fields": {str(i): {"attrs": a} for i, a in after.items()},
+                                     "canUndo": True, "dirty": True, "revision": "changed"}})
+            if undo:
+                steps.append({"op": "undo", "expect": {"ids": REL_IDS,
+                                                        "fields": {str(i): {"attrs": a} for i, a in state.items()},
+                                                        "canRedo": True}})
+        cases.append({"name": name, "setup": rel_setup(relations), "steps": capture + steps})
+
+    R = lambda pol: relation("bina-sayac", "bina", "sayac", "bina", pol, "Binanın sayaçları")  # noqa: E731
+    V = lambda pol: relation("sayac-vana", "sayac", "vana", "sayac", pol, "Sayacın vanaları")  # noqa: E731
+    A = lambda pol: relation("bina-abone", "bina", "abone", "bina", pol, "Binanın aboneleri")  # noqa: E731
+    case("ilişkisiz silme yalnız nesneyi siler", [], [1])
+    case("unlink: binanın sayaçlarının alanı boşalır", [R("unlink")], [1])
+    case("unlink geri alınınca bağlar döner", [R("unlink")], [1], undo=True)
+    case("cascade: sayaçlar binayla silinir; vanaların bağı (unlink) boşalır", [R("cascade"), V("unlink")], [1])
+    case("cascade zinciri: bina, sayaçlar ve vanaları", [R("cascade"), V("cascade")], [1])
+    case("cascade zinciri geri alınınca hepsi döner", [R("cascade"), V("cascade")], [1], undo=True)
+    case("restrict: alt kaydı olan bina silinmez", [R("restrict")], [1])
+    case("restrict: alt kayıtları da silinen bina silinir", [R("restrict"), V("unlink")], [3, 4, 1])
+    case("restrict: girdideki ikinci nesne söylenir", [R("restrict")], [7, 2])
+    case("keep: bağ olduğu gibi kalır", [R("keep")], [1])
+    case("alt nesneyi silmek üst nesneyi değiştirmez", [R("cascade")], [3])
+    case("iki bina birden: bütün sayaçlar bağsız kalır", [R("unlink")], [1, 2])
+    case("bir binadan iki ilişki: sayaçlar bağsız, aboneler silinir", [R("unlink"), A("cascade")], [1])
+    case("kilitli alt katmandaki kayıtlar değişmez", [R("cascade")], [1], locked=("sayac",))
+    case("alanı alt katmanda olmayan ilişki bir şey yapmaz", [relation("bina-vana", "bina", "vana", "bina", "cascade")], [1])
+    case("restrict başka katmanın silinmesini durdurmaz", [A("restrict")], [3])
+    case("sayaç silinince vanası silinir, bina değişmez", [V("cascade")], [3])
+    case("cascade ve unlink zinciri geri alınır", [R("cascade"), V("unlink")], [1], undo=True)
+    case("ikinci binada restrict, ilk bina unlink ilişkisiyle", [R("restrict")], [2])
+    case("restrict ilişkisi zincirin altında: sayaç silinmez", [V("restrict")], [5])
+    case("abone cascade, sayaç keep", [R("keep"), A("cascade")], [1], undo=True)
+    return cases
+
+
 def commands():
     d = ROOT / "fixtures/commands/v1"
     look_v, look_s, look_set, look_fill = look_command_cases()
@@ -2440,6 +2643,14 @@ def commands():
             "cad.forms.fill", "Formla toplu yaz",
             "ADR 0403 §5: aynı değerler birden çok kayda formla yazılır; her kayıt kendi değerleri ve şekliyle denetlenir ve "
             "tamamlanır, biri geçmezse hiçbiri yazılmaz.", fill_cases() + look_fill),
+        d / "cad.relations.edit.json": command_file(
+            "cad.relations.edit", "İlişkiler",
+            "ADR 0405 §3: projenin ilişkileri; oluşturma, değiştirme, silme. Proje ayarıdır, geri alma adımı değildir.",
+            relations_edit_cases()),
+        d / "cad.entities.delete.relations.json": command_file(
+            "cad.entities.delete", "Silme ve ilişkiler",
+            "ADR 0405 §2: üst nesne silinince alt kayıtlar ilişkinin politikasıyla aynı adımda izler (unlink, cascade, keep); "
+            "restrict alt kaydı olan üst nesneyi silmez; kilitli katmandaki alt kayıt değişmez.", delete_relation_cases()),
         d / "cad.polygon.create.forms.json": {**command_file(
             "cad.polygon.create", "Alan çiz ve formun kuralları",
             "ADR 0402 §4: kurallarını uygulayan formun katmanına çizilen alan, aynı adımda formun varsayılanlarını ve "

@@ -369,6 +369,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.named_ucs.is_empty())
             + usize::from(!s.named_views.is_empty())
             + usize::from(!s.forms.is_empty())
+            + usize::from(!s.relations.is_empty())
             + usize::from(!s.line_types.is_empty())
             + usize::from(s.line_type_scale.is_some());
         self.open(n, true)?;
@@ -427,6 +428,17 @@ impl<'d> Encoder<'d> {
         }
         self.key("plotScale");
         self.at(Seg::Name("plotScale"), |e| e.float(s.plot_scale))?;
+        if !s.relations.is_empty() {
+            self.key("relations");
+            self.at(Seg::Name("relations"), |e| {
+                if let Some(problem) = kentos_contracts::relations_problem(&s.relations) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(&s.relations)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
+        }
         if !s.variables.is_empty() {
             self.key("variables");
             self.at(Seg::Name("variables"), |e| e.variables(&s.variables))?;

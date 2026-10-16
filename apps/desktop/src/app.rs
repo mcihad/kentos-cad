@@ -210,6 +210,8 @@ pub enum Dialog {
     Forms,
     /// Formla düzenle (forms/entry.rs, docs/adr/0401); the window is `App::form_entry`.
     FormEntry,
+    /// İlişkiler (forms/relations.rs, docs/adr/0405); the window is `App::relations_window`.
+    Relations,
     /// Yazı stilleri and Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5); the window is
     /// `App::annotation_styles`.
     AnnotationStyles,
@@ -452,6 +454,8 @@ pub enum Message {
     Views(crate::views::Event),
     /// Formlar's window (forms/designer.rs, docs/adr/0401).
     Forms(crate::forms::designer::Event),
+    /// An event of İlişkiler (forms/relations.rs, docs/adr/0405).
+    Relations(crate::forms::relations::Event),
     /// Formla düzenle (forms/entry.rs, docs/adr/0401).
     FormEntry(crate::forms::entry::Event),
     /// An event of Formlar's preview (forms/entry.rs, docs/adr/0403 §3).
@@ -880,6 +884,8 @@ pub struct App {
     pub(crate) forms_window: Option<crate::forms::designer::Window>,
     /// Formla düzenle (forms/entry.rs, docs/adr/0401).
     pub(crate) form_entry: Option<crate::forms::entry::Entry>,
+    /// İlişkiler (forms/relations.rs, docs/adr/0405).
+    pub(crate) relations_window: Option<crate::forms::relations::Window>,
     /// What the session remembers of the forms: the "reuse last" values (forms/entry.rs, docs/adr/0402 §7).
     pub(crate) form_memory: crate::forms::entry::Memory,
     /// Formlar's preview of its copy (forms/entry.rs, docs/adr/0403 §3).
@@ -1180,6 +1186,7 @@ impl App {
             views_window: None,
             forms_window: None,
             form_entry: None,
+            relations_window: None,
             form_memory: Default::default(),
             form_preview: None,
             form_on_create: None,
@@ -1709,6 +1716,7 @@ impl App {
             Message::LayerStates(event) => return self.layer_states_event(event),
             Message::Views(event) => return self.views_event(event),
             Message::Forms(event) => return self.forms_event(event),
+            Message::Relations(event) => return self.relations_event(event),
             Message::FormEntry(event) => return self.form_entry_event(event),
             Message::FormPreview(event) => return self.form_preview_event(event),
             Message::AnnotationStyles(event) => return self.annotation_styles_event(event),

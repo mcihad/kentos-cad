@@ -291,6 +291,13 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ProjectForm>>", optional))]
     pub forms: Vec<crate::ProjectForm>,
+    /// The project's relations (docs/adr/0405 §1).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::ProjectRelation>>", optional)
+    )]
+    pub relations: Vec<crate::ProjectRelation>,
     /// How lengths are written (docs/adr/0262 §2): none, decimal; the others
     /// only in an inch or foot drawing.
     #[serde(default, skip_serializing_if = "Option::is_none")]

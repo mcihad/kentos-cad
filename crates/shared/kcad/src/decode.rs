@@ -446,6 +446,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let (mut ucs, mut named_ucs) = (None, Vec::new());
     let mut named_views = Vec::new();
     let mut forms = Vec::new();
+    let mut relations = Vec::new();
     let mut length_style = None;
     let (mut text_styles, mut dimension_styles) = (Vec::new(), Vec::new());
     let (mut workspace, mut drawing_font, mut area_decimals, mut length_decimals) =
@@ -503,6 +504,39 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }
                 forms = list;
+            }
+            // Schema 60 (docs/adr/0405 §1): the project's relations, read whole and checked.
+            "relations" if has.forms => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let list: Vec<kentos_contracts::ProjectRelation> =
+                    serde_json::from_value(value.clone()).map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(code, at, &format!("ilişkiler okunamadı: {words}"))
+                    })?;
+                if serde_json::to_value(&list).ok().as_ref() != Some(&value) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "ilişkiler yazıcının biçiminde değil (varsayılan değerinde bir alan yazılmış)",
+                    ));
+                }
+                if list.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boş liste yazılmaz; ilişki yoksa alan hiç yazılmaz",
+                    ));
+                }
+                if let Some(problem) = kentos_contracts::relations_problem(&list) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                relations = list;
             }
             // Schema 56 (docs/adr/0313 §1): the project's line types and line type scale.
             "lineTypes" if has.patterns => {
@@ -700,6 +734,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         named_ucs,
         named_views,
         forms,
+        relations,
         length_style,
     })
 }

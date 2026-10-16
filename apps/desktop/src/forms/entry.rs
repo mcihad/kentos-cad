@@ -172,6 +172,10 @@ pub enum Event {
     OpenRelated(String),
     /// A related object, or the one a reference names, is shown in the drawing.
     ShowObject(String),
+    /// A related item's object linked to the record, or its link to it broken (docs/adr/0405 §4):
+    /// the item and the object.
+    Link(String, String),
+    Unlink(String, String),
     FirstIssue,
     Save,
     Cancel,
@@ -679,6 +683,93 @@ impl App {
         }
     }
 
+    /// A related item's object linked to the record (its field takes the record's id) or unlinked (its
+    /// field emptied), through `cad.entities.set` (the object's own form's rules hold); the window's
+    /// lists follow, its values stay.
+    fn link_related(&mut self, item: &str, uid: &str, link: bool) -> Task<Message> {
+        let Some(e) = self.form_entry.as_ref() else {
+            return Task::none();
+        };
+        let Some(FormItem::Related { layer, field, .. }) =
+            crate::forms::designer::find(&e.body.items, item).cloned()
+        else {
+            return Task::none();
+        };
+        let record = e.uid.clone();
+        let Some(name) = self
+            .layer_fields_of(&layer)
+            .iter()
+            .find(|f| f.key() == field)
+            .map(|f| f.name.clone())
+        else {
+            return Task::none();
+        };
+        let value = link.then_some(record);
+        let input = serde_json::json!({
+            "uids": [uid],
+            "attrs": { name: value },
+            "operation": "attributes",
+        });
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let answer = kentos_native_application::registry::run(
+            &mut ExecutionContext::new(&mut doc.model),
+            kentos_contracts::CAD_ENTITIES_SET,
+            kentos_contracts::CallOp::Execute,
+            input,
+        );
+        let refused = match answer {
+            Ok(v) if v["status"] == "completed" => None,
+            Ok(v) => Some(v["error"]["message"].as_str().unwrap_or("").to_owned()),
+            Err(e) => Some(format!("{e:?}")),
+        };
+        if let Some(why) = refused {
+            self.say(Level::Warn, why);
+            return Task::none();
+        }
+        self.say(
+            Level::Success,
+            if link {
+                "Nesne kayda bağlandı."
+            } else {
+                "Nesnenin kayda bağı koparıldı."
+            },
+        );
+        self.refresh_entry()
+    }
+
+    /// The window's record prepared again (another object changed): the values typed stay, the
+    /// drawing's revision is the new one.
+    fn refresh_entry(&mut self) -> Task<Message> {
+        let Some(e) = self.form_entry.as_ref() else {
+            return Task::none();
+        };
+        let (form, uid, draft) = (e.form.clone(), e.uid.clone(), e.draft);
+        let (moment, user) = (e.moment.clone(), e.user.clone());
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
+        let Ok(screen) = record_screen(
+            &doc.model,
+            &form,
+            &uid,
+            draft,
+            moment.as_deref(),
+            user.as_deref(),
+        ) else {
+            return Task::none();
+        };
+        let revision = doc.model.revision().to_string();
+        if let (Some(e), Some(doc)) = (self.form_entry.as_mut(), self.document.as_ref()) {
+            e.screen = screen;
+            e.revision = revision;
+            e.unique_asked.clear();
+            e.recompute(&doc.model);
+        }
+        Task::none()
+    }
+
     /// A related object's form, when the record shown has nothing unsaved.
     fn open_related(&mut self, uid: &str) -> Task<Message> {
         if self.form_entry.as_ref().is_some_and(Entry::dirty) {
@@ -760,6 +851,8 @@ impl App {
             }
             Event::Tab(i) => e.tab = i,
             Event::OpenRelated(uid) => return self.open_related(&uid),
+            Event::Link(item, uid) => return self.link_related(&item, &uid, true),
+            Event::Unlink(item, uid) => return self.link_related(&item, &uid, false),
             Event::ShowObject(uid) => {
                 let slot = kentos_domain::Uuid::parse_str(&uid)
                     .ok()
@@ -1315,6 +1408,41 @@ impl App {
             col = col.push(label::caption("Bu kayda başvuran nesne yok.").style(muted));
         }
         let doc = self.document.as_ref();
+        let live = !e.preview && !e.uid.is_empty();
+        // The other layer's objects not yet linked to the record, to link one (docs/adr/0405 §4).
+        let candidates: Vec<(String, String)> =
+            match (doc, crate::forms::designer::find(&e.body.items, id)) {
+                (Some(d), Some(FormItem::Related { layer, field, .. })) if live => {
+                    let node = d.model.layers().get(layer);
+                    let name = node
+                        .and_then(|n| n.fields.iter().find(|f| f.key() == field))
+                        .map(|f| f.name.clone())
+                        .unwrap_or_default();
+                    d.model
+                        .by_layer_with_uids(layer)
+                        .filter(|(u, x)| {
+                            !uids.contains(&u.to_string())
+                                && x.base().attrs.get(&name).is_none_or(|v| v.trim() != e.uid)
+                        })
+                        .take(200)
+                        .map(|(u, x)| {
+                            let first = node.and_then(|n| {
+                                n.fields.iter().find_map(|f| {
+                                    x.base().attrs.get(&f.name).filter(|v| !v.is_empty())
+                                })
+                            });
+                            let words = x
+                                .base()
+                                .label
+                                .clone()
+                                .or_else(|| first.cloned())
+                                .unwrap_or_else(|| u.to_string().chars().take(8).collect());
+                            (u.to_string(), words)
+                        })
+                        .collect()
+                }
+                _ => Vec::new(),
+            };
         for uid in uids.iter().take(50) {
             let words = doc
                 .and_then(|d| {
@@ -1340,11 +1468,14 @@ impl App {
                     }))
                 })
                 .unwrap_or_else(|| uid.clone());
-            let live = !e.preview;
             col = col.push(
                 row![
                     label::body(words).width(Fill),
                     words::ghost("Git", live.then(|| e.msg(Event::ShowObject(uid.clone())))),
+                    words::ghost(
+                        "Bağı kopar",
+                        live.then(|| e.msg(Event::Unlink(id.to_owned(), uid.clone())))
+                    ),
                     words::secondary("Aç", live.then(|| e.msg(Event::OpenRelated(uid.clone())))),
                 ]
                 .spacing(6)
@@ -1353,6 +1484,18 @@ impl App {
         }
         if uids.len() > 50 {
             col = col.push(label::caption(format!("{} nesne daha.", uids.len() - 50)).style(muted));
+        }
+        if !candidates.is_empty() {
+            let item = id.to_owned();
+            let picks = candidates.clone();
+            col = col.push(
+                Select::new(
+                    candidates.iter().map(|(_, w)| Choice::new(w.clone())),
+                    None,
+                    move |i| Message::FormEntry(Event::Link(item.clone(), picks[i].0.clone())),
+                )
+                .placeholder("Bağla: bağsız bir nesne seçin"),
+            );
         }
         container(col)
             .padding(10)

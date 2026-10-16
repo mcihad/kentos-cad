@@ -188,6 +188,9 @@ Liste:
   katmanın izlemesi (`form_follow.rs`'in kuralı, `cad.polygon.create.forms.json` ve `cad.entities.set.forms.json` durumları);
   Formla düzenle'de hesaplanan alanların kilidi, süzülen listeler, sarı uyarı, kapalı grup, son değer; tasarımcının yeni
   denetçi satırları; kapalı girişin soluk görünüşü ve `Form`'un uyarı satırı web'in form bileşenlerinde.
+- [ ] `FORM-I` ilişkiler (ADR 0405, 16 Ekim): web'de gerekenler: ayarların `relations`'ı (`.kcad` şema 60), `cad.relations.edit`
+  ve `cad.entities.delete`'in `relation_restricted`'ının TS işleyicileri (`cad.relations.edit.json`,
+  `cad.entities.delete.relations.json`), web belgesinde silme politikasının izlenmesi, İlişkiler penceresi, Bağla ve Bağı kopar.
 - [ ] `FORM-H` başka katmandan liste ve ilişkili kayıtlar (ADR 0404, 16 Ekim): web'de gerekenler: sözleşmenin `lookup`'ı,
   `related` öğesi, durumun `options` ve `related`'ı (TS türleri üretildi); WASM'daki form çekirdeğine öbür katmanların
   verisi (`World`); Formla düzenle'nin listeleri ve ilişkili kayıtlar kutusu, tasarımcının liste denetçisi.
@@ -1419,8 +1422,10 @@ burada aşamaları izlenir.
 - [x] `FORM-H` Başka katmandan seçenek listesi (QGIS'in Value Relation'ı: anahtar, etiket, zincirleme il → ilçe → mahalle,
   ifadeyle süzgeç), ilişki başvurusu (`$uid`), formun içinde ilişkili kayıtlar (Aç, Git); bütün yazma yollarında aynı.
   — **16 Ekim, [ADR 0404](docs/adr/0404-form-lookups-and-related-records.md).**
-- [ ] `FORM-I` İlişkiler ve ana–ayrıntı (`relations/1`): kalıcı ilişki tanımı (1:N, N:M bağlantı tablosu), silme politikası,
-  formun içinde alt kayıt ekleme ve bağlama, geometrisiz tablo katmanı.
+- [x] `FORM-I` İlişkiler: kalıcı 1:N ilişki tanımı (`relations`, `cad.relations.edit`), silme politikası (unlink, cascade,
+  restrict, keep) bütün silme yollarında, İlişkiler penceresi, formda Bağla ve Bağı kopar. — **16 Ekim,
+  [ADR 0405](docs/adr/0405-relations.md).**
+- [ ] `FORM-J` N:M bağlantı tablosu, geometrisiz tablo katmanı, formun içinden yeni alt kayıt.
 - [ ] `FORM-F` Merkezi yayın ve izinler (FM2, plan `FORM-FIRST-14`–`17`): bulutta form taslağı, yayın ve dağıtım kaynakları,
   `forms.design`, `forms.publish`, `forms.use` izinleri, sunucunun yazma bekçisi bütün yollarda.
 

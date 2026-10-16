@@ -13,7 +13,9 @@
 //! 1. at least one id; every id lowercase UUID text with hyphens (in order);
 //! 2. the expected revision (every command's, `checks.rs`);
 //! 3. every id names an object of the document (in order);
-//! 4. not every object on a locked layer.
+//! 4. not every object on a locked layer;
+//! 5. no object a `restrict` relation keeps while it has children (`relation_restricted` at its
+//!    place in `uids`, docs/adr/0405 §2). The others' children follow in the document's step.
 //!
 //! Ids are checked before the document is read, and the revision before the
 //! objects: an input that is wrong by itself is refused whatever the drawing
@@ -129,6 +131,22 @@ fn check(doc: &Document, input: &EntitiesDelete) -> Result<Checked, Stop> {
             codes::LAYER_LOCKED,
             message(),
             Some("uids".into()),
+        )));
+    }
+    // A parent a `restrict` relation keeps while it has children (docs/adr/0405 §2).
+    let going: Vec<kentos_domain::Uuid> = removed
+        .iter()
+        .filter_map(|(_, uid)| kentos_domain::Uuid::parse_str(uid).ok())
+        .collect();
+    if let Some((parent, relation)) = doc.restricted_by(&going).into_iter().next() {
+        let text = parent.to_string();
+        let at = input.uids.iter().position(|u| *u == text).unwrap_or(0);
+        return Err(Stop::failed(checks::error(
+            codes::RELATION_RESTRICTED,
+            format!(
+                "“{relation}” ilişkisi alt kayıtları olan nesnenin silinmesine izin vermiyor. Önce alt kayıtları silin ya da bağlarını koparın."
+            ),
+            Some(format!("uids[{at}]")),
         )));
     }
     let mut warnings = Vec::new();

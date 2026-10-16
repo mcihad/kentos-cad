@@ -961,3 +961,99 @@ mod tests {
         assert_eq!(back, f);
     }
 }
+
+/// What happens to a relation's child records when their parent is deleted (docs/adr/0405 §1).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum RelationDelete {
+    /// The link stays as it is: a reference to a deleted object.
+    Keep,
+    /// The child's field is emptied.
+    #[default]
+    Unlink,
+    /// The children are deleted with their parent (a composition).
+    Cascade,
+    /// A parent with children is not deleted (`relation_restricted`).
+    Restrict,
+}
+
+impl RelationDelete {
+    fn is_default(&self) -> bool {
+        *self == RelationDelete::Unlink
+    }
+}
+
+/// A relation of the project (docs/adr/0405 §1): the child layer's field holds the parent object's
+/// persistent id.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProjectRelation {
+    /// Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.
+    pub id: String,
+    pub name: String,
+    /// The parent layer's id.
+    pub parent: String,
+    /// The child layer's id.
+    pub child: String,
+    /// The child field's key that holds the parent's persistent id.
+    pub field: String,
+    /// Written only when not `unlink`.
+    #[serde(default, skip_serializing_if = "RelationDelete::is_default")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<RelationDelete>", optional))]
+    pub on_delete: RelationDelete,
+}
+
+/// The most relations a project holds.
+pub const MOST_RELATIONS: usize = 100;
+
+/// What is wrong with a project's relations by their shape, for a reader (KCAD, the server); none when
+/// they hold: at most 100, ids and names that hold, ids unique, the layers and the field written.
+pub fn relations_problem(relations: &[ProjectRelation]) -> Option<String> {
+    if relations.len() > MOST_RELATIONS {
+        return Some(format!(
+            "Projede en çok {MOST_RELATIONS} ilişki olur; {} var.",
+            relations.len()
+        ));
+    }
+    for (i, r) in relations.iter().enumerate() {
+        if let Some(p) = relation_problem(r) {
+            return Some(p);
+        }
+        if relations[..i].iter().any(|o| o.id == r.id) {
+            return Some(format!("“{}” kimlikli iki ilişki var.", r.id));
+        }
+    }
+    None
+}
+
+/// What is wrong with one relation by its shape.
+pub fn relation_problem(r: &ProjectRelation) -> Option<String> {
+    if !form_id_ok(&r.id) {
+        return Some(format!(
+            "“{}” bir ilişki kimliği olamaz: 1–64 harf, rakam, “-”, “_” ya da “.” olur.",
+            r.id
+        ));
+    }
+    if !form_name_ok(&r.name) {
+        return Some(format!(
+            "“{}” ilişkisinin adı boş olamaz, en çok {MOST_FORM_NAME} karakterdir ve boşlukla başlayıp bitmez.",
+            r.id
+        ));
+    }
+    if [&r.parent, &r.child, &r.field]
+        .iter()
+        .any(|t| t.trim().is_empty() || t.chars().count() > MOST_FORM_NAME)
+    {
+        return Some(format!(
+            "“{}” ilişkisinin üst ve alt katmanı ve alanı yazılmalı, en çok {MOST_FORM_NAME} karakterdir.",
+            r.name
+        ));
+    }
+    None
+}

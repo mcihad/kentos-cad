@@ -1157,6 +1157,13 @@
         "cad.forms.validate"
       ],
       "note": "Kayıt cad.forms.submit ile, birden çok kayıt cad.forms.fill ile tek adımda yazılır; pencerenin canlı denetimi cad.forms.validate'in çekirdeğidir (ADR 0401, 0403)."
+    },
+    "data.relations": {
+      "level": "semantic",
+      "via": [
+        "cad.relations.edit"
+      ],
+      "note": "İlişkiler projenin ayarıdır, cad.relations.edit ile yazılır; silme politikasını belge izler (ADR 0405)."
     }
   },
   "tools": {

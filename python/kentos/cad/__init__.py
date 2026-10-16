@@ -30,7 +30,7 @@ from .errors import *  # noqa: F403
 from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 
-from . import addresses, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, file, forms, labels, layers, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, rectangle, scenarios, settings, sheets, snap, standards, styles, ucs, units, views  # noqa: E402  isort: skip
+from . import addresses, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, file, forms, labels, layers, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, rectangle, relations, scenarios, settings, sheets, snap, standards, styles, ucs, units, views  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -216,6 +216,7 @@ __all__ = [
     "CreateFormsOp",
     "CreateOperation",
     "CreateOperationName",
+    "CreateRelationsOp",
     "CrossingSelectRegion",
     "CrsBase",
     "CrsDefinition",
@@ -732,6 +733,7 @@ __all__ = [
     "ProjectPurge",
     "ProjectPurged",
     "ProjectRef",
+    "ProjectRelation",
     "ProjectRename",
     "ProjectRole",
     "ProjectRoleName",
@@ -776,11 +778,17 @@ __all__ = [
     "RegularFrame",
     "RegularPolygonCreate",
     "RelatedFormItem",
+    "RelationDelete",
+    "RelationDeleteName",
+    "RelationsEdit",
+    "RelationsEdited",
+    "RelationsOp",
     "RemoveArrayEdit",
     "RemoveControlCurveEdit",
     "RemoveEntityEdit",
     "RemoveFitCurveEdit",
     "RemoveFormsOp",
+    "RemoveRelationsOp",
     "RenameFormsOp",
     "RenameViewsOp",
     "RenamedBlock",
@@ -941,6 +949,7 @@ __all__ = [
     "UpdateEntityEdit",
     "UpdateFeatureChange",
     "UpdateFormsOp",
+    "UpdateRelationsOp",
     "VariableKind",
     "VariableKindName",
     "VariableValue",
@@ -992,6 +1001,7 @@ __all__ = [
     "polyline",
     "project",
     "rectangle",
+    "relations",
     "scenarios",
     "settings",
     "sheets",

@@ -1170,6 +1170,22 @@
    "tests": 0
   },
   {
+   "id": "data.relations",
+   "kind": "command",
+   "title": "İlişkiler…",
+   "level": "semantic",
+   "via": [
+    "cad.relations.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.relations.edit",
+   "mcp": "cad.relations.edit",
+   "note": "İlişkiler projenin ayarıdır, cad.relations.edit ile yazılır; silme politikasını belge izler (ADR 0405).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "data.search",
    "kind": "command",
    "title": "Veride ara",
