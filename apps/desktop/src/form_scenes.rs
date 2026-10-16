@@ -591,6 +591,49 @@ fn duplicated(app: &mut App) {
     let _ = app.update(Message::Run("data.featureTable"));
 }
 
+/// A building whose height is calculated from its floors and may be typed over (docs/adr/0417): its
+/// form open, the height typed over.
+fn overridable_height(app: &mut App) {
+    let mut o = Objects::new();
+    let id = o.path(
+        "bina",
+        &[[0.0, 0.0], [18.0, 0.0], [18.0, 14.0], [0.0, 14.0]],
+        true,
+    );
+    o.data(id, &[("Kod", "B-1"), ("Kat", "3")], Some("B-1"));
+    let form = published(
+        "yukseklik",
+        "Bina yüksekliği",
+        "bina",
+        json!([
+            { "type": "field", "id": "kod", "field": "Kod" },
+            { "type": "field", "id": "kat", "field": "Kat" },
+            { "type": "field", "id": "yukseklik", "field": "Yükseklik", "calculate": "Kat * 3", "overridable": true }
+        ]),
+    );
+    open_edited(app, o, move |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut bina = crate::tools_scenes::layer("bina", "Bina", "#3E63DD", 0.35);
+        bina["fields"] = json!([{ "name": "Kod", "kind": "text" }, { "name": "Kat", "kind": "integer" },
+                                { "name": "Yükseklik", "kind": "decimal", "scale": 1 }]);
+        layers.push(bina);
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("bina");
+        d["settings"]["forms"] = json!([form]);
+    });
+    app.selection.set([Slot(1)]);
+    run(app, "data.formEdit");
+}
+
+/// The height typed over: ↺ beside it gives it back to the calculation.
+fn overridden_height(app: &mut App) {
+    overridable_height(app);
+    let _ = app.update(Message::FormEntry(entry::Event::Value(
+        "Yükseklik".into(),
+        "10.5".into(),
+    )));
+}
+
 /// The owners' table (docs/adr/0410 §4): records without a geometry in the Tablo tab.
 fn owner_table(app: &mut App) {
     owners(app);
@@ -1139,6 +1182,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-cogalt", duplicated),
         ("form-gorunumu", form_view),
         ("form-baglar", designer_links),
+        ("form-hesap-degistir", overridden_height),
     ]
 }
 
@@ -1201,6 +1245,54 @@ mod tests {
         let undone = app.document.as_mut().unwrap().model.undo();
         assert_eq!(undone.as_deref(), Some("Koşullu biçim"));
         assert_eq!(rules(&app).len(), 4, "one step undoes it");
+    }
+
+    #[test]
+    fn an_overridable_calculation_follows_until_typed_over() {
+        let mut app = crate::files_testing::app_with_drawing();
+        overridable_height(&mut app);
+        let value =
+            |app: &App, name: &str| app.form_entry.as_ref().and_then(|e| e.after_value(name));
+        let typed = |app: &mut App, key: &str, text: &str| {
+            let _ = app.update(Message::FormEntry(entry::Event::Value(
+                key.into(),
+                text.into(),
+            )));
+        };
+        assert_eq!(
+            value(&app, "Yükseklik").as_deref(),
+            Some("9"),
+            "empty: calculated"
+        );
+        typed(&mut app, "Kat", "4");
+        assert_eq!(
+            value(&app, "Yükseklik").as_deref(),
+            Some("12"),
+            "it follows its inputs"
+        );
+        typed(&mut app, "Yükseklik", "10.5");
+        typed(&mut app, "Kat", "5");
+        assert_eq!(
+            value(&app, "Yükseklik").as_deref(),
+            Some("10.5"),
+            "typed over: kept"
+        );
+        let _ = app.update(Message::FormEntry(entry::Event::Save));
+        assert_eq!(
+            attrs(&app, 1).get("Yükseklik").map(String::as_str),
+            Some("10.5")
+        );
+        // Opened again it does not follow; ↺ gives it back to its calculation.
+        run(&mut app, "data.formEdit");
+        typed(&mut app, "Kat", "6");
+        assert_eq!(value(&app, "Yükseklik").as_deref(), Some("10.5"));
+        typed(&mut app, "Yükseklik", "");
+        assert_eq!(value(&app, "Yükseklik").as_deref(), Some("18"));
+        let _ = app.update(Message::FormEntry(entry::Event::Save));
+        assert_eq!(
+            attrs(&app, 1).get("Yükseklik").map(String::as_str),
+            Some("18")
+        );
     }
 
     #[test]

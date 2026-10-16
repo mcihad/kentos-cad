@@ -327,6 +327,12 @@ pub struct FormField {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub reuse_last: bool,
+    /// The calculation may be overridden (docs/adr/0417): it fills the field while the field is
+    /// empty, the field stays open to typing, and emptying it calculates it again. Only with
+    /// `calculate`; written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub overridable: bool,
     /// The layer's values of the field offered while typing, the value staying free (docs/adr/0407
     /// §3): text fields without a list; written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -364,6 +370,7 @@ impl FormField {
             choice_filter: None,
             unique: false,
             reuse_last: false,
+            overridable: false,
             suggest: false,
             lookup: None,
             checks: Vec::new(),

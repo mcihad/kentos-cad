@@ -130,6 +130,9 @@ pub struct Entry {
     /// The record's place among the layer's records and their count (docs/adr/0408 §3); none in
     /// the preview and with many records.
     place: Option<(usize, usize)>,
+    /// The overridable calculations (docs/adr/0417) that follow their inputs in this window: empty
+    /// or holding their calculation's value when it opened, and not typed into since.
+    follows: BTreeSet<String>,
 }
 
 /// A record of the many-record mode.
@@ -238,11 +241,32 @@ impl fmt::Display for Opt<'_> {
 }
 
 impl Entry {
-    /// The values typed, as a write gives them.
+    /// A field's value as the record would hold it now.
+    #[cfg(test)]
+    pub(crate) fn after_value(&self, name: &str) -> Option<String> {
+        self.after.get(name).cloned()
+    }
+
+    /// Whether the field's item is an overridable calculation (docs/adr/0417).
+    fn overridable(&self, key: &str) -> bool {
+        self.body
+            .fields()
+            .iter()
+            .any(|f| f.field == key && f.overridable && f.calculate.is_some())
+    }
+
+    /// The values typed, as a write gives them; an overridable calculation that follows its inputs
+    /// is given empty, so that it is worked out again.
     fn written(&self) -> Vec<(String, String)> {
         self.values
             .iter()
             .map(|(k, v)| (k.clone(), v.clone()))
+            .chain(
+                self.follows
+                    .iter()
+                    .filter(|k| !self.values.contains_key(*k))
+                    .map(|k| (k.clone(), String::new())),
+            )
             .collect()
     }
 
@@ -640,6 +664,7 @@ impl App {
             mixed: BTreeSet::new(),
             suggestions: BTreeMap::new(),
             place: None,
+            follows: BTreeSet::new(),
         };
         if let (Some(doc), false) = (&self.document, preview) {
             let mut at = None;
@@ -660,6 +685,34 @@ impl App {
             )
             .into_iter()
             .collect();
+        }
+        // An overridable calculation follows while it is empty or holds what its calculation gives.
+        let overridable: Vec<(String, String)> = entry
+            .body
+            .fields()
+            .into_iter()
+            .filter(|f| f.overridable && f.calculate.is_some())
+            .filter_map(|f| {
+                let name = entry
+                    .fields
+                    .iter()
+                    .find(|x| x.key() == f.field)?
+                    .name
+                    .clone();
+                Some((f.field.clone(), name))
+            })
+            .collect();
+        for (key, name) in overridable {
+            let mut emptied = entry.before.clone();
+            let held = emptied.remove(&name);
+            let (worked, _) =
+                entry
+                    .screen
+                    .prepared
+                    .complete(&emptied, &entry.screen.object, entry.new_record);
+            if held.is_none() || held == worked.get(&name).cloned() {
+                entry.follows.insert(key);
+            }
         }
         if let Some(doc) = &self.document {
             entry.recompute(&doc.model);
@@ -1022,6 +1075,14 @@ impl App {
                     *content = text_editor::Content::with_text(&text);
                 }
                 e.touched.insert(key.clone());
+                // Typing over an overridable calculation keeps the value; emptying it follows again.
+                if e.overridable(&key) {
+                    if text.is_empty() {
+                        e.follows.insert(key.clone());
+                    } else {
+                        e.follows.remove(&key);
+                    }
+                }
                 // Many records: emptying a field they had no one value in leaves it as it was.
                 let untouched = !e.members.is_empty()
                     && text.is_empty()
@@ -1183,10 +1244,11 @@ impl App {
         if !e.members.is_empty() {
             return self.save_many();
         }
-        // Only what changed goes in; a new record's defaults with it.
+        // Only what changed goes in; a new record's defaults with it; a following overridable
+        // calculation goes in empty, to be worked out again (docs/adr/0417).
         let values: BTreeMap<String, String> = e
-            .values
-            .iter()
+            .written()
+            .into_iter()
             .filter(|(k, _)| {
                 let name = e
                     .fields
@@ -1195,7 +1257,6 @@ impl App {
                     .map(|f| f.name.clone());
                 name.is_some_and(|n| e.after.get(&n) != e.before.get(&n))
             })
-            .map(|(k, v)| (k.clone(), v.clone()))
             .collect();
         let input = FormsSubmit {
             form: e.form.clone(),
@@ -1699,6 +1760,30 @@ impl App {
                     let read_only = locked || state.is_some_and(|s| s.read_only);
                     let words = f.label.clone().unwrap_or_else(|| field.label().to_owned());
                     let control = entry_control(e, f, field, read_only);
+                    // An overridable calculation typed over: ↺ gives it back to its calculation.
+                    let control: Element<'a, Message> = if f.overridable
+                        && f.calculate.is_some()
+                        && !read_only
+                        && !e.follows.contains(&f.field)
+                    {
+                        let back = kentos_ui::widget::tip(
+                            iced::widget::button(icon(Icon::Undo).size(12.0))
+                                .padding([4, 6])
+                                .style(style::button::tool(false))
+                                .on_press(e.msg(Event::Value(f.field.clone(), String::new()))),
+                            kentos_ui::widget::Tip::new("Hesaba dön")
+                                .body("Yazılan değer bırakılır, alan yeniden hesaplanır"),
+                            iced::widget::tooltip::Position::Top,
+                        );
+                        Row::new()
+                            .spacing(4)
+                            .align_y(Center)
+                            .push(container(control).width(Fill))
+                            .push(back)
+                            .into()
+                    } else {
+                        control
+                    };
                     form = form.field(words, control);
                     if state.is_some_and(|s| s.required) {
                         form = form.required();
@@ -1712,7 +1797,11 @@ impl App {
                             if let Some(help) = &f.help {
                                 form = form.help(help.clone());
                             } else if let Some(calc) = &f.calculate {
-                                form = form.help(format!("Hesaplanır: {calc}"));
+                                form = form.help(if f.overridable {
+                                    format!("Boşken hesaplanır: {calc}; üzerine yazılabilir")
+                                } else {
+                                    format!("Hesaplanır: {calc}")
+                                });
                             }
                         }
                     }

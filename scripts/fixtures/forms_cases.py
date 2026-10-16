@@ -441,6 +441,8 @@ def preflight(body, fields, variables=(), world=None):
             issues.append(issue("form_rule_conflict", True, f["id"], key, "defaultExpr"))
         if "calculate" in f and ("default" in f or "defaultExpr" in f or "readOnlyWhen" in f):
             issues.append(issue("form_rule_conflict", True, f["id"], key, "calculate"))
+        if f.get("overridable") and "calculate" not in f:
+            issues.append(issue("form_rule_conflict", True, f["id"], key, "overridable"))
         if "choiceFilter" in f and not layer.get("values"):
             issues.append(issue("form_choice_unlisted", True, f["id"], key, "choiceFilter"))
         if "lookup" in f:
@@ -651,7 +653,8 @@ class Form:
         return [(x, p) for x, p in self.nodes if x["type"] == "field"]
 
     def calculated(self, key):
-        return any(x["field"] == key and "calculate" in x for x, _ in self.bound())
+        """Calculated and locked: an overridable calculation (docs/adr/0417) leaves the field open."""
+        return any(x["field"] == key and "calculate" in x and not x.get("overridable") for x, _ in self.bound())
 
     def states(self, attrs, obj=None):
         shown, out = [], []
@@ -665,7 +668,7 @@ class Form:
                 if here and (x.get("required") or f.get("required")
                              or ("requiredWhen" in x and holds(x["requiredWhen"], self.fields, attrs, self.ctx(obj)))):
                     state["required"] = True
-                if x.get("readOnly") or "calculate" in x or (
+                if x.get("readOnly") or ("calculate" in x and not x.get("overridable")) or (
                         "readOnlyWhen" in x and holds(x["readOnlyWhen"], self.fields, attrs, self.ctx(obj))):
                     state["readOnly"] = True
             out.append(state)
@@ -737,6 +740,9 @@ class Form:
                 if self.waits(x["calculate"]):
                     continue
                 f = self.layer(x)
+                # An overridable calculation fills the field only while it is empty.
+                if x.get("overridable") and out.get(f["name"]):
+                    continue
                 text = text_for(value_of(x["calculate"], self.fields, out, self.ctx(obj)), f)
                 if text is None:
                     out.pop(f["name"], None)
@@ -1341,6 +1347,8 @@ def calc_cases():
              {"type": "note", "id": "acik", "text": "Toplam {Kat"}, {"type": "note", "id": "bozuk", "text": "{Kat +}"}])))
     case("zorunlu, salt okunur ve hesaplanan alan doldurulur: sorun değil",
          calc_with(lambda b: item(b, "yukseklik").update(required=True, readOnly=True)))
+    case("değiştirilebilir hesap ancak hesapla olur", calc_with(lambda b: item(b, "kod").update(overridable=True)))
+    case("değiştirilebilir hesap salt okunur sayılmaz: sorun yok", calc_with(lambda b: item(b, "yukseklik").update(overridable=True)))
     case("katmanın zorunlu alanı hesaplanırsa hep yazılır sayılır",
          calc_with(lambda b: item(b, "kod").update(calculate="'B-' || Kat", defaultExpr=None) or item(b, "kod").pop("defaultExpr")),
          fields=[{**f, "required": True} if f["name"] == "Kod" else f for f in CALC_FIELDS])
@@ -1368,6 +1376,10 @@ def calc_cases():
     done("gizlenenler silinir: Durum iyi olunca açıklama gider",
          {"Durum": "iyi", "Kat": "2", "Açıklama": "Eski not, uzunca bir not."},
          body=calc_with(lambda b: b.update(clearHidden=True)))
+    over = calc_with(lambda b: item(b, "yukseklik").update(overridable=True))
+    done("değiştirilebilir hesap: boş alan hesapla dolar", {"Durum": "iyi", "Kat": "3"}, body=over)
+    done("değiştirilebilir hesap: yazılmış değer kalır, öbür hesaplar yenilenir",
+         {"Durum": "iyi", "Kat": "4", "Yükseklik": "10", "Puan": "1"}, body=over)
     done("gizlenen grubun hesabı yapılmaz ve silinir",
          {"Durum": "iyi", "Kat": "2", "Yükseklik": "6"},
          body=calc_with(lambda b: (b.update(clearHidden=True), item(b, "hesap").update(visibleWhen="Durum = 'inceleme'"))))
@@ -1387,6 +1399,8 @@ def calc_cases():
     record("uyarı denetimi kaydı durdurmaz; sert denetim durdurur",
            {"Durum": "inceleme", "Kat": "3", "Açıklama": "Çatı"})
     record("yalnız uyarı", {"Durum": "inceleme", "Kat": "3", "Açıklama": "Çatı arası bakılmalı."})
+    record("değiştirilebilir hesap açıktır; öbür hesaplar salt okunur",
+           {"Durum": "iyi", "Kat": "3", "Yükseklik": "10"}, body=calc_with(lambda b: item(b, "yukseklik").update(overridable=True)))
 
     assess = []
 
@@ -1405,17 +1419,22 @@ def calc_cases():
           {**base, "Durum": "inceleme", "Açıklama": "Eski not, uzunca bir not."},
           [["Durum", "iyi"], ["Açıklama", "Yeni not, gene uzun bir not."]], body=calc_with(lambda b: b.update(clearHidden=True)))
     write("uyarı yazmayı durdurmaz", {**base, "Durum": "inceleme"}, [["Açıklama", "Kısa not"]])
+    over = calc_with(lambda b: item(b, "yukseklik").update(overridable=True))
+    write("değiştirilebilir hesaba başka değer yazılır", base, [["Yükseklik", "10"]], body=over)
+    write("değiştirilebilir hesap boşaltılınca yeniden hesaplanır", {**base, "Yükseklik": "10"}, [["Yükseklik", ""]], body=over)
+    write("kat değişince yazılmış değer kalır", {**base, "Yükseklik": "10"}, [["kat-sayisi", "8"]], body=over)
 
     enforce = []
 
-    def guard(name, before, after, variables=GIVEN, obj=SQUARE):
-        enforce.append({"name": name, "fields": CALC_FIELDS, "body": CALC_BODY, "variables": list(variables), "object": obj,
+    def guard(name, before, after, variables=GIVEN, obj=SQUARE, body=CALC_BODY):
+        enforce.append({"name": name, "fields": CALC_FIELDS, "body": body, "variables": list(variables), "object": obj,
                         "before": before, "after": after,
-                        "issues": Form(CALC_BODY, CALC_FIELDS, variables).enforce(before, after, obj)})
+                        "issues": Form(body, CALC_FIELDS, variables).enforce(before, after, obj)})
 
     guard("başka yoldan kat değişir: hesaplar kendiliğinden, sorun yok", base, {**base, "Kat": "4"})
     guard("başka yoldan hesaplanan alan değişmez", base, {**base, "Yükseklik": "99"})
     guard("başka yoldan süzgecin sunmadığı malzeme", {**base, "Tür": "sanayi"}, {**base, "Tür": "sanayi", "Malzeme": "tas"})
+    guard("başka yoldan değiştirilebilir hesap değişir: sorun yok", base, {**base, "Yükseklik": "99"}, body=over)
 
     unique = []
     others = [{"Kod": "B-1"}, {"Kod": "B-2", "Kat": "2"}, {}]

@@ -312,6 +312,16 @@ impl Preflight<'_> {
                 ),
             ));
         }
+        if f.overridable && f.calculate.is_none() {
+            self.issues.push(at(
+                codes::RULE_CONFLICT,
+                Some("overridable"),
+                format!(
+                    "“{}” alanının hesabı yok; değiştirilebilir hesap ancak hesapla olur.",
+                    layer.label()
+                ),
+            ));
+        }
         if f.choice_filter.is_some() && layer.values.as_ref().is_none_or(|v| v.is_empty()) {
             self.issues.push(at(
                 codes::CHOICE_UNLISTED,

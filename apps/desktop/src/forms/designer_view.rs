@@ -773,6 +773,12 @@ impl App {
                         f.calculate.as_deref().unwrap_or(""),
                         "Yok: değeri elle yazılır",
                     ))
+                    .push(words::check(
+                        f.overridable,
+                        "Değiştirilebilir: hesap boş alanı doldurur, yazılan değer kalır",
+                        (f.calculate.is_some() || f.overridable)
+                            .then(|| msg(Event::Overridable(!f.overridable))),
+                    ))
                     .push(rule_row(
                         "Görünürlük",
                         Rule::Visible(id.clone()),

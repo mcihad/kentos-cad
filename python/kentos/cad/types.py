@@ -26428,6 +26428,9 @@ class FieldFormItem(FormItem):
         label: The label; none: the field's alias or name.
         lookup: The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or
             `choiceFilter`.
+        overridable: The calculation may be overridden (docs/adr/0417): it fills the field while the field is
+            empty, the field stays open to typing, and emptying it calculates it again. Only with
+            `calculate`; written only as `true`.
         placeholder: The empty box's hint.
         read_only: Shown, never edited; written only as `true`.
         read_only_when: Locked when this expression is true.
@@ -26453,6 +26456,7 @@ class FieldFormItem(FormItem):
     help: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     lookup: FormLookup | None | Unset = UNSET
+    overridable: bool | Unset = UNSET
     placeholder: str | None | Unset = UNSET
     read_only: bool | Unset = UNSET
     read_only_when: str | None | Unset = UNSET
@@ -26484,6 +26488,8 @@ class FieldFormItem(FormItem):
             out["label"] = self.label
         if self.lookup is not UNSET:
             out["lookup"] = None if self.lookup is None else self.lookup.to_json()
+        if self.overridable is not UNSET:
+            out["overridable"] = self.overridable
         if self.placeholder is not UNSET:
             out["placeholder"] = self.placeholder
         if self.read_only is not UNSET:
@@ -26519,6 +26525,7 @@ class FieldFormItem(FormItem):
             help=data.get("help", UNSET),
             label=data.get("label", UNSET),
             lookup=UNSET if "lookup" not in data else None if data["lookup"] is None else FormLookup.from_json(data["lookup"]),
+            overridable=data.get("overridable", UNSET),
             placeholder=data.get("placeholder", UNSET),
             read_only=data.get("readOnly", UNSET),
             read_only_when=data.get("readOnlyWhen", UNSET),

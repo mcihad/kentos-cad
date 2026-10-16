@@ -3356,6 +3356,7 @@ class _Schema:
                     "choiceFilter": (self.text, False),
                     "unique": (true_, False),
                     "reuseLast": (true_, False),
+                    "overridable": (true_, False),
                     "suggest": (true_, False),
                     "lookup": (lookup, False),
                     "checks": (nonempty(self.array(check)), False),

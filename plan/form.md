@@ -413,10 +413,10 @@ QGIS ilişkili child form gösterimi ve reference widget desteğine sahiptir. Ar
 - [ ] **FORM-RULE-05:** Field-level, cross-field, cross-record, relation/cardinality, geometry/topology ve workflow validation farklı scope'larla tanımlansın.
 - [x] **FORM-RULE-06:** Error/warning/info; stable code, field/widget/record path, source ve mesaj parametreleri taşısın. — *Yapıldı (16 Ekim; ADR 0401 §4, ADR 0402 (uyarı denetimi)).*
 - [ ] **FORM-RULE-07:** Validate-on-change/blur/save/submit politikaları olsun; hesap sonucu authoritative commit validation'ı azaltmasın.
-- [ ] **FORM-RULE-08:** Computed field; pure computed/read-only, persisted computed veya user-overridable modunu açık taşısın.
+- [x] **FORM-RULE-08:** Computed field; pure computed/read-only, persisted computed veya user-overridable modunu açık taşısın. — *Yapıldı (16 Ekim; ADR 0417: kilitli hesap ve değiştirilebilir hesap (`overridable`); saf hesap olmayan kalıcı alan).*
 - [ ] **FORM-RULE-09:** Recompute trigger; source değişimi, related count/aggregate, geometry, subtype/domain ve lookup revision üzerinden dependency graph'ta izlesin.
 - [ ] **FORM-RULE-10:** Kurallar belirsiz async lookup sonucu beklerken “geçerli” sayılmasın; pending/blocked durumları ve timeout politikası olsun.
-- [ ] **FORM-RULE-11:** Calculated ve user-entered değerin çakışması merge/reset politikasıyla görünür olsun; geç ağ cevabı kullanıcının yeni değerini ezmesin.
+- [x] **FORM-RULE-11:** Calculated ve user-entered değerin çakışması merge/reset politikasıyla görünür olsun; geç ağ cevabı kullanıcının yeni değerini ezmesin. — *Yapıldı (16 Ekim; ADR 0417: yazılan değer hesabı ezmez, ↺ ile hesaba dönülür; geç ağ cevabı yok, hesap yereldir).*
 - [ ] **FORM-RULE-12:** Rule engine offline/native/web/server'da null, boolean, decimal, date/timezone ve comparison bakımından aynı çalışsın.
 - [x] **FORM-RULE-13:** Sunucu authoritative rule/data profile'ı seçsin; client başka form/version ID vererek mandatory kuralı atlayamasın. — *Yapıldı (16 Ekim; ADR 0401 §8).*
 - [x] **FORM-RULE-14:** JSON patch hedefleri field IDs ve record refs ile whitelist'li olsun; UI hidden/read-only alanlarına forged write reddedilsin. — *Yapıldı (16 Ekim; ADR 0401 §6, §8).*

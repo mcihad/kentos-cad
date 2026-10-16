@@ -82,6 +82,12 @@ unique?: boolean,
  */
 reuseLast?: boolean, 
 /**
+ * The calculation may be overridden (docs/adr/0417): it fills the field while the field is
+ * empty, the field stays open to typing, and emptying it calculates it again. Only with
+ * `calculate`; written only as `true`.
+ */
+overridable?: boolean, 
+/**
  * The layer's values of the field offered while typing, the value staying free (docs/adr/0407
  * §3): text fields without a list; written only as `true`.
  */

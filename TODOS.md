@@ -194,6 +194,8 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-Y` değiştirilebilir hesap (ADR 0417, 16 Ekim): web'de gerekenler: form öğesinin `overridable`'ı (TS türü üretildi), web'in
+  form çekirdeğinin aynı anlamı (`fixtures/forms/v1/cases.json`), formda ↺ ve izleme, tasarımcıda Değiştirilebilir.
 - [ ] `FORM-W` Öznitelik tablosunda form görünümü (ADR 0416, 16 Ekim): web'de gerekenler: tablonun Tablo | Form seçimi, kayıt listesi ve
   panele gömülü form (Formla düzenle'nin kuralıyla, Kaydet formu tutar).
 - [ ] `FORM-V` kaydı çoğaltma (ADR 0415, 16 Ekim): web'de gerekenler: `cad.records.duplicate`'in TS işleyicisi
@@ -1480,6 +1482,8 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-Y` Değiştirilebilir hesap: boşken hesaplanır, yazılan değer kalır, boşaltılınca yeniden hesaplanır; formda izleme ve ↺. —
+  **16 Ekim, [ADR 0417](docs/adr/0417-overridable-calculations.md).**
 - [x] `FORM-X` Tasarımcıda Bağlar: seçili alanın kurallarının okuduğu alanlar ve alanı okuyan kurallar. — **16 Ekim, ADR 0414 §5.**
 - [x] `FORM-W` Öznitelik tablosunda form görünümü: Tablo | Form, kayıt listesi ve gömülü form; Kaydet formu aynı kayıtta tutar. —
   **16 Ekim, [ADR 0416](docs/adr/0416-form-view-in-attribute-table.md).**

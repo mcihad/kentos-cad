@@ -204,7 +204,7 @@ impl Prepared {
                             .as_ref()
                             .is_some_and(|e| holds(e, attrs, object)));
                 let read_only = b.item.read_only
-                    || b.calculate.is_some()
+                    || (b.calculate.is_some() && !b.item.overridable)
                     || b.read_only_when
                         .as_ref()
                         .is_some_and(|e| holds(e, attrs, object));
@@ -403,6 +403,10 @@ impl Prepared {
             return;
         }
         let field = &self.fields[b.index];
+        // An overridable calculation fills the field only while it is empty (docs/adr/0417).
+        if b.item.overridable && out.get(&field.name).is_some_and(|v| !v.is_empty()) {
+            return;
+        }
         let Some(text) = field_text_of(e, out, object) else {
             out.remove(&field.name);
             return;
@@ -810,9 +814,10 @@ impl Prepared {
             .filter_map(|n| n.field.as_ref().map(|b| (n, b)))
     }
 
+    /// Whether the field is calculated and locked (an overridable calculation leaves it open).
     fn calculated(&self, index: usize) -> bool {
         self.bound()
-            .any(|(_, b)| b.index == index && b.calculate.is_some())
+            .any(|(_, b)| b.index == index && b.calculate.is_some() && !b.item.overridable)
     }
 
     fn item_of(&self, index: usize) -> Option<&str> {

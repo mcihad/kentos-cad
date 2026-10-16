@@ -207,6 +207,8 @@ pub enum Event {
     ReadOnly(bool),
     /// A field's value is not repeated on the layer.
     Unique(bool),
+    /// The calculation may be typed over (docs/adr/0417).
+    Overridable(bool),
     /// A new record starts with the session's last value.
     ReuseLast(bool),
     /// A check's failure is a warning, not an error.
@@ -1026,6 +1028,15 @@ impl App {
                     edited(&mut w, &|b| {
                         if let Some(FormItem::Field(f)) = find_mut(&mut b.items, &id) {
                             f.unique = on;
+                        }
+                    });
+                }
+            }
+            Event::Overridable(on) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Field(f)) = find_mut(&mut b.items, &id) {
+                            f.overridable = on;
                         }
                     });
                 }

@@ -3915,6 +3915,10 @@
                     ],
                     "description": "The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or\n`choiceFilter`."
                   },
+                  "overridable": {
+                    "description": "The calculation may be overridden (docs/adr/0417): it fills the field while the field is\nempty, the field stays open to typing, and emptying it calculates it again. Only with\n`calculate`; written only as `true`.",
+                    "type": "boolean"
+                  },
                   "placeholder": {
                     "description": "The empty box's hint.",
                     "type": [
@@ -13826,6 +13830,10 @@
                     ],
                     "description": "The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or\n`choiceFilter`."
                   },
+                  "overridable": {
+                    "description": "The calculation may be overridden (docs/adr/0417): it fills the field while the field is\nempty, the field stays open to typing, and emptying it calculates it again. Only with\n`calculate`; written only as `true`.",
+                    "type": "boolean"
+                  },
                   "placeholder": {
                     "description": "The empty box's hint.",
                     "type": [
@@ -21686,6 +21694,10 @@
                       }
                     ],
                     "description": "The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or\n`choiceFilter`."
+                  },
+                  "overridable": {
+                    "description": "The calculation may be overridden (docs/adr/0417): it fills the field while the field is\nempty, the field stays open to typing, and emptying it calculates it again. Only with\n`calculate`; written only as `true`.",
+                    "type": "boolean"
                   },
                   "placeholder": {
                     "description": "The empty box's hint.",
@@ -333774,6 +333786,10 @@
                     ],
                     "description": "The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or\n`choiceFilter`."
                   },
+                  "overridable": {
+                    "description": "The calculation may be overridden (docs/adr/0417): it fills the field while the field is\nempty, the field stays open to typing, and emptying it calculates it again. Only with\n`calculate`; written only as `true`.",
+                    "type": "boolean"
+                  },
                   "placeholder": {
                     "description": "The empty box's hint.",
                     "type": [
@@ -334520,6 +334536,10 @@
                       }
                     ],
                     "description": "The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or\n`choiceFilter`."
+                  },
+                  "overridable": {
+                    "description": "The calculation may be overridden (docs/adr/0417): it fills the field while the field is\nempty, the field stays open to typing, and emptying it calculates it again. Only with\n`calculate`; written only as `true`.",
+                    "type": "boolean"
                   },
                   "placeholder": {
                     "description": "The empty box's hint.",
@@ -335268,6 +335288,10 @@
                       }
                     ],
                     "description": "The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or\n`choiceFilter`."
+                  },
+                  "overridable": {
+                    "description": "The calculation may be overridden (docs/adr/0417): it fills the field while the field is\nempty, the field stays open to typing, and emptying it calculates it again. Only with\n`calculate`; written only as `true`.",
+                    "type": "boolean"
                   },
                   "placeholder": {
                     "description": "The empty box's hint.",
