@@ -765,15 +765,51 @@
                 ],
                 "description": "Where `p` is on the text, as a text's (docs/adr/0145)."
               },
+              "boxWidth": {
+                "description": "A multiline attribute's box width, metres in the definition's size.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "constant": {
+                "description": "Its value is the definition's `value` in every insert; an insert holds none of its own (bit 2).",
+                "type": "boolean"
+              },
+              "field": {
+                "description": "A field (docs/adr/0317 §1): a template whose `{ifade}` parts are filled for each insert (its attributes, its\nplace, the project's `@` values); the commands that place, sync and update fields write it as the value.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "height": {
                 "description": "Metres, in the definition's size.",
                 "format": "double",
                 "type": "number",
                 "x-unit": "length"
               },
+              "invisible": {
+                "description": "Not drawn: its value is kept, listed and scheduled (DXF 70 bit 1).",
+                "type": "boolean"
+              },
+              "movable": {
+                "description": "An insert may move its text (`attributePlaces`); off: locked where the definition puts it (bit 16 set).",
+                "type": "boolean"
+              },
+              "multiline": {
+                "description": "Its value may hold line breaks, each a line; wrapped to `boxWidth` when given (an MTEXT attribute).",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "x-unit": "length"
+              },
+              "preset": {
+                "description": "Blok ekle takes its default without asking (bit 8).",
+                "type": "boolean"
               },
               "prompt": {
                 "description": "What Blok ekle asks for it.",
@@ -797,6 +833,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "verify": {
+                "description": "Blok ekle asks for it twice, the two the same (bit 4).",
+                "type": "boolean"
               },
               "widthFactor": {
                 "description": "The letters' width times this, as a text's (docs/adr/0145).",
@@ -883,6 +923,36 @@
             ],
             "type": "string"
           },
+          "BlockCard": {
+            "description": "A block's library card (docs/adr/0317 §4): what the Bloklar panel's cards and search show beside its name, its\ndescription, its size and its attributes.",
+            "properties": {
+              "category": {
+                "description": "A path of categories by `/` (`Mimari/Kapılar`); absent: none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tags": {
+                "description": "Words it is found by, each once, Turkish case folded.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "version": {
+                "description": "How many times its definition has changed since it was made: 1 when made; each change of its objects, base,\nattributes or unit adds one.",
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "version"
+            ],
+            "type": "object"
+          },
           "BlockChange": {
             "description": "A change of one block definition. An update replaces it whole and a\ndelete removes it, each guarded by `expectedVersions[\"block:<id>\"]`.",
             "oneOf": [
@@ -951,6 +1021,17 @@
                 "$ref": "#/$defs/Vec2",
                 "description": "The point placed at an insert's `p`, in the definition's coordinates.",
                 "x-unit": "length"
+              },
+              "card": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/BlockCard"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its library card (docs/adr/0317 §4): category, tags and version."
               },
               "description": {
                 "type": [
@@ -3875,6 +3956,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -16314,15 +16403,51 @@
                 ],
                 "description": "Where `p` is on the text, as a text's (docs/adr/0145)."
               },
+              "boxWidth": {
+                "description": "A multiline attribute's box width, metres in the definition's size.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "constant": {
+                "description": "Its value is the definition's `value` in every insert; an insert holds none of its own (bit 2).",
+                "type": "boolean"
+              },
+              "field": {
+                "description": "A field (docs/adr/0317 §1): a template whose `{ifade}` parts are filled for each insert (its attributes, its\nplace, the project's `@` values); the commands that place, sync and update fields write it as the value.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "height": {
                 "description": "Metres, in the definition's size.",
                 "format": "double",
                 "type": "number",
                 "x-unit": "length"
               },
+              "invisible": {
+                "description": "Not drawn: its value is kept, listed and scheduled (DXF 70 bit 1).",
+                "type": "boolean"
+              },
+              "movable": {
+                "description": "An insert may move its text (`attributePlaces`); off: locked where the definition puts it (bit 16 set).",
+                "type": "boolean"
+              },
+              "multiline": {
+                "description": "Its value may hold line breaks, each a line; wrapped to `boxWidth` when given (an MTEXT attribute).",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "x-unit": "length"
+              },
+              "preset": {
+                "description": "Blok ekle takes its default without asking (bit 8).",
+                "type": "boolean"
               },
               "prompt": {
                 "description": "What Blok ekle asks for it.",
@@ -16346,6 +16471,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "verify": {
+                "description": "Blok ekle asks for it twice, the two the same (bit 4).",
+                "type": "boolean"
               },
               "widthFactor": {
                 "description": "The letters' width times this, as a text's (docs/adr/0145).",
@@ -16432,6 +16561,36 @@
             ],
             "type": "string"
           },
+          "BlockCard": {
+            "description": "A block's library card (docs/adr/0317 §4): what the Bloklar panel's cards and search show beside its name, its\ndescription, its size and its attributes.",
+            "properties": {
+              "category": {
+                "description": "A path of categories by `/` (`Mimari/Kapılar`); absent: none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tags": {
+                "description": "Words it is found by, each once, Turkish case folded.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "version": {
+                "description": "How many times its definition has changed since it was made: 1 when made; each change of its objects, base,\nattributes or unit adds one.",
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "version"
+            ],
+            "type": "object"
+          },
           "BlockDefinition": {
             "description": "A block definition (docs/adr/0144): objects drawn once, placed many\ntimes. Its objects' ids are local to it, once each and kept by every edit\nof it, so a reference to a piece follows it (docs/adr/0315 §1). An object\non the block's layer (`\"\"`, the DXF's layer 0) is drawn on its insert's\nlayer; one on a layer of its own shows only while that layer does\n(docs/adr/0315 §2). A part of its look it has is its own, a `byLayer` part\nits layer's (its insert's layer on the block's layer), any other part its\ninsert's (BYBLOCK).",
             "properties": {
@@ -16446,6 +16605,17 @@
                 "$ref": "#/$defs/Vec2",
                 "description": "The point placed at an insert's `p`, in the definition's coordinates.",
                 "x-unit": "length"
+              },
+              "card": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/BlockCard"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its library card (docs/adr/0317 §4): category, tags and version."
               },
               "description": {
                 "type": [
@@ -19351,6 +19521,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -33878,6 +34056,14 @@
                 },
                 "type": "array"
               },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -39715,6 +39901,14 @@
                 },
                 "type": "array"
               },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -45530,6 +45724,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -51506,6 +51708,14 @@
                 },
                 "type": "array"
               },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -57284,6 +57494,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -63077,6 +63295,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -69168,6 +69394,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -78421,6 +78655,14 @@
                 },
                 "type": "array"
               },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -84409,6 +84651,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -90491,6 +90741,14 @@
                 },
                 "type": "array"
               },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -96293,6 +96551,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -102354,6 +102620,14 @@
                 },
                 "type": "array"
               },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -108170,6 +108444,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -114069,6 +114351,14 @@
                 },
                 "type": "array"
               },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -117815,15 +118105,51 @@
                 ],
                 "description": "Where `p` is on the text, as a text's (docs/adr/0145)."
               },
+              "boxWidth": {
+                "description": "A multiline attribute's box width, metres in the definition's size.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "constant": {
+                "description": "Its value is the definition's `value` in every insert; an insert holds none of its own (bit 2).",
+                "type": "boolean"
+              },
+              "field": {
+                "description": "A field (docs/adr/0317 §1): a template whose `{ifade}` parts are filled for each insert (its attributes, its\nplace, the project's `@` values); the commands that place, sync and update fields write it as the value.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "height": {
                 "description": "Metres, in the definition's size.",
                 "format": "double",
                 "type": "number",
                 "x-unit": "length"
               },
+              "invisible": {
+                "description": "Not drawn: its value is kept, listed and scheduled (DXF 70 bit 1).",
+                "type": "boolean"
+              },
+              "movable": {
+                "description": "An insert may move its text (`attributePlaces`); off: locked where the definition puts it (bit 16 set).",
+                "type": "boolean"
+              },
+              "multiline": {
+                "description": "Its value may hold line breaks, each a line; wrapped to `boxWidth` when given (an MTEXT attribute).",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "x-unit": "length"
+              },
+              "preset": {
+                "description": "Blok ekle takes its default without asking (bit 8).",
+                "type": "boolean"
               },
               "prompt": {
                 "description": "What Blok ekle asks for it.",
@@ -117847,6 +118173,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "verify": {
+                "description": "Blok ekle asks for it twice, the two the same (bit 4).",
+                "type": "boolean"
               },
               "widthFactor": {
                 "description": "The letters' width times this, as a text's (docs/adr/0145).",
@@ -117887,6 +118217,36 @@
             ],
             "type": "string"
           },
+          "BlockCard": {
+            "description": "A block's library card (docs/adr/0317 §4): what the Bloklar panel's cards and search show beside its name, its\ndescription, its size and its attributes.",
+            "properties": {
+              "category": {
+                "description": "A path of categories by `/` (`Mimari/Kapılar`); absent: none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tags": {
+                "description": "Words it is found by, each once, Turkish case folded.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "version": {
+                "description": "How many times its definition has changed since it was made: 1 when made; each change of its objects, base,\nattributes or unit adds one.",
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "version"
+            ],
+            "type": "object"
+          },
           "BlockDefinition": {
             "description": "A block definition (docs/adr/0144): objects drawn once, placed many\ntimes. Its objects' ids are local to it, once each and kept by every edit\nof it, so a reference to a piece follows it (docs/adr/0315 §1). An object\non the block's layer (`\"\"`, the DXF's layer 0) is drawn on its insert's\nlayer; one on a layer of its own shows only while that layer does\n(docs/adr/0315 §2). A part of its look it has is its own, a `byLayer` part\nits layer's (its insert's layer on the block's layer), any other part its\ninsert's (BYBLOCK).",
             "properties": {
@@ -117901,6 +118261,17 @@
                 "$ref": "#/$defs/Vec2",
                 "description": "The point placed at an insert's `p`, in the definition's coordinates.",
                 "x-unit": "length"
+              },
+              "card": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/BlockCard"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its library card (docs/adr/0317 §4): category, tags and version."
               },
               "description": {
                 "type": [
@@ -120322,6 +120693,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -125687,15 +126066,51 @@
                 ],
                 "description": "Where `p` is on the text, as a text's (docs/adr/0145)."
               },
+              "boxWidth": {
+                "description": "A multiline attribute's box width, metres in the definition's size.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "constant": {
+                "description": "Its value is the definition's `value` in every insert; an insert holds none of its own (bit 2).",
+                "type": "boolean"
+              },
+              "field": {
+                "description": "A field (docs/adr/0317 §1): a template whose `{ifade}` parts are filled for each insert (its attributes, its\nplace, the project's `@` values); the commands that place, sync and update fields write it as the value.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "height": {
                 "description": "Metres, in the definition's size.",
                 "format": "double",
                 "type": "number",
                 "x-unit": "length"
               },
+              "invisible": {
+                "description": "Not drawn: its value is kept, listed and scheduled (DXF 70 bit 1).",
+                "type": "boolean"
+              },
+              "movable": {
+                "description": "An insert may move its text (`attributePlaces`); off: locked where the definition puts it (bit 16 set).",
+                "type": "boolean"
+              },
+              "multiline": {
+                "description": "Its value may hold line breaks, each a line; wrapped to `boxWidth` when given (an MTEXT attribute).",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "x-unit": "length"
+              },
+              "preset": {
+                "description": "Blok ekle takes its default without asking (bit 8).",
+                "type": "boolean"
               },
               "prompt": {
                 "description": "What Blok ekle asks for it.",
@@ -125719,6 +126134,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "verify": {
+                "description": "Blok ekle asks for it twice, the two the same (bit 4).",
+                "type": "boolean"
               },
               "widthFactor": {
                 "description": "The letters' width times this, as a text's (docs/adr/0145).",
@@ -125759,6 +126178,36 @@
             ],
             "type": "string"
           },
+          "BlockCard": {
+            "description": "A block's library card (docs/adr/0317 §4): what the Bloklar panel's cards and search show beside its name, its\ndescription, its size and its attributes.",
+            "properties": {
+              "category": {
+                "description": "A path of categories by `/` (`Mimari/Kapılar`); absent: none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tags": {
+                "description": "Words it is found by, each once, Turkish case folded.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "version": {
+                "description": "How many times its definition has changed since it was made: 1 when made; each change of its objects, base,\nattributes or unit adds one.",
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "version"
+            ],
+            "type": "object"
+          },
           "BlockDefinition": {
             "description": "A block definition (docs/adr/0144): objects drawn once, placed many\ntimes. Its objects' ids are local to it, once each and kept by every edit\nof it, so a reference to a piece follows it (docs/adr/0315 §1). An object\non the block's layer (`\"\"`, the DXF's layer 0) is drawn on its insert's\nlayer; one on a layer of its own shows only while that layer does\n(docs/adr/0315 §2). A part of its look it has is its own, a `byLayer` part\nits layer's (its insert's layer on the block's layer), any other part its\ninsert's (BYBLOCK).",
             "properties": {
@@ -125773,6 +126222,17 @@
                 "$ref": "#/$defs/Vec2",
                 "description": "The point placed at an insert's `p`, in the definition's coordinates.",
                 "x-unit": "length"
+              },
+              "card": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/BlockCard"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its library card (docs/adr/0317 §4): category, tags and version."
               },
               "description": {
                 "type": [
@@ -128194,6 +128654,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -133600,15 +134068,51 @@
                 ],
                 "description": "Where `p` is on the text, as a text's (docs/adr/0145)."
               },
+              "boxWidth": {
+                "description": "A multiline attribute's box width, metres in the definition's size.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "constant": {
+                "description": "Its value is the definition's `value` in every insert; an insert holds none of its own (bit 2).",
+                "type": "boolean"
+              },
+              "field": {
+                "description": "A field (docs/adr/0317 §1): a template whose `{ifade}` parts are filled for each insert (its attributes, its\nplace, the project's `@` values); the commands that place, sync and update fields write it as the value.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "height": {
                 "description": "Metres, in the definition's size.",
                 "format": "double",
                 "type": "number",
                 "x-unit": "length"
               },
+              "invisible": {
+                "description": "Not drawn: its value is kept, listed and scheduled (DXF 70 bit 1).",
+                "type": "boolean"
+              },
+              "movable": {
+                "description": "An insert may move its text (`attributePlaces`); off: locked where the definition puts it (bit 16 set).",
+                "type": "boolean"
+              },
+              "multiline": {
+                "description": "Its value may hold line breaks, each a line; wrapped to `boxWidth` when given (an MTEXT attribute).",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "x-unit": "length"
+              },
+              "preset": {
+                "description": "Blok ekle takes its default without asking (bit 8).",
+                "type": "boolean"
               },
               "prompt": {
                 "description": "What Blok ekle asks for it.",
@@ -133632,6 +134136,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "verify": {
+                "description": "Blok ekle asks for it twice, the two the same (bit 4).",
+                "type": "boolean"
               },
               "widthFactor": {
                 "description": "The letters' width times this, as a text's (docs/adr/0145).",
@@ -133672,6 +134180,36 @@
             ],
             "type": "string"
           },
+          "BlockCard": {
+            "description": "A block's library card (docs/adr/0317 §4): what the Bloklar panel's cards and search show beside its name, its\ndescription, its size and its attributes.",
+            "properties": {
+              "category": {
+                "description": "A path of categories by `/` (`Mimari/Kapılar`); absent: none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tags": {
+                "description": "Words it is found by, each once, Turkish case folded.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "version": {
+                "description": "How many times its definition has changed since it was made: 1 when made; each change of its objects, base,\nattributes or unit adds one.",
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "version"
+            ],
+            "type": "object"
+          },
           "BlockDefinition": {
             "description": "A block definition (docs/adr/0144): objects drawn once, placed many\ntimes. Its objects' ids are local to it, once each and kept by every edit\nof it, so a reference to a piece follows it (docs/adr/0315 §1). An object\non the block's layer (`\"\"`, the DXF's layer 0) is drawn on its insert's\nlayer; one on a layer of its own shows only while that layer does\n(docs/adr/0315 §2). A part of its look it has is its own, a `byLayer` part\nits layer's (its insert's layer on the block's layer), any other part its\ninsert's (BYBLOCK).",
             "properties": {
@@ -133686,6 +134224,17 @@
                 "$ref": "#/$defs/Vec2",
                 "description": "The point placed at an insert's `p`, in the definition's coordinates.",
                 "x-unit": "length"
+              },
+              "card": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/BlockCard"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its library card (docs/adr/0317 §4): category, tags and version."
               },
               "description": {
                 "type": [
@@ -136189,6 +136738,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -143547,6 +144104,14 @@
                 },
                 "type": "array"
               },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -149763,6 +150328,14 @@
                 },
                 "type": "array"
               },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -155582,6 +156155,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -161460,6 +162041,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -167464,6 +168053,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -173842,6 +174439,14 @@
                 },
                 "type": "array"
               },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -179787,6 +180392,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -185753,6 +186366,14 @@
                 },
                 "type": "array"
               },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -191622,6 +192243,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -197519,6 +198148,14 @@
                 },
                 "type": "array"
               },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -203338,6 +203975,14 @@
                 },
                 "type": "array"
               },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -209118,6 +209763,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -214957,6 +215610,14 @@
                 },
                 "type": "array"
               },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -220701,6 +221362,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -226560,6 +227229,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -232462,6 +233139,14 @@
                 },
                 "type": "array"
               },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -238353,6 +239038,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -244357,6 +245050,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -253352,6 +254053,14 @@
                 },
                 "type": "array"
               },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -259428,6 +260137,14 @@
                 },
                 "type": "array"
               },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -262746,6 +263463,7 @@
           "invalid_attachments",
           "unknown_asset",
           "line_type_not_found",
+          "constant_attribute",
           "invalid_revision",
           "revision_conflict"
         ],
@@ -263265,15 +263983,51 @@
                 ],
                 "description": "Where `p` is on the text, as a text's (docs/adr/0145)."
               },
+              "boxWidth": {
+                "description": "A multiline attribute's box width, metres in the definition's size.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "constant": {
+                "description": "Its value is the definition's `value` in every insert; an insert holds none of its own (bit 2).",
+                "type": "boolean"
+              },
+              "field": {
+                "description": "A field (docs/adr/0317 §1): a template whose `{ifade}` parts are filled for each insert (its attributes, its\nplace, the project's `@` values); the commands that place, sync and update fields write it as the value.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "height": {
                 "description": "Metres, in the definition's size.",
                 "format": "double",
                 "type": "number",
                 "x-unit": "length"
               },
+              "invisible": {
+                "description": "Not drawn: its value is kept, listed and scheduled (DXF 70 bit 1).",
+                "type": "boolean"
+              },
+              "movable": {
+                "description": "An insert may move its text (`attributePlaces`); off: locked where the definition puts it (bit 16 set).",
+                "type": "boolean"
+              },
+              "multiline": {
+                "description": "Its value may hold line breaks, each a line; wrapped to `boxWidth` when given (an MTEXT attribute).",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "x-unit": "length"
+              },
+              "preset": {
+                "description": "Blok ekle takes its default without asking (bit 8).",
+                "type": "boolean"
               },
               "prompt": {
                 "description": "What Blok ekle asks for it.",
@@ -263298,6 +264052,10 @@
                   "null"
                 ]
               },
+              "verify": {
+                "description": "Blok ekle asks for it twice, the two the same (bit 4).",
+                "type": "boolean"
+              },
               "widthFactor": {
                 "description": "The letters' width times this, as a text's (docs/adr/0145).",
                 "format": "double",
@@ -263318,6 +264076,36 @@
             ],
             "type": "object"
           },
+          "BlockCard": {
+            "description": "A block's library card (docs/adr/0317 §4): what the Bloklar panel's cards and search show beside its name, its\ndescription, its size and its attributes.",
+            "properties": {
+              "category": {
+                "description": "A path of categories by `/` (`Mimari/Kapılar`); absent: none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tags": {
+                "description": "Words it is found by, each once, Turkish case folded.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "version": {
+                "description": "How many times its definition has changed since it was made: 1 when made; each change of its objects, base,\nattributes or unit adds one.",
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "version"
+            ],
+            "type": "object"
+          },
           "BlockDefinition": {
             "description": "A block definition (docs/adr/0144): objects drawn once, placed many\ntimes. Its objects' ids are local to it, once each and kept by every edit\nof it, so a reference to a piece follows it (docs/adr/0315 §1). An object\non the block's layer (`\"\"`, the DXF's layer 0) is drawn on its insert's\nlayer; one on a layer of its own shows only while that layer does\n(docs/adr/0315 §2). A part of its look it has is its own, a `byLayer` part\nits layer's (its insert's layer on the block's layer), any other part its\ninsert's (BYBLOCK).",
             "properties": {
@@ -263332,6 +264120,17 @@
                 "$ref": "#/$defs/Vec2",
                 "description": "The point placed at an insert's `p`, in the definition's coordinates.",
                 "x-unit": "length"
+              },
+              "card": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/BlockCard"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its library card (docs/adr/0317 §4): category, tags and version."
               },
               "description": {
                 "type": [
@@ -265399,6 +266198,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -269089,15 +269896,51 @@
                 ],
                 "description": "Where `p` is on the text, as a text's (docs/adr/0145)."
               },
+              "boxWidth": {
+                "description": "A multiline attribute's box width, metres in the definition's size.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "constant": {
+                "description": "Its value is the definition's `value` in every insert; an insert holds none of its own (bit 2).",
+                "type": "boolean"
+              },
+              "field": {
+                "description": "A field (docs/adr/0317 §1): a template whose `{ifade}` parts are filled for each insert (its attributes, its\nplace, the project's `@` values); the commands that place, sync and update fields write it as the value.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "height": {
                 "description": "Metres, in the definition's size.",
                 "format": "double",
                 "type": "number",
                 "x-unit": "length"
               },
+              "invisible": {
+                "description": "Not drawn: its value is kept, listed and scheduled (DXF 70 bit 1).",
+                "type": "boolean"
+              },
+              "movable": {
+                "description": "An insert may move its text (`attributePlaces`); off: locked where the definition puts it (bit 16 set).",
+                "type": "boolean"
+              },
+              "multiline": {
+                "description": "Its value may hold line breaks, each a line; wrapped to `boxWidth` when given (an MTEXT attribute).",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "x-unit": "length"
+              },
+              "preset": {
+                "description": "Blok ekle takes its default without asking (bit 8).",
+                "type": "boolean"
               },
               "prompt": {
                 "description": "What Blok ekle asks for it.",
@@ -269121,6 +269964,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "verify": {
+                "description": "Blok ekle asks for it twice, the two the same (bit 4).",
+                "type": "boolean"
               },
               "widthFactor": {
                 "description": "The letters' width times this, as a text's (docs/adr/0145).",
@@ -269198,6 +270045,26 @@
               {
                 "const": "update",
                 "description": "Its objects given whole, in its own coordinates, each with its local id (“Blok düzenle”, the block editor's\nsave; docs/adr/0316 §1): an id it had is kept (a reference to that piece follows it), 0 is a new object\nand takes the next id the definition never had; the base point and the attribute definitions when given.",
+                "type": "string"
+              },
+              {
+                "const": "sync",
+                "description": "Its inserts' attribute values made to fit its definition (“Öznitelikleri eşitle”, ATTSYNC; docs/adr/0317 §2):\nvalues renamed (`renames`), taken off (`removeTags`, a constant attribute's), places of attributes no longer\nmovable dropped, fields filled; the definition stays.",
+                "type": "string"
+              },
+              {
+                "const": "fields",
+                "description": "Its inserts' fields filled again (“Alanları güncelle”, UPDATEFIELD; docs/adr/0317 §1); every block's when no\nblock is given.",
+                "type": "string"
+              },
+              {
+                "const": "place",
+                "description": "Where inserts (`uids`) show a movable attribute (`tag`): at `at`, a point of the drawing; absent, where the\ndefinition puts it (“Öznitelik konumu”, docs/adr/0317 §1).",
+                "type": "string"
+              },
+              {
+                "const": "card",
+                "description": "Its library card (“Blok kartı”, docs/adr/0317 §4): `category`, `tags` and `description`; its version is\ncounted by the drawing.",
                 "type": "string"
               }
             ]
@@ -271229,6 +272096,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -274503,6 +275378,18 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Input of `cad.blocks.edit` v1: one change of the drawing's definitions, as\none undo step named after the operation. A definition is named by its id.\n\n- `rename`: `block`, `name`;\n- `redefine`: `block`, `uids` (the objects it is made of now, copied as\n  `cad.blocks.define` copies them), `base` (absent: kept), `replace` and\n  `layerId` as `cad.blocks.define` has them;\n- `rebase`: `block`, `base`;\n- `remove`: `block`;\n- `purge`: nothing; a definition only unused ones use goes too;\n- `attributes`: `block`, `attributes` (the whole list, in its order;\n  empty: none);\n- `duplicate`: `block`, `name` (the copy's);\n- `export`: `blocks` (absent: every definition);\n- `import`: `library` (a `kentos.blocks` file's text), `replace`;\n- `units`: `block`, `units`, `rescale`;\n- `update`: `block`, `entities` (its objects, local ids kept, 0 new), `base` and `attributes` when they change.\n\nWhat would change nothing (the same name, base point, objects or\nattributes; nothing unused to purge) writes nothing: the answer is\ncompleted, with nothing in `changed` and `removed`.\n\nRefusals (`CommandError.code`), checked in this order: `no_block` (none\ngiven where the operation needs one); `rename`: `empty_name`; `redefine`:\n`no_entities`, `invalid_uid` (each id in order), `not_finite` (the base\npoint), `no_layer`; `rebase`: `no_base`, `not_finite`; `attributes`:\n`no_attributes`, then each attribute in order: `empty_tag` (empty or only\nwhite space), `duplicate_tag` (a tag an earlier one has, exactly),\n`not_finite` (its point, east first, then its turn), `invalid_height` (not\nabove zero); then\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`unknown_block`; `rename`: `duplicate_block`; `redefine`:\n`entity_not_found`, `block_cycle` (an object is an\ninsert of this block or of one holding it), `block_too_deep`, with\n`replace` the layer checks of `cad.blocks.define`; `remove`: `block_in_use`\n(inserts of it in the drawing or in another definition).",
         "properties": {
+          "at": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Vec2"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "`place`: where the attribute's text stands, a point of the drawing; absent: where the definition puts it.",
+            "x-unit": "length"
+          },
           "attributes": {
             "description": "`attributes`: the definition's attribute definitions, the whole list\nin its order (empty: it has none).",
             "items": {
@@ -274543,6 +275430,20 @@
             },
             "type": [
               "array",
+              "null"
+            ]
+          },
+          "category": {
+            "description": "`card`: its category (empty: none).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "description": {
+            "description": "`card`: its description (empty: none).",
+            "type": [
+              "string",
               "null"
             ]
           },
@@ -274588,6 +275489,26 @@
           "operation": {
             "$ref": "#/$defs/BlockEditOperation"
           },
+          "removeTags": {
+            "description": "`sync`: tags whose values are taken off the inserts though no attribute has them.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "renames": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "`attributes`, `sync`: an insert's value under an old tag moved to the new one (old → new).",
+            "type": [
+              "object",
+              "null"
+            ]
+          },
           "replace": {
             "description": "`redefine`: true, the objects are replaced by an insert of the block.",
             "type": [
@@ -274599,6 +275520,30 @@
             "description": "`units` between two units: true keeps its numbers (its size changes by their ratio); absent or false keeps\nits size (only the unit's name changes).",
             "type": [
               "boolean",
+              "null"
+            ]
+          },
+          "sync": {
+            "description": "`attributes`, `update`: false leaves the inserts' values as they are; absent or true syncs them as `sync`\ndoes (docs/adr/0317 §2).",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "tag": {
+            "description": "`place`: the movable attribute's tag.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tags": {
+            "description": "`card`: the words it is found by.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
               "null"
             ]
           },
@@ -274632,6 +275577,75 @@
       },
       "output": {
         "$defs": {
+          "AttributeSync": {
+            "description": "What syncing a block's inserts with its definition did (docs/adr/0317 §2): each list in the definition's order,\nthen the inserts' (a tag once).",
+            "properties": {
+              "added": {
+                "description": "The definition's tags an insert has no value of: it shows their default (nothing written).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "constant": {
+                "description": "The constant attributes' tags whose own values were taken off.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "fields": {
+                "description": "Values a field wrote.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "inserts": {
+                "description": "The inserts written.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "places": {
+                "description": "Places dropped: their attributes are no longer movable.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "removed": {
+                "description": "The tags whose values were taken off the inserts: no attribute has them, or `removeTags` named them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "renamed": {
+                "description": "The renames done, old and new.",
+                "items": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "inserts",
+              "added",
+              "removed",
+              "renamed",
+              "constant",
+              "places",
+              "fields"
+            ],
+            "type": "object"
+          },
           "BlockId": {
             "format": "uuid",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
@@ -274704,6 +275718,17 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "sync": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AttributeSync"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "`attributes`, `update`, `sync`, `fields`, `place`: what was done to the inserts' values (docs/adr/0317 §2)."
           }
         },
         "required": [
@@ -274998,15 +276023,51 @@
                 ],
                 "description": "Where `p` is on the text, as a text's (docs/adr/0145)."
               },
+              "boxWidth": {
+                "description": "A multiline attribute's box width, metres in the definition's size.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "constant": {
+                "description": "Its value is the definition's `value` in every insert; an insert holds none of its own (bit 2).",
+                "type": "boolean"
+              },
+              "field": {
+                "description": "A field (docs/adr/0317 §1): a template whose `{ifade}` parts are filled for each insert (its attributes, its\nplace, the project's `@` values); the commands that place, sync and update fields write it as the value.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "height": {
                 "description": "Metres, in the definition's size.",
                 "format": "double",
                 "type": "number",
                 "x-unit": "length"
               },
+              "invisible": {
+                "description": "Not drawn: its value is kept, listed and scheduled (DXF 70 bit 1).",
+                "type": "boolean"
+              },
+              "movable": {
+                "description": "An insert may move its text (`attributePlaces`); off: locked where the definition puts it (bit 16 set).",
+                "type": "boolean"
+              },
+              "multiline": {
+                "description": "Its value may hold line breaks, each a line; wrapped to `boxWidth` when given (an MTEXT attribute).",
+                "type": "boolean"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "x-unit": "length"
+              },
+              "preset": {
+                "description": "Blok ekle takes its default without asking (bit 8).",
+                "type": "boolean"
               },
               "prompt": {
                 "description": "What Blok ekle asks for it.",
@@ -275031,6 +276092,10 @@
                   "null"
                 ]
               },
+              "verify": {
+                "description": "Blok ekle asks for it twice, the two the same (bit 4).",
+                "type": "boolean"
+              },
               "widthFactor": {
                 "description": "The letters' width times this, as a text's (docs/adr/0145).",
                 "format": "double",
@@ -275051,6 +276116,36 @@
             ],
             "type": "object"
           },
+          "BlockCard": {
+            "description": "A block's library card (docs/adr/0317 §4): what the Bloklar panel's cards and search show beside its name, its\ndescription, its size and its attributes.",
+            "properties": {
+              "category": {
+                "description": "A path of categories by `/` (`Mimari/Kapılar`); absent: none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tags": {
+                "description": "Words it is found by, each once, Turkish case folded.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "version": {
+                "description": "How many times its definition has changed since it was made: 1 when made; each change of its objects, base,\nattributes or unit adds one.",
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "version"
+            ],
+            "type": "object"
+          },
           "BlockDefinition": {
             "description": "A block definition (docs/adr/0144): objects drawn once, placed many\ntimes. Its objects' ids are local to it, once each and kept by every edit\nof it, so a reference to a piece follows it (docs/adr/0315 §1). An object\non the block's layer (`\"\"`, the DXF's layer 0) is drawn on its insert's\nlayer; one on a layer of its own shows only while that layer does\n(docs/adr/0315 §2). A part of its look it has is its own, a `byLayer` part\nits layer's (its insert's layer on the block's layer), any other part its\ninsert's (BYBLOCK).",
             "properties": {
@@ -275065,6 +276160,17 @@
                 "$ref": "#/$defs/Vec2",
                 "description": "The point placed at an insert's `p`, in the definition's coordinates.",
                 "x-unit": "length"
+              },
+              "card": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/BlockCard"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its library card (docs/adr/0317 §4): category, tags and version."
               },
               "description": {
                 "type": [
@@ -277132,6 +278238,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -280488,8 +281602,17 @@
           "invalid_library",
           "no_units",
           "duplicate_piece",
+          "invalid_attribute_options",
+          "invalid_block_card",
+          "attribute_not_movable",
+          "invalid_field",
+          "not_insert",
+          "unknown_tag",
           "invalid_revision",
           "revision_conflict"
+        ],
+        "warnings": [
+          "layer_locked"
         ]
       },
       "examples": [
@@ -280795,6 +281918,594 @@
             ],
             "path": "/tmp/ofis-bloklari.kcad",
             "replace": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.blocks.replace",
+      "version": 1,
+      "title": "Bloğu başkasıyla değiştir",
+      "summary": "from bloğunun çizimdeki yerleştirmelerini (ya da uids ile verilenleri) to bloğuna geçirir; tek geri alma adımı. Her yerleştirme yerini, ölçeğini, dönüşünü, katmanını ve görünüşünü korur; to'nun sabit olmayan özniteliklerinin değerleri ve taşınabilir özniteliklerinin yerleri kalır, öbürleri düşer ve söylenir (dropped, places); to'nun alanları doldurulur. purge ile from artık hiçbir yerde yerleşmiyorsa silinir. Kilitli katmandakiler atlanır ve söylenir. AutoCAD'in BLOCKREPLACE'i. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [
+        "blockreplace",
+        "blokdegistir"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.blocks.replace` v1: the drawing's inserts of `from` (or those named) place `to` instead, as one undo\nstep “Bloğu başkasıyla değiştir”; each keeps its place, scale, turn, layer and look, the values of `to`'s attributes\n(not constant) and the places of its movable ones; `to`'s fields are filled. With `purge`, `from` is deleted when\nno insert uses it any more.\n\nRefusals in order: `no_block` (`from` or `to` missing), `same_block`, `invalid_revision`, `revision_conflict`,\n`unknown_block` (`from`, `to`), `entity_not_found`, `not_insert` (an object named that is not an insert of\n`from`), `layer_locked` (every one locked; some: a warning), `invalid_field`.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "from": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/BlockId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The block whose inserts are replaced."
+          },
+          "purge": {
+            "description": "Deletes `from` when no insert uses it after.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "to": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/BlockId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The block they place instead."
+          },
+          "uids": {
+            "description": "Only these inserts of `from`, by persistent id (absent: every one of the drawing's).",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "title": "BlocksReplace",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.blocks.replace` v1.",
+        "properties": {
+          "dropped": {
+            "description": "`from`'s attribute tags whose values were taken off: `to` has no such attribute, or a constant one.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "fields": {
+            "description": "Values `to`'s fields wrote.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "places": {
+            "description": "Places dropped: `to` has no movable attribute of their tag.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "purged": {
+            "description": "`from` was deleted (`purge`).",
+            "type": "boolean"
+          },
+          "replaced": {
+            "description": "The inserts that place `to` now, in the drawing's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "replaced",
+          "dropped",
+          "places",
+          "fields",
+          "purged",
+          "revision"
+        ],
+        "title": "BlocksReplaced",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.blocks.replace` v1.",
+        "properties": {
+          "dropped": {
+            "description": "`from`'s attribute tags whose values were taken off: `to` has no such attribute, or a constant one.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "fields": {
+            "description": "Values `to`'s fields wrote.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "places": {
+            "description": "Places dropped: `to` has no movable attribute of their tag.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "purged": {
+            "description": "`from` was deleted (`purge`).",
+            "type": "boolean"
+          },
+          "replaced": {
+            "description": "The inserts that place `to` now, in the drawing's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "replaced",
+          "dropped",
+          "places",
+          "fields",
+          "purged",
+          "revision"
+        ],
+        "title": "BlocksReplaced",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_block",
+          "same_block",
+          "invalid_revision",
+          "revision_conflict",
+          "unknown_block",
+          "no_entities",
+          "invalid_uid",
+          "entity_not_found",
+          "not_insert",
+          "layer_locked",
+          "invalid_field"
+        ],
+        "warnings": [
+          "layer_locked"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Eski kapı bloğunu yenisiyle değiştir, eskisini temizle",
+          "input": {
+            "from": "01925f3e-7c1c-7b22-8d33-4c5e6f708192",
+            "purge": true,
+            "to": "01925f3e-7c1c-7b22-8d33-4c5e6f708193"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.blocks.query",
+      "version": 1,
+      "title": "Blokları say, bul ve çizelgele",
+      "summary": "Çizimin blok yerleştirmelerini sayar (report count: çizimde, katmana göre ve başka blokların içinden), özniteliklerine göre bulur (instances: kalıcı kimlikler) ya da çizelgeler (schedule: Blok, Katman, X, Y, Dönüş ve özniteliklerin değerleri). blocks ve layers kapsamı daraltır; where koşulları (eq, ne, contains, empty, notEmpty, lt, gt) öznitelik değerine bakar: sabit öznitelikte tanımın değeri, öbürlerinde yerleştirmenin, yoksa tanımın varsayılanı; metin karşılaştırmaları Türkçe büyük küçük harfe bakmaz, lt ve gt sayı karşılaştırır. columns çizelgenin öznitelik sütunlarıdır (verilmezse blokların bütün etiketleri). Hiçbir şey yazılmaz. AutoCAD'in BCOUNT'u ve öznitelik çıkarması.",
+      "aliases": [
+        "bcount",
+        "bloksay"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "AttributeFilter": {
+            "description": "One condition on an insert's attribute: its value (the insert's, else the definition's default) compared with\n`value`.",
+            "properties": {
+              "op": {
+                "$ref": "#/$defs/AttributeOp"
+              },
+              "tag": {
+                "type": "string"
+              },
+              "value": {
+                "description": "Absent for `empty` and `notEmpty`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "tag",
+              "op"
+            ],
+            "type": "object"
+          },
+          "AttributeOp": {
+            "description": "How an attribute's value is compared (docs/adr/0317 §3). Text comparisons fold Turkish case; `lt` and `gt` compare\nnumbers (a value that is not a number does not match).",
+            "enum": [
+              "eq",
+              "ne",
+              "contains",
+              "empty",
+              "notEmpty",
+              "lt",
+              "gt"
+            ],
+            "type": "string"
+          },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "BlockReport": {
+            "description": "What `cad.blocks.query` reports.",
+            "oneOf": [
+              {
+                "const": "count",
+                "description": "Each block's inserts counted: in the drawing, by layer, and placed through other blocks' inserts.",
+                "type": "string"
+              },
+              {
+                "const": "instances",
+                "description": "The inserts that match, by persistent id (select them).",
+                "type": "string"
+              },
+              {
+                "const": "schedule",
+                "description": "A table of the inserts that match: block, layer, x, y, turn in degrees, then the attributes' values.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.blocks.query` v1.\n\nRefusals in order: `unknown_block` (`blocks[i]`), `layer_not_found` (`layers[i]`), `invalid_condition`\n(`where[i]`: no tag, no value where one is needed, a number expected), `unknown_tag` (`columns[i]`: no block\nasked has it).",
+        "properties": {
+          "blocks": {
+            "description": "Only these blocks' inserts (absent: every block's).",
+            "items": {
+              "$ref": "#/$defs/BlockId"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "columns": {
+            "description": "`schedule`: the attribute columns, by tag (absent: every tag of the blocks reported, each once, in their\norder).",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "Only inserts on these layers, by id (absent: every layer's).",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "report": {
+            "$ref": "#/$defs/BlockReport"
+          },
+          "where": {
+            "description": "Every condition holds (`instances`, `schedule`).",
+            "items": {
+              "$ref": "#/$defs/AttributeFilter"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "report"
+        ],
+        "title": "BlocksQuery",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "BlockCount": {
+            "description": "A block's inserts counted (`count`).",
+            "properties": {
+              "block": {
+                "$ref": "#/$defs/BlockId"
+              },
+              "count": {
+                "description": "The drawing's own inserts (on the layers asked).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layers": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "The drawing's own inserts by layer id.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "name": {
+                "type": "string"
+              },
+              "nested": {
+                "description": "How many times other blocks' inserts place it (each of their inserts counted through, the layers asked\napplying to the drawing's insert).",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "block",
+              "name",
+              "count",
+              "layers",
+              "nested"
+            ],
+            "type": "object"
+          },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "ScheduleCell": {
+            "anyOf": [
+              {
+                "format": "double",
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "description": "One cell of a schedule: a number (x, y, turn) or a text.",
+            "x-unit": "value"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.blocks.query` v1: the part its report asks for.",
+        "properties": {
+          "columns": {
+            "description": "`schedule`: the columns' names: `Blok`, `Katman`, `X`, `Y`, `Dönüş`, then the tags.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "counts": {
+            "description": "`count`: each block asked, in the drawing's order (those with no insert too).",
+            "items": {
+              "$ref": "#/$defs/BlockCount"
+            },
+            "type": "array"
+          },
+          "rows": {
+            "description": "`schedule`: a row for each insert of `uids`.",
+            "items": {
+              "items": {
+                "$ref": "#/$defs/ScheduleCell"
+              },
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "uids": {
+            "description": "`instances`, `schedule`: the inserts that match, in the drawing's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "title": "BlocksQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "BlockCount": {
+            "description": "A block's inserts counted (`count`).",
+            "properties": {
+              "block": {
+                "$ref": "#/$defs/BlockId"
+              },
+              "count": {
+                "description": "The drawing's own inserts (on the layers asked).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layers": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "The drawing's own inserts by layer id.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "name": {
+                "type": "string"
+              },
+              "nested": {
+                "description": "How many times other blocks' inserts place it (each of their inserts counted through, the layers asked\napplying to the drawing's insert).",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "block",
+              "name",
+              "count",
+              "layers",
+              "nested"
+            ],
+            "type": "object"
+          },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "ScheduleCell": {
+            "anyOf": [
+              {
+                "format": "double",
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "description": "One cell of a schedule: a number (x, y, turn) or a text.",
+            "x-unit": "value"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.blocks.query` v1: the part its report asks for.",
+        "properties": {
+          "columns": {
+            "description": "`schedule`: the columns' names: `Blok`, `Katman`, `X`, `Y`, `Dönüş`, then the tags.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "counts": {
+            "description": "`count`: each block asked, in the drawing's order (those with no insert too).",
+            "items": {
+              "$ref": "#/$defs/BlockCount"
+            },
+            "type": "array"
+          },
+          "rows": {
+            "description": "`schedule`: a row for each insert of `uids`.",
+            "items": {
+              "items": {
+                "$ref": "#/$defs/ScheduleCell"
+              },
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "uids": {
+            "description": "`instances`, `schedule`: the inserts that match, in the drawing's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "title": "BlocksQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "unknown_block",
+          "layer_not_found",
+          "invalid_condition",
+          "unknown_tag"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Kapıların sayısı",
+          "input": {
+            "blocks": [
+              "01925f3e-7c1c-7b22-8d33-4c5e6f708192"
+            ],
+            "report": "count"
+          }
+        },
+        {
+          "title": "NO'su K- ile başlayan kapılar",
+          "input": {
+            "report": "instances",
+            "where": [
+              {
+                "op": "contains",
+                "tag": "NO",
+                "value": "K-"
+              }
+            ]
           }
         }
       ]
@@ -283287,6 +284998,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -286592,6 +288311,8 @@
           "invalid_scale",
           "unknown_block",
           "unknown_tag",
+          "constant_attribute",
+          "invalid_field",
           "slots_exhausted",
           "layer_not_found",
           "not_a_layer",
@@ -318531,6 +320252,14 @@
                 },
                 "type": "array"
               },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
+              },
               "attrs": {
                 "additionalProperties": {
                   "type": "string"
@@ -324372,6 +326101,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -330340,6 +332077,14 @@
                   "$ref": "#/$defs/Attachment"
                 },
                 "type": "array"
+              },
+              "attributePlaces": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "description": "Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the\ndefinition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where\nthe definition puts it.",
+                "type": "object",
+                "x-unit": "length"
               },
               "attrs": {
                 "additionalProperties": {
@@ -338638,6 +340383,54 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Bloklar 16 düzeyden derin iç içe girerdi."
+    },
+    {
+      "code": "invalid_attribute_options",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Öznitelik tanımının seçenekleri birlikte olamaz (sabit ve sorulan, taşınabilir ya da alan; çok satırsız kutu)."
+    },
+    {
+      "code": "invalid_block_card",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bloğun kartı kurallarına uymuyor (sürüm, kategori, etiketler)."
+    },
+    {
+      "code": "invalid_field",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Özniteliğin alanı okunamadı; {ifade} parçalı bir şablon olmalı."
+    },
+    {
+      "code": "constant_attribute",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Sabit özniteliğin değeri tanımındakidir; yerleştirmede verilmez."
+    },
+    {
+      "code": "same_block",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Yerleştirmeler aynı bloğa geçirilemez; başka bir blok verin."
+    },
+    {
+      "code": "invalid_condition",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Öznitelik koşulu okunamadı (etiket, değer ya da sayı eksik)."
+    },
+    {
+      "code": "not_insert",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesne bir blok yerleştirmesi değil."
+    },
+    {
+      "code": "attribute_not_movable",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Blokta bu öznitelik taşınabilir değil; yerleştirmede yeri değişmez."
     },
     {
       "code": "objects_left_out",

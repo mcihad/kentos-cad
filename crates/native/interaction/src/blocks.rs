@@ -23,8 +23,17 @@ fn name_of(doc: &Document, id: BlockId) -> String {
     doc.block(id).map_or_else(String::new, |b| b.name.clone())
 }
 
-fn input(operation: BlockEditOperation, block: Option<BlockId>) -> BlocksEdit {
+/// A `cad.blocks.edit` input of `operation` on `block`, nothing else given.
+pub fn input(operation: BlockEditOperation, block: Option<BlockId>) -> BlocksEdit {
     BlocksEdit {
+        sync: None,
+        renames: None,
+        remove_tags: None,
+        tag: None,
+        at: None,
+        category: None,
+        tags: None,
+        description: None,
         blocks: None,
         library: None,
         units: None,

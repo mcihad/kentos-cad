@@ -617,6 +617,31 @@ cases.append({
     ],
 })
 
+# A constant attribute's value is its block's (docs/adr/0317 §1): an insert is given none of its own, the other tags
+# are written as ever.
+SABIT = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5e01"
+C_ENTITIES = ENTITIES + [
+    {"kind": "insert", "id": 9, "layerId": "yapi", "attrs": {"NO": "R-1"}, "block": SABIT, "p": P(487030, 4420000), "scale": 1, "rotation": 0},
+]
+C_SETUP = {**SETUP, "entities": C_ENTITIES, "blocks": [
+    {"id": SABIT, "name": "Rögar", "base": P(0, 0), "entities": [{"kind": "circle", "id": 1, "layerId": "", "attrs": {}, "c": P(0, 0), "r": 0.5}],
+     "attributes": [{"tag": "NO", "p": P(0.6, 0), "height": 0.3, "rotation": 0},
+                    {"tag": "TÜR", "value": "Atık su", "p": P(0.6, -0.4), "height": 0.3, "rotation": 0, "constant": True}]},
+]}
+C_IDS = [e["id"] for e in C_ENTITIES]
+cases.append({
+    "name": "Sabit öznitelik: yerleştirmeye değeri verilmez, kaldırılması ve öbür etiketler yazılır",
+    "note": "ADR 0317 §1.",
+    "setup": C_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(9), "attrs": {"TÜR": "Yağmur suyu"}, "operation": "attributes"},
+         "result": failed("constant_attribute", "“Rögar” bloğunun “TÜR” özniteliği sabit: değeri tanımındakidir, yerleştirmede değiştirilmez.", "attrs.TÜR"),
+         "expect": {"ids": C_IDS, "revision": "same"}},
+        {"op": "execute", "input": {"uids": uids(9), "attrs": {"NO": "R-2"}, "operation": "attributes"}, "result": done([9]),
+         "expect": {"entities": {"9": {**C_ENTITIES[-1], "attrs": {"NO": "R-2"}}}, "revision": "changed"}},
+    ],
+})
+
 # A layer's fields (docs/adr/0199 §2): the values given to a field's key are written in their canonical text; one
 # that does not keep its rules is `invalid_attribute`, an empty or removed one of a required field
 # `attribute_required` (path attrs.<name>); objects in the input's order, names in theirs. The rules and their words

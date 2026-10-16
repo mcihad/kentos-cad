@@ -146,12 +146,13 @@ impl BlockInsert {
         let (None, None, Some(block)) = (self.ask, self.pending, cx.memory.block_insert) else {
             return;
         };
-        // A block with attribute definitions asks their values first (§7).
-        if cx
-            .doc
-            .block(block)
-            .is_some_and(|b| !b.attributes.is_empty())
-        {
+        // A block with attributes to ask asks their values first (§7): not a constant, a preset or a field one
+        // (docs/adr/0317 §1).
+        if cx.doc.block(block).is_some_and(|b| {
+            b.attributes
+                .iter()
+                .any(|a| !a.options.constant && !a.options.preset && a.options.field.is_none())
+        }) {
             self.pending = Some(p);
             cx.view_changes.push(ViewChange::AttributeValues(block));
             return;

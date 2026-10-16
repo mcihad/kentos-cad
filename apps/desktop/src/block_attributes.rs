@@ -60,8 +60,70 @@ pub enum Event {
     RemoveRow(usize),
     /// The row's place, shown on the drawing.
     Pick(usize),
+    /// A row's option turned on or off (docs/adr/0317 §1).
+    Toggle(usize, Opt),
+    /// A multiline row's box width, as typed.
+    BoxWidth(usize, String),
+    /// A row's field template.
+    Field(usize, String),
     Save,
     Close,
+}
+
+/// An attribute's option a row turns on and off.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Opt {
+    Invisible,
+    Constant,
+    Verify,
+    Preset,
+    Movable,
+    Multiline,
+}
+
+impl Opt {
+    const ALL: [Opt; 6] = [
+        Opt::Invisible,
+        Opt::Constant,
+        Opt::Verify,
+        Opt::Preset,
+        Opt::Movable,
+        Opt::Multiline,
+    ];
+
+    fn word(self) -> &'static str {
+        match self {
+            Opt::Invisible => "Görünmez",
+            Opt::Constant => "Sabit",
+            Opt::Verify => "Doğrula",
+            Opt::Preset => "Ön ayarlı",
+            Opt::Movable => "Taşınabilir",
+            Opt::Multiline => "Çok satırlı",
+        }
+    }
+
+    fn of(self, o: &kentos_contracts::AttributeOptions) -> bool {
+        match self {
+            Opt::Invisible => o.invisible,
+            Opt::Constant => o.constant,
+            Opt::Verify => o.verify,
+            Opt::Preset => o.preset,
+            Opt::Movable => o.movable,
+            Opt::Multiline => o.multiline,
+        }
+    }
+
+    fn flip(self, o: &mut kentos_contracts::AttributeOptions) {
+        let b = match self {
+            Opt::Invisible => &mut o.invisible,
+            Opt::Constant => &mut o.constant,
+            Opt::Verify => &mut o.verify,
+            Opt::Preset => &mut o.preset,
+            Opt::Movable => &mut o.movable,
+            Opt::Multiline => &mut o.multiline,
+        };
+        *b = !*b;
+    }
 }
 
 fn msg(event: Event) -> Message {
@@ -248,6 +310,24 @@ impl App {
                 self.block_attributes_pick(row);
                 return Task::none();
             }
+            Event::Toggle(row, opt) => {
+                if let Some(r) = w.rows.get_mut(row) {
+                    opt.flip(&mut r.options);
+                }
+                Task::none()
+            }
+            Event::BoxWidth(row, text) => {
+                if let Some(r) = w.rows.get_mut(row) {
+                    r.box_text = text;
+                }
+                Task::none()
+            }
+            Event::Field(row, text) => {
+                if let Some(r) = w.rows.get_mut(row) {
+                    r.options.field = Some(text);
+                }
+                Task::none()
+            }
             Event::Save => {
                 self.block_attributes_save();
                 return Task::none();
@@ -353,7 +433,11 @@ impl App {
                 )]
             },
         );
-        let mut body = Column::new().spacing(12).push(summary).push(sheet);
+        let mut body = Column::new()
+            .spacing(12)
+            .push(summary)
+            .push(sheet)
+            .push(options_view(w));
         if let Err(why) = &w.answer {
             body = body.push(words::text_line(Kind::Error, why.clone()));
         }
@@ -414,6 +498,56 @@ impl App {
             other => return Err(missing(other.to_string())),
         })
     }
+}
+
+
+/// The rows' options (docs/adr/0317 §1): a line for each row, its tag, the six options, a multiline one's box width
+/// and its field template.
+fn options_view(w: &Window) -> Element<'_, Message> {
+    use iced::widget::{row, text_input};
+    use kentos_ui::widget::tree_view::{Check, check_box};
+    let mut list = Column::new().spacing(6).push(kentos_ui::label::caption("Seçenekler"));
+    for (r, item) in w.rows.iter().enumerate() {
+        let tag = kentos_interaction::js_trim(&item.cells[table::TAG]);
+        let name = if tag.is_empty() {
+            format!("{}. satır", r + 1)
+        } else {
+            tag.to_owned()
+        };
+        let mut line = row![text(name).size(13).width(110)].spacing(10).align_y(iced::Center);
+        for opt in Opt::ALL {
+            let on = opt.of(&item.options);
+            line = line.push(
+                row![
+                    check_box(
+                        if on { Check::Checked } else { Check::Unchecked },
+                        Some(msg(Event::Toggle(r, opt))),
+                    ),
+                    text(opt.word()).size(12),
+                ]
+                .spacing(4)
+                .align_y(iced::Center),
+            );
+        }
+        if item.options.multiline {
+            line = line.push(
+                text_input("Kutu genişliği", &item.box_text)
+                    .on_input(move |t| msg(Event::BoxWidth(r, t)))
+                    .padding([3, 6])
+                    .width(96)
+                    .style(style::field::input),
+            );
+        }
+        line = line.push(
+            text_input("Alan şablonu, ör. {NO}/{TUR}", item.options.field.as_deref().unwrap_or(""))
+                .on_input(move |t| msg(Event::Field(r, t)))
+                .padding([3, 6])
+                .width(iced::Fill)
+                .style(style::field::input),
+        );
+        list = list.push(line);
+    }
+    list.into()
 }
 
 #[cfg(test)]

@@ -626,6 +626,7 @@ fn with_blocks(doc: &mut DocumentSnapshotV2, rng: &mut Rng) {
         }
         let attributes = (0..rng.below(3))
             .map(|a| AttributeDefinition {
+                options: Default::default(),
                 tag: format!("ETİKET{a}"),
                 prompt: rng.chance(50).then(|| rng.text()),
                 value: rng.chance(50).then(|| rng.text()),
@@ -637,6 +638,7 @@ fn with_blocks(doc: &mut DocumentSnapshotV2, rng: &mut Rng) {
             })
             .collect();
         blocks.push(BlockDefinition {
+            card: None,
             id: BlockId(rng.uid()),
             // Distinct however the text folds: the last characters differ.
             name: format!("{} {k}", rng.text()),
@@ -658,6 +660,7 @@ fn with_blocks(doc: &mut DocumentSnapshotV2, rng: &mut Rng) {
 fn insert(rng: &mut Rng, layer: &str, block: BlockId) -> Entity {
     let scale = rng.float().abs();
     Entity::Insert(InsertEntity {
+        attribute_places: Default::default(),
         base: base(rng, layer),
         block,
         p: point(rng),
@@ -772,6 +775,7 @@ fn the_writer_refuses_what_a_reader_would_refuse() {
     // The block rules (docs/adr/0144).
     let layer = good.active_layer.clone();
     let block = |rng: &mut Rng, name: &str, inside: Vec<Entity>| BlockDefinition {
+        card: None,
         id: BlockId(rng.uid()),
         name: name.to_owned(),
         base: point(rng),

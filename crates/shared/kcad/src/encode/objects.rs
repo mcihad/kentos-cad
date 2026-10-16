@@ -65,6 +65,8 @@ pub(super) enum Val<'d> {
     Refs(&'d DimensionRefs),
     /// A multi-line text's letter formats (§6.6, docs/adr/0182).
     Runs(&'d [TextRun]),
+    /// An insert's movable attributes' places by tag (docs/adr/0317 §1).
+    Places(&'d BTreeMap<String, Vec2>),
     /// A whole number (a dimension's decimals, docs/adr/0183).
     Uint(u64),
     /// A signed whole number (an object's drawing order, docs/adr/0260 §5).
@@ -780,6 +782,10 @@ impl<'d> Encoder<'d> {
                     f.push(("yScale", Val::Float(y)));
                 }
                 f.push(("rotation", Val::Float(e.rotation)));
+                // Its moved attributes (docs/adr/0317 §1): no map when none.
+                if !e.attribute_places.is_empty() {
+                    f.push(("attributePlaces", Val::Places(&e.attribute_places)));
+                }
                 if e.mirror {
                     f.push(("mirror", Val::Bool(true)));
                 }
@@ -1242,6 +1248,17 @@ impl<'d> Encoder<'d> {
                 for (k, v) in pairs {
                     self.text(k)?;
                     self.at(Seg::Key(k), |e| e.text(v))?;
+                }
+                self.close();
+                Ok(())
+            }
+            Val::Places(places) => {
+                let mut pairs: Vec<(&String, &Vec2)> = places.iter().collect();
+                pairs.sort_by(|a, b| key_order(a.0, b.0));
+                self.open(pairs.len(), true)?;
+                for (k, p) in pairs {
+                    self.text(k)?;
+                    self.at(Seg::Key(k), |e| e.point(p))?;
                 }
                 self.close();
                 Ok(())

@@ -211,6 +211,14 @@ impl App {
         };
         let entities = definition_objects(doc);
         let input = BlocksEdit {
+            sync: None,
+            renames: None,
+            remove_tags: None,
+            tag: None,
+            at: None,
+            category: None,
+            tags: None,
+            description: None,
             operation: BlockEditOperation::Update,
             block: Some(editor.block),
             name: None,

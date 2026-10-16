@@ -1739,6 +1739,8 @@ impl App {
             Asking::BlockAttributes => self.block_attributes_view(),
             Asking::PlotScale => self.plot_scale_view(),
             Asking::AttributeValues => self.attribute_values_view(),
+            Asking::BlockCard => self.block_card_view(),
+            Asking::BlockSchedule => self.block_schedule_view(),
             Asking::FindReplace => self.find_replace_view(),
             Asking::LayerMerge => self.layer_merge_view(),
             Asking::LayerTranslate => self.layer_translate_view(),

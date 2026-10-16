@@ -190,6 +190,9 @@ SCHEMA_WITH_PATTERNS = 56
 # Schema 57: schema 56 and an insert's own y factor (`yScale`, only when it is not `scale`) and a block definition's
 # `units` (docs/adr/0315 §3, §4).
 SCHEMA_WITH_BLOCK_EXTRAS = 57
+# Schema 58: schema 57 and an attribute definition's options (`invisible`, `constant`, `verify`, `preset`, `movable`,
+# `multiline`, `boxWidth`, `field`), an insert's `attributePlaces` and a block definition's `card` (docs/adr/0317).
+SCHEMA_WITH_BLOCK_CARDS = 58
 # A definition opens into at most a million pieces (kentos_contracts::blocks::MAX_BLOCK_PIECES, docs/adr/0316 §4).
 MAX_BLOCK_PIECES = 1_000_000
 # A pattern has at most 12 elements (AutoCAD's LIN, kentos_contracts::MAX_PATTERN_ELEMENTS).
@@ -371,7 +374,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1696,6 +1699,7 @@ class _Schema:
         self.inside = None
         # The definitions' ids and places, once read; where each insert inside them is.
         self.index = {}
+        self.movable = {}
 
     def where(self):
         return "/".join(self.path) or "(kök)"
@@ -1872,6 +1876,7 @@ class _Schema:
         self.frozen = version >= SCHEMA_WITH_FROZEN
         self.patterns = version >= SCHEMA_WITH_PATTERNS
         self.block_extras = version >= SCHEMA_WITH_BLOCK_EXTRAS
+        self.block_cards = version >= SCHEMA_WITH_BLOCK_CARDS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -3381,6 +3386,8 @@ class _Schema:
             if kind == "insert" and self.inside is None and fields["block"] not in self.index:
                 self.path.append("block")
                 self.fail("unknown_block", "yerleştirilen blok çizimde tanımlı değil")
+            if kind == "insert" and self.inside is None:
+                self.places_rule(fields, self.movable.get(fields["block"], set()))
         finally:
             self.path.pop()
         if self.inside is None:
@@ -3397,6 +3404,7 @@ class _Schema:
         blocks = self.array(self.definition)(v)
         self.check_blocks(blocks)
         self.index = {b["id"]: i for i, b in enumerate(blocks)}
+        self.movable = {b["id"]: {a["tag"] for a in b.get("attributes", []) if a.get("movable")} for b in blocks}
         return blocks
 
     def definition(self, v):
@@ -3422,9 +3430,38 @@ class _Schema:
                 "description": (self.text, False),
                 # The unit it is drawn in (schema 57, docs/adr/0315 §4).
                 **({"units": (self.enum(("mm", "cm", "m", "in", "ft", "unitless")), False)} if self.block_extras else {}),
+                # Its library card (schema 58, docs/adr/0317 §4).
+                **({"card": (self.card, False)} if self.block_cards else {}),
             }
         )(v)
-        return {k: d[k] for k in ("id", "name", "base", "entities", "attributes", "description", "units") if k in d}
+        return {k: d[k] for k in ("id", "name", "base", "entities", "attributes", "description", "units", "card") if k in d}
+
+    def card(self, v):
+        """A block's card (schema 58): a version from 1, a category and tags trimmed and not blank, each tag once
+        (Turkish case folded); an empty tag list is not written."""
+        def tags(x):
+            if type(x) is list and not x:
+                self.fail("bad_value", "boş etiket listesi yazılmaz")
+            return self.array(self.text)(x)
+
+        c = self.fields({"category": (self.text, False), "tags": (tags, False), "version": (self.uint(32), True)})(v)
+        if c["version"] < 1 or c["version"] > 0xFFFFFFFF:
+            self.path.append("version")
+            self.fail("bad_value", "sürüm en az 1 olmalı")
+        cat = c.get("category")
+        if cat is not None and (not cat.strip() or cat.strip() != cat):
+            self.path.append("category")
+            self.fail("bad_value", f"“{cat}” kategorisi boş ya da başında, sonunda boşluk var")
+        seen = set()
+        for t in c.get("tags", []):
+            if not t.strip() or t.strip() != t:
+                self.path.append("tags")
+                self.fail("bad_value", f"“{t}” etiketi boş ya da başında, sonunda boşluk var")
+            if name_key(t) in seen:
+                self.path.append("tags")
+                self.fail("bad_value", f"“{t}” etiketi iki kez var")
+            seen.add(name_key(t))
+        return {k: c[k] for k in ("category", "tags", "version") if k in c}
 
     def attribute(self, v):
         table = {
@@ -3437,8 +3474,22 @@ class _Schema:
         }
         if self.texts:
             table.update(text_extras(self, mask=False))
+        if self.block_cards:
+            # Its options (schema 58, docs/adr/0317 §1): a flag only when on.
+            for flag in ("invisible", "constant", "verify", "preset", "movable", "multiline"):
+                table[flag] = (self.true_only, False)
+            table["boxWidth"] = (self.box_width, False)
+            table["field"] = (self.text, False)
         a = self.fields(table)(v)
-        return {k: a[k] for k in ("tag", "prompt", "value", "p", "height", "rotation", "align", "widthFactor") if k in a}
+        problem = attribute_options_problem(a)
+        if problem:
+            self.fail("bad_value", problem)
+        return {k: a[k] for k in ("tag", "prompt", "value", "p", "height", "rotation", "align", "widthFactor", "invisible", "constant", "verify", "preset", "movable", "multiline", "boxWidth", "field") if k in a}
+
+    def true_only(self, v):
+        if self.bool(v) is not True:
+            self.fail("bad_value", "kapalı seçenek yazılmaz")
+        return True
 
     def width_factor(self, v):
         x = self.float(v)
@@ -4119,6 +4170,26 @@ class _Schema:
             self.fail("bad_value", f"blok ölçeği {x}; pozitif olmalı")
         return x
 
+    def attribute_places(self, v):
+        """An insert's moved attributes (schema 58, docs/adr/0317 §1): tag → point, not empty."""
+        if type(v) is dict and not v:
+            self.fail("bad_value", "boş öznitelik yerleri yazılmaz")
+        if type(v) is not dict:
+            self.fail("wrong_type", "harita olmalı")
+        out = {}
+        for k, p in v.items():
+            self.path.append(k)
+            out[k] = self.point(p)
+            self.path.pop()
+        return out
+
+    def places_rule(self, fields, movable):
+        """A place only for a movable attribute of the insert's block (docs/adr/0317 §1)."""
+        for tag in fields.get("attributePlaces", {}):
+            if tag not in movable:
+                self.path.append("attributePlaces")
+                self.fail("bad_value", f"“{tag}” özniteliği blokta taşınabilir değil; yeri yazılmaz")
+
     def y_scale(self, v):
         """An insert's own y factor (schema 57, docs/adr/0315 §3): positive."""
         x = self.float(v)
@@ -4164,6 +4235,11 @@ class _Schema:
                 if e["kind"] == "insert" and e["block"] not in ids:
                     self.path += [str(i), "entities", str(j), "insert", "block"]
                     self.fail("unknown_block", "yerleştirilen blok çizimde tanımlı değil")
+                if e["kind"] == "insert":
+                    movable = {a["tag"] for a in blocks[ids[e["block"]]].get("attributes", []) if a.get("movable")}
+                    self.path += [str(i), "entities", str(j), "insert"]
+                    self.places_rule(e, movable)
+                    del self.path[-4:]
         depth = [0] * len(blocks)
         stack = []
 
@@ -4526,7 +4602,8 @@ ENTITY_KINDS = {
     },
     # Schema 6 (docs/adr/0144): `mirror` only when true.
     "insert": lambda s: {"block": (s.id16, True), "p": (s.point, True), "scale": (s.scale, True), "rotation": (s.float, True), "mirror": (s.mirror, False),
-                         **({"yScale": (s.y_scale, False)} if s.block_extras else {})},
+                         **({"yScale": (s.y_scale, False)} if s.block_extras else {}),
+                         **({"attributePlaces": (s.attribute_places, False)} if s.block_cards else {})},
     # Schema 22 (docs/adr/0184): rows and columns of one-line cells, merged ranges, alignments, a heading row only when
     # true, lines by name (all: no field), a frame's width, a text's face, a source; only in the drawing.
     "table": lambda s: {
@@ -4609,6 +4686,22 @@ def text_extras(s, mask):
     if mask:
         table["mask"] = (s.mask, False)
     return table
+
+
+def attribute_options_problem(a):
+    """What is wrong with an attribute definition's options (kentos_contracts::blocks::options_problem), or None."""
+    constant = a.get("constant", False)
+    if constant and (a.get("verify") or a.get("preset")):
+        return "sabit öznitelik sorulmaz; doğrula ve ön ayarlı seçilemez"
+    if constant and a.get("movable"):
+        return "sabit özniteliğin yeri yerleştirmede değişmez; taşınabilir seçilemez"
+    if constant and "field" in a:
+        return "sabit öznitelik alan olamaz"
+    if "boxWidth" in a and not a.get("multiline"):
+        return "kutu genişliği yalnız çok satırlı öznitelikte olur"
+    if "field" in a and not a["field"].strip():
+        return "alan boş olamaz"
+    return None
 
 
 def name_key(name):

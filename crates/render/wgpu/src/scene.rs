@@ -1493,6 +1493,8 @@ fn shape(entity: &Entity) -> Shape {
             rotation: i.rotation,
             mirror: i.mirror.then_some(true),
             attrs: None,
+            // Nor where it moved them: the texts are drawn above the scene.
+            places: None,
         },
     }
 }

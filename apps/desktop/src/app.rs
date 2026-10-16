@@ -162,6 +162,10 @@ pub enum Dialog {
     BlockAttributes,
     /// Blok ekle's Öznitelik değerleri (attribute_values.rs); the window is `App::attribute_values`.
     AttributeValues,
+    /// Blok kartı (block_card.rs, docs/adr/0317 §4); the window is `App::block_card`.
+    BlockCard,
+    /// Blok çizelgesi (block_schedule.rs, docs/adr/0317 §3); the window is `App::block_schedule`.
+    BlockSchedule,
     /// Bul ve değiştir (find_replace.rs, docs/adr/0145 §6); the window is `App::find_replace`.
     FindReplace,
     /// Katmanları birleştir (layer_merge.rs, docs/adr/0177 §3); the window is `App::layer_merge`.
@@ -415,6 +419,8 @@ pub enum Message {
     BlockAttributes(crate::block_attributes::Event),
     /// Blok ekle's Öznitelik değerleri (attribute_values.rs).
     AttributeValues(crate::attribute_values::Event),
+    BlockCard(crate::block_card::Event),
+    BlockSchedule(crate::block_schedule::Event),
     FindReplace(crate::find_replace::Event),
     LayerMerge(crate::layer_merge::Event),
     LayerTranslate(crate::layer_translate::Event),
@@ -648,6 +654,8 @@ pub struct App {
     pub(crate) block_attributes: Option<crate::block_attributes::Window>,
     /// Blok ekle's Öznitelik değerleri, while it asks (attribute_values.rs).
     pub(crate) attribute_values: Option<crate::attribute_values::Window>,
+    pub(crate) block_card: Option<crate::block_card::Window>,
+    pub(crate) block_schedule: Option<crate::block_schedule::Window>,
     /// Bul ve değiştir's window, while it is open (find_replace.rs).
     pub(crate) find_replace: Option<crate::find_replace::Window>,
     /// Metin dosyası yerleştir asked for its file: the dialog opens after the update (text_file.rs).
@@ -1034,6 +1042,8 @@ impl App {
             template_editor: None,
             block_attributes: None,
             attribute_values: None,
+            block_card: None,
+            block_schedule: None,
             find_replace: None,
             text_file_wanted: false,
             raster_values_wanted: Vec::new(),
@@ -1655,6 +1665,8 @@ impl App {
             Message::TemplateEditor(event) => return self.template_editor_event(event),
             Message::BlockAttributes(event) => return self.block_attributes_event(event),
             Message::AttributeValues(event) => self.attribute_values_event(event),
+            Message::BlockCard(event) => return self.block_card_event(event),
+            Message::BlockSchedule(event) => return self.block_schedule_event(event),
             Message::FindReplace(event) => return self.find_replace_event(event),
             Message::LayerMerge(event) => return self.layer_merge_event(event),
             Message::LayerTranslate(event) => return self.layer_translate_event(event),
@@ -2489,6 +2501,18 @@ impl App {
             "block.redefineFromFile" => {
                 if let Some(id) = self.block_at_hand() {
                     return self.blocks_redefine_from(id);
+                }
+            }
+            // Blok çizelgesi, Öznitelikleri eşitle and Blok kartı (docs/adr/0317).
+            "block.schedule" => self.open_block_schedule(None),
+            "block.sync" => {
+                if let Some(id) = self.block_at_hand() {
+                    self.blocks_sync(id, false);
+                }
+            }
+            "block.card" => {
+                if let Some(id) = self.block_at_hand() {
+                    self.open_block_card(id);
                 }
             }
             // Blokları dışa aktar and Blokları al (blocks_files.rs, docs/adr/0314 §3).

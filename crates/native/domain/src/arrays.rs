@@ -104,6 +104,7 @@ pub fn item_insert(
     like: Option<&InsertEntity>,
 ) -> InsertEntity {
     let mut insert = like.cloned().unwrap_or_else(|| InsertEntity {
+        attribute_places: Default::default(),
         base: kentos_contracts::EntityBase {
             id: 0,
             layer_id: array.layer_id.clone(),

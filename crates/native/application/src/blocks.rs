@@ -36,6 +36,11 @@ pub fn core_blocks(blocks: &[Arc<BlockDefinition>]) -> Blocks {
                             kentos_geometry_core::text::TextAlign::from_name(x.name())
                         }),
                         width_factor: a.width_factor,
+                        invisible: a.options.invisible,
+                        constant: a.options.constant,
+                        movable: a.options.movable,
+                        multiline: a.options.multiline,
+                        box_width: a.options.box_width,
                     })
                     .collect(),
             })

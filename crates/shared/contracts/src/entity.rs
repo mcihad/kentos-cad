@@ -874,6 +874,13 @@ pub struct InsertEntity {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub mirror: bool,
+    /// Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the
+    /// definition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where
+    /// the definition puts it.
+    #[serde(default, rename = "attributePlaces", skip_serializing_if = "BTreeMap::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, Vec2>>", optional, rename = "attributePlaces"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub attribute_places: BTreeMap<String, Vec2>,
 }
 
 /// A block definition (docs/adr/0144): objects drawn once, placed many
@@ -910,6 +917,33 @@ pub struct BlockDefinition {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub units: Option<BlockUnits>,
+    /// Its library card (docs/adr/0317 §4): category, tags and version.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub card: Option<BlockCard>,
+}
+
+/// A block's library card (docs/adr/0317 §4): what the Bloklar panel's cards and search show beside its name, its
+/// description, its size and its attributes.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlockCard {
+    /// A path of categories by `/` (`Mimari/Kapılar`); absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub category: Option<String>,
+    /// Words it is found by, each once, Turkish case folded.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub tags: Vec<String>,
+    /// How many times its definition has changed since it was made: 1 when made; each change of its objects, base,
+    /// attributes or unit adds one.
+    #[cfg_attr(feature = "schema", schemars(range(min = 1)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub version: u32,
 }
 
 /// The unit a block was drawn in (docs/adr/0315 §4).
@@ -996,6 +1030,53 @@ pub struct AttributeDefinition {
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub width_factor: Option<f64>,
+    /// Its options (docs/adr/0317 §1), each absent when off.
+    #[serde(flatten)]
+    #[cfg_attr(feature = "ts", ts(flatten))]
+    pub options: AttributeOptions,
+}
+
+/// An attribute definition's options (docs/adr/0317 §1; AutoCAD's ATTDEF modes, DXF group 70).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AttributeOptions {
+    /// Not drawn: its value is kept, listed and scheduled (DXF 70 bit 1).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub invisible: bool,
+    /// Its value is the definition's `value` in every insert; an insert holds none of its own (bit 2).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub constant: bool,
+    /// Blok ekle asks for it twice, the two the same (bit 4).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub verify: bool,
+    /// Blok ekle takes its default without asking (bit 8).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub preset: bool,
+    /// An insert may move its text (`attributePlaces`); off: locked where the definition puts it (bit 16 set).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub movable: bool,
+    /// Its value may hold line breaks, each a line; wrapped to `boxWidth` when given (an MTEXT attribute).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub multiline: bool,
+    /// A multiline attribute's box width, metres in the definition's size.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub box_width: Option<f64>,
+    /// A field (docs/adr/0317 §1): a template whose `{ifade}` parts are filled for each insert (its attributes, its
+    /// place, the project's `@` values); the commands that place, sync and update fields write it as the value.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub field: Option<String>,
 }
 
 /// The deepest nesting of blocks: a definition holding inserts of

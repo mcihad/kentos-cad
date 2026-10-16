@@ -175,6 +175,14 @@ Liste:
   ve parçaların görünürlük kapısı (`Item::veiled`) web'in çiziminde ve seçiminde; 0'daki parçanın `byLayer`'ının yerleştirmenin
   katmanından alınması web'in stilli çiziminde; `cad.blocks.insert`'in ve `cad.blocks.edit` `units`'inin TS işleyicileri, Blok
   ekle'nin Y ölçeği, Öznitelikler'in X/Y ölçeği, Bloklar panelinin Birim ▸'i; web'in DXF yolu çekirdekten geldiği için hazır.
+- [ ] `CAD-BLOCK-08`, `09`, `10`, `12` öznitelik seçenekleri, eşitleme, değiştirme, sorgu ve kartlar (ADR 0317, 16 Ekim): web'de
+  gerekenler: `.kcad` şema 58'in öznitelik seçenekleri, `attributePlaces`'i ve bloğun `card`'ı (web'in kopyası 55'te); deponun ve
+  stilli çizimin seçeneklere göre öznitelik yazısı (görünmez, sabit, taşınmış yer, çok satırlı kutu); `cad.blocks.edit`'in `sync`,
+  `fields`, `place`, `card` işlemlerinin ve `attributes`/`update`'in eşitlemesinin, `cad.blocks.replace` ve `cad.blocks.query`'nin
+  TS işleyicileri; Blok öznitelikleri penceresinde seçenekler, Öznitelik değerleri'nde doğrulama ve çok satır, Blok kartı ve Blok
+  çizelgesi pencereleri, Bloklar panelinin Liste/Kartlar'ı ve kategori seçicisi. Masaüstünde de açık: DXF'te konum kilidi (16),
+  görünmez özniteliğin ATTRIB'i ve okurken sabit ve görünmez ATTDEF'in öznitelik olarak alınması; taşınabilir özniteliğin
+  tutamacı.
 - [ ] `CAD-BLOCK-05`, `06`, `07`, `11` Blok düzenleyici, blokların dosya API'si ve boyut sınırı (ADR 0316, 16 Ekim): web'de
   gerekenler: Blok düzenleyici (tanımın nesneleri ayrı çizimde, Kaydet `cad.blocks.edit` `update`'iyle) ve `update`'in TS işleyicisi;
   `file.import.block`'un TS işleyicisi (web'in Dosyadan blok ekle'si ve Başka çizimden al'ı onunla; çakışan blok kimliğinin

@@ -39,7 +39,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::api::json::Json;
-use crate::entity::{Attrs, Entity, Shape, entity_bounds_in};
+use crate::entity::{Attrs, Entity, Places, Shape, entity_bounds_in};
 use crate::geom::affine::{Affine, apply, compose, translation};
 use crate::ops::warp::{Warp, warp_shape};
 use crate::geometry::{Bounds, empty_bounds, extend_bounds};
@@ -66,26 +66,71 @@ pub struct Attribute {
     /// Which point of the text `p` is, and its width factor, as a text's (docs/adr/0145).
     pub align: Option<TextAlign>,
     pub width_factor: Option<f64>,
+    /// Not drawn (docs/adr/0317 §1): no piece, nothing on Patlat.
+    pub invisible: bool,
+    /// Its value is `value` in every insert: the insert's own is not shown.
+    pub constant: bool,
+    /// An insert may show it elsewhere (its `attributePlaces`).
+    pub movable: bool,
+    /// Its value's line breaks are lines; a box width wraps them.
+    pub multiline: bool,
+    pub box_width: Option<f64>,
 }
 
 impl Attribute {
     /// Its text showing `text`, in the definition's coordinates.
     pub fn shape(&self, text: String) -> Shape {
+        self.shape_at(self.p, text)
+    }
+
+    /// The text a value shows (docs/adr/0317 §1): a single-line attribute's line breaks are spaces.
+    pub fn shown(&self, value: &str) -> String {
+        if self.multiline {
+            value.to_owned()
+        } else {
+            value.replace("\r\n", " ").replace(['\n', '\r'], " ")
+        }
+    }
+
+    /// Its text showing `text` at `p` of the definition's coordinates (a moved attribute's place).
+    pub fn shape_at(&self, p: Vec2, text: String) -> Shape {
+        let text = self.shown(&text);
         Shape::Text {
-            p: self.p,
+            p,
             text,
             height: self.height,
             rotation: self.rotation,
             align: self.align,
             width_factor: self.width_factor,
             mask: None,
-            box_width: None,
+            box_width: if self.multiline { self.box_width } else { None },
             line_spacing: None,
             runs: None,
             face: Default::default(),
             path: None,
         }
     }
+}
+
+/// An attribute piece's shape in its definition's coordinates relative to the base point (docs/adr/0317 §1): the
+/// value the insert shows (`attrs`; a constant attribute's is the definition's), at the place the insert moved it to
+/// (`places`; a movable attribute's only). Any other piece's shape as it is.
+fn attribute_piece(flat: &Flat, piece: &Piece, attrs: Option<&Attrs>, places: Option<&Places>) -> Shape {
+    let Some(tag) = &piece.attribute else {
+        return piece.shape.clone();
+    };
+    let Some(a) = flat.attributes.iter().find(|a| &a.tag == tag) else {
+        return piece.shape.clone();
+    };
+    let value = attrs.and_then(|v| v.shown(tag)).unwrap_or(&a.value);
+    let at = places
+        .and_then(|p| p.of(tag))
+        .filter(|_| a.movable)
+        .unwrap_or(a.p);
+    transform_shape(
+        &a.shape_at(at, value.to_owned()),
+        &translation(-flat.base.x, -flat.base.y),
+    )
 }
 
 /// A definition as a host gives it: its id, its base point, its objects
@@ -233,17 +278,11 @@ impl Blocks {
         let Some((flat, m, similar)) = self.placed(insert) else {
             return Vec::new();
         };
-        let values = insert_attrs(insert);
+        let (values, places) = insert_attrs(insert);
         flat.pieces
             .iter()
             .map(|piece| {
-                let mut shape = place(&piece.shape, &m, similar);
-                if let (Some(tag), Some(values), Shape::Text { text, .. }) =
-                    (&piece.attribute, values, &mut shape)
-                    && let Some(v) = values.shown(tag)
-                {
-                    v.clone_into(text);
-                }
+                let shape = place(&attribute_piece(flat, piece, values, places), &m, similar);
                 Piece {
                     shape,
                     color: piece.color.clone(),
@@ -415,13 +454,24 @@ impl Blocks {
         let Some((flat, m, similar)) = self.placed(&insert.shape) else {
             return Cut::Error("Yerleştirilen blok çizimde tanımlı değil; patlatılamadı.".into());
         };
-        let values = insert_attrs(&insert.shape);
-        let shown: Vec<(&Attribute, String)> = flat
+        let (values, places) = insert_attrs(&insert.shape);
+        // The attributes that show (docs/adr/0317 §1): an invisible one gives nothing, a constant one its own value,
+        // a moved one stands where the insert put it.
+        let shown: Vec<(&Attribute, Vec2, String)> = flat
             .attributes
             .iter()
+            .filter(|a| !a.invisible)
             .filter_map(|a| {
-                let v = values.and_then(|v| v.shown(&a.tag)).unwrap_or(&a.value);
-                (!v.is_empty()).then(|| (a, v.to_owned()))
+                let v = if a.constant {
+                    &a.value
+                } else {
+                    values.and_then(|v| v.shown(&a.tag)).unwrap_or(&a.value)
+                };
+                let at = places
+                    .and_then(|p| p.of(&a.tag))
+                    .filter(|_| a.movable)
+                    .unwrap_or(a.p);
+                (!v.is_empty()).then(|| (a, at, v.to_owned()))
             })
             .collect();
         if flat.entities.is_empty() && shown.is_empty() {
@@ -488,7 +538,7 @@ impl Blocks {
                     rest,
                 }
             })
-            .chain(shown.into_iter().map(|(a, text)| {
+            .chain(shown.into_iter().map(|(a, at, text)| {
                 // An attribute's text on the insert's layer, in its colour and line weight.
                 let mut rest = vec![("attrs".to_owned(), Json::Obj(Vec::new()))];
                 for (key, value) in [
@@ -501,7 +551,7 @@ impl Blocks {
                     }
                 }
                 Entity {
-                    shape: place(&a.shape(text), &m, similar),
+                    shape: place(&a.shape_at(at, text), &m, similar),
                     rest,
                 }
             }))
@@ -534,6 +584,11 @@ fn attribute_of(v: &Json) -> Result<Attribute, String> {
         rotation: *rotation,
         align: crate::api::json::read_field(v, "align")?,
         width_factor: crate::api::json::read_field(v, "widthFactor")?,
+        invisible: matches!(v.get("invisible"), Json::Bool(true)),
+        constant: matches!(v.get("constant"), Json::Bool(true)),
+        movable: matches!(v.get("movable"), Json::Bool(true)),
+        multiline: matches!(v.get("multiline"), Json::Bool(true)),
+        box_width: crate::api::json::read_field(v, "boxWidth")?,
     })
 }
 
@@ -560,11 +615,11 @@ pub fn pieces_bounds(own: Bounds, pieces: &[Piece], font: Font) -> Bounds {
     b
 }
 
-/// An insert's attributes (docs/adr/0144 §7).
-fn insert_attrs(shape: &Shape) -> Option<&Attrs> {
+/// An insert's attributes (docs/adr/0144 §7) and where it moved them (docs/adr/0317 §1).
+fn insert_attrs(shape: &Shape) -> (Option<&Attrs>, Option<&Places>) {
     match shape {
-        Shape::Insert { attrs, .. } => attrs.as_ref(),
-        _ => None,
+        Shape::Insert { attrs, places, .. } => (attrs.as_ref(), places.as_ref()),
+        _ => (None, None),
     }
 }
 
@@ -619,6 +674,7 @@ pub fn insert_through(shape: &Shape, m: &Affine) -> Option<Shape> {
         rotation,
         mirror,
         attrs,
+        places,
     } = shape
     else {
         return None;
@@ -646,6 +702,7 @@ pub fn insert_through(shape: &Shape, m: &Affine) -> Option<Shape> {
         rotation: atan2(u.y, u.x),
         mirror: flip.then_some(true),
         attrs: attrs.clone(),
+        places: places.clone(),
     })
 }
 
@@ -762,6 +819,7 @@ fn flatten(
             rotation,
             mirror,
             attrs,
+            places,
         } = &e.shape
         {
             flatten(block, sources, done, stack);
@@ -783,14 +841,12 @@ fn flatten(
             // What the nested insert's own `byLayer` parts follow: its layer (docs/adr/0315 §2).
             let insert_mask = own_follows.as_ref().map_or(0, |(_, m)| *m);
             for piece in &inner.pieces {
-                // A nested insert's attribute shows its value, fixed in this definition.
-                let mut shape = place(&piece.shape, &m, similar);
-                if let (Some(tag), Some(values), Shape::Text { text, .. }) =
-                    (&piece.attribute, attrs, &mut shape)
-                    && let Some(v) = values.shown(tag)
-                {
-                    v.clone_into(text);
-                }
+                // A nested insert's attribute shows its value where it put it, fixed in this definition.
+                let shape = place(
+                    &attribute_piece(&inner, piece, attrs.as_ref(), places.as_ref()),
+                    &m,
+                    similar,
+                );
                 if matches!(&shape, Shape::Text { text, .. } if text.is_empty()) {
                     continue;
                 }
@@ -888,8 +944,9 @@ fn flatten(
             });
         }
     }
-    // Its own attributes: texts of the default, the tag telling the host to show the insert's value.
-    for a in &def.attributes {
+    // Its own attributes: texts of the default, the tag telling the host to show the insert's value; an invisible
+    // one draws nothing, a constant one is its definition's text alone (docs/adr/0317 §1).
+    for a in def.attributes.iter().filter(|a| !a.invisible) {
         pieces.push(Piece {
             shape: transform_shape(&a.shape(a.value.clone()), &to_base),
             color: None,
@@ -897,7 +954,7 @@ fn flatten(
             by_layer: Vec::new(),
             gates: Vec::new(),
             stroke: PieceStroke::default(),
-            attribute: Some(a.tag.clone()),
+            attribute: (!a.constant).then(|| a.tag.clone()),
         });
     }
     stack.pop();
@@ -1006,6 +1063,7 @@ mod tests {
             rotation,
             mirror: mirror.then_some(true),
             attrs: None,
+            places: None,
         }
     }
 
@@ -1061,6 +1119,11 @@ mod tests {
                 rotation: 0.0,
                 align: None,
                 width_factor: None,
+                invisible: false,
+                constant: false,
+                movable: false,
+                multiline: false,
+                box_width: None,
             }],
         }]);
         let mut attrs = Attrs::default();
@@ -1073,6 +1136,7 @@ mod tests {
             rotation,
             mirror: Some(true),
             attrs: Some(attrs.clone()),
+            places: None,
         };
         let texts = |pieces: &[Piece]| -> Vec<(f64, f64, f64, Option<TextAlign>, String)> {
             pieces

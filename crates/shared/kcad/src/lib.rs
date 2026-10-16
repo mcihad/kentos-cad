@@ -430,11 +430,16 @@ pub const SCHEMA_WITH_PATTERNS: u32 = 56;
 /// definition's `units`, written only when the drawing has one; older readers refuse the file instead of drawing a
 /// stretched block at one scale or losing its unit.
 pub const SCHEMA_WITH_BLOCK_EXTRAS: u32 = 57;
+/// Schema 58 (docs/adr/0317 §1, §4): an attribute definition's options (`invisible`, `constant`, `verify`, `preset`,
+/// `movable`, `multiline`, `boxWidth`, `field`), an insert's `attributePlaces` and a block definition's `card`,
+/// written only when the drawing has one; older readers refuse the file instead of showing a hidden attribute or
+/// losing a moved one.
+pub const SCHEMA_WITH_BLOCK_CARDS: u32 = 58;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 56] = [
+pub const SCHEMAS: [u32; 57] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -491,6 +496,7 @@ pub const SCHEMAS: [u32; 56] = [
     SCHEMA_WITH_FROZEN,
     SCHEMA_WITH_PATTERNS,
     SCHEMA_WITH_BLOCK_EXTRAS,
+    SCHEMA_WITH_BLOCK_CARDS,
 ];
 
 /// The file a drawing is saved as.

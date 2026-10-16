@@ -138,6 +138,34 @@ pub(crate) fn said(fault: &BlockFault, blocks: &[BlockDefinition]) -> Said {
                 name(*definition)
             ),
         ),
+        BlockFault::BadAttribute {
+            definition,
+            attribute,
+            problem,
+        } => (
+            Code::BadValue,
+            "blocks",
+            in_block(*definition, &[Seg::Name("attributes"), Seg::Index(*attribute)]),
+            format!("“{}” bloğunun özniteliği: {problem}", name(*definition)),
+        ),
+        BlockFault::BadCard {
+            definition,
+            problem,
+        } => (
+            Code::BadValue,
+            "blocks",
+            in_block(*definition, &[Seg::Name("card")]),
+            format!("“{}” bloğunun kartı: {problem}", name(*definition)),
+        ),
+        BlockFault::BadPlace { at, tag } => {
+            let (list, path) = insert(at, "attributePlaces");
+            (
+                Code::BadValue,
+                list,
+                path,
+                format!("“{tag}” özniteliği blokta taşınabilir değil; yeri yazılmaz"),
+            )
+        }
         BlockFault::TooLarge { definition } => (
             Code::BlockTooLarge,
             "blocks",

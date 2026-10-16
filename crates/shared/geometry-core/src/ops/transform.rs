@@ -456,6 +456,7 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
             rotation,
             mirror,
             attrs,
+            places,
         } => {
             let theta = atan2(m[1], m[0]);
             let flip = is_reflection(m);
@@ -473,6 +474,7 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
                 }),
                 mirror: mirrored.then_some(true),
                 attrs: attrs.clone(),
+                places: places.clone(),
             }
         }
         // Its point moves; its alignment, width factor and mask stay (docs/adr/0145); a multi-line

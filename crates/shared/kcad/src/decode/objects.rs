@@ -209,6 +209,9 @@ pub(super) struct Features {
     pub(super) patterns: bool,
     /// Schema 57: an insert's `yScale` and a block definition's `units` (docs/adr/0315 §3, §4).
     pub(super) block_extras: bool,
+    /// Schema 58: an attribute definition's options, an insert's `attributePlaces` and a block's `card`
+    /// (docs/adr/0317 §1, §4).
+    pub(super) block_cards: bool,
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
     pub(super) look: bool,
@@ -281,6 +284,7 @@ impl Features {
             frozen: schema >= crate::SCHEMA_WITH_FROZEN,
             patterns: schema >= crate::SCHEMA_WITH_PATTERNS,
             block_extras: schema >= crate::SCHEMA_WITH_BLOCK_EXTRAS,
+            block_cards: schema >= crate::SCHEMA_WITH_BLOCK_CARDS,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,
@@ -396,6 +400,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
             Kind::Insert => {
                 matches!(key, "block" | "p" | "scale" | "rotation" | "mirror")
                     || (has.block_extras && key == "yScale")
+                    || (has.block_cards && key == "attributePlaces")
             }
             Kind::Leader => {
                 matches!(
@@ -558,6 +563,8 @@ struct Fields {
     scale: Option<f64>,
     /// An insert's own y factor and where it is (docs/adr/0315 §3).
     y_scale: Option<(f64, usize)>,
+    /// Where an insert shows its movable attributes (docs/adr/0317 §1).
+    attribute_places: Option<BTreeMap<String, Vec2>>,
     mirror: Option<bool>,
     align: Option<TextAlign>,
     arrow: Option<LeaderArrow>,
@@ -659,6 +666,27 @@ pub(super) fn objects(
         {
             r.pop();
             return Err(super::blocks::unknown_block(r, i, block_at, blocks));
+        }
+        // A moved attribute only of a movable tag (docs/adr/0317 §1).
+        if let Entity::Insert(insert) = &entity
+            && let Err(fault) = kentos_contracts::blocks::places(
+                blocks,
+                std::slice::from_ref(&entity),
+                None,
+                index,
+            )
+        {
+            let tag = match &fault {
+                kentos_contracts::blocks::BlockFault::BadPlace { tag, .. } => tag.clone(),
+                _ => String::new(),
+            };
+            let _ = insert;
+            r.push(Seg::Name("insert"));
+            r.push(Seg::Name("attributePlaces"));
+            return Err(r.fail(
+                Code::BadValue,
+                &format!("“{tag}” özniteliği blokta taşınabilir değil; yeri yazılmaz"),
+            ));
         }
         // `has.uids`: `object` gave the id or refused the object.
         let Some(uid) = uid else {
@@ -1069,6 +1097,19 @@ pub(super) fn object(
                     ));
                 }
                 f.y_scale = Some((y, at));
+            }
+            "attributePlaces" => {
+                let at = r.position();
+                let mut places = BTreeMap::new();
+                map(r, |r, tag| {
+                    places.insert(tag.to_owned(), point(r)?);
+                    Ok(())
+                })?;
+                // One way to write an insert: no places is no map.
+                if places.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş öznitelik yerleri yazılmaz"));
+                }
+                f.attribute_places = Some(places);
             }
             "mirror" => {
                 let at = r.position();
@@ -1632,6 +1673,7 @@ fn build(
                 ));
             }
             Entity::Insert(InsertEntity {
+            attribute_places: f.attribute_places.take().unwrap_or_default(),
             base,
             block: required(r, f.block, "block")?,
             p: required(r, f.p, "p")?,

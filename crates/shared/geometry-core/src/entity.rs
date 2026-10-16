@@ -51,6 +51,18 @@ impl Attrs {
     }
 }
 
+/// Where an insert shows its block's movable attributes (`attributePlaces`, docs/adr/0317 §1): each tag's point in the
+/// definition's coordinates.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Places(pub Vec<(String, Vec2)>);
+
+impl Places {
+    /// The point `tag`'s text stands at, when the insert moved it.
+    pub fn of(&self, tag: &str) -> Option<Vec2> {
+        self.0.iter().find(|(k, _)| k == tag).map(|(_, p)| *p)
+    }
+}
+
 /// A hatch's pattern (docs/adr/0186 §1): `solid`, `lines`, `cross`,
 /// `pattern` (its line families, named and scaled) or `gradient`.
 #[derive(Clone, Debug, PartialEq)]
@@ -308,6 +320,9 @@ pub enum Shape {
         /// the geometry's JSON: an entity's `attrs` stay among its other
         /// fields, where they were, and are read into it as well.
         attrs: Option<Attrs>,
+        /// Where it shows its block's movable attributes (docs/adr/0317 §1): a tag's text at this point of the
+        /// definition's coordinates. Read from the entity's `attributePlaces`, which stay among its other fields.
+        places: Option<Places>,
     },
     /// A leader (docs/adr/0146): an arrowhead at `pts[0]`, a line through
     /// `pts` and, with a note, a landing from the last vertex along the
@@ -419,7 +434,7 @@ crate::json_tagged!(Shape, "kind",
     Text => "text" { p, text, height, rotation, align, width_factor => "widthFactor", mask, box_width => "boxWidth", line_spacing => "lineSpacing", runs, path & face: crate::text::face::Face },
     Dimension => "dimension" { a, b, offset, height, text, style, angle, c, mask, za, zb & look: crate::geom::dimension::Look },
     Hatch => "hatch" { ring, holes, pattern, assoc },
-    Insert => "insert" { block, p, scale, y_scale => "yScale", rotation, mirror; attrs },
+    Insert => "insert" { block, p, scale, y_scale => "yScale", rotation, mirror; attrs, places },
     Leader => "leader" { pts, text, height, rotation, arrow, arrow_size => "arrowSize", mask },
     Table => "table" { p, rotation, height, rows, columns, cells, merges, aligns, header, grid, frame, source & face: crate::text::face::Face },
     Image => "image" { p, width, height, rotation, mirror, asset, file, clip, opacity },
@@ -461,6 +476,18 @@ impl FromJson for Entity {
             && let Json::Obj(fields) = v.get("attrs")
         {
             *attrs = Some(Attrs(fields.clone()));
+        }
+        // Its moved attributes (docs/adr/0317 §1): points by tag, those that read.
+        if let Shape::Insert { places, .. } = &mut shape
+            && let Json::Obj(fields) = v.get("attributePlaces")
+        {
+            let read: Vec<(String, Vec2)> = fields
+                .iter()
+                .filter_map(|(k, p)| Vec2::from_json(p).ok().map(|p| (k.clone(), p)))
+                .collect();
+            if !read.is_empty() {
+                *places = Some(Places(read));
+            }
         }
         let kind = match v.get("kind") {
             Json::Str(k) => k.as_str(),

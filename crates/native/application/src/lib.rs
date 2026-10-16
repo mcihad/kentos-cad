@@ -48,6 +48,9 @@ pub mod blocks;
 pub mod blocks_define;
 pub mod blocks_edit;
 pub mod blocks_insert;
+pub mod blocks_query;
+pub mod blocks_replace;
+pub mod blocks_sync;
 pub mod file_import_block;
 pub mod blocks_library;
 pub mod break_join;
@@ -475,6 +478,16 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_BLOCKS_INSERT,
         kentos_contracts::CAD_BLOCKS_INSERT_VERSION,
+    ),
+    // A block's inserts placing another, and the inserts counted, found and scheduled ([`blocks_replace`],
+    // [`blocks_query`], docs/adr/0317 §3).
+    (
+        kentos_contracts::CAD_BLOCKS_REPLACE,
+        kentos_contracts::CAD_BLOCKS_REPLACE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_BLOCKS_QUERY,
+        kentos_contracts::CAD_BLOCKS_QUERY_VERSION,
     ),
     // The project's style library and a change's reach ([`library_edit`], [`styles_impact`], docs/adr/0314).
     (

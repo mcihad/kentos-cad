@@ -294,6 +294,8 @@ impl Reader<'_> {
                     mirror: mirror.then_some(true),
                     block,
                     attrs,
+                    // Moved attributes are the typed hosts' (docs/adr/0317 §1): the web's packed store has none.
+                    places: None,
                 }
             }
             13 | 16 => {
@@ -1194,6 +1196,7 @@ impl Packer {
                 rotation,
                 mirror,
                 attrs,
+                places: _,
             } => {
                 let b = self.string(block);
                 let mirrored = flag(mirror.unwrap_or(false));
@@ -1752,6 +1755,7 @@ mod tests {
                 ("KOT".into(), text("")),
                 ("Sayı".into(), Json::Num(3.0)),
             ])),
+            places: None,
         };
         let without = Shape::Insert {
             block: "b".into(),
@@ -1761,6 +1765,7 @@ mod tests {
             rotation: 0.5,
             mirror: None,
             attrs: None,
+            places: None,
         };
         let mut w = Packer::default();
         w.object(1.0, "altyapi", false, &with);

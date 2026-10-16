@@ -747,6 +747,12 @@ pub fn shape(entity: &Entity) -> Shape {
                     .map(|(k, v)| (k.clone(), Json::Str(v.clone())))
                     .collect(),
             )),
+            // And where it moved them (docs/adr/0317 §1).
+            places: (!i.attribute_places.is_empty()).then(|| {
+                kentos_geometry_core::entity::Places(
+                    i.attribute_places.iter().map(|(k, p)| (k.clone(), v(p))).collect(),
+                )
+            }),
         },
     }
 }
@@ -1402,6 +1408,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             rotation,
             mirror,
         } => Entity::Insert(InsertEntity {
+            attribute_places: Default::default(),
             base,
             block,
             p,

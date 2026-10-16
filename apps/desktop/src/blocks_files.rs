@@ -19,6 +19,14 @@ use kentos_interaction::Level;
 
 fn input(operation: BlockEditOperation) -> BlocksEdit {
     BlocksEdit {
+        sync: None,
+        renames: None,
+        remove_tags: None,
+        tag: None,
+        at: None,
+        category: None,
+        tags: None,
+        description: None,
         operation,
         block: None,
         name: None,

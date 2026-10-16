@@ -62,6 +62,11 @@ impl Placing {
                                 rotation: a.rotation,
                                 align: a.align.and_then(core_align),
                                 width_factor: a.width_factor,
+                                invisible: a.options.invisible,
+                                constant: a.options.constant,
+                                movable: a.options.movable,
+                                multiline: a.options.multiline,
+                                box_width: a.options.box_width,
                             })
                             .collect()
                     } else {
@@ -684,6 +689,15 @@ pub(crate) fn shape(e: &Entity) -> Shape {
             rotation: i.rotation,
             mirror: i.mirror.then_some(true),
             attrs: None,
+            // Where it moved its attributes (docs/adr/0317 §1).
+            places: (!i.attribute_places.is_empty()).then(|| {
+                kentos_geometry_core::entity::Places(
+                    i.attribute_places
+                        .iter()
+                        .map(|(k, p)| (k.clone(), core(*p)))
+                        .collect(),
+                )
+            }),
         },
     }
 }
@@ -987,6 +1001,7 @@ mod tests {
     fn an_insert_is_its_blocks_objects_placed() {
         let id = |n: u8| BlockId([n; 16]);
         let block = |n: u8, base: (f64, f64), entities: Vec<Entity>| BlockDefinition {
+            card: None,
             id: id(n),
             name: format!("B{n}"),
             base: Vec2 {
@@ -1011,6 +1026,7 @@ mod tests {
             vec![
                 object(r#"{"kind":"point","id":1,"layerId":"","attrs":{},"p":{"x":1,"y":3}}"#),
                 Entity::Insert(InsertEntity {
+                    attribute_places: Default::default(),
                     base: object(
                         r#"{"kind":"point","id":2,"layerId":"","attrs":{},"p":{"x":0,"y":0}}"#,
                     )
@@ -1027,6 +1043,7 @@ mod tests {
         );
         let placing = Placing::new(&[outer, inner]);
         let i = InsertEntity {
+            attribute_places: Default::default(),
             base: object(r#"{"kind":"point","id":7,"layerId":"a","attrs":{},"p":{"x":0,"y":0}}"#)
                 .base()
                 .clone(),

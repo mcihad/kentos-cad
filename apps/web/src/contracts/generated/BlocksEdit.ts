@@ -97,6 +97,39 @@ units?: BlockUnits,
  */
 rescale?: boolean, 
 /**
+ * `attributes`, `update`: false leaves the inserts' values as they are; absent or true syncs them as `sync`
+ * does (docs/adr/0317 §2).
+ */
+sync?: boolean, 
+/**
+ * `attributes`, `sync`: an insert's value under an old tag moved to the new one (old → new).
+ */
+renames?: { [key in string]: string }, 
+/**
+ * `sync`: tags whose values are taken off the inserts though no attribute has them.
+ */
+removeTags?: Array<string>, 
+/**
+ * `place`: the movable attribute's tag.
+ */
+tag?: string, 
+/**
+ * `place`: where the attribute's text stands, a point of the drawing; absent: where the definition puts it.
+ */
+at?: Vec2, 
+/**
+ * `card`: its category (empty: none).
+ */
+category?: string, 
+/**
+ * `card`: the words it is found by.
+ */
+tags?: Array<string>, 
+/**
+ * `card`: its description (empty: none).
+ */
+description?: string, 
+/**
  * The document revision the input was prepared against, as decimal text.
  */
 expectedRevision?: string, };

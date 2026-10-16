@@ -92,6 +92,20 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: BlocksEdit) -> CommandRes
     let changed: Vec<BlockId> = checked.changed.iter().map(|b| b.id).collect();
     let removed = in_drawing_order(cx.doc, &checked.removed);
     let mut slot = None;
+    let mut warnings = checked.warnings.clone();
+    let report = checked.sync.as_ref().map(|s| s.report.clone());
+    if let Some(s) = &checked.sync
+        && s.locked > 0
+    {
+        warnings.push(CommandWarning {
+            code: codes::LAYER_LOCKED.into(),
+            message: format!(
+                "{} yerleştirme kilitli katmanda olduğu için değerleri eşitlenmedi. Katmanın kilidini Katmanlar panelinden açıp Öznitelikleri eşitle'yi yineleyin.",
+                s.locked
+            ),
+            path: Some("block".into()),
+        });
+    }
     if !checked.removed.is_empty() {
         if let Err(stop) = remove(cx.doc, label(input.operation), &checked.removed) {
             return stop.into();
@@ -104,7 +118,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: BlocksEdit) -> CommandRes
         let Some(block) = block else {
             return CommandResult::Completed {
                 output: done(cx.doc, Vec::new(), Vec::new(), None, Vec::new()),
-                warnings: checked.warnings,
+                warnings,
             };
         };
         let gone: Vec<Slot> = checked.deleted.iter().map(|(s, _)| *s).collect();
@@ -113,11 +127,16 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: BlocksEdit) -> CommandRes
             Err(stop) => return stop.into(),
         }
     }
-    let deleted = checked.deleted.into_iter().map(|(_, uid)| uid).collect();
-    CommandResult::Completed {
-        output: done(cx.doc, changed, removed, slot, deleted),
-        warnings: checked.warnings,
+    // The inserts' values, in the same step (docs/adr/0317 §2).
+    if let Some(s) = checked.sync
+        && !s.changes.is_empty()
+    {
+        cx.doc.update_many(s.changes, label(input.operation));
     }
+    let deleted = checked.deleted.into_iter().map(|(_, uid)| uid).collect();
+    let mut output = done(cx.doc, changed, removed, slot, deleted);
+    output.sync = report;
+    CommandResult::Completed { output, warnings }
 }
 
 /// `ids` in the order the drawing lists its definitions.
@@ -142,6 +161,10 @@ pub fn label(operation: BlockEditOperation) -> &'static str {
         BlockEditOperation::Purge => labels::BLOCK_PURGE,
         BlockEditOperation::Duplicate => crate::blocks_library::DUPLICATE,
         BlockEditOperation::Import | BlockEditOperation::Export => crate::blocks_library::IMPORT,
+        BlockEditOperation::Sync => crate::blocks_sync::SYNC,
+        BlockEditOperation::Fields => crate::blocks_sync::FIELDS,
+        BlockEditOperation::Place => crate::blocks_sync::PLACE,
+        BlockEditOperation::Card => labels::BLOCK_CHANGE,
     }
 }
 
@@ -153,6 +176,7 @@ fn done(
     deleted: Vec<String>,
 ) -> BlocksEdited {
     BlocksEdited {
+        sync: None,
         changed,
         removed,
         insert: slot.and_then(|s| doc.uid(s)).map(|u| u.to_string()),
@@ -174,6 +198,8 @@ struct Checked {
     deleted: Vec<(Slot, String)>,
     insert: Option<Entity>,
     warnings: Vec<CommandWarning>,
+    /// The inserts' values fitted to the definition (docs/adr/0317 §2).
+    sync: Option<crate::blocks_sync::Synced>,
 }
 
 impl Checked {
@@ -184,13 +210,18 @@ impl Checked {
             deleted: Vec::new(),
             insert: None,
             warnings: Vec::new(),
+            sync: None,
         }
     }
 }
 
 /// The checks in the contract's order.
 fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
-    let needs_block = input.operation != BlockEditOperation::Purge;
+    // Every operation names its block but these: `purge` and `fields` take every one, `place` its inserts'.
+    let needs_block = !matches!(
+        input.operation,
+        BlockEditOperation::Purge | BlockEditOperation::Fields | BlockEditOperation::Place
+    );
     if needs_block && input.block.is_none() {
         return Err(Stop::failed(error(
             codes::NO_BLOCK,
@@ -231,11 +262,27 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         }
         BlockEditOperation::Units => {}
         BlockEditOperation::Update => update_input(input)?,
+        BlockEditOperation::Place => {
+            checks::uids(uids, "Konumu değişecek yerleştirme verilmedi.")?;
+            if input.tag.as_deref().is_none_or(checks::is_blank) {
+                return Err(Stop::failed(error(
+                    codes::UNKNOWN_TAG,
+                    "Taşınacak özniteliğin etiketi verilmedi. tag ile bloğun taşınabilir bir özniteliğini verin.".into(),
+                    Some("tag".into()),
+                )));
+            }
+            if let Some(at) = input.at {
+                checks::point(at, "Özniteliğin yerinin", "at")?;
+            }
+        }
         BlockEditOperation::Remove
         | BlockEditOperation::Purge
         | BlockEditOperation::Duplicate
         | BlockEditOperation::Export
-        | BlockEditOperation::Import => {}
+        | BlockEditOperation::Import
+        | BlockEditOperation::Sync
+        | BlockEditOperation::Fields
+        | BlockEditOperation::Card => {}
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
     if input.operation == BlockEditOperation::Purge {
@@ -243,6 +290,12 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
             removed: unused(doc),
             ..Checked::nothing()
         });
+    }
+    if input.operation == BlockEditOperation::Place {
+        return place(doc, input, uids);
+    }
+    if input.operation == BlockEditOperation::Fields && input.block.is_none() {
+        return fields_all(doc);
     }
     let Some(old) = input.block.and_then(|id| doc.block(id)) else {
         let id = input.block.map(|b| b.to_text()).unwrap_or_default();
@@ -268,6 +321,12 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         BlockEditOperation::Attributes => {
             next.attributes = input.attributes.clone().unwrap_or_default();
             rules_with(doc, &next)?;
+            if let Some(r) = &input.renames {
+                crate::blocks_sync::renames_ok(&next, r)?;
+            }
+            crate::blocks_sync::fields_of(doc, &next.attributes, &|i| {
+                format!("attributes[{i}].field")
+            })?;
         }
         BlockEditOperation::Redefine => {
             let named = checks::named(doc, uids)?;
@@ -305,15 +364,168 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
             checked.removed = vec![old.id];
             return Ok(checked);
         }
-        BlockEditOperation::Purge
+        BlockEditOperation::Sync => {
+            let renames = input.renames.clone().unwrap_or_default();
+            crate::blocks_sync::renames_ok(old, &renames)?;
+            let remove = input.remove_tags.clone().unwrap_or_default();
+            checked.sync = Some(crate::blocks_sync::sync(
+                doc, old, old, &renames, &remove, true, false,
+            )?);
+            return Ok(checked);
+        }
+        BlockEditOperation::Fields => {
+            checked.sync = Some(crate::blocks_sync::sync(
+                doc,
+                old,
+                old,
+                &Default::default(),
+                &[],
+                true,
+                true,
+            )?);
+            return Ok(checked);
+        }
+        BlockEditOperation::Card => {
+            let version = old.card.as_ref().map_or(1, |c| c.version);
+            let category = input.category.clone().or_else(|| old.card.as_ref().and_then(|c| c.category.clone()));
+            let tags = input
+                .tags
+                .clone()
+                .unwrap_or_else(|| old.card.as_ref().map(|c| c.tags.clone()).unwrap_or_default());
+            next.card = Some(kentos_contracts::BlockCard {
+                category: category.filter(|c| !checks::is_blank(c)),
+                tags,
+                version,
+            });
+            if let Some(d) = &input.description {
+                next.description = (!checks::is_blank(d)).then(|| d.clone());
+            }
+            if let Some(problem) = next.card.as_ref().and_then(kentos_contracts::blocks::card_problem) {
+                return Err(Stop::failed(error(
+                    codes::INVALID_BLOCK_CARD,
+                    format!("“{}” bloğunun kartı: {problem}", old.name),
+                    Some(if input.tags.is_some() { "tags" } else { "category" }.into()),
+                )));
+            }
+        }
+        BlockEditOperation::Place
+        | BlockEditOperation::Purge
         | BlockEditOperation::Duplicate
         | BlockEditOperation::Export
         | BlockEditOperation::Import => {}
+    }
+    // A change of what it draws counts on its card (docs/adr/0317 §4): its name and card do not.
+    fn draws(b: &BlockDefinition) -> (&Vec<Entity>, kentos_contracts::Vec2, &Vec<AttributeDefinition>, Option<kentos_contracts::BlockUnits>) {
+        (&b.entities, b.base, &b.attributes, b.units)
+    }
+    let redrawn = draws(&next) != draws(old);
+    if redrawn
+        && let Some(card) = next.card.as_mut()
+    {
+        card.version = card.version.saturating_add(1);
+    }
+    // `attributes` and `update` sync the inserts unless asked not to (docs/adr/0317 §2).
+    if matches!(
+        input.operation,
+        BlockEditOperation::Attributes | BlockEditOperation::Update
+    ) && input.sync != Some(false)
+        && next.attributes != old.attributes
+    {
+        let renames = input.renames.clone().unwrap_or_default();
+        checked.sync = Some(crate::blocks_sync::sync(
+            doc, old, &next, &renames, &[], true, false,
+        )?);
     }
     if next != *old {
         checked.changed = Some(next);
     }
     Ok(checked)
+}
+
+/// `place` (docs/adr/0317 §1): each insert named shows `tag` at `at` (a drawing point, kept in its definition's
+/// coordinates) or where the definition puts it; inserts on a locked layer left out and said.
+fn place(doc: &Document, input: &BlocksEdit, uids: &[String]) -> Result<Checked, Stop> {
+    let tag = input.tag.clone().unwrap_or_default();
+    let named = checks::named(doc, uids)?;
+    let (open, warning) = checks::skip_locked(doc, named)?;
+    let mut changes = Vec::with_capacity(open.len());
+    for (i, slot, e, _) in open {
+        let Entity::Insert(insert) = e else {
+            return Err(Stop::failed(error(
+                codes::NOT_INSERT,
+                "Verilen nesne bir blok yerleştirmesi değil. Bir bloğun yerleştirmesini verin.".into(),
+                Some(format!("uids[{i}]")),
+            )));
+        };
+        let Some(block) = doc.block(insert.block) else {
+            continue;
+        };
+        if !block
+            .attributes
+            .iter()
+            .any(|a| a.tag == tag && a.options.movable)
+        {
+            return Err(Stop::failed(error(
+                codes::ATTRIBUTE_NOT_MOVABLE,
+                format!(
+                    "“{}” bloğunda “{tag}” etiketli taşınabilir bir öznitelik yok. Blok öznitelikleri penceresinde özniteliği taşınabilir yapın.",
+                    block.name
+                ),
+                Some("tag".into()),
+            )));
+        }
+        let mut next = insert.clone();
+        match input.at {
+            Some(at) => {
+                let Some(q) = crate::blocks_sync::definition_point(block, insert, at) else {
+                    continue;
+                };
+                next.attribute_places.insert(tag.clone(), q);
+            }
+            None => {
+                next.attribute_places.remove(&tag);
+            }
+        }
+        if next != *insert {
+            changes.push((slot, Entity::Insert(next)));
+        }
+    }
+    let report = kentos_contracts::AttributeSync {
+        inserts: u32::try_from(changes.len()).unwrap_or(u32::MAX),
+        ..Default::default()
+    };
+    Ok(Checked {
+        warnings: warning.into_iter().collect(),
+        sync: Some(crate::blocks_sync::Synced {
+            changes,
+            report,
+            locked: 0,
+        }),
+        ..Checked::nothing()
+    })
+}
+
+/// `fields` without a block: every block's inserts with a field filled again (docs/adr/0317 §1).
+fn fields_all(doc: &Document) -> Result<Checked, Stop> {
+    let mut changes = Vec::new();
+    let mut report = kentos_contracts::AttributeSync::default();
+    let mut locked = 0;
+    for id in crate::blocks_sync::field_blocks(doc, None) {
+        let Some(b) = doc.block(id) else { continue };
+        let s = crate::blocks_sync::sync(doc, b, b, &Default::default(), &[], true, true)?;
+        report.inserts += s.report.inserts;
+        report.fields += s.report.fields;
+        locked += s.locked;
+        changes.extend(s.changes);
+    }
+    Ok(Checked {
+        sync: Some(crate::blocks_sync::Synced {
+            changes,
+            report,
+            locked,
+        }),
+        ..Checked::nothing()
+    })
 }
 
 /// The attribute definitions `attributes` writes (docs/adr/0144 §7): the

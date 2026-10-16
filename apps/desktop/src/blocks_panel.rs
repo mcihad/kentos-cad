@@ -37,6 +37,9 @@ const SEARCH: &str = "blok-ara";
 /// A row's height and its picture's side, at the body text's size (the web's `--blk-row-h`).
 const ROW: f32 = 46.0;
 const THUMB: f32 = 34.0;
+/// A card's height and its picture's side (docs/adr/0317 §4).
+const CARD: f32 = 150.0;
+const CARD_THUMB: f32 = 84.0;
 
 /// What the panel keeps while the app runs.
 #[derive(Debug, Default)]
@@ -52,6 +55,10 @@ pub struct PanelState {
     picking: Option<Picking>,
     /// Whether the list has the keyboard (a row was pressed).
     pub(crate) keyboard: bool,
+    /// Cards rather than rows (docs/adr/0317 §4).
+    cards: bool,
+    /// The category the list shows: a block of it or of one below it (none: every block).
+    category: Option<String>,
 }
 
 /// What a point shown on the drawing is for.
@@ -93,6 +100,19 @@ pub enum Event {
     Imported(Option<(String, String)>),
     /// The unit it is drawn in (blocks_files.rs, docs/adr/0315 §4): with `rescale` its numbers kept.
     Units(BlockId, kentos_contracts::BlockUnits, bool),
+    /// Öznitelikleri eşitle and Alanları güncelle (docs/adr/0317 §2, §1).
+    Sync(BlockId),
+    Fields(BlockId),
+    /// Kart… (block_card.rs, docs/adr/0317 §4).
+    Card(BlockId),
+    /// Başka blokla değiştir ▸ (docs/adr/0317 §3): this block's inserts place the other.
+    ReplaceWith(BlockId, BlockId),
+    /// Say ve çizelgele… (block_schedule.rs, docs/adr/0317 §3).
+    Schedule(BlockId),
+    /// The list's rows or its cards (docs/adr/0317 §4).
+    Cards(bool),
+    /// The category the list shows (none: every one).
+    Category(Option<String>),
 }
 
 fn msg(event: Event) -> Message {
@@ -122,11 +142,25 @@ impl App {
             .iter()
             .zip(placed)
             .filter(|(b, _)| {
+                // The category shown: the block's or one below it (docs/adr/0317 §4).
+                self.blocks_panel.category.as_ref().is_none_or(|c| {
+                    b.card.as_ref().and_then(|k| k.category.as_ref()).is_some_and(|k| {
+                        name_key(k) == name_key(c) || name_key(k).starts_with(&format!("{}/", name_key(c)))
+                    })
+                })
+            })
+            .filter(|(b, _)| {
+                // Found by its name, description, card's category and tags, and attributes' tags.
                 query.is_empty()
                     || name_key(&b.name).contains(&query)
                     || b.description
                         .as_deref()
                         .is_some_and(|d| name_key(d).contains(&query))
+                    || b.card.as_ref().is_some_and(|k| {
+                        k.category.as_deref().is_some_and(|c| name_key(c).contains(&query))
+                            || k.tags.iter().any(|t| name_key(t).contains(&query))
+                    })
+                    || b.attributes.iter().any(|a| name_key(&a.tag).contains(&query))
             })
             .map(|(b, placed)| Listed {
                 id: b.id,
@@ -208,6 +242,13 @@ impl App {
             Event::RedefineChosen(id, path) => self.blocks_redefine_chosen(id, path),
             Event::Exported(id, path) => self.blocks_exported(id, path),
             Event::Imported(read) => self.blocks_imported(read),
+            Event::Sync(id) => self.blocks_sync(id, false),
+            Event::Fields(id) => self.blocks_sync(id, true),
+            Event::Card(id) => self.open_block_card(id),
+            Event::ReplaceWith(from, to) => self.blocks_replace(from, to),
+            Event::Schedule(id) => self.open_block_schedule(Some(id)),
+            Event::Cards(on) => self.blocks_panel.cards = on,
+            Event::Category(c) => self.blocks_panel.category = c,
         }
         Task::none()
     }
@@ -465,9 +506,12 @@ impl App {
         )
         .padding([6, 8])
         .width(Fill);
+        let search = column![search, self.blocks_view_bar()];
         let rows = self.listed_blocks();
         if rows.is_empty() {
-            let words = if self.blocks_panel.query.trim().is_empty() {
+            let words = if self.blocks_panel.category.is_some() {
+                "Bu kategoride aramayla eşleşen blok yok. Bütün kategorileri seçin."
+            } else if self.blocks_panel.query.trim().is_empty() {
                 "Çizimde blok yok. Seçili nesnelerden Blok oluştur ile bir blok tanımlayın."
             } else {
                 "Aramayla eşleşen blok yok. Başka bir ad deneyin."
@@ -482,6 +526,9 @@ impl App {
         }
         let chosen = self.memory.block_insert;
         let focused = self.blocks_panel.focused;
+        if self.blocks_panel.cards {
+            return column![search, self.block_cards(rows, chosen)].into();
+        }
         let reveal = rows.iter().position(|r| Some(r.id) == focused);
         let list = VirtualList::new(rows.len(), typography::scaled(ROW), move |i| {
             let r = &rows[i];
@@ -567,6 +614,186 @@ impl App {
         ContextMenu::new(face, move |_| self.block_menu(id)).into()
     }
 
+    /// Under the search: the list's rows or cards, and the category shown (docs/adr/0317 §4).
+    fn blocks_view_bar(&self) -> Element<'_, Message> {
+        let p = &self.blocks_panel;
+        let toggle = |on: bool, glyph: &'static str, words: &'static str| {
+            tip(
+                button(icon(crate::icons::from_web(Some(glyph))).size(14.0))
+                    .on_press(msg(Event::Cards(on)))
+                    .padding(5)
+                    .style(style::button::toggle(p.cards == on)),
+                Tip::new(words),
+                tooltip::Position::Bottom,
+            )
+        };
+        // Every category the blocks' cards name, and each of their parents, once, sorted.
+        let mut categories: Vec<String> = Vec::new();
+        if let Some(doc) = &self.document {
+            for b in doc.model.blocks().iter() {
+                let Some(c) = b.card.as_ref().and_then(|k| k.category.as_ref()) else {
+                    continue;
+                };
+                let parts: Vec<&str> = c.split('/').collect();
+                for n in 1..=parts.len() {
+                    let path = parts[..n].join("/");
+                    if !categories.contains(&path) {
+                        categories.push(path);
+                    }
+                }
+            }
+        }
+        categories.sort_by_key(|c| name_key(c));
+        let shown = p
+            .category
+            .clone()
+            .unwrap_or_else(|| "Bütün kategoriler".to_owned());
+        let face = container(
+            row![
+                icon(crate::icons::from_web(Some("blockCategory"))).size(14.0),
+                container(label::caption(shown).wrapping(text::Wrapping::None))
+                    .width(Fill)
+                    .clip(true),
+                icon(Icon::ChevronDown).size(12.0),
+            ]
+            .spacing(6)
+            .align_y(Center),
+        )
+        .padding([3, 8])
+        .width(Fill)
+        .style(style::container::field_box);
+        let now = p.category.clone();
+        let menu = move || {
+            let mut m = Menu::new().radio(
+                "Bütün kategoriler",
+                now.is_none(),
+                msg(Event::Category(None)),
+            );
+            for c in &categories {
+                let depth = c.matches('/').count();
+                let name = c.rsplit('/').next().unwrap_or(c);
+                m = m.radio(
+                    format!("{}{name}", "    ".repeat(depth)),
+                    now.as_deref() == Some(c.as_str()),
+                    msg(Event::Category(Some(c.clone()))),
+                );
+            }
+            m
+        };
+        let category: Element<'_, Message> =
+            kentos_ui::widget::MenuButton::new(face, menu).into();
+        container(
+            row![
+                toggle(false, "blockList", "Liste"),
+                toggle(true, "blockCards", "Kartlar"),
+                category,
+            ]
+            .spacing(4)
+            .align_y(Center),
+        )
+        .padding(iced::Padding {
+            top: 0.0,
+            right: 8.0,
+            bottom: 6.0,
+            left: 8.0,
+        })
+        .width(Fill)
+        .into()
+    }
+
+    /// The blocks as cards, two a row: a large picture, the name, the category, the version and inserts; the tip says
+    /// the size, unit, tags and attributes (docs/adr/0317 §4). A press chooses, a second places; the menu is the row's.
+    fn block_cards(&self, rows: Vec<Listed>, chosen: Option<BlockId>) -> Element<'_, Message> {
+        let height = typography::scaled(CARD);
+        let pairs = rows.len().div_ceil(2);
+        VirtualList::new(pairs, height, move |i| {
+            let mut line = row![].spacing(6).padding([3, 8]).height(Fill);
+            for r in rows.iter().skip(i * 2).take(2) {
+                line = line.push(self.block_card_face(r, Some(r.id) == chosen));
+            }
+            if rows.len() <= i * 2 + 1 {
+                line = line.push(iced::widget::Space::new().width(Fill));
+            }
+            line.into()
+        })
+        .height(Fill)
+        .into()
+    }
+
+    fn block_card_face<'a>(&'a self, r: &Listed, chosen: bool) -> Element<'a, Message> {
+        let id = r.id;
+        let paths = self.spatial.store().insert_outlines(
+            &id.to_text(),
+            Vec2::new(0.0, 0.0),
+            1.0,
+            0.0,
+            false,
+        );
+        let side = typography::scaled(CARD_THUMB);
+        let picture = container(Canvas::new(Thumb { paths }).width(side).height(side))
+            .center_x(Fill)
+            .style(move |theme: &Theme| thumb_tile(theme, chosen));
+        let block = self.document.as_ref().and_then(|d| d.model.block(id));
+        let card = block.and_then(|b| b.card.as_ref());
+        let faint = |t: &Theme| text::Style {
+            color: Some(Tokens::of(t).faint),
+        };
+        let font = if chosen {
+            typography::ui_strong()
+        } else {
+            typography::ui()
+        };
+        let category = card
+            .and_then(|c| c.category.as_deref())
+            .map_or_else(|| "Kategorisiz".to_owned(), |c| c.replace('/', " › "));
+        let version = card.map_or_else(|| "Kartsız".to_owned(), |c| format!("Sürüm {}", c.version));
+        let words = column![
+            text(r.name.clone())
+                .font(font)
+                .size(typography::body())
+                .wrapping(text::Wrapping::None),
+            label::caption(category)
+                .wrapping(text::Wrapping::None)
+                .style(faint),
+            label::caption(format!("{version}, {} yerleştirme", r.placed.drawing))
+                .wrapping(text::Wrapping::None)
+                .style(faint),
+        ]
+        .spacing(1)
+        .width(Fill)
+        .clip(true);
+        let face = button(column![picture, words].spacing(5))
+            .on_press(msg(Event::Pressed(id)))
+            .padding(6)
+            .width(Fill)
+            .height(Fill)
+            .style(style::button::row(chosen));
+        let mut body = Vec::new();
+        if let Some(about) = &r.about {
+            body.push(about.clone());
+        }
+        if let Some(size) = size_text(self, id) {
+            body.push(size);
+        }
+        if let Some(c) = card
+            && !c.tags.is_empty()
+        {
+            body.push(format!("Etiketler: {}", c.tags.join(", ")));
+        }
+        if let Some(b) = block
+            && !b.attributes.is_empty()
+        {
+            let tags: Vec<&str> = b.attributes.iter().map(|a| a.tag.as_str()).collect();
+            body.push(format!("Öznitelikler: {}", tags.join(", ")));
+        }
+        let face = tip(
+            face,
+            Tip::new(r.name.clone()).body(body.join("\n")),
+            tooltip::Position::Left,
+        );
+        ContextMenu::new(face, move |_| self.block_menu(id)).into()
+    }
+
     /// Birim ▸ (docs/adr/0315 §4): the unit it is drawn in, its size kept; or its numbers kept (Sayıları koru), for
     /// a block drawn in another unit than the one it was taken in; Birimsiz, its numbers the drawing's units.
     fn units_menu(&self, id: BlockId) -> Menu<Message> {
@@ -608,6 +835,9 @@ impl App {
         let refusal = actions::remove_refusal(model, id);
         let inserts = actions::inserts_of(model, id).len();
         let selected = !self.selection.is_empty();
+        let fields = model
+            .block(id)
+            .is_some_and(|b| b.attributes.iter().any(|a| a.options.field.is_some()));
         let mut menu = Menu::new()
             .item("Blok ekle", msg(Event::Insert(id)))
             .icon(crate::icons::from_web(Some("blockInsert")))
@@ -622,6 +852,20 @@ impl App {
             .shortcut("F2")
             .item("Öznitelikler…", msg(Event::Attributes(id)))
             .icon(crate::icons::from_web(Some("blockAttributes")))
+            .item("Öznitelikleri eşitle", (inserts > 0).then(|| msg(Event::Sync(id))))
+            .icon(crate::icons::from_web(Some("blockSync")))
+            .detail("Yerleştirmelerin değerlerini tanıma uydurur: kalkan etiketler, sabitler, alanlar.")
+            .item(
+                "Alanları güncelle",
+                (inserts > 0 && fields).then(|| msg(Event::Fields(id))),
+            )
+            .icon(crate::icons::from_web(Some("blockFields")))
+            .item("Kart…", msg(Event::Card(id)))
+            .icon(crate::icons::from_web(Some("blockCard")))
+            .submenu("Başka blokla değiştir", self.replace_menu(id, inserts))
+            .icon(crate::icons::from_web(Some("blockReplace")))
+            .item("Say ve çizelgele…", msg(Event::Schedule(id)))
+            .icon(crate::icons::from_web(Some("blockSchedule")))
             .item("Kopyasını oluştur", msg(Event::Duplicate(id)))
             .icon(crate::icons::from_web(Some("copy")))
             .item("Dışa aktar…", msg(Event::Export(Some(id))))
@@ -670,6 +914,130 @@ impl App {
         }
         menu
     }
+}
+
+impl App {
+    /// Başka blokla değiştir ▸: the drawing's other blocks.
+    fn replace_menu(&self, id: BlockId, inserts: usize) -> Menu<Message> {
+        let Some(doc) = &self.document else {
+            return Menu::new();
+        };
+        let mut menu = Menu::new();
+        for b in doc.model.blocks().iter().filter(|b| b.id != id) {
+            menu = menu.item(
+                b.name.clone(),
+                (inserts > 0).then(|| msg(Event::ReplaceWith(id, b.id))),
+            );
+        }
+        menu.detail("Yerleştirmeler yerinde kalır; uyan öznitelik değerleri taşınır, uymayanlar söylenir.")
+    }
+
+    /// Öznitelikleri eşitle (`fields` false) and Alanları güncelle through `cad.blocks.edit`.
+    pub(crate) fn blocks_sync(&mut self, id: BlockId, fields: bool) {
+        use kentos_contracts::{BlockEditOperation, CommandResult};
+        let Some(doc) = self.document.as_mut() else { return };
+        let name = doc.model.block(id).map(|b| b.name.clone()).unwrap_or_default();
+        let input = actions::input(
+            if fields { BlockEditOperation::Fields } else { BlockEditOperation::Sync },
+            Some(id),
+        );
+        let ran = kentos_native_application::blocks_edit::execute(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            input,
+        );
+        match ran {
+            CommandResult::Completed { output, warnings } => {
+                let s = output.sync.unwrap_or_default();
+                let mut parts = vec![format!("{} yerleştirme yazıldı", s.inserts)];
+                if !s.removed.is_empty() {
+                    parts.push(format!("kalkan değerler: {}", s.removed.join(", ")));
+                }
+                if !s.constant.is_empty() {
+                    parts.push(format!("sabitlenenler: {}", s.constant.join(", ")));
+                }
+                if s.places > 0 {
+                    parts.push(format!("{} yer düştü", s.places));
+                }
+                if s.fields > 0 {
+                    parts.push(format!("{} alan doldu", s.fields));
+                }
+                if !s.added.is_empty() {
+                    parts.push(format!("varsayılanını gösterenler: {}", s.added.join(", ")));
+                }
+                let what = if fields { "alanları güncellendi" } else { "öznitelikleri eşitlendi" };
+                self.say(Level::Success, format!("“{name}” bloğunun {what}: {}.", parts.join("; ")));
+                for w in warnings {
+                    self.warn(w.message);
+                }
+            }
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => self.warn(error.message),
+            _ => {}
+        }
+    }
+
+    /// Başka blokla değiştir: `from`'s inserts place `to` (`cad.blocks.replace`).
+    fn blocks_replace(&mut self, from: BlockId, to: BlockId) {
+        use kentos_contracts::{BlocksReplace, CommandResult};
+        let Some(doc) = self.document.as_mut() else { return };
+        let names = |id| doc.model.block(id).map(|b| b.name.clone()).unwrap_or_default();
+        let (a, b) = (names(from), names(to));
+        let input = BlocksReplace {
+            from: Some(from),
+            to: Some(to),
+            uids: None,
+            purge: None,
+            expected_revision: None,
+        };
+        let ran = kentos_native_application::blocks_replace::execute(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            input,
+        );
+        match ran {
+            CommandResult::Completed { output, warnings } => {
+                let mut line = format!(
+                    "“{a}” bloğunun {} yerleştirmesi “{b}” oldu.",
+                    output.replaced.len()
+                );
+                if !output.dropped.is_empty() {
+                    line.push_str(&format!(" “{b}” bloğunda karşılığı olmayan değerler düştü: {}.", output.dropped.join(", ")));
+                }
+                self.say(Level::Success, line);
+                for w in warnings {
+                    self.warn(w.message);
+                }
+            }
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => self.warn(error.message),
+            _ => {}
+        }
+    }
+}
+
+/// A block's size (its drawing's box at the base point, unturned) and unit, as a card says it.
+pub(crate) fn size_text(app: &App, id: BlockId) -> Option<String> {
+    let doc = app.document.as_ref()?;
+    let b = doc.model.block(id)?;
+    let paths = app
+        .spatial
+        .store()
+        .insert_outlines(&id.to_text(), Vec2::new(0.0, 0.0), 1.0, 0.0, false);
+    let e = crate::attribute_table::outline_extent(&paths)?;
+    let format = app.format();
+    let unit = b.units.map_or_else(
+        || "çizim biriminde".to_owned(),
+        |u| match u.unit() {
+            Some(_) => format!("çizildiği birim {}", u.word()),
+            None => "birimsiz".to_owned(),
+        },
+    );
+    Some(format!(
+        "Boyu {} × {}; {unit}",
+        format.length(e.max_x - e.min_x),
+        format.length(e.max_y - e.min_y)
+    ))
 }
 
 /// The picture's tile: the header's ground, its edge the accent on the block Blok ekle places next.

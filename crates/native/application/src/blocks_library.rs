@@ -301,6 +301,7 @@ pub fn write(cx: &mut ExecutionContext<'_>, input: &BlocksEdit) -> CommandResult
     }
     CommandResult::Completed {
         output: BlocksEdited {
+            sync: None,
             changed,
             removed: Vec::new(),
             insert: None,

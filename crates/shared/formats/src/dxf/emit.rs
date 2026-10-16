@@ -757,6 +757,7 @@ impl<'l> Emitter<'l> {
             self.out.holes = holes;
             self.pending = pending;
             defs.push(BlockDefinition {
+                card: None,
                 id: self.kept[n],
                 name: block.name.clone(),
                 base: v(block.base[0], block.base[1]),
@@ -2212,6 +2213,7 @@ impl<'l> Emitter<'l> {
             Ok((Some((p, rotation, height, widen)), f)) => {
                 let prompt = text_codes(&caret_decode(prompt));
                 self.out.attributes.push(AttributeDefinition {
+                    options: Default::default(),
                     tag: tag.to_owned(),
                     prompt: (!prompt.trim().is_empty()).then_some(prompt),
                     value: (!value.trim().is_empty()).then_some(value),
@@ -2675,6 +2677,7 @@ impl<'l> Emitter<'l> {
         let mut base = base(layer, self.color_of(e, ctx), self.weight_of(e, ctx));
         base.attrs = attrs;
         self.push(Entity::Insert(InsertEntity {
+            attribute_places: Default::default(),
             base,
             block: id,
             p: v(placed.p[0], placed.p[1]),

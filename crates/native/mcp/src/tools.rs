@@ -495,6 +495,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.entities.set"
             | "cad.blocks.define"
             | "cad.blocks.edit"
+            // It moves inserts to another block and may purge the first (docs/adr/0317 §3).
+            | "cad.blocks.replace"
             // deleteSource deletes the objects it offsets (docs/adr/0246).
             | "cad.entities.offset"
             // It binds or frees a dimension's points (docs/adr/0249 §3).

@@ -2704,6 +2704,72 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Bloğu başkasıyla değiştir (docs/adr/0317 §3), held together by fixtures/commands/v1/cad.blocks.replace.json.
+        CommandDescriptor {
+            id: crate::CAD_BLOCKS_REPLACE.into(),
+            version: crate::CAD_BLOCKS_REPLACE_VERSION,
+            title: "Bloğu başkasıyla değiştir".into(),
+            summary: "from bloğunun çizimdeki yerleştirmelerini (ya da uids ile verilenleri) to bloğuna geçirir; tek geri alma adımı. \
+                      Her yerleştirme yerini, ölçeğini, dönüşünü, katmanını ve görünüşünü korur; to'nun sabit olmayan özniteliklerinin değerleri ve taşınabilir özniteliklerinin yerleri kalır, öbürleri düşer ve söylenir (dropped, places); to'nun alanları doldurulur. \
+                      purge ile from artık hiçbir yerde yerleşmiyorsa silinir. Kilitli katmandakiler atlanır ve söylenir. \
+                      AutoCAD'in BLOCKREPLACE'i. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec!["blockreplace".into(), "blokdegistir".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::BlocksReplace>(),
+            output: schema::<crate::BlocksReplaced>(),
+            plan: Some(schema::<crate::BlocksReplaced>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Eski kapı bloğunu yenisiyle değiştir, eskisini temizle".into(),
+                input: json!({
+                    "from": "01925f3e-7c1c-7b22-8d33-4c5e6f708192",
+                    "to": "01925f3e-7c1c-7b22-8d33-4c5e6f708193",
+                    "purge": true
+                }),
+                output: None,
+            }],
+        },
+        // Blok çizelgesi (docs/adr/0317 §3), held together by fixtures/commands/v1/cad.blocks.query.json.
+        CommandDescriptor {
+            id: crate::CAD_BLOCKS_QUERY.into(),
+            version: crate::CAD_BLOCKS_QUERY_VERSION,
+            title: "Blokları say, bul ve çizelgele".into(),
+            summary: "Çizimin blok yerleştirmelerini sayar (report count: çizimde, katmana göre ve başka blokların içinden), özniteliklerine göre bulur (instances: kalıcı kimlikler) ya da çizelgeler (schedule: Blok, Katman, X, Y, Dönüş ve özniteliklerin değerleri). \
+                      blocks ve layers kapsamı daraltır; where koşulları (eq, ne, contains, empty, notEmpty, lt, gt) öznitelik değerine bakar: sabit öznitelikte tanımın değeri, öbürlerinde yerleştirmenin, yoksa tanımın varsayılanı; metin karşılaştırmaları Türkçe büyük küçük harfe bakmaz, lt ve gt sayı karşılaştırır. \
+                      columns çizelgenin öznitelik sütunlarıdır (verilmezse blokların bütün etiketleri). Hiçbir şey yazılmaz. AutoCAD'in BCOUNT'u ve öznitelik çıkarması."
+                .into(),
+            aliases: vec!["bcount".into(), "bloksay".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::BlocksQuery>(),
+            output: schema::<crate::BlocksQueried>(),
+            plan: Some(schema::<crate::BlocksQueried>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Kapıların sayısı".into(),
+                    input: json!({ "report": "count", "blocks": ["01925f3e-7c1c-7b22-8d33-4c5e6f708192"] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "NO'su K- ile başlayan kapılar".into(),
+                    input: json!({ "report": "instances", "where": [{ "tag": "NO", "op": "contains", "value": "K-" }] }),
+                    output: None,
+                },
+            ],
+        },
         // Blok ekle (docs/adr/0315 §4), held together by fixtures/commands/v1/cad.blocks.insert.json.
         CommandDescriptor {
             id: crate::CAD_BLOCKS_INSERT.into(),
@@ -4818,6 +4884,12 @@ mod tests {
                     crate::CAD_BLOCKS_INSERT => {
                         serde_json::from_value::<crate::BlocksInsert>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_BLOCKS_REPLACE => {
+                        serde_json::from_value::<crate::BlocksReplace>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_BLOCKS_QUERY => {
+                        serde_json::from_value::<crate::BlocksQuery>(e.input.clone()).map(|_| ())
+                    }
                     crate::FILE_IMPORT_BLOCK => {
                         serde_json::from_value::<crate::ImportBlock>(e.input.clone()).map(|_| ())
                     }
@@ -5147,6 +5219,14 @@ mod tests {
                         }
                         crate::CAD_BLOCKS_INSERT => {
                             serde_json::from_value::<crate::BlockInserted>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_BLOCKS_REPLACE => {
+                            serde_json::from_value::<crate::BlocksReplaced>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_BLOCKS_QUERY => {
+                            serde_json::from_value::<crate::BlocksQueried>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_STANDARDS_APPLY => {

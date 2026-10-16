@@ -17,21 +17,21 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 54 | 131 | 38 | 38 | 261 |
+| semantic | 56 | 131 | 38 | 38 | 263 |
 | geometry | 19 | 60 | 0 | 8 | 87 |
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 20 | 0 | 6 | 26 |
-| query | 0 | 23 | 1 | 4 | 28 |
+| query | 1 | 23 | 1 | 4 | 29 |
 | session | 0 | 80 | 48 | 5 | 133 |
 | host | 0 | 15 | 14 | 4 | 33 |
-| **toplam** | 73 | 340 | 103 | 205 | 721 |
+| **toplam** | 76 | 340 | 103 | 205 | 724 |
 
 Kapsam: `cad` yalnız CAD şeridinde, `gis` yalnız CBS şeridinde, `shared` ikisinde, `none` hiçbir şeritte (kısayol, menü,
 komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 516 satırdan 132'i: geometry 79, none 20, processing 13, query 20.
+CBS'ye özgü olmayan 519 satırdan 133'i: geometry 79, none 20, processing 13, query 21.
 
 ### Sonucu çağıran hesaplar (geometry) — 79
 
@@ -160,10 +160,11 @@ CBS'ye özgü olmayan 516 satırdan 132'i: geometry 79, none 20, processing 13, 
 | `processing.run.pointcloud.thin` | Seyrelt… | shared | — | İşlemler aracı; Python ve MCP'den çalıştırılamaz. |
 | `processing.run.pointcloud.tile` | Karola… | shared | — | İşlemler aracı; Python ve MCP'den çalıştırılamaz. |
 
-### Okuma, Python'da yok (query) — 20
+### Okuma, Python'da yok (query) — 21
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
+| `block.schedule` | Blok çizelgesi | cad | cad.blocks.query | count, instances ve schedule raporları (ADR 0317 §3). |
 | `calc.stakeout` | Aplikasyon… | shared | — |  |
 | `chart.bar` | Çubuk grafik | shared | — |  |
 | `chart.box` | Kutu grafiği | shared | — |  |

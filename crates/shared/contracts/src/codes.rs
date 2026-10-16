@@ -310,6 +310,22 @@ codes! {
     /// Blocks that would be nested deeper than 16 levels.
     BLOCK_TOO_DEEP = "block_too_deep", Failed, false, "Bloklar 16 düzeyden derin iç içe girerdi.";
     /// A definition that would open into more than a million pieces (docs/adr/0316 §4).
+    /// An attribute definition's options that do not go together (docs/adr/0317 §1).
+    INVALID_ATTRIBUTE_OPTIONS = "invalid_attribute_options", Failed, false, "Öznitelik tanımının seçenekleri birlikte olamaz (sabit ve sorulan, taşınabilir ya da alan; çok satırsız kutu).";
+    /// A block's card that breaks its rules (docs/adr/0317 §4).
+    INVALID_BLOCK_CARD = "invalid_block_card", Failed, false, "Bloğun kartı kurallarına uymuyor (sürüm, kategori, etiketler).";
+    /// An attribute's field template that does not compile (docs/adr/0317 §1).
+    INVALID_FIELD = "invalid_field", Failed, false, "Özniteliğin alanı okunamadı; {ifade} parçalı bir şablon olmalı.";
+    /// A value for a constant attribute: its value is the definition's (docs/adr/0317 §1).
+    CONSTANT_ATTRIBUTE = "constant_attribute", Failed, false, "Sabit özniteliğin değeri tanımındakidir; yerleştirmede verilmez.";
+    /// `cad.blocks.replace` with the same block twice (docs/adr/0317 §3).
+    SAME_BLOCK = "same_block", Failed, false, "Yerleştirmeler aynı bloğa geçirilemez; başka bir blok verin.";
+    /// A `cad.blocks.query` condition that cannot be read (docs/adr/0317 §3).
+    INVALID_CONDITION = "invalid_condition", Failed, false, "Öznitelik koşulu okunamadı (etiket, değer ya da sayı eksik).";
+    /// An object a block command needs to be an insert is not one (docs/adr/0317 §1, §3).
+    NOT_INSERT = "not_insert", Failed, false, "Nesne bir blok yerleştirmesi değil.";
+    /// An insert's place for an attribute that is not movable (docs/adr/0317 §1).
+    ATTRIBUTE_NOT_MOVABLE = "attribute_not_movable", Failed, false, "Blokta bu öznitelik taşınabilir değil; yerleştirmede yeri değişmez.";
     /// `file.import.block`'s pictures and tables, which a block cannot hold, left out (docs/adr/0316 §3).
     OBJECTS_LEFT_OUT = "objects_left_out", Warning, false, "Resimler ve tablolar bloğa konamaz; dosyadakiler alınmadı.";
     BLOCK_TOO_LARGE = "block_too_large", Failed, false, "Blok iç içe yerleştirmeleriyle bir milyondan çok parçaya açılırdı.";

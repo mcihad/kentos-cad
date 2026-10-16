@@ -425,6 +425,22 @@
    "tests": 2
   },
   {
+   "id": "block.card",
+   "kind": "command",
+   "title": "Blok kartı",
+   "level": "semantic",
+   "via": [
+    "cad.blocks.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.blocks.edit",
+   "mcp": "cad.blocks.edit",
+   "note": "card işlemi: kategori, etiketler, açıklama (ADR 0317 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "block.edit",
    "kind": "command",
    "title": "Bloğu düzenle",
@@ -530,6 +546,38 @@
    "python": "Connection: file.import.block",
    "mcp": "file.import.block",
    "note": "blocks kipi, replace (ADR 0316 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "block.schedule",
+   "kind": "command",
+   "title": "Blok çizelgesi",
+   "level": "query",
+   "via": [
+    "cad.blocks.query"
+   ],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "count, instances ve schedule raporları (ADR 0317 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "block.sync",
+   "kind": "command",
+   "title": "Öznitelikleri eşitle",
+   "level": "semantic",
+   "via": [
+    "cad.blocks.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.blocks.edit",
+   "mcp": "cad.blocks.edit",
+   "note": "sync işlemi; tanım değişince attributes ve update de eşitler (ADR 0317 §2).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

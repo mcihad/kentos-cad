@@ -1122,6 +1122,7 @@ mod tests {
             e.base_mut().id = k;
         }
         BlockDefinition {
+            card: None,
             id: BlockId((u128::from(n)).to_be_bytes()),
             name: name.into(),
             base: Vec2 { x: 0.0, y: 0.0 },
@@ -1134,6 +1135,7 @@ mod tests {
 
     fn insert(layer: &str, n: u8) -> Entity {
         Entity::Insert(kentos_contracts::InsertEntity {
+            attribute_places: Default::default(),
             base: base(layer),
             block: BlockId((u128::from(n)).to_be_bytes()),
             p: Vec2 { x: 5.0, y: 5.0 },

@@ -1354,6 +1354,24 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 58 (docs/adr/0317 §1, §4): an attribute definition's option, an insert's moved attribute (of the drawing
+    // or of a block definition) or a block's card.
+    let placed = |list: &[Entity]| {
+        list.iter().any(|e| {
+            matches!(e, kentos_contracts::Entity::Insert(i) if !i.attribute_places.is_empty())
+        })
+    };
+    if placed(&doc.entities)
+        || doc.blocks.iter().any(|b| {
+            b.card.is_some()
+                || placed(&b.entities)
+                || b.attributes
+                    .iter()
+                    .any(|a| a.options != kentos_contracts::AttributeOptions::default())
+        })
+    {
+        return crate::SCHEMA_WITH_BLOCK_CARDS;
+    }
     // Schema 57 (docs/adr/0315 §3, §4): an insert's own y factor, of the drawing or of a block definition, or a
     // block's unit.
     let stretched = |list: &[Entity]| {

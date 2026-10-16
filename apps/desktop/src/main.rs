@@ -33,7 +33,9 @@ mod attribute_values;
 mod audit_scenes;
 mod block_attributes;
 mod blocks;
+mod block_card;
 mod block_editor;
+mod block_schedule;
 mod blocks_files;
 mod blocks_panel;
 mod bottom;
@@ -100,6 +102,8 @@ mod icons;
 mod image_scenes;
 #[cfg(test)]
 mod impact_scenes;
+#[cfg(test)]
+mod block_attr_scenes;
 #[cfg(test)]
 mod block_scenes;
 #[cfg(test)]

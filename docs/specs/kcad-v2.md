@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `56`'ya bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-57.kcad`) |
+| `version` | tam sayı | `2`'den `58`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-59.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -1027,6 +1027,12 @@ Motor anahtarı olan stil bütün kurallarıyla denetlenir (`kentos_contracts::l
 | `units` | metin | | yalnız şema 57 ve sonrası: çizildiği birim, `mm`, `cm`, `m`, `in`, `ft` ya da `unitless` (başka söz `bad_value`, `broken/block-units-unknown.kcad`); birimli blok gerçek boyutludur, birimsiz bloğun sayıları çizim birimidir (ADR 0315 §4) |
 
 **Yerleştirmenin y ölçeği:** şema 57'de `insert` nesnesi `yScale` float taşıyabilir: pozitif (`broken/insert-y-scale-zero.kcad`) ve `scale`'den farklı; eşitse yazılmaz (`broken/insert-y-scale-equal.kcad`). Yoksa `scale` iki eksende geçerlidir; varsa parçalar afinle yerleşir (ADR 0315 §3). Şema 56 ve öncesinde `yScale` ve `units` `unknown_field`'dır.
+
+**Öznitelik seçenekleri, yerleştirmenin yerleri ve bloğun kartı** (şema 58, ADR 0317; şema 57 ve öncesinde `unknown_field`: `broken/attribute-options-in-schema-57.kcad`, `broken/block-cards-in-schema-57.kcad`):
+
+- Öznitelik tanımının bayrakları `invisible`, `constant`, `verify`, `preset`, `movable`, `multiline` yalnız `true` olarak yazılır; `false` `bad_value`'dur (`broken/attribute-option-false.kcad`). Sabit öznitelik `verify` ve `preset` taşımaz (`broken/attribute-constant-verify.kcad`). `boxWidth` float (m, pozitif) yalnız çok satırlıdadır (`broken/attribute-box-not-multiline.kcad`). `field` metin: boş olmayan alan şablonu (`{NO}/{TUR}`). Anahtarlar haritanın kanonik sırasındadır.
+- `insert` nesnesi `attributePlaces` taşıyabilir: etiketten noktaya harita, tanımın koordinatlarında. Boş harita yazılmaz (`broken/insert-places-empty.kcad`); her etiket yerleştirdiği tanımın taşınabilir bir özniteliğidir (`broken/insert-place-not-movable.kcad`).
+- Tanım `card` haritası taşıyabilir: `category` metin (`/` ile yol, boş bölümsüz), `tags` metin dizisi (boş değil; her biri Türkçe katlanarak bir kez, `broken/block-card-tag-twice.kcad`), `version` tamsayı (1 ve üstü, `broken/block-card-version-zero.kcad`). Örnek `block-cards.kcad`.
 
 **Öznitelik tanımı** haritası: `p` nokta (evet), `tag` metin (evet), `align` numaralı metin (yalnız şema 7 ve sonrası), `value` metin (varsayılan değer), `height` float (evet, m), `prompt` metin (Blok ekle'nin sorusu), `rotation` float (evet, derece, bir yazınınki gibi), `widthFactor` float (yalnız şema 7 ve sonrası). Anahtarları bu sıradadır. `align` ve `widthFactor`'ın anlamı ve kuralları yazınınkidir (§6.6, yazı ekleri).
 

@@ -409,6 +409,7 @@ impl Store {
             rotation,
             mirror: mirror.then_some(true),
             attrs: None,
+            places: None,
         };
         let mut out = Vec::new();
         for piece in self.blocks().expand(&insert) {

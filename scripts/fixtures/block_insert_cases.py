@@ -191,6 +191,47 @@ def written(slot, entity, extra=None):
     return out
 
 
+# ── Attribute options (docs/adr/0317 §1): a constant's value is the definition's, a field is filled ──────────────
+
+ETIKETLI = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5f01"
+BOZUK = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5f02"
+OPTIONED = json.loads(json.dumps(SETUP))
+OPTIONED["blocks"] += [
+    {"id": ETIKETLI, "name": "Etiketli kapı", "base": P(0, 0),
+     "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": P(0, 0), "b": P(0, 0.9)}],
+     "attributes": [
+         {"tag": "NUMARA", "value": "K-0", "p": P(0.2, 0.5), "height": 0.2, "rotation": 0},
+         {"tag": "ÜRETİCİ", "value": "KentOS", "p": P(0.2, 0.2), "height": 0.2, "rotation": 0, "constant": True},
+         {"tag": "ETİKET", "p": P(0.2, -0.1), "height": 0.2, "rotation": 0, "field": "No: {NUMARA}"},
+     ]},
+    {"id": BOZUK, "name": "Bozuk alan", "base": P(0, 0),
+     "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": P(0, 0), "b": P(1, 0)}],
+     "attributes": [{"tag": "ETİKET", "p": P(0, 0), "height": 0.2, "rotation": 0, "field": "No: {NUMARA"}]},
+]
+add("alan: verilmeyen alanlı öznitelik yerleştirmenin değerleriyle dolar", [
+    {"op": "execute", "input": {"block": ETIKETLI, "at": AT, "layerId": "kapilar", "attributes": {"NUMARA": "K-9"}},
+     "result": done(NEXT, ETIKETLI),
+     "expect": {"entities": {str(NEXT): {"kind": "insert", "id": NEXT, "layerId": "kapilar", "attrs": {"NUMARA": "K-9", "ETİKET": "No: K-9"},
+                                         "block": ETIKETLI, "p": AT, "scale": 1, "rotation": 0}}}},
+], setup_doc=OPTIONED, note="Alan, şablonun {ETİKET} parçalarını yerleştirmenin değerleriyle doldurur (docs/adr/0317 §1).")
+add("alan: verilen değer alanın yerine geçer", [
+    {"op": "execute", "input": {"block": ETIKETLI, "at": AT, "layerId": "kapilar", "attributes": {"NUMARA": "K-9", "ETİKET": "Giriş"}},
+     "result": done(NEXT, ETIKETLI),
+     "expect": {"entities": {str(NEXT): {"kind": "insert", "id": NEXT, "layerId": "kapilar", "attrs": {"NUMARA": "K-9", "ETİKET": "Giriş"},
+                                         "block": ETIKETLI, "p": AT, "scale": 1, "rotation": 0}}}},
+], setup_doc=OPTIONED)
+add("sabit özniteliğe değer verilmez", [
+    {"op": "execute", "input": {"block": ETIKETLI, "at": AT, "layerId": "kapilar", "attributes": {"ÜRETİCİ": "Başka"}},
+     "result": failed("constant_attribute", "“Etiketli kapı” bloğunun “ÜRETİCİ” özniteliği sabit: değeri tanımındakidir, yerleştirmede verilmez.",
+                      "attributes.ÜRETİCİ"), "expect": NOTHING},
+], setup_doc=OPTIONED)
+add("derlenmeyen alanlı blok yerleşmez (yalnız bir dosya getirebilir)", [
+    {"op": "execute", "input": {"block": BOZUK, "at": AT, "layerId": "kapilar"}, "result": failed("invalid_field", "$any", "block"),
+     "expect": NOTHING},
+    {"op": "execute", "input": {"name": "Bozuk alan", "at": AT, "layerId": "kapilar"}, "result": failed("invalid_field", "$any", "name"),
+     "expect": NOTHING},
+], setup_doc=OPTIONED)
+
 # ── Writes ───────────────────────────────────────────────────────────────
 
 e = insert(NEXT, PENCERE, AT)

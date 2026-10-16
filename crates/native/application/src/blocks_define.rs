@@ -133,6 +133,7 @@ fn check(doc: &Document, input: &BlocksDefine) -> Result<Checked, Stop> {
     let named = checks::named(doc, &input.uids)?;
     no_tables(&named)?;
     let mut block = BlockDefinition {
+        card: None,
         id: BlockId([0; 16]),
         name: input.name.clone(),
         base: input.base,
@@ -318,6 +319,7 @@ pub(crate) fn block_rules(next: &[&BlockDefinition]) -> Result<(), Stop> {
     let checked = rules::definitions(next).and_then(|index| {
         for (i, block) in next.iter().enumerate() {
             rules::inserts(&block.entities, Some(i), &index)?;
+            rules::places(next, &block.entities, Some(i), &index)?;
         }
         rules::nesting(next, &index).map(|_| ())
     });
@@ -333,6 +335,15 @@ pub(crate) fn block_rules(next: &[&BlockDefinition]) -> Result<(), Stop> {
             rules::BlockFault::TooLarge { .. } => (codes::BLOCK_TOO_LARGE, "uids"),
             rules::BlockFault::BadScale { .. } => (codes::INVALID_SCALE, "uids"),
             rules::BlockFault::UnknownBlock { .. } => (codes::UNKNOWN_BLOCK, "uids"),
+            rules::BlockFault::BadCard { .. } => (codes::INVALID_BLOCK_CARD, "card"),
+            rules::BlockFault::BadPlace { .. } => (codes::ATTRIBUTE_NOT_MOVABLE, "uids"),
+            rules::BlockFault::BadAttribute { attribute, .. } => {
+                return Stop::failed(error(
+                    codes::INVALID_ATTRIBUTE_OPTIONS,
+                    message,
+                    Some(format!("attributes[{attribute}]")),
+                ));
+            }
             // `attributes` checks its list first: never expected.
             rules::BlockFault::EmptyTag { attribute, .. } => {
                 return Stop::failed(error(
@@ -390,6 +401,7 @@ pub(crate) fn replaced(
         .map(|(_, slot, _, uid)| (*slot, (*uid).clone()))
         .collect();
     let insert = Entity::Insert(InsertEntity {
+        attribute_places: Default::default(),
         base: EntityBase {
             look: Default::default(),
             id: 0,

@@ -10,6 +10,8 @@
 //! The block rules are `kentos_contracts::blocks`' (names once, Turkish case
 //! folded; no cycles; at most 16 levels), said in the documents' words.
 
+use std::collections::BTreeMap;
+
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
@@ -180,6 +182,19 @@ pub enum BlockEditOperation {
     /// save; docs/adr/0316 §1): an id it had is kept (a reference to that piece follows it), 0 is a new object
     /// and takes the next id the definition never had; the base point and the attribute definitions when given.
     Update,
+    /// Its inserts' attribute values made to fit its definition (“Öznitelikleri eşitle”, ATTSYNC; docs/adr/0317 §2):
+    /// values renamed (`renames`), taken off (`removeTags`, a constant attribute's), places of attributes no longer
+    /// movable dropped, fields filled; the definition stays.
+    Sync,
+    /// Its inserts' fields filled again (“Alanları güncelle”, UPDATEFIELD; docs/adr/0317 §1); every block's when no
+    /// block is given.
+    Fields,
+    /// Where inserts (`uids`) show a movable attribute (`tag`): at `at`, a point of the drawing; absent, where the
+    /// definition puts it (“Öznitelik konumu”, docs/adr/0317 §1).
+    Place,
+    /// Its library card (“Blok kartı”, docs/adr/0317 §4): `category`, `tags` and `description`; its version is
+    /// counted by the drawing.
+    Card,
 }
 
 /// The format of a block library file (docs/adr/0314 §3).
@@ -282,6 +297,40 @@ pub struct BlocksEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub rescale: Option<bool>,
+    /// `attributes`, `update`: false leaves the inserts' values as they are; absent or true syncs them as `sync`
+    /// does (docs/adr/0317 §2).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sync: Option<bool>,
+    /// `attributes`, `sync`: an insert's value under an old tag moved to the new one (old → new).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub renames: Option<BTreeMap<String, String>>,
+    /// `sync`: tags whose values are taken off the inserts though no attribute has them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub remove_tags: Option<Vec<String>>,
+    /// `place`: the movable attribute's tag.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub tag: Option<String>,
+    /// `place`: where the attribute's text stands, a point of the drawing; absent: where the definition puts it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub at: Option<Vec2>,
+    /// `card`: its category (empty: none).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub category: Option<String>,
+    /// `card`: the words it is found by.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub tags: Option<Vec<String>>,
+    /// `card`: its description (empty: none).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub description: Option<String>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -321,10 +370,41 @@ pub struct BlocksEdited {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub library: Option<String>,
+    /// `attributes`, `update`, `sync`, `fields`, `place`: what was done to the inserts' values (docs/adr/0317 §2).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sync: Option<AttributeSync>,
     /// The document's revision after the write (the same when nothing was
     /// written), as decimal text.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
+}
+
+/// What syncing a block's inserts with its definition did (docs/adr/0317 §2): each list in the definition's order,
+/// then the inserts' (a tag once).
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AttributeSync {
+    /// The inserts written.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub inserts: u32,
+    /// The definition's tags an insert has no value of: it shows their default (nothing written).
+    pub added: Vec<String>,
+    /// The tags whose values were taken off the inserts: no attribute has them, or `removeTags` named them.
+    pub removed: Vec<String>,
+    /// The renames done, old and new.
+    pub renamed: Vec<[String; 2]>,
+    /// The constant attributes' tags whose own values were taken off.
+    pub constant: Vec<String>,
+    /// Places dropped: their attributes are no longer movable.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub places: u32,
+    /// Values a field wrote.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub fields: u32,
 }
 
 /// What `cad.blocks.edit` would write (plan mode); nothing is written.
@@ -545,4 +625,205 @@ pub struct BlockFileImported {
     /// The document's revision after the write, as decimal text.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
+}
+
+/// Replaces a block's inserts by another block's (docs/adr/0317 §3): BLOCKREPLACE.
+pub const CAD_BLOCKS_REPLACE: &str = "cad.blocks.replace";
+pub const CAD_BLOCKS_REPLACE_VERSION: u32 = 1;
+
+/// Input of `cad.blocks.replace` v1: the drawing's inserts of `from` (or those named) place `to` instead, as one undo
+/// step “Bloğu başkasıyla değiştir”; each keeps its place, scale, turn, layer and look, the values of `to`'s attributes
+/// (not constant) and the places of its movable ones; `to`'s fields are filled. With `purge`, `from` is deleted when
+/// no insert uses it any more.
+///
+/// Refusals in order: `no_block` (`from` or `to` missing), `same_block`, `invalid_revision`, `revision_conflict`,
+/// `unknown_block` (`from`, `to`), `entity_not_found`, `not_insert` (an object named that is not an insert of
+/// `from`), `layer_locked` (every one locked; some: a warning), `invalid_field`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlocksReplace {
+    /// The block whose inserts are replaced.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub from: Option<BlockId>,
+    /// The block they place instead.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub to: Option<BlockId>,
+    /// Only these inserts of `from`, by persistent id (absent: every one of the drawing's).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub uids: Option<Vec<String>>,
+    /// Deletes `from` when no insert uses it after.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub purge: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `cad.blocks.replace` v1.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlocksReplaced {
+    /// The inserts that place `to` now, in the drawing's order.
+    pub replaced: Vec<String>,
+    /// `from`'s attribute tags whose values were taken off: `to` has no such attribute, or a constant one.
+    pub dropped: Vec<String>,
+    /// Places dropped: `to` has no movable attribute of their tag.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub places: u32,
+    /// Values `to`'s fields wrote.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub fields: u32,
+    /// `from` was deleted (`purge`).
+    pub purged: bool,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// Counts, finds and schedules a drawing's block inserts (docs/adr/0317 §3): BCOUNT, select by attribute and the
+/// attribute schedule; nothing is written.
+pub const CAD_BLOCKS_QUERY: &str = "cad.blocks.query";
+pub const CAD_BLOCKS_QUERY_VERSION: u32 = 1;
+
+/// What `cad.blocks.query` reports.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum BlockReport {
+    /// Each block's inserts counted: in the drawing, by layer, and placed through other blocks' inserts.
+    Count,
+    /// The inserts that match, by persistent id (select them).
+    Instances,
+    /// A table of the inserts that match: block, layer, x, y, turn in degrees, then the attributes' values.
+    Schedule,
+}
+
+/// How an attribute's value is compared (docs/adr/0317 §3). Text comparisons fold Turkish case; `lt` and `gt` compare
+/// numbers (a value that is not a number does not match).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum AttributeOp {
+    Eq,
+    Ne,
+    Contains,
+    Empty,
+    NotEmpty,
+    Lt,
+    Gt,
+}
+
+/// One condition on an insert's attribute: its value (the insert's, else the definition's default) compared with
+/// `value`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AttributeFilter {
+    pub tag: String,
+    pub op: AttributeOp,
+    /// Absent for `empty` and `notEmpty`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub value: Option<String>,
+}
+
+/// Input of `cad.blocks.query` v1.
+///
+/// Refusals in order: `unknown_block` (`blocks[i]`), `layer_not_found` (`layers[i]`), `invalid_condition`
+/// (`where[i]`: no tag, no value where one is needed, a number expected), `unknown_tag` (`columns[i]`: no block
+/// asked has it).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlocksQuery {
+    pub report: BlockReport,
+    /// Only these blocks' inserts (absent: every block's).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub blocks: Option<Vec<BlockId>>,
+    /// Only inserts on these layers, by id (absent: every layer's).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub layers: Option<Vec<String>>,
+    /// Every condition holds (`instances`, `schedule`).
+    #[serde(default, rename = "where", skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional, rename = "where"))]
+    pub filters: Option<Vec<AttributeFilter>>,
+    /// `schedule`: the attribute columns, by tag (absent: every tag of the blocks reported, each once, in their
+    /// order).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub columns: Option<Vec<String>>,
+}
+
+/// A block's inserts counted (`count`).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlockCount {
+    pub block: BlockId,
+    pub name: String,
+    /// The drawing's own inserts (on the layers asked).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub count: u32,
+    /// The drawing's own inserts by layer id.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub layers: BTreeMap<String, u32>,
+    /// How many times other blocks' inserts place it (each of their inserts counted through, the layers asked
+    /// applying to the drawing's insert).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub nested: u64,
+}
+
+/// One cell of a schedule: a number (x, y, turn) or a text.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(untagged)]
+#[cfg_attr(feature = "ts", ts(export))]
+#[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
+pub enum ScheduleCell {
+    Number(f64),
+    Text(String),
+}
+
+/// Output of `cad.blocks.query` v1: the part its report asks for.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlocksQueried {
+    /// `count`: each block asked, in the drawing's order (those with no insert too).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub counts: Vec<BlockCount>,
+    /// `instances`, `schedule`: the inserts that match, in the drawing's order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub uids: Vec<String>,
+    /// `schedule`: the columns' names: `Blok`, `Katman`, `X`, `Y`, `Dönüş`, then the tags.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub columns: Vec<String>,
+    /// `schedule`: a row for each insert of `uids`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub rows: Vec<Vec<ScheduleCell>>,
 }

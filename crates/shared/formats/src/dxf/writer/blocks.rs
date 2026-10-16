@@ -265,7 +265,8 @@ pub(super) fn block(
         out.str(100, "AcDbAttributeDefinition");
         out.str(3, &prompt);
         out.str(2, tag);
-        out.int(70, 0);
+        // Its options (docs/adr/0317 §1): invisible 1, constant 2, verify 4, preset 8.
+        out.int(70, attribute_flags(&a.options));
         if vertical != 0 {
             out.int(74, vertical);
         }
@@ -277,6 +278,12 @@ pub(super) fn block(
     out.str(100, "AcDbEntity");
     out.str(8, "0");
     out.str(100, "AcDbBlockEnd");
+}
+
+/// An attribute's options as DXF's group 70 holds them (docs/adr/0317 §1): invisible 1, constant 2, verify 4, preset
+/// 8. The lock position bit (16) is not written: a drawing opened elsewhere moves every attribute.
+pub(super) fn attribute_flags(o: &kentos_contracts::AttributeOptions) -> i64 {
+    i64::from(o.invisible) | i64::from(o.constant) << 1 | i64::from(o.verify) << 2 | i64::from(o.preset) << 3
 }
 
 /// What an attribute's text lost on the way to DXF's one line (said).

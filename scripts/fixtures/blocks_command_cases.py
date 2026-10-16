@@ -564,6 +564,41 @@ define.append({
 edit = []
 
 
+def sync_report(block_id, old_attrs, new_attrs):
+    """What `attributes` and `update` do to the inserts (docs/adr/0317 §2): the drawing's inserts of the block on
+    unlocked layers; values of tags no attribute has any more taken off, a constant one's too; the definition's tags an
+    insert has no value of said (`added`). The inserts here have no places and their blocks no fields."""
+    new_tags = {a["tag"]: a for a in new_attrs}
+    gone = [a["tag"] for a in old_attrs if a["tag"] not in new_tags]
+    locked = {"kilitli", "eski"}
+    removed, constant, added, inserts = set(), set(), set(), 0
+    for e in ENTITIES:
+        if e["kind"] != "insert" or e["block"] != block_id or e["layerId"] in locked:
+            continue
+        attrs, changed = dict(e["attrs"]), False
+        for t in gone:
+            if t in attrs:
+                del attrs[t]
+                changed = True
+                removed.add(t)
+        for a in new_attrs:
+            if a.get("constant") and a["tag"] in attrs:
+                del attrs[a["tag"]]
+                changed = True
+                constant.add(a["tag"])
+            elif not a.get("constant") and a["tag"] not in attrs:
+                added.add(a["tag"])
+        inserts += changed
+    return {"inserts": inserts, "added": [a["tag"] for a in new_attrs if a["tag"] in added], "removed": [t for t in gone if t in removed],
+            "renamed": [], "constant": [a["tag"] for a in new_attrs if a["tag"] in constant], "places": 0, "fields": 0}
+
+
+def synced(block_id, old_attrs, new_attrs):
+    out = edited([block_id])
+    out["output"]["sync"] = sync_report(block_id, old_attrs, new_attrs)
+    return out
+
+
 def edited(changed=(), removed=(), deleted=(), insert_slot=None):
     out = {"changed": list(changed), "removed": list(removed), "deleted": list(deleted), "revision": "$current"}
     if insert_slot is not None:
@@ -996,7 +1031,7 @@ def attributes_input(block_id, attributes):
 edit.append({
     "name": "Öznitelikler: tanımın öznitelik listesi bütün yazılır, yerleştirmeler onu gösterir; adımı “Blok değiştir”, geri alınır",
     "steps": [
-        {"op": "execute", "input": attributes_input(ROGAR, [NO, KOT]), "result": edited([ROGAR]),
+        {"op": "execute", "input": attributes_input(ROGAR, [NO, KOT]), "result": synced(ROGAR, [], [NO, KOT]),
          "expect": {"ids": IDS, "entities": {"4": E(4)}, "blocks": blocks_after((ROGAR, with_attributes(ROGAR, [NO, KOT]))), "canUndo": True, "dirty": True, "revision": "changed"},
          "note": "Yerleştirmenin kendisi değişmez: değerleri kendi özniteliklerindedir, tanım yalnız yazılarını tanımlar."},
         {"op": "undo", "returns": "Blok değiştir", "expect": {"blocks": SETUP_BLOCKS, "canUndo": False, "canRedo": True}},
@@ -1008,12 +1043,14 @@ edit.append({
     "name": "aynı liste bir şey değiştirmez; sıra bir değişikliktir; boş liste öznitelikleri kaldırır, özniteliksiz tanımda bir şey değiştirmez",
     "steps": [
         {"op": "execute", "input": attributes_input(ROGAR, []), "result": edited(), "expect": NOTHING},
-        {"op": "execute", "input": attributes_input(ROGAR, [NO, KOT]), "result": edited([ROGAR]), "expect": {"revision": "changed"}},
+        {"op": "execute", "input": attributes_input(ROGAR, [NO, KOT]), "result": synced(ROGAR, [], [NO, KOT]), "expect": {"revision": "changed"}},
         {"op": "execute", "input": attributes_input(ROGAR, [NO, KOT]), "result": edited(),
          "expect": {"blocks": blocks_after((ROGAR, with_attributes(ROGAR, [NO, KOT]))), "revision": "same"}},
-        {"op": "execute", "input": attributes_input(ROGAR, [KOT, NO]), "result": edited([ROGAR]),
+        {"op": "execute", "input": attributes_input(ROGAR, [KOT, NO]), "result": synced(ROGAR, [NO, KOT], [KOT, NO]),
          "expect": {"blocks": blocks_after((ROGAR, with_attributes(ROGAR, [KOT, NO]))), "revision": "changed"}},
-        {"op": "execute", "input": attributes_input(ROGAR, []), "result": edited([ROGAR]), "expect": {"blocks": SETUP_BLOCKS, "revision": "changed"}},
+        {"op": "execute", "input": attributes_input(ROGAR, []), "result": synced(ROGAR, [KOT, NO], []),
+         "expect": {"blocks": SETUP_BLOCKS, "entities": {"4": {**E(4), "attrs": {}}}, "revision": "changed"},
+         "note": "Kaldırılan özniteliğin değeri yerleştirmeden de kalkar (docs/adr/0317 §2)."},
     ],
 })
 
@@ -1024,7 +1061,8 @@ edit.append({
         {"op": "execute", "input": attributes_input(ROGAR, [attribute("", P(0, 0), 0.5)]), "result": failed("empty_tag", EMPTY_TAG, "attributes[0].tag"), "expect": NOTHING},
         {"op": "execute", "input": attributes_input(ROGAR, [NO, attribute(" 　", P(0, 0), 0.5)]), "result": failed("empty_tag", EMPTY_TAG, "attributes[1].tag"), "expect": NOTHING},
         {"op": "execute", "input": attributes_input(ROGAR, [NO, KOT, attribute("NO", P(0, 1), 0.3)]), "result": duplicate_tag("NO", 2), "expect": NOTHING},
-        {"op": "execute", "input": attributes_input(ROGAR, [NO, attribute("no", P(0, 1), 0.3)]), "result": edited([ROGAR]),
+        {"op": "execute", "input": attributes_input(ROGAR, [NO, attribute("no", P(0, 1), 0.3)]),
+         "result": synced(ROGAR, [], [NO, attribute("no", P(0, 1), 0.3)]),
          "expect": {"blocks": blocks_after((ROGAR, with_attributes(ROGAR, [NO, attribute("no", P(0, 1), 0.3)]))), "revision": "changed"}},
     ],
 })
@@ -1243,7 +1281,7 @@ edit.append({
     "name": "güncelle: taban noktası ve öznitelikler verilirse değişir",
     "steps": [
         {"op": "execute", "input": update_input(LAMBA, B(LAMBA)["entities"], base=P(0.1, 0), attributes=[NO]),
-         "result": edited([LAMBA]),
+         "result": synced(LAMBA, [], [NO]),
          "expect": {"blocks": blocks_after((LAMBA, updated(LAMBA, B(LAMBA)["entities"], P(0.1, 0), [NO])))}},
     ],
 })

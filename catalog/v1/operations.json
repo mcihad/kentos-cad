@@ -1112,6 +1112,27 @@
         "file.import.block"
       ],
       "note": "blocks kipi, replace (ADR 0316 §3)."
+    },
+    "block.schedule": {
+      "level": "query",
+      "via": [
+        "cad.blocks.query"
+      ],
+      "note": "count, instances ve schedule raporları (ADR 0317 §3)."
+    },
+    "block.sync": {
+      "level": "semantic",
+      "via": [
+        "cad.blocks.edit"
+      ],
+      "note": "sync işlemi; tanım değişince attributes ve update de eşitler (ADR 0317 §2)."
+    },
+    "block.card": {
+      "level": "semantic",
+      "via": [
+        "cad.blocks.edit"
+      ],
+      "note": "card işlemi: kategori, etiketler, açıklama (ADR 0317 §4)."
     }
   },
   "tools": {

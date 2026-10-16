@@ -194,6 +194,25 @@ fn check(doc: &Document, input: &BlocksInsert) -> Result<Checked, Stop> {
             Some(format!("attributes.{tag}")),
         )));
     }
+    // A constant attribute's value is its definition's (docs/adr/0317 §1).
+    if let Some(tag) = values.keys().find(|t| {
+        block
+            .attributes
+            .iter()
+            .any(|a| &a.tag == *t && a.options.constant)
+    }) {
+        return Err(Stop::failed(error(
+            codes::CONSTANT_ATTRIBUTE,
+            format!(
+                "“{}” bloğunun “{tag}” özniteliği sabit: değeri tanımındakidir, yerleştirmede verilmez.",
+                block.name
+            ),
+            Some(format!("attributes.{tag}")),
+        )));
+    }
+    let fields = crate::blocks_sync::fields_of(doc, &block.attributes, &|_| {
+        if input.block.is_some() { "block" } else { "name" }.to_owned()
+    })?;
     let mut warnings = checks::layer(doc, &input.layer_id)?;
     let factor = unit_factor(doc, block);
     let drawing = crate::units_change::unit_of(doc);
@@ -214,6 +233,7 @@ fn check(doc: &Document, input: &BlocksInsert) -> Result<Checked, Stop> {
     let sx = scale * factor;
     let sy = input.y_scale.map(|y| y * factor).filter(|y| *y != sx);
     let insert = Entity::Insert(InsertEntity {
+        attribute_places: Default::default(),
         base: EntityBase {
             look: Default::default(),
             id: 0,
@@ -240,6 +260,30 @@ fn check(doc: &Document, input: &BlocksInsert) -> Result<Checked, Stop> {
         rotation,
         mirror: input.mirror == Some(true),
     });
+    // Its fields filled with its values and place, those not given (docs/adr/0317 §1).
+    let mut insert = insert;
+    if !fields.is_empty() {
+        let shapes = [crate::geometry::shape(&insert)];
+        let layer_name = |id: &str| {
+            doc.layers()
+                .get(id)
+                .map_or_else(|| id.to_owned(), |n| n.name.clone())
+        };
+        let mut filled = Vec::new();
+        for (tag, template) in &fields {
+            if input.attributes.as_ref().is_some_and(|v| v.contains_key(tag)) {
+                continue;
+            }
+            let text = template
+                .texts(&[&insert], &layer_name, &|k| shapes.get(k), &|_| None)
+                .pop()
+                .unwrap_or_default();
+            filled.push((tag.clone(), text));
+        }
+        if let Entity::Insert(i) = &mut insert {
+            i.base.attrs.extend(filled);
+        }
+    }
     Ok(Checked {
         insert,
         factor,

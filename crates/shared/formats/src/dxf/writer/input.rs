@@ -413,6 +413,7 @@ impl Fields {
                 assoc: self.assoc,
             }),
             "insert" => Entity::Insert(InsertEntity {
+                attribute_places: Default::default(),
                 base,
                 block: need(self.block, "block")?,
                 p: need(self.p, "p")?,
@@ -635,6 +636,7 @@ impl<'de> Deserialize<'de> for Definitions {
         Ok(Definitions(
             list.into_iter()
                 .map(|d| BlockDefinition {
+                    card: None,
                     id: d.id,
                     name: d.name,
                     base: d.base,

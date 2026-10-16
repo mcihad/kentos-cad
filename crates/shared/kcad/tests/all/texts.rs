@@ -89,12 +89,14 @@ fn drawing(more: Vec<Entity>) -> DocumentSnapshotV2 {
 fn with_attribute(align: Option<TextAlign>, width_factor: Option<f64>) -> DocumentSnapshotV2 {
     let mut doc = drawing(vec![]);
     doc.blocks = vec![BlockDefinition {
+        card: None,
         id: BlockId([7; 16]),
         name: "Rögar".into(),
         base: Vec2 { x: 0.0, y: 0.0 },
         entities: vec![],
         units: None,
         attributes: vec![AttributeDefinition {
+            options: Default::default(),
             tag: "NO".into(),
             prompt: None,
             value: Some("R-?".into()),

@@ -771,7 +771,9 @@ impl Writer<'_> {
                 }
             }
             let value = blocks::one_line(&t.text);
-            if value != t.text {
+            // The insert's own value says what was lost: a single-line attribute shows its breaks as spaces.
+            let raw = i.base.attrs.get(&tag);
+            if value != t.text || raw.is_some_and(|v| blocks::one_line(v) != *v) {
                 self.report.note("Öznitelik", blocks::ONE_LINE, 0);
             }
             self.out.str(100, "AcDbText");

@@ -388,6 +388,29 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
             at_layer(),
         )));
     }
+    // A constant attribute's value is its block's (docs/adr/0317 §1): an insert takes none of its own.
+    if let Some(attrs) = attrs {
+        for (_, _, e, _) in &found {
+            let kentos_contracts::Entity::Insert(i) = e else {
+                continue;
+            };
+            let Some(block) = doc.block(i.block) else {
+                continue;
+            };
+            if let Some(a) = block.attributes.iter().find(|a| {
+                a.options.constant && attrs.get(&a.tag).is_some_and(Option::is_some)
+            }) {
+                return Err(Stop::failed(error(
+                    codes::CONSTANT_ATTRIBUTE,
+                    format!(
+                        "“{}” bloğunun “{}” özniteliği sabit: değeri tanımındakidir, yerleştirmede değiştirilmez.",
+                        block.name, a.tag
+                    ),
+                    Some(format!("attrs.{}", a.tag)),
+                )));
+            }
+        }
+    }
     // The values given to a layer's fields, in their canonical text (docs/adr/0199 §2).
     let mut given = Vec::with_capacity(found.len());
     for (_, _, e, _) in &found {

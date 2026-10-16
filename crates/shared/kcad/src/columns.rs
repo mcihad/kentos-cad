@@ -66,7 +66,7 @@
 //! §6): a line flags int follows (`LINE_*`: 1 dimension line colour, 2 its
 //! weight, 4 its type, 8 extension lines' colour, 16 their weight, 32 their
 //! type, 64 the value's colour), and bit 28 (`REFS`) for its references (docs/adr/0249 §4);
-//! hatch: holes, name, scale, families, gradient, tie (docs/adr/0186); insert: mirror, y factor (a float after the turn, docs/adr/0315 §3); leader: text, arrow, mask (no value;
+//! hatch: holes, name, scale, families, gradient, tie (docs/adr/0186); insert: mirror, y factor (a float after the turn, docs/adr/0315 §3), moved attributes (a count, then each tag and point, docs/adr/0317 §1); leader: text, arrow, mask (no value;
 //! docs/adr/0146), arrow size (docs/adr/0205 §7); table: merges, aligns, header (no value), grid, text
 //! style, font, bold (no value), italic (no value), oblique, source, frame
 //! (docs/adr/0184); image: mirror (no value), asset, file, clip, opacity
@@ -1158,6 +1158,7 @@ impl Packer {
                 y_scale,
                 rotation,
                 mirror,
+                attribute_places,
             }) => {
                 self.point(p);
                 self.out.floats.extend([*scale, *rotation]);
@@ -1168,6 +1169,15 @@ impl Packer {
                 self.text(&block.to_text());
                 if *mirror {
                     flags |= OPT[0];
+                }
+                // Its moved attributes (docs/adr/0317 §1): a count, then each tag and point.
+                if !attribute_places.is_empty() {
+                    flags |= OPT[2];
+                    self.int(count(attribute_places.len()));
+                    for (tag, at) in attribute_places {
+                        self.text(tag);
+                        self.point(at);
+                    }
                 }
             }
             Entity::Image(ImageEntity {
@@ -1974,8 +1984,8 @@ fn allowed(kind: u8) -> u32 {
         11 => OPT.iter().fold(0, |m, b| m | b) | LINES | REFS,
         // A hatch: holes, schema 23's name, scale, families, gradient and tie (docs/adr/0186).
         12 => OPT[..6].iter().fold(0, |m, b| m | b),
-        // An insert: mirror, its own y factor (docs/adr/0315 §3).
-        13 => OPT[0] | OPT[1],
+        // An insert: mirror, its own y factor (docs/adr/0315 §3), its moved attributes (docs/adr/0317 §1).
+        13 => OPT[0] | OPT[1] | OPT[2],
         // A table: merges, aligns, header, grid, its face, source, frame (docs/adr/0184).
         15 => OPT[..11].iter().fold(0, |m, b| m | b),
         // A picture: mirror, asset, file, clip, opacity (docs/adr/0192).
@@ -3048,7 +3058,20 @@ fn geometry(
             let text = c.text(|| place("block"))?;
             let block =
                 BlockId::parse(&text).ok_or_else(|| broken(&format!("blok kimliği “{text}”")))?;
+            let mut attribute_places = std::collections::BTreeMap::new();
+            if has(2) {
+                let n = c.int()?;
+                for _ in 0..n {
+                    let tag = c.text(|| place("attributePlaces"))?;
+                    let at = c.point()?;
+                    attribute_places.insert(tag, at);
+                }
+                if attribute_places.is_empty() {
+                    return Err(broken("boş öznitelik yerleri"));
+                }
+            }
             Entity::Insert(InsertEntity {
+                attribute_places,
                 base,
                 block,
                 p,

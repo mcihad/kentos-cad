@@ -3,6 +3,7 @@
 //! One binary links once where each file was linked on its own.
 
 mod arrange;
+mod block_attrs;
 mod block_scales;
 mod centerline;
 mod charts;

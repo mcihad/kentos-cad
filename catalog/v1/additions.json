@@ -679,6 +679,47 @@
       "shortcuts": [],
       "category": "Blok",
       "status": "implemented"
+    },
+    {
+      "id": "block.schedule",
+      "title": "Blok çizelgesi",
+      "short": "Çizelge",
+      "icon": "blockSchedule",
+      "description": "Çizimin bloklarını sayar (katmanlarına ve iç içe yerleştirmelerine göre), özniteliklerine göre bulur ve çizelgeler; seçer, panoya kopyalar ya da dosyaya kaydeder (cad.blocks.query).",
+      "aliases": [
+        "BCOUNT",
+        "BLOKSAY"
+      ],
+      "shortcuts": [],
+      "category": "Blok",
+      "status": "implemented"
+    },
+    {
+      "id": "block.sync",
+      "title": "Öznitelikleri eşitle",
+      "short": "Eşitle",
+      "icon": "blockSync",
+      "description": "Seçili yerleştirmenin bloğunun bütün yerleştirmelerini tanımın özniteliklerine getirir: yeniler eklenir, kalkanlar silinir, sabitler ve alanlar yenilenir; tek adımda (ATTSYNC, cad.blocks.edit sync).",
+      "aliases": [
+        "ATTSYNC",
+        "OZNESITLE"
+      ],
+      "shortcuts": [],
+      "category": "Blok",
+      "status": "implemented"
+    },
+    {
+      "id": "block.card",
+      "title": "Blok kartı",
+      "short": "Kart",
+      "icon": "blockCard",
+      "description": "Seçili yerleştirmenin bloğunun kartı: kategorisi, etiketleri ve açıklaması; Bloklar paneli arama ve kategoriyle bunlardan bulur (cad.blocks.edit card).",
+      "aliases": [
+        "BLOKKARTI"
+      ],
+      "shortcuts": [],
+      "category": "Blok",
+      "status": "implemented"
     }
   ],
   "icons": {
@@ -754,7 +795,15 @@
     "styleImpact": "<path d=\"m7.5 3 5.6 2.9-5.6 2.9L1.9 5.9z\" fill=\"currentColor\" fill-opacity=\".3\"/><path d=\"m1.9 9.4 5.6 2.9 5.6-2.9\"/><path d=\"M14.6 12a3 3 0 0 1 0 4M16.8 10a6 6 0 0 1 0 8\"/>",
     "blockEdit": "<rect x=\"3\" y=\"3\" width=\"9\" height=\"9\" rx=\"1\"/><path d=\"M3 7.5h9M7.5 3v9\"/><path d=\"m11.5 16.8 5.6-5.6 1.9 1.9-5.6 5.6-2.4.5z\"/>",
     "blockWrite": "<rect x=\"3\" y=\"3\" width=\"9\" height=\"9\" rx=\"1\"/><path d=\"M3 7.5h9M7.5 3v9\"/><path d=\"M17.5 10v7.5m-3-3 3 3 3-3\"/><path d=\"M13.5 21h8\"/>",
-    "blockRedefineFile": "<path d=\"M11 21H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h7l4 4v3\"/><path d=\"M12 3v4h4\"/><path d=\"M14.5 15.5a3.5 3.5 0 0 1 6-1.5\"/><path d=\"M20.8 11.8v2.4h-2.4\"/><path d=\"M20.5 18.5a3.5 3.5 0 0 1-6 1.5\"/><path d=\"M14.2 22.2v-2.4h2.4\"/>"
+    "blockRedefineFile": "<path d=\"M11 21H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h7l4 4v3\"/><path d=\"M12 3v4h4\"/><path d=\"M14.5 15.5a3.5 3.5 0 0 1 6-1.5\"/><path d=\"M20.8 11.8v2.4h-2.4\"/><path d=\"M20.5 18.5a3.5 3.5 0 0 1-6 1.5\"/><path d=\"M14.2 22.2v-2.4h2.4\"/>",
+    "blockSync": "<rect x=\"2.5\" y=\"2.5\" width=\"8\" height=\"8\" rx=\"1\"/><path d=\"M2.5 6.5h8M6.5 2.5v8\"/><path d=\"M17.6 13.2a4 4 0 0 1-7.2 1.6\"/><path d=\"M10.2 17.6v-2.9h2.9\"/><path d=\"M10.6 12.4a4 4 0 0 1 7.1-1.4\"/><path d=\"M17.8 8.4v2.9h-2.9\"/>",
+    "blockFields": "<rect x=\"2.5\" y=\"2.5\" width=\"8\" height=\"8\" rx=\"1\"/><path d=\"M2.5 6.5h8M6.5 2.5v8\"/><path d=\"M13.6 11.5c-.9 0-1.3.4-1.3 1.3v1c0 .7-.3 1-1 1 .7 0 1 .3 1 1v1c0 .9.4 1.3 1.3 1.3M16.4 11.5c.9 0 1.3.4 1.3 1.3v1c0 .7.3 1 1 1-.7 0-1 .3-1 1v1c0 .9-.4 1.3-1.3 1.3\"/>",
+    "blockCard": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1.5\"/><rect x=\"5\" y=\"6\" width=\"5\" height=\"5\" rx=\".6\"/><path d=\"M5 8.5h5M7.5 6v5\"/><path d=\"M12 7h3.5M12 9.5h3.5M5 13.8h10.5\" stroke-width=\"1.2\"/>",
+    "blockReplace": "<rect x=\"2.5\" y=\"2.5\" width=\"6.5\" height=\"6.5\" rx=\"1\"/><rect x=\"11\" y=\"11\" width=\"6.5\" height=\"6.5\" rx=\"1\" stroke-dasharray=\"2 1.4\"/><path d=\"M11.5 4.2h2.6a2 2 0 0 1 2 2v2.3m-1.6-1.6 1.6 1.6 1.6-1.6\"/><path d=\"M8.5 15.8H5.9a2 2 0 0 1-2-2v-2.3m-1.6 1.6 1.6-1.6 1.6 1.6\"/>",
+    "blockSchedule": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1\"/><path d=\"M2.5 7.5h15M2.5 12h15M8.5 3.5v13\"/><rect x=\"4\" y=\"8.8\" width=\"3\" height=\"2\" rx=\".4\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"4\" y=\"13.3\" width=\"3\" height=\"2\" rx=\".4\" fill=\"currentColor\" stroke=\"none\"/>",
+    "blockCards": "<rect x=\"2.5\" y=\"2.5\" width=\"6.5\" height=\"6.5\" rx=\"1\"/><rect x=\"11\" y=\"2.5\" width=\"6.5\" height=\"6.5\" rx=\"1\"/><rect x=\"2.5\" y=\"11\" width=\"6.5\" height=\"6.5\" rx=\"1\"/><rect x=\"11\" y=\"11\" width=\"6.5\" height=\"6.5\" rx=\"1\"/>",
+    "blockList": "<rect x=\"2.5\" y=\"3\" width=\"4\" height=\"4\" rx=\".6\"/><rect x=\"2.5\" y=\"8\" width=\"4\" height=\"4\" rx=\".6\"/><rect x=\"2.5\" y=\"13\" width=\"4\" height=\"4\" rx=\".6\"/><path d=\"M9 5h8.5M9 10h8.5M9 15h8.5\"/>",
+    "blockCategory": "<path d=\"M2.5 5.5v10a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1V7.5a1 1 0 0 0-1-1H9.5L8 4.5H3.5a1 1 0 0 0-1 1z\"/><rect x=\"7.5\" y=\"9\" width=\"5\" height=\"5\" rx=\".6\"/><path d=\"M7.5 11.5h5M10 9v5\"/>"
   },
   "ribbon": [
     {
@@ -1243,6 +1292,18 @@
       "items": [
         {
           "command": "block.edit",
+          "size": "small"
+        },
+        {
+          "command": "block.sync",
+          "size": "small"
+        },
+        {
+          "command": "block.card",
+          "size": "small"
+        },
+        {
+          "command": "block.schedule",
           "size": "small"
         },
         {

@@ -144,6 +144,7 @@ fn refused(blocks: &[&BlockDefinition]) -> Result<(), Refusal> {
     let checked = rules::definitions(blocks).and_then(|index| {
         for (i, block) in blocks.iter().enumerate() {
             rules::inserts(&block.entities, Some(i), &index)?;
+            rules::places(blocks, &block.entities, Some(i), &index)?;
         }
         rules::nesting(blocks, &index).map(|_| ())
     });

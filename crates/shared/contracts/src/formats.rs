@@ -158,7 +158,11 @@ use crate::layer::LineType;
 /// 66 (docs/adr/0315): an insert's own y factor and a block's unit: `.kcad` document schema 57, the insert's
 ///    `yScale` and the definition's `units`; in the typed columns the insert's option bit 1 and its float after the
 ///    turn. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 66;
+/// 67 (docs/adr/0317): attribute options, moved attributes and block cards: `.kcad` document schema 58, an attribute
+///    definition's `invisible`, `constant`, `verify`, `preset`, `movable`, `multiline`, `boxWidth` and `field`, an
+///    insert's `attributePlaces` and a definition's `card`; in the typed columns the insert's option bit 2, a count
+///    and each tag and point. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 67;
 
 // ── Every import ────────────────────────────────────────────────────────
 

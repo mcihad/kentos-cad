@@ -1,0 +1,320 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Blok kartları",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "cad"
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "duvar",
+      "name": "A-DUVAR",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+      },
+      "children": []
+    },
+    {
+      "id": "kapilar",
+      "name": "A-KAPI",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#C8A165",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "duvar",
+  "entities": [
+    {
+      "kind": "insert",
+      "id": 1,
+      "layerId": "kapilar",
+      "attrs": {
+        "NO": "K-12",
+        "NOT": "Yangın\nkapısı",
+        "ALAN": "1.000 / 2.000"
+      },
+      "block": "0192f5a1-2800-7000-8000-0000000000b1",
+      "p": {
+        "x": 2.0,
+        "y": 0.0
+      },
+      "scale": 1.0,
+      "yScale": 1.5,
+      "rotation": 0.0,
+      "attributePlaces": {
+        "NO": {
+          "x": 0.5,
+          "y": 0.7
+        }
+      }
+    },
+    {
+      "kind": "insert",
+      "id": 2,
+      "layerId": "kapilar",
+      "attrs": {
+        "NO": "K-13"
+      },
+      "block": "0192f5a1-2800-7000-8000-0000000000b1",
+      "p": {
+        "x": 6.0,
+        "y": 0.0
+      },
+      "scale": 1.2,
+      "yScale": 0.8,
+      "rotation": 1.5707963267948966,
+      "mirror": true
+    },
+    {
+      "kind": "insert",
+      "id": 3,
+      "layerId": "duvar",
+      "attrs": {},
+      "block": "0192f5a1-2800-7000-8000-0000000000b2",
+      "p": {
+        "x": 10.0,
+        "y": 10.0
+      },
+      "scale": 0.001,
+      "rotation": 0.0
+    },
+    {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "duvar",
+      "attrs": {},
+      "block": "0192f5a1-2800-7000-8000-0000000000b3",
+      "p": {
+        "x": 0.0,
+        "y": 5.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+    }
+  ],
+  "uids": [
+    "0192f5a1-2800-7000-8000-000000000001",
+    "0192f5a1-2800-7000-8000-000000000002",
+    "0192f5a1-2800-7000-8000-000000000003",
+    "0192f5a1-2800-7000-8000-000000000004"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "blocks": [
+    {
+      "id": "0192f5a1-2800-7000-8000-0000000000b1",
+      "name": "Kapı 90",
+      "base": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "units": "mm",
+      "entities": [
+        {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "b": {
+            "x": 0.9,
+            "y": 0.0
+          },
+          "byLayer": [
+            "color",
+            "lineType",
+            "lineWeight",
+            "transparency"
+          ]
+        },
+        {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "kapilar",
+          "attrs": {},
+          "c": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966,
+          "byLayer": [
+            "color",
+            "lineWeight"
+          ]
+        }
+      ],
+      "attributes": [
+        {
+          "tag": "NO",
+          "prompt": "Kapı numarası",
+          "value": "K-1",
+          "p": {
+            "x": 0.3,
+            "y": 0.45
+          },
+          "height": 0.15,
+          "rotation": 0.0,
+          "movable": true
+        },
+        {
+          "tag": "ÜRETİCİ",
+          "value": "KentOS",
+          "p": {
+            "x": 0.3,
+            "y": 0.2
+          },
+          "height": 0.1,
+          "rotation": 0.0,
+          "invisible": true,
+          "constant": true
+        },
+        {
+          "tag": "NOT",
+          "prompt": "Not",
+          "p": {
+            "x": 0.0,
+            "y": -0.3
+          },
+          "height": 0.1,
+          "rotation": 0.0,
+          "multiline": true,
+          "boxWidth": 1.2,
+          "verify": true
+        },
+        {
+          "tag": "ALAN",
+          "value": "",
+          "p": {
+            "x": 0.0,
+            "y": -0.6
+          },
+          "height": 0.1,
+          "rotation": 0.0,
+          "preset": true,
+          "field": "{$x} / {$y}"
+        }
+      ],
+      "card": {
+        "category": "Mimari/Kapılar",
+        "tags": [
+          "kapı",
+          "tek kanat"
+        ],
+        "version": 3
+      }
+    },
+    {
+      "id": "0192f5a1-2800-7000-8000-0000000000b2",
+      "name": "Kuzey oku",
+      "base": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "units": "unitless",
+      "entities": [
+        {
+          "kind": "polygon",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+            {
+              "x": 0.0,
+              "y": 0.0
+            },
+            {
+              "x": 500.0,
+              "y": -500.0
+            },
+            {
+              "x": 0.0,
+              "y": 2000.0
+            },
+            {
+              "x": -500.0,
+              "y": -500.0
+            }
+          ]
+        }
+      ],
+      "card": {
+        "version": 1
+      }
+    },
+    {
+      "id": "0192f5a1-2800-7000-8000-0000000000b3",
+      "name": "Kapı grubu",
+      "base": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "units": "m",
+      "entities": [
+        {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "kapilar",
+          "attrs": {},
+          "block": "0192f5a1-2800-7000-8000-0000000000b1",
+          "p": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "scale": 2.0,
+          "yScale": 1.0,
+          "rotation": 0.0
+        },
+        {
+          "kind": "line",
+          "id": 2,
+          "layerId": "duvar",
+          "attrs": {},
+          "a": {
+            "x": -1.0,
+            "y": 0.0
+          },
+          "b": {
+            "x": 3.0,
+            "y": 0.0
+          },
+          "byLayer": [
+            "color",
+            "lineType",
+            "lineWeight",
+            "transparency"
+          ]
+        }
+      ]
+    }
+  ]
+}

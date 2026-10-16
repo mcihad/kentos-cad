@@ -185,6 +185,23 @@ ArrangeModeName = Literal["left", "center", "right", "top", "middle", "bottom", 
 """The names of :class:`ArrangeMode`, for a plain string."""
 
 
+class AttributeOp(_StrEnum):
+    """How an attribute's value is compared (docs/adr/0317 §3). Text comparisons fold Turkish case; `lt` and `gt` compare
+    numbers (a value that is not a number does not match).
+    """
+    EQ = "eq"
+    NE = "ne"
+    CONTAINS = "contains"
+    EMPTY = "empty"
+    NOT_EMPTY = "notEmpty"
+    LT = "lt"
+    GT = "gt"
+
+
+AttributeOpName = Literal["eq", "ne", "contains", "empty", "notEmpty", "lt", "gt"]
+"""The names of :class:`AttributeOp`, for a plain string."""
+
+
 class AuditCode(_StrEnum):
     """What is broken.
 
@@ -278,6 +295,10 @@ class BlockEditOperation(_StrEnum):
     - ``import``: A `kentos.blocks` file's definitions taken in (“Blokları al”): a name the drawing has is kept, or with
     - ``units``: The unit it is drawn in (“Blok birimi”, docs/adr/0315 §4): with `rescale` its numbers are kept and their
     - ``update``: Its objects given whole, in its own coordinates, each with its local id (“Blok düzenle”, the block editor's
+    - ``sync``: Its inserts' attribute values made to fit its definition (“Öznitelikleri eşitle”, ATTSYNC; docs/adr/0317 §2):
+    - ``fields``: Its inserts' fields filled again (“Alanları güncelle”, UPDATEFIELD; docs/adr/0317 §1); every block's when no
+    - ``place``: Where inserts (`uids`) show a movable attribute (`tag`): at `at`, a point of the drawing; absent, where the
+    - ``card``: Its library card (“Blok kartı”, docs/adr/0317 §4): `category`, `tags` and `description`; its version is
     """
     RENAME = "rename"
     REDEFINE = "redefine"
@@ -290,9 +311,13 @@ class BlockEditOperation(_StrEnum):
     IMPORT = "import"
     UNITS = "units"
     UPDATE = "update"
+    SYNC = "sync"
+    FIELDS = "fields"
+    PLACE = "place"
+    CARD = "card"
 
 
-BlockEditOperationName = Literal["rename", "redefine", "rebase", "remove", "purge", "attributes", "duplicate", "export", "import", "units", "update"]
+BlockEditOperationName = Literal["rename", "redefine", "rebase", "remove", "purge", "attributes", "duplicate", "export", "import", "units", "update", "sync", "fields", "place", "card"]
 """The names of :class:`BlockEditOperation`, for a plain string."""
 
 
@@ -308,6 +333,22 @@ class BlockFileMode(_StrEnum):
 
 BlockFileModeName = Literal["drawing", "blocks"]
 """The names of :class:`BlockFileMode`, for a plain string."""
+
+
+class BlockReport(_StrEnum):
+    """What `cad.blocks.query` reports.
+
+    - ``count``: Each block's inserts counted: in the drawing, by layer, and placed through other blocks' inserts.
+    - ``instances``: The inserts that match, by persistent id (select them).
+    - ``schedule``: A table of the inserts that match: block, layer, x, y, turn in degrees, then the attributes' values.
+    """
+    COUNT = "count"
+    INSTANCES = "instances"
+    SCHEDULE = "schedule"
+
+
+BlockReportName = Literal["count", "instances", "schedule"]
+"""The names of :class:`BlockReport`, for a plain string."""
 
 
 class BlockUnits(_StrEnum):
@@ -2134,6 +2175,10 @@ WorkspaceName = Literal["cad", "gis", "plan3d", "disaster"]
 """The names of :class:`Workspace`, for a plain string."""
 
 
+#: One cell of a schedule: a number (x, y, turn) or a text.
+ScheduleCell = Union[float, str]
+
+
 #: A variable's value: none yet, true/false, a number or text.
 VariableValue = Union[bool, float, str, None]
 
@@ -3711,8 +3756,17 @@ class AttributeDefinition(_Model):
         height: Metres, in the definition's size. Unit: length.
         rotation: Degrees, counter-clockwise from east, as a text's. Unit: deg.
         align: Where `p` is on the text, as a text's (docs/adr/0145).
+        box_width: A multiline attribute's box width, metres in the definition's size. Unit: length.
+        constant: Its value is the definition's `value` in every insert; an insert holds none of its own (bit 2).
+        field: A field (docs/adr/0317 §1): a template whose `{ifade}` parts are filled for each insert (its attributes, its
+            place, the project's `@` values); the commands that place, sync and update fields write it as the value.
+        invisible: Not drawn: its value is kept, listed and scheduled (DXF 70 bit 1).
+        movable: An insert may move its text (`attributePlaces`); off: locked where the definition puts it (bit 16 set).
+        multiline: Its value may hold line breaks, each a line; wrapped to `boxWidth` when given (an MTEXT attribute).
+        preset: Blok ekle takes its default without asking (bit 8).
         prompt: What Blok ekle asks for it.
         value: The default value.
+        verify: Blok ekle asks for it twice, the two the same (bit 4).
         width_factor: The letters' width times this, as a text's (docs/adr/0145). Unit: 1.
     """
     tag: str
@@ -3720,8 +3774,16 @@ class AttributeDefinition(_Model):
     height: float
     rotation: float
     align: TextAlign | TextAlignName | None | Unset = UNSET
+    box_width: float | None | Unset = UNSET
+    constant: bool | Unset = UNSET
+    field: str | None | Unset = UNSET
+    invisible: bool | Unset = UNSET
+    movable: bool | Unset = UNSET
+    multiline: bool | Unset = UNSET
+    preset: bool | Unset = UNSET
     prompt: str | None | Unset = UNSET
     value: str | None | Unset = UNSET
+    verify: bool | Unset = UNSET
     width_factor: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -3732,10 +3794,26 @@ class AttributeDefinition(_Model):
         out["rotation"] = float(self.rotation)
         if self.align is not UNSET:
             out["align"] = None if self.align is None else _enum_out(self.align)
+        if self.box_width is not UNSET:
+            out["boxWidth"] = None if self.box_width is None else float(self.box_width)
+        if self.constant is not UNSET:
+            out["constant"] = self.constant
+        if self.field is not UNSET:
+            out["field"] = self.field
+        if self.invisible is not UNSET:
+            out["invisible"] = self.invisible
+        if self.movable is not UNSET:
+            out["movable"] = self.movable
+        if self.multiline is not UNSET:
+            out["multiline"] = self.multiline
+        if self.preset is not UNSET:
+            out["preset"] = self.preset
         if self.prompt is not UNSET:
             out["prompt"] = self.prompt
         if self.value is not UNSET:
             out["value"] = self.value
+        if self.verify is not UNSET:
+            out["verify"] = self.verify
         if self.width_factor is not UNSET:
             out["widthFactor"] = None if self.width_factor is None else float(self.width_factor)
         return out
@@ -3748,9 +3826,90 @@ class AttributeDefinition(_Model):
             height=float(data["height"]),
             rotation=float(data["rotation"]),
             align=UNSET if "align" not in data else None if data["align"] is None else _enum_in(TextAlign, data["align"]),
+            box_width=UNSET if "boxWidth" not in data else None if data["boxWidth"] is None else float(data["boxWidth"]),
+            constant=data.get("constant", UNSET),
+            field=data.get("field", UNSET),
+            invisible=data.get("invisible", UNSET),
+            movable=data.get("movable", UNSET),
+            multiline=data.get("multiline", UNSET),
+            preset=data.get("preset", UNSET),
             prompt=data.get("prompt", UNSET),
             value=data.get("value", UNSET),
+            verify=data.get("verify", UNSET),
             width_factor=UNSET if "widthFactor" not in data else None if data["widthFactor"] is None else float(data["widthFactor"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AttributeFilter(_Model):
+    """One condition on an insert's attribute: its value (the insert's, else the definition's default) compared with
+    `value`.
+    Attributes:
+        value: Absent for `empty` and `notEmpty`.
+    """
+    tag: str
+    op: AttributeOp | AttributeOpName
+    value: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["tag"] = self.tag
+        out["op"] = _enum_out(self.op)
+        if self.value is not UNSET:
+            out["value"] = self.value
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AttributeFilter:
+        return cls(
+            tag=data["tag"],
+            op=_enum_in(AttributeOp, data["op"]),
+            value=data.get("value", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AttributeSync(_Model):
+    """What syncing a block's inserts with its definition did (docs/adr/0317 §2): each list in the definition's order,
+    then the inserts' (a tag once).
+    Attributes:
+        inserts: The inserts written. Unit: count.
+        added: The definition's tags an insert has no value of: it shows their default (nothing written).
+        removed: The tags whose values were taken off the inserts: no attribute has them, or `removeTags` named them.
+        renamed: The renames done, old and new.
+        constant: The constant attributes' tags whose own values were taken off.
+        places: Places dropped: their attributes are no longer movable. Unit: count.
+        fields: Values a field wrote. Unit: count.
+    """
+    inserts: int
+    added: list[str]
+    removed: list[str]
+    renamed: list[list[str]]
+    constant: list[str]
+    places: int
+    fields: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["inserts"] = self.inserts
+        out["added"] = list(self.added)
+        out["removed"] = list(self.removed)
+        out["renamed"] = [list(e0) for e0 in self.renamed]
+        out["constant"] = list(self.constant)
+        out["places"] = self.places
+        out["fields"] = self.fields
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AttributeSync:
+        return cls(
+            inserts=data["inserts"],
+            added=list(data["added"]),
+            removed=list(data["removed"]),
+            renamed=[list(e0) for e0 in data["renamed"]],
+            constant=list(data["constant"]),
+            places=data["places"],
+            fields=data["fields"],
         )
 
 
@@ -3782,6 +3941,73 @@ class AuditFinding(_Model):
             uid=data["uid"],
             message=data["message"],
             fixed=data["fixed"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlockCard(_Model):
+    """A block's library card (docs/adr/0317 §4): what the Bloklar panel's cards and search show beside its name, its
+    description, its size and its attributes.
+    Attributes:
+        version: How many times its definition has changed since it was made: 1 when made; each change of its objects, base,
+            attributes or unit adds one. Unit: version.
+        category: A path of categories by `/` (`Mimari/Kapılar`); absent: none.
+        tags: Words it is found by, each once, Turkish case folded.
+    """
+    version: int
+    category: str | None | Unset = UNSET
+    tags: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["version"] = self.version
+        if self.category is not UNSET:
+            out["category"] = self.category
+        if self.tags is not UNSET:
+            out["tags"] = list(self.tags)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlockCard:
+        return cls(
+            version=data["version"],
+            category=data.get("category", UNSET),
+            tags=list(data["tags"]) if "tags" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlockCount(_Model):
+    """A block's inserts counted (`count`).
+    Attributes:
+        count: The drawing's own inserts (on the layers asked). Unit: count.
+        layers: The drawing's own inserts by layer id. Unit: count.
+        nested: How many times other blocks' inserts place it (each of their inserts counted through, the layers asked
+            applying to the drawing's insert). Unit: count.
+    """
+    block: str
+    name: str
+    count: int
+    layers: dict[str, int]
+    nested: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["block"] = self.block
+        out["name"] = self.name
+        out["count"] = self.count
+        out["layers"] = dict(self.layers)
+        out["nested"] = self.nested
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlockCount:
+        return cls(
+            block=data["block"],
+            name=data["name"],
+            count=data["count"],
+            layers=dict(data["layers"]),
+            nested=data["nested"],
         )
 
 
@@ -3837,6 +4063,7 @@ class BlockDefinition(_Model):
         name: Unique in the drawing, Turkish case folded.
         base: The point placed at an insert's `p`, in the definition's coordinates. Unit: length.
         attributes: The texts an insert shows from its attributes (ATTDEF).
+        card: Its library card (docs/adr/0317 §4): category, tags and version.
         units: The unit it was drawn in (docs/adr/0315 §4): a unit, its geometry being metres as the drawing's (an insert
             keeps its size anywhere); `unitless`, its numbers being drawing units (an insert is scaled by the drawing's
             unit). Absent: a real-size block of an unknown unit.
@@ -3846,6 +4073,7 @@ class BlockDefinition(_Model):
     base: Vec2
     entities: list[Entity]
     attributes: list[AttributeDefinition] | Unset = UNSET
+    card: BlockCard | None | Unset = UNSET
     description: str | None | Unset = UNSET
     units: BlockUnits | BlockUnitsName | None | Unset = UNSET
 
@@ -3857,6 +4085,8 @@ class BlockDefinition(_Model):
         out["entities"] = [e0.to_json() for e0 in self.entities]
         if self.attributes is not UNSET:
             out["attributes"] = [e0.to_json() for e0 in self.attributes]
+        if self.card is not UNSET:
+            out["card"] = None if self.card is None else self.card.to_json()
         if self.description is not UNSET:
             out["description"] = self.description
         if self.units is not UNSET:
@@ -3871,6 +4101,7 @@ class BlockDefinition(_Model):
             base=Vec2.from_json(data["base"]),
             entities=[Entity.from_json(e0) for e0 in data["entities"]],
             attributes=[AttributeDefinition.from_json(e0) for e0 in data["attributes"]] if "attributes" in data else UNSET,
+            card=UNSET if "card" not in data else None if data["card"] is None else BlockCard.from_json(data["card"]),
             description=data.get("description", UNSET),
             units=UNSET if "units" not in data else None if data["units"] is None else _enum_in(BlockUnits, data["units"]),
         )
@@ -4188,41 +4419,60 @@ class BlocksEdit(_Model):
     `replace` the layer checks of `cad.blocks.define`; `remove`: `block_in_use`
     (inserts of it in the drawing or in another definition).
     Attributes:
+        at: `place`: where the attribute's text stands, a point of the drawing; absent: where the definition puts it. Unit: length.
         attributes: `attributes`: the definition's attribute definitions, the whole list
             in its order (empty: it has none).
         base: `rebase`: the new base point; `redefine`: the base point (absent: kept). Unit: length.
         block: The definition; every operation but `purge`.
         blocks: `export`: the definitions, by id (absent: every one).
+        category: `card`: its category (empty: none).
+        description: `card`: its description (empty: none).
         entities: `update`: the definition's objects, in its own coordinates, each with its local id (0: a new one;
             docs/adr/0316 §1).
         expected_revision: The document revision the input was prepared against, as decimal text.
         layer_id: `redefine` with `replace`: the layer the insert goes on.
         library: `import`: a `kentos.blocks` file's text.
         name: `rename`: the new name.
+        remove_tags: `sync`: tags whose values are taken off the inserts though no attribute has them.
+        renames: `attributes`, `sync`: an insert's value under an old tag moved to the new one (old → new).
         replace: `redefine`: true, the objects are replaced by an insert of the block.
         rescale: `units` between two units: true keeps its numbers (its size changes by their ratio); absent or false keeps
             its size (only the unit's name changes).
+        sync: `attributes`, `update`: false leaves the inserts' values as they are; absent or true syncs them as `sync`
+            does (docs/adr/0317 §2).
+        tag: `place`: the movable attribute's tag.
+        tags: `card`: the words it is found by.
         uids: `redefine`: the objects it is made of now, by persistent id.
         units: `units`: the unit it is drawn in (docs/adr/0315 §4).
     """
     operation: BlockEditOperation | BlockEditOperationName
+    at: Vec2 | None | Unset = UNSET
     attributes: list[AttributeDefinition] | None | Unset = UNSET
     base: Vec2 | None | Unset = UNSET
     block: str | None | Unset = UNSET
     blocks: list[str] | None | Unset = UNSET
+    category: str | None | Unset = UNSET
+    description: str | None | Unset = UNSET
     entities: list[Entity] | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     layer_id: str | None | Unset = UNSET
     library: str | None | Unset = UNSET
     name: str | None | Unset = UNSET
+    remove_tags: list[str] | None | Unset = UNSET
+    renames: dict[str, str] | None | Unset = UNSET
     replace: bool | None | Unset = UNSET
     rescale: bool | None | Unset = UNSET
+    sync: bool | None | Unset = UNSET
+    tag: str | None | Unset = UNSET
+    tags: list[str] | None | Unset = UNSET
     uids: list[str] | None | Unset = UNSET
     units: BlockUnits | BlockUnitsName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["operation"] = _enum_out(self.operation)
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else _vec2_out(self.at)
         if self.attributes is not UNSET:
             out["attributes"] = None if self.attributes is None else [e0.to_json() for e0 in self.attributes]
         if self.base is not UNSET:
@@ -4231,6 +4481,10 @@ class BlocksEdit(_Model):
             out["block"] = self.block
         if self.blocks is not UNSET:
             out["blocks"] = None if self.blocks is None else list(self.blocks)
+        if self.category is not UNSET:
+            out["category"] = self.category
+        if self.description is not UNSET:
+            out["description"] = self.description
         if self.entities is not UNSET:
             out["entities"] = None if self.entities is None else [e0.to_json() for e0 in self.entities]
         if self.expected_revision is not UNSET:
@@ -4241,10 +4495,20 @@ class BlocksEdit(_Model):
             out["library"] = self.library
         if self.name is not UNSET:
             out["name"] = self.name
+        if self.remove_tags is not UNSET:
+            out["removeTags"] = None if self.remove_tags is None else list(self.remove_tags)
+        if self.renames is not UNSET:
+            out["renames"] = None if self.renames is None else dict(self.renames)
         if self.replace is not UNSET:
             out["replace"] = self.replace
         if self.rescale is not UNSET:
             out["rescale"] = self.rescale
+        if self.sync is not UNSET:
+            out["sync"] = self.sync
+        if self.tag is not UNSET:
+            out["tag"] = self.tag
+        if self.tags is not UNSET:
+            out["tags"] = None if self.tags is None else list(self.tags)
         if self.uids is not UNSET:
             out["uids"] = None if self.uids is None else list(self.uids)
         if self.units is not UNSET:
@@ -4255,17 +4519,25 @@ class BlocksEdit(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> BlocksEdit:
         return cls(
             operation=_enum_in(BlockEditOperation, data["operation"]),
+            at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
             attributes=UNSET if "attributes" not in data else None if data["attributes"] is None else [AttributeDefinition.from_json(e0) for e0 in data["attributes"]],
             base=UNSET if "base" not in data else None if data["base"] is None else Vec2.from_json(data["base"]),
             block=data.get("block", UNSET),
             blocks=UNSET if "blocks" not in data else None if data["blocks"] is None else list(data["blocks"]),
+            category=data.get("category", UNSET),
+            description=data.get("description", UNSET),
             entities=UNSET if "entities" not in data else None if data["entities"] is None else [Entity.from_json(e0) for e0 in data["entities"]],
             expected_revision=data.get("expectedRevision", UNSET),
             layer_id=data.get("layerId", UNSET),
             library=data.get("library", UNSET),
             name=data.get("name", UNSET),
+            remove_tags=UNSET if "removeTags" not in data else None if data["removeTags"] is None else list(data["removeTags"]),
+            renames=UNSET if "renames" not in data else None if data["renames"] is None else dict(data["renames"]),
             replace=data.get("replace", UNSET),
             rescale=data.get("rescale", UNSET),
+            sync=data.get("sync", UNSET),
+            tag=data.get("tag", UNSET),
+            tags=UNSET if "tags" not in data else None if data["tags"] is None else list(data["tags"]),
             uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
             units=UNSET if "units" not in data else None if data["units"] is None else _enum_in(BlockUnits, data["units"]),
         )
@@ -4327,6 +4599,7 @@ class BlocksEdited(_Model):
         insert: `redefine` with `replace`: the insert's persistent id and its slot.
         library: `export`: the file's text.
         skipped: `import`: the file's names the drawing has, kept as they are.
+        sync: `attributes`, `update`, `sync`, `fields`, `place`: what was done to the inserts' values (docs/adr/0317 §2).
     """
     changed: list[str]
     removed: list[str]
@@ -4337,6 +4610,7 @@ class BlocksEdited(_Model):
     insert: str | None | Unset = UNSET
     library: str | None | Unset = UNSET
     skipped: list[str] | Unset = UNSET
+    sync: AttributeSync | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -4354,6 +4628,8 @@ class BlocksEdited(_Model):
             out["library"] = self.library
         if self.skipped is not UNSET:
             out["skipped"] = list(self.skipped)
+        if self.sync is not UNSET:
+            out["sync"] = None if self.sync is None else self.sync.to_json()
         return out
 
     @classmethod
@@ -4368,6 +4644,7 @@ class BlocksEdited(_Model):
             insert=data.get("insert", UNSET),
             library=data.get("library", UNSET),
             skipped=list(data["skipped"]) if "skipped" in data else UNSET,
+            sync=UNSET if "sync" not in data else None if data["sync"] is None else AttributeSync.from_json(data["sync"]),
         )
 
 
@@ -4494,6 +4771,172 @@ class BlocksInsertPlan(_Model):
         return cls(
             insert=Entity.from_json(data["insert"]),
             unit_factor=float(data["unitFactor"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksQueried(_Model):
+    """Output of `cad.blocks.query` v1: the part its report asks for.
+    Attributes:
+        columns: `schedule`: the columns' names: `Blok`, `Katman`, `X`, `Y`, `Dönüş`, then the tags.
+        counts: `count`: each block asked, in the drawing's order (those with no insert too).
+        rows: `schedule`: a row for each insert of `uids`.
+        uids: `instances`, `schedule`: the inserts that match, in the drawing's order.
+    """
+    columns: list[str] | Unset = UNSET
+    counts: list[BlockCount] | Unset = UNSET
+    rows: list[list[ScheduleCell]] | Unset = UNSET
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.columns is not UNSET:
+            out["columns"] = list(self.columns)
+        if self.counts is not UNSET:
+            out["counts"] = [e0.to_json() for e0 in self.counts]
+        if self.rows is not UNSET:
+            out["rows"] = [list(e0) for e0 in self.rows]
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksQueried:
+        return cls(
+            columns=list(data["columns"]) if "columns" in data else UNSET,
+            counts=[BlockCount.from_json(e0) for e0 in data["counts"]] if "counts" in data else UNSET,
+            rows=[list(e0) for e0 in data["rows"]] if "rows" in data else UNSET,
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksQuery(_Model):
+    """Input of `cad.blocks.query` v1.
+
+    Refusals in order: `unknown_block` (`blocks[i]`), `layer_not_found` (`layers[i]`), `invalid_condition`
+    (`where[i]`: no tag, no value where one is needed, a number expected), `unknown_tag` (`columns[i]`: no block
+    asked has it).
+    Attributes:
+        blocks: Only these blocks' inserts (absent: every block's).
+        columns: `schedule`: the attribute columns, by tag (absent: every tag of the blocks reported, each once, in their
+            order).
+        layers: Only inserts on these layers, by id (absent: every layer's).
+        where: Every condition holds (`instances`, `schedule`).
+    """
+    report: BlockReport | BlockReportName
+    blocks: list[str] | None | Unset = UNSET
+    columns: list[str] | None | Unset = UNSET
+    layers: list[str] | None | Unset = UNSET
+    where: list[AttributeFilter] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["report"] = _enum_out(self.report)
+        if self.blocks is not UNSET:
+            out["blocks"] = None if self.blocks is None else list(self.blocks)
+        if self.columns is not UNSET:
+            out["columns"] = None if self.columns is None else list(self.columns)
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else list(self.layers)
+        if self.where is not UNSET:
+            out["where"] = None if self.where is None else [e0.to_json() for e0 in self.where]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksQuery:
+        return cls(
+            report=_enum_in(BlockReport, data["report"]),
+            blocks=UNSET if "blocks" not in data else None if data["blocks"] is None else list(data["blocks"]),
+            columns=UNSET if "columns" not in data else None if data["columns"] is None else list(data["columns"]),
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+            where=UNSET if "where" not in data else None if data["where"] is None else [AttributeFilter.from_json(e0) for e0 in data["where"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksReplace(_Model):
+    """Input of `cad.blocks.replace` v1: the drawing's inserts of `from` (or those named) place `to` instead, as one undo
+    step “Bloğu başkasıyla değiştir”; each keeps its place, scale, turn, layer and look, the values of `to`'s attributes
+    (not constant) and the places of its movable ones; `to`'s fields are filled. With `purge`, `from` is deleted when
+    no insert uses it any more.
+
+    Refusals in order: `no_block` (`from` or `to` missing), `same_block`, `invalid_revision`, `revision_conflict`,
+    `unknown_block` (`from`, `to`), `entity_not_found`, `not_insert` (an object named that is not an insert of
+    `from`), `layer_locked` (every one locked; some: a warning), `invalid_field`.
+    Attributes:
+        from_: The block whose inserts are replaced.
+        purge: Deletes `from` when no insert uses it after.
+        to: The block they place instead.
+        uids: Only these inserts of `from`, by persistent id (absent: every one of the drawing's).
+    """
+    expected_revision: str | None | Unset = UNSET
+    from_: str | None | Unset = UNSET
+    purge: bool | None | Unset = UNSET
+    to: str | None | Unset = UNSET
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        if self.purge is not UNSET:
+            out["purge"] = self.purge
+        if self.to is not UNSET:
+            out["to"] = self.to
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksReplace:
+        return cls(
+            expected_revision=data.get("expectedRevision", UNSET),
+            from_=data.get("from", UNSET),
+            purge=data.get("purge", UNSET),
+            to=data.get("to", UNSET),
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksReplaced(_Model):
+    """Output of `cad.blocks.replace` v1.
+    Attributes:
+        replaced: The inserts that place `to` now, in the drawing's order.
+        dropped: `from`'s attribute tags whose values were taken off: `to` has no such attribute, or a constant one.
+        places: Places dropped: `to` has no movable attribute of their tag. Unit: count.
+        fields: Values `to`'s fields wrote. Unit: count.
+        purged: `from` was deleted (`purge`).
+    """
+    replaced: list[str]
+    dropped: list[str]
+    places: int
+    fields: int
+    purged: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["replaced"] = list(self.replaced)
+        out["dropped"] = list(self.dropped)
+        out["places"] = self.places
+        out["fields"] = self.fields
+        out["purged"] = self.purged
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksReplaced:
+        return cls(
+            replaced=list(data["replaced"]),
+            dropped=list(data["dropped"]),
+            places=data["places"],
+            fields=data["fields"],
+            purged=data["purged"],
             revision=data["revision"],
         )
 
@@ -10583,6 +11026,9 @@ class InsertEntity(Entity):
         rotation: Radians, counter-clockwise from east. Unit: rad.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        attribute_places: Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the
+            definition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where
+            the definition puts it. Unit: length.
         by_layer: On a block's object, the parts without a value of their own that
             follow the object's layer instead of the insert; in order, once each,
             never one with a value of its own.
@@ -10616,6 +11062,7 @@ class InsertEntity(Entity):
     scale: float
     rotation: float
     attachments: list[Attachment] | Unset = UNSET
+    attribute_places: dict[str, Vec2] | Unset = UNSET
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
@@ -10642,6 +11089,8 @@ class InsertEntity(Entity):
         out["rotation"] = float(self.rotation)
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.attribute_places is not UNSET:
+            out["attributePlaces"] = {k0: _vec2_out(e0) for k0, e0 in self.attribute_places.items()}
         if self.by_layer is not UNSET:
             out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
@@ -10683,6 +11132,7 @@ class InsertEntity(Entity):
             scale=float(data["scale"]),
             rotation=float(data["rotation"]),
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            attribute_places={k0: Vec2.from_json(e0) for k0, e0 in data["attributePlaces"].items()} if "attributePlaces" in data else UNSET,
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
@@ -25739,6 +26189,10 @@ __all__ = [
     "AtMeasuredPoint",
     "Attachment",
     "AttributeDefinition",
+    "AttributeFilter",
+    "AttributeOp",
+    "AttributeOpName",
+    "AttributeSync",
     "AttributesTableSource",
     "AuditCode",
     "AuditCodeName",
@@ -25750,7 +26204,9 @@ __all__ = [
     "AzimuthDimensionMeasure",
     "BlendMode",
     "BlendModeName",
+    "BlockCard",
     "BlockChange",
+    "BlockCount",
     "BlockDefined",
     "BlockDefinition",
     "BlockEditOperation",
@@ -25761,6 +26217,8 @@ __all__ = [
     "BlockFileModeName",
     "BlockInserted",
     "BlockRecord",
+    "BlockReport",
+    "BlockReportName",
     "BlockUnit",
     "BlockUnits",
     "BlockUnitsName",
@@ -25771,6 +26229,10 @@ __all__ = [
     "BlocksEdited",
     "BlocksInsert",
     "BlocksInsertPlan",
+    "BlocksQueried",
+    "BlocksQuery",
+    "BlocksReplace",
+    "BlocksReplaced",
     "BothNetworkDirection",
     "Bounds",
     "CalloutKind",
@@ -26343,6 +26805,7 @@ __all__ = [
     "ScenariosEdit",
     "ScenariosEditPlan",
     "ScenariosEdited",
+    "ScheduleCell",
     "SelectKind",
     "SelectKindName",
     "SelectLeftOut",

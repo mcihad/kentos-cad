@@ -1564,6 +1564,7 @@ fn block_id(n: u8) -> BlockId {
 
 fn insert(layer: &str, block: u8, p: Vec2, scale: f64, rotation: f64, mirror: bool) -> Entity {
     Entity::Insert(InsertEntity {
+        attribute_places: Default::default(),
         base: base(layer),
         block: block_id(block),
         p,
@@ -1576,6 +1577,7 @@ fn insert(layer: &str, block: u8, p: Vec2, scale: f64, rotation: f64, mirror: bo
 
 fn definition(n: u8, name: &str, base_point: Vec2, entities: Vec<Entity>) -> BlockDefinition {
     BlockDefinition {
+        card: None,
         id: block_id(n),
         name: name.into(),
         base: base_point,
@@ -3182,4 +3184,24 @@ fn line_types_with_patterns_go_out_and_come_back() {
         Some("KESIK-INCE")
     );
     assert_eq!(r.entities[0].base().look.line_type, Some(LineType::Dashed));
+}
+
+/// An attribute's options go into the ATTDEF's 70 (docs/adr/0317 §1): invisible 1, verify 4.
+#[test]
+fn an_attribute_s_options_are_its_flags() {
+    let mut input = blocks_input();
+    let direk = input
+        .blocks
+        .iter_mut()
+        .find(|b| b.name == "Direk")
+        .expect("Direk");
+    direk.attributes[0].options.invisible = true;
+    direk.attributes[0].options.verify = true;
+    let (text, _) = write(&input);
+    let at = text.find("AcDbAttributeDefinition").expect("an ATTDEF");
+    let def = &text[at..at + 120];
+    assert!(def.contains(" 70\r\n5\r\n"), "{def:?}");
+    let (plain, _) = write(&blocks_input());
+    let at = plain.find("AcDbAttributeDefinition").expect("an ATTDEF");
+    assert!(plain[at..at + 120].contains(" 70\r\n0\r\n"));
 }

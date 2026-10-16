@@ -31,4 +31,37 @@ align?: TextAlign,
 /**
  * The letters' width times this, as a text's (docs/adr/0145).
  */
-widthFactor?: number, };
+widthFactor?: number, 
+/**
+ * Not drawn: its value is kept, listed and scheduled (DXF 70 bit 1).
+ */
+invisible?: boolean, 
+/**
+ * Its value is the definition's `value` in every insert; an insert holds none of its own (bit 2).
+ */
+constant?: boolean, 
+/**
+ * Blok ekle asks for it twice, the two the same (bit 4).
+ */
+verify?: boolean, 
+/**
+ * Blok ekle takes its default without asking (bit 8).
+ */
+preset?: boolean, 
+/**
+ * An insert may move its text (`attributePlaces`); off: locked where the definition puts it (bit 16 set).
+ */
+movable?: boolean, 
+/**
+ * Its value may hold line breaks, each a line; wrapped to `boxWidth` when given (an MTEXT attribute).
+ */
+multiline?: boolean, 
+/**
+ * A multiline attribute's box width, metres in the definition's size.
+ */
+boxWidth?: number, 
+/**
+ * A field (docs/adr/0317 §1): a template whose `{ifade}` parts are filled for each insert (its attributes, its
+ * place, the project's `@` values); the commands that place, sync and update fields write it as the value.
+ */
+field?: string, };

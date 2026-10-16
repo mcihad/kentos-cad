@@ -1,0 +1,151 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.blocks.replace",
+  "commandVersion": 1,
+  "title": "Bloğu başkasıyla değiştir",
+  "note": "Written by scripts/fixtures/block_attribute_cases.py from docs/adr/0317; do not edit by hand.",
+  "setup": {"format": "kentos.document", "version": 1, "name": "Blok öznitelikleri", "settings": {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg", "plotScale": 50, "workspace": "cad", "drawingFont": "barlow"}, "origin": {"x": 0, "y": 0}, "layers": [{"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}, {"id": "kapilar", "name": "Kapılar", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}, {"id": "kilitli", "name": "Kilitli", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}], "activeLayer": "yapi", "entities": [{"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {"NUMARA": "K-1", "KAT": "1", "ETİKET": "No: K-1"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 10, "y": 0}, "scale": 1, "rotation": 0, "attributePlaces": {"NUMARA": {"x": 0.5, "y": 1.0}}}, {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {"NUMARA": "K-2", "KAT": "2", "ESKİ": "x"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 20, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "insert", "id": 3, "layerId": "kilitli", "attrs": {"NUMARA": "K-3"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 30, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "insert", "id": 4, "layerId": "yapi", "attrs": {"NUMARA": "P-1", "GENİŞLİK": "1.5"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "p": {"x": 40, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "insert", "id": 5, "layerId": "kapilar", "attrs": {"NUMARA": "P-2"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "p": {"x": 50, "y": 0}, "scale": 1, "rotation": 1.5707963267948966}, {"kind": "insert", "id": 6, "layerId": "yapi", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7004", "p": {"x": 60, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "line", "id": 7, "layerId": "yapi", "attrs": {}, "a": {"x": 0, "y": 10}, "b": {"x": 10, "y": 10}}, {"kind": "insert", "id": 8, "layerId": "kapilar", "attrs": {"NUMARA": "K-8"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 70, "y": 0}, "scale": 2, "rotation": 1.5707963267948966}], "styles": {"items": [], "categories": []}, "blocks": [{"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "name": "Kapı", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0.9}}], "attributes": [{"tag": "NUMARA", "prompt": "Kapı numarası", "value": "K-0", "p": {"x": 0.2, "y": 0.5}, "height": 0.2, "rotation": 0, "movable": true}, {"tag": "KAT", "value": "1", "p": {"x": 0.2, "y": 0.2}, "height": 0.2, "rotation": 0}, {"tag": "ÜRETİCİ", "value": "KentOS", "p": {"x": 0.2, "y": -0.1}, "height": 0.2, "rotation": 0, "invisible": true, "constant": true}, {"tag": "ETİKET", "p": {"x": 0.2, "y": -0.4}, "height": 0.2, "rotation": 0, "preset": true, "field": "No: {NUMARA}"}], "card": {"category": "Mimari/Kapılar", "tags": ["kapı"], "version": 2}}, {"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "name": "Pencere", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 1.2, "y": 0}}], "attributes": [{"tag": "NUMARA", "value": "P-0", "p": {"x": 0, "y": 0.3}, "height": 0.2, "rotation": 0}, {"tag": "GENİŞLİK", "value": "1.2", "p": {"x": 0, "y": 0}, "height": 0.2, "rotation": 0}]}, {"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7003", "name": "Lamba", "base": {"x": 0, "y": 0}, "entities": [{"kind": "circle", "id": 1, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0}, "r": 0.3}]}, {"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7004", "name": "Kapı grubu", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "", "attrs": {"NUMARA": "G-1"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "insert", "id": 2, "layerId": "", "attrs": {"NUMARA": "G-2"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 2, "y": 0}, "scale": 1, "rotation": 0}]}]},
+  "cases": [
+    {
+      "name": "bütün yerleştirmeler: uyan değerler kalır, düşenler söylenir, kilitli katmandaki atlanır; geri alınır",
+      "steps": [
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002"}, "result": {"status": "completed", "output": {"replaced": ["$uidOf:1", "$uidOf:2", "$uidOf:8"], "dropped": ["KAT", "ETİKET"], "places": 1, "fields": 0, "purged": false, "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"entities": {"1": {"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {"NUMARA": "K-1"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "p": {"x": 10, "y": 0}, "scale": 1, "rotation": 0}, "2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {"NUMARA": "K-2", "ESKİ": "x"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "p": {"x": 20, "y": 0}, "scale": 1, "rotation": 0}, "8": {"kind": "insert", "id": 8, "layerId": "kapilar", "attrs": {"NUMARA": "K-8"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "p": {"x": 70, "y": 0}, "scale": 2, "rotation": 1.5707963267948966}}, "canUndo": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Bloğu başkasıyla değiştir", "expect": {"entities": {"1": {"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {"NUMARA": "K-1", "KAT": "1", "ETİKET": "No: K-1"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 10, "y": 0}, "scale": 1, "rotation": 0, "attributePlaces": {"NUMARA": {"x": 0.5, "y": 1.0}}}, "2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {"NUMARA": "K-2", "KAT": "2", "ESKİ": "x"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 20, "y": 0}, "scale": 1, "rotation": 0}, "8": {"kind": "insert", "id": 8, "layerId": "kapilar", "attrs": {"NUMARA": "K-8"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 70, "y": 0}, "scale": 2, "rotation": 1.5707963267948966}}}}
+      ]
+    },
+    {
+      "name": "verilen yerleştirmeler",
+      "steps": [
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "uids": ["$uidOf:2"]}, "result": {"status": "completed", "output": {"replaced": ["$uidOf:2"], "dropped": ["KAT"], "places": 0, "fields": 0, "purged": false, "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {"NUMARA": "K-2", "ESKİ": "x"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "p": {"x": 20, "y": 0}, "scale": 1, "rotation": 0}}}}
+      ]
+    },
+    {
+      "name": "yeni bloğun alanları dolar",
+      "steps": [
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001"}, "result": {"status": "completed", "output": {"replaced": ["$uidOf:4", "$uidOf:5"], "dropped": ["GENİŞLİK"], "places": 0, "fields": 2, "purged": false, "revision": "$current"}, "warnings": []}, "expect": {"entities": {"4": {"kind": "insert", "id": 4, "layerId": "yapi", "attrs": {"NUMARA": "P-1", "ETİKET": "No: P-1"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 40, "y": 0}, "scale": 1, "rotation": 0}, "5": {"kind": "insert", "id": 5, "layerId": "kapilar", "attrs": {"NUMARA": "P-2", "ETİKET": "No: P-2"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 50, "y": 0}, "scale": 1, "rotation": 1.5707963267948966}}}}
+      ]
+    },
+    {
+      "name": "purge: artık yerleşmeyen eski blok silinir, aynı adımda",
+      "steps": [
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7003", "purge": true}, "result": {"status": "completed", "output": {"replaced": ["$uidOf:4", "$uidOf:5"], "dropped": ["NUMARA", "GENİŞLİK"], "places": 0, "fields": 0, "purged": true, "revision": "$current"}, "warnings": []}, "expect": {"entities": {"4": {"kind": "insert", "id": 4, "layerId": "yapi", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7003", "p": {"x": 40, "y": 0}, "scale": 1, "rotation": 0}, "5": {"kind": "insert", "id": 5, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7003", "p": {"x": 50, "y": 0}, "scale": 1, "rotation": 1.5707963267948966}}, "blocks": [{"name": "Kapı", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0.9}}], "attributes": [{"tag": "NUMARA", "prompt": "Kapı numarası", "value": "K-0", "p": {"x": 0.2, "y": 0.5}, "height": 0.2, "rotation": 0, "movable": true}, {"tag": "KAT", "value": "1", "p": {"x": 0.2, "y": 0.2}, "height": 0.2, "rotation": 0}, {"tag": "ÜRETİCİ", "value": "KentOS", "p": {"x": 0.2, "y": -0.1}, "height": 0.2, "rotation": 0, "invisible": true, "constant": true}, {"tag": "ETİKET", "p": {"x": 0.2, "y": -0.4}, "height": 0.2, "rotation": 0, "preset": true, "field": "No: {NUMARA}"}], "card": {"category": "Mimari/Kapılar", "tags": ["kapı"], "version": 2}}, {"name": "Lamba", "base": {"x": 0, "y": 0}, "entities": [{"kind": "circle", "id": 1, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0}, "r": 0.3}]}, {"name": "Kapı grubu", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "", "attrs": {"NUMARA": "G-1"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "insert", "id": 2, "layerId": "", "attrs": {"NUMARA": "G-2"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 2, "y": 0}, "scale": 1, "rotation": 0}]}]}},
+        {"op": "undo", "returns": "Bloğu başkasıyla değiştir", "expect": {"blocks": [{"name": "Kapı", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0.9}}], "attributes": [{"tag": "NUMARA", "prompt": "Kapı numarası", "value": "K-0", "p": {"x": 0.2, "y": 0.5}, "height": 0.2, "rotation": 0, "movable": true}, {"tag": "KAT", "value": "1", "p": {"x": 0.2, "y": 0.2}, "height": 0.2, "rotation": 0}, {"tag": "ÜRETİCİ", "value": "KentOS", "p": {"x": 0.2, "y": -0.1}, "height": 0.2, "rotation": 0, "invisible": true, "constant": true}, {"tag": "ETİKET", "p": {"x": 0.2, "y": -0.4}, "height": 0.2, "rotation": 0, "preset": true, "field": "No: {NUMARA}"}], "card": {"category": "Mimari/Kapılar", "tags": ["kapı"], "version": 2}}, {"name": "Pencere", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 1.2, "y": 0}}], "attributes": [{"tag": "NUMARA", "value": "P-0", "p": {"x": 0, "y": 0.3}, "height": 0.2, "rotation": 0}, {"tag": "GENİŞLİK", "value": "1.2", "p": {"x": 0, "y": 0}, "height": 0.2, "rotation": 0}]}, {"name": "Lamba", "base": {"x": 0, "y": 0}, "entities": [{"kind": "circle", "id": 1, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0}, "r": 0.3}]}, {"name": "Kapı grubu", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "", "attrs": {"NUMARA": "G-1"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "insert", "id": 2, "layerId": "", "attrs": {"NUMARA": "G-2"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 2, "y": 0}, "scale": 1, "rotation": 0}]}]}}
+      ]
+    },
+    {
+      "name": "purge: başka bir blok içinde yerleşen eski blok kalır",
+      "steps": [
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7003", "purge": true}, "result": {"status": "completed", "output": {"replaced": ["$uidOf:1", "$uidOf:2", "$uidOf:8"], "dropped": ["NUMARA", "KAT", "ETİKET"], "places": 1, "fields": 0, "purged": false, "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"blocks": [{"name": "Kapı", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0.9}}], "attributes": [{"tag": "NUMARA", "prompt": "Kapı numarası", "value": "K-0", "p": {"x": 0.2, "y": 0.5}, "height": 0.2, "rotation": 0, "movable": true}, {"tag": "KAT", "value": "1", "p": {"x": 0.2, "y": 0.2}, "height": 0.2, "rotation": 0}, {"tag": "ÜRETİCİ", "value": "KentOS", "p": {"x": 0.2, "y": -0.1}, "height": 0.2, "rotation": 0, "invisible": true, "constant": true}, {"tag": "ETİKET", "p": {"x": 0.2, "y": -0.4}, "height": 0.2, "rotation": 0, "preset": true, "field": "No: {NUMARA}"}], "card": {"category": "Mimari/Kapılar", "tags": ["kapı"], "version": 2}}, {"name": "Pencere", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 1.2, "y": 0}}], "attributes": [{"tag": "NUMARA", "value": "P-0", "p": {"x": 0, "y": 0.3}, "height": 0.2, "rotation": 0}, {"tag": "GENİŞLİK", "value": "1.2", "p": {"x": 0, "y": 0}, "height": 0.2, "rotation": 0}]}, {"name": "Lamba", "base": {"x": 0, "y": 0}, "entities": [{"kind": "circle", "id": 1, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0}, "r": 0.3}]}, {"name": "Kapı grubu", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "", "attrs": {"NUMARA": "G-1"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "insert", "id": 2, "layerId": "", "attrs": {"NUMARA": "G-2"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 2, "y": 0}, "scale": 1, "rotation": 0}]}]}}
+      ]
+    },
+    {
+      "name": "plan yazmaz",
+      "steps": [
+        {"op": "plan", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002"}, "result": {"status": "completed", "output": {"replaced": ["$uidOf:1", "$uidOf:2", "$uidOf:8"], "dropped": ["KAT", "ETİKET"], "places": 1, "fields": 0, "purged": false, "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "bloklar verilmemiş",
+      "steps": [
+        {"op": "execute", "input": {"to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002"}, "result": {"status": "failed", "error": {"code": "no_block", "message": "Değişecek blok ya da yerine geçecek blok verilmedi. from ve to ile iki bloğun kimliğini verin.", "path": "from"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001"}, "result": {"status": "failed", "error": {"code": "no_block", "message": "Değişecek blok ya da yerine geçecek blok verilmedi. from ve to ile iki bloğun kimliğini verin.", "path": "to"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "aynı blok",
+      "steps": [
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001"}, "result": {"status": "failed", "error": {"code": "same_block", "message": "Yerleştirmeler aynı bloğa geçirilemez; to ile başka bir blok verin.", "path": "to"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "çizimde olmayan blok (from)",
+      "steps": [
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7fff", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001"}, "result": {"status": "failed", "error": {"code": "unknown_block", "message": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7fff” kimlikli blok çizimde tanımlı değil. Çizimde tanımlı bir bloğun kimliğini verin.", "path": "from"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "çizimde olmayan blok (to)",
+      "steps": [
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7fff"}, "result": {"status": "failed", "error": {"code": "unknown_block", "message": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7fff” kimlikli blok çizimde tanımlı değil. Çizimde tanımlı bir bloğun kimliğini verin.", "path": "to"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "verilen nesne bloğun yerleştirmesi değil",
+      "steps": [
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "uids": ["$uidOf:7"]}, "result": {"status": "failed", "error": {"code": "not_insert", "message": "Verilen nesne “Kapı” bloğunun bir yerleştirmesi değil. Bu bloğun yerleştirmelerini verin.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "uids": ["$uidOf:4"]}, "result": {"status": "failed", "error": {"code": "not_insert", "message": "Verilen nesne “Kapı” bloğunun bir yerleştirmesi değil. Bu bloğun yerleştirmelerini verin.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "kimlik olmayan metin",
+      "steps": [
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "uids": ["kapı"]}, "result": {"status": "failed", "error": {"code": "invalid_uid", "message": "$any", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "yeni bloğun alanı derlenmiyorsa hiçbir şey yazılmaz (yalnız bir dosya getirebilir)",
+      "setup": {"format": "kentos.document", "version": 1, "name": "Blok öznitelikleri", "settings": {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg", "plotScale": 50, "workspace": "cad", "drawingFont": "barlow"}, "origin": {"x": 0, "y": 0}, "layers": [{"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}, {"id": "kapilar", "name": "Kapılar", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}, {"id": "kilitli", "name": "Kilitli", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}], "activeLayer": "yapi", "entities": [{"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {"NUMARA": "K-1", "KAT": "1", "ETİKET": "No: K-1"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 10, "y": 0}, "scale": 1, "rotation": 0, "attributePlaces": {"NUMARA": {"x": 0.5, "y": 1.0}}}, {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {"NUMARA": "K-2", "KAT": "2", "ESKİ": "x"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 20, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "insert", "id": 3, "layerId": "kilitli", "attrs": {"NUMARA": "K-3"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 30, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "insert", "id": 4, "layerId": "yapi", "attrs": {"NUMARA": "P-1", "GENİŞLİK": "1.5"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "p": {"x": 40, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "insert", "id": 5, "layerId": "kapilar", "attrs": {"NUMARA": "P-2"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "p": {"x": 50, "y": 0}, "scale": 1, "rotation": 1.5707963267948966}, {"kind": "insert", "id": 6, "layerId": "yapi", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7004", "p": {"x": 60, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "line", "id": 7, "layerId": "yapi", "attrs": {}, "a": {"x": 0, "y": 10}, "b": {"x": 10, "y": 10}}, {"kind": "insert", "id": 8, "layerId": "kapilar", "attrs": {"NUMARA": "K-8"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 70, "y": 0}, "scale": 2, "rotation": 1.5707963267948966}], "styles": {"items": [], "categories": []}, "blocks": [{"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "name": "Kapı", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0.9}}], "attributes": [{"tag": "NUMARA", "prompt": "Kapı numarası", "value": "K-0", "p": {"x": 0.2, "y": 0.5}, "height": 0.2, "rotation": 0, "movable": true}, {"tag": "KAT", "value": "1", "p": {"x": 0.2, "y": 0.2}, "height": 0.2, "rotation": 0}, {"tag": "ÜRETİCİ", "value": "KentOS", "p": {"x": 0.2, "y": -0.1}, "height": 0.2, "rotation": 0, "invisible": true, "constant": true}, {"tag": "ETİKET", "p": {"x": 0.2, "y": -0.4}, "height": 0.2, "rotation": 0, "preset": true, "field": "No: {NUMARA}"}], "card": {"category": "Mimari/Kapılar", "tags": ["kapı"], "version": 2}}, {"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "name": "Pencere", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 1.2, "y": 0}}], "attributes": [{"tag": "NUMARA", "value": "P-0", "p": {"x": 0, "y": 0.3}, "height": 0.2, "rotation": 0}, {"tag": "GENİŞLİK", "value": "1.2", "p": {"x": 0, "y": 0}, "height": 0.2, "rotation": 0}]}, {"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7003", "name": "Lamba", "base": {"x": 0, "y": 0}, "entities": [{"kind": "circle", "id": 1, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0}, "r": 0.3}], "attributes": [{"tag": "ETİKET", "p": {"x": 0, "y": 0}, "height": 0.2, "rotation": 0, "field": "No: {NUMARA"}]}, {"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7004", "name": "Kapı grubu", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "", "attrs": {"NUMARA": "G-1"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "insert", "id": 2, "layerId": "", "attrs": {"NUMARA": "G-2"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 2, "y": 0}, "scale": 1, "rotation": 0}]}]},
+      "steps": [
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7003"}, "result": {"status": "failed", "error": {"code": "invalid_field", "message": "$any", "path": "to"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "boş liste, olmayan nesne",
+      "steps": [
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "uids": []}, "result": {"status": "failed", "error": {"code": "no_entities", "message": "Değişecek yerleştirme verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "path": "uids"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "uids": ["00000000-0000-0000-0000-000000000000"]}, "result": {"status": "failed", "error": {"code": "entity_not_found", "message": "“00000000-0000-0000-0000-000000000000” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "yalnız kilitli katmandaki yerleştirme",
+      "steps": [
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "uids": ["$uidOf:3"]}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Kilitli” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "beklenen sürüm",
+      "steps": [
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "expectedRevision": "7"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "$any", "path": "expectedRevision", "revision": "$current"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "expectedRevision": "yedi"}, "result": {"status": "failed", "error": {"code": "invalid_revision", "message": "$any", "path": "expectedRevision"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "doğru sürümle yazılır, ikinci kez değiştirecek yerleştirme kalmaz",
+      "steps": [
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "expectedRevision": "$current"}, "result": {"status": "completed", "output": {"replaced": ["$uidOf:1", "$uidOf:2", "$uidOf:8"], "dropped": ["KAT", "ETİKET"], "places": 1, "fields": 0, "purged": false, "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}},
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "uids": ["$uidOf:3"]}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Kilitli” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.", "path": "uids[0]"}}}
+      ]
+    },
+    {
+      "name": "değeri düşen yok: kapının etiketleri pencerenin değerini alır",
+      "steps": [
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "uids": ["$uidOf:4"]}, "result": {"status": "completed", "output": {"replaced": ["$uidOf:4"], "dropped": ["GENİŞLİK"], "places": 0, "fields": 1, "purged": false, "revision": "$current"}, "warnings": []}, "expect": {"entities": {"4": {"kind": "insert", "id": 4, "layerId": "yapi", "attrs": {"NUMARA": "P-1", "ETİKET": "No: P-1"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "p": {"x": 40, "y": 0}, "scale": 1, "rotation": 0}}}}
+      ]
+    },
+    {
+      "name": "özniteliksiz bloğa geçen yerleştirmenin değerleri düşer, başka verisi kalır",
+      "steps": [
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7003", "uids": ["$uidOf:2"]}, "result": {"status": "completed", "output": {"replaced": ["$uidOf:2"], "dropped": ["NUMARA", "KAT"], "places": 0, "fields": 0, "purged": false, "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {"ESKİ": "x"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7003", "p": {"x": 20, "y": 0}, "scale": 1, "rotation": 0}}}}
+      ]
+    },
+    {
+      "name": "taşınmış öznitelik yeni blokta taşınabilir değilse yeri düşer",
+      "steps": [
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "uids": ["$uidOf:1"]}, "result": {"status": "completed", "output": {"replaced": ["$uidOf:1"], "dropped": ["KAT", "ETİKET"], "places": 1, "fields": 0, "purged": false, "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {"NUMARA": "K-1"}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "p": {"x": 10, "y": 0}, "scale": 1, "rotation": 0}}}}
+      ]
+    },
+    {
+      "name": "özniteliksiz iki blok: yalnız blok değişir",
+      "steps": [
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7004", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7003"}, "result": {"status": "completed", "output": {"replaced": ["$uidOf:6"], "dropped": [], "places": 0, "fields": 0, "purged": false, "revision": "$current"}, "warnings": []}, "expect": {"entities": {"6": {"kind": "insert", "id": 6, "layerId": "yapi", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7003", "p": {"x": 60, "y": 0}, "scale": 1, "rotation": 0}}}}
+      ]
+    },
+    {
+      "name": "aynı kimlik iki kez verilirse bir kez sayılır",
+      "steps": [
+        {"op": "execute", "input": {"from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7001", "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7002", "uids": ["$uidOf:2", "$uidOf:2"]}, "result": {"status": "completed", "output": {"replaced": ["$uidOf:2"], "dropped": ["KAT"], "places": 0, "fields": 0, "purged": false, "revision": "$current"}, "warnings": []}}
+      ]
+    }
+  ]
+}

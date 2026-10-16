@@ -52,7 +52,8 @@ use kentos_native_application::{
     entities_reverse, file_import, stretch,
 };
 use kentos_native_application::{
-    blocks_insert, file_import_block, library_edit, line_types_edit, styles_impact,
+    blocks_insert, blocks_query, blocks_replace, file_import_block, library_edit, line_types_edit,
+    styles_impact,
 };
 use serde_json::{Value, json};
 
@@ -1382,6 +1383,18 @@ impl Input for BlocksEdit {
     }
 }
 
+impl Input for kentos_domain::contracts::BlocksReplace {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::BlocksQuery {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_domain::contracts::ImportBlock {
     /// No number to make not finite.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
@@ -2013,6 +2026,12 @@ fn run_op(
         }
         kentos_domain::contracts::FILE_IMPORT_BLOCK => {
             run!(file_import_block, kentos_domain::contracts::ImportBlock)
+        }
+        kentos_domain::contracts::CAD_BLOCKS_REPLACE => {
+            run!(blocks_replace, kentos_domain::contracts::BlocksReplace)
+        }
+        kentos_domain::contracts::CAD_BLOCKS_QUERY => {
+            run!(blocks_query, kentos_domain::contracts::BlocksQuery)
         }
         kentos_domain::contracts::CAD_LAYERS_SERVICE => run!(layers_service, LayersService),
         kentos_domain::contracts::CAD_NETWORK_DEFINE => run!(network_define, NetworkDefine),

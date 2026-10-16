@@ -37,6 +37,7 @@ pub(super) fn definitions(r: &mut Reader<'_>, has: Features) -> Result<Definitio
     let checked = blocks::definitions(&list).and_then(|index| {
         for (i, block) in list.iter().enumerate() {
             blocks::inserts(&block.entities, Some(i), &index)?;
+            blocks::places(&list, &block.entities, Some(i), &index)?;
         }
         blocks::nesting(&list, &index)?;
         Ok(index)
@@ -45,7 +46,9 @@ pub(super) fn definitions(r: &mut Reader<'_>, has: Features) -> Result<Definitio
         Ok(index) => Ok((list, index)),
         Err(fault) => {
             let place = match &fault {
-                BlockFault::UnknownBlock { at } | BlockFault::BadScale { at } => at
+                BlockFault::UnknownBlock { at }
+                | BlockFault::BadScale { at }
+                | BlockFault::BadPlace { at, .. } => at
                     .definition
                     .and_then(|d| inserts.get(&(d, at.entity)).copied()),
                 _ => None,
@@ -58,8 +61,12 @@ pub(super) fn definitions(r: &mut Reader<'_>, has: Features) -> Result<Definitio
                 | BlockFault::DuplicateTag { definition, .. }
                 | BlockFault::Cycle { definition }
                 | BlockFault::TooDeep { definition }
-                | BlockFault::TooLarge { definition } => *definition,
-                BlockFault::UnknownBlock { at } | BlockFault::BadScale { at } => {
+                | BlockFault::TooLarge { definition }
+                | BlockFault::BadAttribute { definition, .. }
+                | BlockFault::BadCard { definition, .. } => *definition,
+                BlockFault::UnknownBlock { at }
+                | BlockFault::BadScale { at }
+                | BlockFault::BadPlace { at, .. } => {
                     at.definition.unwrap_or_default()
                 }
             };
@@ -80,7 +87,7 @@ fn definition(
     inserts: &mut HashMap<(usize, usize), usize>,
 ) -> Result<BlockDefinition, KcadError> {
     let (mut id, mut base, mut name, mut entities) = (None, None, None, None);
-    let (mut attributes, mut description, mut units) = (None, None, None);
+    let (mut attributes, mut description, mut units, mut card) = (None, None, None, None);
     let inner = has.without_uids();
     map(r, |r, key| {
         match key {
@@ -109,6 +116,8 @@ fn definition(
                 attributes = Some(list);
             }
             "description" => description = Some(text(r)?),
+            // Schema 58 (docs/adr/0317 §4).
+            "card" if has.block_cards => card = Some(block_card(r)?),
             // Schema 57 (docs/adr/0315 §4).
             "units" if has.block_extras => {
                 let at = r.position();
@@ -142,6 +151,36 @@ fn definition(
         attributes: attributes.unwrap_or_default(),
         description,
         units,
+        card,
+    })
+}
+
+/// A block's card (docs/adr/0317 §4); its rules are the definitions' (`blocks::card_problem`).
+fn block_card(r: &mut Reader<'_>) -> Result<kentos_contracts::BlockCard, KcadError> {
+    let (mut category, mut tags, mut version) = (None, None, None);
+    map(r, |r, key| {
+        match key {
+            "category" => category = Some(text(r)?),
+            "tags" => {
+                let list = list(r, |r, _| text(r))?;
+                if list.is_empty() {
+                    return Err(r.fail(Code::BadValue, "boş etiket listesi yazılmaz"));
+                }
+                tags = Some(list);
+            }
+            "version" => {
+                let at = r.position();
+                let v = r.uint(u64::from(u32::MAX))?;
+                version = Some(u32::try_from(v).map_err(|_| r.fail_at(Code::BadValue, at, "sürüm çok büyük"))?);
+            }
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    Ok(kentos_contracts::BlockCard {
+        category,
+        tags: tags.unwrap_or_default(),
+        version: required(r, version, "version")?,
     })
 }
 
@@ -151,6 +190,7 @@ fn attribute(r: &mut Reader<'_>, has: Features) -> Result<AttributeDefinition, K
     let (mut p, mut tag, mut value, mut height, mut prompt, mut rotation) =
         (None, None, None, None, None, None);
     let (mut align, mut width_factor) = (None, None);
+    let mut options = kentos_contracts::AttributeOptions::default();
     map(r, |r, key| {
         match key {
             "p" => p = Some(point(r)?),
@@ -161,11 +201,29 @@ fn attribute(r: &mut Reader<'_>, has: Features) -> Result<AttributeDefinition, K
             "rotation" => rotation = Some(r.float()?),
             "align" if has.texts => align = Some(text_align(r)?),
             "widthFactor" if has.texts => width_factor = Some(objects::width_factor(r)?),
+            // Schema 58 (docs/adr/0317 §1): an option only when on.
+            "invisible" | "constant" | "verify" | "preset" | "movable" | "multiline" if has.block_cards => {
+                let at = r.position();
+                if !r.bool()? {
+                    return Err(r.fail_at(Code::BadValue, at, "kapalı seçenek yazılmaz"));
+                }
+                match key {
+                    "invisible" => options.invisible = true,
+                    "constant" => options.constant = true,
+                    "verify" => options.verify = true,
+                    "preset" => options.preset = true,
+                    "movable" => options.movable = true,
+                    _ => options.multiline = true,
+                }
+            }
+            "boxWidth" if has.block_cards => options.box_width = Some(r.float()?),
+            "field" if has.block_cards => options.field = Some(text(r)?),
             _ => return Err(unknown(r)),
         }
         Ok(())
     })?;
     Ok(AttributeDefinition {
+        options,
         tag: required(r, tag, "tag")?,
         prompt,
         value,

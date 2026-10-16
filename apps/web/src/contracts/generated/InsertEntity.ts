@@ -41,7 +41,13 @@ rotation: number,
 /**
  * Mirrored in the definition's x axis, before the turn.
  */
-mirror?: boolean, id: number, layerId: string, 
+mirror?: boolean, 
+/**
+ * Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the
+ * definition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where
+ * the definition puts it.
+ */
+attributePlaces?: { [key in string]: Vec2 }, id: number, layerId: string, 
 /**
  * Colour override; absent = the layer's colour ("katmana göre").
  */

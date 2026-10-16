@@ -88,11 +88,14 @@ pub struct Exact {
     pub width_factor: Option<f64>,
 }
 
-/// A row: its cells' texts, and the exact values the numbers were shown from.
+/// A row: its cells' texts, the exact values the numbers were shown from, and its options (docs/adr/0317 §1), a
+/// multiline one's box width as typed.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Row {
     pub cells: [String; 7],
     pub exact: Exact,
+    pub options: kentos_contracts::AttributeOptions,
+    pub box_text: String,
 }
 
 /// A number as a cell shows it: at most six decimals, no trailing zeros,
@@ -129,6 +132,8 @@ pub fn row_of(a: &AttributeDefinition, base: Vec2) -> Row {
             align: a.align,
             width_factor: a.width_factor,
         },
+        box_text: a.options.box_width.map(number_text).unwrap_or_default(),
+        options: a.options.clone(),
     }
 }
 
@@ -164,7 +169,18 @@ fn trimmed(text: &str) -> Option<String> {
 /// width factor as they were.
 pub fn definition_of(row: &Row, base: Vec2) -> AttributeDefinition {
     let (c, e) = (&row.cells, &row.exact);
+    // A multiline one's box width as typed (empty: none; not a number: NaN, which the command refuses), a field
+    // trimmed (empty: none).
+    let mut options = row.options.clone();
+    options.box_width = (options.multiline && !js_trim(&row.box_text).is_empty()).then(|| {
+        options
+            .box_width
+            .filter(|w| row.box_text == number_text(*w))
+            .unwrap_or_else(|| read_number(&row.box_text).unwrap_or(f64::NAN))
+    });
+    options.field = options.field.as_deref().and_then(trimmed);
     AttributeDefinition {
+        options,
         tag: js_trim(&c[TAG]).to_owned(),
         prompt: trimmed(&c[PROMPT]),
         value: trimmed(&c[VALUE]),
@@ -235,6 +251,8 @@ pub fn new_row(above: &[Row], base: Vec2, extent: Option<Extent>, height: f64) -
             align: None,
             width_factor: None,
         },
+        options: Default::default(),
+        box_text: String::new(),
     };
     placed(&row, p, base)
 }
@@ -295,6 +313,7 @@ mod tests {
 
     fn definition(v: &Value) -> AttributeDefinition {
         AttributeDefinition {
+            options: Default::default(),
             tag: v["tag"].as_str().expect("a tag").to_owned(),
             prompt: v["prompt"].as_str().map(str::to_owned),
             value: v["value"].as_str().map(str::to_owned),

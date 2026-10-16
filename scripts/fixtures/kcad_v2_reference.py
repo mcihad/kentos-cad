@@ -1450,7 +1450,9 @@ KINDS = {
     # Schema 6 (docs/adr/0144): the definition's id; `mirror` only when true.
     "insert": {"block": (lambda u: blob(uid_bytes(u)), True), "p": (point, True), "scale": (f64, True), "rotation": (f64, True), "mirror": (lambda b: boolean(b) if b is True else None, False),
                # Schema 57 (docs/adr/0315 §3): its own y factor, only when it is not the x one.
-               "yScale": (f64, False)},
+               "yScale": (f64, False),
+               # Schema 58 (docs/adr/0317 §1): where it shows its moved attributes, none written empty.
+               "attributePlaces": (lambda m: cmap({k: point(v) for k, v in m.items()}), False)},
     # Schema 22 (docs/adr/0184): one-line cells row by row, merged ranges, alignments, a heading row only when true, lines
     # by name, a frame's width, a text's face, a source; only in the drawing.
     "table": {
@@ -1676,7 +1678,19 @@ def attribute(a):
     table = {"tag": (text, True), "prompt": (text, False), "value": (text, False), "p": (point, True), "height": (f64, True), "rotation": (f64, True)}
     # Schema 7 (docs/adr/0145): an alignment and a width factor, as a text's.
     table.update({"align": (enum(TEXT_ALIGNS), False), "widthFactor": (f64, False)})
+    # Schema 58 (docs/adr/0317 §1): its options, a flag only when on.
+    for flag in ("invisible", "constant", "verify", "preset", "movable", "multiline"):
+        table[flag] = (lambda b: boolean(b) if b is True else None, False)
+    table.update({"boxWidth": (f64, False), "field": (text, False)})
+    for flag in ("invisible", "constant", "verify", "preset", "movable", "multiline"):
+        assert a.get(flag, True) is not False, f"öznitelik {a.get('tag')}: {flag} yalnız true yazılır"
     return cmap(fields(a, table, "öznitelik"))
+
+
+def card(c):
+    """A block's card (schema 58, docs/adr/0317 §4): its version, a category and its tags."""
+    assert c.get("tags", [None]), "boş etiket listesi yazılmaz"
+    return cmap(fields(c, {"category": (text, False), "tags": (lambda ts: array([text(t) for t in ts]), False), "version": (uint, True)}, "kart"))
 
 
 def definition(b):
@@ -1691,6 +1705,8 @@ def definition(b):
         "description": (text, False),
         # Schema 57 (docs/adr/0315 §4): the unit it is drawn in.
         "units": (enum(("mm", "cm", "m", "in", "ft", "unitless")), False),
+        # Schema 58 (docs/adr/0317 §4): its library card.
+        "card": (card, False),
     }
     return cmap(fields(b, table, f"blok {b.get('name')}"))
 
@@ -1923,6 +1939,12 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def line_patterned(nodes):
         return any("linePattern" in n.get("style", {}) or line_patterned(n.get("children", [])) for n in nodes)
 
+    # Schema 58 (docs/adr/0317 §1, §4): an attribute's option, an insert's moved attribute or a block's card.
+    options = ("invisible", "constant", "verify", "preset", "movable", "multiline", "boxWidth", "field")
+    placed = lambda es: any(e["kind"] == "insert" and "attributePlaces" in e for e in es)  # noqa: E731
+    if placed(entities) or any("card" in b or placed(b["entities"]) or any(k in a for a in b.get("attributes", []) for k in options)
+                               for b in blocks or []):
+        return 58
     # Schema 57 (docs/adr/0315 §3, §4): an insert's own y factor, of the drawing or of a definition, or a block's unit.
     stretched = lambda es: any(e["kind"] == "insert" and "yScale" in e for e in es)  # noqa: E731
     if stretched(entities) or any("units" in b or stretched(b["entities"]) for b in blocks or []):
@@ -2265,7 +2287,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-58.kcad"] = container(root(cmap(parts), version=uint(58)))
+    files["schema-version-59.kcad"] = container(root(cmap(parts), version=uint(59)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2407,6 +2429,21 @@ def broken(minimal_content, minimal_file):
     files["insert-y-scale-zero.kcad"] = with_blocks([block(1, "Rögar")], entities=[insert_of(1, yScale=f64(0.0))], version=57)
     files["block-units-in-schema-56.kcad"] = with_blocks([block(1, "Rögar", units=text("mm"))], version=56)
     files["block-units-unknown.kcad"] = with_blocks([block(1, "Rögar", units=text("dm"))], version=57)
+    # An attribute's options, an insert's places and a block's card are schema 58's (docs/adr/0317): a flag only true,
+    # a constant neither asked nor moved, a box only for a multiline one, a place only for a movable tag and never an
+    # empty map, a card's version from 1 and each tag once.
+    def attdef(**extra):
+        return cmap({"p": point({"x": 0.0, "y": 0.0}), "tag": text("NO"), "height": f64(0.5), "rotation": f64(0.0), **extra})
+    files["attribute-option-false.kcad"] = with_blocks([block(1, "Rögar", attributes=array([attdef(invisible=boolean(False))]))], version=58)
+    files["attribute-constant-verify.kcad"] = with_blocks([block(1, "Rögar", attributes=array([attdef(constant=boolean(True), verify=boolean(True))]))], version=58)
+    files["attribute-box-not-multiline.kcad"] = with_blocks([block(1, "Rögar", attributes=array([attdef(boxWidth=f64(2.0))]))], version=58)
+    files["attribute-options-in-schema-57.kcad"] = with_blocks([block(1, "Rögar", attributes=array([attdef(movable=boolean(True))]))], version=57)
+    files["insert-place-not-movable.kcad"] = with_blocks([block(1, "Rögar", attributes=array([attdef()]))],
+                                                          entities=[insert_of(1, attributePlaces=cmap({"NO": point({"x": 1.0, "y": 1.0})}))], version=58)
+    files["insert-places-empty.kcad"] = with_blocks([block(1, "Rögar", attributes=array([attdef(movable=boolean(True))]))],
+                                                     entities=[insert_of(1, attributePlaces=cmap({}))], version=58)
+    files["block-card-version-zero.kcad"] = with_blocks([block(1, "Rögar", card=cmap({"version": uint(0)}))], version=58)
+    files["block-card-tag-twice.kcad"] = with_blocks([block(1, "Rögar", card=cmap({"tags": array([text("Kapı"), text("KAPI")]), "version": uint(1)}))], version=58)
     files["empty-blocks.kcad"] = with_blocks([], entities=[])
     files["empty-attributes.kcad"] = with_blocks([block(1, "Rögar", attributes=array([]))])
     files["duplicate-attribute-tag.kcad"] = with_blocks([block(1, "Rögar", attributes=array([cmap({"p": point({"x": 0.0, "y": 0.0}), "tag": text("NO"), "height": f64(0.5), "rotation": f64(0.0)})] * 2))])
@@ -3552,6 +3589,10 @@ def build():
     payload = document(load("wipeouts.json"))
     assert payload.count(b"\x67version\x18\x36") == 1
     out["broken/wipeouts-in-schema-53.kcad"] = container(payload.replace(b"\x67version\x18\x36", b"\x67version\x18\x35"))
+    out["block-cards.kcad"] = container(document(load("block-cards.json")))
+    payload = document(load("block-cards.json"))
+    assert payload.count(b"\x67version\x18\x3a") == 1
+    out["broken/block-cards-in-schema-57.kcad"] = container(payload.replace(b"\x67version\x18\x3a", b"\x67version\x18\x39"))
     out["block-extras.kcad"] = container(document(load("block-extras.json")))
     payload = document(load("block-extras.json"))
     assert payload.count(b"\x67version\x18\x39") == 1

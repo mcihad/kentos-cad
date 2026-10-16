@@ -77,6 +77,22 @@ pub enum BlockFault {
     TooLarge {
         definition: usize,
     },
+    /// An attribute definition whose options do not go together (docs/adr/0317 §1); `problem` says why.
+    BadAttribute {
+        definition: usize,
+        attribute: usize,
+        problem: String,
+    },
+    /// A definition's card that breaks its rules (docs/adr/0317 §4).
+    BadCard {
+        definition: usize,
+        problem: String,
+    },
+    /// An insert's place for an attribute its block does not let move (docs/adr/0317 §1).
+    BadPlace {
+        at: Place,
+        tag: String,
+    },
 }
 
 /// The most pieces one definition opens into, its nested inserts' counted through and its attributes with them
@@ -120,8 +136,70 @@ impl BlockFault {
                 "“{}” bloğu iç içe yerleştirmeleriyle bir milyondan çok parçaya açılır; böyle bir blok çizilemez. İç içe yerleştirmelerini azaltın ya da bölün.",
                 name(*definition)
             ),
+            BlockFault::BadAttribute {
+                definition,
+                problem,
+                ..
+            } => format!("“{}” bloğunun özniteliği: {problem}", name(*definition)),
+            BlockFault::BadCard {
+                definition,
+                problem,
+            } => format!("“{}” bloğunun kartı: {problem}", name(*definition)),
+            BlockFault::BadPlace { tag, .. } => format!(
+                "“{tag}” özniteliği bu blokta taşınabilir değil; yeri değiştirilemez. Blok tanımında özniteliği taşınabilir yapın."
+            ),
         }
     }
+}
+
+/// What is wrong with an attribute definition's options (docs/adr/0317 §1), or none: a constant value is the
+/// definition's, so it is neither asked (verify, preset), moved nor a field; a box width only for a multiline one,
+/// positive and finite; a field not blank.
+pub fn options_problem(o: &crate::entity::AttributeOptions) -> Option<String> {
+    if o.constant && (o.verify || o.preset) {
+        return Some("sabit öznitelik sorulmaz; doğrula ve ön ayarlı seçilemez.".into());
+    }
+    if o.constant && o.movable {
+        return Some("sabit özniteliğin yeri yerleştirmede değişmez; taşınabilir seçilemez.".into());
+    }
+    if o.constant && o.field.is_some() {
+        return Some("sabit öznitelik alan olamaz: değeri tanımındakidir.".into());
+    }
+    if let Some(w) = o.box_width {
+        if !o.multiline {
+            return Some("kutu genişliği yalnız çok satırlı öznitelikte olur.".into());
+        }
+        if !(w.is_finite() && w > 0.0) {
+            return Some(format!("kutu genişliği {w}; pozitif bir sayı olmalı."));
+        }
+    }
+    if o.field.as_deref().is_some_and(|f| f.trim().is_empty()) {
+        return Some("alan boş olamaz; bir şablon yazın ya da alanı kaldırın.".into());
+    }
+    None
+}
+
+/// What is wrong with a block's card (docs/adr/0317 §4), or none: its version at least 1, its category not blank and
+/// trimmed, each tag not blank, trimmed and once (Turkish case folded).
+pub fn card_problem(card: &crate::entity::BlockCard) -> Option<String> {
+    if card.version == 0 {
+        return Some("sürüm en az 1 olmalı.".into());
+    }
+    if let Some(c) = &card.category
+        && (c.trim().is_empty() || c.trim() != c)
+    {
+        return Some(format!("“{c}” kategorisi boş ya da başında, sonunda boşluk var."));
+    }
+    let mut seen = std::collections::HashSet::with_capacity(card.tags.len());
+    for t in &card.tags {
+        if t.trim().is_empty() || t.trim() != t {
+            return Some(format!("“{t}” etiketi boş ya da başında, sonunda boşluk var."));
+        }
+        if !seen.insert(name_key(t)) {
+            return Some(format!("“{t}” etiketi iki kez var."));
+        }
+    }
+    None
 }
 
 /// A definition's name as names are compared: each character lowercased,
@@ -307,9 +385,11 @@ pub fn check<B: Borrow<BlockDefinition>>(
     let index = definitions(blocks)?;
     for (i, block) in blocks.iter().enumerate() {
         inserts(&block.borrow().entities, Some(i), &index)?;
+        places(blocks, &block.borrow().entities, Some(i), &index)?;
     }
     nesting(blocks, &index)?;
-    inserts(entities, None, &index)
+    inserts(entities, None, &index)?;
+    places(blocks, entities, None, &index)
 }
 
 /// The definitions checked on their own (names, ids, tags); each id's place.
@@ -353,9 +433,53 @@ pub fn definitions<B: Borrow<BlockDefinition>>(
                 });
             }
             tags.insert(&attribute.tag, a);
+            if let Some(problem) = options_problem(&attribute.options) {
+                return Err(BlockFault::BadAttribute {
+                    definition: i,
+                    attribute: a,
+                    problem,
+                });
+            }
+        }
+        if let Some(problem) = block.card.as_ref().and_then(card_problem) {
+            return Err(BlockFault::BadCard {
+                definition: i,
+                problem,
+            });
         }
     }
     Ok(ids)
+}
+
+/// The inserts among `entities` (a definition's, or the drawing's own) checked against their blocks' attributes
+/// (docs/adr/0317 §1): a place only for a movable attribute's tag. Every block known (`inserts` first).
+pub fn places<B: Borrow<BlockDefinition>>(
+    blocks: &[B],
+    entities: &[Entity],
+    definition: Option<usize>,
+    index: &HashMap<BlockId, usize>,
+) -> Result<(), BlockFault> {
+    for (entity, e) in entities.iter().enumerate() {
+        if let Entity::Insert(insert) = e
+            && !insert.attribute_places.is_empty()
+            && let Some(&k) = index.get(&insert.block)
+        {
+            let block = blocks[k].borrow();
+            for (tag, p) in &insert.attribute_places {
+                let movable = block
+                    .attributes
+                    .iter()
+                    .any(|a| &a.tag == tag && a.options.movable);
+                if !(movable && p.x.is_finite() && p.y.is_finite()) {
+                    return Err(BlockFault::BadPlace {
+                        at: Place { definition, entity },
+                        tag: tag.clone(),
+                    });
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 /// The inserts among `entities` (a definition's, or the drawing's own when
@@ -476,6 +600,7 @@ mod tests {
 
     fn insert(block: u8, scale: f64) -> Entity {
         Entity::Insert(InsertEntity {
+            attribute_places: Default::default(),
             base: EntityBase {
                 look: Default::default(),
                 id: 1,
@@ -499,6 +624,7 @@ mod tests {
 
     fn block(n: u8, name: &str, inside: &[u8]) -> BlockDefinition {
         BlockDefinition {
+            card: None,
             id: id(n),
             name: name.into(),
             base: Vec2 { x: 0.0, y: 0.0 },
@@ -545,6 +671,7 @@ mod tests {
         );
         let mut tagged = million;
         tagged.attributes.push(AttributeDefinition {
+            options: Default::default(),
             tag: "NO".into(),
             prompt: None,
             value: None,
@@ -679,6 +806,7 @@ mod tests {
             })
         );
         let tag = |t: &str| AttributeDefinition {
+            options: Default::default(),
             tag: t.into(),
             prompt: None,
             value: None,
