@@ -373,8 +373,9 @@ fn a_geojson_export_writes_an_insert_as_its_blocks_objects() {
             )
         })
         .count();
-    // KAPI's insert: its point, and the nested NO's circle and line; KENDI draws nothing and is left out.
-    assert_eq!(back.entities.len(), plain + 3);
+    // KAPI's insert: its point, and the nested NO's circle and line; DAIRE's stretched insert (kept, docs/adr/0315
+    // §3): its ellipse; KENDI draws nothing and is left out.
+    assert_eq!(back.entities.len(), plain + 4);
     assert!(
         back.entities
             .iter()

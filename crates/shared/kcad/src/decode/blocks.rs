@@ -79,7 +79,7 @@ fn definition(
     inserts: &mut HashMap<(usize, usize), usize>,
 ) -> Result<BlockDefinition, KcadError> {
     let (mut id, mut base, mut name, mut entities) = (None, None, None, None);
-    let (mut attributes, mut description) = (None, None);
+    let (mut attributes, mut description, mut units) = (None, None, None);
     let inner = has.without_uids();
     map(r, |r, key| {
         match key {
@@ -108,6 +108,27 @@ fn definition(
                 attributes = Some(list);
             }
             "description" => description = Some(text(r)?),
+            // Schema 57 (docs/adr/0315 §4).
+            "units" if has.block_extras => {
+                let at = r.position();
+                let word = text(r)?;
+                use kentos_contracts::BlockUnits as B;
+                units = Some(match word.as_str() {
+                    "mm" => B::Mm,
+                    "cm" => B::Cm,
+                    "m" => B::M,
+                    "in" => B::In,
+                    "ft" => B::Ft,
+                    "unitless" => B::Unitless,
+                    _ => {
+                        return Err(r.fail_at(
+                            Code::BadValue,
+                            at,
+                            &format!("“{word}” bir blok birimi değil (mm, cm, m, in, ft, unitless)"),
+                        ));
+                    }
+                });
+            }
             _ => return Err(unknown(r)),
         }
         Ok(())
@@ -119,6 +140,7 @@ fn definition(
         entities: required(r, entities, "entities")?,
         attributes: attributes.unwrap_or_default(),
         description,
+        units,
     })
 }
 

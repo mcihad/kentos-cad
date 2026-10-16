@@ -265,7 +265,7 @@ pub(super) struct Writer<'a> {
     pub out: &'a mut Out,
     /// The dimensions' own blocks (BLOCKS section), and their block records.
     pub blocks: &'a mut Out,
-    pub records: &'a mut Vec<(u64, String)>,
+    pub records: &'a mut Vec<(u64, String, i64)>,
     /// The dimensions' blocks written so far: the next is *D and one more.
     pub dimensions: &'a mut usize,
     /// The tables' blocks written so far: the next is *U and one more (docs/adr/0184 §7).
@@ -713,8 +713,10 @@ impl Writer<'_> {
         }
         self.out.str(2, name);
         self.out.xyz(10, i.p);
+        // Its own y factor (docs/adr/0315 §3); the mirror in its x axis is a negative y.
+        let sy = i.y_scale.unwrap_or(i.scale);
         self.out.real(41, i.scale);
-        self.out.real(42, if i.mirror { -i.scale } else { i.scale });
+        self.out.real(42, if i.mirror { -sy } else { sy });
         self.out.real(43, i.scale);
         let degrees = deg(i.rotation);
         self.out.real(50, degrees);
@@ -1318,7 +1320,7 @@ impl Writer<'_> {
         let record = self.handles.take();
         *self.anonymous += 1;
         let name = format!("*U{}", *self.anonymous);
-        self.records.push((record, name.clone()));
+        self.records.push((record, name.clone(), 0));
         self.block_begin(record, &name);
         for [a, b] in g.lines() {
             self.block_line(record, app(a), app(b));
@@ -1490,7 +1492,7 @@ impl Writer<'_> {
         let record = self.handles.take();
         *self.dimensions += 1;
         let name = format!("*D{}", *self.dimensions);
-        self.records.push((record, name.clone()));
+        self.records.push((record, name.clone(), 0));
         self.block_begin(record, &name);
         let arc = match l.pick.first() {
             Some(&Edge::Arc { c, r, a0, sweep }) => Some((app(c), r, a0, sweep)),

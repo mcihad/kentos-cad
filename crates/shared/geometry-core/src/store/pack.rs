@@ -265,7 +265,14 @@ impl Reader<'_> {
                 let p = self.pt()?;
                 let scale = self.num()?;
                 let rotation = self.num()?;
-                let mirror = self.flag()?;
+                // The flag's 2 says an own y factor follows (docs/adr/0315 §3); without one the record is as before.
+                let flags = self.num()?;
+                let mirror = flags == 1.0 || flags == 3.0;
+                let y_scale = if flags >= 2.0 {
+                    Some(self.num()?)
+                } else {
+                    None
+                };
                 let block = self.string()?.unwrap_or_default();
                 let attrs = match self.int()? {
                     None => None,
@@ -282,6 +289,7 @@ impl Reader<'_> {
                 Shape::Insert {
                     p,
                     scale,
+                    y_scale,
                     rotation,
                     mirror: mirror.then_some(true),
                     block,
@@ -1182,20 +1190,19 @@ impl Packer {
                 block,
                 p,
                 scale,
+                y_scale,
                 rotation,
                 mirror,
                 attrs,
             } => {
                 let b = self.string(block);
-                self.put(&[
-                    14.0,
-                    p.x,
-                    p.y,
-                    *scale,
-                    *rotation,
-                    flag(mirror.unwrap_or(false)),
-                    b,
-                ]);
+                let mirrored = flag(mirror.unwrap_or(false));
+                match y_scale {
+                    None => self.put(&[14.0, p.x, p.y, *scale, *rotation, mirrored, b]),
+                    Some(y) => {
+                        self.put(&[14.0, p.x, p.y, *scale, *rotation, mirrored + 2.0, *y, b])
+                    }
+                }
                 match attrs {
                     None => self.put(&[-1.0]),
                     Some(Attrs(fields)) => {
@@ -1737,6 +1744,7 @@ mod tests {
             block: "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001".into(),
             p: Vec2::new(486520.25, 4420200.5),
             scale: 2.0,
+            y_scale: None,
             rotation: -0.0,
             mirror: Some(true),
             attrs: Some(Attrs(vec![
@@ -1749,6 +1757,7 @@ mod tests {
             block: "b".into(),
             p: Vec2::new(1.0, 2.0),
             scale: 1.0,
+            y_scale: None,
             rotation: 0.5,
             mirror: None,
             attrs: None,

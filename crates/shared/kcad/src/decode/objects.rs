@@ -207,6 +207,8 @@ pub(super) struct Features {
     /// Schema 56: the settings' `lineTypes` and `lineTypeScale`, a layer style's and an object's `pattern`
     /// (docs/adr/0313 §1).
     pub(super) patterns: bool,
+    /// Schema 57: an insert's `yScale` and a block definition's `units` (docs/adr/0315 §3, §4).
+    pub(super) block_extras: bool,
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
     pub(super) look: bool,
@@ -278,6 +280,7 @@ impl Features {
             wipeouts: schema >= crate::SCHEMA_WITH_WIPEOUTS,
             frozen: schema >= crate::SCHEMA_WITH_FROZEN,
             patterns: schema >= crate::SCHEMA_WITH_PATTERNS,
+            block_extras: schema >= crate::SCHEMA_WITH_BLOCK_EXTRAS,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,
@@ -390,7 +393,10 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                 matches!(key, "ring" | "holes" | "pattern")
                     || (has.hatches && has.uids && key == "assoc")
             }
-            Kind::Insert => matches!(key, "block" | "p" | "scale" | "rotation" | "mirror"),
+            Kind::Insert => {
+                matches!(key, "block" | "p" | "scale" | "rotation" | "mirror")
+                    || (has.block_extras && key == "yScale")
+            }
             Kind::Leader => {
                 matches!(
                     key,
@@ -550,6 +556,8 @@ struct Fields {
     /// Where the insert's `block` is in the payload (for an unknown block).
     block_at: usize,
     scale: Option<f64>,
+    /// An insert's own y factor and where it is (docs/adr/0315 §3).
+    y_scale: Option<(f64, usize)>,
     mirror: Option<bool>,
     align: Option<TextAlign>,
     arrow: Option<LeaderArrow>,
@@ -1049,6 +1057,18 @@ pub(super) fn object(
                     ));
                 }
                 f.scale = Some(scale);
+            }
+            "yScale" => {
+                let at = r.position();
+                let y = r.float()?;
+                if !kentos_contracts::blocks::scale_ok(y) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        &format!("blok y ölçeği {y}; pozitif olmalı"),
+                    ));
+                }
+                f.y_scale = Some((y, at));
             }
             "mirror" => {
                 let at = r.position();
@@ -1599,14 +1619,28 @@ fn build(
             pattern: required(r, f.pattern.take(), "pattern")?,
             assoc: f.assoc.take(),
         }),
-        Kind::Insert => Entity::Insert(InsertEntity {
+        Kind::Insert => {
+            let scale = required(r, f.scale, "scale")?;
+            // One way to write a block: the y factor only when it is not the x one.
+            if let Some((y, at)) = f.y_scale
+                && y == scale
+            {
+                return Err(r.fail_at(
+                    Code::BadValue,
+                    at,
+                    "y ölçeği x ölçeğine eşitse yazılmaz",
+                ));
+            }
+            Entity::Insert(InsertEntity {
             base,
             block: required(r, f.block, "block")?,
             p: required(r, f.p, "p")?,
-            scale: required(r, f.scale, "scale")?,
+            scale,
+            y_scale: f.y_scale.map(|(y, _)| y),
             rotation: required(r, f.rotation, "rotation")?,
             mirror: f.mirror.unwrap_or(false),
-        }),
+        })
+        }
         Kind::Leader => Entity::Leader(LeaderEntity {
             base,
             pts: required(r, f.pts.take(), "pts")?,

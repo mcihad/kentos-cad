@@ -549,6 +549,7 @@ fn block_of(
         base: Wire { x: E, y: N },
         uids: vec![uid],
         description: None,
+        units: None,
         replace: replace.then_some(true),
         layer_id: replace.then(|| "cizim".to_owned()),
         expected_revision: None,

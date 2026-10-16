@@ -510,8 +510,6 @@ pub struct Emitter<'l> {
     /// Blocks kept as definitions (all but Blokları patlat's; docs/adr/0144
     /// §5): upper-case name → the id the reader gave it.
     pub kept: HashMap<String, BlockId>,
-    /// Kept blocks with objects on a layer other than 0, and the first one's line.
-    off_layer: HashMap<BlockId, u32>,
     /// Blokları patlat: every insert is opened, none kept.
     explode: bool,
     /// A definition's objects are being read: they are not the drawing's.
@@ -538,7 +536,6 @@ impl<'l> Emitter<'l> {
             lib,
             out,
             kept: HashMap::new(),
-            off_layer: HashMap::new(),
             explode,
             defining: false,
             pending: notes::Pending::default(),
@@ -735,13 +732,6 @@ impl<'l> Emitter<'l> {
         let mut defs = Vec::with_capacity(names.len());
         for n in names {
             let block = &lib.blocks[n];
-            let off = block
-                .entities
-                .iter()
-                .find(|x| x.common.layer != "0" && !matches!(x.kind, Kind::Unsupported(_)));
-            if let Some(x) = off {
-                self.off_layer.insert(self.kept[n], x.line);
-            }
             let drawing = std::mem::take(&mut self.out.entities);
             let handles = std::mem::take(&mut self.out.handles);
             let holes = std::mem::take(&mut self.out.holes);
@@ -771,6 +761,7 @@ impl<'l> Emitter<'l> {
                 name: block.name.clone(),
                 base: v(block.base[0], block.base[1]),
                 entities,
+                units: None,
                 attributes: std::mem::take(&mut self.out.attributes),
                 description: (!block.description.trim().is_empty())
                     .then(|| block.description.clone()),
@@ -817,17 +808,8 @@ impl<'l> Emitter<'l> {
         }
         self.aside.clear();
         let unused = kept.iter().filter(|(_, used)| !used).count();
-        // An insert draws a definition's objects on its own layer (docs/adr/0144 §1): an object on a
-        // layer of its own keeps that layer's look, not whether it is hidden or locked.
-        for (d, _) in &kept {
-            if let Some(&line) = self.off_layer.get(&d.id) {
-                self.note(
-                    "Blok (BLOCK)",
-                    "tanımında 0 dışındaki katmanlarda nesne var: yerleştirmenin katmanında, kendi katmanlarının renk ve kalınlığıyla çizilirler; o katmanların gizliliği ve kilidi uygulanmaz",
-                    line,
-                );
-            }
-        }
+        // A definition's object on a layer of its own shows as AutoCAD shows it: with that layer's look, while that
+        // layer shows (docs/adr/0315 §2); nothing to say.
         if !kept.is_empty() {
             let mut fact = format!("{} tanım", kept.len());
             if unused > 0 {
@@ -894,10 +876,7 @@ impl<'l> Emitter<'l> {
     /// BYBLOCK at its top is none (the insert's, when it is drawn).
     fn weight_of(&self, e: &Parsed, ctx: &Ctx) -> Option<f64> {
         match e.common.weight {
-            Weight::ByLayer if ctx.definition => {
-                let layer = Self::own_layer(e, ctx)?;
-                self.lib.layer_weights.get(&layer.to_uppercase()).copied()
-            }
+            // In a definition BYLAYER stays its layer's (`byLayer`, docs/adr/0315 §2).
             Weight::ByLayer | Weight::Default => None,
             Weight::ByBlock if ctx.definition && ctx.layer.is_none() => None,
             Weight::ByBlock => ctx.byblock_weight,
@@ -905,16 +884,6 @@ impl<'l> Emitter<'l> {
         }
     }
 
-    /// In a definition, the layer whose look a BYLAYER object keeps: its
-    /// own, or an opened insert's for a child on 0; none on 0 itself (the
-    /// kept block's inserts give it theirs).
-    fn own_layer<'e>(e: &'e Parsed, ctx: &'e Ctx) -> Option<&'e str> {
-        let layer = match (&ctx.layer, e.common.layer.as_str()) {
-            (Some(l), "0") => l.as_str(),
-            (_, name) => name,
-        };
-        (layer != "0").then_some(layer)
-    }
 
     /// What an insert hands its BYBLOCK children: its own weight, or its layer's.
     fn insert_weight(&self, e: &Parsed, ctx: &Ctx, layer: &str) -> Option<f64> {
@@ -966,10 +935,7 @@ impl<'l> Emitter<'l> {
         // A pattern of the table by its name; in a definition BYLAYER on another layer than 0 its layer's
         // (docs/adr/0313 §6).
         let line_pattern = match up.as_str() {
-            "BYBLOCK" => None,
-            "" | "BYLAYER" if ctx.definition => Self::own_layer(e, ctx)
-                .and_then(|l| self.lib.layer_patterns.get(&l.to_uppercase()).cloned()),
-            "" | "BYLAYER" => None,
+            "BYBLOCK" | "" | "BYLAYER" => None,
             _ => self
                 .lib
                 .patterns
@@ -978,10 +944,7 @@ impl<'l> Emitter<'l> {
                 .map(|p| p.name.clone()),
         };
         let line_type = match up.as_str() {
-            "BYBLOCK" => None,
-            "" | "BYLAYER" if ctx.definition => Self::own_layer(e, ctx)
-                .and_then(|l| self.lib.layer_line_types.get(&l.to_uppercase()).copied()),
-            "" | "BYLAYER" => None,
+            "BYBLOCK" | "" | "BYLAYER" => None,
             _ => Some(self.lib.ltypes.get(&up).copied().unwrap_or_else(|| {
                 super::classify_name(c.line_type.as_deref().unwrap_or_default())
             })),
@@ -995,11 +958,32 @@ impl<'l> Emitter<'l> {
             let percent = ((255.0 - alpha) / 255.0 * 100.0).round();
             (percent / 100.0).min(kentos_contracts::MAX_TRANSPARENCY)
         });
+        // A definition's object keeps BYLAYER as such (docs/adr/0315 §2): its layer's, the insert's layer's on 0;
+        // BYBLOCK and anything else unset is the insert's.
+        let by_layer = if ctx.definition {
+            use kentos_contracts::LookPart;
+            [
+                (LookPart::Color, matches!(c.color, Color::ByLayer)),
+                (LookPart::LineType, matches!(up.as_str(), "" | "BYLAYER")),
+                (LookPart::LineWeight, matches!(c.weight, Weight::ByLayer)),
+                (
+                    LookPart::Transparency,
+                    c.transparency.is_none_or(|v| v & 0x0300_0000 == 0),
+                ),
+            ]
+            .into_iter()
+            .filter(|(_, yes)| *yes)
+            .map(|(p, _)| p)
+            .collect()
+        } else {
+            Vec::new()
+        };
         kentos_contracts::ObjectLook {
             line_type,
             line_pattern,
             line_type_scale,
             transparency: transparency.filter(|t| *t > 0.0),
+            by_layer,
             ..Default::default()
         }
     }
@@ -1010,10 +994,7 @@ impl<'l> Emitter<'l> {
     /// insert's colour, when it is drawn).
     fn color_of(&self, e: &Parsed, ctx: &Ctx) -> Option<String> {
         match e.common.color {
-            Color::ByLayer if ctx.definition => {
-                let layer = Self::own_layer(e, ctx)?;
-                self.lib.layer_colors.get(&layer.to_uppercase()).cloned()
-            }
+            // In a definition BYLAYER stays its layer's (`byLayer`, docs/adr/0315 §2).
             Color::ByLayer => None,
             Color::ByBlock if ctx.definition && ctx.layer.is_none() => None,
             Color::ByBlock => Some(ctx.byblock.clone()),
@@ -2654,10 +2635,10 @@ impl<'l> Emitter<'l> {
             Some("blok dizisi (MINSERT) patlatılarak alındı")
         } else if super::extrusion_z(e.common.extrusion) != 1.0 {
             Some("eğik düzlemdeki yerleştirme patlatılarak alındı")
+        } else if placed.scale[0] == 0.0 || placed.scale[1] == 0.0 {
+            Some("ölçeği sıfır olan yerleştirme alınmadı")
         } else {
-            let [sx, sy, _] = placed.scale;
-            let equal = sx != 0.0 && (sx.abs() - sy.abs()).abs() <= sx.abs() * 1e-9;
-            (!equal).then_some("X ve Y ölçeği eşit olmayan yerleştirme patlatılarak alındı")
+            None
         };
         if let Some(why) = why {
             if !ctx.definition || ctx.tf.is_identity() {
@@ -2698,6 +2679,8 @@ impl<'l> Emitter<'l> {
             block: id,
             p: v(placed.p[0], placed.p[1]),
             scale: sx.abs(),
+            // Unequal factors stay one insert (docs/adr/0315 §3); equal ones within a billionth are one.
+            y_scale: (sx != 0.0 && (sx.abs() - sy.abs()).abs() > sx.abs() * 1e-9).then_some(sy.abs()),
             rotation: exact.unwrap_or_else(|| turn_of(degrees)),
             mirror,
         }));

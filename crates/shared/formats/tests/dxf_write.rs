@@ -1568,6 +1568,7 @@ fn insert(layer: &str, block: u8, p: Vec2, scale: f64, rotation: f64, mirror: bo
         block: block_id(block),
         p,
         scale,
+        y_scale: None,
         rotation,
         mirror,
     })
@@ -1586,6 +1587,7 @@ fn definition(n: u8, name: &str, base_point: Vec2, entities: Vec<Entity>) -> Blo
                 e
             })
             .collect(),
+        units: None,
         attributes: Vec::new(),
         description: None,
     }

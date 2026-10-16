@@ -388,7 +388,13 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             &objects,
             &tags,
         );
-        records.push((record, name.clone()));
+        // Its insertion unit (docs/adr/0315 §4): the file's, its numbers being in it; 0 for a unitless block.
+        let code = if def.units == Some(kentos_contracts::BlockUnits::Unitless) {
+            0
+        } else {
+            units::insunits_of(unit)
+        };
+        records.push((record, name.clone(), code));
         defined.insert(
             def.id,
             Written {

@@ -1489,6 +1489,7 @@ fn shape(entity: &Entity) -> Shape {
             block: i.block.to_text(),
             p: v(&i.p),
             scale: i.scale,
+            y_scale: i.y_scale,
             rotation: i.rotation,
             mirror: i.mirror.then_some(true),
             attrs: None,

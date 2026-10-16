@@ -9,7 +9,7 @@ use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::block::Blocks;
 use kentos_geometry_core::entity::Entity;
 use kentos_geometry_core::ops::subref::{
-    Followed, Place, follow, follow_in, follow_range, place_in, point, point_in, range_length,
+    Followed, Place, follow, follow_in, follow_path, follow_range, place_in, point, point_in, range_length,
 };
 use kentos_geometry_core::vec2::Vec2;
 use serde_json::Value;
@@ -244,11 +244,25 @@ fn a_piece_inside_a_block_is_where_the_reference_puts_it_and_follows_its_insert(
         );
         let before = entity(&c["before"]["insert"]);
         let after = (!c["after"]["insert"].is_null()).then(|| entity(&c["after"]["insert"]));
-        let got = follow_in(
+        let (got, moved) = follow_path(
             place(&c["place"]),
             &path(&c["path"]),
             (&bb, &before),
             after.as_ref().map(|a| (&ab, a)),
+        );
+        // The single-answer form agrees.
+        assert_eq!(
+            format!("{got:?}"),
+            format!(
+                "{:?}",
+                follow_in(
+                    place(&c["place"]),
+                    &path(&c["path"]),
+                    (&bb, &before),
+                    after.as_ref().map(|a| (&ab, a)),
+                )
+            ),
+            "{name}"
         );
         let want = &c["expect"];
         match got {
@@ -260,6 +274,13 @@ fn a_piece_inside_a_block_is_where_the_reference_puts_it_and_follows_its_insert(
                 );
                 same_place(name, at, place(&want["at"]));
                 same(name, p, &want["point"], false);
+                // The piece found again by its local id (docs/adr/0315 §1).
+                let expected = if want["path"].is_null() {
+                    path(&c["path"])
+                } else {
+                    path(&want["path"])
+                };
+                assert_eq!(moved, expected, "{name}");
             }
             Followed::Broken(r) => {
                 gone += usize::from(r.code() == "piece_gone");

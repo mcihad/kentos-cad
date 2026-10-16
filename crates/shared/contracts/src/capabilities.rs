@@ -656,10 +656,28 @@ const ENTRIES: &[Entry] = &[
                 "block_refused",
                 "no_library",
                 "invalid_library",
+                "no_units",
             ],
             REVISION,
         ],
         warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.blocks.insert",
+        refusals: &[
+            &[
+                "no_block",
+                "not_finite",
+                "invalid_scale",
+                "unknown_block",
+                "unknown_tag",
+                "slots_exhausted",
+            ],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["layer_hidden", "insert_units_differ"],
         targets: none,
     },
     Entry {

@@ -230,7 +230,7 @@ textColor?: string, } | { "kind": "hatch", ring: Array<Vec2>, holes?: Array<Arra
 /**
  * The objects its region follows (docs/adr/0186 §6).
  */
-assoc?: HatchAssoc, } | { "kind": "insert", block: BlockId, p: Vec2, scale: number, rotation: number, mirror?: boolean, } | { "kind": "leader", 
+assoc?: HatchAssoc, } | { "kind": "insert", block: BlockId, p: Vec2, scale: number, yScale?: number, rotation: number, mirror?: boolean, } | { "kind": "leader", 
 /**
  * At least two: the arrow's tip first.
  */

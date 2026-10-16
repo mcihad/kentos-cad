@@ -51,7 +51,7 @@ use kentos_native_application::{
     entities_hatch, entities_join, entities_lengthen, entities_match, entities_paste,
     entities_reverse, file_import, stretch,
 };
-use kentos_native_application::{library_edit, line_types_edit, styles_impact};
+use kentos_native_application::{blocks_insert, library_edit, line_types_edit, styles_impact};
 use serde_json::{Value, json};
 
 type Outcome<T> = Result<T, String>;
@@ -1380,6 +1380,18 @@ impl Input for BlocksEdit {
     }
 }
 
+impl Input for kentos_domain::contracts::BlocksInsert {
+    /// `at.x`, `at.y`, `rotation`, `scale`, `yScale` (which the step's input must give).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "rotation" => self.rotation.as_mut(),
+            "scale" => self.scale.as_mut(),
+            "yScale" => self.y_scale.as_mut(),
+            _ => coordinate(&mut self.at, "at", path),
+        }
+    }
+}
+
 impl Input for EntitiesSetProperties {
     /// `lineWeight` (which the step's input must give); the rest is ids and texts.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -1725,9 +1737,14 @@ fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&
                 .or_else(|| c.as_mut().and_then(|c| coordinate(c, "c", rest))),
         },
         EntityGeometry::Insert {
-            p, scale, rotation, ..
+            p,
+            scale,
+            y_scale,
+            rotation,
+            ..
         } => match rest {
             "scale" => Some(scale),
+            "yScale" => y_scale.as_mut(),
             "rotation" => Some(rotation),
             _ => coordinate(p, "p", rest),
         },
@@ -1982,6 +1999,9 @@ fn run_op(
         CAD_ENTITIES_SET => run!(set, EntitiesSetProperties),
         CAD_BLOCKS_DEFINE => run!(blocks_define, BlocksDefine),
         CAD_BLOCKS_EDIT => run!(blocks_edit, BlocksEdit),
+        kentos_domain::contracts::CAD_BLOCKS_INSERT => {
+            run!(blocks_insert, kentos_domain::contracts::BlocksInsert)
+        }
         kentos_domain::contracts::CAD_LAYERS_SERVICE => run!(layers_service, LayersService),
         kentos_domain::contracts::CAD_NETWORK_DEFINE => run!(network_define, NetworkDefine),
         kentos_domain::contracts::CAD_ADDRESSES_DEFINE => run!(address_define, AddressesDefine),

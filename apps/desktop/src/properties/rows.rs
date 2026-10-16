@@ -1386,7 +1386,18 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 Row::text("Blok", name).editor(edit(blocks)),
                 len("Konum Y", i.p.x).editor(number(Field::InsertX(slot))),
                 len("Konum X", i.p.y).editor(number(Field::InsertY(slot))),
-                Row::figure("Ölçek", fixed(i.scale, 4)).editor(number(Field::InsertScale(slot))),
+                // One factor, or its own y factor beside the x one (docs/adr/0315 §3).
+                Row::figure(
+                    if i.y_scale.is_some() {
+                        "X ölçeği"
+                    } else {
+                        "Ölçek"
+                    },
+                    fixed(i.scale, 4),
+                )
+                .editor(number(Field::InsertScale(slot))),
+                Row::figure("Y ölçeği", fixed(i.y_scale.unwrap_or(i.scale), 4))
+                    .editor(number(Field::InsertYScale(slot))),
                 Row::figure("Dönüş", degrees(i.rotation))
                     .unit("°")
                     .editor(number(Field::InsertTurn(slot))),

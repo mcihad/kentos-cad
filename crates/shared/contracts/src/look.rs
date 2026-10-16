@@ -374,11 +374,16 @@ mod tests {
         for case in doc["cases"].as_array().expect("cases") {
             let name = case["name"].as_str().unwrap_or_default();
             let mut resolved: Option<ResolvedLook> = None;
+            // A block's object on the block's layer ("") has the layer of its insert (docs/adr/0315 §2): the
+            // caller gives `resolve_look` that layer.
+            let mut layer_id = "";
             for link in case["chain"].as_array().expect("a chain") {
-                let layer: crate::LayerStyle = serde_json::from_value(
-                    layers[link["layerId"].as_str().expect("a layer")].clone(),
-                )
-                .expect("a layer style");
+                let own_layer = link["layerId"].as_str().expect("a layer");
+                if !own_layer.is_empty() {
+                    layer_id = own_layer;
+                }
+                let layer: crate::LayerStyle = serde_json::from_value(layers[layer_id].clone())
+                    .expect("a layer style");
                 let look: ObjectLook = serde_json::from_value(link.clone()).expect("a look");
                 let own = OwnLook {
                     color: link["color"].as_str(),

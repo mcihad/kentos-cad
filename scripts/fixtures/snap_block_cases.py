@@ -14,7 +14,8 @@ a circle, an arc's ends swap under a mirror, its quadrants are the drawing's eas
 piece gives its centroid; a text inside gives its insertion point; the insertion point is the outermost insert's
 alone (a nested insert gives its pieces, not its own point). What decides is the insert's layer: hidden, nothing
 snaps; locked, everything still snaps (a lock forbids editing, not reading); its own snap kinds apply to the pieces
-too. A piece's own layer changes how it looks (docs/adr/0260 §1), not whether it is drawn: it snaps as it shows.
+too. A piece on a layer of its own shows only while that layer does (docs/adr/0315 §2, AutoCAD's rule), and a
+nested insert's pieces only while its layer does: a piece that does not show does not snap.
 
 The candidates of the kinds asked are written out here from the definitions (the corners, the edges' middles, the
 circles' and arcs' centres and quadrants, the texts' points, the closed pieces' centroids); a case's expectation is
@@ -124,6 +125,10 @@ def pieces(ins, m=(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)):
     m = compose(m, compose(placement(ins), (1.0, 0.0, 0.0, 1.0, -d["base"]["x"], -d["base"]["y"])))
     out = []
     for e in d["entities"]:
+        # A piece, or a nested insert, on a hidden layer of its own does not show (ADR 0315 §2); "" is the block's.
+        own = e.get("layerId", "")
+        if own and own in LAYER and not LAYER[own]["visible"]:
+            continue
         if e["kind"] == "insert":
             out.extend(pieces(e, m))
         else:
@@ -298,7 +303,7 @@ def cases():
     case("aynalı iç içe kapının yayının ortası", "midpoint",
          off(at(I1, (6 + math.cos(math.pi / 4), 1 + math.sin(math.pi / 4))), 0.1), 0.5, "best")
     case("aynalı iç içe kapının menteşesi", "center", off(m2, 0.1), 0.4, "best")
-    case("kendi gizli katmanındaki yazı çizildiği için kenetlenir", "insertion", off(at(I1, (1, 3)), 0.15), 0.8,
+    case("kendi gizli katmanındaki yazı görünmediği için kenetlenmez", "insertion", off(at(I1, (1, 3)), 0.15), 0.8,
          "best")
     case("iç içe kapının ekleme noktası kenetlenmez", "insertion", off(hinge, 0.1), 0.8, "best")
     case("en dıştaki bloğun ekleme noktası", "insertion", off(xy(I1["p"]), 0.1), 0.8, "best")

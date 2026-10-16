@@ -1728,6 +1728,7 @@ fn arrayed(doc: &mut Document, array: bool) -> kentos_contracts::AssocArray {
         name: "Dizi 1".into(),
         base: Vec2 { x: 0.0, y: 0.0 },
         entities: vec![point(0.0)],
+        units: None,
         attributes: Vec::new(),
         description: None,
     };
@@ -1739,6 +1740,7 @@ fn arrayed(doc: &mut Document, array: bool) -> kentos_contracts::AssocArray {
             block: block.id,
             p: Vec2 { x, y: 0.0 },
             scale: 1.0,
+            y_scale: None,
             rotation: 0.0,
             mirror: false,
         })

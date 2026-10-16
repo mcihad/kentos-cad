@@ -1448,7 +1448,9 @@ KINDS = {
         "assoc": (lambda a: hatch_assoc(a), False),
     },
     # Schema 6 (docs/adr/0144): the definition's id; `mirror` only when true.
-    "insert": {"block": (lambda u: blob(uid_bytes(u)), True), "p": (point, True), "scale": (f64, True), "rotation": (f64, True), "mirror": (lambda b: boolean(b) if b is True else None, False)},
+    "insert": {"block": (lambda u: blob(uid_bytes(u)), True), "p": (point, True), "scale": (f64, True), "rotation": (f64, True), "mirror": (lambda b: boolean(b) if b is True else None, False),
+               # Schema 57 (docs/adr/0315 §3): its own y factor, only when it is not the x one.
+               "yScale": (f64, False)},
     # Schema 22 (docs/adr/0184): one-line cells row by row, merged ranges, alignments, a heading row only when true, lines
     # by name, a frame's width, a text's face, a source; only in the drawing.
     "table": {
@@ -1662,6 +1664,7 @@ def entity(e, uid, index):
     body = fields({k: v for k, v in e.items() if k not in ("kind", "id")}, table, f"nesne {index} ({kind})")
     assert body.get("header", True) is not None, f"nesne {index}: header yalnız true yazılır"
     assert body.get("mirror", True) is not None, f"nesne {index}: mirror yalnız true yazılır"
+    assert kind != "insert" or e.get("yScale", None) != e["scale"], f"nesne {index}: x'e eşit y ölçeği yazılmaz"
     assert body.get("mask", True) is not None, f"nesne {index}: mask yalnız true yazılır"
     assert body.get("closed", True) is not None, f"nesne {index}: closed yalnız true yazılır"
     if uid is not None:
@@ -1686,6 +1689,8 @@ def definition(b):
         "entities": (lambda es: array([entity(e, None, i) for i, e in enumerate(es)]), True),
         "attributes": (lambda xs: array([attribute(a) for a in xs]), False),
         "description": (text, False),
+        # Schema 57 (docs/adr/0315 §4): the unit it is drawn in.
+        "units": (enum(("mm", "cm", "m", "in", "ft", "unitless")), False),
     }
     return cmap(fields(b, table, f"blok {b.get('name')}"))
 
@@ -1918,6 +1923,10 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def line_patterned(nodes):
         return any("linePattern" in n.get("style", {}) or line_patterned(n.get("children", [])) for n in nodes)
 
+    # Schema 57 (docs/adr/0315 §3, §4): an insert's own y factor, of the drawing or of a definition, or a block's unit.
+    stretched = lambda es: any(e["kind"] == "insert" and "yScale" in e for e in es)  # noqa: E731
+    if stretched(entities) or any("units" in b or stretched(b["entities"]) for b in blocks or []):
+        return 57
     named_pattern = lambda es: any("linePattern" in e for e in es)  # noqa: E731
     s_ = settings or {}
     if ("lineTypes" in s_ or "lineTypeScale" in s_ or line_patterned(layers)
@@ -2256,7 +2265,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-57.kcad"] = container(root(cmap(parts), version=uint(57)))
+    files["schema-version-58.kcad"] = container(root(cmap(parts), version=uint(58)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2389,6 +2398,13 @@ def broken(minimal_content, minimal_file):
     files["block-object-uid.kcad"] = with_blocks([block(1, "Rögar", [cmap({"circle": cmap({"attrs": cmap({}), "layerId": text("0"), "uid": blob(uid_bytes(m["uids"][0])), "c": point({"x": 0.0, "y": 0.0}), "r": f64(0.5)})})])])
     files["insert-scale-zero.kcad"] = with_blocks([block(1, "Rögar")], entities=[insert_of(1, scale=f64(0.0))])
     files["insert-mirror-false.kcad"] = with_blocks([block(1, "Rögar")], entities=[insert_of(1, mirror=boolean(False))])
+    # An insert's y factor and a block's unit are schema 57's (docs/adr/0315 §3, §4): unknown fields in 56; the factor
+    # positive and not the x one, the unit one of six words.
+    files["insert-y-scale-in-schema-56.kcad"] = with_blocks([block(1, "Rögar")], entities=[insert_of(1, yScale=f64(2.0))], version=56)
+    files["insert-y-scale-equal.kcad"] = with_blocks([block(1, "Rögar")], entities=[insert_of(1, yScale=f64(1.0))], version=57)
+    files["insert-y-scale-zero.kcad"] = with_blocks([block(1, "Rögar")], entities=[insert_of(1, yScale=f64(0.0))], version=57)
+    files["block-units-in-schema-56.kcad"] = with_blocks([block(1, "Rögar", units=text("mm"))], version=56)
+    files["block-units-unknown.kcad"] = with_blocks([block(1, "Rögar", units=text("dm"))], version=57)
     files["empty-blocks.kcad"] = with_blocks([], entities=[])
     files["empty-attributes.kcad"] = with_blocks([block(1, "Rögar", attributes=array([]))])
     files["duplicate-attribute-tag.kcad"] = with_blocks([block(1, "Rögar", attributes=array([cmap({"p": point({"x": 0.0, "y": 0.0}), "tag": text("NO"), "height": f64(0.5), "rotation": f64(0.0)})] * 2))])
@@ -3534,6 +3550,10 @@ def build():
     payload = document(load("wipeouts.json"))
     assert payload.count(b"\x67version\x18\x36") == 1
     out["broken/wipeouts-in-schema-53.kcad"] = container(payload.replace(b"\x67version\x18\x36", b"\x67version\x18\x35"))
+    out["block-extras.kcad"] = container(document(load("block-extras.json")))
+    payload = document(load("block-extras.json"))
+    assert payload.count(b"\x67version\x18\x39") == 1
+    out["broken/block-extras-in-schema-56.kcad"] = container(payload.replace(b"\x67version\x18\x39", b"\x67version\x18\x38"))
     out["patterns.kcad"] = container(document(load("patterns.json")))
     payload = document(load("patterns.json"))
     assert payload.count(b"\x67version\x18\x38") == 1

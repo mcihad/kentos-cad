@@ -7120,11 +7120,11 @@
    "title": "Blok ekle",
    "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.blocks.insert"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
+   "python": "kentos.cad.blocks.insert",
+   "mcp": "cad.blocks.insert",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",

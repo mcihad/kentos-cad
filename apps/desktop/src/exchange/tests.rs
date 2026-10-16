@@ -295,7 +295,8 @@ fn a_dxfs_blocks_go_out_to_dxf_as_blocks() {
     run(&mut app, "file.import.dxf");
     send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
     let had = blocks_of(&app).len();
-    assert_eq!(inserts(&app), 2);
+    // KAPI's, the nested NO's and DAIRE's, kept with its own y factor (docs/adr/0315 §3).
+    assert_eq!(inserts(&app), 3);
     let dir = scratch("export-dxf-blocks");
     let path = dir.join("bloklar.dxf");
     app.picker = Picker::File(path.clone());
@@ -310,18 +311,18 @@ fn a_dxfs_blocks_go_out_to_dxf_as_blocks() {
         kentos_formats::dxf::read(&std::fs::read(&path).expect("written"), &Default::default())
             .expect("reads");
     // The blocks the inserts place, in the order the objects place them, each after the ones it
-    // holds (NO is inside KAPI); DAIRE, which nothing places, stays out.
+    // holds (NO is inside KAPI); DAIRE's stretched insert is kept now (docs/adr/0315 §3).
     let names: Vec<&str> = back.blocks.iter().map(|b| b.name.as_str()).collect();
-    assert_eq!(names, ["KENDI", "NO", "KAPI"]);
+    assert_eq!(names, ["DAIRE", "KENDI", "NO", "KAPI"]);
     let placed = back
         .entities
         .iter()
         .filter(|e| matches!(e, Entity::Insert(_)))
         .count();
-    assert_eq!(placed, 2);
+    assert_eq!(placed, 3);
     assert_eq!(
         had, 4,
-        "DAIRE came in though nothing places it; it does not go out"
+        "every block the file defines came in"
     );
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -1058,7 +1059,8 @@ fn a_dxfs_blocks_go_in_as_definitions_and_blokları_patlat_opens_them() {
         blocks_of(&app)[had.len()..],
         ["NO", "KAPI", "DAIRE", "KENDI"]
     );
-    assert_eq!(inserts(&app), 2);
+    // KAPI's, the nested NO's and DAIRE's, kept with its own y factor (docs/adr/0315 §3).
+    assert_eq!(inserts(&app), 3);
     assert!(
         app.log.lines().any(|l| l
             .text
@@ -1079,7 +1081,7 @@ fn a_dxfs_blocks_go_in_as_definitions_and_blokları_patlat_opens_them() {
         &app,
         "“blocks.dxf” içindeki 4 bloğun adı çizimde vardı; yeni adla alındı: “NO” → “NO (2)”, “KAPI” → “KAPI (2)”"
     ));
-    assert_eq!(inserts(&app), 4);
+    assert_eq!(inserts(&app), 6);
 
     // Each import is one step; then Blokları patlat: no definition, no insert.
     let _ = app.update(Message::Run("edit.undo"));

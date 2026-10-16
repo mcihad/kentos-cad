@@ -1024,10 +1024,13 @@ Motor anahtarı olan stil bütün kurallarıyla denetlenir (`kentos_contracts::l
 | `entities` | dizi: nesne (§6.6) | evet | tanımın nesneleri, sırasıyla; `uid`'leri yoktur |
 | `attributes` | dizi: öznitelik tanımı | | yerleştirmenin yazı olarak gösterdiği öznitelikler; boş dizi yazılmaz (`bad_value`) |
 | `description` | metin | | açıklama |
+| `units` | metin | | yalnız şema 57 ve sonrası: çizildiği birim, `mm`, `cm`, `m`, `in`, `ft` ya da `unitless` (başka söz `bad_value`, `broken/block-units-unknown.kcad`); birimli blok gerçek boyutludur, birimsiz bloğun sayıları çizim birimidir (ADR 0315 §4) |
+
+**Yerleştirmenin y ölçeği:** şema 57'de `insert` nesnesi `yScale` float taşıyabilir: pozitif (`broken/insert-y-scale-zero.kcad`) ve `scale`'den farklı; eşitse yazılmaz (`broken/insert-y-scale-equal.kcad`). Yoksa `scale` iki eksende geçerlidir; varsa parçalar afinle yerleşir (ADR 0315 §3). Şema 56 ve öncesinde `yScale` ve `units` `unknown_field`'dır.
 
 **Öznitelik tanımı** haritası: `p` nokta (evet), `tag` metin (evet), `align` numaralı metin (yalnız şema 7 ve sonrası), `value` metin (varsayılan değer), `height` float (evet, m), `prompt` metin (Blok ekle'nin sorusu), `rotation` float (evet, derece, bir yazınınki gibi), `widthFactor` float (yalnız şema 7 ve sonrası). Anahtarları bu sıradadır. `align` ve `widthFactor`'ın anlamı ve kuralları yazınınkidir (§6.6, yazı ekleri).
 
-- **Tanımın nesneleri** belgenin nesneleriyle aynı biçimdedir (§6.6), yalnız `uid` taşımazlar: kimlikleri tanımın içinde yereldir. Okuyucu onlara tanımın içinde 1, 2, 3, … yuvalarını verir. Katmanları saklanır ama ağaçta bulunmaları gerekmez: yerleştirme onları kendi katmanıyla çizer.
+- **Tanımın nesneleri** belgenin nesneleriyle aynı biçimdedir (§6.6), yalnız `uid` taşımazlar: kimlikleri tanımın içinde yereldir. Okuyucu onlara tanımın içinde 1, 2, 3, … yuvalarını verir. Katmanları saklanır ama ağaçta bulunmaları gerekmez. Boş katman (`""`) bloğun katmanıdır: yerleştirmenin katmanında çizilir; ağaçta olan bir katmandaki nesne o katman görünürken görünür (ADR 0315 §2).
 - **Kurallar** (okuyucu ve yazıcı aynı sırayla denetler; web ve masaüstü belgeleri de aynı kurallarla, `kentos_contracts::blocks`):
   1. Tanımlar sırasıyla: adı boş ya da yalnız boşluk olamaz (`bad_value`); kimliği (`duplicate_block`) ve adı (`duplicate_block`, Türkçe büyük/küçük harf ayrımı yapılmadan: I → ı, İ → i, öbür harfler Unicode'un küçük harfiyle) bir kezdir; öznitelik etiketi boş olamaz ve tanımda bir kezdir (`bad_value`).
   2. Tanımların nesnelerindeki yerleştirmeler bilinen bir tanımı gösterir (`unknown_block`); bir yerleştirme listede kendisinden sonra gelen bir tanımı da gösterebilir.

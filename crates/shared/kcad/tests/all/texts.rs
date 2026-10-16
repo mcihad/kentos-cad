@@ -93,6 +93,7 @@ fn with_attribute(align: Option<TextAlign>, width_factor: Option<f64>) -> Docume
         name: "Rögar".into(),
         base: Vec2 { x: 0.0, y: 0.0 },
         entities: vec![],
+        units: None,
         attributes: vec![AttributeDefinition {
             tag: "NO".into(),
             prompt: None,

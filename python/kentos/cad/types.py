@@ -276,6 +276,7 @@ class BlockEditOperation(_StrEnum):
     - ``duplicate``: A copy of a definition under a new name (“Blok kopyala”, docs/adr/0314 §3): its objects, base point,
     - ``export``: Definitions as a `kentos.blocks` file's text, with the definitions they insert (“Blokları dışa aktar”);
     - ``import``: A `kentos.blocks` file's definitions taken in (“Blokları al”): a name the drawing has is kept, or with
+    - ``units``: The unit it is drawn in (“Blok birimi”, docs/adr/0315 §4): with `rescale` its numbers are kept and their
     """
     RENAME = "rename"
     REDEFINE = "redefine"
@@ -286,10 +287,33 @@ class BlockEditOperation(_StrEnum):
     DUPLICATE = "duplicate"
     EXPORT = "export"
     IMPORT = "import"
+    UNITS = "units"
 
 
-BlockEditOperationName = Literal["rename", "redefine", "rebase", "remove", "purge", "attributes", "duplicate", "export", "import"]
+BlockEditOperationName = Literal["rename", "redefine", "rebase", "remove", "purge", "attributes", "duplicate", "export", "import", "units"]
 """The names of :class:`BlockEditOperation`, for a plain string."""
+
+
+class BlockUnits(_StrEnum):
+    """The unit a block was drawn in (docs/adr/0315 §4).
+
+    - ``mm``
+    - ``cm``
+    - ``m``
+    - ``in``
+    - ``ft``
+    - ``unitless``: Its numbers are the drawing's units: a 1 is a millimetre in a millimetre drawing, a metre in a metre one.
+    """
+    MM = "mm"
+    CM = "cm"
+    M = "m"
+    IN = "in"
+    FT = "ft"
+    UNITLESS = "unitless"
+
+
+BlockUnitsName = Literal["mm", "cm", "m", "in", "ft", "unitless"]
+"""The names of :class:`BlockUnits`, for a plain string."""
 
 
 class CalloutKind(_StrEnum):
@@ -3786,13 +3810,20 @@ class BlockDefined(_Model):
 @dataclass(kw_only=True, slots=True)
 class BlockDefinition(_Model):
     """A block definition (docs/adr/0144): objects drawn once, placed many
-    times. Its objects' ids are local to it; their layer is kept, but an
-    insert draws them on its own layer (the DXF's layer 0), each with its own
-    colour or line weight when it has one.
+    times. Its objects' ids are local to it, once each and kept by every edit
+    of it, so a reference to a piece follows it (docs/adr/0315 §1). An object
+    on the block's layer (`""`, the DXF's layer 0) is drawn on its insert's
+    layer; one on a layer of its own shows only while that layer does
+    (docs/adr/0315 §2). A part of its look it has is its own, a `byLayer` part
+    its layer's (its insert's layer on the block's layer), any other part its
+    insert's (BYBLOCK).
     Attributes:
         name: Unique in the drawing, Turkish case folded.
         base: The point placed at an insert's `p`, in the definition's coordinates. Unit: length.
         attributes: The texts an insert shows from its attributes (ATTDEF).
+        units: The unit it was drawn in (docs/adr/0315 §4): a unit, its geometry being metres as the drawing's (an insert
+            keeps its size anywhere); `unitless`, its numbers being drawing units (an insert is scaled by the drawing's
+            unit). Absent: a real-size block of an unknown unit.
     """
     id: str
     name: str
@@ -3800,6 +3831,7 @@ class BlockDefinition(_Model):
     entities: list[Entity]
     attributes: list[AttributeDefinition] | Unset = UNSET
     description: str | None | Unset = UNSET
+    units: BlockUnits | BlockUnitsName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -3811,6 +3843,8 @@ class BlockDefinition(_Model):
             out["attributes"] = [e0.to_json() for e0 in self.attributes]
         if self.description is not UNSET:
             out["description"] = self.description
+        if self.units is not UNSET:
+            out["units"] = None if self.units is None else _enum_out(self.units)
         return out
 
     @classmethod
@@ -3822,6 +3856,43 @@ class BlockDefinition(_Model):
             entities=[Entity.from_json(e0) for e0 in data["entities"]],
             attributes=[AttributeDefinition.from_json(e0) for e0 in data["attributes"]] if "attributes" in data else UNSET,
             description=data.get("description", UNSET),
+            units=UNSET if "units" not in data else None if data["units"] is None else _enum_in(BlockUnits, data["units"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlockInserted(_Model):
+    """Output of `cad.blocks.insert` v1.
+    Attributes:
+        uid: The insert's persistent id.
+        id: Unit: id.
+        block: The block placed.
+        unit_factor: The unit's factor in the insert's scale (1 for a real-size block). Unit: 1.
+        revision: The document's revision after the write, as decimal text.
+    """
+    uid: str
+    id: int
+    block: str
+    unit_factor: float
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["id"] = self.id
+        out["block"] = self.block
+        out["unitFactor"] = float(self.unit_factor)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlockInserted:
+        return cls(
+            uid=data["uid"],
+            id=data["id"],
+            block=data["block"],
+            unit_factor=float(data["unitFactor"]),
+            revision=data["revision"],
         )
 
 
@@ -3904,6 +3975,8 @@ class BlocksDefine(_Model):
             longer at it, nothing is written and the answer is `conflict`.
         layer_id: With `replace`: the layer the insert goes on, a layer's id.
         replace: True: the objects are replaced by an insert of the new block.
+        units: The unit it is drawn in (docs/adr/0315 §4); absent: the drawing's. `unitless`: its numbers are kept in the
+            drawing's units, an insert scaled by the drawing's unit wherever it goes.
     """
     name: str
     base: Vec2
@@ -3912,6 +3985,7 @@ class BlocksDefine(_Model):
     expected_revision: str | None | Unset = UNSET
     layer_id: str | None | Unset = UNSET
     replace: bool | None | Unset = UNSET
+    units: BlockUnits | BlockUnitsName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -3926,6 +4000,8 @@ class BlocksDefine(_Model):
             out["layerId"] = self.layer_id
         if self.replace is not UNSET:
             out["replace"] = self.replace
+        if self.units is not UNSET:
+            out["units"] = None if self.units is None else _enum_out(self.units)
         return out
 
     @classmethod
@@ -3938,6 +4014,7 @@ class BlocksDefine(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             layer_id=data.get("layerId", UNSET),
             replace=data.get("replace", UNSET),
+            units=UNSET if "units" not in data else None if data["units"] is None else _enum_in(BlockUnits, data["units"]),
         )
 
 
@@ -3992,7 +4069,8 @@ class BlocksEdit(_Model):
       empty: none);
     - `duplicate`: `block`, `name` (the copy's);
     - `export`: `blocks` (absent: every definition);
-    - `import`: `library` (a `kentos.blocks` file's text), `replace`.
+    - `import`: `library` (a `kentos.blocks` file's text), `replace`;
+    - `units`: `block`, `units`, `rescale`.
 
     What would change nothing (the same name, base point, objects or
     attributes; nothing unused to purge) writes nothing: the answer is
@@ -4023,7 +4101,10 @@ class BlocksEdit(_Model):
         library: `import`: a `kentos.blocks` file's text.
         name: `rename`: the new name.
         replace: `redefine`: true, the objects are replaced by an insert of the block.
+        rescale: `units` between two units: true keeps its numbers (its size changes by their ratio); absent or false keeps
+            its size (only the unit's name changes).
         uids: `redefine`: the objects it is made of now, by persistent id.
+        units: `units`: the unit it is drawn in (docs/adr/0315 §4).
     """
     operation: BlockEditOperation | BlockEditOperationName
     attributes: list[AttributeDefinition] | None | Unset = UNSET
@@ -4035,7 +4116,9 @@ class BlocksEdit(_Model):
     library: str | None | Unset = UNSET
     name: str | None | Unset = UNSET
     replace: bool | None | Unset = UNSET
+    rescale: bool | None | Unset = UNSET
     uids: list[str] | None | Unset = UNSET
+    units: BlockUnits | BlockUnitsName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -4058,8 +4141,12 @@ class BlocksEdit(_Model):
             out["name"] = self.name
         if self.replace is not UNSET:
             out["replace"] = self.replace
+        if self.rescale is not UNSET:
+            out["rescale"] = self.rescale
         if self.uids is not UNSET:
             out["uids"] = None if self.uids is None else list(self.uids)
+        if self.units is not UNSET:
+            out["units"] = None if self.units is None else _enum_out(self.units)
         return out
 
     @classmethod
@@ -4075,7 +4162,9 @@ class BlocksEdit(_Model):
             library=data.get("library", UNSET),
             name=data.get("name", UNSET),
             replace=data.get("replace", UNSET),
+            rescale=data.get("rescale", UNSET),
             uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+            units=UNSET if "units" not in data else None if data["units"] is None else _enum_in(BlockUnits, data["units"]),
         )
 
 
@@ -4176,6 +4265,133 @@ class BlocksEdited(_Model):
             insert=data.get("insert", UNSET),
             library=data.get("library", UNSET),
             skipped=list(data["skipped"]) if "skipped" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksInsert(_Model):
+    """Input of `cad.blocks.insert` v1 (docs/adr/0315 §4): an insert of a block, named by its id or its name, at `at`
+    on `layerId`. Everything it depends on is here (TODOS.md CMD-07): Blok ekle gives the active layer, the current
+    colour, its scale, turn and mirror, the values asked.
+
+    The insert's factors: `scale` (absent: 1) and `yScale` (absent: `scale`), times the unit's factor: a unitless
+    block takes the drawing's unit (a 1 of it is a millimetre in a millimetre drawing); a real-size block keeps
+    its size (factor 1) and, drawn in another unit than the drawing's, is said so (`block_units_differ`).
+
+    Attribute values are the given ones by tag (an attribute left out shows its default); a tag the block does
+    not have is refused. `attrs` are the insert's other data (an object template's, a GIS record's), not checked
+    against the block's tags; a value under a tag of both is the attribute's.
+
+    Refusals, in this order: `no_block` (neither `block` nor `name`), `not_finite` (`at`, then `rotation`),
+    `invalid_scale` (`scale`, `yScale`: positive and finite); `invalid_revision`, `revision_conflict` (status
+    `conflict`); `unknown_block` (no such id or name, Turkish case folded); `unknown_tag`; `layer_not_found`,
+    `not_a_layer`, `layer_locked`; on the desktop `slots_exhausted`. Warnings: `layer_hidden`, `block_units_differ`.
+    Attributes:
+        at: Where its base point goes. Unit: length.
+        layer_id: The layer it goes on, a layer's id.
+        attributes: Its attribute values by tag.
+        attrs: Its other data (an object template's), under the attribute values.
+        block: The block, by id.
+        color: Its own colour (absent: its layer's).
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        label: Its label.
+        mirror: Mirrored in its x axis, before the turn.
+        name: The block, by name, when `block` is absent (Turkish case folded).
+        rotation: Radians, counter-clockwise from east (absent: 0). Unit: rad.
+        scale: The factor along its x axis (absent: 1), before the unit's. Unit: 1.
+        symbol: A library symbol over its layer's style.
+        y_scale: The factor along its y axis (absent: `scale`), before the unit's. Unit: 1.
+    """
+    at: Vec2
+    layer_id: str
+    attributes: dict[str, str] | None | Unset = UNSET
+    attrs: dict[str, str] | None | Unset = UNSET
+    block: str | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    mirror: bool | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    rotation: float | None | Unset = UNSET
+    scale: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+    y_scale: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = _vec2_out(self.at)
+        out["layerId"] = self.layer_id
+        if self.attributes is not UNSET:
+            out["attributes"] = None if self.attributes is None else dict(self.attributes)
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.block is not UNSET:
+            out["block"] = self.block
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.mirror is not UNSET:
+            out["mirror"] = self.mirror
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.rotation is not UNSET:
+            out["rotation"] = None if self.rotation is None else float(self.rotation)
+        if self.scale is not UNSET:
+            out["scale"] = None if self.scale is None else float(self.scale)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        if self.y_scale is not UNSET:
+            out["yScale"] = None if self.y_scale is None else float(self.y_scale)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksInsert:
+        return cls(
+            at=Vec2.from_json(data["at"]),
+            layer_id=data["layerId"],
+            attributes=UNSET if "attributes" not in data else None if data["attributes"] is None else dict(data["attributes"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            block=data.get("block", UNSET),
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            label=data.get("label", UNSET),
+            mirror=data.get("mirror", UNSET),
+            name=data.get("name", UNSET),
+            rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
+            symbol=data.get("symbol", UNSET),
+            y_scale=UNSET if "yScale" not in data else None if data["yScale"] is None else float(data["yScale"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksInsertPlan(_Model):
+    """What `cad.blocks.insert` would write (plan mode); nothing is written.
+    Attributes:
+        insert: The insert as execute would write it, `id` 0.
+        unit_factor: The unit's factor in its scale. Unit: 1.
+        revision: The document revision the plan was made against.
+    """
+    insert: Entity
+    unit_factor: float
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["insert"] = self.insert.to_json()
+        out["unitFactor"] = float(self.unit_factor)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksInsertPlan:
+        return cls(
+            insert=Entity.from_json(data["insert"]),
+            unit_factor=float(data["unitFactor"]),
+            revision=data["revision"],
         )
 
 
@@ -10159,14 +10375,16 @@ class InsertEntity(Entity):
     """A block placed in the drawing (docs/adr/0144): its definition drawn
     moved from the definition's base point to `p`, mirrored in the
     definition's x axis when `mirror`, then scaled and turned about `p`. The
-    transform is a similarity: shapes keep their kind. The insert's own
-    attributes carry the values of the definition's attribute definitions.
+    transform is a similarity, shapes keeping their kind, unless the insert
+    has a y factor of its own (docs/adr/0315 §3): then an affine, a circle
+    becoming the exact ellipse of its image. The insert's own attributes
+    carry the values of the definition's attribute definitions.
     Attributes:
         id: Unit: id.
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         block: The definition's id.
         p: Where the definition's base point goes. Unit: length.
-        scale: Positive and finite; 1 is the definition's size. Unit: 1.
+        scale: Positive and finite; 1 is the definition's size. With `yScale`, the factor along the definition's x axis. Unit: 1.
         rotation: Radians, counter-clockwise from east. Unit: rad.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
@@ -10191,6 +10409,8 @@ class InsertEntity(Entity):
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
+        y_scale: The factor along the definition's y axis when it is not `scale` (docs/adr/0315 §3), positive and finite;
+            absent: `scale`. A negative factor of a DXF is a mirror and a turn here. Unit: 1.
     """
     TAG_VALUE: ClassVar[str] = "insert"
     id: int
@@ -10214,6 +10434,7 @@ class InsertEntity(Entity):
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
     wipeout: Wipeout | None | Unset = UNSET
+    y_scale: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "insert"}
@@ -10252,6 +10473,8 @@ class InsertEntity(Entity):
             out["transparency"] = None if self.transparency is None else float(self.transparency)
         if self.wipeout is not UNSET:
             out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
+        if self.y_scale is not UNSET:
+            out["yScale"] = None if self.y_scale is None else float(self.y_scale)
         return out
 
     @classmethod
@@ -10278,6 +10501,7 @@ class InsertEntity(Entity):
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+            y_scale=UNSET if "yScale" not in data else None if data["yScale"] is None else float(data["yScale"]),
         )
 
 
@@ -22868,11 +23092,13 @@ class InsertEntityGeometry(EntityGeometry):
     """A block placed (docs/adr/0144): the definition's base point goes to
     `p`, its objects are mirrored in the definition's x axis when
     `mirror`, scaled by `scale` (above 0) and turned by `rotation`
-    (radians, counter-clockwise) about `p`. The block is the drawing's.
+    (radians, counter-clockwise) about `p`. The block is the drawing's. `yScale` is its own y factor when it is
+    not `scale` (docs/adr/0315 §3).
     Attributes:
         p: Unit: length.
         scale: Unit: 1.
         rotation: Unit: rad.
+        y_scale: Unit: 1.
     """
     TAG_VALUE: ClassVar[str] = "insert"
     block: str
@@ -22880,6 +23106,7 @@ class InsertEntityGeometry(EntityGeometry):
     scale: float
     rotation: float
     mirror: bool | Unset = UNSET
+    y_scale: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "insert"}
@@ -22889,6 +23116,8 @@ class InsertEntityGeometry(EntityGeometry):
         out["rotation"] = float(self.rotation)
         if self.mirror is not UNSET:
             out["mirror"] = self.mirror
+        if self.y_scale is not UNSET:
+            out["yScale"] = None if self.y_scale is None else float(self.y_scale)
         return out
 
     @classmethod
@@ -22899,6 +23128,7 @@ class InsertEntityGeometry(EntityGeometry):
             scale=float(data["scale"]),
             rotation=float(data["rotation"]),
             mirror=data.get("mirror", UNSET),
+            y_scale=UNSET if "yScale" not in data else None if data["yScale"] is None else float(data["yScale"]),
         )
 
 
@@ -25330,13 +25560,18 @@ __all__ = [
     "BlockDefinition",
     "BlockEditOperation",
     "BlockEditOperationName",
+    "BlockInserted",
     "BlockRecord",
     "BlockUnit",
+    "BlockUnits",
+    "BlockUnitsName",
     "BlocksDefine",
     "BlocksDefinePlan",
     "BlocksEdit",
     "BlocksEditPlan",
     "BlocksEdited",
+    "BlocksInsert",
+    "BlocksInsertPlan",
     "BothNetworkDirection",
     "Bounds",
     "CalloutKind",

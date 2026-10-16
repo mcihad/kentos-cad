@@ -28,7 +28,7 @@
     {"run": "tool.text", "note": "Yazı'nın kendi seçenekleri döner", "expect": {"prompt": "Yazı: yazının başlangıcına tıklayın [Yükseklik (Y): 2.5 mm / Açı (A): 0° / Hiza (H): sol taban / Genişlik (G): 1 / Zemin (Z): kapalı / Artır (R): kapalı]"}},
     {"key": "Esc", "expect": {"tool": "select"}},
     {"template": "p-vana", "note": "Çizimde Vana bloğu yok: şablon başlamaz, söylenir; etkin katman değişmez", "expect": {"tool": "select", "activeLayer": ["Yazılar"], "log": "warn", "logged": ["Çizimde “Vana” bloğu yok: “Vana” şablonu bu bloğu yerleştirir. Bloğu Blok oluştur ile tanımlayın ya da bir DXF'ten alın."]}},
-    {"template": "p-rogar", "note": "Blok ekle şablonun bloğuyla başlar; Altyapı grubu ve Rögar katmanı açılır", "expect": {"prompt": "Rögar · Blok ekle: “Rögar kapağı” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]", "tool": "blockInsert", "activeLayer": ["Altyapı", "Rögar"]}},
+    {"template": "p-rogar", "note": "Blok ekle şablonun bloğuyla başlar; Altyapı grubu ve Rögar katmanı açılır", "expect": {"prompt": "Rögar · Blok ekle: “Rögar kapağı” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Y ölçeği (Y): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]", "tool": "blockInsert", "activeLayer": ["Altyapı", "Rögar"]}},
     {"click": [20, 0], "expect": {"entities": 5, "newest": {"kind": "insert", "attrs": {"Tür": "Rögar"}, "layer": "Rögar"}}},
     {"shot": "sablon-blok", "note": "Rögar şablonuyla Rögar kapağı bloğu, Altyapı / Rögar katmanında"},
     {"key": "Esc", "expect": {"tool": "select"}}

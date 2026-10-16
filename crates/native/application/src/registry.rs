@@ -19,6 +19,7 @@ use kentos_contracts::{
     RegularPolygonCreate, ScenariosEdit, SettingsSet, SheetsEdit, SnapFind, StandardsApply,
     StandardsCheck, StylesEdit, StylesImpact, UcsSet, UnitsChange, ViewsEdit, codes,
 };
+use kentos_contracts::BlocksInsert;
 use serde_json::Value;
 
 use crate::standards::{apply as standards_apply, check as standards_check};
@@ -36,6 +37,7 @@ use crate::{
     polygon_regular, polyline, rectangle_create, scenarios_edit, set, settings_set, sheets_edit,
     snap_find, stretch, styles_edit, styles_impact, transform, ucs_set, units_change, views_edit,
 };
+use crate::blocks_insert;
 
 /// Why a command was not run: not a refusal of the command (that is its
 /// `CommandResult`), but a command this host does not run or input that is
@@ -152,6 +154,7 @@ macro_rules! by_command {
             kentos_contracts::CAD_LINE_TYPES_EDIT => $then!(line_types_edit, LineTypesEdit),
             kentos_contracts::CAD_LIBRARY_EDIT => $then!(library_edit, LibraryEdit),
             kentos_contracts::CAD_STYLES_IMPACT => $then!(styles_impact, StylesImpact),
+            kentos_contracts::CAD_BLOCKS_INSERT => $then!(blocks_insert, BlocksInsert),
             kentos_contracts::CAD_STYLES_EDIT => $then!(styles_edit, StylesEdit),
             kentos_contracts::CAD_SETTINGS_SET => $then!(settings_set, SettingsSet),
             kentos_contracts::CAD_UNITS_CHANGE => $then!(units_change, UnitsChange),

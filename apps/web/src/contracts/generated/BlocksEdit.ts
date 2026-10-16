@@ -2,6 +2,7 @@
 import type { AttributeDefinition } from "./AttributeDefinition";
 import type { BlockEditOperation } from "./BlockEditOperation";
 import type { BlockId } from "./BlockId";
+import type { BlockUnits } from "./BlockUnits";
 import type { Vec2 } from "./Vec2";
 
 /**
@@ -19,7 +20,8 @@ import type { Vec2 } from "./Vec2";
  *   empty: none);
  * - `duplicate`: `block`, `name` (the copy's);
  * - `export`: `blocks` (absent: every definition);
- * - `import`: `library` (a `kentos.blocks` file's text), `replace`.
+ * - `import`: `library` (a `kentos.blocks` file's text), `replace`;
+ * - `units`: `block`, `units`, `rescale`.
  *
  * What would change nothing (the same name, base point, objects or
  * attributes; nothing unused to purge) writes nothing: the answer is
@@ -78,6 +80,15 @@ blocks?: Array<BlockId>,
  * `import`: a `kentos.blocks` file's text.
  */
 library?: string, 
+/**
+ * `units`: the unit it is drawn in (docs/adr/0315 §4).
+ */
+units?: BlockUnits, 
+/**
+ * `units` between two units: true keeps its numbers (its size changes by their ratio); absent or false keeps
+ * its size (only the unit's name changes).
+ */
+rescale?: boolean, 
 /**
  * The document revision the input was prepared against, as decimal text.
  */

@@ -29,7 +29,7 @@ use kentos_contracts::{DimensionEntity, DimensionRefs, Entity, EntityId, SubPlac
 use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::block::Blocks;
 use kentos_geometry_core::entity::Entity as CoreEntity;
-use kentos_geometry_core::ops::subref::{Followed, Place, Reason, follow, follow_in, place_near};
+use kentos_geometry_core::ops::subref::{Followed, Place, Reason, follow, follow_path, place_near};
 
 use crate::document::Document;
 use crate::history::Op;
@@ -262,10 +262,13 @@ impl Document {
                         continue;
                     };
                     let a = after.as_ref().and_then(|a| core(a));
-                    let followed = if after.is_some() && a.is_none() {
-                        Followed::Broken(kentos_geometry_core::ops::subref::Reason::KindChanged)
+                    let (followed, path) = if after.is_some() && a.is_none() {
+                        (
+                            Followed::Broken(kentos_geometry_core::ops::subref::Reason::KindChanged),
+                            r.path.clone(),
+                        )
                     } else {
-                        follow_in(
+                        follow_path(
                             core_place(r.place),
                             &r.path,
                             (was, &b),
@@ -278,6 +281,8 @@ impl Document {
                             set_point(&mut next, name, Vec2 { x: p.x, y: p.y });
                             if let Some(s) = slot_ref {
                                 s.place = contract_place(place);
+                                // The piece found again by its local id where it is now (docs/adr/0315 §1).
+                                s.path = path;
                             }
                         }
                         Followed::Broken(reason) => {

@@ -1126,6 +1126,7 @@ mod tests {
             name: name.into(),
             base: Vec2 { x: 0.0, y: 0.0 },
             entities,
+            units: None,
             attributes: Vec::new(),
             description: None,
         }
@@ -1137,6 +1138,7 @@ mod tests {
             block: BlockId((u128::from(n)).to_be_bytes()),
             p: Vec2 { x: 5.0, y: 5.0 },
             scale: 1.0,
+            y_scale: None,
             rotation: 0.0,
             mirror: false,
         })

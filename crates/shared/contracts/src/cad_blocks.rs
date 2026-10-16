@@ -27,6 +27,10 @@ pub const CAD_BLOCKS_DEFINE_VERSION: u32 = 1;
 pub const CAD_BLOCKS_EDIT: &str = "cad.blocks.edit";
 pub const CAD_BLOCKS_EDIT_VERSION: u32 = 1;
 
+/// Places a block (docs/adr/0315 §4): Blok ekle's command.
+pub const CAD_BLOCKS_INSERT: &str = "cad.blocks.insert";
+pub const CAD_BLOCKS_INSERT_VERSION: u32 = 1;
+
 /// Input of `cad.blocks.define` v1: a new definition made of the objects
 /// named by their persistent ids, copied as they are (their coordinates,
 /// layers, colours and data; local ids 1, 2, … in the input's order), with
@@ -74,6 +78,11 @@ pub struct BlocksDefine {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub layer_id: Option<String>,
+    /// The unit it is drawn in (docs/adr/0315 §4); absent: the drawing's. `unitless`: its numbers are kept in the
+    /// drawing's units, an insert scaled by the drawing's unit wherever it goes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub units: Option<crate::entity::BlockUnits>,
     /// The document revision the input was prepared against, as decimal text
     /// (from a plan, or the document). When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
@@ -159,6 +168,10 @@ pub enum BlockEditOperation {
     /// A `kentos.blocks` file's definitions taken in (“Blokları al”): a name the drawing has is kept, or with
     /// `replace` redefined; inserts in them point at the drawing's definitions of their names.
     Import,
+    /// The unit it is drawn in (“Blok birimi”, docs/adr/0315 §4): with `rescale` its numbers are kept and their
+    /// meaning changes (a block drawn in millimetres in a drawing taken for metres is a thousandth of its size
+    /// after); a block made unitless or real-size keeps its size in this drawing.
+    Units,
 }
 
 /// The format of a block library file (docs/adr/0314 §3).
@@ -180,7 +193,8 @@ pub const BLOCKS_VERSION: u32 = 1;
 ///   empty: none);
 /// - `duplicate`: `block`, `name` (the copy's);
 /// - `export`: `blocks` (absent: every definition);
-/// - `import`: `library` (a `kentos.blocks` file's text), `replace`.
+/// - `import`: `library` (a `kentos.blocks` file's text), `replace`;
+/// - `units`: `block`, `units`, `rescale`.
 ///
 /// What would change nothing (the same name, base point, objects or
 /// attributes; nothing unused to purge) writes nothing: the answer is
@@ -245,6 +259,15 @@ pub struct BlocksEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub library: Option<String>,
+    /// `units`: the unit it is drawn in (docs/adr/0315 §4).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub units: Option<crate::entity::BlockUnits>,
+    /// `units` between two units: true keeps its numbers (its size changes by their ratio); absent or false keeps
+    /// its size (only the unit's name changes).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub rescale: Option<bool>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -310,6 +333,126 @@ pub struct BlocksEditPlan {
     pub insert: Option<Entity>,
     /// `redefine` with `replace`: the objects execute would delete.
     pub deleted: Vec<String>,
+    /// The document revision the plan was made against.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// Input of `cad.blocks.insert` v1 (docs/adr/0315 §4): an insert of a block, named by its id or its name, at `at`
+/// on `layerId`. Everything it depends on is here (TODOS.md CMD-07): Blok ekle gives the active layer, the current
+/// colour, its scale, turn and mirror, the values asked.
+///
+/// The insert's factors: `scale` (absent: 1) and `yScale` (absent: `scale`), times the unit's factor: a unitless
+/// block takes the drawing's unit (a 1 of it is a millimetre in a millimetre drawing); a real-size block keeps
+/// its size (factor 1) and, drawn in another unit than the drawing's, is said so (`block_units_differ`).
+///
+/// Attribute values are the given ones by tag (an attribute left out shows its default); a tag the block does
+/// not have is refused. `attrs` are the insert's other data (an object template's, a GIS record's), not checked
+/// against the block's tags; a value under a tag of both is the attribute's.
+///
+/// Refusals, in this order: `no_block` (neither `block` nor `name`), `not_finite` (`at`, then `rotation`),
+/// `invalid_scale` (`scale`, `yScale`: positive and finite); `invalid_revision`, `revision_conflict` (status
+/// `conflict`); `unknown_block` (no such id or name, Turkish case folded); `unknown_tag`; `layer_not_found`,
+/// `not_a_layer`, `layer_locked`; on the desktop `slots_exhausted`. Warnings: `layer_hidden`, `block_units_differ`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlocksInsert {
+    /// The block, by id.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub block: Option<BlockId>,
+    /// The block, by name, when `block` is absent (Turkish case folded).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub name: Option<String>,
+    /// Where its base point goes.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub at: Vec2,
+    /// The factor along its x axis (absent: 1), before the unit's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub scale: Option<f64>,
+    /// The factor along its y axis (absent: `scale`), before the unit's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub y_scale: Option<f64>,
+    /// Radians, counter-clockwise from east (absent: 0).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+    pub rotation: Option<f64>,
+    /// Mirrored in its x axis, before the turn.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub mirror: Option<bool>,
+    /// The layer it goes on, a layer's id.
+    pub layer_id: String,
+    /// Its own colour (absent: its layer's).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub color: Option<String>,
+    /// Its attribute values by tag.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub attributes: Option<std::collections::BTreeMap<String, String>>,
+    /// Its other data (an object template's), under the attribute values.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub attrs: Option<std::collections::BTreeMap<String, String>>,
+    /// Its label.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub label: Option<String>,
+    /// A library symbol over its layer's style.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub symbol: Option<String>,
+    /// The document revision the input was prepared against, as decimal text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `cad.blocks.insert` v1.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlockInserted {
+    /// The insert's persistent id.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+    pub uid: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
+    pub id: u32,
+    /// The block placed.
+    pub block: BlockId,
+    /// The unit's factor in the insert's scale (1 for a real-size block).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub unit_factor: f64,
+    /// The document's revision after the write, as decimal text.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// What `cad.blocks.insert` would write (plan mode); nothing is written.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlocksInsertPlan {
+    /// The insert as execute would write it, `id` 0.
+    pub insert: Entity,
+    /// The unit's factor in its scale.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub unit_factor: f64,
     /// The document revision the plan was made against.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,

@@ -44,7 +44,7 @@
     {
       "run": "tool.blockInsert",
       "note": "Tanımlanan blok, Blok ekle'nin sıradaki bloğudur.",
-      "expect": { "prompt": "Blok ekle: “Vana” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]" }
+      "expect": { "prompt": "Blok ekle: “Vana” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Y ölçeği (Y): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]" }
     },
     { "move": [0, 0] },
     { "text": "487022,4420011.5" },

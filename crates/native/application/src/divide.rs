@@ -218,6 +218,7 @@ fn check(doc: &Document, input: &EntitiesDivide) -> Result<kentos_contracts::Ent
                     block: id,
                     p,
                     scale: b.scale,
+                    y_scale: None,
                     rotation: b.rotation + if b.align { place.direction } else { 0.0 },
                     mirror: false,
                 },

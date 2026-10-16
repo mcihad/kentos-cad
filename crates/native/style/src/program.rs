@@ -414,30 +414,29 @@ pub fn layer_call(
                 .and_then(|item| item.expanded.as_deref())
         {
             for (i, shape) in x.shapes.iter().enumerate() {
-                // A piece that follows its own layer takes that layer's parts (docs/adr/0260 §1).
-                let own = x
-                    .by_layer
-                    .get(i)
-                    .cloned()
-                    .flatten()
-                    .and_then(|(id, mask)| Some((opts.layer_styles?.get(&id)?, mask)));
-                let follows = |bit: u8| own.is_some_and(|(_, m)| m & bit != 0);
-                let piece_style = match own {
-                    Some((s, m)) if m & kentos_geometry_core::block::BY_LAYER_LINE_TYPE != 0 => s,
-                    _ => style,
+                // A part that follows a layer takes that layer's (docs/adr/0260 §1, 0315 §2): its own, or on the
+                // block's layer (`""`) the insert's; a layer the drawing does not have is the insert's too.
+                let layers = x.by_layer.get(i).map(Vec::as_slice).unwrap_or_default();
+                let layer_of = |bit: u8| -> Option<&LayerStyle> {
+                    let (id, _) = layers.iter().find(|(_, m)| m & bit != 0)?;
+                    Some(match opts.layer_styles.and_then(|l| l.get(id)) {
+                        Some(s) if !id.is_empty() => s,
+                        _ => style,
+                    })
                 };
+                let follows = |bit: u8| layer_of(bit).is_some();
+                let piece_style =
+                    layer_of(kentos_geometry_core::block::BY_LAYER_LINE_TYPE).unwrap_or(style);
                 let color = x.colors.get(i).cloned().flatten().or_else(|| {
-                    follows(kentos_geometry_core::block::BY_LAYER_COLOR)
-                        .then(|| own.map(|(s, _)| s.color.clone()))
-                        .flatten()
+                    layer_of(kentos_geometry_core::block::BY_LAYER_COLOR).map(|s| s.color.clone())
                 });
                 let color = color.as_deref().unwrap_or(color_of(base, style));
-                let weight = x.weights.get(i).copied().flatten().unwrap_or(match own {
-                    Some((s, m)) if m & kentos_geometry_core::block::BY_LAYER_WEIGHT != 0 => {
-                        s.line_weight
-                    }
-                    _ => weight,
-                });
+                let weight = x.weights.get(i).copied().flatten().unwrap_or(
+                    match layer_of(kentos_geometry_core::block::BY_LAYER_WEIGHT) {
+                        Some(s) => s.line_weight,
+                        None => weight,
+                    },
+                );
                 let style = piece_style;
                 // Its line type, scale and transparency (docs/adr/0312 §4): its own, else a part that follows its
                 // layer that layer's (the piece's style), else the insert's own, else the insert's layer's.

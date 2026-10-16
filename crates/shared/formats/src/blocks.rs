@@ -680,6 +680,7 @@ pub(crate) fn shape(e: &Entity) -> Shape {
             block: i.block.to_text(),
             p: core(i.p),
             scale: i.scale,
+            y_scale: i.y_scale,
             rotation: i.rotation,
             mirror: i.mirror.then_some(true),
             attrs: None,
@@ -993,6 +994,7 @@ mod tests {
                 y: base.1,
             },
             entities,
+            units: None,
             attributes: Vec::new(),
             description: None,
         };
@@ -1017,6 +1019,7 @@ mod tests {
                     block: id(2),
                     p: Vec2 { x: 1.0, y: 2.0 },
                     scale: 2.0,
+                    y_scale: None,
                     rotation: 0.0,
                     mirror: false,
                 }),
@@ -1030,6 +1033,7 @@ mod tests {
             block: id(1),
             p: Vec2 { x: 100.0, y: 200.0 },
             scale: 3.0,
+            y_scale: None,
             rotation: std::f64::consts::FRAC_PI_2,
             mirror: true,
         };

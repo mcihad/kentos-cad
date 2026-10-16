@@ -96,7 +96,7 @@ impl Writer<'_> {
         let record = self.handles.take();
         *self.anonymous += 1;
         let name = format!("*U{}", *self.anonymous);
-        self.records.push((record, name.clone()));
+        self.records.push((record, name.clone(), 0));
         self.block_begin(record, &name);
         let mut changed = false;
         for (l, ch) in letters.iter().zip(&chars) {

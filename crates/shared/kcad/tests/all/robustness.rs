@@ -642,6 +642,7 @@ fn with_blocks(doc: &mut DocumentSnapshotV2, rng: &mut Rng) {
             name: format!("{} {k}", rng.text()),
             base: point(rng),
             entities: inside,
+            units: None,
             attributes,
             description: rng.chance(50).then(|| rng.text()),
         });
@@ -661,6 +662,7 @@ fn insert(rng: &mut Rng, layer: &str, block: BlockId) -> Entity {
         block,
         p: point(rng),
         scale: if scale > 0.0 { scale } else { 1.0 },
+        y_scale: None,
         rotation: rng.float(),
         mirror: rng.chance(50),
     })
@@ -774,6 +776,7 @@ fn the_writer_refuses_what_a_reader_would_refuse() {
         name: name.to_owned(),
         base: point(rng),
         entities: inside,
+        units: None,
         attributes: Vec::new(),
         description: None,
     };

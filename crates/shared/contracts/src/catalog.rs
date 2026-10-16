@@ -2668,6 +2668,61 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Blok ekle (docs/adr/0315 §4), held together by fixtures/commands/v1/cad.blocks.insert.json.
+        CommandDescriptor {
+            id: crate::CAD_BLOCKS_INSERT.into(),
+            version: crate::CAD_BLOCKS_INSERT_VERSION,
+            title: "Blok ekle".into(),
+            summary: "Bir bloğu kimliğiyle ya da adıyla at noktasına, layerId katmanına yerleştirir; tek geri alma adımı, adı Ekle. \
+                      scale x ekseni boyunca, yScale y ekseni boyunca çarpandır (yScale verilmezse scale; eşit değilse daire elipse döner), rotation radyan saat yönünün tersine, mirror bloğun x ekseninde aynalar. \
+                      Birimsiz blok çizimin birimini alır (1 birimi milimetre çizimde 1 mm); birimi olan blok gerçek boyutuyla yerleşir, birimi çizimin biriminden başkaysa söylenir (insert_units_differ). \
+                      attributes öznitelik değerlerini etiketleriyle verir; verilmeyen öznitelik varsayılanını gösterir, blokta olmayan etiket reddedilir. \
+                      Blok ekle aracı bu komutla yazar. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
+                      Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::BlocksInsert>(),
+            output: schema::<crate::BlockInserted>(),
+            plan: Some(schema::<crate::BlocksInsertPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Kapı bloğunu adıyla, çeyrek dönüşle yerleştir".into(),
+                    input: json!({
+                        "name": "Kapı 90",
+                        "at": { "x": 12.5, "y": 4.0 },
+                        "rotation": std::f64::consts::FRAC_PI_2,
+                        "layerId": "kapilar"
+                    }),
+                    output: Some(json!({
+                        "uid": "01925f3e-7c1d-7c33-8e44-5d6f708192a3",
+                        "id": 41,
+                        "block": "01925f3e-7c1c-7b22-8d33-4c5e6f708192",
+                        "unitFactor": 1.0,
+                        "revision": "42"
+                    })),
+                },
+                CommandExample {
+                    title: "Pencereyi 1,5 geniş, 1 yüksek yerleştir: eşit olmayan ölçek".into(),
+                    input: json!({
+                        "block": "01925f3e-7c1c-7b22-8d33-4c5e6f708192",
+                        "at": { "x": 3.0, "y": 0.0 },
+                        "scale": 1.5,
+                        "yScale": 1.0,
+                        "layerId": "pencereler",
+                        "attributes": { "NO": "P-3" }
+                    }),
+                    output: None,
+                },
+            ],
+        },
         // Harita servisi, Servisten veri al and the layers' menus (docs/adr/0208 §15),
         // held together by fixtures/commands/v1/cad.layers.service.json.
         CommandDescriptor {
@@ -4696,6 +4751,9 @@ mod tests {
                     crate::CAD_BLOCKS_EDIT => {
                         serde_json::from_value::<crate::BlocksEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_BLOCKS_INSERT => {
+                        serde_json::from_value::<crate::BlocksInsert>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_LAYERS_SERVICE => {
                         serde_json::from_value::<crate::LayersService>(e.input.clone()).map(|_| ())
                     }
@@ -5015,6 +5073,10 @@ mod tests {
                         }
                         crate::CAD_STYLES_IMPACT => {
                             serde_json::from_value::<crate::StyleImpact>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_BLOCKS_INSERT => {
+                            serde_json::from_value::<crate::BlockInserted>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_STANDARDS_APPLY => {

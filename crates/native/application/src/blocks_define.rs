@@ -132,14 +132,17 @@ fn check(doc: &Document, input: &BlocksDefine) -> Result<Checked, Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     let named = checks::named(doc, &input.uids)?;
     no_tables(&named)?;
-    let block = BlockDefinition {
+    let mut block = BlockDefinition {
         id: BlockId([0; 16]),
         name: input.name.clone(),
         base: input.base,
-        entities: copies(named.iter().map(|(_, _, e, _)| *e)),
+        entities: as_drawn(copies(named.iter().map(|(_, _, e, _)| *e))),
+        units: input.units,
         attributes: Vec::new(),
         description: input.description.clone(),
     };
+    // A unitless block keeps its numbers in the drawing's units (docs/adr/0315 §4): its insert here is scaled back.
+    let factor = unitless_factor(doc, &mut block);
     let mut next: Vec<&BlockDefinition> = doc.blocks().iter().map(|b| &**b).collect();
     next.push(&block);
     block_rules(&next)?;
@@ -150,12 +153,54 @@ fn check(doc: &Document, input: &BlocksDefine) -> Result<Checked, Stop> {
         block: block.clone(),
     };
     if let (true, Some(layer)) = (replace, &input.layer_id) {
-        let r = replaced(doc, &named, layer, input.base)?;
+        let mut r = replaced(doc, &named, layer, input.base)?;
+        if let Entity::Insert(i) = &mut r.insert {
+            i.scale = factor;
+        }
         checked.removed = r.removed;
         checked.insert = Some(r.insert);
         checked.warnings = r.warnings;
     }
     Ok(checked)
+}
+
+/// A unitless definition's numbers made the drawing's units (docs/adr/0315 §4): its geometry, metres as the
+/// drawing's, divided by the drawing unit's metres; the factor an insert takes back here (1 for any other).
+pub(crate) fn unitless_factor(doc: &Document, block: &mut BlockDefinition) -> f64 {
+    if block.units != Some(kentos_contracts::BlockUnits::Unitless) {
+        return 1.0;
+    }
+    let unit = crate::units_change::unit_of(doc);
+    crate::blocks_edit::rescaled(block, kentos_contracts::units::Scale::to_unit(unit));
+    kentos_contracts::units::Scale::from_unit(unit).apply(1.0)
+}
+
+/// Objects of the drawing as a block holds them to look as they were drawn (docs/adr/0315 §2, AutoCAD's BLOCK):
+/// each on its own layer, every part of its look without a value of its own following that layer (`byLayer`)
+/// instead of the insert.
+pub(crate) fn as_drawn(mut objects: Vec<Entity>) -> Vec<Entity> {
+    use kentos_contracts::LookPart;
+    for e in &mut objects {
+        let base = base_mut(e);
+        if base.layer_id.is_empty() {
+            continue;
+        }
+        let own = [
+            (LookPart::Color, base.color.is_some()),
+            (
+                LookPart::LineType,
+                base.look.line_type.is_some() || base.look.line_pattern.is_some(),
+            ),
+            (LookPart::LineWeight, base.line_weight.is_some()),
+            (LookPart::Transparency, base.look.transparency.is_some()),
+        ];
+        base.look.by_layer = own
+            .into_iter()
+            .filter(|(_, has)| !has)
+            .map(|(p, _)| p)
+            .collect();
+    }
+    objects
 }
 
 /// A block's name: something besides white space (`empty_name`).
@@ -359,6 +404,7 @@ pub(crate) fn replaced(
         block: BlockId([0; 16]),
         p: base,
         scale: 1.0,
+        y_scale: None,
         rotation: 0.0,
         mirror: false,
     });

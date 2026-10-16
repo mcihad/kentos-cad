@@ -159,13 +159,28 @@ def B(block_id):
     return json.loads(json.dumps(BY_BLOCK[block_id]))
 
 
+def as_drawn(e):
+    """An object taken from the drawing into a definition, to look as it was drawn (ADR 0315 §2, AutoCAD's
+    BLOCK): on a layer of its own, every part of the look without a value of its own follows that layer
+    (`byLayer`), in the contract's order colour, line type, line weight, transparency."""
+    if e.get("layerId"):
+        own = {"color": "color" in e, "lineType": "lineType" in e or "linePattern" in e,
+               "lineWeight": "lineWeight" in e, "transparency": "transparency" in e}
+        parts = [p for p in ("color", "lineType", "lineWeight", "transparency") if not own[p]]
+        if parts:
+            e["byLayer"] = parts
+        else:
+            e.pop("byLayer", None)
+    return e
+
+
 def copies(*slots):
-    """The objects as a definition holds them: every field kept, local ids 1, 2, … in order."""
+    """The objects as a definition holds them: every field kept, local ids 1, 2, … in order, as drawn."""
     out = []
     for k, slot in enumerate(slots):
         e = E(slot)
         e["id"] = k + 1
-        out.append(e)
+        out.append(as_drawn(e))
     return out
 
 
@@ -284,7 +299,7 @@ define.append({
     "setup": setup(entities=ENTITIES + [LINKED]),
     "steps": [
         {"op": "execute", "input": {"name": "Etiketli duvar", "base": BASE, "uids": ["$uidOf:1", "$uidOf:9"]}, "result": defined("Etiketli duvar"),
-         "expect": {"entities": {"9": LINKED}, "blocks": SETUP_BLOCKS + [{"name": "Etiketli duvar", "base": BASE, "entities": [{**E(1), "id": 1}, {**linked_copy, "id": 2}]}], "revision": "changed"}},
+         "expect": {"entities": {"9": LINKED}, "blocks": SETUP_BLOCKS + [{"name": "Etiketli duvar", "base": BASE, "entities": [as_drawn({**E(1), "id": 1}), as_drawn({**linked_copy, "id": 2})]}], "revision": "changed"}},
     ],
 })
 
@@ -1036,6 +1051,146 @@ edit.append({
         {"op": "execute", "input": attributes_input(MISSING_BLOCK, [NO]), "result": unknown_block(MISSING_BLOCK), "expect": NOTHING},
         {"op": "plan", "input": attributes_input(LAMBA, [NO]),
          "result": {"status": "completed", "output": {"changed": [{**B(LAMBA), "attributes": [NO]}], "removed": [], "deleted": [], "revision": "$current"}, "warnings": []}, "expect": NOTHING},
+    ],
+})
+
+# ── units (docs/adr/0315 §4) ──────────────────────────────────────────
+
+METRES = {"mm": (1, 1000), "cm": (1, 100), "m": (1, 1), "in": (254, 10000), "ft": (3048, 10000)}
+
+
+def gcd(a, b):
+    while b:
+        a, b = b, a % b
+    return a
+
+
+def keeping(frm, to):
+    """The ratio keeping a number while its unit goes from `frm` to `to`, in lowest terms (ADR 0256 §1)."""
+    (fm, fd), (tm, td) = METRES[frm], METRES[to]
+    mul, div = tm * fd, td * fm
+    g = gcd(mul, div)
+    return (mul // g, div // g)
+
+
+def apply(ratio, v):
+    """A value times the ratio, as the contract divides and multiplies: by the divisor alone when the multiplier
+    is 1, by the multiplier alone when the divisor is."""
+    mul, div = ratio
+    if mul == 1:
+        return v / div
+    if div == 1:
+        return v * mul
+    return v * mul / div
+
+
+def scaled(block, ratio):
+    """A definition alone scaled: its base point, its objects' points and sizes, its nested inserts' factors."""
+    b = json.loads(json.dumps(block))
+    pt = lambda q: {"x": apply(ratio, q["x"]), "y": apply(ratio, q["y"])}  # noqa: E731
+    b["base"] = pt(b["base"])
+    for e in b["entities"]:
+        k = e["kind"]
+        if k in ("point", "text", "insert"):
+            e["p"] = pt(e["p"])
+        if k == "text":
+            e["height"] = apply(ratio, e["height"])
+        if k == "circle":
+            e["c"], e["r"] = pt(e["c"]), apply(ratio, e["r"])
+        if k == "line":
+            e["a"], e["b"] = pt(e["a"]), pt(e["b"])
+        if k == "polygon":
+            e["pts"] = [pt(q) for q in e["pts"]]
+        if k == "insert":
+            e["scale"] = apply(ratio, e["scale"])
+    return b
+
+
+def with_units(block, units, ratio=None):
+    b = without_id(block if ratio is None else scaled(block, ratio))
+    b["units"] = units
+    return b
+
+
+NO_UNITS = "Bloğun birimi verilmedi. units ile mm, cm, m, in, ft ya da unitless verin."
+assert keeping("m", "mm") == (1, 1000) and keeping("m", "cm") == (1, 100) and keeping("mm", "in") == (127, 5)
+
+
+def in_use_units(name):
+    return failed("block_in_use", f"“{name}” bloğu yerleştirilmiş; birimsiz yapılan ya da birimsizlikten çıkan blok "
+                                  "yerleştirmelerinde boyunu değiştirirdi. Önce yerleştirmelerini kaldırın ya da "
+                                  "bloğun kopyasında değiştirin.", "block")
+
+
+edit.append({
+    "name": "birim: yalnız adı değişir, boyu kalır; “Blok değiştir”, geri alınır",
+    "steps": [
+        {"op": "execute", "input": {"operation": "units", "block": ROGAR, "units": "mm"}, "result": edited([ROGAR]),
+         "expect": {"ids": IDS, "blocks": blocks_after((ROGAR, with_units(B(ROGAR), "mm"))), "canUndo": True,
+                    "revision": "changed"}},
+        {"op": "undo", "returns": "Blok değiştir", "expect": {"blocks": SETUP_BLOCKS, "canUndo": False}},
+    ],
+})
+edit.append({
+    "name": "birim ve sayılar korunur (rescale): metre çizimde milimetre sayılan rögar binde birine iner",
+    "steps": [
+        {"op": "execute", "input": {"operation": "units", "block": ROGAR, "units": "mm", "rescale": True},
+         "result": edited([ROGAR]),
+         "expect": {"blocks": blocks_after((ROGAR, with_units(B(ROGAR), "mm", keeping("m", "mm")))),
+                    "revision": "changed"}},
+    ],
+})
+edit.append({
+    "name": "rescale iç içe yerleştirmenin ölçeğini de çarpar: içteki tanım kendisi değişmez",
+    "steps": [
+        {"op": "execute", "input": {"operation": "units", "block": ZINCIR_A, "units": "cm", "rescale": True},
+         "result": edited([ZINCIR_A]),
+         "expect": {"blocks": blocks_after((ZINCIR_A, with_units(B(ZINCIR_A), "cm", keeping("m", "cm")))),
+                    "revision": "changed"}},
+    ],
+})
+edit.append({
+    "name": "kullanılmayan blok birimsiz olur: metre çizimde sayıları aynı kalır",
+    "steps": [
+        {"op": "execute", "input": {"operation": "units", "block": ESKI, "units": "unitless"},
+         "result": edited([ESKI]), "expect": {"blocks": blocks_after((ESKI, with_units(B(ESKI), "unitless")))}},
+    ],
+})
+MM_SETUP = {**setup(), "settings": {**SETTINGS, "drawingUnit": "mm"}}
+edit.append({
+    "name": "milimetre çizimde birimsiz olan bloğun sayıları milimetre olur, gerçek boya dönünce geri gelir",
+    "setup": MM_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "units", "block": ZINCIR_A, "units": "unitless"},
+         "result": edited([ZINCIR_A]),
+         "expect": {"blocks": blocks_after((ZINCIR_A, with_units(B(ZINCIR_A), "unitless", (1000, 1))))}},
+        {"op": "execute", "input": {"operation": "units", "block": ZINCIR_A, "units": "mm"},
+         "result": edited([ZINCIR_A]),
+         "expect": {"blocks": blocks_after((ZINCIR_A, with_units(B(ZINCIR_A), "mm")))}},
+    ],
+})
+edit.append({
+    "name": "yerleştirilmiş blok birimsiz yapılmaz: yerleştirmeleri boy değiştirirdi",
+    "steps": [
+        {"op": "execute", "input": {"operation": "units", "block": ROGAR, "units": "unitless"},
+         "result": in_use_units("Rögar"), "expect": NOTHING},
+        {"op": "execute", "input": {"operation": "units", "block": LAMBA, "units": "unitless"},
+         "result": in_use_units("Lamba"), "expect": NOTHING},
+    ],
+})
+edit.append({
+    "name": "birim: denetim sırası; birim bloktan sonra, sürümden önce; aynı birim hiçbir şey yazmaz",
+    "steps": [
+        {"op": "execute", "input": {"operation": "units", "units": "mm"}, "result": failed("no_block", NO_BLOCK, "block"),
+         "expect": NOTHING},
+        {"op": "execute", "input": {"operation": "units", "block": MISSING_BLOCK}, "result": failed("no_units", NO_UNITS, "units"),
+         "expect": NOTHING},
+        {"op": "execute", "input": {"operation": "units", "block": MISSING_BLOCK, "units": "mm"},
+         "result": unknown_block(MISSING_BLOCK), "expect": NOTHING},
+        {"op": "execute", "input": {"operation": "units", "block": ROGAR, "units": "mm"}, "result": edited([ROGAR]),
+         "expect": {"revision": "changed"}},
+        {"op": "execute", "input": {"operation": "units", "block": ROGAR, "units": "mm"}, "result": edited(),
+         "expect": {"revision": "same"}},
     ],
 })
 

@@ -85,6 +85,8 @@ pub enum Event {
     Export(Option<BlockId>),
     Exported(Option<BlockId>, Option<std::path::PathBuf>),
     Imported(Option<(String, String)>),
+    /// The unit it is drawn in (blocks_files.rs, docs/adr/0315 §4): with `rescale` its numbers kept.
+    Units(BlockId, kentos_contracts::BlockUnits, bool),
 }
 
 fn msg(event: Event) -> Message {
@@ -192,6 +194,7 @@ impl App {
             }
             Event::Remove(id) => self.blocks_remove(id),
             Event::Duplicate(id) => self.blocks_duplicate(id),
+            Event::Units(id, units, rescale) => self.blocks_units(id, units, rescale),
             Event::Export(id) => return self.blocks_export(id),
             Event::Exported(id, path) => self.blocks_exported(id, path),
             Event::Imported(read) => self.blocks_imported(read),
@@ -534,7 +537,14 @@ impl App {
             .width(Fill)
             .height(Fill)
             .style(style::button::row(focused));
-        let body = [r.about.clone(), Some(actions::placed_text(r.placed))]
+        // Its unit (docs/adr/0315 §4).
+        let unit = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.block(id))
+            .and_then(|b| b.units)
+            .map(|u| format!("Birim: {}", u.word()));
+        let body = [r.about.clone(), Some(actions::placed_text(r.placed)), unit]
             .into_iter()
             .flatten()
             .collect::<Vec<_>>()
@@ -545,6 +555,37 @@ impl App {
             tooltip::Position::Left,
         );
         ContextMenu::new(face, move |_| self.block_menu(id)).into()
+    }
+
+    /// Birim ▸ (docs/adr/0315 §4): the unit it is drawn in, its size kept; or its numbers kept (Sayıları koru), for
+    /// a block drawn in another unit than the one it was taken in; Birimsiz, its numbers the drawing's units.
+    fn units_menu(&self, id: BlockId) -> Menu<Message> {
+        use kentos_contracts::BlockUnits as B;
+        let now = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.block(id))
+            .and_then(|b| b.units);
+        let mut menu = Menu::new();
+        for (u, word) in [
+            (B::Mm, "Milimetre"),
+            (B::Cm, "Santimetre"),
+            (B::M, "Metre"),
+            (B::In, "İnç"),
+            (B::Ft, "Ayak"),
+            (B::Unitless, "Birimsiz"),
+        ] {
+            menu = menu.radio(word, now == Some(u), msg(Event::Units(id, u, false)));
+        }
+        menu = menu.separator();
+        for (u, word) in [
+            (B::Mm, "Sayıları koru: milimetre"),
+            (B::Cm, "Sayıları koru: santimetre"),
+            (B::M, "Sayıları koru: metre"),
+        ] {
+            menu = menu.item(word, msg(Event::Units(id, u, true)));
+        }
+        menu.detail("Sayıları koru: blok yanlış birimde alınmışsa boyunu birimlerin oranıyla düzeltir.")
     }
 
     /// The row's menu (the web's `menuFor`).
@@ -569,7 +610,9 @@ impl App {
             .item("Kopyasını oluştur", msg(Event::Duplicate(id)))
             .icon(crate::icons::from_web(Some("copy")))
             .item("Dışa aktar…", msg(Event::Export(Some(id))))
-            .icon(crate::icons::from_web(Some("export")));
+            .icon(crate::icons::from_web(Some("export")))
+            .submenu("Birim", self.units_menu(id))
+            .icon(crate::icons::from_web(Some("units")));
         let attributes = model.block(id).map_or(0, |b| b.attributes.len());
         if attributes > 0 {
             menu = menu.hint(attributes.to_string());

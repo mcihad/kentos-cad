@@ -1354,6 +1354,21 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 57 (docs/adr/0315 §3, §4): an insert's own y factor, of the drawing or of a block definition, or a
+    // block's unit.
+    let stretched = |list: &[Entity]| {
+        list.iter().any(|e| {
+            matches!(e, kentos_contracts::Entity::Insert(i) if i.y_scale.is_some_and(|y| y != i.scale))
+        })
+    };
+    if stretched(&doc.entities)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| b.units.is_some() || stretched(&b.entities))
+    {
+        return crate::SCHEMA_WITH_BLOCK_EXTRAS;
+    }
     // Schema 56 (docs/adr/0313): a line type with a pattern, a line type scale, a pattern named by a layer, a layer
     // state's style or an object of the drawing or of a block definition.
     fn patterned(nodes: &[LayerNode]) -> bool {

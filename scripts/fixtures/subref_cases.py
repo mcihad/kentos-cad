@@ -534,6 +534,29 @@ def paths(defs, block, depth=0):
     return out
 
 
+def path_in(defs_b, ins_b, defs_a, ins_a, path):
+    """A block path made a path through the insert after (ADR 0315 §1): each step's object found again by its local
+    id when that id is once in both definitions, else kept at its place."""
+    def once(entities, i):
+        found = [k for k, e in enumerate(entities) if e.get("id") == i]
+        return found[0] if len(found) == 1 else None
+    out, was, now = [], ins_b, ins_a
+    for i in path:
+        old, new = defs_b.get(was.get("block")), defs_a.get(now.get("block"))
+        if old is None or new is None or i >= len(old["entities"]):
+            return None
+        e = old["entities"][i]
+        j = i
+        if "id" in e and once(old["entities"], e["id"]) == i:
+            k = once(new["entities"], e["id"])
+            j = i if k is None else k
+        if j >= len(new["entities"]):
+            return None
+        out.append(j)
+        was, now = e, new["entities"][j]
+    return out
+
+
 def follow_in(pl, path, defs_b, ins_b, defs_a, ins_a):
     if ins_a is None:
         return {"broken": "object_gone"}
@@ -542,10 +565,14 @@ def follow_in(pl, path, defs_b, ins_b, defs_a, ins_a):
     pb = piece(defs_b, ins_b, path)
     if pb is None:
         return {"broken": "no_such_place"}
-    pa = piece(defs_a, ins_a, path)
+    moved = path_in(defs_b, ins_b, defs_a, ins_a, path) or path
+    pa = piece(defs_a, ins_a, moved)
     if pa is None:
         return {"broken": "piece_gone"}
-    return follow(pl, pb, pa)
+    out = follow(pl, pb, pa)
+    if moved != path and "broken" not in out:
+        out["path"] = moved
+    return out
 
 
 def place_in(defs, ins, snap, at):
@@ -874,6 +901,17 @@ DOOR_SHORT = dict(DOOR, entities=DOOR["entities"][:1])
 DEFS_WIDE = dict(DEFS, kapi=DOOR_WIDE)
 DEFS_SHORT = dict(DEFS, kapi=DOOR_SHORT)
 DEFS_REBASED = dict(DEFS, oda=dict(ROOM_BLOCK, base=v(0, 0)))
+# The door with its objects' local ids, and the same door after an object was put before them (ADR 0315 §1): the
+# ids stay, the places move; and one whose ids are not once each.
+DOOR_IDS = dict(DOOR, entities=[dict(e, id=k + 1) for k, e in enumerate(DOOR["entities"])])
+DOOR_PUT_BEFORE = dict(DOOR, entities=[{"kind": "line", "id": 9, "a": v(0, -0.2), "b": v(1, -0.2)}]
+                       + DOOR_IDS["entities"])
+DOOR_TWICE = dict(DOOR, entities=[dict(e, id=1) for e in DOOR["entities"]])
+DEFS_IDS = dict(DEFS, kapi=DOOR_IDS)
+DEFS_PUT_BEFORE = dict(DEFS, kapi=DOOR_PUT_BEFORE)
+DEFS_TWICE = dict(DEFS, kapi=DOOR_TWICE)
+DEFS_TWICE_PUT = dict(DEFS, kapi=dict(DOOR, entities=[{"kind": "line", "id": 9, "a": v(0, -0.2), "b": v(1, -0.2)}]
+                                       + DOOR_TWICE["entities"]))
 
 
 def insert(block, x, y, scale=1.0, rotation=0.0, mirror=None):
@@ -911,6 +949,10 @@ PIECE_FOLLOW_CASES = [
      {"kind": "line", "a": v(0, 0), "b": v(1, 0)}),
     ("Aynalı çerçevede kanat boyunca", [1, 1, 1], along(0, 0, 1, 0.5), DEFS, FRAME_IN, DEFS,
      insert("cerceve", 90, 40, 1.0, math.pi / 2)),
+    ("Kapının önüne nesne girdi: kanat yerel kimliğiyle bulunur, yol değişir", [1, 1], place("vertex", 0, 0, 1),
+     DEFS_IDS, ROOM_IN, DEFS_PUT_BEFORE, ROOM_IN),
+    ("Yerel kimlikleri tek olmayan kapı: yol yerinde kalır, önüne giren nesneyi anar", [1, 0], place("end"),
+     DEFS_TWICE, ROOM_IN, DEFS_TWICE_PUT, ROOM_IN),
 ]
 
 PIECE_SNAP_CASES = [

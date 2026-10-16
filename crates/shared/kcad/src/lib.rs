@@ -426,11 +426,15 @@ pub const SCHEMA_WITH_FROZEN: u32 = 55;
 /// (`lineTypeScale`), a layer style's and an object's `pattern`, written only when the drawing has one; older readers
 /// refuse the file instead of drawing a pattern as its nearest built-in type.
 pub const SCHEMA_WITH_PATTERNS: u32 = 56;
+/// Schema 57 (docs/adr/0315 §3, §4): an insert's own y factor (`yScale`, only when it is not `scale`) and a block
+/// definition's `units`, written only when the drawing has one; older readers refuse the file instead of drawing a
+/// stretched block at one scale or losing its unit.
+pub const SCHEMA_WITH_BLOCK_EXTRAS: u32 = 57;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 55] = [
+pub const SCHEMAS: [u32; 56] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -486,6 +490,7 @@ pub const SCHEMAS: [u32; 55] = [
     SCHEMA_WITH_WIPEOUTS,
     SCHEMA_WITH_FROZEN,
     SCHEMA_WITH_PATTERNS,
+    SCHEMA_WITH_BLOCK_EXTRAS,
 ];
 
 /// The file a drawing is saved as.

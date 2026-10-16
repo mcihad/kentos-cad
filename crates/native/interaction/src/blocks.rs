@@ -27,6 +27,8 @@ fn input(operation: BlockEditOperation, block: Option<BlockId>) -> BlocksEdit {
     BlocksEdit {
         blocks: None,
         library: None,
+        units: None,
+        rescale: None,
         operation,
         block,
         name: None,

@@ -8,6 +8,9 @@ An object draws each part of its look (colour, line type, its pattern's scale, l
   turn;
 - in the drawing: its layer. A layer has no transparency (0) and no pattern scale (1).
 
+An object of a block on the block's layer (`layerId` "", the DXF's layer 0; docs/adr/0315 §2) has the layer of the
+insert it is drawn through: its `byLayer` parts are that layer's, nested inserts in turn.
+
 Each case is a chain, the outermost insert first and the drawn object last, each link with its layer and its own
 parts; the expected look and where each part came from (`own`, `layer`, `block`). Written from the rule above, without
 KentOS code. The contracts (crates/shared/contracts/src/look.rs, `resolve_look`) run them.
@@ -33,10 +36,10 @@ LAYERS = {
 PARTS = [("color", "color"), ("lineType", "lineType"), ("lineWeight", "lineWeight"), ("transparency", "transparency")]
 
 
-def resolve(link, outer):
+def resolve(link, outer, layer_id):
     """One link's look: its own parts, else (in a block) its layer's for its byLayer parts and the insert's for the
-    rest, else its layer's."""
-    layer = LAYERS[link["layerId"]]
+    rest, else its layer's. `layer_id`: its layer, the insert's on the block's layer."""
+    layer = LAYERS[layer_id]
     by_layer = set(link.get("byLayer", []))
     out, src = {}, {}
     for key, part in PARTS:
@@ -60,9 +63,10 @@ def resolve(link, outer):
 
 
 def case(name, chain):
-    r = None
+    r, layer_id = None, None
     for link in chain:
-        r = resolve(link, r)
+        layer_id = link["layerId"] or layer_id
+        r = resolve(link, r, layer_id)
     return {"name": name, "chain": chain, "expect": r}
 
 
@@ -109,6 +113,20 @@ def cases():
         case("Kendi rengi tema rengi (ink) olan nesne", [{"layerId": "duvar", "color": "ink"}]),
         case("Yerleştirmenin katmanı kesikli, nesnenin kendi çizgi tipi sürekli",
              [{"layerId": "yardimci"}, {"layerId": "sifir", "lineType": "continuous"}]),
+        case("0 katmanındaki nesne katmana göre: yerleştirmenin katmanının değerleri, kendi rengi değil",
+             [{"layerId": "kapi", "color": "#00FF00"}, {"layerId": "", "byLayer": ["color", "lineType", "lineWeight",
+                                                                                   "transparency"]}]),
+        case("0 katmanındaki nesne bloğa göre: yerleştirmenin kendi rengi",
+             [{"layerId": "kapi", "color": "#00FF00"}, {"layerId": ""}]),
+        case("0 katmanındaki nesne kısmen katmana göre: renk katmandan, çizgi tipi yerleştirmeden",
+             [{"layerId": "eksen", "lineType": "dashed"}, {"layerId": "", "byLayer": ["color"]}]),
+        case("İç içe 0 katmanı: içteki yerleştirme de 0'da, nesne en dıştakinin katmanından",
+             [{"layerId": "duvar"}, {"layerId": ""}, {"layerId": "", "byLayer": ["color", "lineWeight"]}]),
+        case("İç içe 0 katmanı: içteki yerleştirme kendi katmanında, nesne onun katmanından",
+             [{"layerId": "duvar"}, {"layerId": "eksen"}, {"layerId": "", "byLayer": ["color", "lineType"]}]),
+        case("Kendi katmanındaki nesne katmana göre, 0'daki içteki yerleştirmeden geçerken",
+             [{"layerId": "kapi", "color": "#00FF00"}, {"layerId": ""}, {"layerId": "yardimci",
+                                                                         "byLayer": ["color", "lineType"]}]),
     ]
 
 

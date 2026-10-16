@@ -452,6 +452,7 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
             block,
             p,
             scale,
+            y_scale,
             rotation,
             mirror,
             attrs,
@@ -463,6 +464,8 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
                 block: block.clone(),
                 p: apply(m, *p),
                 scale: scale * s,
+                // Its own y factor scales as its x (docs/adr/0315 §3): R·D commutes with the mirror's diagonal.
+                y_scale: y_scale.map(|y| y * s),
                 rotation: norm_angle(if flip {
                     theta - rotation
                 } else {

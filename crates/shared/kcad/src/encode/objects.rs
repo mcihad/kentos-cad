@@ -766,6 +766,19 @@ impl<'d> Encoder<'d> {
                 f.push(("block", Val::Block(&e.block)));
                 f.push(("p", Val::Point(&e.p)));
                 f.push(("scale", Val::Float(e.scale)));
+                // Its own y factor (docs/adr/0315 §3), only when it is not the x one: one way to write an insert,
+                // as the reader takes it.
+                if let Some(y) = e.y_scale {
+                    if y == e.scale || !kentos_contracts::blocks::scale_ok(y) {
+                        self.path.push(Seg::Name(kind));
+                        self.path.push(Seg::Name("yScale"));
+                        return Err(self.fail(
+                            Code::BadValue,
+                            "y ölçeği pozitif olmalı ve x ölçeğine eşitse yazılmaz",
+                        ));
+                    }
+                    f.push(("yScale", Val::Float(y)));
+                }
                 f.push(("rotation", Val::Float(e.rotation)));
                 if e.mirror {
                     f.push(("mirror", Val::Bool(true)));

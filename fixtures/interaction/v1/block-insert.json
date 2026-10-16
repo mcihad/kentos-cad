@@ -15,8 +15,8 @@
       "note": "Çizimin ilk bloğu: Rögar.",
       "expect": {
         "tool": "blockInsert",
-        "options": ["B", "Ö", "D", "A"],
-        "prompt": "Blok ekle: “Rögar” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]"
+        "options": ["B", "Ö", "Y", "D", "A"],
+        "prompt": "Blok ekle: “Rögar” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Y ölçeği (Y): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]"
       }
     },
     { "move": [0, 0], "note": "İmleç çizimde: yazılan değer imlecin yanındaki alana gider, Enter odağı çizime geri verir." },
@@ -26,9 +26,9 @@
       "note": "Yazılan nokta kesindir; araç bir sonrakini bekler.",
       "expect": { "tool": "blockInsert", "entities": 13, "log": "info", "newest": { "kind": "insert", "points": [[5, -1.5], [6, -1.5], [5, -0.5]] } }
     },
-    { "key": "B", "expect": { "prompt": "Blok ekle: “Lamba” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]" } },
-    { "key": "B", "expect": { "prompt": "Blok ekle: “Aydınlatma direği” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]" } },
-    { "key": "O", "note": "O, Ö seçeneğini seçer: ölçek sorulur.", "expect": { "prompt": "Blok ekle: ölçeği yazın [Blok (B) / Ölçek (Ö): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]" } },
+    { "key": "B", "expect": { "prompt": "Blok ekle: “Lamba” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Y ölçeği (Y): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]" } },
+    { "key": "B", "expect": { "prompt": "Blok ekle: “Aydınlatma direği” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Y ölçeği (Y): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]" } },
+    { "key": "O", "note": "O, Ö seçeneğini seçer: ölçek sorulur.", "expect": { "prompt": "Blok ekle: ölçeği yazın (x ve y birlikte) [Blok (B) / Ölçek (Ö): 1.0000 / Y ölçeği (Y): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]" } },
     { "text": "0" },
     { "key": "Enter", "note": "Ölçek sıfırdan büyük olmalı; soru sürer.", "expect": { "log": "warn", "logged": ["Ölçek sıfırdan büyük olmalı."], "entities": 13 } },
     { "text": "2" },
@@ -36,7 +36,7 @@
     { "key": "D" },
     { "text": "90" },
     { "key": "Enter" },
-    { "key": "A", "expect": { "prompt": "Blok ekle: “Aydınlatma direği” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 2.0000 / Dönüş (D): 90.0000° / Aynala (A): açık]" } },
+    { "key": "A", "expect": { "prompt": "Blok ekle: “Aydınlatma direği” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 2.0000 / Y ölçeği (Y): 2.0000 / Dönüş (D): 90.0000° / Aynala (A): açık]" } },
     { "move": [2, 6], "note": "Önizleme: imleçte bloğun hayaleti." },
     {
       "click": [2, 6],
@@ -53,7 +53,7 @@
     { "key": "D" },
     { "text": "0" },
     { "key": "Enter" },
-    { "key": "A", "expect": { "prompt": "Blok ekle: “Rögar” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]" } },
+    { "key": "A", "expect": { "prompt": "Blok ekle: “Rögar” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Y ölçeği (Y): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]" } },
     { "key": "Enter", "note": "Enter bitirir.", "expect": { "tool": "select", "entities": 13 } }
   ]
 }

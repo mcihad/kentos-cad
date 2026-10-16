@@ -298,6 +298,9 @@ pub enum Shape {
         block: String,
         p: Vec2,
         scale: f64,
+        /// Its own y factor (docs/adr/0315 §3), positive and finite; none: `scale` (uniform). Its pieces are
+        /// placed by an affine then: a circle becomes the exact ellipse of its image.
+        y_scale: Option<f64>,
         rotation: f64,
         /// `Some(true)` when mirrored; never `Some(false)` (a file writes no false).
         mirror: Option<bool>,
@@ -416,7 +419,7 @@ crate::json_tagged!(Shape, "kind",
     Text => "text" { p, text, height, rotation, align, width_factor => "widthFactor", mask, box_width => "boxWidth", line_spacing => "lineSpacing", runs, path & face: crate::text::face::Face },
     Dimension => "dimension" { a, b, offset, height, text, style, angle, c, mask, za, zb & look: crate::geom::dimension::Look },
     Hatch => "hatch" { ring, holes, pattern, assoc },
-    Insert => "insert" { block, p, scale, rotation, mirror; attrs },
+    Insert => "insert" { block, p, scale, y_scale => "yScale", rotation, mirror; attrs },
     Leader => "leader" { pts, text, height, rotation, arrow, arrow_size => "arrowSize", mask },
     Table => "table" { p, rotation, height, rows, columns, cells, merges, aligns, header, grid, frame, source & face: crate::text::face::Face },
     Image => "image" { p, width, height, rotation, mirror, asset, file, clip, opacity },

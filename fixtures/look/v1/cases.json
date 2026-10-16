@@ -634,6 +634,190 @@
           "lineTypeScale": "block"
         }
       }
+    },
+    {
+      "name": "0 katmanındaki nesne katmana göre: yerleştirmenin katmanının değerleri, kendi rengi değil",
+      "chain": [
+        {
+          "layerId": "kapi",
+          "color": "#00FF00"
+        },
+        {
+          "layerId": "",
+          "byLayer": [
+            "color",
+            "lineType",
+            "lineWeight",
+            "transparency"
+          ]
+        }
+      ],
+      "expect": {
+        "color": "#C8A165",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "layer",
+          "lineType": "layer",
+          "lineWeight": "layer",
+          "transparency": "layer",
+          "lineTypeScale": "block"
+        }
+      }
+    },
+    {
+      "name": "0 katmanındaki nesne bloğa göre: yerleştirmenin kendi rengi",
+      "chain": [
+        {
+          "layerId": "kapi",
+          "color": "#00FF00"
+        },
+        {
+          "layerId": ""
+        }
+      ],
+      "expect": {
+        "color": "#00FF00",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "block",
+          "lineType": "block",
+          "lineWeight": "block",
+          "transparency": "block",
+          "lineTypeScale": "block"
+        }
+      }
+    },
+    {
+      "name": "0 katmanındaki nesne kısmen katmana göre: renk katmandan, çizgi tipi yerleştirmeden",
+      "chain": [
+        {
+          "layerId": "eksen",
+          "lineType": "dashed"
+        },
+        {
+          "layerId": "",
+          "byLayer": [
+            "color"
+          ]
+        }
+      ],
+      "expect": {
+        "color": "#E06C75",
+        "lineType": "dashed",
+        "lineWeight": 0.18,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "layer",
+          "lineType": "block",
+          "lineWeight": "block",
+          "transparency": "block",
+          "lineTypeScale": "block"
+        }
+      }
+    },
+    {
+      "name": "İç içe 0 katmanı: içteki yerleştirme de 0'da, nesne en dıştakinin katmanından",
+      "chain": [
+        {
+          "layerId": "duvar"
+        },
+        {
+          "layerId": ""
+        },
+        {
+          "layerId": "",
+          "byLayer": [
+            "color",
+            "lineWeight"
+          ]
+        }
+      ],
+      "expect": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.5,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "layer",
+          "lineType": "block",
+          "lineWeight": "layer",
+          "transparency": "block",
+          "lineTypeScale": "block"
+        }
+      }
+    },
+    {
+      "name": "İç içe 0 katmanı: içteki yerleştirme kendi katmanında, nesne onun katmanından",
+      "chain": [
+        {
+          "layerId": "duvar"
+        },
+        {
+          "layerId": "eksen"
+        },
+        {
+          "layerId": "",
+          "byLayer": [
+            "color",
+            "lineType"
+          ]
+        }
+      ],
+      "expect": {
+        "color": "#E06C75",
+        "lineType": "dashdot",
+        "lineWeight": 0.5,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "layer",
+          "lineType": "layer",
+          "lineWeight": "block",
+          "transparency": "block",
+          "lineTypeScale": "block"
+        }
+      }
+    },
+    {
+      "name": "Kendi katmanındaki nesne katmana göre, 0'daki içteki yerleştirmeden geçerken",
+      "chain": [
+        {
+          "layerId": "kapi",
+          "color": "#00FF00"
+        },
+        {
+          "layerId": ""
+        },
+        {
+          "layerId": "yardimci",
+          "byLayer": [
+            "color",
+            "lineType"
+          ]
+        }
+      ],
+      "expect": {
+        "color": "fg-dim",
+        "lineType": "dashed",
+        "lineWeight": 0.25,
+        "transparency": 0.0,
+        "lineTypeScale": 1.0,
+        "from": {
+          "color": "layer",
+          "lineType": "layer",
+          "lineWeight": "block",
+          "transparency": "block",
+          "lineTypeScale": "block"
+        }
+      }
     }
   ]
 }

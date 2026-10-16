@@ -381,3 +381,48 @@ fn an_attribute_that_shows_nothing_is_not_there() {
         9
     );
 }
+
+/// A piece on a layer of its own shows only while that layer does, and a nested insert's pieces only while its
+/// layer does (docs/adr/0315 §2): hidden, they are not hit; shown again, they are.
+#[test]
+fn a_piece_shows_only_while_its_own_layer_does() {
+    use crate::store::LayerFlags;
+    let mut s = Store::new();
+    s.set_blocks_json(
+        r#"[{"id":"ic","base":{"x":0,"y":0},"entities":[{"kind":"line","id":1,"layerId":"","attrs":{},"a":{"x":0,"y":5},"b":{"x":4,"y":5}}]},
+            {"id":"dis","base":{"x":0,"y":0},"entities":[
+              {"kind":"line","id":1,"layerId":"","attrs":{},"a":{"x":0,"y":0},"b":{"x":4,"y":0}},
+              {"kind":"line","id":2,"layerId":"kapi","attrs":{},"a":{"x":0,"y":2},"b":{"x":4,"y":2}},
+              {"kind":"insert","id":3,"layerId":"mobilya","attrs":{},"block":"ic","p":{"x":0,"y":0},"scale":1,"rotation":0}]}]"#,
+    )
+    .unwrap();
+    s.put_json(
+        r#"[{"id":1,"layerId":"plan","kind":"insert","attrs":{},"block":"dis","p":{"x":100,"y":100},"scale":1,"rotation":0}]"#,
+    )
+    .unwrap();
+    let shown = LayerFlags {
+        visible: true,
+        locked: false,
+        pick_interior: true,
+        snap: u32::MAX,
+    };
+    let hidden = LayerFlags {
+        visible: false,
+        ..shown
+    };
+    let hits = |s: &Store| {
+        [100.0, 102.0, 105.0].map(|y| s.hit(Vec2::new(102.0, y), 0.1) == Some(1.0))
+    };
+    assert_eq!(hits(&s), [true, true, true]);
+    // KAPI hidden: its line is not there; the block's own line and the nested insert's stay.
+    s.set_layers([("plan", shown), ("kapi", hidden), ("mobilya", shown)]);
+    assert_eq!(hits(&s), [true, false, true]);
+    assert_eq!(s.get(1.0).unwrap().shapes().count(), 2);
+    // MOBILYA hidden: the nested insert's pieces go with it.
+    s.set_layers([("plan", shown), ("kapi", shown), ("mobilya", hidden)]);
+    assert_eq!(hits(&s), [true, true, false]);
+    // Both shown again: everything is back.
+    s.set_layers([("plan", shown), ("kapi", shown), ("mobilya", shown)]);
+    assert_eq!(hits(&s), [true, true, true]);
+    assert!(s.get(1.0).unwrap().veiled.is_none());
+}

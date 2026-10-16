@@ -383,34 +383,36 @@ fn blocks_are_kept_as_definitions_and_inserts_place_them() {
                 "KAPILAR",
                 Some(blue.as_str())
             ),
+            (id(3), v(50.0, 50.0), 3.0, 0.0, "0", None),
             (id(4), v(0.0, 0.0), 1.0, 0.0, "0", None),
         ]
     );
-    // NO's array is opened as before: its four circles; DAIRE's unequal scales an ellipse.
+    // DAIRE's unequal scales stay its insert's own y factor (docs/adr/0315 §3).
+    let daire = r
+        .entities
+        .iter()
+        .find_map(|e| match e {
+            Entity::Insert(i) if i.block == id(3) => Some(i),
+            _ => None,
+        })
+        .expect("DAIRE's insert");
+    assert!(daire.y_scale.is_some_and(|y| y != 3.0), "{daire:?}");
+    // NO's array is opened as before: its four circles.
     let circles = r
         .entities
         .iter()
         .filter(|e| matches!(e, Entity::Circle(_)))
         .count();
     assert_eq!(circles, 4);
-    assert!(r.entities.iter().any(|e| matches!(e, Entity::Ellipse(_))));
     let notes: Vec<&str> = r.report.notes.iter().map(|n| n.reason.as_str()).collect();
     for said in [
         "blok dizisi (MINSERT) patlatılarak alındı",
-        "X ve Y ölçeği eşit olmayan yerleştirme patlatılarak alındı",
         "yerleştirmenin yüksekliği (Z) alınmadı",
     ] {
         assert!(notes.contains(&said), "{said}: {notes:?}");
     }
-    // NO's line is on DETAY: drawn on its insert's layer with DETAY's look, and said.
-    let other = r
-        .report
-        .notes
-        .iter()
-        .find(|n| n.what == "Blok (BLOCK)")
-        .expect("the note on NO's layers");
-    assert_eq!(other.lines, [53]);
-    assert!(other.reason.contains("gizliliği ve kilidi uygulanmaz"));
+    // NO's line on DETAY follows DETAY as AutoCAD draws it: nothing to say (docs/adr/0315 §2).
+    assert!(r.report.notes.iter().all(|n| n.what != "Blok (BLOCK)"));
     let reasons: Vec<&str> = r.report.skipped.iter().map(|s| s.reason.as_str()).collect();
     assert!(
         reasons
@@ -430,8 +432,9 @@ fn blocks_are_kept_as_definitions_and_inserts_place_them() {
         .iter()
         .map(|f| (f.label.as_str(), f.value.as_str()))
         .collect();
+    // DAIRE is placed now that its stretched insert is kept: every definition is used.
     assert!(
-        facts.contains(&("Blok", "4 tanım (1 tanesi yerleştirilmemiş)")),
+        facts.contains(&("Blok", "4 tanım")),
         "{facts:?}"
     );
     // Blokları patlat: no definition, every insert opened.
@@ -1704,10 +1707,14 @@ fn texts_take_their_alignment_width_factor_and_mask() {
         (no.tag.as_str(), no.p, no.height, no.align, no.width_factor),
         ("NO", v(1.5, 0.0), 0.5, Some(MiddleCenter), Some(0.9))
     );
-    // YAZILI at an X scale of 3 opens: 0.5 × 3 wide at the same height.
+    // YAZILI at an X scale of 3 stays an insert with its own y factor (docs/adr/0315 §3): its text is 3 wide at the
+    // same height where it is drawn.
+    let Entity::Insert(yazili) = &e[24] else {
+        panic!("{:?}", e[24])
+    };
     assert_eq!(
-        at(24),
-        ("OLCEK", v(200.0, 20.0), 1.0, 0.0, None, Some(1.5), false)
+        (yazili.p, yazili.scale, yazili.y_scale, yazili.mirror),
+        (v(200.0, 20.0), 3.0, Some(1.0), false)
     );
     assert!(matches!(&e[25], Entity::Insert(_)));
     assert_eq!(
@@ -2506,19 +2513,27 @@ fn a_definitions_by_layer_line_type_is_its_layers_and_by_block_the_inserts() {
         &DxfReadOptions::default(),
     )
     .expect("read");
-    let types: Vec<Option<LineType>> = r.blocks[0]
+    // BYLAYER stays its layer's (`byLayer`, docs/adr/0315 §2): ESKI's dashes on ESKI, the insert's layer's on 0;
+    // BYBLOCK is the insert's.
+    let types: Vec<(Option<LineType>, bool)> = r.blocks[0]
         .entities
         .iter()
-        .map(|e| e.base().look.line_type)
+        .map(|e| {
+            let look = &e.base().look;
+            (
+                look.line_type,
+                look.by_layer.contains(&kentos_contracts::LookPart::LineType),
+            )
+        })
         .collect();
     assert_eq!(
         types,
         [
-            Some(LineType::Dashed),
-            Some(LineType::Dashed),
-            None,
-            None,
-            None
+            (None, true),
+            (None, true),
+            (None, false),
+            (None, true),
+            (None, true)
         ]
     );
 }

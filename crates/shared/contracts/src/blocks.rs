@@ -352,7 +352,7 @@ pub fn inserts(
     for (entity, e) in entities.iter().enumerate() {
         if let Entity::Insert(insert) = e {
             let at = Place { definition, entity };
-            if !scale_ok(insert.scale) {
+            if !scale_ok(insert.scale) || !insert.y_scale.is_none_or(scale_ok) {
                 return Err(BlockFault::BadScale { at });
             }
             if !index.contains_key(&insert.block) {
@@ -446,6 +446,7 @@ mod tests {
             block: id(block),
             p: Vec2 { x: 0.0, y: 0.0 },
             scale,
+            y_scale: None,
             rotation: 0.0,
             mirror: false,
         })
@@ -457,6 +458,7 @@ mod tests {
             name: name.into(),
             base: Vec2 { x: 0.0, y: 0.0 },
             entities: inside.iter().map(|&b| insert(b, 1.0)).collect(),
+            units: None,
             attributes: Vec::new(),
             description: None,
         }

@@ -100,6 +100,8 @@ mod image_scenes;
 #[cfg(test)]
 mod impact_scenes;
 #[cfg(test)]
+mod block_scenes;
+#[cfg(test)]
 mod imperial_scenes;
 mod info_card;
 mod input;

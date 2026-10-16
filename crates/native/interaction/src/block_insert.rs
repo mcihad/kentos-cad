@@ -3,12 +3,15 @@
 //!
 //! - without a block in the drawing the tool says so and leaves;
 //! - every click (or typed point) places the block there, an insert through
-//!   `cad.entities.create` on the active layer in the current colour: its own
-//!   object and undo step (“Ekle”); the tool waits for the next;
-//! - Blok (B) takes the drawing's next block; Ölçek (Ö, or O) and Dönüş (D,
-//!   degrees counter-clockwise) ask for a typed value; Aynala (A) mirrors in
-//!   the block's x axis. The block, scale, turn and mirror stay for as long
-//!   as the app lives ([`Memory`]);
+//!   `cad.blocks.insert` (docs/adr/0315 §4) on the active layer in the current
+//!   colour: its own object and undo step (“Ekle”); the tool waits for the next;
+//!   a unitless block takes the drawing's unit, a block drawn in another unit is
+//!   said;
+//! - Blok (B) takes the drawing's next block; Ölçek (Ö, or O), Y ölçeği (Y;
+//!   docs/adr/0315 §3) and Dönüş (D, degrees counter-clockwise) ask for a
+//!   typed value; Aynala (A) mirrors in the block's x axis. Ölçek sets both
+//!   factors. The block, factors, turn and mirror stay for as long as the app
+//!   lives ([`Memory`]);
 //! - the ghost is the block as it would be placed at the cursor, from the
 //!   geometry store (`insert_outlines`);
 //! - a block with attribute definitions (§7) asks their values first: the
@@ -17,7 +20,8 @@
 //!   drops the point and the tool waits for the next.
 
 use kentos_contracts::blocks::turn_of;
-use kentos_contracts::{BlockId, EntityGeometry};
+use kentos_contracts::{BlockId, BlocksInsert};
+use kentos_native_application::{ExecutionContext, blocks_insert};
 use kentos_geometry_core::tools::point_text::js_trim;
 
 use crate::Vec2;
@@ -36,6 +40,7 @@ const NO_BLOCK: &str = "Çizimde blok yok; önce Blok oluştur ile bir blok tan�
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Ask {
     Scale,
+    YScale,
     Rotation,
 }
 
@@ -79,6 +84,7 @@ impl BlockInsert {
                 cx.memory.block_insert = blocks.get(next).map(|b| b.id);
             }
             "Ö" | "O" => self.ask = Some(Ask::Scale),
+            "Y" => self.ask = Some(Ask::YScale),
             "D" => self.ask = Some(Ask::Rotation),
             "A" => cx.memory.block_mirror = !cx.memory.block_mirror,
             _ => return false,
@@ -89,9 +95,16 @@ impl BlockInsert {
     /// A typed value while one is asked for: a scale above zero, a turn in degrees.
     fn value(&mut self, ask: Ask, n: f64, cx: &mut Context<'_>) {
         match ask {
-            Ask::Scale if n <= 0.0 => cx.say(Level::Warn, "Ölçek sıfırdan büyük olmalı."),
+            Ask::Scale | Ask::YScale if n <= 0.0 => {
+                cx.say(Level::Warn, "Ölçek sıfırdan büyük olmalı.")
+            }
             Ask::Scale => {
                 cx.memory.block_scale = n;
+                cx.memory.block_y_scale = None;
+                self.ask = None;
+            }
+            Ask::YScale => {
+                cx.memory.block_y_scale = (n != cx.memory.block_scale).then_some(n);
                 self.ask = None;
             }
             Ask::Rotation => {
@@ -101,13 +114,30 @@ impl BlockInsert {
         }
     }
 
-    fn geometry(block: BlockId, p: Vec2, m: &Memory) -> EntityGeometry {
-        EntityGeometry::Insert {
-            block,
-            p: wire(p),
-            scale: m.block_scale,
-            rotation: turn_of(m.block_rotation),
-            mirror: m.block_mirror,
+    /// `cad.blocks.insert`'s input: everything explicit (CMD-07), the active layer and the current colour.
+    fn input(
+        block: BlockId,
+        p: Vec2,
+        attrs: Option<std::collections::BTreeMap<String, String>>,
+        cx: &Context<'_>,
+    ) -> BlocksInsert {
+        let m = &*cx.memory;
+        BlocksInsert {
+            block: Some(block),
+            name: None,
+            at: wire(p),
+            scale: Some(m.block_scale),
+            y_scale: m.block_y_scale,
+            rotation: Some(turn_of(m.block_rotation)),
+            mirror: m.block_mirror.then_some(true),
+            layer_id: cx.doc.layers().active().to_owned(),
+            color: cx.draft.color_text(),
+            attributes: attrs,
+            // An object template's data, label and symbol (docs/adr/0176 §3).
+            attrs: cx.template_attrs(None),
+            label: cx.template_label(),
+            symbol: cx.template_symbol(),
+            expected_revision: None,
         }
     }
 
@@ -136,11 +166,10 @@ impl BlockInsert {
         attrs: Option<std::collections::BTreeMap<String, String>>,
         cx: &mut Context<'_>,
     ) {
-        let geometry = Self::geometry(block, p, cx.memory);
-        if let Some(out) = points::write_objects_with(vec![geometry], attrs, None, cx)
-            && let Some(&id) = out.ids.first()
-        {
-            self.d.note(id, cx);
+        let input = Self::input(block, p, attrs, cx);
+        let result = blocks_insert::execute(&mut ExecutionContext::new(cx.doc), input);
+        if let Some(out) = points::written(result, cx) {
+            self.d.note(out.id, cx);
         }
     }
 
@@ -152,10 +181,17 @@ impl BlockInsert {
             return;
         };
         let m = *cx.memory;
-        let paths = cx.spatial.store().insert_outlines(
+        // The factors as the command writes them: a unitless block's times the drawing's unit.
+        let unit = cx
+            .doc
+            .block(block)
+            .map_or(1.0, |b| blocks_insert::unit_factor(cx.doc, b));
+        let x = m.block_scale * unit;
+        let y = m.block_y_scale.unwrap_or(m.block_scale) * unit;
+        let paths = cx.spatial.store().insert_outlines_xy(
             &block.to_text(),
             h,
-            m.block_scale,
+            (x, y),
             turn_of(m.block_rotation),
             m.block_mirror,
         );
@@ -189,13 +225,19 @@ impl Tool for BlockInsert {
             .clone()
             .unwrap_or_else(|| (Memory::default(), String::new()));
         let step = match self.ask {
-            Some(Ask::Scale) => "ölçeği yazın".to_owned(),
+            Some(Ask::Scale) => "ölçeği yazın (x ve y birlikte)".to_owned(),
+            Some(Ask::YScale) => "y ölçeğini yazın".to_owned(),
             Some(Ask::Rotation) => "dönüş açısını derece olarak yazın".to_owned(),
             None => format!("“{name}” için yerleştirme noktasına tıklayın"),
         };
         Prompt::new(LABEL, step)
             .option("Blok", "B")
             .option_with("Ölçek", "Ö", fixed(m.block_scale, 4))
+            .option_with(
+                "Y ölçeği",
+                "Y",
+                fixed(m.block_y_scale.unwrap_or(m.block_scale), 4),
+            )
             .option_with("Dönüş", "D", format!("{}°", fixed(m.block_rotation, 4)))
             .option_with(
                 "Aynala",

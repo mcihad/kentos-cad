@@ -675,6 +675,10 @@ pub fn build_layer_in(
         match pieces {
             Some((x, sets)) => {
                 for (k, shape) in x.shapes.iter().enumerate() {
+                    // A piece on a hidden layer of its own does not show (docs/adr/0315 §2).
+                    if !item.piece_shown(k) {
+                        continue;
+                    }
                     let set = sets.and_then(|s| s.get(k)).copied().unwrap_or(simple);
                     one(
                         shape,

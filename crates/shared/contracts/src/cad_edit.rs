@@ -515,13 +515,18 @@ pub enum EntityGeometry {
     /// A block placed (docs/adr/0144): the definition's base point goes to
     /// `p`, its objects are mirrored in the definition's x axis when
     /// `mirror`, scaled by `scale` (above 0) and turned by `rotation`
-    /// (radians, counter-clockwise) about `p`. The block is the drawing's.
+    /// (radians, counter-clockwise) about `p`. The block is the drawing's. `yScale` is its own y factor when it is
+    /// not `scale` (docs/adr/0315 §3).
     Insert {
         block: BlockId,
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         p: Vec2,
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         scale: f64,
+        #[serde(default, rename = "yScale", skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional, rename = "yScale"))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+        y_scale: Option<f64>,
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
         rotation: f64,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]

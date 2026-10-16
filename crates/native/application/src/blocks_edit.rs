@@ -27,7 +27,7 @@ use kentos_contracts::{
 use kentos_domain::{Document, Slot, labels};
 
 use crate::ExecutionContext;
-use crate::blocks_define::{block_rules, copies, name, no_layer, replaced, write};
+use crate::blocks_define::{as_drawn, block_rules, copies, name, no_layer, replaced, write};
 use crate::checks::{self, Stop, error};
 /// The stable codes of the answers (`CommandError.code`, `CommandWarning.code`).
 pub use crate::codes;
@@ -135,7 +135,8 @@ pub fn label(operation: BlockEditOperation) -> &'static str {
         BlockEditOperation::Rename
         | BlockEditOperation::Redefine
         | BlockEditOperation::Rebase
-        | BlockEditOperation::Attributes => labels::BLOCK_CHANGE,
+        | BlockEditOperation::Attributes
+        | BlockEditOperation::Units => labels::BLOCK_CHANGE,
         BlockEditOperation::Remove => labels::BLOCK_REMOVE,
         BlockEditOperation::Purge => labels::BLOCK_PURGE,
         BlockEditOperation::Duplicate => crate::blocks_library::DUPLICATE,
@@ -220,6 +221,14 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
             checks::point(base, "Taban noktasının", "base")?;
         }
         BlockEditOperation::Attributes => attributes(input.attributes.as_deref())?,
+        BlockEditOperation::Units if input.units.is_none() => {
+            return Err(Stop::failed(error(
+                codes::NO_UNITS,
+                "Bloğun birimi verilmedi. units ile mm, cm, m, in, ft ya da unitless verin.".into(),
+                Some("units".into()),
+            )));
+        }
+        BlockEditOperation::Units => {}
         BlockEditOperation::Remove
         | BlockEditOperation::Purge
         | BlockEditOperation::Duplicate
@@ -261,7 +270,7 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         BlockEditOperation::Redefine => {
             let named = checks::named(doc, uids)?;
             crate::blocks_define::no_tables(&named)?;
-            next.entities = copies(named.iter().map(|(_, _, e, _)| *e));
+            next.entities = as_drawn(copies(named.iter().map(|(_, _, e, _)| *e)));
             next.base = input.base.unwrap_or(old.base);
             rules_with(doc, &next)?;
             if let (true, Some(layer)) = (input.replace == Some(true), &input.layer_id) {
@@ -274,6 +283,7 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
                 checked.warnings = r.warnings;
             }
         }
+        BlockEditOperation::Units => units(doc, old, &mut next, input)?,
         BlockEditOperation::Remove => {
             if let Some(reason) = doc.block_removal_refused(old.id) {
                 return Err(Stop::failed(error(
@@ -399,4 +409,63 @@ fn remove(doc: &mut Document, label: &str, ids: &[BlockId]) -> Result<(), Stop> 
         Ok::<(), String>(())
     });
     written.map_err(|message| Stop::failed(error(codes::BLOCK_REFUSED, message, None)))
+}
+
+/// `units` (docs/adr/0315 §4): the unit named; between two units with `rescale` the numbers kept (the geometry
+/// scaled by their ratio); to or from unitless the numbers made the drawing's units or metres again, refused while
+/// an insert places the block (it would change size).
+fn units(
+    doc: &Document,
+    old: &BlockDefinition,
+    next: &mut BlockDefinition,
+    input: &BlocksEdit,
+) -> Result<(), Stop> {
+    use kentos_contracts::BlockUnits;
+    use kentos_contracts::units::Scale;
+    let Some(to) = input.units else {
+        return Ok(());
+    };
+    let drawing = crate::units_change::unit_of(doc);
+    let (was_free, now_free) = (
+        old.units == Some(BlockUnits::Unitless),
+        to == BlockUnits::Unitless,
+    );
+    if was_free != now_free {
+        if doc.block_removal_refused(old.id).is_some() {
+            return Err(Stop::failed(error(
+                codes::BLOCK_IN_USE,
+                format!(
+                    "“{}” bloğu yerleştirilmiş; birimsiz yapılan ya da birimsizlikten çıkan blok yerleştirmelerinde boyunu değiştirirdi. Önce yerleştirmelerini kaldırın ya da bloğun kopyasında değiştirin.",
+                    old.name
+                ),
+                Some("block".into()),
+            )));
+        }
+        rescaled(
+            next,
+            if now_free {
+                Scale::to_unit(drawing)
+            } else {
+                Scale::from_unit(drawing)
+            },
+        );
+    } else if !now_free && input.rescale == Some(true) {
+        let from = old.units.and_then(BlockUnits::unit).unwrap_or(drawing);
+        let to = to.unit().unwrap_or(drawing);
+        rescaled(next, Scale::keeping_numbers(from, to));
+    }
+    next.units = Some(to);
+    rules_with(doc, next)
+}
+
+/// A definition alone scaled (docs/adr/0315 §4): its points and sizes, and its nested inserts' factors, since the
+/// definitions they place stay as they are.
+pub(crate) fn rescaled(block: &mut BlockDefinition, s: kentos_contracts::units::Scale) {
+    kentos_contracts::units::scale_block(block, s);
+    for e in &mut block.entities {
+        if let Entity::Insert(i) = e {
+            i.scale = s.apply(i.scale);
+            i.y_scale = i.y_scale.map(|y| s.apply(y));
+        }
+    }
 }

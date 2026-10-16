@@ -64,6 +64,8 @@ struct Define {
     /// The active layer, which the insert goes on, and its name.
     layer: String,
     layer_name: String,
+    /// The drawing's unit, the block's (docs/adr/0315 §4).
+    units: kentos_contracts::BlockUnits,
     /// The command's answer for the window as it is: its warnings' words, or its refusal's.
     answer: Result<Vec<String>, String>,
 }
@@ -81,6 +83,7 @@ impl Define {
             },
             uids: self.uids.clone(),
             description: (!about.is_empty()).then(|| about.to_owned()),
+            units: Some(self.units),
             replace: self.replace.then_some(true),
             layer_id: self.replace.then(|| self.layer.clone()),
             expected_revision: None,
@@ -130,6 +133,9 @@ impl App {
             replace: self.blocks.replace,
             layer,
             layer_name,
+            units: kentos_contracts::BlockUnits::of(
+                model.settings().drawing_unit.unwrap_or_default(),
+            ),
             answer: Ok(Vec::new()),
         });
         self.blocks.focus = true;

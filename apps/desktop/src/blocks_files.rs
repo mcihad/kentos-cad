@@ -25,6 +25,8 @@ fn input(operation: BlockEditOperation) -> BlocksEdit {
         attributes: None,
         blocks: None,
         library: None,
+        units: None,
+        rescale: None,
         expected_revision: None,
     }
 }
@@ -71,6 +73,42 @@ impl App {
             self.say(
                 Level::Info,
                 format!("“{name}” bloğunun kopyası “{free}” oluşturuldu."),
+            );
+        }
+    }
+
+    /// Birim ▸ (docs/adr/0315 §4): the unit the block is drawn in, its size kept, or with `rescale` its numbers.
+    pub(crate) fn blocks_units(
+        &mut self,
+        id: BlockId,
+        units: kentos_contracts::BlockUnits,
+        rescale: bool,
+    ) {
+        let Some(name) = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.block(id))
+            .map(|b| b.name.clone())
+        else {
+            return;
+        };
+        let edit = BlocksEdit {
+            block: Some(id),
+            units: Some(units),
+            rescale: rescale.then_some(true),
+            ..input(BlockEditOperation::Units)
+        };
+        if let Some(done) = self.blocks_command(edit)
+            && !done.changed.is_empty()
+        {
+            let how = if rescale {
+                "sayıları korunarak, boyu birimlerin oranıyla değişti"
+            } else {
+                "boyu korundu"
+            };
+            self.say(
+                Level::Info,
+                format!("“{name}” bloğunun birimi {}: {how}.", units.word()),
             );
         }
     }

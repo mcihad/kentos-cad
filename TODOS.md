@@ -170,6 +170,11 @@ Liste:
   uyarıları komutun sözleri; paralel iki doğruya TTY, saat yönünde verilen yaydan Devam; araç durumları
   `fixtures/curve-methods/v1/tools.json`. Web'in donmuş çağrı kayıtları eski `arcStartCenterEnd` ve `arcStartCenterAngle`'ı (tam tur)
   tutar; geri dönüşte komutun kuralına getirilir.
+- [ ] `CAD-BLOCK-01`, `02`, `03`, `04` blokta kararlı kimlik, katman kuralı, X/Y ölçeği ve birim (ADR 0315, 16 Ekim): web'de
+  gerekenler: `.kcad` şema 57'nin `yScale`'i ve `units`'i (web'in kopyası 55'te), deponun paket kaydında y ölçeği (bayrağın 2'si)
+  ve parçaların görünürlük kapısı (`Item::veiled`) web'in çiziminde ve seçiminde; 0'daki parçanın `byLayer`'ının yerleştirmenin
+  katmanından alınması web'in stilli çiziminde; `cad.blocks.insert`'in ve `cad.blocks.edit` `units`'inin TS işleyicileri, Blok
+  ekle'nin Y ölçeği, Öznitelikler'in X/Y ölçeği, Bloklar panelinin Birim ▸'i; web'in DXF yolu çekirdekten geldiği için hazır.
 - [ ] `CAD-STYLE-12`, `13`, `14`, `15` haritanın katmanları, değişikliğin etkisi, kitaplık API'si ve etki raporu (ADR 0314, 16 Ekim):
   web'de gerekenler: pafta tasarımcısının Denetçi'sinde haritanın Katmanlar bölümü ve web'in pafta çiziminde `layerOverrides`
   (`kentos_plot::layers::map_layers`'ın kuralı WASM'la ya da sheet-wasm'dan); `cad.library.edit` ve `cad.styles.impact`'in TS

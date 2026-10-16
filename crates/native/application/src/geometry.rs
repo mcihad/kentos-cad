@@ -737,6 +737,7 @@ pub fn shape(entity: &Entity) -> Shape {
             block: i.block.to_text(),
             p: v(&i.p),
             scale: i.scale,
+            y_scale: i.y_scale,
             rotation: i.rotation,
             mirror: i.mirror.then_some(true),
             attrs: Some(Attrs(
@@ -1397,6 +1398,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             block,
             p,
             scale,
+            y_scale,
             rotation,
             mirror,
         } => Entity::Insert(InsertEntity {
@@ -1404,6 +1406,8 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             block,
             p,
             scale,
+            // One way to write it: the y factor only when it is not the x one (docs/adr/0315 §3).
+            y_scale: y_scale.filter(|y| *y != scale),
             rotation,
             mirror,
         }),
@@ -1663,6 +1667,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             block,
             p: at,
             scale,
+            y_scale,
             rotation,
             mirror,
             ..
@@ -1670,6 +1675,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             block: BlockId::parse(&block)?,
             p: p(at),
             scale,
+            y_scale: y_scale.filter(|y| *y != scale),
             rotation,
             mirror: mirror == Some(true),
         },

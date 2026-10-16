@@ -187,6 +187,9 @@ SCHEMA_WITH_FROZEN = 55
 # Schema 56: schema 55 and the settings' line types with patterns (`lineTypes`) and line type scale (`lineTypeScale`),
 # a layer style's and an object's `linePattern` (docs/adr/0313 §1).
 SCHEMA_WITH_PATTERNS = 56
+# Schema 57: schema 56 and an insert's own y factor (`yScale`, only when it is not `scale`) and a block definition's
+# `units` (docs/adr/0315 §3, §4).
+SCHEMA_WITH_BLOCK_EXTRAS = 57
 # A pattern has at most 12 elements (AutoCAD's LIN, kentos_contracts::MAX_PATTERN_ELEMENTS).
 MOST_PATTERN_ELEMENTS = 12
 # An associative array holds 2 to 10 000 places (kentos_contracts::ARRAY_PLACES_MAX).
@@ -366,7 +369,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1866,6 +1869,7 @@ class _Schema:
         self.wipeouts = version >= SCHEMA_WITH_WIPEOUTS
         self.frozen = version >= SCHEMA_WITH_FROZEN
         self.patterns = version >= SCHEMA_WITH_PATTERNS
+        self.block_extras = version >= SCHEMA_WITH_BLOCK_EXTRAS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -3332,6 +3336,10 @@ class _Schema:
         self.path.append(kind)
         try:
             fields = self.fields(table)(body)
+            # One way to write an insert: its y factor only when it is not the x one (docs/adr/0315 §3).
+            if kind == "insert" and fields.get("yScale") == fields["scale"]:
+                self.path.append("yScale")
+                self.fail("bad_value", "y ölçeği x ölçeğine eşitse yazılmaz")
             if kind in ("polyline", "polygon"):
                 self.same_length(fields)
             if kind == "polyline":
@@ -3410,9 +3418,11 @@ class _Schema:
                 "entities": (content, True),
                 "attributes": (attributes, False),
                 "description": (self.text, False),
+                # The unit it is drawn in (schema 57, docs/adr/0315 §4).
+                **({"units": (self.enum(("mm", "cm", "m", "in", "ft", "unitless")), False)} if self.block_extras else {}),
             }
         )(v)
-        return {k: d[k] for k in ("id", "name", "base", "entities", "attributes", "description") if k in d}
+        return {k: d[k] for k in ("id", "name", "base", "entities", "attributes", "description", "units") if k in d}
 
     def attribute(self, v):
         table = {
@@ -4107,6 +4117,13 @@ class _Schema:
             self.fail("bad_value", f"blok ölçeği {x}; pozitif olmalı")
         return x
 
+    def y_scale(self, v):
+        """An insert's own y factor (schema 57, docs/adr/0315 §3): positive."""
+        x = self.float(v)
+        if not x > 0.0:
+            self.fail("bad_value", f"blok y ölçeği {x}; pozitif olmalı")
+        return x
+
     def mirror(self, v):
         if self.bool(v) is not True:
             self.fail("bad_value", "aynalama false yazılmaz; aynalı olmayan yerleştirmede alan yoktur")
@@ -4494,7 +4511,8 @@ ENTITY_KINDS = {
         **({"assoc": (s.hatch_assoc, False)} if s.hatches and s.inside is None else {}),
     },
     # Schema 6 (docs/adr/0144): `mirror` only when true.
-    "insert": lambda s: {"block": (s.id16, True), "p": (s.point, True), "scale": (s.scale, True), "rotation": (s.float, True), "mirror": (s.mirror, False)},
+    "insert": lambda s: {"block": (s.id16, True), "p": (s.point, True), "scale": (s.scale, True), "rotation": (s.float, True), "mirror": (s.mirror, False),
+                         **({"yScale": (s.y_scale, False)} if s.block_extras else {})},
     # Schema 22 (docs/adr/0184): rows and columns of one-line cells, merged ranges, alignments, a heading row only when
     # true, lines by name (all: no field), a frame's width, a text's face, a source; only in the drawing.
     "table": lambda s: {

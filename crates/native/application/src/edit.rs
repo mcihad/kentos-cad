@@ -930,6 +930,18 @@ pub(crate) fn check_geometry(
             at(".scale"),
         )));
     }
+    // Its own y factor (docs/adr/0315 §3).
+    if let EntityGeometry::Insert {
+        y_scale: Some(y), ..
+    } = g
+        && *y <= 0.0
+    {
+        return Err(Stop::failed(error(
+            codes::INVALID_SCALE,
+            "Bloğun y ölçeği sıfırdan büyük olmalı. Pozitif bir ölçek verin.".into(),
+            at(".yScale"),
+        )));
+    }
     // A leader's height measures its note, arrowhead and landing (docs/adr/0146 §1).
     if let EntityGeometry::Leader { height, .. } = g
         && *height <= 0.0
@@ -1549,8 +1561,14 @@ fn finite(g: &EntityGeometry) -> bool {
                 && assoc.as_ref().is_none_or(|a| pt(&a.seed))
         }
         EntityGeometry::Insert {
-            p, scale, rotation, ..
-        } => pt(p) && scale.is_finite() && rotation.is_finite(),
+            p,
+            scale,
+            y_scale,
+            rotation,
+            ..
+        } => {
+            pt(p) && scale.is_finite() && y_scale.is_none_or(f64::is_finite) && rotation.is_finite()
+        }
         EntityGeometry::Table {
             p,
             rotation,

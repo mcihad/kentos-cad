@@ -119,6 +119,7 @@ pub fn item_insert(
         block: array.block,
         p: kentos_contracts::Vec2 { x: 0.0, y: 0.0 },
         scale: 1.0,
+        y_scale: None,
         rotation: 0.0,
         mirror: false,
     });

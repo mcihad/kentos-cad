@@ -1195,7 +1195,11 @@
       "operation": "image"
     },
     "blockInsert": {
-      "level": "semantic"
+      "level": "semantic",
+      "via": [
+        "cad.blocks.insert"
+      ],
+      "was": "cad.entities.create"
     },
     "rectangle": {
       "level": "semantic",

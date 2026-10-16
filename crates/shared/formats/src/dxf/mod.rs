@@ -891,6 +891,24 @@ fn read_once(
     out.report.fact("Karakter kodlaması", rd.dec.enc.label());
     let (scale, unit) = decide_units(rd.units, opts, &lib.block_units, &mut out.report);
     let mut blocks = blocks;
+    // Each block's unit (docs/adr/0315 §4): its record's insertion unit, else the file's when the file says one.
+    for b in &mut blocks {
+        let code = lib
+            .block_units
+            .iter()
+            .find(|(n, _)| n.eq_ignore_ascii_case(&b.name))
+            .map(|(_, c)| *c)
+            .or((!unit.assumed).then_some(unit.used));
+        use kentos_contracts::BlockUnits as B;
+        b.units = match code {
+            Some(1) => Some(B::In),
+            Some(2) => Some(B::Ft),
+            Some(4) => Some(B::Mm),
+            Some(5) => Some(B::Cm),
+            Some(6) => Some(B::M),
+            _ => None,
+        };
+    }
     if !scale.is_one() {
         // The drawing in metres: every object, every definition, the extent (docs/adr/0165 §2).
         for e in &mut out.entities {

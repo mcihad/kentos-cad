@@ -76,8 +76,10 @@ pub struct Expanded {
     pub shapes: Vec<Shape>,
     pub colors: Vec<Option<String>>,
     pub weights: Vec<Option<f64>>,
-    /// Each piece's own layer and its parts that follow it (docs/adr/0260 §1).
-    pub by_layer: Vec<Option<(String, u8)>>,
+    /// Each piece's layers and the parts that follow them (docs/adr/0260 §1, 0315 §2; `""`: the insert's layer).
+    pub by_layer: Vec<Vec<(String, u8)>>,
+    /// Each piece's layers it shows only while they show (docs/adr/0315 §2).
+    pub gates: Vec<Vec<String>>,
     /// Each piece's own line type, scale and transparency (docs/adr/0312 §4).
     pub strokes: Vec<crate::block::PieceStroke>,
 }
@@ -94,6 +96,8 @@ pub struct Item {
     /// A block's insert: its definition's pieces placed (none for an
     /// unknown or empty block, which is its insertion point alone).
     pub expanded: Option<Arc<Expanded>>,
+    /// Per piece, whether a layer it shows only with is hidden (docs/adr/0315 §2); none when none is.
+    pub veiled: Option<Arc<[bool]>>,
     /// Its place in the document's order.
     order: u64,
 }
@@ -106,7 +110,18 @@ impl Item {
             Some(x) => (&x.shapes, |s| !crate::block::shows_nothing(s)),
             None => (std::slice::from_ref(&self.shape), |_| true),
         };
-        list.iter().filter(keep)
+        let veiled = self.veiled.as_deref();
+        list.iter()
+            .enumerate()
+            .filter(move |(i, s)| keep(s) && veiled.is_none_or(|v| v.get(*i) != Some(&true)))
+            .map(|(_, s)| s)
+    }
+
+    /// Whether piece `i` of an insert shows: no layer it shows only with is hidden (docs/adr/0315 §2).
+    pub fn piece_shown(&self, i: usize) -> bool {
+        self.veiled
+            .as_deref()
+            .is_none_or(|v| v.get(i) != Some(&true))
     }
 
     /// Infinite lines and boxes the tree cannot hold: always candidates, decided by the exact test.
@@ -275,6 +290,7 @@ impl Store {
     pub fn put(&mut self, id: f64, layer_id: &str, label: bool, shape: Shape) {
         let layer = self.layer_index(layer_id);
         let (expanded, bounds) = self.expansion(&shape);
+        let veiled = expanded.as_deref().and_then(|x| self.veil(x));
         let key = id.to_bits();
         // Its labels' texts and pins come again with it (docs/adr/0212 §3.1).
         self.labelling.objects.remove(&key);
@@ -289,6 +305,7 @@ impl Store {
                     bounds,
                     label,
                     expanded,
+                    veiled,
                     order,
                 });
                 s
@@ -303,6 +320,7 @@ impl Store {
                     bounds,
                     label,
                     expanded,
+                    veiled,
                     order,
                 };
                 if returning.is_none() {
@@ -375,13 +393,17 @@ impl Store {
             .filter(|&s| matches!(&self.slots[s as usize], Some(it) if matches!(it.shape, Shape::Text { .. } | Shape::Insert { .. })))
             .collect();
         for s in &texts {
-            let fresh = self.slots[*s as usize]
-                .as_ref()
-                .map(|it| self.expansion(&it.shape));
-            if let (Some(it), Some((expanded, bounds))) = (self.slots[*s as usize].as_mut(), fresh)
+            let fresh = self.slots[*s as usize].as_ref().map(|it| {
+                let (x, b) = self.expansion(&it.shape);
+                let veiled = x.as_deref().and_then(|x| self.veil(x));
+                (x, b, veiled)
+            });
+            if let (Some(it), Some((expanded, bounds, veiled))) =
+                (self.slots[*s as usize].as_mut(), fresh)
             {
                 it.bounds = bounds;
                 it.expanded = expanded;
+                it.veiled = veiled;
             }
             self.loosen(*s);
         }
@@ -397,13 +419,17 @@ impl Store {
             .filter(|&s| matches!(&self.slots[s as usize], Some(it) if matches!(it.shape, Shape::Insert { .. })))
             .collect();
         for s in &inserts {
-            let fresh = self.slots[*s as usize]
-                .as_ref()
-                .map(|it| self.expansion(&it.shape));
-            if let (Some(it), Some((expanded, bounds))) = (self.slots[*s as usize].as_mut(), fresh)
+            let fresh = self.slots[*s as usize].as_ref().map(|it| {
+                let (x, b) = self.expansion(&it.shape);
+                let veiled = x.as_deref().and_then(|x| self.veil(x));
+                (x, b, veiled)
+            });
+            if let (Some(it), Some((expanded, bounds, veiled))) =
+                (self.slots[*s as usize].as_mut(), fresh)
             {
                 it.bounds = bounds;
                 it.expanded = expanded;
+                it.veiled = veiled;
             }
             self.loosen(*s);
         }
@@ -442,6 +468,7 @@ impl Store {
             x.colors.push(piece.color);
             x.weights.push(piece.line_weight);
             x.by_layer.push(piece.by_layer);
+            x.gates.push(piece.gates);
             x.strokes.push(piece.stroke);
         }
         (Some(Arc::new(x)), b)
@@ -627,6 +654,29 @@ impl Store {
             let l = self.layer_index(id);
             self.flags[l as usize] = flags;
         }
+        // The pieces that show only with a layer follow it (docs/adr/0315 §2).
+        for s in 0..self.slots.len() {
+            let fresh = match &self.slots[s] {
+                Some(Item {
+                    expanded: Some(x), ..
+                }) if x.gates.iter().any(|g| !g.is_empty()) => self.veil(x),
+                _ => continue,
+            };
+            if let Some(it) = self.slots[s].as_mut() {
+                it.veiled = fresh;
+            }
+        }
+    }
+
+    /// Per piece, whether a layer it shows only with is hidden; none when none is (docs/adr/0315 §2).
+    fn veil(&self, x: &Expanded) -> Option<Arc<[bool]>> {
+        let hidden = |id: &String| {
+            self.layer_ids
+                .get(id)
+                .is_some_and(|&l| !self.flags[l as usize].visible)
+        };
+        let v: Vec<bool> = x.gates.iter().map(|g| g.iter().any(hidden)).collect();
+        v.contains(&true).then(|| v.into())
     }
 
     /// Replaces the layer table: `[{ id, visible, locked, pickInterior, snapKinds? }]`,

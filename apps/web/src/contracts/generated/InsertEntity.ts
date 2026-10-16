@@ -11,8 +11,10 @@ import type { Wipeout } from "./Wipeout";
  * A block placed in the drawing (docs/adr/0144): its definition drawn
  * moved from the definition's base point to `p`, mirrored in the
  * definition's x axis when `mirror`, then scaled and turned about `p`. The
- * transform is a similarity: shapes keep their kind. The insert's own
- * attributes carry the values of the definition's attribute definitions.
+ * transform is a similarity, shapes keeping their kind, unless the insert
+ * has a y factor of its own (docs/adr/0315 §3): then an affine, a circle
+ * becoming the exact ellipse of its image. The insert's own attributes
+ * carry the values of the definition's attribute definitions.
  */
 export type InsertEntity = { 
 /**
@@ -24,9 +26,14 @@ block: BlockId,
  */
 p: Vec2, 
 /**
- * Positive and finite; 1 is the definition's size.
+ * Positive and finite; 1 is the definition's size. With `yScale`, the factor along the definition's x axis.
  */
 scale: number, 
+/**
+ * The factor along the definition's y axis when it is not `scale` (docs/adr/0315 §3), positive and finite;
+ * absent: `scale`. A negative factor of a DXF is a mirror and a turn here.
+ */
+yScale?: number, 
 /**
  * Radians, counter-clockwise from east.
  */

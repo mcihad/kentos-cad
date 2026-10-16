@@ -247,6 +247,7 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
         Shape::Insert {
             block,
             scale,
+            y_scale,
             rotation,
             mirror,
             attrs,
@@ -255,6 +256,7 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             block: block.clone(),
             p,
             scale: *scale,
+            y_scale: *y_scale,
             rotation: *rotation,
             mirror: *mirror,
             attrs: attrs.clone(),

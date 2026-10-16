@@ -317,6 +317,12 @@ codes! {
     NO_BASE = "no_base", Failed, false, "Taban noktası verilmedi.";
     /// A definition an insert uses, in the drawing or in another definition.
     BLOCK_IN_USE = "block_in_use", Failed, false, "Tanım çizimde ya da başka bir tanımda bir yerleştirmece kullanılıyor.";
+    /// An attribute value under a tag the block does not have (`cad.blocks.insert`, docs/adr/0315 §4).
+    UNKNOWN_TAG = "unknown_tag", Failed, false, "Blokta bu etiketle bir öznitelik yok.";
+    /// `cad.blocks.edit`'s `units` without the unit (docs/adr/0315 §4).
+    NO_UNITS = "no_units", Failed, false, "Bloğun birimi verilmedi.";
+    /// A real-size block drawn in another unit than the drawing's: placed at its own size (docs/adr/0315 §4).
+    INSERT_UNITS_DIFFER = "insert_units_differ", Warning, false, "Bloğun birimi çizimin biriminden başka; blok gerçek boyutuyla yerleşti.";
     /// `attributes` without its list (docs/adr/0144 §7).
     NO_ATTRIBUTES = "no_attributes", Failed, false, "Öznitelik listesi verilmedi.";
     /// An attribute definition's tag empty or only white space.

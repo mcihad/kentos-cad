@@ -1,0 +1,916 @@
+{
+ "format": "kentos.block-scale-cases",
+ "version": 1,
+ "note": "Written by scripts/fixtures/block_scale_cases.py from docs/adr/0315 §3; do not edit by hand.",
+ "definitions": [
+  {
+   "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4101",
+   "base": {
+    "x": 0,
+    "y": 0
+   },
+   "entities": [
+    {
+     "kind": "circle",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 2,
+      "y": 1
+     },
+     "r": 1
+    }
+   ]
+  },
+  {
+   "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4102",
+   "base": {
+    "x": 0,
+    "y": 0
+   },
+   "entities": [
+    {
+     "kind": "arc",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0,
+      "y": 0
+     },
+     "r": 1,
+     "a0": 0,
+     "a1": 1.5707963267948966
+    }
+   ]
+  },
+  {
+   "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4103",
+   "base": {
+    "x": 1,
+    "y": 1
+   },
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 1,
+       "y": 1
+      },
+      {
+       "x": 5,
+       "y": 1
+      },
+      {
+       "x": 5,
+       "y": 4
+      },
+      {
+       "x": 1,
+       "y": 4
+      }
+     ]
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 1,
+      "y": 1
+     },
+     "b": {
+      "x": 5,
+      "y": 4
+     }
+    },
+    {
+     "kind": "ellipse",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 3,
+      "y": 2.5
+     },
+     "major": {
+      "x": 1,
+      "y": 0
+     },
+     "ratio": 0.5,
+     "t0": 0,
+     "t1": 6.283185307179586
+    },
+    {
+     "kind": "text",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "p": {
+      "x": 2,
+      "y": 3
+     },
+     "text": "ODA",
+     "height": 0.5,
+     "rotation": 0
+    }
+   ]
+  },
+  {
+   "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4104",
+   "base": {
+    "x": 0,
+    "y": 0
+   },
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4101",
+     "p": {
+      "x": 0,
+      "y": 0
+     },
+     "scale": 1,
+     "rotation": 0.7853981633974483
+    }
+   ]
+  },
+  {
+   "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4105",
+   "base": {
+    "x": 0,
+    "y": 0
+   },
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4101",
+     "p": {
+      "x": 1,
+      "y": 0
+     },
+     "scale": 1,
+     "rotation": 1.5707963267948966
+    }
+   ]
+  },
+  {
+   "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4106",
+   "base": {
+    "x": 0,
+    "y": 0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0,
+       "y": 0
+      },
+      {
+       "x": 2,
+       "y": 0
+      },
+      {
+       "x": 4,
+       "y": 0
+      }
+     ],
+     "bulges": [
+      0.5,
+      0
+     ]
+    }
+   ]
+  }
+ ],
+ "cases": [
+  {
+   "name": "Daire, x 2 y 1: yatay büyük eksenli elips",
+   "insert": {
+    "kind": "insert",
+    "id": 1,
+    "layerId": "kat",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4101",
+    "p": {
+     "x": 10,
+     "y": 10
+    },
+    "scale": 2,
+    "rotation": 0.0,
+    "yScale": 1
+   },
+   "pieces": [
+    {
+     "center": [
+      14.0,
+      11.0
+     ],
+     "semi": [
+      2.0,
+      1.0
+     ],
+     "axis": 0.0,
+     "kind": "ellipse"
+    }
+   ]
+  },
+  {
+   "name": "Daire, x 2 y 1, çeyrek dönüş: büyük eksen düşey",
+   "insert": {
+    "kind": "insert",
+    "id": 1,
+    "layerId": "kat",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4101",
+    "p": {
+     "x": 10,
+     "y": 10
+    },
+    "scale": 2,
+    "rotation": 1.5707963267948966,
+    "yScale": 1
+   },
+   "pieces": [
+    {
+     "center": [
+      9.0,
+      14.0
+     ],
+     "semi": [
+      2.0,
+      1.0
+     ],
+     "axis": 1.5707963267948966,
+     "kind": "ellipse"
+    }
+   ]
+  },
+  {
+   "name": "Daire, x 1 y 3: büyük eksen y boyunca, oran 1/3",
+   "insert": {
+    "kind": "insert",
+    "id": 1,
+    "layerId": "kat",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4101",
+    "p": {
+     "x": 0,
+     "y": 0
+    },
+    "scale": 1,
+    "rotation": 0.0,
+    "yScale": 3
+   },
+   "pieces": [
+    {
+     "center": [
+      2.0,
+      3.0
+     ],
+     "semi": [
+      3.0,
+      1.0
+     ],
+     "axis": 1.5707963267948966,
+     "kind": "ellipse"
+    }
+   ]
+  },
+  {
+   "name": "Daire, x 2 y 1, aynalı ve 30° dönük",
+   "insert": {
+    "kind": "insert",
+    "id": 1,
+    "layerId": "kat",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4101",
+    "p": {
+     "x": 5,
+     "y": -5
+    },
+    "scale": 2,
+    "rotation": 0.5235987755982988,
+    "yScale": 1,
+    "mirror": true
+   },
+   "pieces": [
+    {
+     "center": [
+      8.964101615137755,
+      -3.866025403784439
+     ],
+     "semi": [
+      2.0,
+      1.0
+     ],
+     "axis": 0.5235987755982988,
+     "kind": "ellipse"
+    }
+   ]
+  },
+  {
+   "name": "Daire, eşit ölçek: daire kalır",
+   "insert": {
+    "kind": "insert",
+    "id": 1,
+    "layerId": "kat",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4101",
+    "p": {
+     "x": 1,
+     "y": 2
+    },
+    "scale": 1.5,
+    "rotation": 0.0,
+    "yScale": 1.5
+   },
+   "pieces": [
+    {
+     "center": [
+      4.0,
+      3.5
+     ],
+     "semi": [
+      1.5,
+      1.5
+     ],
+     "axis": 0.0,
+     "kind": "circle"
+    }
+   ]
+  },
+  {
+   "name": "Yay, x 2 y 1: eliptik yay, uçlar ve ortası",
+   "insert": {
+    "kind": "insert",
+    "id": 1,
+    "layerId": "kat",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4102",
+    "p": {
+     "x": 0,
+     "y": 0
+    },
+    "scale": 2,
+    "rotation": 0.0,
+    "yScale": 1
+   },
+   "pieces": [
+    {
+     "center": [
+      0.0,
+      0.0
+     ],
+     "semi": [
+      2.0,
+      1.0
+     ],
+     "axis": 0.0,
+     "kind": "arc",
+     "start": [
+      2.0,
+      0.0
+     ],
+     "end": [
+      1.2246467991473532e-16,
+      1.0
+     ],
+     "mid": [
+      1.4142135623730951,
+      0.7071067811865475
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Yay, x 2 y 1, aynalı: yön ters, uçlar yer değiştirir",
+   "insert": {
+    "kind": "insert",
+    "id": 1,
+    "layerId": "kat",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4102",
+    "p": {
+     "x": 0,
+     "y": 0
+    },
+    "scale": 2,
+    "rotation": 0.0,
+    "yScale": 1,
+    "mirror": true
+   },
+   "pieces": [
+    {
+     "center": [
+      0.0,
+      0.0
+     ],
+     "semi": [
+      2.0,
+      1.0
+     ],
+     "axis": 0.0,
+     "kind": "arc",
+     "start": [
+      1.2246467991473532e-16,
+      -1.0
+     ],
+     "end": [
+      2.0,
+      0.0
+     ],
+     "mid": [
+      1.4142135623730951,
+      -0.7071067811865475
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Yay, x 0,5 y 3, 120° dönük",
+   "insert": {
+    "kind": "insert",
+    "id": 1,
+    "layerId": "kat",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4102",
+    "p": {
+     "x": 3,
+     "y": 4
+    },
+    "scale": 0.5,
+    "rotation": 2.0943951023931953,
+    "yScale": 3
+   },
+   "pieces": [
+    {
+     "center": [
+      3.0,
+      4.0
+     ],
+     "semi": [
+      2.9999999999999996,
+      0.49999999999999994
+     ],
+     "axis": 0.5235987755982987,
+     "kind": "arc",
+     "start": [
+      2.75,
+      4.43301270189222
+     ],
+     "end": [
+      0.401923788646684,
+      2.500000000000001
+     ],
+     "mid": [
+      0.9861059976159798,
+      3.2455260460680764
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Oda, x 1,5 y 0,5: köşeler, çapraz, elips ve yazı",
+   "insert": {
+    "kind": "insert",
+    "id": 1,
+    "layerId": "kat",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4103",
+    "p": {
+     "x": 100,
+     "y": 200
+    },
+    "scale": 1.5,
+    "rotation": 0.0,
+    "yScale": 0.5
+   },
+   "pieces": [
+    {
+     "kind": "polygon",
+     "corners": [
+      [
+       100.0,
+       200.0
+      ],
+      [
+       106.0,
+       200.0
+      ],
+      [
+       106.0,
+       201.5
+      ],
+      [
+       100.0,
+       201.5
+      ]
+     ]
+    },
+    {
+     "kind": "line",
+     "ends": [
+      [
+       100.0,
+       200.0
+      ],
+      [
+       106.0,
+       201.5
+      ]
+     ]
+    },
+    {
+     "center": [
+      103.0,
+      200.75
+     ],
+     "semi": [
+      1.5,
+      0.25
+     ],
+     "axis": 0.0,
+     "kind": "ellipse"
+    },
+    {
+     "kind": "text",
+     "p": [
+      101.5,
+      201.0
+     ],
+     "height": 0.25,
+     "widthFactor": 3.0,
+     "rotation": 0.0
+    }
+   ]
+  },
+  {
+   "name": "Oda, x 1,5 y 0,5, 45° dönük ve aynalı",
+   "insert": {
+    "kind": "insert",
+    "id": 1,
+    "layerId": "kat",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4103",
+    "p": {
+     "x": 100,
+     "y": 200
+    },
+    "scale": 1.5,
+    "rotation": 0.7853981633974483,
+    "yScale": 0.5,
+    "mirror": true
+   },
+   "pieces": [
+    {
+     "kind": "polygon",
+     "corners": [
+      [
+       100.0,
+       200.0
+      ],
+      [
+       104.24264068711929,
+       204.2426406871193
+      ],
+      [
+       105.3033008588991,
+       203.18198051533946
+      ],
+      [
+       101.06066017177983,
+       198.93933982822017
+      ]
+     ]
+    },
+    {
+     "kind": "line",
+     "ends": [
+      [
+       100.0,
+       200.0
+      ],
+      [
+       105.3033008588991,
+       203.18198051533946
+      ]
+     ]
+    },
+    {
+     "center": [
+      102.65165042944956,
+      201.59099025766972
+     ],
+     "semi": [
+      1.5,
+      0.25
+     ],
+     "axis": 0.7853981633974482,
+     "kind": "ellipse"
+    },
+    {
+     "kind": "text",
+     "p": [
+      101.76776695296637,
+      200.35355339059328
+     ],
+     "height": 0.25,
+     "widthFactor": 3.0,
+     "rotation": 225.0
+    }
+   ]
+  },
+  {
+   "name": "İç içe: dışta x 2 y 1, içte 45° dönük daire",
+   "insert": {
+    "kind": "insert",
+    "id": 1,
+    "layerId": "kat",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4104",
+    "p": {
+     "x": 0,
+     "y": 0
+    },
+    "scale": 2,
+    "rotation": 0.0,
+    "yScale": 1
+   },
+   "pieces": [
+    {
+     "center": [
+      1.4142135623730954,
+      2.1213203435596424
+     ],
+     "semi": [
+      2.0,
+      1.0
+     ],
+     "axis": 0.0,
+     "kind": "ellipse"
+    }
+   ]
+  },
+  {
+   "name": "İç içe: dışta x 3 y 1 ve 30°, içte çeyrek dönük daire",
+   "insert": {
+    "kind": "insert",
+    "id": 1,
+    "layerId": "kat",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4105",
+    "p": {
+     "x": 1,
+     "y": 1
+    },
+    "scale": 3,
+    "rotation": 0.5235987755982988,
+    "yScale": 1
+   },
+   "pieces": [
+    {
+     "center": [
+      4.440892098500626e-16,
+      2.7320508075688776
+     ],
+     "semi": [
+      3.0,
+      1.0
+     ],
+     "axis": 0.5235987755982988,
+     "kind": "ellipse"
+    }
+   ]
+  },
+  {
+   "name": "Yaylı çoklu çizgi, x 2 y 1: yay kenarı 0,1 mm içinde köşeler",
+   "insert": {
+    "kind": "insert",
+    "id": 1,
+    "layerId": "kat",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4106",
+    "p": {
+     "x": 0,
+     "y": 0
+    },
+    "scale": 2,
+    "rotation": 0.0,
+    "yScale": 1
+   },
+   "pieces": [
+    {
+     "kind": "polyline",
+     "first": [
+      0.0,
+      0.0
+     ],
+     "last": [
+      8.0,
+      0.0
+     ],
+     "arc": {
+      "center": [
+       2.0,
+       0.75
+      ],
+      "u": [
+       2.5,
+       0.0
+      ],
+      "v": [
+       0.0,
+       1.25
+      ]
+     },
+     "joint": [
+      4.0,
+      0.0
+     ]
+    }
+   ]
+  }
+ ],
+ "explodes": [
+  {
+   "name": "Patlat: dışta x 2 y 1, içte 45° dönük blok eğilir: reddedilir",
+   "insert": {
+    "kind": "insert",
+    "id": 1,
+    "layerId": "kat",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4104",
+    "p": {
+     "x": 0,
+     "y": 0
+    },
+    "scale": 2,
+    "rotation": 0.0,
+    "yScale": 1
+   },
+   "expect": {
+    "refused": true
+   }
+  },
+  {
+   "name": "Patlat: dışta x 3 y 1, içte çeyrek dönük blok: x 1 y 3, çeyrek dönük",
+   "insert": {
+    "kind": "insert",
+    "id": 1,
+    "layerId": "kat",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4105",
+    "p": {
+     "x": 1,
+     "y": 1
+    },
+    "scale": 3,
+    "rotation": 0.0,
+    "yScale": 1
+   },
+   "expect": {
+    "pieces": [
+     {
+      "kind": "insert",
+      "p": [
+       4.0,
+       1.0
+      ],
+      "scale": 1.0,
+      "yScale": 3.0,
+      "rotation": 1.5707963267948963,
+      "mirror": false
+     }
+    ]
+   }
+  },
+  {
+   "name": "Patlat: dışta x 3 y 1 aynalı, içte çeyrek dönük blok",
+   "insert": {
+    "kind": "insert",
+    "id": 1,
+    "layerId": "kat",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4105",
+    "p": {
+     "x": 1,
+     "y": 1
+    },
+    "scale": 3,
+    "rotation": 0.0,
+    "yScale": 1,
+    "mirror": true
+   },
+   "expect": {
+    "pieces": [
+     {
+      "kind": "insert",
+      "p": [
+       4.0,
+       1.0
+      ],
+      "scale": 1.0,
+      "yScale": 3.0,
+      "rotation": -1.5707963267948963,
+      "mirror": true
+     }
+    ]
+   }
+  },
+  {
+   "name": "Patlat: oda x 1,5 y 0,5: daire elips, yazı genişler",
+   "insert": {
+    "kind": "insert",
+    "id": 1,
+    "layerId": "kat",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4103",
+    "p": {
+     "x": 100,
+     "y": 200
+    },
+    "scale": 1.5,
+    "rotation": 0.0,
+    "yScale": 0.5
+   },
+   "expect": {
+    "pieces": [
+     {
+      "kind": "polygon",
+      "corners": [
+       [
+        100.0,
+        200.0
+       ],
+       [
+        106.0,
+        200.0
+       ],
+       [
+        106.0,
+        201.5
+       ],
+       [
+        100.0,
+        201.5
+       ]
+      ]
+     },
+     {
+      "kind": "line",
+      "ends": [
+       [
+        100.0,
+        200.0
+       ],
+       [
+        106.0,
+        201.5
+       ]
+      ]
+     },
+     {
+      "center": [
+       103.0,
+       200.75
+      ],
+      "semi": [
+       1.5,
+       0.25
+      ],
+      "axis": 0.0,
+      "kind": "ellipse"
+     },
+     {
+      "kind": "text",
+      "p": [
+       101.5,
+       201.0
+      ],
+      "height": 0.25,
+      "widthFactor": 3.0,
+      "rotation": 0.0
+     }
+    ]
+   }
+  }
+ ]
+}

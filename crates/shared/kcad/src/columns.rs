@@ -66,7 +66,7 @@
 //! §6): a line flags int follows (`LINE_*`: 1 dimension line colour, 2 its
 //! weight, 4 its type, 8 extension lines' colour, 16 their weight, 32 their
 //! type, 64 the value's colour), and bit 28 (`REFS`) for its references (docs/adr/0249 §4);
-//! hatch: holes, name, scale, families, gradient, tie (docs/adr/0186); insert: mirror; leader: text, arrow, mask (no value;
+//! hatch: holes, name, scale, families, gradient, tie (docs/adr/0186); insert: mirror, y factor (a float after the turn, docs/adr/0315 §3); leader: text, arrow, mask (no value;
 //! docs/adr/0146), arrow size (docs/adr/0205 §7); table: merges, aligns, header (no value), grid, text
 //! style, font, bold (no value), italic (no value), oblique, source, frame
 //! (docs/adr/0184); image: mirror (no value), asset, file, clip, opacity
@@ -1155,11 +1155,16 @@ impl Packer {
                 block,
                 p,
                 scale,
+                y_scale,
                 rotation,
                 mirror,
             }) => {
                 self.point(p);
                 self.out.floats.extend([*scale, *rotation]);
+                if let Some(y) = y_scale {
+                    flags |= OPT[1];
+                    self.out.floats.push(*y);
+                }
                 self.text(&block.to_text());
                 if *mirror {
                     flags |= OPT[0];
@@ -1969,7 +1974,8 @@ fn allowed(kind: u8) -> u32 {
         11 => OPT.iter().fold(0, |m, b| m | b) | LINES | REFS,
         // A hatch: holes, schema 23's name, scale, families, gradient and tie (docs/adr/0186).
         12 => OPT[..6].iter().fold(0, |m, b| m | b),
-        13 => OPT[0],
+        // An insert: mirror, its own y factor (docs/adr/0315 §3).
+        13 => OPT[0] | OPT[1],
         // A table: merges, aligns, header, grid, its face, source, frame (docs/adr/0184).
         15 => OPT[..11].iter().fold(0, |m, b| m | b),
         // A picture: mirror, asset, file, clip, opacity (docs/adr/0192).
@@ -3038,6 +3044,7 @@ fn geometry(
         13 => {
             let p = c.point()?;
             let (scale, rotation) = (c.float()?, c.float()?);
+            let y_scale = if has(1) { Some(c.float()?) } else { None };
             let text = c.text(|| place("block"))?;
             let block =
                 BlockId::parse(&text).ok_or_else(|| broken(&format!("blok kimliği “{text}”")))?;
@@ -3046,6 +3053,7 @@ fn geometry(
                 block,
                 p,
                 scale,
+                y_scale,
                 rotation,
                 mirror: has(0),
             })

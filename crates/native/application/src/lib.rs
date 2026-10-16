@@ -47,6 +47,7 @@ pub mod audit_cmd;
 pub mod blocks;
 pub mod blocks_define;
 pub mod blocks_edit;
+pub mod blocks_insert;
 pub mod blocks_library;
 pub mod break_join;
 pub mod call;
@@ -463,6 +464,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_LINE_TYPES_EDIT,
         kentos_contracts::CAD_LINE_TYPES_EDIT_VERSION,
+    ),
+    // A block placed ([`blocks_insert`], docs/adr/0315 §4).
+    (
+        kentos_contracts::CAD_BLOCKS_INSERT,
+        kentos_contracts::CAD_BLOCKS_INSERT_VERSION,
     ),
     // The project's style library and a change's reach ([`library_edit`], [`styles_impact`], docs/adr/0314).
     (

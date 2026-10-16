@@ -11,7 +11,7 @@
   "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
   "clickTolerance": 0.16,
   "steps": [
-    { "run": "block.insertFile", "note": "Dosya sorulur, iz altyapi-projesi.kcad'i verir.", "expect": { "tool": "blockInsert", "entities": 4, "layers": ["Çizim", "Kadastro", "Kadastro / Parsel", "Yapı", "Altyapı", "Altyapı / Su hattı", "Altyapı / Kanalizasyon", "Aydınlatma"], "prompt": "Blok ekle: “altyapi-projesi” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]", "logged": ["“altyapi-projesi.kcad” blok oldu: “altyapi-projesi”, 8 nesne, 3 iç blok, 4 yeni katman; 1 resim bloğa konamadığı için alınmadı. Yerleştirme noktasına tıklayın."] } },
+    { "run": "block.insertFile", "note": "Dosya sorulur, iz altyapi-projesi.kcad'i verir.", "expect": { "tool": "blockInsert", "entities": 4, "layers": ["Çizim", "Kadastro", "Kadastro / Parsel", "Yapı", "Altyapı", "Altyapı / Su hattı", "Altyapı / Kanalizasyon", "Aydınlatma"], "prompt": "Blok ekle: “altyapi-projesi” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Y ölçeği (Y): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]", "logged": ["“altyapi-projesi.kcad” blok oldu: “altyapi-projesi”, 8 nesne, 3 iç blok, 4 yeni katman; 1 resim bloğa konamadığı için alınmadı. Yerleştirme noktasına tıklayın."] } },
     { "move": [8, -12], "note": "Önizleme: imleçte bloğun hayaleti, taban noktası sol alt köşe." },
     { "shot": "dosyadan-blok", "note": "Dosyadan blok ekle: dosyanın çizimi imleçte" },
     { "click": [8, -12], "note": "Yerleştirme.", "expect": { "tool": "blockInsert", "entities": 5, "newest": { "kind": "insert", "points": [[8, -12], [9, -12], [8, -11]] } } },

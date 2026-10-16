@@ -12,6 +12,19 @@ use super::objects::width_factor_words;
 use crate::cbor::Seg;
 use crate::error::{Code, KcadError};
 
+/// A block's unit as a file writes it (docs/adr/0315 §4).
+pub(crate) fn units_name(u: kentos_contracts::BlockUnits) -> &'static str {
+    use kentos_contracts::BlockUnits as B;
+    match u {
+        B::Mm => "mm",
+        B::Cm => "cm",
+        B::M => "m",
+        B::In => "in",
+        B::Ft => "ft",
+        B::Unitless => "unitless",
+    }
+}
+
 impl<'d> Encoder<'d> {
     pub(super) fn blocks(&mut self, list: &'d [BlockDefinition]) -> Result<(), KcadError> {
         self.open(list.len(), false)?;
@@ -20,15 +33,24 @@ impl<'d> Encoder<'d> {
             self.path.push(Seg::Index(i));
             let n = 4
                 + usize::from(!block.attributes.is_empty())
-                + usize::from(block.description.is_some());
+                + usize::from(block.description.is_some())
+                + usize::from(block.units.is_some());
             self.open(n, true)?;
-            // id (2), base name (4), entities (8), attributes (10), description (11).
+            // id (2), base name (4), units (5), entities (8), attributes (10), description (11).
             self.key("id");
             self.at(Seg::Name("id"), |e| e.id(&block.id.0))?;
             self.key("base");
             self.at(Seg::Name("base"), |e| e.point(&block.base))?;
             self.key("name");
             self.at(Seg::Name("name"), |e| e.text(&block.name))?;
+            // The unit it is drawn in (docs/adr/0315 §4).
+            if let Some(u) = block.units {
+                self.key("units");
+                self.at(Seg::Name("units"), |e| {
+                    e.w.text(units_name(u));
+                    Ok(())
+                })?;
+            }
             self.key("entities");
             self.path.push(Seg::Name("entities"));
             self.open(block.entities.len(), false)?;

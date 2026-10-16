@@ -21,6 +21,19 @@
 //! The documents keep the block rules (known blocks, no cycles, at most 16
 //! levels; `kentos_contracts::blocks`); the core stays total all the same:
 //! an unknown block expands to nothing and a cycle stops where it closes.
+//!
+//! An insert's own y factor (docs/adr/0315 §3) makes its placement an affine:
+//! its pieces are then warped as Vektör oturtma's affine warps them
+//! (`ops::warp`): straight geometry exactly, a circle, an arc and an ellipse
+//! the exact ellipse of their image, a path's arc segments straight vertices
+//! within 0.1 mm.
+//!
+//! A piece's look (docs/adr/0315 §2): a part it has is its own; a part in its
+//! `byLayer` follows a layer, its own, or for a piece on the block's layer
+//! (`""`, the DXF's layer 0) the layer of the insert that draws it; any other
+//! part is the insert's (BYBLOCK). A piece on a layer of its own shows only
+//! while that layer does (`Piece::gates`), and a nested insert's pieces only
+//! while its layer does.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -28,8 +41,9 @@ use std::sync::Arc;
 use crate::api::json::Json;
 use crate::entity::{Attrs, Entity, Shape, entity_bounds_in};
 use crate::geom::affine::{Affine, apply, compose, translation};
+use crate::ops::warp::{Warp, warp_shape};
 use crate::geometry::{Bounds, empty_bounds, extend_bounds};
-use crate::jsmath::{PI, cos, js_max, js_min, sin};
+use crate::jsmath::{PI, atan2, cos, js_hypot, js_max, js_min, sin};
 use crate::ops::curve_cuts::Cut;
 use crate::ops::transform::transform_shape;
 use crate::text::{Font, TextAlign};
@@ -95,10 +109,12 @@ pub struct Piece {
     pub shape: Shape,
     pub color: Option<String>,
     pub line_weight: Option<f64>,
-    /// Its own layer and the parts of its look that follow that layer
-    /// rather than the insert (`byLayer`, docs/adr/0260 §1): a mask of
-    /// [`BY_LAYER_COLOR`] …; none when it has none.
-    pub by_layer: Option<(String, u8)>,
+    /// The layers its parts follow rather than the insert (`byLayer`, docs/adr/0260 §1, 0315 §2): each a layer
+    /// (`""`: the layer of the insert that draws it) and a mask of [`BY_LAYER_COLOR`] …, at most one entry a layer.
+    pub by_layer: Vec<(String, u8)>,
+    /// The layers it shows only while they show (docs/adr/0315 §2): its own, and those of the nested inserts it is
+    /// drawn through; none on the block's layer.
+    pub gates: Vec<String>,
     /// Its line type, its pattern's scale and its transparency: its own, or a nested insert's (BYBLOCK, docs/adr/0312
     /// §4); none of a part draws with the insert's, then its layer's.
     pub stroke: PieceStroke,
@@ -214,14 +230,14 @@ impl Blocks {
     /// the value the insert shows (an empty text when it shows none); none
     /// for an unknown block or a shape that is not an insert.
     pub fn expand(&self, insert: &Shape) -> Vec<Piece> {
-        let Some((flat, m)) = self.placed(insert) else {
+        let Some((flat, m, similar)) = self.placed(insert) else {
             return Vec::new();
         };
         let values = insert_attrs(insert);
         flat.pieces
             .iter()
             .map(|piece| {
-                let mut shape = transform_shape(&piece.shape, &m);
+                let mut shape = place(&piece.shape, &m, similar);
                 if let (Some(tag), Some(values), Shape::Text { text, .. }) =
                     (&piece.attribute, values, &mut shape)
                     && let Some(v) = values.shown(tag)
@@ -233,6 +249,7 @@ impl Blocks {
                     color: piece.color.clone(),
                     line_weight: piece.line_weight,
                     by_layer: piece.by_layer.clone(),
+                    gates: piece.gates.clone(),
                     stroke: piece.stroke.clone(),
                     attribute: piece.attribute.clone(),
                 }
@@ -249,8 +266,10 @@ impl Blocks {
         }
         let mut cur = insert;
         let mut m: Affine = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
+        let mut similar = true;
         for (depth, &i) in path.iter().enumerate() {
-            let (flat, placed) = self.placed(cur)?;
+            let (flat, placed, alike) = self.placed(cur)?;
+            similar &= alike;
             m = compose(
                 &m,
                 &compose(&placed, &translation(-flat.base.x, -flat.base.y)),
@@ -263,17 +282,53 @@ impl Blocks {
                 }
                 cur = &e.shape;
             } else {
-                return (!inner).then(|| transform_shape(&e.shape, &m));
+                return (!inner).then(|| place(&e.shape, &m, similar));
             }
         }
         None
+    }
+
+    /// A block path through an insert under these definitions, made a path through `after_insert` under `after`
+    /// (docs/adr/0315 §1): each step's object found again by its local id, which a definition keeps through its
+    /// edits; a step whose id is not once in both definitions keeps its place. None when a step leaves either.
+    pub fn path_in(
+        &self,
+        insert: &Shape,
+        after: &Blocks,
+        after_insert: &Shape,
+        path: &[u32],
+    ) -> Option<Vec<u32>> {
+        let local = |e: &Entity| number_field(&e.rest, "id");
+        let once = |list: &[Entity], id: f64| {
+            let mut found = list.iter().enumerate().filter(|(_, e)| local(e) == Some(id));
+            match (found.next(), found.next()) {
+                (Some((i, _)), None) => Some(i),
+                _ => None,
+            }
+        };
+        let (mut was, mut now) = (insert, after_insert);
+        let mut out = Vec::with_capacity(path.len());
+        for &i in path {
+            let (old, _, _) = self.placed(was)?;
+            let (new, _, _) = after.placed(now)?;
+            let e = old.entities.get(i as usize)?;
+            let j = local(e)
+                .filter(|&id| once(&old.entities, id) == Some(i as usize))
+                .and_then(|id| once(&new.entities, id))
+                .unwrap_or(i as usize);
+            let next = new.entities.get(j)?;
+            out.push(j as u32);
+            was = &e.shape;
+            now = &next.shape;
+        }
+        Some(out)
     }
 
     /// Every block path of an insert's objects (docs/adr/0263 §3), in the order the flattening places them (a nested
     /// insert's objects where it stands); an unknown block has none.
     pub fn piece_paths(&self, insert: &Shape) -> Vec<Vec<u32>> {
         fn walk(blocks: &Blocks, shape: &Shape, prefix: &mut Vec<u32>, out: &mut Vec<Vec<u32>>) {
-            let Some((flat, _)) = blocks.placed(shape) else {
+            let Some((flat, _, _)) = blocks.placed(shape) else {
                 return;
             };
             if prefix.len() >= MAX_DEPTH {
@@ -298,7 +353,7 @@ impl Blocks {
     /// definition's frame, placed as the insert places them; none for an
     /// unknown block or one without pieces.
     pub fn outline(&self, insert: &Shape, font: Font) -> Option<Vec<Vec2>> {
-        let (flat, m) = self.placed(insert)?;
+        let (flat, m, _) = self.placed(insert)?;
         let mut b = empty_bounds();
         for piece in &flat.pieces {
             let pb = entity_bounds_in(&piece.shape, font);
@@ -324,12 +379,14 @@ impl Blocks {
         )
     }
 
-    /// An insert's definition and its similarity from the base-relative pieces to the drawing.
-    fn placed(&self, insert: &Shape) -> Option<(&Arc<Flat>, Affine)> {
+    /// An insert's definition, its placement from the base-relative pieces to the drawing, and whether that is a
+    /// similarity (no y factor of its own).
+    fn placed(&self, insert: &Shape) -> Option<(&Arc<Flat>, Affine, bool)> {
         let Shape::Insert {
             block,
             p,
             scale,
+            y_scale,
             rotation,
             mirror,
             ..
@@ -338,9 +395,11 @@ impl Blocks {
             return None;
         };
         let flat = self.by_id.get(block)?;
+        let sy = y_scale.unwrap_or(*scale);
         Some((
             flat,
-            placement(*p, *scale, *rotation, mirror.unwrap_or(false)),
+            placement_xy(*p, *scale, sy, *rotation, mirror.unwrap_or(false)),
+            uniform(*scale, *y_scale),
         ))
     }
 
@@ -353,7 +412,7 @@ impl Blocks {
     /// (§7; an empty one none). The objects come without ids (they are new
     /// objects).
     pub fn explode(&self, insert: &Entity) -> Cut {
-        let Some((flat, m)) = self.placed(&insert.shape) else {
+        let Some((flat, m, similar)) = self.placed(&insert.shape) else {
             return Cut::Error("Yerleştirilen blok çizimde tanımlı değil; patlatılamadı.".into());
         };
         let values = insert_attrs(&insert.shape);
@@ -378,10 +437,27 @@ impl Blocks {
                 .map(|(_, v)| v.clone())
         };
         let (color, weight, layer) = (field("color"), field("lineWeight"), field("layerId"));
+        // Under a y factor a nested insert stays one only while its axes stay square (docs/adr/0315 §3).
+        let mut nested = Vec::with_capacity(flat.entities.len());
+        for e in &flat.entities {
+            nested.push(if similar || !matches!(e.shape, Shape::Insert { .. }) {
+                place(&e.shape, &m, similar)
+            } else {
+                match insert_through(&e.shape, &m) {
+                    Some(s) => s,
+                    None => {
+                        return Cut::Error(
+                            "Eşit olmayan ölçekli bu yerleştirmenin içindeki döndürülmüş blok, eksenleri eğileceği için blok olarak kalamaz; önce içteki bloğu patlatın ya da ölçekleri eşitleyin.".into(),
+                        );
+                    }
+                }
+            });
+        }
         let pieces = flat
             .entities
             .iter()
-            .map(|e| {
+            .zip(nested)
+            .map(|(e, placed)| {
                 let mut rest: Vec<(String, Json)> = e
                     .rest
                     .iter()
@@ -404,8 +480,11 @@ impl Blocks {
                     rest.retain(|(k, _)| k != "layerId");
                     rest.push(("layerId".into(), l.clone()));
                 }
+                // The parts that followed the layer now are their layer's own: an object of the drawing has no
+                // `byLayer` (docs/adr/0315 §2).
+                rest.retain(|(k, _)| k != "byLayer");
                 Entity {
-                    shape: transform_shape(&e.shape, &m),
+                    shape: placed,
                     rest,
                 }
             })
@@ -422,7 +501,7 @@ impl Blocks {
                     }
                 }
                 Entity {
-                    shape: transform_shape(&a.shape(text), &m),
+                    shape: place(&a.shape(text), &m, similar),
                     rest,
                 }
             }))
@@ -494,16 +573,80 @@ fn insert_attrs(shape: &Shape) -> Option<&Attrs> {
 /// `mirror`. A rotation that is exactly the double of a quarter turn
 /// (0, π/2, π, 3π/2 and their negatives) has an exact sine and cosine.
 pub fn placement(p: Vec2, scale: f64, rotation: f64, mirror: bool) -> Affine {
+    placement_xy(p, scale, scale, rotation, mirror)
+}
+
+/// [`placement`] with its own y factor (docs/adr/0315 §3): x' = p + R(rotation)·S·M·x, S = diag(sx, sy). With
+/// `sx == sy` it is [`placement`]'s similarity, bit for bit.
+pub fn placement_xy(p: Vec2, sx: f64, sy: f64, rotation: f64, mirror: bool) -> Affine {
     let (s, c) = quarter_turn(rotation).unwrap_or_else(|| (sin(rotation), cos(rotation)));
     let k = if mirror { -1.0 } else { 1.0 };
-    [
-        scale * c,
-        scale * s,
-        -scale * k * s,
-        scale * k * c,
-        p.x,
-        p.y,
-    ]
+    [sx * c, sx * s, -sy * k * s, sy * k * c, p.x, p.y]
+}
+
+/// Whether an insert's factors are one (no y factor of its own, or the same): its placement a similarity.
+pub fn uniform(scale: f64, y_scale: Option<f64>) -> bool {
+    y_scale.is_none_or(|y| y == scale)
+}
+
+/// A shape placed by `m`: moved, turned and scaled when `m` is a similarity (`similar`), else warped as an affine
+/// (docs/adr/0315 §3): curves the exact ellipse of their image, a path's arcs straight vertices within 0.1 mm.
+pub fn place(shape: &Shape, m: &Affine, similar: bool) -> Shape {
+    if similar {
+        return transform_shape(shape, m);
+    }
+    let warp = Warp::Affine {
+        from: Vec2::new(0.0, 0.0),
+        to: Vec2::new(m[4], m[5]),
+        m: [m[0], m[1], m[2], m[3]],
+    };
+    match warp_shape(shape, &[], &warp) {
+        Ok(w) => w.shape,
+        // An affine has no horizon; the similarity's own way all the same.
+        Err(_) => transform_shape(shape, m),
+    }
+}
+
+/// A nested insert placed by an affine `m` (docs/adr/0315 §3): its point moved, its own placement composed with
+/// `m` and read back as a turn, two factors and a mirror; none when the composition shears (its axes are no
+/// longer square) and no insert can hold it.
+pub fn insert_through(shape: &Shape, m: &Affine) -> Option<Shape> {
+    let Shape::Insert {
+        block,
+        p,
+        scale,
+        y_scale,
+        rotation,
+        mirror,
+        attrs,
+    } = shape
+    else {
+        return None;
+    };
+    let own = placement_xy(
+        Vec2::new(0.0, 0.0),
+        *scale,
+        y_scale.unwrap_or(*scale),
+        *rotation,
+        mirror.unwrap_or(false),
+    );
+    let l = compose(m, &own);
+    let (u, v) = (Vec2::new(l[0], l[1]), Vec2::new(l[2], l[3]));
+    let (su, sv) = (js_hypot(u.x, u.y), js_hypot(v.x, v.y));
+    if !(su > 0.0 && sv > 0.0) || (u.x * v.x + u.y * v.y).abs() > 1e-12 * su * sv {
+        return None;
+    }
+    let flip = u.x * v.y - u.y * v.x < 0.0;
+    let sy = if (su - sv).abs() <= 1e-15 * su { su } else { sv };
+    Some(Shape::Insert {
+        block: block.clone(),
+        p: apply(m, *p),
+        scale: su,
+        y_scale: (sy != su).then_some(sy),
+        rotation: atan2(u.y, u.x),
+        mirror: flip.then_some(true),
+        attrs: attrs.clone(),
+    })
 }
 
 /// The whole matrix of an insert of a definition whose base point is `base`
@@ -511,6 +654,20 @@ pub fn placement(p: Vec2, scale: f64, rotation: f64, mirror: bool) -> Affine {
 pub fn insert_matrix(base: Vec2, p: Vec2, scale: f64, rotation: f64, mirror: bool) -> Affine {
     compose(
         &placement(p, scale, rotation, mirror),
+        &translation(-base.x, -base.y),
+    )
+}
+
+/// [`insert_matrix`] with an own y factor (docs/adr/0315 §3).
+pub fn insert_matrix_xy(
+    base: Vec2,
+    p: Vec2,
+    (sx, sy): (f64, f64),
+    rotation: f64,
+    mirror: bool,
+) -> Affine {
+    compose(
+        &placement_xy(p, sx, sy, rotation, mirror),
         &translation(-base.x, -base.y),
     )
 }
@@ -528,13 +685,30 @@ pub fn insert_local(
     mirror: bool,
     at: Vec2,
 ) -> Option<Vec2> {
-    if !(scale.is_finite() && scale != 0.0) {
+    insert_local_xy(base, p, (scale, scale), rotation, mirror, at)
+}
+
+/// [`insert_local`] with an own y factor (docs/adr/0315 §3).
+pub fn insert_local_xy(
+    base: Vec2,
+    p: Vec2,
+    (sx, sy): (f64, f64),
+    rotation: f64,
+    mirror: bool,
+    at: Vec2,
+) -> Option<Vec2> {
+    if !(sx.is_finite() && sx != 0.0 && sy.is_finite() && sy != 0.0) {
         return None;
     }
     let (s, c) = quarter_turn(rotation).unwrap_or_else(|| (sin(rotation), cos(rotation)));
-    let (dx, dy) = ((at.x - p.x) / scale, (at.y - p.y) / scale);
-    // R⁻¹ is R's transpose; M is its own inverse.
-    let (x, y) = (c * dx + s * dy, -s * dx + c * dy);
+    // R⁻¹ is R's transpose, then S⁻¹; M is its own inverse. One factor divides first, as it always did.
+    let (x, y) = if sx == sy {
+        let (dx, dy) = ((at.x - p.x) / sx, (at.y - p.y) / sx);
+        (c * dx + s * dy, -s * dx + c * dy)
+    } else {
+        let (dx, dy) = (at.x - p.x, at.y - p.y);
+        ((c * dx + s * dy) / sx, (-s * dx + c * dy) / sy)
+    };
     let k = if mirror { -1.0 } else { 1.0 };
     Some(Vec2::new(base.x + x, base.y + k * y))
 }
@@ -578,10 +752,13 @@ fn flatten(
         let own_color = text_field(&e.rest, "color");
         let own_weight = number_field(&e.rest, "lineWeight");
         let own_stroke = PieceStroke::of(&e.rest);
+        let own_layer = text_field(&e.rest, "layerId").unwrap_or_default();
+        let own_follows = by_layer(&e.rest);
         if let Shape::Insert {
             block,
             p,
             scale,
+            y_scale,
             rotation,
             mirror,
             attrs,
@@ -594,11 +771,20 @@ fn flatten(
             // The nested pieces: placed in this definition, then relative to its base point.
             let m = compose(
                 &to_base,
-                &placement(*p, *scale, *rotation, mirror.unwrap_or(false)),
+                &placement_xy(
+                    *p,
+                    *scale,
+                    y_scale.unwrap_or(*scale),
+                    *rotation,
+                    mirror.unwrap_or(false),
+                ),
             );
+            let similar = uniform(*scale, *y_scale);
+            // What the nested insert's own `byLayer` parts follow: its layer (docs/adr/0315 §2).
+            let insert_mask = own_follows.as_ref().map_or(0, |(_, m)| *m);
             for piece in &inner.pieces {
                 // A nested insert's attribute shows its value, fixed in this definition.
-                let mut shape = transform_shape(&piece.shape, &m);
+                let mut shape = place(&piece.shape, &m, similar);
                 if let (Some(tag), Some(values), Shape::Text { text, .. }) =
                     (&piece.attribute, attrs, &mut shape)
                     && let Some(v) = values.shown(tag)
@@ -608,8 +794,48 @@ fn flatten(
                 if matches!(&shape, Shape::Text { text, .. } if text.is_empty()) {
                     continue;
                 }
-                // A part that follows the piece's own layer takes nothing from the nested insert.
-                let follows = |bit: u8| piece.by_layer.as_ref().is_some_and(|(_, m)| m & bit != 0);
+                // A part that follows a layer takes nothing from the nested insert.
+                let follows =
+                    |bit: u8| piece.by_layer.iter().any(|(_, m)| m & bit != 0);
+                // A part the piece takes from the nested insert (BYBLOCK) and the insert has none of its own:
+                // the insert's own `byLayer` part follows the insert's layer.
+                let mut via = 0u8;
+                let mut from_insert = |bit: u8, has: bool| {
+                    if !follows(bit) && !has && insert_mask & bit != 0 {
+                        via |= bit;
+                    }
+                };
+                from_insert(BY_LAYER_COLOR, piece.color.is_some() || own_color.is_some());
+                from_insert(
+                    BY_LAYER_WEIGHT,
+                    piece.line_weight.is_some() || own_weight.is_some(),
+                );
+                from_insert(
+                    BY_LAYER_LINE_TYPE,
+                    piece.stroke.line_type.is_some()
+                        || piece.stroke.pattern.is_some()
+                        || own_stroke.line_type.is_some()
+                        || own_stroke.pattern.is_some(),
+                );
+                from_insert(
+                    BY_LAYER_TRANSPARENCY,
+                    piece.stroke.transparency.is_some() || own_stroke.transparency.is_some(),
+                );
+                // The block's layer of the nested definition is the nested insert's layer here.
+                let mut layers: Vec<(String, u8)> = Vec::with_capacity(2);
+                for (layer, mask) in piece.by_layer.iter().cloned().chain(
+                    (via != 0).then(|| (String::new(), via)),
+                ) {
+                    let layer = if layer.is_empty() { own_layer.clone() } else { layer };
+                    match layers.iter_mut().find(|(l, _)| *l == layer) {
+                        Some((_, m)) => *m |= mask,
+                        None => layers.push((layer, mask)),
+                    }
+                }
+                let mut gates = piece.gates.clone();
+                if !own_layer.is_empty() && !gates.contains(&own_layer) {
+                    gates.push(own_layer.clone());
+                }
                 pieces.push(Piece {
                     shape,
                     color: piece.color.clone().or_else(|| {
@@ -620,7 +846,8 @@ fn flatten(
                     line_weight: piece
                         .line_weight
                         .or_else(|| (!follows(BY_LAYER_WEIGHT)).then_some(own_weight).flatten()),
-                    by_layer: piece.by_layer.clone(),
+                    by_layer: layers,
+                    gates,
                     // The nested insert's line type, scale and transparency, as its colour (BYBLOCK).
                     stroke: PieceStroke {
                         line_type: piece.stroke.line_type.clone().or_else(|| {
@@ -650,7 +877,12 @@ fn flatten(
                 shape: transform_shape(&e.shape, &to_base),
                 color: own_color,
                 line_weight: own_weight,
-                by_layer: by_layer(&e.rest),
+                gates: if own_layer.is_empty() {
+                    Vec::new()
+                } else {
+                    vec![own_layer]
+                },
+                by_layer: own_follows.into_iter().collect(),
                 stroke: own_stroke,
                 attribute: None,
             });
@@ -662,7 +894,8 @@ fn flatten(
             shape: transform_shape(&a.shape(a.value.clone()), &to_base),
             color: None,
             line_weight: None,
-            by_layer: None,
+            by_layer: Vec::new(),
+            gates: Vec::new(),
             stroke: PieceStroke::default(),
             attribute: Some(a.tag.clone()),
         });
@@ -769,6 +1002,7 @@ mod tests {
             block: block.into(),
             p: Vec2::new(p.0, p.1),
             scale,
+            y_scale: None,
             rotation,
             mirror: mirror.then_some(true),
             attrs: None,
@@ -835,6 +1069,7 @@ mod tests {
             block: DOOR.into(),
             p: Vec2::new(10.0, 20.0),
             scale: 1.0,
+            y_scale: None,
             rotation,
             mirror: Some(true),
             attrs: Some(attrs.clone()),

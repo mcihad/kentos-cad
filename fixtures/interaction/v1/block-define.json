@@ -96,7 +96,7 @@
       "note": "Tanımlanan blok, Blok ekle'nin sıradaki bloğudur.",
       "expect": {
         "tool": "blockInsert",
-        "prompt": "Blok ekle: “Vana” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]"
+        "prompt": "Blok ekle: “Vana” için yerleştirme noktasına tıklayın [Blok (B) / Ölçek (Ö): 1.0000 / Y ölçeği (Y): 1.0000 / Dönüş (D): 0.0000° / Aynala (A): kapalı]"
       }
     },
     { "key": "Enter", "expect": { "tool": "select", "entities": 13 } }

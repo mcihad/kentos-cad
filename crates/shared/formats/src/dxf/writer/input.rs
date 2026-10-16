@@ -417,6 +417,7 @@ impl Fields {
                 block: need(self.block, "block")?,
                 p: need(self.p, "p")?,
                 scale: need(self.scale, "scale")?,
+                y_scale: None,
                 rotation: need(self.rotation, "rotation")?,
                 mirror: self.mirror.unwrap_or(false),
             }),
@@ -638,6 +639,7 @@ impl<'de> Deserialize<'de> for Definitions {
                     name: d.name,
                     base: d.base,
                     entities: d.entities.0,
+                    units: None,
                     attributes: d.attributes,
                     description: d.description,
                 })

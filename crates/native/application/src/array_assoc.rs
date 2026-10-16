@@ -87,6 +87,7 @@ pub(crate) fn write(
         name: free_name(doc),
         base,
         entities: crate::blocks_define::copies(objects.iter().copied()),
+        units: None,
         attributes: Vec::new(),
         description: None,
     };

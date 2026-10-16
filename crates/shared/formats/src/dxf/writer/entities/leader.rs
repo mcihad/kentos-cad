@@ -156,7 +156,7 @@ impl Writer<'_> {
             return None;
         }
         let record = self.handles.take();
-        self.records.push((record, name.to_owned()));
+        self.records.push((record, name.to_owned(), 0));
         self.block_begin_flags(record, name, 0);
         let head = arrowhead(
             ArrowKind::of(Some(arrow.name())),

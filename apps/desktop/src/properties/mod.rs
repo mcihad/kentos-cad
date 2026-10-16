@@ -161,6 +161,8 @@ pub enum Field {
     InsertX(Slot),
     InsertY(Slot),
     InsertScale(Slot),
+    /// An insert's own y factor (docs/adr/0315 §3).
+    InsertYScale(Slot),
     InsertTurn(Slot),
     /// A picture's place (Y, X), width and height (each keeping its shape),
     /// turn (degrees typed) and see-through share (0 to 90 %; docs/adr/0192 §4).
@@ -903,6 +905,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::InsertX(s)
         | Field::InsertY(s)
         | Field::InsertScale(s)
+        | Field::InsertYScale(s)
         | Field::InsertTurn(s)
         | Field::ImageX(s)
         | Field::ImageY(s)
@@ -1004,8 +1007,14 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             i.p.y = f.to_metres(n);
             true
         }
+        // Ölçek sets both factors of a uniform insert; X ölçeği the x one alone (docs/adr/0315 §3).
         (Field::InsertScale(_), Entity::Insert(i)) if finite && n > 0.0 => {
             i.scale = n;
+            i.y_scale = i.y_scale.filter(|y| *y != n);
+            true
+        }
+        (Field::InsertYScale(_), Entity::Insert(i)) if finite && n > 0.0 => {
+            i.y_scale = (n != i.scale).then_some(n);
             true
         }
         (Field::InsertTurn(_), Entity::Insert(i)) if finite => {

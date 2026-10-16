@@ -155,7 +155,10 @@ use crate::layer::LineType;
 /// 65 (docs/adr/0313): line types with patterns: `.kcad` document schema 56, the settings' `lineTypes` and
 ///    `lineTypeScale`, a layer style's and an object's `linePattern`; in the typed columns the look's bit 128 and
 ///    its name. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 65;
+/// 66 (docs/adr/0315): an insert's own y factor and a block's unit: `.kcad` document schema 57, the insert's
+///    `yScale` and the definition's `units`; in the typed columns the insert's option bit 1 and its float after the
+///    turn. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 66;
 
 // ── Every import ────────────────────────────────────────────────────────
 

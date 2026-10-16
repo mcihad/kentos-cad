@@ -389,10 +389,23 @@ impl Store {
         rotation: f64,
         mirror: bool,
     ) -> Vec<f64> {
+        self.insert_outlines_xy(block, p, (scale, scale), rotation, mirror)
+    }
+
+    /// [`Store::insert_outlines`] with an own y factor (docs/adr/0315 §3).
+    pub fn insert_outlines_xy(
+        &self,
+        block: &str,
+        p: Vec2,
+        (scale, y): (f64, f64),
+        rotation: f64,
+        mirror: bool,
+    ) -> Vec<f64> {
         let insert = Shape::Insert {
             block: block.to_owned(),
             p,
             scale,
+            y_scale: (y != scale).then_some(y),
             rotation,
             mirror: mirror.then_some(true),
             attrs: None,
@@ -416,6 +429,7 @@ impl Store {
             block,
             p,
             scale,
+            y_scale,
             rotation,
             mirror,
             ..
@@ -425,7 +439,8 @@ impl Store {
         };
         let base = self.blocks().get(block)?.base;
         let mirror = mirror.unwrap_or(false);
-        crate::block::insert_local(base, *p, *scale, *rotation, mirror, at)
+        let factors = (*scale, y_scale.unwrap_or(*scale));
+        crate::block::insert_local_xy(base, *p, factors, *rotation, mirror, at)
     }
 
     /// Objects moved by each affine in turn, as `transformEntities` gives

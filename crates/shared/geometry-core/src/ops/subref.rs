@@ -785,19 +785,34 @@ pub fn follow_in(
     before: (&Blocks, &Entity),
     after: Option<(&Blocks, &Entity)>,
 ) -> Followed {
+    follow_path(place, path, before, after).0
+}
+
+/// [`follow_in`], and the path the piece has after (docs/adr/0315 §1): each step found again by the object's local
+/// id, which a definition keeps through its edits (an object added before it, or one removed, moves its place).
+pub fn follow_path(
+    place: Place,
+    path: &[u32],
+    before: (&Blocks, &Entity),
+    after: Option<(&Blocks, &Entity)>,
+) -> (Followed, Vec<u32>) {
     let Some((blocks_after, after)) = after else {
-        return Followed::Broken(Reason::ObjectGone);
+        return (Followed::Broken(Reason::ObjectGone), path.to_vec());
     };
     if !matches!(after.shape, Shape::Insert { .. }) {
-        return Followed::Broken(Reason::KindChanged);
+        return (Followed::Broken(Reason::KindChanged), path.to_vec());
     }
     let Some(was) = piece(before.0, before.1, path) else {
-        return Followed::Broken(Reason::NoSuchPlace);
+        return (Followed::Broken(Reason::NoSuchPlace), path.to_vec());
     };
-    let Some(now) = piece(blocks_after, after, path) else {
-        return Followed::Broken(Reason::PieceGone);
+    let moved = before
+        .0
+        .path_in(&before.1.shape, blocks_after, &after.shape, path)
+        .unwrap_or_else(|| path.to_vec());
+    let Some(now) = piece(blocks_after, after, &moved) else {
+        return (Followed::Broken(Reason::PieceGone), path.to_vec());
     };
-    follow(place, &was, Some(&now))
+    (follow(place, &was, Some(&now)), moved)
 }
 
 /// The sub-object a click at `at` falls on within `tol` (docs/adr/0276): its points (an end, a vertex, a point

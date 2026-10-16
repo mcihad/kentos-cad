@@ -791,6 +791,8 @@ pub struct Memory {
     /// (`BlockInsertTool.block`, `.scale`, `.rotation`, `.mirror`; docs/adr/0144).
     pub block_insert: Option<kentos_contracts::BlockId>,
     pub block_scale: f64,
+    /// Blok ekle's own y factor (docs/adr/0315 §3); none: the x one.
+    pub block_y_scale: Option<f64>,
     pub block_rotation: f64,
     pub block_mirror: bool,
     /// Topolojik temizlik's tolerance, metres, and its four works
@@ -1127,6 +1129,7 @@ impl Default for Memory {
             audit_purge_dims: false,
             block_insert: None,
             block_scale: 1.0,
+            block_y_scale: None,
             block_rotation: 0.0,
             block_mirror: false,
             topology_tolerance: crate::topology::FIRST_TOLERANCE,

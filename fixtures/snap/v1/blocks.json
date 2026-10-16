@@ -1452,7 +1452,7 @@
    }
   },
   {
-   "name": "kendi gizli katmanındaki yazı çizildiği için kenetlenir",
+   "name": "kendi gizli katmanındaki yazı görünmediği için kenetlenmez",
    "entities": [
     {
      "kind": "insert",
@@ -1586,14 +1586,7 @@
    ],
    "from": null,
    "extras": {},
-   "expect": {
-    "kind": "insertion",
-    "point": [
-     98.73205080756888,
-     106.19615242270663
-    ],
-    "id": 1
-   }
+   "expect": null
   },
   {
    "name": "iç içe kapının ekleme noktası kenetlenmez",

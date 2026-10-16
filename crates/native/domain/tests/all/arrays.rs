@@ -40,6 +40,7 @@ fn insert(x: f64) -> Entity {
         block: BLOCK,
         p: Vec2 { x, y: 0.0 },
         scale: 1.0,
+        y_scale: None,
         rotation: 0.0,
         mirror: false,
     })
@@ -60,6 +61,7 @@ fn arrayed() -> (Document, Vec<Slot>, AssocArray) {
         })],
         attributes: Vec::new(),
         description: None,
+        units: None,
     };
     let (slots, array) = doc
         .transact("İlişkili dizi", |doc| {

@@ -380,7 +380,7 @@ pub fn dimstyle_record(
 /// BLOCK_RECORD: model space and paper space, each pointing to its
 /// layout, then the drawing's blocks and the dimensions' anonymous ones
 /// (handle, name), as they were written.
-pub fn block_record_table(out: &mut Out, records: &[(u64, String)]) {
+pub fn block_record_table(out: &mut Out, records: &[(u64, String, i64)]) {
     table(out, "BLOCK_RECORD", BLOCK_RECORD_TABLE, 2 + records.len());
     for (handle, name, layout) in [
         (MODEL_SPACE, "*Model_Space", "1A"),
@@ -398,7 +398,7 @@ pub fn block_record_table(out: &mut Out, records: &[(u64, String)]) {
             &[(2, name), (340, layout), (70, "0"), (280, "1"), (281, "0")],
         );
     }
-    for (handle, name) in records {
+    for (handle, name, units) in records {
         record(
             out,
             "BLOCK_RECORD",
@@ -407,7 +407,10 @@ pub fn block_record_table(out: &mut Out, records: &[(u64, String)]) {
             "AcDbBlockTableRecord",
         );
         out.str(2, name);
-        fixed(out, &[(340, "0"), (70, "0"), (280, "1"), (281, "0")]);
+        out.str(340, "0");
+        // Its insertion unit (docs/adr/0315 §4).
+        out.int(70, *units);
+        fixed(out, &[(280, "1"), (281, "0")]);
     }
     out.str(0, "ENDTAB");
 }

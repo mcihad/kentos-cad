@@ -3309,7 +3309,7 @@
     "part": 0,
     "ring": 0,
     "index": 0,
-    "t": 0.5
+    "t": 0.5000000000000001
    }
   },
   {
@@ -3711,7 +3711,7 @@
     "index": 1,
     "t": 0.5
    },
-   "length": 3.3182380450040307
+   "length": 3.3182380450040303
   },
   {
    "name": "Yayın parçası",
@@ -7955,6 +7955,650 @@
      "y": 46.598076211353316
     }
    }
+  },
+  {
+   "name": "Kapının önüne nesne girdi: kanat yerel kimliğiyle bulunur, yol değişir",
+   "path": [
+    1,
+    1
+   ],
+   "place": {
+    "kind": "vertex",
+    "part": 0,
+    "ring": 0,
+    "index": 1
+   },
+   "before": {
+    "definitions": [
+     {
+      "id": "kapi",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "kind": "line",
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 1,
+         "y": 0
+        },
+        "id": 1
+       },
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 0,
+          "y": 1
+         },
+         {
+          "x": 1,
+          "y": 1
+         }
+        ],
+        "id": 2
+       },
+       {
+        "kind": "circle",
+        "c": {
+         "x": 0.5,
+         "y": 0.5
+        },
+        "r": 0.25,
+        "id": 3
+       }
+      ]
+     },
+     {
+      "id": "oda",
+      "base": {
+       "x": 1,
+       "y": 1
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 1,
+          "y": 1
+         },
+         {
+          "x": 5,
+          "y": 1
+         },
+         {
+          "x": 5,
+          "y": 4
+         },
+         {
+          "x": 1,
+          "y": 4
+         }
+        ]
+       },
+       {
+        "kind": "insert",
+        "block": "kapi",
+        "p": {
+         "x": 2,
+         "y": 1
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "insert",
+        "block": "kapi",
+        "p": {
+         "x": 5,
+         "y": 2
+        },
+        "scale": 0.5,
+        "rotation": 1.5707963267948966
+       }
+      ]
+     },
+     {
+      "id": "cerceve",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "kind": "line",
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 10,
+         "y": 0
+        }
+       },
+       {
+        "kind": "insert",
+        "block": "oda",
+        "p": {
+         "x": 3,
+         "y": 3
+        },
+        "scale": 2.0,
+        "rotation": 0.5235987755982988,
+        "mirror": true
+       }
+      ]
+     }
+    ],
+    "insert": {
+     "kind": "insert",
+     "block": "oda",
+     "p": {
+      "x": 20,
+      "y": 10
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    }
+   },
+   "after": {
+    "definitions": [
+     {
+      "id": "kapi",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "kind": "line",
+        "id": 9,
+        "a": {
+         "x": 0,
+         "y": -0.2
+        },
+        "b": {
+         "x": 1,
+         "y": -0.2
+        }
+       },
+       {
+        "kind": "line",
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 1,
+         "y": 0
+        },
+        "id": 1
+       },
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 0,
+          "y": 1
+         },
+         {
+          "x": 1,
+          "y": 1
+         }
+        ],
+        "id": 2
+       },
+       {
+        "kind": "circle",
+        "c": {
+         "x": 0.5,
+         "y": 0.5
+        },
+        "r": 0.25,
+        "id": 3
+       }
+      ]
+     },
+     {
+      "id": "oda",
+      "base": {
+       "x": 1,
+       "y": 1
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 1,
+          "y": 1
+         },
+         {
+          "x": 5,
+          "y": 1
+         },
+         {
+          "x": 5,
+          "y": 4
+         },
+         {
+          "x": 1,
+          "y": 4
+         }
+        ]
+       },
+       {
+        "kind": "insert",
+        "block": "kapi",
+        "p": {
+         "x": 2,
+         "y": 1
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "insert",
+        "block": "kapi",
+        "p": {
+         "x": 5,
+         "y": 2
+        },
+        "scale": 0.5,
+        "rotation": 1.5707963267948966
+       }
+      ]
+     },
+     {
+      "id": "cerceve",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "kind": "line",
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 10,
+         "y": 0
+        }
+       },
+       {
+        "kind": "insert",
+        "block": "oda",
+        "p": {
+         "x": 3,
+         "y": 3
+        },
+        "scale": 2.0,
+        "rotation": 0.5235987755982988,
+        "mirror": true
+       }
+      ]
+     }
+    ],
+    "insert": {
+     "kind": "insert",
+     "block": "oda",
+     "p": {
+      "x": 20,
+      "y": 10
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    }
+   },
+   "expect": {
+    "at": {
+     "kind": "vertex",
+     "part": 0,
+     "ring": 0,
+     "index": 1
+    },
+    "point": {
+     "x": 21.0,
+     "y": 11.0
+    },
+    "path": [
+     1,
+     2
+    ]
+   }
+  },
+  {
+   "name": "Yerel kimlikleri tek olmayan kapı: yol yerinde kalır, önüne giren nesneyi anar",
+   "path": [
+    1,
+    0
+   ],
+   "place": {
+    "kind": "end"
+   },
+   "before": {
+    "definitions": [
+     {
+      "id": "kapi",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "kind": "line",
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 1,
+         "y": 0
+        },
+        "id": 1
+       },
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 0,
+          "y": 1
+         },
+         {
+          "x": 1,
+          "y": 1
+         }
+        ],
+        "id": 1
+       },
+       {
+        "kind": "circle",
+        "c": {
+         "x": 0.5,
+         "y": 0.5
+        },
+        "r": 0.25,
+        "id": 1
+       }
+      ]
+     },
+     {
+      "id": "oda",
+      "base": {
+       "x": 1,
+       "y": 1
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 1,
+          "y": 1
+         },
+         {
+          "x": 5,
+          "y": 1
+         },
+         {
+          "x": 5,
+          "y": 4
+         },
+         {
+          "x": 1,
+          "y": 4
+         }
+        ]
+       },
+       {
+        "kind": "insert",
+        "block": "kapi",
+        "p": {
+         "x": 2,
+         "y": 1
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "insert",
+        "block": "kapi",
+        "p": {
+         "x": 5,
+         "y": 2
+        },
+        "scale": 0.5,
+        "rotation": 1.5707963267948966
+       }
+      ]
+     },
+     {
+      "id": "cerceve",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "kind": "line",
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 10,
+         "y": 0
+        }
+       },
+       {
+        "kind": "insert",
+        "block": "oda",
+        "p": {
+         "x": 3,
+         "y": 3
+        },
+        "scale": 2.0,
+        "rotation": 0.5235987755982988,
+        "mirror": true
+       }
+      ]
+     }
+    ],
+    "insert": {
+     "kind": "insert",
+     "block": "oda",
+     "p": {
+      "x": 20,
+      "y": 10
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    }
+   },
+   "after": {
+    "definitions": [
+     {
+      "id": "kapi",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "kind": "line",
+        "id": 9,
+        "a": {
+         "x": 0,
+         "y": -0.2
+        },
+        "b": {
+         "x": 1,
+         "y": -0.2
+        }
+       },
+       {
+        "kind": "line",
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 1,
+         "y": 0
+        },
+        "id": 1
+       },
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 0,
+          "y": 1
+         },
+         {
+          "x": 1,
+          "y": 1
+         }
+        ],
+        "id": 1
+       },
+       {
+        "kind": "circle",
+        "c": {
+         "x": 0.5,
+         "y": 0.5
+        },
+        "r": 0.25,
+        "id": 1
+       }
+      ]
+     },
+     {
+      "id": "oda",
+      "base": {
+       "x": 1,
+       "y": 1
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 1,
+          "y": 1
+         },
+         {
+          "x": 5,
+          "y": 1
+         },
+         {
+          "x": 5,
+          "y": 4
+         },
+         {
+          "x": 1,
+          "y": 4
+         }
+        ]
+       },
+       {
+        "kind": "insert",
+        "block": "kapi",
+        "p": {
+         "x": 2,
+         "y": 1
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "insert",
+        "block": "kapi",
+        "p": {
+         "x": 5,
+         "y": 2
+        },
+        "scale": 0.5,
+        "rotation": 1.5707963267948966
+       }
+      ]
+     },
+     {
+      "id": "cerceve",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "kind": "line",
+        "a": {
+         "x": 0,
+         "y": 0
+        },
+        "b": {
+         "x": 10,
+         "y": 0
+        }
+       },
+       {
+        "kind": "insert",
+        "block": "oda",
+        "p": {
+         "x": 3,
+         "y": 3
+        },
+        "scale": 2.0,
+        "rotation": 0.5235987755982988,
+        "mirror": true
+       }
+      ]
+     }
+    ],
+    "insert": {
+     "kind": "insert",
+     "block": "oda",
+     "p": {
+      "x": 20,
+      "y": 10
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    }
+   },
+   "expect": {
+    "at": {
+     "kind": "end"
+    },
+    "point": {
+     "x": 22.0,
+     "y": 9.8
+    }
+   }
   }
  ],
  "pieceSnaps": [
@@ -8893,7 +9537,7 @@
     "part": 0,
     "ring": 0,
     "index": 0,
-    "t": 0.5
+    "t": 0.5000000000000001
    }
   },
   {

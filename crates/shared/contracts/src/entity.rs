@@ -841,8 +841,10 @@ impl TextAlign {
 /// A block placed in the drawing (docs/adr/0144): its definition drawn
 /// moved from the definition's base point to `p`, mirrored in the
 /// definition's x axis when `mirror`, then scaled and turned about `p`. The
-/// transform is a similarity: shapes keep their kind. The insert's own
-/// attributes carry the values of the definition's attribute definitions.
+/// transform is a similarity, shapes keeping their kind, unless the insert
+/// has a y factor of its own (docs/adr/0315 §3): then an affine, a circle
+/// becoming the exact ellipse of its image. The insert's own attributes
+/// carry the values of the definition's attribute definitions.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -856,9 +858,15 @@ pub struct InsertEntity {
     /// Where the definition's base point goes.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub p: Vec2,
-    /// Positive and finite; 1 is the definition's size.
+    /// Positive and finite; 1 is the definition's size. With `yScale`, the factor along the definition's x axis.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub scale: f64,
+    /// The factor along the definition's y axis when it is not `scale` (docs/adr/0315 §3), positive and finite;
+    /// absent: `scale`. A negative factor of a DXF is a mirror and a turn here.
+    #[serde(default, rename = "yScale", skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional, rename = "yScale"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub y_scale: Option<f64>,
     /// Radians, counter-clockwise from east.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub rotation: f64,
@@ -869,9 +877,13 @@ pub struct InsertEntity {
 }
 
 /// A block definition (docs/adr/0144): objects drawn once, placed many
-/// times. Its objects' ids are local to it; their layer is kept, but an
-/// insert draws them on its own layer (the DXF's layer 0), each with its own
-/// colour or line weight when it has one.
+/// times. Its objects' ids are local to it, once each and kept by every edit
+/// of it, so a reference to a piece follows it (docs/adr/0315 §1). An object
+/// on the block's layer (`""`, the DXF's layer 0) is drawn on its insert's
+/// layer; one on a layer of its own shows only while that layer does
+/// (docs/adr/0315 §2). A part of its look it has is its own, a `byLayer` part
+/// its layer's (its insert's layer on the block's layer), any other part its
+/// insert's (BYBLOCK).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -892,6 +904,60 @@ pub struct BlockDefinition {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub description: Option<String>,
+    /// The unit it was drawn in (docs/adr/0315 §4): a unit, its geometry being metres as the drawing's (an insert
+    /// keeps its size anywhere); `unitless`, its numbers being drawing units (an insert is scaled by the drawing's
+    /// unit). Absent: a real-size block of an unknown unit.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub units: Option<BlockUnits>,
+}
+
+/// The unit a block was drawn in (docs/adr/0315 §4).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum BlockUnits {
+    Mm,
+    Cm,
+    M,
+    In,
+    Ft,
+    /// Its numbers are the drawing's units: a 1 is a millimetre in a millimetre drawing, a metre in a metre one.
+    Unitless,
+}
+
+impl BlockUnits {
+    /// The drawing unit it is; none when unitless.
+    pub fn unit(self) -> Option<crate::DrawingUnit> {
+        use crate::DrawingUnit as U;
+        match self {
+            Self::Mm => Some(U::Mm),
+            Self::Cm => Some(U::Cm),
+            Self::M => Some(U::M),
+            Self::In => Some(U::In),
+            Self::Ft => Some(U::Ft),
+            Self::Unitless => None,
+        }
+    }
+
+    /// A drawing unit as a block's.
+    pub fn of(u: crate::DrawingUnit) -> Self {
+        use crate::DrawingUnit as U;
+        match u {
+            U::Mm => Self::Mm,
+            U::Cm => Self::Cm,
+            U::M => Self::M,
+            U::In => Self::In,
+            U::Ft => Self::Ft,
+        }
+    }
+
+    /// Its Turkish word: `mm`, `cm`, `m`, `in`, `ft` or `birimsiz`.
+    pub fn word(self) -> &'static str {
+        self.unit().map_or("birimsiz", |u| u.mark())
+    }
 }
 
 /// One attribute an insert shows as text (docs/adr/0144 §7): the insert's
