@@ -89,7 +89,7 @@ Yerel masaüstü/web dilimi erken denenebilir. **Merkezi saha kullanımı için 
 - [ ] **FORM-FIRST-13:** Aynı core tanımını desktop/web'de aç; aynı input/validation sonucu, focus/draft preservation ve responsive sekme/grup davranışı için ortak fixture kullan.
 - [ ] **FORM-FIRST-14:** Bulutta form metadata için draft/release/deployment kaynakları oluştur; published snapshot immutable ve dataset binding server-owned olsun. — *16 Ekim, kısmen: taslak ve yayınlar projenin ayarında, yayımlanmış sürüm sunucuda değişmez (ADR 0411 §3); ayrı dağıtım kaynağı yok.*
 - [x] **FORM-FIRST-15:** İlk merkezi kapsamda `forms.design`, `forms.publish`, `forms.use` ve dataset/row/field read/write izinlerini ayrı denetle; saha editörü form JSON/schema/domain değiştiremesin. — *Yapıldı (16 Ekim; ADR 0411 §1–§3: üç izin ayrı denetlenir; Veri girişi form JSON'unu, şemayı ve değer listelerini değiştiremez).*
-- [ ] **FORM-FIRST-16:** Okuma projection'ı ve mutation guard'ı ortak sunucu access resolver'a bağla; ham feature/attribute komutu, tablo, import, Python ve AI aynı denetimden geçsin. Geçiş varsayılanları mevcut verinin yetkisini sessiz genişletmesin. — *16 Ekim, kısmen: yazma bekçisi `project.changes`'te bütün istemciler için (ADR 0411 §4); okuma projeksiyonu yok (`FORM-Q`).*
+- [x] **FORM-FIRST-16:** Okuma projection'ı ve mutation guard'ı ortak sunucu access resolver'a bağla; ham feature/attribute komutu, tablo, import, Python ve AI aynı denetimden geçsin. Geçiş varsayılanları mevcut verinin yetkisini sessiz genişletmesin. — *Yapıldı (16 Ekim; ADR 0411 §4, §6: yazma bekçisi `project.changes`'te bütün istemciler için; Veri girişinin okuması formun alanlarıyla, indirme kapalı).*
 - [x] **FORM-FIRST-17:** Bir tasarımcı v1 yayınlasın; yalnız atanmış veri giriş kullanıcısı izinli alanları düzenlesin, viewer yalnız görsün. Her mutation revision/idempotency ve actor audit taşısın. — *Yapıldı (16 Ekim; ADR 0411: tasarımcı yayınlar, Veri girişi yalnız formun açık alanlarını yazar, görüntüleyici yalnız görür; her yazma `project.changes`'in sürüm, idempotency ve denetim kaydından geçer).*
 - [x] **FORM-FIRST-18:** Tasarım/preview/session/validate/save/publish komutlarını aynı katalogdan Python wrapper ve AI/MCP yüzeyine çıkar; tüm UI seçenekleri argüman/default/result/hata düzeyinde eşdeğer olsun. Bunun için uv/plugin manager bekleme. — *Yapıldı (16 Ekim; ADR 0401 §9, ADR 0402 §6).*
 - [ ] **FORM-FIRST-19:** İlk teslimde local/cloud capability ve desteklenen core profile açık listelensin; mobile/offline/relations/extension action henüz yoksa kullanıcıya gerçek durum gösterilsin.
@@ -313,14 +313,14 @@ ArcGIS'in domain yaklaşımı; kodlu değer veya aralık, yeniden kullanım ve s
 
 ### 5.1 Dataset ve alan şeması
 
-- [ ] **FORM-DATA-01:** Geometrili layer ile bağımsız tablonun ortak DatasetSchema/record API'sini tasarla; ilişki için sahte geometri nesnesi üretme.
+- [x] **FORM-DATA-01:** Geometrili layer ile bağımsız tablonun ortak DatasetSchema/record API'sini tasarla; ilişki için sahte geometri nesnesi üretme. — *Yapıldı (16 Ekim; ADR 0410: geometrisiz kayıt `record` geometrili nesnelerle aynı kayıt API'sinden; ilişki için sahte geometri yok).*
 - [x] **FORM-DATA-02:** Dataset/field immutable IDs ve current storage names ayrışsın; alias/rename ref migration gerektirmeden çalışsın. — *Yapıldı (16 Ekim; ADR 0401 §2).*
 - [ ] **FORM-DATA-03:** Primary/global UUID, unique keys, nullable, required, type, default, precision/length/range ve indexing alanlarını tanımla.
 - [ ] **FORM-DATA-04:** Date/time/datetime/timezone, reference/UUID, enum/collection, attachment ve geometry desteklerini aşamalı şema genişletmesiyle ekle.
 - [ ] **FORM-DATA-05:** Mevcut canonical string attributes için lossless migration; null/blank/absent, unknown attr ve geçmiş kaydı koru.
 - [ ] **FORM-DATA-06:** Kayıt oluştururken incomplete draft ile committed/submitted kayıt farklı validation profile kullansın; eksik zorunlu değeri sessizce kalıcı geçerli kayıt yapma.
 - [ ] **FORM-DATA-07:** Field rename/drop/type change için bağlı form/domain/relation/processing/expression kullanım grafını göster; breaking değişiklik planlı migration olsun.
-- [ ] **FORM-DATA-08:** Schema owner/design/publish izinleri data edit'ten ayrışsın; saha personeli feature.write ile şemayı değiştiremesin.
+- [x] **FORM-DATA-08:** Schema owner/design/publish izinleri data edit'ten ayrışsın; saha personeli feature.write ile şemayı değiştiremesin. — *Yapıldı (16 Ekim; ADR 0411: `forms.design`, `forms.publish` ayrı izin; Veri girişi şemayı değiştiremez).*
 - [ ] **FORM-DATA-09:** Local `.kcad`, cloud dataset ve offline replica aynı schema/version/value codec'ini taşısın.
 
 ### 5.2 Domain ve subtype
@@ -338,7 +338,7 @@ ArcGIS'in domain yaklaşımı; kodlu değer veya aralık, yeniden kullanım ve s
 - [x] **FORM-DATA-20:** Üst seçim değişince alt seçenekler aynı rule engine ile filtrelensin; önceki değer artık geçersizse açık validation ver. — *Yapıldı (16 Ekim; ADR 0402 §1 (`choiceFilter`, `form_choice_filtered`)).*
 - [ ] **FORM-DATA-21:** Split/merge default/duplicate/sum/proportional gibi attribute politikaları domain/field modelinde açık olsun; geometri işlemlerine bağlantısı korunsun.
 - [ ] **FORM-DATA-22:** Domain/subtype/contingent create/edit/publish/import/export işlemleri UI/Python/AI'da aynı komut olsun.
-- [ ] **FORM-DATA-23:** Final commit bütün API'lerde authoritative dataset/domain/contingent validation yapsın; form widget listesi tek denetim olmasın.
+- [x] **FORM-DATA-23:** Final commit bütün API'lerde authoritative dataset/domain/contingent validation yapsın; form widget listesi tek denetim olmasın. — *Yapıldı (16 Ekim; ADR 0411 §4: Kuralları uygula açık formun katmanına her API'den gelen yazma sunucuda formun kurallarıyla denetlenir).*
 - [x] **FORM-DATA-24:** Invalid legacy data için audit/repair raporu ve planlı correction sun; görüntüleme sırasında sessiz düzeltme yapma. — *Yapıldı (16 Ekim; ADR 0406 §1 (`cad.forms.audit`, Kayıtları denetle; düzeltme Formla düzenle ve `cad.forms.fill` ile)).*
 
 **Kabul:** Aynı domain iki katmanda kullanılır, subtype ve üst seçim alt seçenekleri sınırlar. UI payload'ına elle illegal code yazan Python/HTTP/AI isteği aynı validation koduyla reddedilir.

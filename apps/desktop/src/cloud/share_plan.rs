@@ -174,7 +174,7 @@ pub(crate) fn role_hint(role: GrantRole) -> &'static str {
         GrantRole::Viewer => "Projeyi açar, görür, indirir ve geçmişine bakar; değiştiremez.",
         GrantRole::Commenter => "Görüntüleyicinin yapabildikleri ve yorum.",
         GrantRole::Entry => {
-            "Yorumcunun yapabildikleri; kayıtların özniteliklerini yalnız yayımlanmış formla düzenler, çizimi değiştiremez."
+            "Projeyi açar, görür ve yorum yazar; kayıtların özniteliklerini yalnız yayımlanmış formla, formun gösterdiği alanlarda düzenler; çizimi değiştiremez, indiremez."
         }
         GrantRole::Editor => "Nesneleri çizer, değiştirir ve siler.",
         GrantRole::Manager => {

@@ -505,6 +505,32 @@ pub async fn commit(
         now.require(ProjectPermission::Edit)?;
     }
     let access = &now;
+    // A Veri girişi writes what it reads (docs/adr/0411 §6): the attributes its forms do not show
+    // are kept as stored.
+    let shown = crate::projects::shown_fields_for(&mut tx, access).await?;
+    let input = match &shown {
+        Some(shown) if entry => {
+            let ids: Vec<Uuid> = input
+                .features
+                .iter()
+                .filter_map(|c| match c {
+                    FeatureChange::Update { id, .. } => Uuid::parse_str(id).ok(),
+                    _ => None,
+                })
+                .collect();
+            let stored = current_copies(&mut tx, access, &ids).await?;
+            let mut input = input;
+            for change in &mut input.features {
+                if let FeatureChange::Update { id, entity } = change
+                    && let Some(before) = Uuid::parse_str(id).ok().and_then(|u| stored.get(&u))
+                {
+                    *entity = crate::form_guard::merged(entity.clone(), &before.entity, shown);
+                }
+            }
+            input
+        }
+        _ => input,
+    };
 
     // 4. Plan and check: layer tree after the patch, stored forms, versions.
     let current_tree: Vec<LayerNode> = serde_json::from_value(layers)
@@ -726,7 +752,13 @@ pub async fn commit(
         let mut copies = current_copies(&mut tx, access, &conflicting_ids).await?;
         for c in &mut conflicts {
             if let Ok(id) = Uuid::parse_str(&c.id) {
-                c.current = copies.remove(&id);
+                // A Veri girişi sees the server's copy as it reads it (docs/adr/0411 §6).
+                c.current = copies.remove(&id).map(|mut r| {
+                    if let Some(shown) = &shown {
+                        r.entity = crate::form_guard::projected(r.entity, shown);
+                    }
+                    r
+                });
             }
         }
         drop(tx);

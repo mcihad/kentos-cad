@@ -24,7 +24,8 @@ fn patch(published: bool) -> ProjectPatch {
         "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [],
         "fields": [
             { "name": "Durum", "kind": "text", "values": [{ "code": "iyi", "label": "İyi" }, { "code": "kotu", "label": "Kötü" }] },
-            { "name": "Kat", "kind": "integer", "min": "1" }
+            { "name": "Kat", "kind": "integer", "min": "1" },
+            { "name": "Not", "kind": "text" }
         ]
     }]))
     .unwrap();
@@ -88,6 +89,10 @@ async fn the_forms_are_designed_published_and_guarded_on_the_server() {
     assert_eq!(entry.role, ProjectRole::Entry);
     assert!(entry.allows(ProjectPermission::FormsUse));
     assert!(!entry.allows(ProjectPermission::FeatureWrite));
+    assert!(
+        !entry.allows(ProjectPermission::Download),
+        "a download would hold the hidden fields"
+    );
     assert!(ed.allows(ProjectPermission::FormsUse) && !ed.allows(ProjectPermission::FormsDesign));
 
     // The manager designs the form, then publishes it with its rules enforced.
@@ -112,6 +117,27 @@ async fn the_forms_are_designed_published_and_guarded_on_the_server() {
     )
     .await
     .unwrap();
+    // A building made while the form is a draft (it holds a field the form does not show).
+    let id = Uuid::new_v4().to_string();
+    let made = changes::commit(
+        &db.app,
+        &ed,
+        envelope(
+            &editor,
+            project,
+            features(vec![FeatureChange::Create {
+                id: id.clone(),
+                entity: building(
+                    json!({ "Durum": "iyi", "Kat": "2", "Not": "Yalnız ofis görür." }),
+                    10.0,
+                ),
+            }]),
+            &[],
+        ),
+    )
+    .await
+    .unwrap();
+    let v1 = made.versions[&id].clone();
     let published = changes::commit(
         &db.app,
         &owner,
@@ -129,24 +155,27 @@ async fn the_forms_are_designed_published_and_guarded_on_the_server() {
     .unwrap();
     assert_ne!(published.meta_version, drafted.meta_version);
 
-    // A building that keeps the rules is written; one that breaks them is not, from anyone.
-    let id = Uuid::new_v4().to_string();
-    let made = changes::commit(
-        &db.app,
-        &ed,
-        envelope(
-            &editor,
-            project,
-            features(vec![FeatureChange::Create {
-                id: id.clone(),
-                entity: building(json!({ "Durum": "iyi", "Kat": "2" }), 10.0),
-            }]),
-            &[],
-        ),
-    )
-    .await
-    .unwrap();
-    let v1 = made.versions[&id].clone();
+    // The Veri girişi reads the fields the form shows (docs/adr/0411 §6); the editor reads all.
+    let read = |by: &kentos_application::access::ProjectAccess| {
+        let by = by.clone();
+        let db = &db;
+        async move {
+            kentos_application::projects::features(&db.app, &by, None, 10)
+                .await
+                .unwrap()
+                .features[0]
+                .entity
+                .base()
+                .attrs
+                .clone()
+        }
+    };
+    assert!(!read(&entry).await.contains_key("Not"));
+    assert_eq!(
+        read(&ed).await.get("Not").map(String::as_str),
+        Some("Yalnız ofis görür.")
+    );
+    // Published and enforced: a write that breaks the rules is not taken, from anyone.
     let refused = changes::commit(
         &db.app,
         &ed,
@@ -222,7 +251,11 @@ async fn the_forms_are_designed_published_and_guarded_on_the_server() {
             .fetch_one(&db.owner)
             .await
             .unwrap();
-    assert_eq!(stored, json!({ "Durum": "kotu", "Kat": "3" }));
+    // What the Veri girişi does not read is kept.
+    assert_eq!(
+        stored,
+        json!({ "Durum": "kotu", "Kat": "3", "Not": "Yalnız ofis görür." })
+    );
     // The Veri girişi does not change the settings either.
     let meta_now: i64 = sqlx::query_scalar("select meta_version from kentos.project where id = $1")
         .bind(project)

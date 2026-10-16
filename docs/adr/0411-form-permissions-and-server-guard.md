@@ -39,7 +39,7 @@ Rollerin sırası Görüntüleyici < Yorumcu < **Veri girişi** < Düzenleyici <
 |---|---|
 | Görüntüleyici | okuma, indirme, geçmiş |
 | Yorumcu | + yorum |
-| Veri girişi | + `forms.use` |
+| Veri girişi | okuma, geçmiş, yorum, `forms.use` (indirme yok, §6) |
 | Düzenleyici | + `feature.write`, işler, `forms.use` |
 | Yönetici, Sahip | + `project.edit`, paylaşma, `forms.design`, `forms.publish` (Sahip ayrıca silme, devretme) |
 
@@ -81,12 +81,22 @@ nedeniyle reddeder, adım bütünüyle geri alınır. Formla düzenle, Özniteli
 Eşitleme `forms.use` sahibine de nesne değişikliklerini gönderir (`OpenedProject::can_send_objects`); dosya projesinin
 revizyonu yalnız yazanın. Rol açıkken değişince kural da değişir.
 
+### 6. Alan düzeyinde okuma
+
+Veri girişi formun göstermediği alanı okumaz. Yayımlanmış formu olan katmanda nesne sayfaları (`features`, `features?ids=`) ve
+çakışmanın sunucu kopyası yalnız formların son sürümlerinin gösterdiği alanları taşır (`shown_fields`, `projected`); formu
+olmayan katmanın öznitelikleri bütündür. Veri girişinin yazmasında görmediği alanlar kayıtlı değerleriyle korunur (`merged`),
+bekçi sonra karar verir. Bütün alanları taşıyan yollar Veri girişine kapalıdır: rol `project.download` almaz (`.kcad`
+görüntüsü, kopya, dönüştürme, kontrol noktası indirme). Olaylar zaten yalnız kimlik ve sürüm taşır. Bilinen sınır: hesaplanan
+alan görünmeyen bir alana dayanıyorsa istemcinin hesabı sunucununkinden ayrılabilir ve yazma reddedilir.
+
 ## Denetimler
 
 - Bekçinin kuralları saf bir modülde (`form_guard.rs`) birim testleriyle: ayarların izinleri, Veri girişinin yazabildikleri
   ve yazamadıkları, Kuralları uygula'nın reddi.
 - Veritabanı testi (`tests/project_forms.rs`, geçici veritabanında): tasarım ve yayın izinleri, Veri girişi ile öznitelik
-  güncellemesi ve şekil değişikliğinin reddi, düzenleyicinin kuralı bozan yazmasının reddi.
+  güncellemesi ve şekil değişikliğinin reddi, düzenleyicinin kuralı bozan yazmasının reddi, Veri girişinin formda olmayan
+  alanı okumaması ve yazmasında o alanın korunması.
 - Sunucunun bütün veritabanı testleri (133) kendi geçici PostGIS kapsayıcısında (127.0.0.1:55432; geliştiricinin 5432'si
   değil) göç 0020 ve 0021 dahil geçti.
 - `kentos-native-application`'ın `object_policy` testi: kural açıkken nokta oluşturma, taşıma ve silme reddedilir, öznitelik
@@ -98,5 +108,4 @@ revizyonu yalnız yazanın. Rol açıkken değişince kural da değişir.
 
 - Formun tasarımı, yayını ve kullanımı ayrı yetkilerdir; saha ekibi çizimi değiştirmeden formla veri girer.
 - Kuralları uygula bir istemci tercihi olmaktan çıkar, sunucunun kuralı olur.
-- Açık: alan düzeyinde okuma yetkisi (formun göstermediği alanın Veri girişine gönderilmemesi, TODOS.md `FORM-R`), form başına
-  kullanıcı ataması, onay akışı (FORM-ACL, FORM-WORK).
+- Açık: form başına kullanıcı ataması, onay akışı (FORM-ACL, FORM-WORK).

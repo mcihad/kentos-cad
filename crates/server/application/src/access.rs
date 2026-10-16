@@ -30,8 +30,9 @@ pub fn role_permissions(role: ProjectRole) -> &'static [ProjectPermission] {
     match role {
         ProjectRole::Viewer => &[Read, Download, History],
         ProjectRole::Commenter => &[Read, Download, History, Comment],
-        // Veri girişi (docs/adr/0411 §2): records' attributes through a published form, nothing else.
-        ProjectRole::Entry => &[Read, Download, History, Comment, FormsUse],
+        // Veri girişi (docs/adr/0411 §2, §6): records' attributes through a published form, nothing
+        // else; no download, which would hold the fields its forms do not show.
+        ProjectRole::Entry => &[Read, History, Comment, FormsUse],
         ProjectRole::Editor => &[
             Read,
             Download,
@@ -150,6 +151,11 @@ impl ProjectAccess {
             user: Some(self.actor.user_id),
             project: Some(self.project),
         }
+    }
+
+    /// Whether it reads and writes the objects through forms alone (a Veri girişi, docs/adr/0411 §6).
+    pub fn through_forms(&self) -> bool {
+        !self.allows(ProjectPermission::FeatureWrite) && self.allows(ProjectPermission::FormsUse)
     }
 
     pub fn allows(&self, permission: ProjectPermission) -> bool {

@@ -14,6 +14,8 @@
 //! Opening a project (its first page of objects) and creating one mark it in
 //! the person's recently used projects (docs/adr/0028).
 
+use std::collections::{BTreeMap, BTreeSet};
+
 use kentos_contracts::{
     FeaturePage, FeatureRecord, LayerNode, LayerNodeType, ProjectCreate, ProjectInfo,
     ProjectStorage,
@@ -642,6 +644,46 @@ pub(crate) fn record(
     })
 }
 
+/// The fields a Veri girişi reads on each layer with a published form (docs/adr/0411 §6); none for
+/// anyone else, who reads everything.
+pub(crate) async fn shown_fields_for(
+    tx: &mut Transaction<'static, Postgres>,
+    access: &ProjectAccess,
+) -> AppResult<Option<BTreeMap<String, BTreeSet<String>>>> {
+    if !access.through_forms() {
+        return Ok(None);
+    }
+    let (settings, layers): (Value, Value) = sqlx::query_as(
+        "select settings, layers from kentos.project where tenant_id = $1 and id = $2",
+    )
+    .bind(access.tenant)
+    .bind(access.project)
+    .fetch_one(&mut **tx)
+    .await?;
+    let settings: kentos_contracts::ProjectSettings = serde_json::from_value(settings)
+        .map_err(|e| AppError::invalid(format!("Projenin ayarları okunamadı: {e}")))?;
+    let layers: Vec<LayerNode> = serde_json::from_value(layers)
+        .map_err(|e| AppError::invalid(format!("Proje katmanları okunamadı: {e}")))?;
+    Ok(Some(crate::form_guard::shown_fields(&settings, &layers)))
+}
+
+/// `records` as `access` reads them: a Veri girişi's through its forms (docs/adr/0411 §6).
+pub(crate) fn as_read(
+    records: Vec<FeatureRecord>,
+    shown: Option<&BTreeMap<String, BTreeSet<String>>>,
+) -> Vec<FeatureRecord> {
+    match shown {
+        None => records,
+        Some(shown) => records
+            .into_iter()
+            .map(|mut r| {
+                r.entity = crate::form_guard::projected(r.entity, shown);
+                r
+            })
+            .collect(),
+    }
+}
+
 /// The project in scope, still visible to the caller and not deleted: 404
 /// when they lost their role since the access check, 410 when it was deleted.
 async fn live_project(
@@ -686,6 +728,7 @@ pub async fn features(
     .bind(limit + 1)
     .fetch_all(&mut *tx)
     .await?;
+    let shown = shown_fields_for(&mut tx, access).await?;
     tx.commit().await?;
     let more = rows.len() as i64 > limit;
     let features: Vec<FeatureRecord> = rows
@@ -693,6 +736,7 @@ pub async fn features(
         .take(limit as usize)
         .map(record)
         .collect::<AppResult<_>>()?;
+    let features = as_read(features, shown.as_ref());
     let next = more
         .then(|| features.last().map(|f| f.id.clone()))
         .flatten();
@@ -721,8 +765,13 @@ pub async fn features_by_id(
     .bind(ids)
     .fetch_all(&mut *tx)
     .await?;
+    let shown = shown_fields_for(&mut tx, access).await?;
     tx.commit().await?;
-    rows.into_iter().map(record).collect()
+    let records = rows
+        .into_iter()
+        .map(record)
+        .collect::<AppResult<Vec<_>>>()?;
+    Ok(as_read(records, shown.as_ref()))
 }
 
 #[cfg(test)]

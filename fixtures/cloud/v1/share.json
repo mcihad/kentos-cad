@@ -27,7 +27,7 @@
   "hints": {
    "viewer": "Projeyi açar, görür, indirir ve geçmişine bakar; değiştiremez.",
    "commenter": "Görüntüleyicinin yapabildikleri ve yorum.",
-   "entry": "Yorumcunun yapabildikleri; kayıtların özniteliklerini yalnız yayımlanmış formla düzenler, çizimi değiştiremez.",
+   "entry": "Projeyi açar, görür ve yorum yazar; kayıtların özniteliklerini yalnız yayımlanmış formla, formun gösterdiği alanlarda düzenler; çizimi değiştiremez, indiremez.",
    "editor": "Nesneleri çizer, değiştirir ve siler.",
    "manager": "Düzenleyicinin yapabildikleri; ad, ayar ve katmanları değiştirir, formları tasarlar ve yayınlar, projeyi paylaşır."
   }

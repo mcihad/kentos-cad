@@ -1465,8 +1465,8 @@ burada aşamaları izlenir.
   [ADR 0411](docs/adr/0411-form-permissions-and-server-guard.md).**
 - [x] `FORM-Q` Veri girişi masaüstünde: belgenin nesne kuralı (yalnız öznitelik), eşitleme formla yazılanı gönderir. — **16 Ekim,
   ADR 0411 §5.**
-- [ ] `FORM-R` Alan düzeyinde okuma yetkisi: formun göstermediği alan Veri girişine gönderilmez (nesne sayfaları, olaylar, `.kcad`
-  görüntüsü), yazmasında saklı alanlar korunur (plan `FORM-FIRST-16`'nın okuma yanı).
+- [x] `FORM-R` Alan düzeyinde okuma yetkisi: formun göstermediği alan Veri girişine gönderilmez, yazmasında korunur, Veri girişi
+  indiremez. — **16 Ekim, ADR 0411 §6.**
 
 ## 17. Arazi, yol ve altyapı projeleri — P2/P3
 
