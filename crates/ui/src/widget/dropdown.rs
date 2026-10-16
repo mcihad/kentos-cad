@@ -73,6 +73,10 @@ type Build<'a, S, Local> = Box<dyn Fn(&S) -> Element<'a, Local> + 'a>;
 /// İç mesajı uygulayan fonksiyon.
 type Reduce<'a, S, Local, Message> = Box<dyn Fn(&mut S, Local) -> Reaction<Message> + 'a>;
 
+/// Açık panelin tuşları (listede ↑ ↓, Enter): iç durumu değiştirir, yanıt verirse tuş onundur.
+type KeyFn<'a, S, Message> = dyn Fn(&mut S, keyboard::key::Named) -> Option<Reaction<Message>> + 'a;
+type Keys<'a, S, Message> = Box<KeyFn<'a, S, Message>>;
+
 /// Açılır panel.
 pub(crate) struct Dropdown<'a, Message, Local, S> {
     anchor: Element<'a, Message>,
@@ -89,6 +93,10 @@ pub(crate) struct Dropdown<'a, Message, Local, S> {
     /// değişince yeniden kurulur: düğmeler durumlarını (üzerinde, basılı)
     /// öğenin kendisinde tutar ve her kurulumda yitirir.
     built: Option<(u64, Element<'a, Local>)>,
+    /// ↑ ↓ on the closed field with the keyboard: the value before or after (a list's next choice).
+    on_step: Option<Box<dyn Fn(i32) -> Option<Message> + 'a>>,
+    /// The open panel's keys.
+    keys: Option<Keys<'a, S, Message>>,
 }
 
 impl<'a, Message, Local, S> Dropdown<'a, Message, Local, S>
@@ -115,7 +123,25 @@ where
             match_width: false,
             edge: None,
             built: None,
+            on_step: None,
+            keys: None,
         }
+    }
+
+    /// The open panel's keys (a list's ↑ ↓ and Enter), before the panel's own widgets see them: the
+    /// reply, when there is one, is applied as the panel's own message's would be.
+    pub fn keys(
+        mut self,
+        keys: impl Fn(&mut S, keyboard::key::Named) -> Option<Reaction<Message>> + 'a,
+    ) -> Self {
+        self.keys = Some(Box::new(keys));
+        self
+    }
+
+    /// ↑ ↓ (and ← →) on the closed field: −1 the value before, +1 the one after; none past the ends.
+    pub fn on_step(mut self, step: impl Fn(i32) -> Option<Message> + 'a) -> Self {
+        self.on_step = Some(Box::new(step));
+        self
     }
 
     /// Alanın sağındaki tetikleyici; herhangi bir mesajı paneli açıp kapatır.
@@ -168,6 +194,8 @@ struct State<S> {
     revision: u64,
     /// İmleç alanın üstünde mi; kenar ona göre çizilir.
     hovered: bool,
+    /// Klavye odağı: Tab ile gelir, Enter, Boşluk ya da Alt+↓ paneli açar (widget/key_focus.rs).
+    keys: super::key_focus::Flag,
 }
 
 struct Open<S> {
@@ -182,6 +210,7 @@ impl<S> Default for State<S> {
             open: None,
             revision: 0,
             hovered: false,
+            keys: super::key_focus::Flag::default(),
         }
     }
 }
@@ -312,6 +341,49 @@ where
         );
 
         let state = tree.state.downcast_mut::<State<S>>();
+
+        // The keyboard: a press on the field takes it, elsewhere lets it go (not while the panel is
+        // open: a press in the list leaves it with the field). With it, Enter, Space or Alt+↓ open
+        // the panel, ↑ ↓ step the value.
+        if self.trigger.is_none() {
+            if state.open.is_none() {
+                super::key_focus::follow_press(
+                    &mut state.keys,
+                    event,
+                    cursor,
+                    layout.bounds(),
+                    shell,
+                );
+            }
+            if state.keys.0
+                && state.open.is_none()
+                && !shell.is_event_captured()
+                && let Some((named, modifiers)) = super::key_focus::pressed(event)
+                && !modifiers.control()
+                && !modifiers.logo()
+            {
+                use keyboard::key::Named;
+                let opens = matches!(named, Named::Enter | Named::Space | Named::F4)
+                    || (modifiers.alt() && named == Named::ArrowDown);
+                if opens {
+                    state.toggle(&self.init);
+                    shell.capture_event();
+                    shell.invalidate_layout();
+                    shell.request_redraw();
+                    return;
+                }
+                if !modifiers.alt()
+                    && let Some(by) = super::key_focus::arrow_step(named)
+                    && let Some(on_step) = &self.on_step
+                {
+                    if let Some(message) = on_step(by) {
+                        shell.publish(message);
+                    }
+                    shell.capture_event();
+                    return;
+                }
+            }
+        }
 
         // Kenar, imleç alana girip çıkınca yeniden çizilir.
         if self.edge.is_some()
@@ -446,6 +518,15 @@ where
                 );
             };
 
+            if self.trigger.is_none() && tree.state.downcast_ref::<State<S>>().keys.0 {
+                super::key_focus::halo(
+                    renderer,
+                    theme,
+                    anchor.bounds(),
+                    crate::style::button::radius(),
+                );
+            }
+
             if let (Some(Edge::Under), Some(color)) = (self.edge, color) {
                 frame(renderer, color, t.field);
             }
@@ -485,6 +566,10 @@ where
         renderer: &Renderer,
         operation: &mut dyn Operation,
     ) {
+        if self.trigger.is_none() {
+            let keys = &mut tree.state.downcast_mut::<State<S>>().keys;
+            operation.focusable(None, layout.bounds(), keys);
+        }
         if let Some(anchor) = layout.children().next() {
             self.anchor
                 .as_widget_mut()
@@ -541,6 +626,7 @@ where
                     tree: panel_tree,
                     state,
                     reduce: &*self.reduce,
+                    keys: self.keys.as_deref(),
                     focus: self.focus.clone(),
                     match_width: self.match_width,
                 })))
@@ -617,6 +703,7 @@ struct Panel<'a, 'b, Message, Local, S> {
     tree: &'b mut Tree,
     state: &'b mut State<S>,
     reduce: &'b dyn Fn(&mut S, Local) -> Reaction<Message>,
+    keys: Option<&'b KeyFn<'b, S, Message>>,
     focus: Option<widget::Id>,
     match_width: bool,
 }
@@ -739,6 +826,26 @@ impl<Message, Local: Clone, S> overlay::Overlay<Message, Theme, Renderer>
             Event::Window(window::Event::Unfocused) => {
                 self.close(shell);
                 return;
+            }
+            Event::Keyboard(keyboard::Event::KeyPressed {
+                key: keyboard::Key::Named(named),
+                ..
+            }) => {
+                if let (Some(keys), Some(open)) = (self.keys, self.state.open.as_mut())
+                    && let Some(reaction) = keys(&mut open.inner, *named)
+                {
+                    self.state.revision += 1;
+                    if let Some(message) = reaction.publish {
+                        shell.publish(message);
+                    }
+                    if reaction.close {
+                        self.state.open = None;
+                    }
+                    shell.capture_event();
+                    shell.invalidate_layout();
+                    shell.request_redraw();
+                    return;
+                }
             }
             _ => {}
         }

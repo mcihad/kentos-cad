@@ -157,7 +157,9 @@ impl<'a, Message: 'a> From<Dialog<'a, Message>> for Element<'a, Message> {
             content = content.push(actions);
         }
 
+        // The dialog is Tab's scope: the keyboard goes round its fields, not out to the window behind.
         let boxed = container(content)
+            .id(crate::focus::scope_id())
             .width(typography::scaled(dialog.width))
             .padding(18)
             .style(style::container::dialog);

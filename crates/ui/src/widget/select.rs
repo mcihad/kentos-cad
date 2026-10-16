@@ -31,6 +31,7 @@
 use std::rc::Rc;
 
 use iced::advanced::widget;
+use iced::keyboard::key::Named;
 use iced::widget::{Column, button, column, container, row, rule, scrollable, space, text_input};
 use iced::{Center, Color, Element, Fill};
 
@@ -321,11 +322,11 @@ impl<'a, Message: Clone + 'a> From<Select<'a, Message>> for Element<'a, Message>
             let clearable = on_clear.is_some() && selected.is_some();
             let search_id = search_id.clone();
 
-            move |search: &String| {
+            move |picker: &Picker| {
                 panel(
                     &choices,
                     selected,
-                    search,
+                    picker,
                     searchable.then(|| search_id.clone()),
                     &actions,
                     clearable,
@@ -334,23 +335,61 @@ impl<'a, Message: Clone + 'a> From<Select<'a, Message>> for Element<'a, Message>
             }
         };
 
-        let reduce = move |search: &mut String, event: Event| match event {
-            Event::Search(text) => {
-                *search = text;
-                Reaction::stay()
+        // ↑ ↓ on the closed box: the choice before or after the chosen one, headers skipped.
+        let presses: Vec<Option<Message>> = choices
+            .iter()
+            .enumerate()
+            .map(|(i, c)| (!c.header && !c.disabled).then(|| on_select(i)))
+            .collect();
+        // The open list's keys: ↑ ↓ Home End move the marked row among those the search shows, Enter
+        // chooses it (or the first one shown).
+        let keys = {
+            let choices = choices.clone();
+            let on_select = on_select.clone();
+            move |picker: &mut Picker, named: Named| {
+                let shown = pickable(&choices, &picker.search);
+                match named {
+                    Named::ArrowDown | Named::ArrowUp | Named::Home | Named::End => {
+                        picker.active = step_active(&shown, picker.active, named);
+                        Some(Reaction::stay())
+                    }
+                    Named::Enter => picker
+                        .active
+                        .filter(|a| shown.contains(a))
+                        .or_else(|| shown.first().copied())
+                        .map(|i| Reaction::commit(on_select(i))),
+                    _ => None,
+                }
             }
-            Event::Pick(index) => Reaction::commit(on_select(index)),
-            Event::Action(index) => actions
-                .get(index)
-                .map_or_else(Reaction::close, |(_, _, message)| {
-                    Reaction::commit(message.clone())
-                }),
-            Event::Clear => on_clear
-                .clone()
-                .map_or_else(Reaction::close, Reaction::commit),
+        };
+        let reduce = {
+            let choices = choices.clone();
+            move |picker: &mut Picker, event: Event| match event {
+                Event::Search(text) => {
+                    picker.active = pickable(&choices, &text).first().copied();
+                    picker.search = text;
+                    Reaction::stay()
+                }
+                Event::Pick(index) => Reaction::commit(on_select(index)),
+                Event::Action(index) => actions
+                    .get(index)
+                    .map_or_else(Reaction::close, |(_, _, message)| {
+                        Reaction::commit(message.clone())
+                    }),
+                Event::Clear => on_clear
+                    .clone()
+                    .map_or_else(Reaction::close, Reaction::commit),
+            }
         };
 
-        let dropdown = Dropdown::new(anchor, String::new, panel, reduce).match_width();
+        let init = move || Picker {
+            search: String::new(),
+            active: selected,
+        };
+        let dropdown = Dropdown::new(anchor, init, panel, reduce)
+            .match_width()
+            .keys(keys)
+            .on_step(move |by| super::segmented::step_to(&presses, selected, by));
         let dropdown = if borderless {
             dropdown.edge_cell()
         } else {
@@ -365,17 +404,50 @@ impl<'a, Message: Clone + 'a> From<Select<'a, Message>> for Element<'a, Message>
     }
 }
 
+/// The open list's own state: what is searched and the row the keyboard marks.
+struct Picker {
+    search: String,
+    active: Option<usize>,
+}
+
+/// The choices the search shows that may be chosen (no header, none disabled), in order.
+fn pickable(choices: &[Choice], search: &str) -> Vec<usize> {
+    let search = search.trim();
+    choices
+        .iter()
+        .enumerate()
+        .filter(|(_, c)| !c.header && !c.disabled && c.matches(search))
+        .map(|(i, _)| i)
+        .collect()
+}
+
+/// The marked row after ↑ ↓ Home End: within `shown`, stopping at the ends; none marked yet, ↓ marks the
+/// first and ↑ the last.
+fn step_active(shown: &[usize], active: Option<usize>, named: Named) -> Option<usize> {
+    let last = shown.len().checked_sub(1)?;
+    let at = active.and_then(|a| shown.iter().position(|&i| i == a));
+    let next = match named {
+        Named::ArrowDown => at.map_or(0, |k| (k + 1).min(last)),
+        Named::ArrowUp => at.map_or(last, |k| k.saturating_sub(1)),
+        Named::Home => 0,
+        _ => last,
+    };
+    Some(shown[next])
+}
+
 /// Açık liste: arama, seçenekler ve komutlar.
 fn panel<'a>(
     choices: &[Choice],
     selected: Option<usize>,
-    search: &str,
+    picker: &Picker,
     search_id: Option<widget::Id>,
     actions: &[(Icon, String, impl Clone)],
     clearable: bool,
     width: f32,
 ) -> Element<'a, Event> {
-    let search = search.trim();
+    let active = picker.active;
+    let search_text = picker.search.as_str();
+    let search = search_text.trim();
 
     let matches: Vec<(usize, &Choice)> = choices
         .iter()
@@ -390,7 +462,7 @@ fn panel<'a>(
             container(
                 row![
                     icon(Icon::Search).size(13.0).tone(Tone::Muted),
-                    text_input("Ara", search)
+                    text_input("Ara", search_text)
                         .id(id)
                         .on_input(Event::Search)
                         .font(typography::ui())
@@ -457,12 +529,23 @@ fn panel<'a>(
         }
 
         // The row's content in the middle of its height, not at its top.
+        // The row the keyboard marks looks as if the pointer were on it.
+        let marked = active == Some(index);
         button(container(line).height(Fill).align_y(Center))
             .on_press_maybe((!choice.disabled).then_some(Event::Pick(index)))
             .width(Fill)
             .height(typography::scaled(ROW_HEIGHT))
             .padding([0, 6])
-            .style(style::button::menu_row)
+            .style(move |theme, status| {
+                style::button::menu_row(
+                    theme,
+                    if marked {
+                        iced::widget::button::Status::Hovered
+                    } else {
+                        status
+                    },
+                )
+            })
             .into()
     }))
     .spacing(1);
@@ -525,6 +608,29 @@ fn command<'a>(glyph: Icon, text: String, event: Event) -> Element<'a, Event> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_keyboard_marks_and_steps_the_shown_choices() {
+        let choices = vec![
+            Choice::header("İller"),
+            Choice::new("Ankara"),
+            Choice::new("Bursa").disabled(),
+            Choice::new("İzmir"),
+        ];
+        assert_eq!(pickable(&choices, ""), [1, 3]);
+        assert_eq!(pickable(&choices, "izm"), [3]);
+        let shown = pickable(&choices, "");
+        assert_eq!(step_active(&shown, None, Named::ArrowDown), Some(1));
+        assert_eq!(step_active(&shown, None, Named::ArrowUp), Some(3));
+        assert_eq!(step_active(&shown, Some(1), Named::ArrowDown), Some(3));
+        assert_eq!(
+            step_active(&shown, Some(3), Named::ArrowDown),
+            Some(3),
+            "stops at the end"
+        );
+        assert_eq!(step_active(&shown, Some(3), Named::Home), Some(1));
+        assert_eq!(step_active(&[], None, Named::ArrowDown), None);
+    }
 
     #[test]
     fn search_matches_labels_and_details_without_case() {

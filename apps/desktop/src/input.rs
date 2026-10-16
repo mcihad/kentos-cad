@@ -612,6 +612,11 @@ impl App {
                 return task;
             }
             match press.named() {
+                // Tab and Shift+Tab go round the window's fields, its choosers and boxes too; never out to
+                // the window behind it (kentos_ui::focus, docs/adr/0400).
+                Some(Named::Tab) if !press.modifiers.control() && !press.modifiers.alt() => {
+                    return kentos_ui::focus::next(press.modifiers.shift());
+                }
                 // Projeyi paylaş: its question first, then the window; over
                 // the catalog, the catalog stays and reads its list again.
                 Some(Named::Escape) if self.cloud.share.is_some() => return self.share_escape(),
@@ -740,6 +745,12 @@ impl App {
             && self.cycle_snap(press.modifiers.shift())
         {
             return Task::none();
+        }
+        // 3. Tab in a panel's field (Öznitelikler, a dock's form): the next field; with none focused it
+        // does nothing (docs/adr/0400).
+        if press.named() == Some(Named::Tab) && !press.modifiers.control() && !press.modifiers.alt()
+        {
+            return kentos_ui::focus::next_if_focused(press.modifiers.shift());
         }
         // 3. An option letter of the running command beats the shortcuts.
         // A hot grip's modes are letters too (docs/adr/0280).

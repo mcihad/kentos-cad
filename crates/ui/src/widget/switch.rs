@@ -80,6 +80,8 @@ struct State {
     now: Instant,
     hovered: bool,
     pressed: bool,
+    /// The keyboard's focus: Tab reaches it, Space and Enter turn it (widget/key_focus.rs).
+    focus: super::key_focus::Flag,
 }
 
 impl State {
@@ -112,6 +114,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Switch<'a, Message> {
             now,
             hovered: false,
             pressed: false,
+            focus: super::key_focus::Flag::default(),
         })
     }
 
@@ -188,6 +191,23 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Switch<'a, Message> {
     ) {
         let state = tree.state.downcast_mut::<State>();
         let bounds = layout.bounds();
+        if self.on_toggle.is_some() {
+            super::key_focus::follow_press(&mut state.focus, event, cursor, bounds, shell);
+            if state.focus.0
+                && !shell.is_event_captured()
+                && let Some((
+                    iced::keyboard::key::Named::Space | iced::keyboard::key::Named::Enter,
+                    modifiers,
+                )) = super::key_focus::pressed(event)
+                && !modifiers.control()
+                && !modifiers.alt()
+                && let Some(on_toggle) = &self.on_toggle
+            {
+                shell.publish(on_toggle(!self.on));
+                shell.capture_event();
+                return;
+            }
+        }
 
         match event {
             Event::Window(window::Event::RedrawRequested(now)) => {
@@ -243,6 +263,22 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Switch<'a, Message> {
         }
     }
 
+    fn operate(
+        &mut self,
+        tree: &mut Tree,
+        layout: Layout<'_>,
+        _renderer: &Renderer,
+        operation: &mut dyn iced::advanced::widget::Operation,
+    ) {
+        if self.on_toggle.is_some() {
+            operation.focusable(
+                None,
+                layout.bounds(),
+                &mut tree.state.downcast_mut::<State>().focus,
+            );
+        }
+    }
+
     fn draw(
         &self,
         tree: &Tree,
@@ -262,6 +298,9 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Switch<'a, Message> {
         };
         let position = state.position();
         let radius = track.height / 2.0;
+        if state.focus.0 && enabled {
+            super::key_focus::halo(renderer, theme, track, radius);
+        }
 
         // Ray kapalıdan açığa doğru vurgu rengine döner.
         let off = if state.hovered && enabled {
@@ -350,6 +389,7 @@ mod tests {
             now: start,
             hovered: false,
             pressed: false,
+            focus: crate::widget::key_focus::Flag::default(),
         };
 
         assert_eq!(state.position(), 0.0);

@@ -827,12 +827,16 @@ pub fn check_box<'a, Message: Clone + 'a>(
         Check::Unchecked => space::horizontal().width(0).into(),
     };
 
-    button(container(mark).center(CHECK_SIZE))
-        .on_press_maybe(on_toggle)
+    let boxed = button(container(mark).center(CHECK_SIZE))
+        .on_press_maybe(on_toggle.clone())
         .padding(0)
         .width(CHECK_SIZE)
         .height(CHECK_SIZE)
-        .style(style::button::check(check != Check::Unchecked))
+        .style(style::button::check(check != Check::Unchecked));
+    // Tab reaches it; Space and Enter toggle it (widget/key_focus.rs).
+    super::key_focus(boxed)
+        .on_activate_maybe(on_toggle)
+        .radius(3.0)
         .into()
 }
 

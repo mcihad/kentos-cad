@@ -241,6 +241,13 @@ impl<'a, Message: Clone + 'a> From<Segmented<'a, Message>> for Element<'a, Messa
         };
         let height = outer - 2.0 * inset;
         let width = segmented.width;
+        // ← → (and ↑ ↓) choose the next part that takes a press, from the chosen one.
+        let presses: Vec<Option<Message>> = segmented
+            .segments
+            .iter()
+            .map(|s| s.on_press.clone())
+            .collect();
+        let at = segmented.segments.iter().position(|s| s.selected);
         let parts = Parts {
             segments: segmented.segments,
             hints: segmented.hints,
@@ -270,12 +277,34 @@ impl<'a, Message: Clone + 'a> From<Segmented<'a, Message>> for Element<'a, Messa
         } else {
             parts.row(None)
         };
-        container(content)
+        let boxed = container(content)
             .padding(inset)
             .height(outer)
             .width(typography::length(width))
-            .style(style::container::segmented)
+            .style(style::container::segmented);
+        super::key_focus(boxed)
+            .on_step(move |by| step_to(&presses, at, by))
             .into()
+    }
+}
+
+/// The message of the part `by` away from `at` that takes a press (`at` none: from before the first
+/// or after the last); none past the ends.
+pub(crate) fn step_to<Message: Clone>(
+    presses: &[Option<Message>],
+    at: Option<usize>,
+    by: i32,
+) -> Option<Message> {
+    let n = presses.len() as i64;
+    let mut i = at.map_or(if by > 0 { -1 } else { n }, |a| a as i64);
+    loop {
+        i += i64::from(by.signum());
+        if i < 0 || i >= n {
+            return None;
+        }
+        if let Some(message) = &presses[i as usize] {
+            return Some(message.clone());
+        }
     }
 }
 

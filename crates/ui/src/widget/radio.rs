@@ -120,6 +120,16 @@ impl<'a, T: Copy + PartialEq + 'a, Message: Clone + 'a> From<RadioGroup<'a, T, M
 {
     fn from(group: RadioGroup<'a, T, Message>) -> Self {
         let at_end = group.notes_at_end;
+        // ↑ ↓ (and ← →) choose the next option that may be chosen (widget/key_focus.rs).
+        let presses: Vec<Option<Message>> = group
+            .options
+            .iter()
+            .map(|o| o.enabled.then(|| (group.on_select)(o.value)))
+            .collect();
+        let at = group
+            .options
+            .iter()
+            .position(|o| Some(o.value) == group.selected);
         let mut items: Vec<Element<'a, Message>> = Vec::new();
         for item in group.options {
             let Item {
@@ -186,11 +196,14 @@ impl<'a, T: Copy + PartialEq + 'a, Message: Clone + 'a> From<RadioGroup<'a, T, M
             }
         }
 
-        if group.horizontal {
+        let list: Element<'a, Message> = if group.horizontal {
             Row::with_children(items).spacing(8).into()
         } else {
             Column::with_children(items).spacing(2).into()
-        }
+        };
+        super::key_focus(list)
+            .on_step(move |by| super::segmented::step_to(&presses, at, by))
+            .into()
     }
 }
 
