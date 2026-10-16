@@ -133,6 +133,10 @@ pub enum Event {
     AddRecord,
     /// Çoğalt (docs/adr/0415): the selected objects copied with the records they hold.
     Duplicate,
+    /// Tablo or Form (docs/adr/0416).
+    Pane(Pane),
+    /// A record of the Form view's list pressed (its place among the rows shown).
+    FormRow(usize),
     /// Dışa aktar ▾ (docs/adr/0223 §3): the rows shown written in a format.
     Export(kentos_contracts::WorkbookFormat),
     /// A value cell double-clicked: the row and the model's column.
@@ -195,10 +199,29 @@ type Key = (u64, u64, u64, [u64; 4], u64);
 /// The Tür column's sort key (no attribute is named so).
 const KIND_SORT: &str = "\u{0}tür";
 
+/// What the Tablo tab shows: the rows, or the records beside one record's form (docs/adr/0416).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub(crate) enum Pane {
+    #[default]
+    Table,
+    Form,
+}
+
+impl std::fmt::Display for Pane {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Pane::Table => "Tablo",
+            Pane::Form => "Form",
+        })
+    }
+}
+
 /// The tab's state, kept for as long as the app lives.
 #[derive(Default)]
 pub(crate) struct FeaturesPanel {
     pub layer: Option<String>,
+    /// Tablo or Form (docs/adr/0416).
+    pub pane: Pane,
     pub search: String,
     pub show: Show,
     pub filter: String,
@@ -448,6 +471,9 @@ impl App {
     pub(crate) fn features_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Layer(id) => {
+                if self.form_entry.as_ref().is_some_and(|e| e.docked) {
+                    self.form_entry = None;
+                }
                 self.features.layer = Some(id);
                 self.features.sort = None;
                 self.features.editing = None;
@@ -508,6 +534,33 @@ impl App {
             Event::ZoomSelection => self.navigating(Self::zoom_selection),
             Event::AddRecord => return self.feature_add_record(),
             Event::Duplicate => return self.duplicate_selected(),
+            Event::Pane(pane) => {
+                self.features.pane = pane;
+                if pane == Pane::Form {
+                    return self.dock_form_on_selection();
+                }
+                if self.form_entry.as_ref().is_some_and(|e| e.docked) {
+                    self.form_entry = None;
+                }
+            }
+            Event::FormRow(i) => {
+                let slot = self.shown_features().get(i).copied();
+                if let Some(slot) = slot {
+                    if self
+                        .form_entry
+                        .as_ref()
+                        .is_some_and(|e| e.docked && e.dirty_now())
+                    {
+                        self.say(
+                            kentos_interaction::Level::Warn,
+                            "Kaydedilmemiş değişiklik var: önce Kaydet’e basın ya da Vazgeç’le bırakın.",
+                        );
+                        return Task::none();
+                    }
+                    self.selection.set([slot]);
+                    return self.dock_form_on(slot);
+                }
+            }
             Event::Export(format) => {
                 let Some(doc) = &self.document else {
                     return Task::none();
@@ -944,4 +997,44 @@ pub(crate) fn lookup_labels(
         }
     }
     out
+}
+
+impl App {
+    /// The Form view's record (docs/adr/0416): the first selected object of the table's layer, else
+    /// its first row shown.
+    pub(crate) fn dock_form_on_selection(&mut self) -> Task<Message> {
+        let Some(doc) = self.document.as_ref() else {
+            return Task::none();
+        };
+        let Some(layer) = self.feature_layer(doc) else {
+            return Task::none();
+        };
+        let selected = self.selection.ids().iter().copied().find(|s| {
+            doc.model
+                .get(*s)
+                .is_some_and(|e| e.base().layer_id == layer)
+        });
+        let slot = selected.or_else(|| self.shown_features().first().copied());
+        match slot {
+            Some(slot) => self.dock_form_on(slot),
+            None => {
+                self.form_entry = None;
+                Task::none()
+            }
+        }
+    }
+
+    /// The record's form docked in the Form view; nothing when its layer has no form.
+    fn dock_form_on(&mut self, slot: Slot) -> Task<Message> {
+        let layer = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.get(slot))
+            .map(|e| e.base().layer_id.clone());
+        let Some(form) = layer.and_then(|l| self.form_of_layer(&l)) else {
+            self.form_entry = None;
+            return Task::none();
+        };
+        self.open_entry_docked(slot, &form)
+    }
 }

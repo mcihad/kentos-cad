@@ -483,6 +483,19 @@ fn field_usage(app: &mut App) {
     )));
 }
 
+/// The attribute table's Form view (docs/adr/0416): the buildings listed, the second one's form
+/// beside them, its floor count typed and not yet saved.
+fn form_view(app: &mut App) {
+    use crate::features::{Event, Pane};
+    buildings_with_a_form(app);
+    let _ = app.update(Message::Features(Event::Pane(Pane::Form)));
+    let _ = app.update(Message::Features(Event::FormRow(1)));
+    let _ = app.update(Message::FormEntry(entry::Event::Value(
+        "Kat".into(),
+        "8".into(),
+    )));
+}
+
 /// Koşullu biçim's window on the buildings' rules, the floor count's rule chosen.
 fn styles_window(app: &mut App) {
     styled_buildings(app);
@@ -1117,6 +1130,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-kosullu-bicim", styles_window),
         ("form-alan-kullanim", field_usage),
         ("form-cogalt", duplicated),
+        ("form-gorunumu", form_view),
     ]
 }
 
@@ -1179,6 +1193,42 @@ mod tests {
         let undone = app.document.as_mut().unwrap().model.undo();
         assert_eq!(undone.as_deref(), Some("Koşullu biçim"));
         assert_eq!(rules(&app).len(), 4, "one step undoes it");
+    }
+
+    #[test]
+    fn the_form_view_writes_a_record_and_stays_on_it() {
+        use crate::features::{Event, Pane};
+        let mut app = crate::files_testing::app_with_drawing();
+        form_view(&mut app);
+        let docked = |app: &App| app.form_entry.as_ref().is_some_and(|e| e.docked);
+        assert!(docked(&app), "the form is in the table, not a window");
+        assert!(app.dialog.is_none());
+        let slot = app.selection.ids()[0];
+        // Another record while the value is not saved: refused, the record stays.
+        let _ = app.update(Message::Features(Event::FormRow(0)));
+        assert_eq!(app.selection.ids()[0], slot);
+        let _ = app.update(Message::FormEntry(entry::Event::Save));
+        assert!(docked(&app), "Kaydet keeps the form on its record");
+        let kat = app
+            .document
+            .as_ref()
+            .unwrap()
+            .model
+            .get(slot)
+            .unwrap()
+            .base()
+            .attrs
+            .get("Kat")
+            .cloned();
+        assert_eq!(kat.as_deref(), Some("8"));
+        let _ = app.update(Message::Features(Event::FormRow(0)));
+        assert_ne!(
+            app.selection.ids()[0],
+            slot,
+            "a saved record lets another one be chosen"
+        );
+        let _ = app.update(Message::Features(Event::Pane(Pane::Table)));
+        assert!(app.form_entry.is_none());
     }
 
     #[test]

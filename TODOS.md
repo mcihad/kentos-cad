@@ -194,6 +194,8 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-W` Öznitelik tablosunda form görünümü (ADR 0416, 16 Ekim): web'de gerekenler: tablonun Tablo | Form seçimi, kayıt listesi ve
+  panele gömülü form (Formla düzenle'nin kuralıyla, Kaydet formu tutar).
 - [ ] `FORM-V` kaydı çoğaltma (ADR 0415, 16 Ekim): web'de gerekenler: `cad.records.duplicate`'in TS işleyicisi
   (`fixtures/commands/v1/cad.records.duplicate.json`), Öznitelik tablosunda Çoğalt, ilişkinin alt alanında üst nesnenin etiketi.
 - [ ] `FORM-U` alanın kullanıldığı yerler (ADR 0414, 16 Ekim): web'de gerekenler: `cad.fields.usage`'in TS işleyicisi
@@ -1478,6 +1480,8 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-W` Öznitelik tablosunda form görünümü: Tablo | Form, kayıt listesi ve gömülü form; Kaydet formu aynı kayıtta tutar. —
+  **16 Ekim, [ADR 0416](docs/adr/0416-form-view-in-attribute-table.md).**
 - [x] `FORM-V` Kaydı alt kayıtlarıyla çoğaltma: `cad.records.duplicate`, bileşik ilişkilerin alt kayıtları alanları kopyanın kimliğiyle,
   tekil alan boş, kilitli katman kuralı; Öznitelik tablosunda ve Veri › Tablo'da Çoğalt. — **16 Ekim,
   [ADR 0415](docs/adr/0415-duplicate-records.md).**

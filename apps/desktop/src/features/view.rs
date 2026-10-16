@@ -166,7 +166,14 @@ impl App {
             Tip::new(texts::EXPORT).body(texts::EXPORT_HINT),
             iced::widget::tooltip::Position::Top,
         );
+        let pane = kentos_ui::widget::segmented::Segmented::new(
+            [super::Pane::Table, super::Pane::Form],
+            self.features.pane,
+            |p| msg(Event::Pane(p)),
+        )
+        .compact();
         let actions = row![
+            pane,
             label::muted(count),
             bar_button(
                 "zoomSelection",
@@ -217,6 +224,16 @@ impl App {
         let rows = self.feature_rows(doc);
         let panel = &self.features;
         let bar = self.features_bar(&rows, self.viewport.bounds.width);
+        if panel.pane == super::Pane::Form {
+            return iced::widget::column![
+                bar,
+                kentos_ui::widget::horizontal_divider(),
+                self.form_pane(&rows)
+            ]
+            .width(Fill)
+            .height(Fill)
+            .into();
+        }
         let mut columns = vec![
             TableColumn::new("Sıra")
                 .width(Length::Fixed(56.0))
@@ -416,6 +433,90 @@ impl App {
             .into()
     }
 }
+
+impl App {
+    /// The Form view (docs/adr/0416): the rows shown as a list of records, the chosen one's form
+    /// beside it, written through the form as Formla düzenle writes.
+    fn form_pane<'a>(&'a self, rows: &super::Rows) -> Element<'a, Message> {
+        let chosen = self
+            .form_entry
+            .as_ref()
+            .filter(|e| e.docked)
+            .and_then(|e| e.uid_slot(self));
+        let mut list = iced::widget::Column::new().spacing(1).padding(2);
+        for (i, &at) in rows.shown.iter().enumerate().take(MOST_LISTED) {
+            let slot = rows.slots[at];
+            let line = &rows.table.rows[at];
+            // The record's name: its label, else its first value, else its place.
+            let name = self
+                .document
+                .as_ref()
+                .and_then(|d| d.model.get(slot))
+                .and_then(|e| e.base().label.clone())
+                .filter(|l| !l.trim().is_empty())
+                .or_else(|| {
+                    rows.table
+                        .columns
+                        .iter()
+                        .zip(&line.cells)
+                        .find(|(c, cell)| c.key.is_some() && !cell.shown.trim().is_empty())
+                        .map(|(_, cell)| cell.shown.clone())
+                })
+                .unwrap_or_else(|| format!("Kayıt {}", i + 1));
+            let kind = line
+                .cells
+                .first()
+                .map(|c| c.shown.clone())
+                .unwrap_or_default();
+            let face = iced::widget::column![
+                label::body(name).wrapping(Wrapping::None),
+                label::caption(kind).style(style::text::muted),
+            ]
+            .spacing(1);
+            list = list.push(
+                button(face)
+                    .on_press(msg(Event::FormRow(i)))
+                    .padding([4, 8])
+                    .width(Fill)
+                    .style(style::button::row(chosen == Some(slot))),
+            );
+        }
+        if rows.shown.len() > MOST_LISTED {
+            list = list.push(
+                container(label::caption(format!(
+                    "İlk {MOST_LISTED} kayıt listelendi; aramayla ya da süzgeçle daraltın."
+                )))
+                .padding([4, 8]),
+            );
+        }
+        let left = container(iced::widget::scrollable(list).height(Fill))
+            .width(Length::Fixed(typography::scaled(260.0)))
+            .height(Fill)
+            .style(style::container::field_box);
+        let right: Element<'a, Message> = match self.docked_entry_view() {
+            Some(form) => form,
+            None => {
+                let layer = rows.layer.as_deref().unwrap_or_default();
+                let words = if rows.shown.is_empty() {
+                    "Gösterilen kayıt yok.".to_owned()
+                } else if self.form_of_layer(layer).is_none() {
+                    "Bu katmanın formu yok: Veri › Formlar'dan katmanın alanlarından bir form oluşturun.".to_owned()
+                } else {
+                    "Soldan bir kayıt seçin.".to_owned()
+                };
+                container(label::muted(words)).padding(16).into()
+            }
+        };
+        iced::widget::row![left, container(right).width(Fill).height(Fill)]
+            .spacing(8)
+            .padding([6, 8])
+            .height(Fill)
+            .into()
+    }
+}
+
+/// The Form view lists at most this many records (a list beyond it says so).
+const MOST_LISTED: usize = 2000;
 
 /// How a column shows its values: Tür muted, numbers in figures.
 struct Face {

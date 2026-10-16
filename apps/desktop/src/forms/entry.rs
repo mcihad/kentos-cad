@@ -101,6 +101,9 @@ pub struct Entry {
     revision: String,
     /// The designer's preview (docs/adr/0403 §3): nothing is written.
     pub(crate) preview: bool,
+    /// Shown in the attribute table's Form view (docs/adr/0416), not as a window: Kaydet and Vazgeç
+    /// keep it open on its record.
+    pub(crate) docked: bool,
     /// A record without any of the form's fields: the defaults fill it.
     new_record: bool,
     /// The values typed, by the fields' keys.
@@ -370,6 +373,18 @@ impl Entry {
         self.items.iter().find(|s| s.id == id)
     }
 
+    /// The record's slot in the open drawing.
+    pub(crate) fn uid_slot(&self, app: &App) -> Option<Slot> {
+        app.document
+            .as_ref()
+            .and_then(|d| record_slot(&d.model, &self.uid))
+    }
+
+    /// Whether a value was typed that the record does not hold yet.
+    pub(crate) fn dirty_now(&self) -> bool {
+        self.dirty()
+    }
+
     fn dirty(&self) -> bool {
         if !self.members.is_empty() {
             return !self.values.is_empty();
@@ -444,6 +459,34 @@ impl App {
         self.form_entry = Some(entry);
         self.dialog = Some(Dialog::FormEntry);
         Task::none()
+    }
+
+    /// The record's form in the attribute table's Form view (docs/adr/0416): the same editor, no
+    /// window.
+    pub(crate) fn open_entry_docked(&mut self, slot: Slot, form: &str) -> Task<Message> {
+        let task = self.open_entry(slot, form);
+        if let Some(e) = self.form_entry.as_mut() {
+            e.docked = true;
+            if self.dialog == Some(Dialog::FormEntry) {
+                self.dialog = None;
+            }
+        }
+        task
+    }
+
+    /// The docked editor again on its record, as the drawing has it now.
+    fn redock(&mut self, uid: &str, form: &str) -> Task<Message> {
+        let slot = self
+            .document
+            .as_ref()
+            .and_then(|d| record_slot(&d.model, uid));
+        match slot {
+            Some(slot) => self.open_entry_docked(slot, form),
+            None => {
+                self.form_entry = None;
+                Task::none()
+            }
+        }
     }
 
     /// Formla düzenle on many records of one layer (docs/adr/0403 §6): what they have the same shows,
@@ -580,6 +623,7 @@ impl App {
             user,
             revision,
             preview,
+            docked: false,
             new_record,
             values,
             notes,
@@ -1036,7 +1080,11 @@ impl App {
                     .and_then(|(u, _)| doc.model.slot_of(u));
                 if let Some(slot) = slot {
                     self.selection.set([slot]);
-                    return self.open_entry(slot, &form);
+                    return if e.docked {
+                        self.open_entry_docked(slot, &form)
+                    } else {
+                        self.open_entry(slot, &form)
+                    };
                 }
             }
             Event::AttachAdd(photos) => {
@@ -1075,6 +1123,10 @@ impl App {
             }
             Event::FirstIssue => return self.go_to_first_issue(),
             Event::Cancel => {
+                if e.docked {
+                    let (uid, form) = (e.uid.clone(), e.form.clone());
+                    return self.redock(&uid, &form);
+                }
                 self.form_entry = None;
                 self.dialog = None;
             }
@@ -1157,6 +1209,7 @@ impl App {
         };
         let name = e.name.clone();
         let form = e.form.clone();
+        let docked = e.docked.then(|| e.uid.clone());
         // The "reuse last" fields' values, kept for the next new record when this one goes in.
         let reused: Vec<(String, String)> = e
             .screen
@@ -1180,6 +1233,9 @@ impl App {
             Some(done) => {
                 self.form_entry = None;
                 self.dialog = None;
+                if let Some(uid) = &docked {
+                    let _ = self.redock(uid, &form);
+                }
                 if !reused.is_empty() {
                     self.form_memory
                         .last
@@ -1245,11 +1301,57 @@ impl App {
         let Some(e) = &self.form_entry else {
             return iced::widget::text("").into();
         };
-        let locked = self.forms_locked().is_some()
-            || self
-                .document
-                .as_ref()
-                .is_some_and(|d| d.model.layers().is_locked(&e.screen.layer));
+        let body = self.entry_column(e, Some(380.0), true);
+        let title = if e.dirty() {
+            format!("{TITLE} · {} ●", e.name)
+        } else {
+            format!("{TITLE} · {}", e.name)
+        };
+        overlay::modal(
+            Frame::new(title).push(body).width(620.0),
+            e.msg(Event::Cancel),
+        )
+    }
+
+    /// The docked editor (docs/adr/0416): the form's title, its pages and its footer, scrolled in the
+    /// room the table gives it; none when no record's form is docked.
+    pub(crate) fn docked_entry_view(&self) -> Option<Element<'_, Message>> {
+        let e = self.form_entry.as_ref().filter(|e| e.docked)?;
+        let title = if e.dirty() {
+            format!("{} ●", e.name)
+        } else {
+            e.name.clone()
+        };
+        let body = self.entry_column(e, None, false);
+        let pages = scrollable(
+            container(
+                Column::new()
+                    .spacing(10)
+                    .push(label::strong(title))
+                    .push(body),
+            )
+            .padding([8, 12]),
+        )
+        .height(Fill);
+        Some(
+            Column::new()
+                .push(pages)
+                .push(kentos_ui::widget::horizontal_divider())
+                .push(container(self.entry_footer(e, self.entry_locked(e))).padding([6, 12]))
+                .height(Fill)
+                .into(),
+        )
+    }
+
+    /// The editor's column: what it shows, its pages scrolled `height` high (none: as tall as they
+    /// are) and its footer.
+    fn entry_column<'a>(
+        &'a self,
+        e: &'a Entry,
+        height: Option<f32>,
+        footer: bool,
+    ) -> Column<'a, Message> {
+        let locked = self.entry_locked(e);
         let mut body = Column::new().spacing(12);
         let mut head = if e.members.is_empty() {
             format!("{} · {}", e.screen.object.kind, e.screen.object.layer)
@@ -1287,7 +1389,15 @@ impl App {
                 "Katman kilitli ya da yetkiniz yok: kayıt yalnız görüntülenir.",
             )]));
         }
-        body = self.entry_pages(e, locked, body, Some(380.0));
+        body = self.entry_pages(e, locked, body, height);
+        if footer {
+            body = body.push(self.entry_footer(e, locked));
+        }
+        body
+    }
+
+    /// The editor's footer: its problems and warnings, Vazgeç and Kaydet.
+    fn entry_footer<'a>(&'a self, e: &'a Entry, locked: bool) -> Row<'a, Message> {
         let (errors, warnings) = if e.tried {
             (e.errors().count(), e.issues.len() - e.errors().count())
         } else {
@@ -1306,16 +1416,15 @@ impl App {
             .push(space::horizontal().width(Fill))
             .push(words::secondary(CANCEL, Some(e.msg(Event::Cancel))))
             .push(words::primary(SAVE, (!locked).then(|| e.msg(Event::Save))));
-        body = body.push(footer);
-        let title = if e.dirty() {
-            format!("{TITLE} · {} ●", e.name)
-        } else {
-            format!("{TITLE} · {}", e.name)
-        };
-        overlay::modal(
-            Frame::new(title).push(body).width(620.0),
-            e.msg(Event::Cancel),
-        )
+        footer
+    }
+
+    fn entry_locked(&self, e: &Entry) -> bool {
+        self.forms_locked().is_some()
+            || self
+                .document
+                .as_ref()
+                .is_some_and(|d| d.model.layers().is_locked(&e.screen.layer))
     }
 
     /// The form's pages under `body`: its tabs and the chosen one's items, or its items; scrolled
