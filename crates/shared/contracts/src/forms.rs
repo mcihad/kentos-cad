@@ -155,6 +155,29 @@ pub struct FormRelease {
     pub note: Option<String>,
 }
 
+/// How a related item shows its objects (docs/adr/0425).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum RelatedView {
+    /// Their names, one a line.
+    #[default]
+    List,
+    /// A table of the item's columns, the numbers totalled under them.
+    Table,
+}
+
+impl RelatedView {
+    pub fn is_list(&self) -> bool {
+        *self == RelatedView::List
+    }
+}
+
+/// A related table holds at most this many columns.
+pub const MOST_RELATED_COLUMNS: usize = 8;
+
 /// An item of a form: a tab (only at the top), a group, a field or a note.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -214,6 +237,14 @@ pub enum FormItem {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         visible_when: Option<String>,
+        /// How the objects are shown (docs/adr/0425): a list of their names, or a table of `columns`.
+        #[serde(default, skip_serializing_if = "RelatedView::is_list")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<RelatedView>", optional))]
+        view: RelatedView,
+        /// The table's columns: the other layer's fields' keys, at most 8; empty: its first four.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+        columns: Vec<String>,
     },
     /// The record's photos and documents (docs/adr/0407 §1): the object's own attachments, added
     /// and removed in the form; their count may be bounded.
@@ -782,8 +813,24 @@ pub fn body_problem(body: &FormBody) -> Option<String> {
                 layer,
                 field,
                 visible_when,
+                columns,
                 ..
             } => {
+                if columns.len() > MOST_RELATED_COLUMNS {
+                    return Some(format!(
+                        "“{id}” öğesinin tablosu en çok {MOST_RELATED_COLUMNS} sütun olur; {} var.",
+                        columns.len()
+                    ));
+                }
+                if columns
+                    .iter()
+                    .enumerate()
+                    .any(|(i, c)| c.trim().is_empty() || columns[..i].contains(c))
+                {
+                    return Some(format!(
+                        "“{id}” öğesinin sütunları boş olamaz, her alan bir kez."
+                    ));
+                }
                 if label.as_deref().is_some_and(|l| !form_name_ok(l)) {
                     return Some(format!(
                         "“{id}” öğesinin adı boş olamaz ve en çok {MOST_FORM_NAME} karakterdir."

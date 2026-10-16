@@ -1944,6 +1944,20 @@ RegistryDatumName = Literal["TUREF", "ED50", "WGS84"]
 """The names of :class:`RegistryDatum`, for a plain string."""
 
 
+class RelatedView(_StrEnum):
+    """How a related item shows its objects (docs/adr/0425).
+
+    - ``list``: Their names, one a line.
+    - ``table``: A table of the item's columns, the numbers totalled under them.
+    """
+    LIST = "list"
+    TABLE = "table"
+
+
+RelatedViewName = Literal["list", "table"]
+"""The names of :class:`RelatedView`, for a plain string."""
+
+
 class RelationDelete(_StrEnum):
     """What happens to a relation's child records when their parent is deleted (docs/adr/0405 §1).
 
@@ -27164,12 +27178,16 @@ class RelatedFormItem(FormItem):
     Attributes:
         layer: The other layer's id.
         field: Its field's key that holds this record's id.
+        columns: The table's columns: the other layer's fields' keys, at most 8; empty: its first four.
+        view: How the objects are shown (docs/adr/0425): a list of their names, or a table of `columns`.
     """
     TAG_VALUE: ClassVar[str] = "related"
     id: str
     layer: str
     field: str
+    columns: list[str] | Unset = UNSET
     label: str | None | Unset = UNSET
+    view: RelatedView | RelatedViewName | Unset = UNSET
     visible_when: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -27177,8 +27195,12 @@ class RelatedFormItem(FormItem):
         out["id"] = self.id
         out["layer"] = self.layer
         out["field"] = self.field
+        if self.columns is not UNSET:
+            out["columns"] = list(self.columns)
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.view is not UNSET:
+            out["view"] = _enum_out(self.view)
         if self.visible_when is not UNSET:
             out["visibleWhen"] = self.visible_when
         return out
@@ -27189,7 +27211,9 @@ class RelatedFormItem(FormItem):
             id=data["id"],
             layer=data["layer"],
             field=data["field"],
+            columns=list(data["columns"]) if "columns" in data else UNSET,
             label=data.get("label", UNSET),
+            view=_enum_in(RelatedView, data["view"]) if "view" in data else UNSET,
             visible_when=data.get("visibleWhen", UNSET),
         )
 
@@ -30228,6 +30252,8 @@ __all__ = [
     "RegularFrame",
     "RegularPolygonCreate",
     "RelatedFormItem",
+    "RelatedView",
+    "RelatedViewName",
     "RelationDelete",
     "RelationDeleteName",
     "RelationsEdit",

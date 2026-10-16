@@ -370,6 +370,26 @@ class FormsTests(unittest.TestCase):
         doc.undo()
         self.assertEqual([r.uid for r in doc.entities(layer=owner_layer)], made.uids)
 
+    def test_a_related_table_names_its_columns(self) -> None:
+        """docs/adr/0425: a related item shown as a table of the other layer's fields; a column the layer lacks is
+        the preflight's error."""
+        doc, layer = drawing()
+        cad.layers.edit(doc, operation="add", name="Bölüm")
+        units = next(n.id for n in doc.layers() if n.name == "Bölüm")
+        cad.layers.edit(doc, operation="fields", layer=units, fields=[
+            cad.LayerField(name="No", kind="text"), cad.LayerField(name="Alan", kind="decimal", scale=2),
+            cad.LayerField(name="Bina", kind="text")])
+        item = lambda cols: cad.RelatedFormItem(  # noqa: E731
+            id="bolumler", layer=units, field="Bina", view="table", columns=cols)
+        body = cad.FormBody(revision=1, items=[cad.FieldFormItem(id="durum", field="Durum"), item(["No", "Alan"])])
+        made = cad.forms.edit(doc, edit=cad.CreateFormsOp(name="Bina", layer=layer, id="bina", body=body))
+        self.assertEqual(made.issues, [])
+        related = made.form.draft.items[1] if made.form else None
+        self.assertEqual((related.view, related.columns), ("table", ["No", "Alan"]))
+        saved = cad.forms.edit(doc, edit=cad.UpdateFormsOp(id="bina", body=cad.FormBody(
+            revision=1, items=[body.items[0], item(["No", "Pay"])])))
+        self.assertEqual([i.code for i in saved.issues], ["form_lookup_field"])
+
     def test_a_relation_keeps_its_children(self) -> None:
         """docs/adr/0405: a meter refers to its building; the building deleted, its meters go with it (cascade); a
         restricting relation keeps a building with meters."""

@@ -1622,6 +1622,11 @@ def body_problem(body):
                 return f"“{iid}” öğesinin katmanı ve alanı yazılmalı"
             if "visibleWhen" in i and not _rule_ok(i["visibleWhen"]):
                 return f"“{iid}” öğesinin kuralı geçersiz"
+            cols = i.get("columns", [])
+            if "columns" in i and not cols:
+                return f"“{iid}” öğesinin boş sütun listesi yazılmaz"
+            if len(cols) > 8 or len(set(cols)) != len(cols) or any(not c.strip() for c in cols):
+                return f"“{iid}” öğesinin sütunları geçersiz"
         if t == "attachments":
             if "label" in i and not _form_name_ok(i["label"]):
                 return f"“{iid}” öğesinin adı geçersiz"
@@ -3547,6 +3552,9 @@ class _Schema:
                     "layer": (self.text, True),
                     "field": (self.text, True),
                     "visibleWhen": (self.text, False),
+                    # docs/adr/0425: a table of the other layer's fields; a list is not written.
+                    "view": (self.enum(("table",)), False),
+                    "columns": (self.array(self.text), False),
                 },
                 # docs/adr/0407 §1: the record's photos and documents.
                 "attachments": {

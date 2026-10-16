@@ -494,6 +494,11 @@ def preflight(body, fields, variables=(), world=None):
             issues.append(issue("form_lookup_layer", True, x["id"], None, "related"))
         elif not any(key_of(y) == x["field"] for y in other["fields"]):
             issues.append(issue("form_lookup_field", True, x["id"], None, "related"))
+        if other is not None:
+            # docs/adr/0425: the table's columns are the other layer's fields.
+            for c in x.get("columns", []):
+                if not any(key_of(y) == c for y in other["fields"]):
+                    issues.append(issue("form_lookup_field", True, x["id"], None, "related"))
 
     def note(x):
         sources = template_exprs(x["text"])

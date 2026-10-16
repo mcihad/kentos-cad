@@ -543,6 +543,8 @@ impl App {
                 layer,
                 field,
                 visible_when,
+                view,
+                columns,
                 ..
             } => {
                 let layers = self.form_layers();
@@ -577,12 +579,44 @@ impl App {
                             "Seçilen alanında bu kaydın kalıcı kimliğini tutan nesneler listelenir; her biri kendi formuyla açılır.",
                         )
                         .style(muted),
-                    )
-                    .push(rule_row(
-                        "Görünürlük",
-                        Rule::Visible(id.clone()),
-                        visible_when.as_deref().unwrap_or(""),
+                    );
+                // Liste | Tablo, and the table's columns (docs/adr/0425).
+                use kentos_contracts::RelatedView as RV;
+                let views = [RV::List, RV::Table];
+                col = col.push(words::field(
+                    "Görünüm",
+                    Select::new(
+                        ["Liste", "Tablo"].map(Choice::new),
+                        views.iter().position(|v| v == view),
+                        move |i| msg(Event::RelatedView(views[i])),
+                    ),
+                    None,
+                ));
+                if *view == RV::Table {
+                    let mut chips = Row::new().spacing(4);
+                    for f in their.iter().filter(|f| f.key() != field) {
+                        let on = columns.iter().any(|c| c == f.key());
+                        chips = chips.push(
+                            button(label::caption(f.label().to_owned()))
+                                .on_press(msg(Event::RelatedColumn(f.key().to_owned())))
+                                .padding([2, 8])
+                                .style(style::button::chip(on)),
+                        );
+                    }
+                    col = col.push(words::field(
+                        "Sütunlar",
+                        chips.wrap(),
+                        Some(
+                            "Seçilmezse katmanın ilk dört alanı; ondalık sayı sütunlarının toplamı tablonun altında."
+                                .into(),
+                        ),
                     ));
+                }
+                col = col.push(rule_row(
+                    "Görünürlük",
+                    Rule::Visible(id.clone()),
+                    visible_when.as_deref().unwrap_or(""),
+                ));
             }
             FormItem::Attachments {
                 label: text,

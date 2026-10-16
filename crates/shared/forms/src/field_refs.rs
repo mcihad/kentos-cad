@@ -244,6 +244,8 @@ fn items(
                 layer: other,
                 field,
                 visible_when,
+                columns,
+                ..
             } => {
                 let w = format!(
                     "{words}{SEP}“{}” ilişkili kayıtları",
@@ -257,6 +259,16 @@ fn items(
                     format!("{w}{SEP}Alan"),
                     field,
                 );
+                // The table's columns name the other layer's fields by key (docs/adr/0425).
+                for (i, c) in columns.iter_mut().enumerate() {
+                    put(
+                        &other,
+                        FieldUseHow::Key,
+                        format!("{p}/columns/{i}"),
+                        format!("{w}{SEP}Tablonun sütunu"),
+                        c,
+                    );
+                }
                 if let Some(v) = visible_when.as_mut().filter(|v| !v.is_empty()) {
                     put(
                         layer,

@@ -4127,6 +4127,13 @@
               {
                 "description": "The objects of another layer whose field holds this record's persistent id (docs/adr/0404 §4):\na list in the form, each opened by its own form.",
                 "properties": {
+                  "columns": {
+                    "description": "The table's columns: the other layer's fields' keys, at most 8; empty: its first four.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
                   "field": {
                     "description": "Its field's key that holds this record's id.",
                     "type": "string"
@@ -4147,6 +4154,10 @@
                   "type": {
                     "const": "related",
                     "type": "string"
+                  },
+                  "view": {
+                    "$ref": "#/$defs/RelatedView",
+                    "description": "How the objects are shown (docs/adr/0425): a list of their names, or a table of `columns`."
                   },
                   "visibleWhen": {
                     "type": [
@@ -9951,6 +9962,21 @@
             ],
             "type": "string"
           },
+          "RelatedView": {
+            "description": "How a related item shows its objects (docs/adr/0425).",
+            "oneOf": [
+              {
+                "const": "list",
+                "description": "Their names, one a line.",
+                "type": "string"
+              },
+              {
+                "const": "table",
+                "description": "A table of the item's columns, the numbers totalled under them.",
+                "type": "string"
+              }
+            ]
+          },
           "RelationDelete": {
             "description": "What happens to a relation's child records when their parent is deleted (docs/adr/0405 §1).",
             "oneOf": [
@@ -14398,6 +14424,13 @@
               {
                 "description": "The objects of another layer whose field holds this record's persistent id (docs/adr/0404 §4):\na list in the form, each opened by its own form.",
                 "properties": {
+                  "columns": {
+                    "description": "The table's columns: the other layer's fields' keys, at most 8; empty: its first four.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
                   "field": {
                     "description": "Its field's key that holds this record's id.",
                     "type": "string"
@@ -14418,6 +14451,10 @@
                   "type": {
                     "const": "related",
                     "type": "string"
+                  },
+                  "view": {
+                    "$ref": "#/$defs/RelatedView",
+                    "description": "How the objects are shown (docs/adr/0425): a list of their names, or a table of `columns`."
                   },
                   "visibleWhen": {
                     "type": [
@@ -17368,6 +17405,21 @@
               "WGS84"
             ],
             "type": "string"
+          },
+          "RelatedView": {
+            "description": "How a related item shows its objects (docs/adr/0425).",
+            "oneOf": [
+              {
+                "const": "list",
+                "description": "Their names, one a line.",
+                "type": "string"
+              },
+              {
+                "const": "table",
+                "description": "A table of the item's columns, the numbers totalled under them.",
+                "type": "string"
+              }
+            ]
           },
           "RelationDelete": {
             "description": "What happens to a relation's child records when their parent is deleted (docs/adr/0405 §1).",
@@ -22619,6 +22671,13 @@
               {
                 "description": "The objects of another layer whose field holds this record's persistent id (docs/adr/0404 §4):\na list in the form, each opened by its own form.",
                 "properties": {
+                  "columns": {
+                    "description": "The table's columns: the other layer's fields' keys, at most 8; empty: its first four.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
                   "field": {
                     "description": "Its field's key that holds this record's id.",
                     "type": "string"
@@ -22639,6 +22698,10 @@
                   "type": {
                     "const": "related",
                     "type": "string"
+                  },
+                  "view": {
+                    "$ref": "#/$defs/RelatedView",
+                    "description": "How the objects are shown (docs/adr/0425): a list of their names, or a table of `columns`."
                   },
                   "visibleWhen": {
                     "type": [
@@ -28527,6 +28590,21 @@
               "WGS84"
             ],
             "type": "string"
+          },
+          "RelatedView": {
+            "description": "How a related item shows its objects (docs/adr/0425).",
+            "oneOf": [
+              {
+                "const": "list",
+                "description": "Their names, one a line.",
+                "type": "string"
+              },
+              {
+                "const": "table",
+                "description": "A table of the item's columns, the numbers totalled under them.",
+                "type": "string"
+              }
+            ]
           },
           "RelationDelete": {
             "description": "What happens to a relation's child records when their parent is deleted (docs/adr/0405 §1).",
@@ -343125,6 +343203,13 @@
               {
                 "description": "The objects of another layer whose field holds this record's persistent id (docs/adr/0404 §4):\na list in the form, each opened by its own form.",
                 "properties": {
+                  "columns": {
+                    "description": "The table's columns: the other layer's fields' keys, at most 8; empty: its first four.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
                   "field": {
                     "description": "Its field's key that holds this record's id.",
                     "type": "string"
@@ -343145,6 +343230,10 @@
                   "type": {
                     "const": "related",
                     "type": "string"
+                  },
+                  "view": {
+                    "$ref": "#/$defs/RelatedView",
+                    "description": "How the objects are shown (docs/adr/0425): a list of their names, or a table of `columns`."
                   },
                   "visibleWhen": {
                     "type": [
@@ -343554,6 +343643,21 @@
               "record"
             ],
             "type": "object"
+          },
+          "RelatedView": {
+            "description": "How a related item shows its objects (docs/adr/0425).",
+            "oneOf": [
+              {
+                "const": "list",
+                "description": "Their names, one a line.",
+                "type": "string"
+              },
+              {
+                "const": "table",
+                "description": "A table of the item's columns, the numbers totalled under them.",
+                "type": "string"
+              }
+            ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -343952,6 +344056,13 @@
               {
                 "description": "The objects of another layer whose field holds this record's persistent id (docs/adr/0404 §4):\na list in the form, each opened by its own form.",
                 "properties": {
+                  "columns": {
+                    "description": "The table's columns: the other layer's fields' keys, at most 8; empty: its first four.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
                   "field": {
                     "description": "Its field's key that holds this record's id.",
                     "type": "string"
@@ -343972,6 +344083,10 @@
                   "type": {
                     "const": "related",
                     "type": "string"
+                  },
+                  "view": {
+                    "$ref": "#/$defs/RelatedView",
+                    "description": "How the objects are shown (docs/adr/0425): a list of their names, or a table of `columns`."
                   },
                   "visibleWhen": {
                     "type": [
@@ -344357,6 +344472,21 @@
               "draft"
             ],
             "type": "object"
+          },
+          "RelatedView": {
+            "description": "How a related item shows its objects (docs/adr/0425).",
+            "oneOf": [
+              {
+                "const": "list",
+                "description": "Their names, one a line.",
+                "type": "string"
+              },
+              {
+                "const": "table",
+                "description": "A table of the item's columns, the numbers totalled under them.",
+                "type": "string"
+              }
+            ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -344780,6 +344910,13 @@
               {
                 "description": "The objects of another layer whose field holds this record's persistent id (docs/adr/0404 §4):\na list in the form, each opened by its own form.",
                 "properties": {
+                  "columns": {
+                    "description": "The table's columns: the other layer's fields' keys, at most 8; empty: its first four.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
                   "field": {
                     "description": "Its field's key that holds this record's id.",
                     "type": "string"
@@ -344800,6 +344937,10 @@
                   "type": {
                     "const": "related",
                     "type": "string"
+                  },
+                  "view": {
+                    "$ref": "#/$defs/RelatedView",
+                    "description": "How the objects are shown (docs/adr/0425): a list of their names, or a table of `columns`."
                   },
                   "visibleWhen": {
                     "type": [
@@ -345185,6 +345326,21 @@
               "draft"
             ],
             "type": "object"
+          },
+          "RelatedView": {
+            "description": "How a related item shows its objects (docs/adr/0425).",
+            "oneOf": [
+              {
+                "const": "list",
+                "description": "Their names, one a line.",
+                "type": "string"
+              },
+              {
+                "const": "table",
+                "description": "A table of the item's columns, the numbers totalled under them.",
+                "type": "string"
+              }
+            ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",

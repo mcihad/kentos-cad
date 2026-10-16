@@ -110,7 +110,12 @@
                   "id": "ilgili",
                   "label": "Bağlı binalar",
                   "layer": "bina",
-                  "field": "Not"
+                  "field": "Not",
+                  "view": "table",
+                  "columns": [
+                    "Durum",
+                    "kat-sayisi"
+                  ]
                 }
               ]
             }

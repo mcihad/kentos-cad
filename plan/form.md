@@ -361,7 +361,7 @@ QGIS ilişkili child form gösterimi ve reference widget desteğine sahiptir. Ar
 
 ### 6.2 Master–detail runtime
 
-- [ ] **FORM-REL-10:** Form relationEditor; table/cards/tree ve child form görünümünü aynı relation üzerinden üretsin.
+- [x] **FORM-REL-10:** Form relationEditor; table/cards/tree ve child form görünümünü aynı relation üzerinden üretsin. — *Yapıldı (17 Ekim; ADR 0425: Liste ve Tablo, sütunlar, ondalık toplamlar; kart ve ağaç açık).*
 - [ ] **FORM-REL-11:** Child create/update/delete/link/unlink/view/select-on-map action'ları ayrı yetki ve capability ile gösterilsin.
 - [ ] **FORM-REL-12:** İlişkili lookup/relation reference; yetkili parent search, display fields, filter ve nested parent preview sunsun.
 - [ ] **FORM-REL-13:** Parent data edit izni child edit izni vermesin; ilgili dataset/row/field/action yetkileri ayrıca denetlensin.

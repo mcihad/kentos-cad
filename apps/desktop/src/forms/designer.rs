@@ -196,6 +196,10 @@ pub enum Event {
     /// A related item's layer and field.
     RelatedLayer(String),
     RelatedField(String),
+    /// A related item shown as a list or a table (docs/adr/0425).
+    RelatedView(kentos_contracts::RelatedView),
+    /// A field of the other layer taken into the table's columns, or out of them.
+    RelatedColumn(String),
     Move(i32),
     /// An item dragged onto another in the tree, by their places in the tree's order.
     Drop(usize, usize, kentos_ui::widget::tree_view::Place),
@@ -846,6 +850,8 @@ impl App {
                     layer: String::new(),
                     field: String::new(),
                     visible_when: None,
+                    view: kentos_contracts::RelatedView::List,
+                    columns: Vec::new(),
                 };
                 edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
                 w.item = Some(id);
@@ -978,6 +984,34 @@ impl App {
                         {
                             *l = layer.clone();
                             field.clear();
+                        }
+                        if let Some(FormItem::Related { columns, .. }) = find_mut(&mut b.items, &id)
+                        {
+                            columns.clear();
+                        }
+                    });
+                }
+            }
+            Event::RelatedView(view) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Related { view: v, .. }) = find_mut(&mut b.items, &id)
+                        {
+                            *v = view;
+                        }
+                    });
+                }
+            }
+            Event::RelatedColumn(key) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Related { columns, .. }) = find_mut(&mut b.items, &id)
+                        {
+                            if let Some(i) = columns.iter().position(|c| *c == key) {
+                                columns.remove(i);
+                            } else if columns.len() < kentos_contracts::MOST_RELATED_COLUMNS {
+                                columns.push(key.clone());
+                            }
                         }
                     });
                 }

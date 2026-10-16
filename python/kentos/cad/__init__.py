@@ -817,6 +817,8 @@ __all__ = [
     "RegularFrame",
     "RegularPolygonCreate",
     "RelatedFormItem",
+    "RelatedView",
+    "RelatedViewName",
     "RelationDelete",
     "RelationDeleteName",
     "RelationsEdit",

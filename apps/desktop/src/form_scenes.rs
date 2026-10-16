@@ -599,6 +599,87 @@ fn typed_buildings(app: &mut App) {
     app.features.layer = Some("bina".into());
 }
 
+/// A building's units as a table (docs/adr/0425): number, floor and area of each, the areas totalled;
+/// the units are records without a geometry linked to the building by its persistent id.
+fn units_table(app: &mut App) {
+    let mut o = Objects::new();
+    let building = o.path(
+        "bina",
+        &[[0.0, 0.0], [24.0, 0.0], [24.0, 16.0], [0.0, 16.0]],
+        true,
+    );
+    o.data(building, &[("Kod", "B-1")], Some("B-1"));
+    let rows = [
+        ("1", "0", "92.40", "Ayşe Yılmaz"),
+        ("2", "1", "88.15", "Mehmet Kaya"),
+        ("3", "1", "88.15", "Zeynep Arslan"),
+        ("4", "2", "120.75", "Ali Demir"),
+    ];
+    let mut units = Vec::new();
+    for (no, floor, area, owner) in rows {
+        let id = o.record("bolum");
+        o.data(
+            id,
+            &[("No", no), ("Kat", floor), ("Alan", area), ("Malik", owner)],
+            Some(no),
+        );
+        units.push(id);
+    }
+    let form = published(
+        "bina-formu",
+        "Bina",
+        "bina",
+        json!([
+            { "type": "field", "id": "kod", "field": "Kod" },
+            { "type": "related", "id": "bolumler", "label": "Bağımsız bölümler", "layer": "bolum", "field": "Bina",
+              "view": "table", "columns": ["No", "Kat", "Alan", "Malik"] }
+        ]),
+    );
+    open_edited(app, o, move |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut bina = crate::tools_scenes::layer("bina", "Bina", "#3E63DD", 0.35);
+        bina["fields"] = json!([{ "name": "Kod", "kind": "text" }]);
+        let mut bolum = crate::tools_scenes::layer("bolum", "Bağımsız bölüm", "#E5484D", 0.35);
+        bolum["fields"] = json!([{ "name": "No", "kind": "text" }, { "name": "Kat", "kind": "integer" },
+                                 { "name": "Alan", "kind": "decimal", "scale": 2 }, { "name": "Malik", "kind": "text" },
+                                 { "name": "Bina", "kind": "text" }]);
+        layers.push(bina);
+        layers.push(bolum);
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("bina");
+        d["settings"]["forms"] = json!([form]);
+        d["settings"]["relations"] = json!([{ "id": "bina-bolum", "name": "Bağımsız bölümler",
+                                              "parent": "bina", "child": "bolum", "field": "Bina" }]);
+    });
+    let uid = |app: &App, slot: u32| {
+        app.document
+            .as_ref()
+            .and_then(|d| d.model.uid(Slot(slot)))
+            .map(|u| u.to_string())
+            .unwrap_or_default()
+    };
+    let parent = uid(app, building);
+    let children: Vec<String> = units.iter().map(|s| uid(app, *s)).collect();
+    if let Some(doc) = app.document.as_mut() {
+        let _ = kentos_native_application::registry::run(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            kentos_contracts::CAD_ENTITIES_SET,
+            kentos_contracts::CallOp::Execute,
+            json!({ "uids": children, "attrs": { "Bina": parent }, "operation": "attributes" }),
+        );
+    }
+    app.selection.set([Slot(building)]);
+    run(app, "data.formEdit");
+}
+
+/// Formlar on the building form, its units item chosen: Görünüm Tablo and its columns (docs/adr/0425).
+fn units_designer(app: &mut App) {
+    units_table(app);
+    let _ = app.update(Message::FormEntry(entry::Event::Cancel));
+    run(app, "data.forms");
+    designer(app, designer::Event::SelectItem("bolumler".into()));
+}
+
 /// Değer bileşimleri's window on the buildings' group (docs/adr/0423 §5).
 fn contingents_window(app: &mut App) {
     typed_buildings(app);
@@ -1398,6 +1479,8 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-alt-tur-degisti", subtype_changed),
         ("form-bilesimler", contingents_window),
         ("form-bilesim-sorunu", combination_refused),
+        ("form-iliskili-tablo", units_table),
+        ("form-iliskili-tasarim", units_designer),
         ("form-hesap-degistir", overridden_height),
         ("form-kalkmis-deger", retired_list),
         ("form-alan-politika", field_policies),
@@ -1603,6 +1686,14 @@ mod tests {
             rule.default, None,
             "steel is no longer offered, nor its default"
         );
+    }
+
+    #[test]
+    fn a_related_table_lists_the_units() {
+        let mut app = crate::files_testing::app_with_drawing();
+        units_table(&mut app);
+        let e = app.form_entry.as_ref().expect("the building's form");
+        assert_eq!(e.related_of("bolumler").len(), 4);
     }
 
     #[test]

@@ -194,6 +194,8 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-AH` ilişkili kayıtların tablosu (ADR 0425, 17 Ekim): web'de gerekenler: ilişkili kayıtlar öğesinin `view` ve `columns`'ı
+  (TS türleri üretildi), formda tablo ve ondalık toplamları, tasarımcıda Görünüm ve Sütunlar.
 - [ ] `FORM-AE` değer bileşimleri (ADR 0423, 17 Ekim): web'de gerekenler: katmanın `contingents`'ı (TS türleri üretildi),
   `cad.layers.contingents`'ın TS işleyicisi ve yazmaların bileşim kuralı (`fixtures/commands/v1/cad.layers.contingents.json`,
   `cad.entities.set.contingents.json`, `cad.polygon.create.contingents.json`), form çekirdeğinin web bağlayıcısında
@@ -1500,6 +1502,8 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-AH` İlişkili kayıtların tablosu: öğenin Liste ya da Tablo görünümü, sütunları (alt katmanın alanları), ondalık
+  sütunların toplamı; tasarımcıda Görünüm ve Sütunlar. — **17 Ekim, [ADR 0425](docs/adr/0425-related-table.md).**
 - [x] `FORM-AG` Formların geliştirici örnekleri: `python/examples/forms` (bina formu baştan sona; alt türler ve değer bileşimleri; malikler
   ilişkisi ve geometrisiz kayıtlar; il ve ilçe listesi), kapsamları README'de, `python/tests/test_examples.py` hepsini çalıştırır. — **17 Ekim.**
 - [x] `FORM-AF` Büyük form ve katmanda süreler: 100 000 kayıt, 200 öğe, alt türler ve 2 000 bileşimle ölçüm ve bütçeleri; Kayıtları denetle

@@ -176,12 +176,13 @@ impl Preflight<'_> {
                     layer,
                     field,
                     visible_when,
+                    columns,
                     ..
                 } => {
                     if let Some(rule) = visible_when {
                         self.rule(id, None, None, "visibleWhen", rule);
                     }
-                    self.related(id, layer, field);
+                    self.related(id, layer, field, columns);
                 }
                 FormItem::Attachments {
                     id, visible_when, ..
@@ -486,7 +487,7 @@ impl Preflight<'_> {
     }
 
     /// A related item (docs/adr/0404 §4): its layer and its field exist.
-    fn related(&mut self, id: &str, layer: &str, field: &str) {
+    fn related(&mut self, id: &str, layer: &str, field: &str, columns: &[String]) {
         let at = |code: &str, message: String| {
             issue(
                 code,
@@ -511,6 +512,18 @@ impl Preflight<'_> {
                 codes::LOOKUP_FIELD,
                 format!("“{}” katmanında “{field}” alanı yok.", other.name),
             ));
+        }
+        // The table's columns (docs/adr/0425).
+        for c in columns {
+            if !other.fields.iter().any(|x| x.key() == c) {
+                self.issues.push(at(
+                    codes::LOOKUP_FIELD,
+                    format!(
+                        "Tablonun sütunu: “{}” katmanında “{c}” alanı yok.",
+                        other.name
+                    ),
+                ));
+            }
         }
     }
 

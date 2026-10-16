@@ -2052,6 +2052,18 @@ impl App {
                 }
                 _ => Vec::new(),
             };
+        // A table of the other layer's fields, its numbers totalled (docs/adr/0425).
+        if let (Some(d), Some(FormItem::Related {
+            layer,
+            field,
+            view: kentos_contracts::RelatedView::Table,
+            columns,
+            ..
+        })) = (doc, crate::forms::designer::find(&e.body.items, id))
+        {
+            col = col.push(related_table(d, layer, field, columns, &uids, e, id, live));
+            return self.related_footer(e, id, col, live, candidates);
+        }
         for uid in uids.iter().take(50) {
             let words = doc
                 .and_then(|d| {
@@ -2094,6 +2106,18 @@ impl App {
         if uids.len() > 50 {
             col = col.push(label::caption(format!("{} nesne daha.", uids.len() - 50)).style(muted));
         }
+        self.related_footer(e, id, col, live, candidates)
+    }
+
+    /// A related item's Yeni and Bağla, and its frame.
+    fn related_footer<'a>(
+        &'a self,
+        e: &'a Entry,
+        id: &str,
+        mut col: Column<'a, Message>,
+        live: bool,
+        candidates: Vec<(String, String)>,
+    ) -> Element<'a, Message> {
         let mut actions = Row::new().spacing(6).align_y(Center);
         if live {
             actions = actions.push(words::secondary(
@@ -2610,4 +2634,123 @@ fn muted(theme: &iced::Theme) -> iced::widget::text::Style {
     iced::widget::text::Style {
         color: Some(Tokens::of(theme).muted),
     }
+}
+
+
+/// The related objects as a table (docs/adr/0425): the item's columns (the other layer's first four
+/// fields when it names none), each object a row with Aç, Git and Bağı kopar; the decimal columns'
+/// totals under them.
+#[allow(clippy::too_many_arguments)]
+fn related_table<'a>(
+    d: &crate::document::Document,
+    layer: &str,
+    link: &str,
+    columns: &[String],
+    uids: &[String],
+    e: &'a Entry,
+    id: &str,
+    live: bool,
+) -> Element<'a, Message> {
+    let fields: Vec<kentos_contracts::LayerField> = d
+        .model
+        .layers()
+        .get(layer)
+        .map(|n| n.fields.clone())
+        .unwrap_or_default();
+    let shown: Vec<kentos_contracts::LayerField> = if columns.is_empty() {
+        fields.iter().filter(|f| f.key() != link).take(4).cloned().collect()
+    } else {
+        columns
+            .iter()
+            .filter_map(|c| fields.iter().find(|f| f.key() == c).cloned())
+            .collect()
+    };
+    let numeric = |f: &kentos_contracts::LayerField| {
+        matches!(f.kind, LayerFieldKind::Integer | LayerFieldKind::Decimal)
+    };
+    let cell = |text: String, f: Option<&kentos_contracts::LayerField>| -> Element<'a, Message> {
+        let t = label::body(text);
+        if f.is_some_and(numeric) {
+            container(t).width(Fill).align_x(iced::alignment::Horizontal::Right).into()
+        } else {
+            container(t).width(Fill).into()
+        }
+    };
+    let mut head = Row::new().spacing(8);
+    for f in &shown {
+        let words = label::caption(f.label().to_owned()).style(muted);
+        head = head.push(if numeric(f) {
+            container(words).width(Fill).align_x(iced::alignment::Horizontal::Right)
+        } else {
+            container(words).width(Fill)
+        });
+    }
+    head = head.push(space::horizontal().width(84));
+    let mut rows = Column::new().spacing(2).push(head);
+    // A decimal is a measure and is totalled (an area, a share); an integer is often a number or a floor.
+    let mut totals: Vec<Option<f64>> = shown
+        .iter()
+        .map(|f| (f.kind == LayerFieldKind::Decimal).then_some(0.0))
+        .collect();
+    for uid in uids.iter().take(200) {
+        let Some(x) = kentos_domain::Uuid::parse_str(uid)
+            .ok()
+            .and_then(|u| d.model.slot_of(u))
+            .and_then(|s| d.model.get(s))
+        else {
+            continue;
+        };
+        let mut line = Row::new().spacing(8).align_y(Center);
+        for (i, f) in shown.iter().enumerate() {
+            let raw = x.base().attrs.get(&f.name).cloned().unwrap_or_default();
+            if let (Some(t), Ok(v)) = (totals[i].as_mut(), raw.trim().parse::<f64>()) {
+                *t += v;
+            }
+            line = line.push(cell(kentos_contracts::display_value(f, &raw), Some(f)));
+        }
+        let tool = |glyph: Icon, tip: &'static str, on: Option<Message>| {
+            kentos_ui::widget::tip(
+                iced::widget::button(icon(glyph).size(13.0))
+                    .padding([3, 5])
+                    .style(style::button::tool(false))
+                    .on_press_maybe(on),
+                kentos_ui::widget::Tip::new(tip),
+                iced::widget::tooltip::Position::Top,
+            )
+        };
+        line = line.push(
+            row![
+                tool(Icon::Open, "Aç", live.then(|| e.msg(Event::OpenRelated(uid.clone())))),
+                tool(Icon::Target, "Çizimde göster", live.then(|| e.msg(Event::ShowObject(uid.clone())))),
+                tool(
+                    Icon::Close,
+                    "Bağı kopar",
+                    live.then(|| e.msg(Event::Unlink(id.to_owned(), uid.clone())))
+                ),
+            ]
+            .spacing(2)
+            .width(84),
+        );
+        rows = rows.push(line);
+    }
+    if totals.iter().any(Option::is_some) && !uids.is_empty() {
+        let mut foot = Row::new().spacing(8);
+        for (i, f) in shown.iter().enumerate() {
+            let text = match totals[i] {
+                Some(t) => {
+                    let scale = f.scale.unwrap_or(0) as usize;
+                    format!("{t:.scale$}")
+                }
+                None if i == 0 => "Toplam".to_owned(),
+                None => String::new(),
+            };
+            foot = foot.push(cell(text, Some(f).filter(|f| f.kind == LayerFieldKind::Decimal)));
+        }
+        foot = foot.push(space::horizontal().width(84));
+        rows = rows.push(container(foot).padding(iced::Padding { top: 4.0, ..iced::Padding::ZERO }));
+    }
+    if uids.len() > 200 {
+        rows = rows.push(label::caption(format!("{} nesne daha.", uids.len() - 200)).style(muted));
+    }
+    rows.into()
 }
