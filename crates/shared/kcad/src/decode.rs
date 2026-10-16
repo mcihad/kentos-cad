@@ -1031,6 +1031,7 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
     let (mut actions, mut card, mut compose) = (None, None, None);
     let (mut plot, mut frozen) = (None, None);
     let mut table_styles = Vec::new();
+    let mut subtypes: Option<(usize, kentos_contracts::LayerSubtypes)> = None;
     map(r, |r, key| {
         match key {
             "id" => id = Some(text(r)?),
@@ -1080,6 +1081,29 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
                 }
                 table_styles = list;
             }
+            // Schema 60 (docs/adr/0422 §4): the subtypes, read whole; checked with the fields below.
+            "subtypes" if has.forms => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let read: kentos_contracts::LayerSubtypes = serde_json::from_value(value.clone())
+                    .map_err(|e| {
+                    let words = e.to_string();
+                    let code = if words.contains("unknown field") {
+                        Code::UnknownField
+                    } else {
+                        Code::BadValue
+                    };
+                    r.fail_at(code, at, &format!("alt türler okunamadı: {words}"))
+                })?;
+                if serde_json::to_value(&read).ok().as_ref() != Some(&value) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "alt türler yazıcının biçiminde değil (varsayılan değerinde bir alan yazılmış)",
+                    ));
+                }
+                subtypes = Some((at, read));
+            }
             "plot" if has.look => {
                 if r.bool()? {
                     return Err(r.fail(
@@ -1121,7 +1145,22 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
             "grubun koşullu biçimi olmaz; yalnız katmanın olur",
         ));
     }
+    if let Some((at, read)) = &subtypes {
+        if kind == Some(LayerNodeType::Group) {
+            return Err(r.fail_at(
+                Code::BadValue,
+                *at,
+                "grubun alt türleri olmaz; yalnız katmanın olur",
+            ));
+        }
+        let none = Vec::new();
+        let fields_now: &Vec<_> = fields.as_ref().unwrap_or(&none);
+        if let Some((_, problem)) = kentos_contracts::subtypes_problem(fields_now, read) {
+            return Err(r.fail_at(Code::BadValue, *at, &problem));
+        }
+    }
     Ok(LayerNode {
+        subtypes: subtypes.map(|(_, s)| s),
         table_styles,
         plot,
         frozen,

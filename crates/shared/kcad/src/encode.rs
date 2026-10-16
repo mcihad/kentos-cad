@@ -947,11 +947,13 @@ impl<'d> Encoder<'d> {
                 + usize::from(compose.is_some())
                 + usize::from(n.plot == Some(false))
                 + usize::from(n.frozen == Some(true))
-                + usize::from(!n.table_styles.is_empty()),
+                + usize::from(!n.table_styles.is_empty())
+                + usize::from(n.subtypes.is_some()),
             true,
         )?;
         // id (2), card feed name plot snap time type (4), style (5), fields filter locked (6),
-        // actions compose service visible (7), children expanded replaces scenario (8), tableStyles (11).
+        // actions compose service visible (7), children expanded replaces scenario subtypes (8),
+        // tableStyles (11).
         if n.service.is_some() && n.feed.is_some() {
             return Err(self.fail(
                 Code::BadValue,
@@ -1050,6 +1052,21 @@ impl<'d> Encoder<'d> {
         if let Some(scenario) = &n.scenario {
             self.key("scenario");
             self.at(Seg::Name("scenario"), |e| e.scenario(n.kind, scenario))?;
+        }
+        // Schema 60 (docs/adr/0422 §4): the subtypes, as their JSON, on a layer whose fields they fit.
+        if let Some(subtypes) = &n.subtypes {
+            self.key("subtypes");
+            self.at(Seg::Name("subtypes"), |e| {
+                if n.kind == LayerNodeType::Group {
+                    return Err(e.fail(Code::BadValue, "grubun alt türleri olmaz; yalnız katmanın olur"));
+                }
+                if let Some((_, problem)) = kentos_contracts::subtypes_problem(&n.fields, subtypes) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(subtypes)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
         }
         // Schema 60 (docs/adr/0413 §3): the table's rules, as their JSON, on a layer.
         if !n.table_styles.is_empty() {
@@ -1518,7 +1535,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 )
         };
         nodes.iter().any(|n| {
-            n.fields.iter().any(later) || !n.table_styles.is_empty() || keyed(&n.children)
+            n.fields.iter().any(later)
+                || !n.table_styles.is_empty()
+                || n.subtypes.is_some()
+                || keyed(&n.children)
         })
     }
     if !doc.settings.forms.is_empty()

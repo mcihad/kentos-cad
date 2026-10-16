@@ -1167,6 +1167,8 @@ def layer_entries(n):
                 "frozen": (lambda b: boolean(b) if b is True else None, False),
                 # Schema 60 (docs/adr/0413 §3): the attribute table's rules, as their JSON.
                 "tableStyles": (opaque, False),
+                # Schema 60 (docs/adr/0422 §4): the subtypes, as their JSON.
+                "subtypes": (opaque, False),
                 "type": (enum(("group", "layer")), True),
                 "visible": (boolean, True),
                 "locked": (boolean, True),
@@ -1981,7 +1983,7 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
 
     # A record without a geometry is schema 60's too (docs/adr/0410 §2).
     def styled(nodes):
-        return any(n.get("tableStyles") or styled(n.get("children", [])) for n in nodes)
+        return any(n.get("tableStyles") or n.get("subtypes") or styled(n.get("children", [])) for n in nodes)
 
     if (settings or {}).get("forms") or (settings or {}).get("relations") or keyed(layers) or styled(layers) or any(
         e["kind"] == "record" for e in entities
@@ -3704,6 +3706,7 @@ def build():
     timed["settings"].pop("forms")
     timed["layers"][0]["fields"] = [f for f in timed["layers"][0]["fields"] if f["kind"] == "datetime"]
     timed["layers"][0].pop("tableStyles")
+    timed["layers"][0].pop("subtypes")
     unretired(timed)
     timed_payload = document(timed)
     assert timed_payload.count(b"\x67version\x18\x3c") == 1, "a date and time field alone is schema 60"
@@ -3712,6 +3715,7 @@ def build():
     aged = copy.deepcopy(load("forms.json"))
     aged["settings"].pop("forms")
     aged["layers"][0].pop("tableStyles")
+    aged["layers"][0].pop("subtypes")
     aged["layers"][0]["fields"] = [{k: v for k, v in f.items() if k != "id"} for f in aged["layers"][0]["fields"]
                                    if f["kind"] not in ("datetime", "time") and not f.get("multiple")]
     aged["layers"][0]["fields"] = [f for f in aged["layers"][0]["fields"] if "split" not in f and "merge" not in f]
@@ -3722,6 +3726,7 @@ def build():
     shared = copy.deepcopy(load("forms.json"))
     shared["settings"].pop("forms")
     shared["layers"][0].pop("tableStyles")
+    shared["layers"][0].pop("subtypes")
     shared["layers"][0]["fields"] = [{k: v for k, v in f.items() if k != "id"} for f in shared["layers"][0]["fields"]
                                      if f["kind"] not in ("datetime", "time") and not f.get("multiple")]
     for f in shared["layers"][0]["fields"]:
@@ -3737,9 +3742,27 @@ def build():
     styled["layers"][0]["fields"] = [{k: v for k, v in f.items() if k != "id"} for f in styled["layers"][0]["fields"]
                                      if f["kind"] not in ("datetime", "time") and not f.get("multiple")]
     unretired(styled)
+    styled["layers"][0].pop("subtypes")
     styled_payload = document(styled)
     assert styled_payload.count(b"\x67version\x18\x3c") == 1, "a table's rules alone are schema 60"
     out["broken/table-styles-in-schema-59.kcad"] = container(styled_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
+    # A layer's subtypes alone are schema 60's (docs/adr/0422 §4).
+    kinds = copy.deepcopy(load("forms.json"))
+    kinds["settings"].pop("forms")
+    kinds["layers"][0].pop("tableStyles")
+    kinds["layers"][0]["fields"] = [{k: v for k, v in f.items() if k != "id"} for f in kinds["layers"][0]["fields"]
+                                    if f["kind"] not in ("datetime", "time") and "split" not in f]
+    for f in kinds["layers"][0]["fields"]:
+        if "values" in f:
+            f["values"] = [c for c in f["values"] if not c.get("retired")]
+        f.pop("multiple", None)
+        if f["name"] == "Kullanım":
+            f["default"] = "konut"
+    kinds_payload = document(kinds)
+    assert kinds_payload.count(b"\x67version\x18\x3c") == 1, "the subtypes alone are schema 60"
+    out["broken/subtypes-in-schema-59.kcad"] = container(kinds_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
+    out["broken/subtypes-unfit.kcad"] = forms_broken(lambda d: d["layers"][0]["subtypes"]["types"].append({"code": "yok"}))
+    out["broken/subtypes-sorter-many.kcad"] = forms_broken(lambda d: d["layers"][0]["subtypes"].update(field="Kullanım"))
     form = lambda d: d["settings"]["forms"][0]  # noqa: E731
     out["broken/forms-empty.kcad"] = forms_broken(lambda d: d["settings"].update(forms=[]))
     out["broken/forms-digest.kcad"] = forms_broken(lambda d: form(d)["releases"][0]["body"].update(revision=9))

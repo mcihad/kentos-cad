@@ -13658,6 +13658,8 @@ class LayerNode(_Model):
             objects. Only a layer has it, never a group.
         snap: A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;
             absent, the general kinds. Only a layer has it, never a group.
+        subtypes: Alt türler (docs/adr/0422): the field that sorts the records and what each kind narrows.
+            Only a layer holding objects has them.
         table_styles: Koşullu biçim (docs/adr/0413 §1): how the attribute table paints its rows and cells by
             conditions; empty, plainly. Only a layer holding objects has them.
         time: A temporal layer's time setting (docs/adr/0210 §2): which attributes
@@ -13683,6 +13685,7 @@ class LayerNode(_Model):
     scenario: ScenarioInfo | None | Unset = UNSET
     service: ServiceLayer | None | Unset = UNSET
     snap: LayerSnap | None | Unset = UNSET
+    subtypes: LayerSubtypes | None | Unset = UNSET
     table_styles: list[TableStyle] | Unset = UNSET
     time: LayerTime | None | Unset = UNSET
 
@@ -13720,6 +13723,8 @@ class LayerNode(_Model):
             out["service"] = None if self.service is None else self.service.to_json()
         if self.snap is not UNSET:
             out["snap"] = None if self.snap is None else self.snap.to_json()
+        if self.subtypes is not UNSET:
+            out["subtypes"] = None if self.subtypes is None else self.subtypes.to_json()
         if self.table_styles is not UNSET:
             out["tableStyles"] = [e0.to_json() for e0 in self.table_styles]
         if self.time is not UNSET:
@@ -13749,6 +13754,7 @@ class LayerNode(_Model):
             scenario=UNSET if "scenario" not in data else None if data["scenario"] is None else ScenarioInfo.from_json(data["scenario"]),
             service=UNSET if "service" not in data else None if data["service"] is None else ServiceLayer.from_json(data["service"]),
             snap=UNSET if "snap" not in data else None if data["snap"] is None else LayerSnap.from_json(data["snap"]),
+            subtypes=UNSET if "subtypes" not in data else None if data["subtypes"] is None else LayerSubtypes.from_json(data["subtypes"]),
             table_styles=[TableStyle.from_json(e0) for e0 in data["tableStyles"]] if "tableStyles" in data else UNSET,
             time=UNSET if "time" not in data else None if data["time"] is None else LayerTime.from_json(data["time"]),
         )
@@ -14024,6 +14030,29 @@ class LayerStyle(_Model):
             pick_interior=data.get("pickInterior", UNSET),
             point=UNSET if "point" not in data else None if data["point"] is None else PointStyle.from_json(data["point"]),
             renderer=data.get("renderer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayerSubtypes(_Model):
+    """A layer's subtypes: the field that sorts the records (its key) and the subtypes, in their order.
+    Attributes:
+        field: The subtype field's key (its id, else its name): a field with a value list, one value each.
+    """
+    field: str
+    types: list[Subtype]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["field"] = self.field
+        out["types"] = [e0.to_json() for e0 in self.types]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerSubtypes:
+        return cls(
+            field=data["field"],
+            types=[Subtype.from_json(e0) for e0 in data["types"]],
         )
 
 
@@ -15241,6 +15270,41 @@ class LayersStates(_Model):
             state=data.get("state", UNSET),
             states=UNSET if "states" not in data else None if data["states"] is None else list(data["states"]),
             styles=data.get("styles", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersSubtypes(_Model):
+    """Input of `cad.layers.subtypes` v1: a layer's subtypes written as one undo step “Alt türler”; none
+    takes them away. A layer that already has them as given is left as it is (`changed` false).
+
+    Refusals, checked in this order: `invalid_revision`, `revision_conflict` (status `conflict`),
+    `layer_not_found`, `not_a_layer`, `service_layer`; then `invalid_subtypes` (subtypes that do not fit
+    the layer's fields, `subtypes_problem`, path `subtypes/<where>`).
+    Attributes:
+        layer: The layer's id.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        subtypes: The subtypes; none: the layer has none.
+    """
+    layer: str
+    expected_revision: str | None | Unset = UNSET
+    subtypes: LayerSubtypes | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.subtypes is not UNSET:
+            out["subtypes"] = None if self.subtypes is None else self.subtypes.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersSubtypes:
+        return cls(
+            layer=data["layer"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            subtypes=UNSET if "subtypes" not in data else None if data["subtypes"] is None else LayerSubtypes.from_json(data["subtypes"]),
         )
 
 
@@ -22047,6 +22111,69 @@ class SubRef(_Model):
             place=SubPlace.from_json(data["place"]),
             broken=data.get("broken", UNSET),
             path=list(data["path"]) if "path" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class Subtype(_Model):
+    """One subtype: a code of the subtype field's list, its label, and what it narrows.
+    Attributes:
+        label: What it is called; empty: the subtype field's label of its code.
+    """
+    code: str
+    fields: list[SubtypeField] | Unset = UNSET
+    label: str | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["code"] = self.code
+        if self.fields is not UNSET:
+            out["fields"] = [e0.to_json() for e0 in self.fields]
+        if self.label is not UNSET:
+            out["label"] = self.label
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> Subtype:
+        return cls(
+            code=data["code"],
+            fields=[SubtypeField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
+            label=data.get("label", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SubtypeField(_Model):
+    """What a subtype changes on one field; a field it does not name keeps the layer's rules.
+    Attributes:
+        field: The field's key.
+        default: The value a new record of this subtype starts with, in its field's canonical text.
+        required: A record of this subtype has a value (in addition to the field's own rule).
+        values: The codes of its value list this subtype offers (a field with a value list); none: all of them.
+    """
+    field: str
+    default: str | None | Unset = UNSET
+    required: bool | Unset = UNSET
+    values: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["field"] = self.field
+        if self.default is not UNSET:
+            out["default"] = self.default
+        if self.required is not UNSET:
+            out["required"] = self.required
+        if self.values is not UNSET:
+            out["values"] = None if self.values is None else list(self.values)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SubtypeField:
+        return cls(
+            field=data["field"],
+            default=data.get("default", UNSET),
+            required=data.get("required", UNSET),
+            values=UNSET if "values" not in data else None if data["values"] is None else list(data["values"]),
         )
 
 
@@ -29658,6 +29785,7 @@ __all__ = [
     "LayerStatesOperation",
     "LayerStatesOperationName",
     "LayerStyle",
+    "LayerSubtypes",
     "LayerTime",
     "LayerTranslation",
     "LayersChanged",
@@ -29685,6 +29813,7 @@ __all__ = [
     "LayersServiced",
     "LayersSet",
     "LayersStates",
+    "LayersSubtypes",
     "LayersTable",
     "LayersTime",
     "LayersTimePlan",
@@ -30023,6 +30152,8 @@ __all__ = [
     "StylesImpact",
     "SubPlace",
     "SubRef",
+    "Subtype",
+    "SubtypeField",
     "SurveySettings",
     "TabFormItem",
     "TableAlign",

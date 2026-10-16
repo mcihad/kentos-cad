@@ -235,6 +235,7 @@ fn one_line(x: f64) -> DocumentSnapshotV1 {
     };
     doc.layers = vec![LayerNode {
         table_styles: Vec::new(),
+        subtypes: None,
         frozen: None,
         plot: None,
         id: "l".into(),

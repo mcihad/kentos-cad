@@ -350,7 +350,33 @@
           "condition": "Kat > 5",
           "bold": true
         }
-      ]
+      ],
+      "subtypes": {
+        "field": "Durum",
+        "types": [
+          {
+            "code": "iyi"
+          },
+          {
+            "code": "inceleme",
+            "label": "İnceleme",
+            "fields": [
+              {
+                "field": "Not",
+                "required": true
+              },
+              {
+                "field": "Kullanım",
+                "values": [
+                  "konut",
+                  "buro"
+                ],
+                "default": "konut"
+              }
+            ]
+          }
+        ]
+      }
     }
   ],
   "activeLayer": "bina",

@@ -8,6 +8,7 @@ import type { LayerFilter } from "./LayerFilter";
 import type { LayerNodeType } from "./LayerNodeType";
 import type { LayerSnap } from "./LayerSnap";
 import type { LayerStyle } from "./LayerStyle";
+import type { LayerSubtypes } from "./LayerSubtypes";
 import type { LayerTime } from "./LayerTime";
 import type { ScenarioInfo } from "./ScenarioInfo";
 import type { ServiceLayer } from "./ServiceLayer";
@@ -92,4 +93,9 @@ frozen?: boolean,
  * Koşullu biçim (docs/adr/0413 §1): how the attribute table paints its rows and cells by
  * conditions; empty, plainly. Only a layer holding objects has them.
  */
-tableStyles?: Array<TableStyle>, };
+tableStyles?: Array<TableStyle>, 
+/**
+ * Alt türler (docs/adr/0422): the field that sorts the records and what each kind narrows.
+ * Only a layer holding objects has them.
+ */
+subtypes?: LayerSubtypes, };

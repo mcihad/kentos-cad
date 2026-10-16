@@ -47,6 +47,8 @@ pub struct Prepared {
     /// The calculated field items' places in `items`, each after the calculated fields it reads.
     calc_order: Vec<usize>,
     clear_hidden: bool,
+    /// The layer's subtypes (docs/adr/0422 §2): what a record's kind narrows.
+    subtypes: Option<kentos_contracts::LayerSubtypes>,
 }
 
 /// An item, flattened in the form's order with its parent.
@@ -150,7 +152,31 @@ impl Prepared {
             items,
             calc_order,
             clear_hidden: body.clear_hidden,
+            subtypes: None,
         })
+    }
+
+    /// The form over a layer with `subtypes` (docs/adr/0422 §2): a record's subtype narrows the values
+    /// its choices offer, gives a new record its defaults and makes fields required.
+    pub fn with_subtypes(mut self, subtypes: Option<&kentos_contracts::LayerSubtypes>) -> Prepared {
+        self.subtypes = subtypes.cloned();
+        self
+    }
+
+    /// The subtype of the record with `attrs`.
+    fn subtype(&self, attrs: &Attrs) -> Option<&kentos_contracts::Subtype> {
+        self.subtypes
+            .as_ref()?
+            .of(&self.fields, |n| attrs.get(n).cloned())
+    }
+
+    /// The field at `index` as the record's subtype sees it.
+    fn seen(&self, index: usize, attrs: &Attrs) -> Option<LayerField> {
+        let t = self.subtype(attrs)?;
+        Some(kentos_contracts::LayerSubtypes::field_for(
+            &self.fields[index],
+            Some(t),
+        ))
     }
 
     /// The layer fields' keys the form shows, in its order.
@@ -200,6 +226,7 @@ impl Prepared {
                 let required = here
                     && (b.item.required
                         || self.fields[b.index].required
+                        || self.seen(b.index, attrs).is_some_and(|f| f.required)
                         || b.required_when
                             .as_ref()
                             .is_some_and(|e| holds(e, attrs, object)));
@@ -262,18 +289,45 @@ impl Prepared {
                     .collect(),
             );
         }
-        let choices = b.choices.as_ref()?;
-        // A retired value is offered only to the record that holds it (docs/adr/0418).
         let field = &self.fields[b.index];
-        let held = attrs
-            .get(&field.name)
-            .map_or_else(Vec::new, |v| field.retired_in(v));
-        Some(
-            choices
+        // A subtype that narrows the field offers its values only (docs/adr/0422 §2), and a value
+        // the record holds.
+        let subtype = self.subtype(attrs);
+        let narrows = subtype.is_some_and(|t| {
+            t.fields
                 .iter()
-                .filter(|(code, _)| !field.is_retired(code) || held.contains(code))
-                .filter(|(_, e)| holds(e, attrs, object))
-                .map(|(code, _)| code.clone())
+                .any(|r| r.field == field.key() && r.values.is_some())
+        });
+        if b.choices.is_none() && !narrows {
+            return None;
+        }
+        let held_codes: Vec<String> = attrs.get(&field.name).map_or_else(Vec::new, |v| {
+            if field.holds_many() {
+                field.codes_of(v).into_iter().map(str::to_owned).collect()
+            } else {
+                vec![js_trim(v).to_owned()]
+            }
+        });
+        let listed: Vec<(String, Option<&Expr>)> = match &b.choices {
+            Some(c) => c.iter().map(|(code, e)| (code.clone(), Some(e))).collect(),
+            None => field
+                .values
+                .iter()
+                .flatten()
+                .map(|c| (c.code.clone(), None))
+                .collect(),
+        };
+        // A retired value is offered only to the record that holds it (docs/adr/0418).
+        Some(
+            listed
+                .into_iter()
+                .filter(|(code, _)| !field.is_retired(code) || held_codes.contains(code))
+                .filter(|(code, _)| {
+                    kentos_contracts::subtype_offers(field, subtype, code)
+                        || held_codes.contains(code)
+                })
+                .filter(|(_, e)| e.is_none_or(|e| holds(e, attrs, object)))
+                .map(|(code, _)| code)
                 .collect(),
         )
     }
@@ -363,6 +417,27 @@ impl Prepared {
                 && !v.is_empty()
             {
                 out.insert(field.name.clone(), v);
+            }
+        }
+        // The record's subtype's defaults, where the form gives none (docs/adr/0422 §2).
+        if self.subtypes.is_some() {
+            for (_, b) in self.bound() {
+                let field = &self.fields[b.index];
+                if b.item.default.is_some()
+                    || b.default_expr.is_some()
+                    || !is_empty(out, &field.name)
+                {
+                    continue;
+                }
+                let Some(t) = self.subtype(out) else { break };
+                if let Some(d) = t
+                    .fields
+                    .iter()
+                    .find(|r| r.field == field.key())
+                    .and_then(|r| r.default.clone())
+                {
+                    out.insert(field.name.clone(), d);
+                }
             }
         }
         for (node, b) in self.bound() {
@@ -708,6 +783,7 @@ impl Prepared {
         let (after, completed) = self.complete(&written, object, new);
         issues.extend(self.locked(&changed, &after, object));
         issues.extend(self.retired(&changed, before, &after));
+        issues.extend(self.misfits(&changed, before, &after));
         // A calculated field given a value other than its calculation's.
         for (index, value) in asked {
             if after.get(&self.fields[index].name) != value.as_ref() {
@@ -777,6 +853,7 @@ impl Prepared {
         }
         issues.extend(self.locked(&changed, &completed, object));
         issues.extend(self.retired(&changed, before, &completed));
+        issues.extend(self.misfits(&changed, before, &completed));
         issues.extend(worked);
         issues.extend(self.validate(&completed, object));
         issues
@@ -806,6 +883,43 @@ impl Prepared {
                     ),
                 ));
             }
+        }
+        issues
+    }
+
+    /// The values the record's subtype does not offer (docs/adr/0422 §2): one written anew, or every
+    /// one when the subtype itself changed; a value the record keeps under its kind stays.
+    fn misfits(&self, changed: &[usize], before: &Attrs, after: &Attrs) -> Vec<FormIssue> {
+        let Some(subtypes) = &self.subtypes else {
+            return Vec::new();
+        };
+        let Some(t) = self.subtype(after) else {
+            return Vec::new();
+        };
+        let kind_changed = subtypes
+            .sorter(&self.fields)
+            .is_some_and(|s| before.get(&s.name) != after.get(&s.name));
+        let words = subtypes.label_of(&self.fields, t).to_owned();
+        let mut issues = Vec::new();
+        for (f, codes) in
+            kentos_contracts::subtype_misfits(&self.fields, Some(t), |n| after.get(n).cloned())
+        {
+            let Some(index) = self.fields.iter().position(|x| x.key() == f.key()) else {
+                continue;
+            };
+            if !kind_changed && !changed.contains(&index) {
+                continue;
+            }
+            issues.push(refused(
+                codes::VALUE_NOT_IN_SUBTYPE,
+                self.item_of(index),
+                f.key(),
+                format!(
+                    "“{}” alanının “{}” değeri “{words}” alt türünde yok; alt türün değerlerinden birini seçin ya da alanı boşaltın.",
+                    f.label(),
+                    codes.join(", ")
+                ),
+            ));
         }
         issues
     }

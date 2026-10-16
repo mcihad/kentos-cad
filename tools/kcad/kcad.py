@@ -1362,6 +1362,49 @@ def service_links_problem(layers, connections, entities):
     return None
 
 
+def subtypes_problem(fields, st):
+    """The contract's `subtypes_problem` (docs/adr/0422 §1): the subtype field a single-valued listed field, the
+    subtypes its codes, each once, labels within 64 characters; each rule a field of the layer, not the subtype field,
+    once; values of the field's list, each once, not none; a default not empty and offered by its subtype."""
+    def key(f):
+        return f.get("id") or f["name"]
+
+    def many(f):
+        return bool(f.get("multiple")) and f["kind"] == "text"
+
+    sorter = next((f for f in fields if key(f) == st["field"]), None)
+    if sorter is None or not sorter.get("values") or many(sorter):
+        return f"“{st['field']}” alt tür alanı olamaz: katmanın tek değerli, listeli bir alanı olmalı"
+    if not st["types"] or len(st["types"]) > 256:
+        return "bir katmanın 1–256 alt türü olur"
+    codes = [c["code"] for c in sorter["values"]]
+    seen = set()
+    for t in st["types"]:
+        if t["code"] not in codes or t["code"] in seen:
+            return f"“{t['code']}” alt türü listede yok ya da iki kez var"
+        seen.add(t["code"])
+        lab = t.get("label", "")
+        if len(lab) > 64 or lab.strip() != lab:
+            return f"“{lab}” bir alt tür adı olamaz"
+        named = set()
+        for r in t.get("fields", []):
+            f = next((x for x in fields if key(x) == r["field"]), None)
+            if f is None or key(f) == key(sorter) or r["field"] in named:
+                return f"“{r['field']}” alanının “{t['code']}” alt türündeki kuralı olamaz"
+            named.add(r["field"])
+            if "values" in r:
+                listed = [c["code"] for c in f.get("values") or []]
+                if not f.get("values") or not r["values"] or len(set(r["values"])) != len(r["values"]) or any(
+                        c not in listed for c in r["values"]):
+                    return f"“{r['field']}” alanının “{t['code']}” alt türündeki değerleri olamaz"
+            if "default" in r:
+                d = r["default"]
+                parts = [p.strip() for p in d.split(";") if p.strip()] if many(f) else [d]
+                if not d or (f.get("values") and "values" in r and any(p not in r["values"] for p in parts)):
+                    return f"“{r['field']}” alanının “{t['code']}” alt türündeki varsayılanı olamaz"
+    return None
+
+
 def fields_problem(fields):
     """The contract's `layer_fields_problem` (kentos_contracts::fields): a list that is not empty, each field's own
     rules, no name twice (folded)."""
@@ -2816,6 +2859,8 @@ class _Schema:
                 **({"frozen": (self.only_true, False)} if self.frozen else {}),
                 # Schema 60 (docs/adr/0413 §3): the attribute table's rules.
                 **({"tableStyles": (self.table_styles_, False)} if self.forms else {}),
+                # Schema 60 (docs/adr/0422 §4): the subtypes.
+                **({"subtypes": (self.subtypes_, False)} if self.forms else {}),
                 "type": (self.enum(("group", "layer")), True),
                 "style": (self.layer_style, True),
                 "locked": (self.bool, True),
@@ -2850,7 +2895,40 @@ class _Schema:
             self.fail("bad_value", "grubun katman çizimi olmaz; katman çizimi yalnız katmanındır")
         if "tableStyles" in n and n["type"] == "group":
             self.fail("bad_value", "grubun koşullu biçimi olmaz; yalnız katmanın olur")
+        if "subtypes" in n:
+            if n["type"] == "group":
+                self.fail("bad_value", "grubun alt türleri olmaz; yalnız katmanın olur")
+            problem = subtypes_problem(n.get("fields", []), n["subtypes"])
+            if problem:
+                self.fail("bad_value", problem)
         return n
+
+    # Schema 60's subtypes (docs/adr/0422 §1): field by field; `required` only true, the label and the lists not
+    # written empty. Their fit to the layer's fields is checked with the layer.
+
+    def subtypes_(self, v):
+        def only_true(x):
+            if self.bool(x) is not True:
+                self.fail("bad_value", "required yalnız true yazılır")
+            return True
+
+        def label(x):
+            t = self.text(x)
+            if t == "":
+                self.fail("bad_value", "boş ad yazılmaz; ad yoksa alan hiç yazılmaz")
+            return t
+
+        rule = self.fields({"field": (self.text, True), "values": (self.array(self.text), False),
+                            "default": (self.text, False), "required": (only_true, False)})
+
+        def rules(x):
+            out = self.array(rule)(x)
+            if not out:
+                self.fail("bad_value", "boş liste yazılmaz; kural yoksa alan hiç yazılmaz")
+            return out
+
+        kind = self.fields({"code": (self.text, True), "label": (label, False), "fields": (rules, False)})
+        return self.fields({"field": (self.text, True), "types": (self.array(kind), True)})(v)
 
     # Schema 60's table rules (docs/adr/0413 §1): field by field, then the rules' rule; `bold` only true, the list not
     # empty, at most 50.

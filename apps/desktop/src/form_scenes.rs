@@ -516,6 +516,94 @@ fn retired_list(app: &mut App) {
     )));
 }
 
+/// Buildings sorted by their kind (docs/adr/0422): Tür is the subtype field; an industrial building
+/// is concrete or steel (steel by default) and has a note; a depot is concrete or stone. A published
+/// form shows the four fields.
+fn typed_buildings(app: &mut App) {
+    let mut o = Objects::new();
+    let rows = [
+        ("B-1", "konut", "ahsap", "3", ""),
+        ("B-2", "sanayi", "beton", "2", "Kalıp atölyesi"),
+        ("B-3", "depo", "tas", "1", ""),
+        ("B-4", "konut", "beton", "5", ""),
+    ];
+    for (i, (code, kind, material, floors, note)) in rows.iter().enumerate() {
+        let x = (i % 2) as f64 * 24.0;
+        let y = (i / 2) as f64 * 20.0;
+        let id = o.path(
+            "bina",
+            &[[x, y], [x + 18.0, y], [x + 18.0, y + 14.0], [x, y + 14.0]],
+            true,
+        );
+        let mut attrs = vec![
+            ("Kod", *code),
+            ("Tür", *kind),
+            ("Malzeme", *material),
+            ("Kat", *floors),
+        ];
+        if !note.is_empty() {
+            attrs.push(("Not", *note));
+        }
+        o.data(id, &attrs, Some(code));
+    }
+    open_edited(app, o, |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut bina = crate::tools_scenes::layer("bina", "Bina", "#3E63DD", 0.35);
+        bina["fields"] = json!([{ "name": "Kod", "kind": "text" },
+                                { "name": "Tür", "kind": "text", "values": [
+                                    { "code": "konut", "label": "Konut" }, { "code": "sanayi", "label": "Sanayi" },
+                                    { "code": "depo", "label": "Depo" }] },
+                                { "name": "Malzeme", "kind": "text", "default": "ahsap", "values": [
+                                    { "code": "ahsap", "label": "Ahşap" }, { "code": "beton", "label": "Betonarme" },
+                                    { "code": "celik", "label": "Çelik" }, { "code": "tas", "label": "Taş" }] },
+                                { "name": "Kat", "kind": "integer" },
+                                { "name": "Not", "kind": "text" }]);
+        bina["subtypes"] = json!({ "field": "Tür", "types": [
+            { "code": "konut" },
+            { "code": "sanayi", "label": "Sanayi binası", "fields": [
+                { "field": "Malzeme", "values": ["beton", "celik"], "default": "celik", "required": true },
+                { "field": "Not", "required": true }] },
+            { "code": "depo", "fields": [{ "field": "Malzeme", "values": ["beton", "tas"] }] }
+        ] });
+        layers.push(bina);
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("bina");
+    });
+    let form = published(
+        "yapi",
+        "Yapı kaydı",
+        "bina",
+        json!([
+            { "type": "field", "id": "tur", "field": "Tür" },
+            { "type": "field", "id": "malzeme", "field": "Malzeme" },
+            { "type": "field", "id": "kat", "field": "Kat" },
+            { "type": "field", "id": "not", "field": "Not" }
+        ]),
+    );
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut settings = doc.model.settings().clone();
+    settings.forms = vec![serde_json::from_value(form).expect("a form")];
+    doc.model.set_settings(settings);
+    app.features.layer = Some("bina".into());
+}
+
+/// Alt türler's window on the buildings, the industrial subtype chosen (docs/adr/0422 §5).
+fn subtypes_window(app: &mut App) {
+    use crate::forms::subtypes::Event;
+    typed_buildings(app);
+    run(app, "data.subtypes");
+    let _ = app.update(Message::Subtypes(Event::Choose("sanayi".into())));
+}
+
+/// A timber house's form, its kind changed to industrial: timber is not offered, the note is
+/// required, the values are kept until the user empties them (docs/adr/0422 §2).
+fn subtype_changed(app: &mut App) {
+    typed_buildings(app);
+    app.selection.set([Slot(1)]);
+    run(app, "data.formEdit");
+    entry(app, entry::Event::Value("Tür".into(), "sanayi".into()));
+}
+
 /// Hesapları yenile (docs/adr/0421): the survey form gains a calculated note after the buildings
 /// were written; one press writes it on every building, the window then closed over the table.
 fn recompute(app: &mut App) {
@@ -1278,6 +1366,8 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-baglar", designer_links),
         ("form-senaryolar", scenarios),
         ("form-hesap-yenile", recompute),
+        ("form-alt-turler", subtypes_window),
+        ("form-alt-tur-degisti", subtype_changed),
         ("form-hesap-degistir", overridden_height),
         ("form-kalkmis-deger", retired_list),
         ("form-alan-politika", field_policies),
@@ -1457,6 +1547,58 @@ mod tests {
             attrs(&app, 1).get("Yükseklik").map(String::as_str),
             Some("18")
         );
+    }
+
+    #[test]
+    fn the_subtypes_window_writes_through_its_command_and_closes() {
+        use crate::forms::subtypes::Event;
+        let mut app = crate::files_testing::app_with_drawing();
+        subtypes_window(&mut app);
+        let w = app.subtypes.as_ref().expect("the window");
+        assert_eq!(w.types.len(), 3);
+        // Depo is no longer a subtype; the industrial one offers concrete only.
+        let _ = app.update(Message::Subtypes(Event::Toggle("depo".into())));
+        let _ = app.update(Message::Subtypes(Event::Offer(
+            "Malzeme".into(),
+            "celik".into(),
+        )));
+        let _ = app.update(Message::Subtypes(Event::Save));
+        assert!(app.subtypes.is_none(), "Kaydet closes the window");
+        let doc = &app.document.as_ref().unwrap().model;
+        let s = doc.layers().get("bina").unwrap().subtypes.clone().unwrap();
+        assert_eq!(s.types.len(), 2);
+        let rule = &s.types[1].fields[0];
+        assert_eq!(rule.values.as_deref(), Some(&["beton".to_owned()][..]));
+        assert_eq!(
+            rule.default, None,
+            "steel is no longer offered, nor its default"
+        );
+    }
+
+    #[test]
+    fn a_changed_kind_keeps_its_values_until_they_are_emptied() {
+        let mut app = crate::files_testing::app_with_drawing();
+        subtype_changed(&mut app);
+        let e = app.form_entry.as_ref().expect("the editor");
+        assert_eq!(e.misfits(), ["Malzeme"]);
+        assert_eq!(
+            e.value_of("Malzeme").as_deref(),
+            Some("ahsap"),
+            "kept, not emptied"
+        );
+        let choices = e
+            .state("malzeme")
+            .and_then(|s| s.choices.clone())
+            .unwrap_or_default();
+        assert_eq!(
+            choices,
+            ["ahsap", "beton", "celik"],
+            "the held value stays offered"
+        );
+        let _ = app.update(Message::FormEntry(entry::Event::ClearMisfits));
+        let e = app.form_entry.as_ref().unwrap();
+        assert!(e.misfits().is_empty());
+        assert_eq!(e.value_of("Malzeme"), None);
     }
 
     #[test]

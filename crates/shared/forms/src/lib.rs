@@ -94,6 +94,9 @@ pub mod codes {
     pub const VALUE_INVALID: &str = "form_value_invalid";
     /// A value written anew is retired from its field's list (docs/adr/0418).
     pub const VALUE_RETIRED: &str = "form_value_retired";
+    /// A value the record's subtype does not offer, written anew or left when the subtype changed
+    /// (docs/adr/0422 §2).
+    pub const VALUE_NOT_IN_SUBTYPE: &str = "form_value_not_in_subtype";
     /// A check of a shown, filled field is not true.
     pub const CHECK_FAILED: &str = "form_check_failed";
     /// A write to a field the form shows read-only.

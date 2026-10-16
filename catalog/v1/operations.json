@@ -1169,6 +1169,13 @@
       ],
       "note": "Seçili nesneler alt kayıtlarıyla cad.records.duplicate ile tek adımda çoğaltılır (ADR 0415)."
     },
+    "data.subtypes": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.subtypes"
+      ],
+      "note": "Alt türler cad.layers.subtypes ile tek adımda yazılır; yazmalar ve formlar onları okur (ADR 0422)."
+    },
     "data.tableStyles": {
       "level": "semantic",
       "via": [

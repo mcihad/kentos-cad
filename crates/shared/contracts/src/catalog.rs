@@ -3239,6 +3239,39 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Alt türler (docs/adr/0422), held together by fixtures/commands/v1/cad.layers.subtypes.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_SUBTYPES.into(),
+            version: crate::CAD_LAYERS_SUBTYPES_VERSION,
+            title: "Alt türler".into(),
+            summary: "Katmanın alt türlerini yazar (ArcGIS'in subtype'ı): değer listeli tek değerli bir alan (field, alanın anahtarı) kayıtları türlerine ayırır; \
+                      her alt tür (types: code, listenin bir değeri; label) öbür alanları o türün kayıtları için daraltır: sunulan değerler (values), yeni kaydın \
+                      varsayılanı (default), zorunluluk (required). Alt türün sunmadığı değer kayda yeniden yazılamaz; tür değişince eski değerler kalır ve \
+                      subtype_misfit uyarısıyla söylenir. subtypes verilmezse kaldırılır. Tek geri alma adımı “Alt türler”; aynıysa hiçbir şey yazılmaz."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersSubtypes>(),
+            output: schema::<crate::LayersComposed>(),
+            plan: Some(schema::<crate::LayersComposePlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Sanayi binası yalnız betonarme ya da çelik olur".into(),
+                input: json!({ "layer": "bina", "subtypes": { "field": "Tür", "types": [
+                    { "code": "konut" },
+                    { "code": "sanayi", "fields": [
+                        { "field": "Malzeme", "values": ["beton", "celik"], "default": "celik", "required": true }
+                    ] }
+                ] } }),
+                output: None,
+            }],
+        },
         // Katman çizimi (docs/adr/0226 §3, §4), held together by fixtures/commands/v1/cad.layers.compose.json.
         CommandDescriptor {
             id: crate::CAD_LAYERS_COMPOSE.into(),
@@ -5311,6 +5344,9 @@ mod tests {
                     crate::CAD_LAYERS_TABLE => {
                         serde_json::from_value::<crate::LayersTable>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_LAYERS_SUBTYPES => {
+                        serde_json::from_value::<crate::LayersSubtypes>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_LAYERS_COMPOSE => {
                         serde_json::from_value::<crate::LayersCompose>(e.input.clone()).map(|_| ())
                     }
@@ -5595,6 +5631,10 @@ mod tests {
                                 .map(|_| ())
                         }
                         crate::CAD_LAYERS_TABLE => {
+                            serde_json::from_value::<crate::LayersComposed>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LAYERS_SUBTYPES => {
                             serde_json::from_value::<crate::LayersComposed>(output.clone())
                                 .map(|_| ())
                         }

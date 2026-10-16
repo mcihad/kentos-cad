@@ -73,6 +73,7 @@ COMMANDS: dict[str, Any] = {
     "cad.layers.service": layers.service,
     "cad.layers.set": layers.set,
     "cad.layers.states": layers.states,
+    "cad.layers.subtypes": layers.subtypes,
     "cad.layers.table": layers.table,
     "cad.layers.time": layers.time,
     "cad.layers.translate": layers.translate,

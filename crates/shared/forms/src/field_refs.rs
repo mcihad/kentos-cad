@@ -315,6 +315,30 @@ fn node_sites(node: &mut LayerNode, f: &mut Visit<'_>) {
             value,
         );
     };
+    // The subtypes name the fields by key (docs/adr/0422 §1).
+    if let Some(sub) = node.subtypes.as_mut() {
+        put(
+            FieldUseHow::Key,
+            format!("{at}/subtypes/field"),
+            format!("{w}{SEP}Alt türler{SEP}Alt tür alanı"),
+            &mut sub.field,
+        );
+        for (i, t) in sub.types.iter_mut().enumerate() {
+            let words = if t.label.is_empty() {
+                t.code.clone()
+            } else {
+                t.label.clone()
+            };
+            for (j, r) in t.fields.iter_mut().enumerate() {
+                put(
+                    FieldUseHow::Key,
+                    format!("{at}/subtypes/types/{i}/fields/{j}/field"),
+                    format!("{w}{SEP}Alt türler{SEP}“{words}”"),
+                    &mut r.field,
+                );
+            }
+        }
+    }
     for (i, s) in node.table_styles.iter_mut().enumerate() {
         let rule = format!("{w}{SEP}Koşullu biçim, {}. kural", i + 1);
         if let Some(field) = s.field.as_mut() {
@@ -497,6 +521,19 @@ pub fn keyed(settings: &ProjectSettings, layer: &str) -> Vec<String> {
         }
     };
     settings_sites(&mut settings.clone(), &[], &mut visit);
+    out
+}
+
+/// The keys of `node`'s fields its own places name by key (its subtypes, docs/adr/0422): they too
+/// stay when a field is renamed.
+pub fn node_keyed(node: &LayerNode) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    let mut visit = |s: &Site<'_>, v: &mut String| {
+        if s.how == FieldUseHow::Key && !out.contains(v) {
+            out.push(v.clone());
+        }
+    };
+    node_sites(&mut node.clone(), &mut visit);
     out
 }
 

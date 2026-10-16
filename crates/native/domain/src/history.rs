@@ -136,6 +136,12 @@ pub(crate) enum Op {
         before: Vec<kentos_contracts::TableStyle>,
         after: Vec<kentos_contracts::TableStyle>,
     },
+    /// A layer's subtypes (Alt türler, docs/adr/0422), before and after.
+    LayerSubtypes {
+        layer: String,
+        before: Option<Box<kentos_contracts::LayerSubtypes>>,
+        after: Option<Box<kentos_contracts::LayerSubtypes>>,
+    },
     /// A layer or a group taken out of the tree with everything under it
     /// (`Document::remove_layer`), and its inverse, which puts it back; a
     /// new one (`Document::add_layer`) is a `LayerAdd`.
@@ -290,6 +296,15 @@ impl Op {
                 before,
                 after,
             } => Op::LayerTableStyles {
+                layer: layer.clone(),
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::LayerSubtypes {
+                layer,
+                before,
+                after,
+            } => Op::LayerSubtypes {
                 layer: layer.clone(),
                 before: after.clone(),
                 after: before.clone(),
@@ -721,6 +736,7 @@ impl Document {
                 | Op::LayerInfo { .. }
                 | Op::LayerCompose { .. }
                 | Op::LayerTableStyles { .. }
+                | Op::LayerSubtypes { .. }
                 | Op::LayerRemove(_)
                 | Op::LayerAdd(_)
                 | Op::LayerMove { .. }
@@ -878,6 +894,10 @@ impl Document {
             }
             Op::LayerTableStyles { layer, after, .. } => {
                 self.layers.replace_table_styles(layer, after);
+                return;
+            }
+            Op::LayerSubtypes { layer, after, .. } => {
+                self.layers.replace_subtypes(layer, after.as_deref());
                 return;
             }
             // A node still holding objects stays: taking it away would leave

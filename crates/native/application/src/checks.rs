@@ -91,14 +91,111 @@ pub(crate) fn object_attrs(
         .filter_map(|(k, v)| Some((k, v?)))
         .filter(|(_, v)| !v.is_empty())
         .collect();
-    if let Some(node) = doc.layers().get(layer) {
-        for f in &node.fields {
-            if let Some(d) = &f.default {
-                out.entry(f.name.clone()).or_insert_with(|| d.clone());
+    new_defaults(doc, layer, &mut out);
+    subtype_fit(doc, layer, None, &out, at)?;
+    Ok((!out.is_empty()).then_some(out))
+}
+
+/// A new record's empty fields filled (docs/adr/0199 §2, 0422 §2): the subtype field first by its own
+/// default, then every other field by its subtype's default, else the field's.
+pub(crate) fn new_defaults(doc: &Document, layer: &str, out: &mut BTreeMap<String, String>) {
+    let Some(node) = doc.layers().get(layer) else {
+        return;
+    };
+    let subtypes = node.subtypes.as_ref();
+    if let Some(sorter) = subtypes.and_then(|s| s.sorter(&node.fields))
+        && let Some(d) = &sorter.default
+    {
+        out.entry(sorter.name.clone()).or_insert_with(|| d.clone());
+    }
+    let subtype = subtypes.and_then(|s| s.of(&node.fields, |n| out.get(n).cloned()));
+    for f in &node.fields {
+        let seen = kentos_contracts::LayerSubtypes::field_for(f, subtype);
+        let offered = |d: &str| {
+            seen.values.is_none()
+                || (if f.holds_many() {
+                    f.codes_of(d)
+                } else {
+                    vec![d]
+                })
+                .iter()
+                .all(|c| kentos_contracts::subtype_offers(f, subtype, c))
+        };
+        if let Some(d) = seen.default.filter(|d| !d.is_empty() && offered(d)) {
+            out.entry(f.name.clone()).or_insert(d);
+        }
+    }
+}
+
+/// A record's values on `layer` against its subtype (docs/adr/0422 §2): a value written anew (one that
+/// differs from `before`) that the subtype does not offer is `invalid_attribute`, a required one of the
+/// subtype written empty `attribute_required`, at `{at}.{name}`; values the record kept that its
+/// subtype no longer allows, or required ones it left empty, are the warning `subtype_misfit`.
+pub(crate) fn subtype_fit(
+    doc: &Document,
+    layer: &str,
+    before: Option<&BTreeMap<String, String>>,
+    after: &BTreeMap<String, String>,
+    at: &str,
+) -> Result<Option<CommandWarning>, Stop> {
+    let Some(node) = doc.layers().get(layer) else {
+        return Ok(None);
+    };
+    let Some(subtypes) = node.subtypes.as_ref() else {
+        return Ok(None);
+    };
+    let Some(subtype) = subtypes.of(&node.fields, |n| after.get(n).cloned()) else {
+        return Ok(None);
+    };
+    let words = subtypes.label_of(&node.fields, subtype);
+    let anew = |name: &str| before.is_none_or(|b| b.get(name) != after.get(name));
+    let mut kept: Vec<String> = Vec::new();
+    for (f, codes) in
+        kentos_contracts::subtype_misfits(&node.fields, Some(subtype), |n| after.get(n).cloned())
+    {
+        if anew(&f.name) {
+            return Err(Stop::failed(error(
+                codes::INVALID_ATTRIBUTE,
+                format!(
+                    "“{}” alanına “{}”, “{words}” alt türünde verilemez: bu alt tür bu değeri sunmaz. Alt türün değerlerinden birini seçin.",
+                    f.label(),
+                    codes.join(", ")
+                ),
+                Some(format!("{at}.{}", f.name)),
+            )));
+        }
+        kept.push(f.label().to_owned());
+    }
+    for f in &node.fields {
+        let seen = kentos_contracts::LayerSubtypes::field_for(f, Some(subtype));
+        let empty = after.get(&f.name).is_none_or(|v| v.trim().is_empty());
+        if seen.required && !f.required && empty {
+            if before.is_some() && anew(&f.name) {
+                return Err(Stop::failed(error(
+                    codes::ATTRIBUTE_REQUIRED,
+                    format!(
+                        "“{}” alanı “{words}” alt türünde zorunlu; boş bırakılamaz.",
+                        f.label()
+                    ),
+                    Some(format!("{at}.{}", f.name)),
+                )));
+            }
+            if before.is_some() {
+                kept.push(f.label().to_owned());
             }
         }
     }
-    Ok((!out.is_empty()).then_some(out))
+    if kept.is_empty() {
+        return Ok(None);
+    }
+    Ok(Some(CommandWarning {
+        code: codes::SUBTYPE_MISFIT.into(),
+        message: format!(
+            "“{words}” alt türüne uymayan değerler kaldı: {}. Kaydı formla açıp düzeltin.",
+            kept.join(", ")
+        ),
+        path: Some(at.to_owned()),
+    }))
 }
 
 /// The attributes written to an object on `layer`, by its fields

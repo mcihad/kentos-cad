@@ -1768,6 +1768,7 @@ impl App {
             Asking::FormEntry => self.form_entry_view(),
             Asking::Relations => self.relations_view(),
             Asking::TableStyles => self.table_styles_view(),
+            Asking::Subtypes => self.subtypes_view(),
             Asking::FormAudit => self.form_audit_view(),
             Asking::AnnotationStyles => self.annotation_styles_view(),
             Asking::LayerPurge => self.layer_purge_view(),

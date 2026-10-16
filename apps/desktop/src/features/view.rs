@@ -54,14 +54,15 @@ const BAR_ONE_ROW: f32 = 1370.0;
 
 /// A list editor's choices for a field: none, then its codes by their labels,
 /// or yes and no; with the one written now.
-fn choices_of(f: &LayerField, value: &str) -> (Vec<Choice>, Vec<String>, Option<usize>) {
+fn choices_of(
+    f: &LayerField,
+    value: &str,
+    offered: Vec<kentos_contracts::FieldChoice>,
+) -> (Vec<Choice>, Vec<String>, Option<usize>) {
     let pairs: Vec<(String, String)> = match &f.values {
-        // A retired value only for the record holding it (docs/adr/0418).
-        Some(list) if !list.is_empty() => f
-            .offered_values(value)
-            .into_iter()
-            .map(|c| (c.code, c.label))
-            .collect(),
+        // A retired value only for the record holding it (docs/adr/0418), narrowed to the record's
+        // subtype (docs/adr/0422).
+        Some(list) if !list.is_empty() => offered.into_iter().map(|c| (c.code, c.label)).collect(),
         _ => vec![
             ("true".to_owned(), "Evet".to_owned()),
             ("false".to_owned(), "Hayır".to_owned()),
@@ -326,7 +327,16 @@ impl App {
                                 .and_then(|e| c.key.as_ref().and_then(|k| e.base().attrs.get(k)))
                                 .cloned()
                                 .unwrap_or_default();
-                            let (choices, codes, at) = choices_of(f, &raw);
+                            let offered = model.get(slot).map_or_else(Vec::new, |e| {
+                                let node = model.layers().get(&e.base().layer_id);
+                                kentos_contracts::offered_on(
+                                    node.and_then(|n| n.subtypes.as_ref()),
+                                    node.map_or(&[][..], |n| n.fields.as_slice()),
+                                    f,
+                                    |n| e.base().attrs.get(n).cloned(),
+                                )
+                            });
+                            let (choices, codes, at) = choices_of(f, &raw, offered);
                             cells.push(
                                 Select::new(choices, at, move |k| {
                                     msg(Event::Choose(codes[k].clone()))

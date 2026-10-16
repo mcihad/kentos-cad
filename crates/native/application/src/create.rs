@@ -244,18 +244,8 @@ fn check(doc: &Document, input: &EntitiesCreate) -> Result<Checked, Stop> {
             )));
         }
     }
-    // The values given to the layer's fields in their canonical text, and its
-    // defaults where an object gives none (docs/adr/0199 §2).
-    let defaults: Vec<(&str, &str)> = doc
-        .layers()
-        .get(&input.layer_id)
-        .map(|n| {
-            n.fields
-                .iter()
-                .filter_map(|f| Some((f.name.as_str(), f.default.as_deref()?)))
-                .collect()
-        })
-        .unwrap_or_default();
+    // The values given to the layer's fields in their canonical text, and its (and the record's
+    // subtype's) defaults where an object gives none (docs/adr/0199 §2, 0422 §2).
     let mut attrs = Vec::with_capacity(input.objects.len());
     for (i, object) in input.objects.iter().enumerate() {
         let given: BTreeMap<String, Option<String>> = object
@@ -270,10 +260,8 @@ fn check(doc: &Document, input: &EntitiesCreate) -> Result<Checked, Stop> {
                 .into_iter()
                 .filter_map(|(k, v)| Some((k, v?)))
                 .collect();
-        for (name, value) in &defaults {
-            own.entry((*name).to_owned())
-                .or_insert_with(|| (*value).to_owned());
-        }
+        checks::new_defaults(doc, &input.layer_id, &mut own);
+        checks::subtype_fit(doc, &input.layer_id, None, &own, &at)?;
         attrs.push(own);
     }
     let placed = placed_points(doc, input)?;

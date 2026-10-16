@@ -303,6 +303,7 @@ fn layer(rng: &mut Rng, depth: u32, ids: &mut Vec<String>) -> LayerNode {
     });
     LayerNode {
         table_styles: Vec::new(),
+        subtypes: None,
         frozen: None,
         plot: None,
         id,
@@ -362,6 +363,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
         ids.push("son".to_owned());
         layers.push(LayerNode {
             table_styles: Vec::new(),
+            subtypes: None,
             frozen: None,
             plot: None,
             id: "son".to_owned(),

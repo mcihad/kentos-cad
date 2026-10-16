@@ -266,6 +266,16 @@ const ENTRIES: &[Entry] = &[
         targets: || vec![target(None, &["*"], &[], None, None)],
     },
     Entry {
+        id: "cad.layers.subtypes",
+        refusals: &[
+            REVISION,
+            &["layer_not_found", "not_a_layer", "service_layer"],
+            &["invalid_subtypes"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.layers.table",
         refusals: &[
             &["invalid_table_styles"],
@@ -642,7 +652,7 @@ const ENTRIES: &[Entry] = &[
             ],
             REVISION,
         ],
-        warnings: &["layer_hidden"],
+        warnings: &["layer_hidden", "subtype_misfit"],
         targets: || vec![target(None, &["*"], &[], None, None)],
     },
     Entry {

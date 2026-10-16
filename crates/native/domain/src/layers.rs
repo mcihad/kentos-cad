@@ -655,6 +655,17 @@ impl LayerTree {
         }
     }
 
+    /// A layer's subtypes, as an undo or a redo puts them (docs/adr/0422).
+    pub(crate) fn replace_subtypes(
+        &mut self,
+        id: &str,
+        subtypes: Option<&kentos_contracts::LayerSubtypes>,
+    ) {
+        if let Some(node) = self.node_mut(id) {
+            node.subtypes = subtypes.cloned();
+        }
+    }
+
     pub(crate) fn replace_service(&mut self, id: &str, served: &crate::history::Served) {
         if let Some(node) = self.node_mut(id) {
             node.name.clone_from(&served.name);
@@ -676,6 +687,7 @@ impl LayerTree {
         };
         LayerNode {
             table_styles: Vec::new(),
+            subtypes: None,
             plot: new.plot.filter(|p| !p),
             frozen: new.frozen.filter(|f| *f),
             id,

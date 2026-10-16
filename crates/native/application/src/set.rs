@@ -449,14 +449,24 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
         .collect();
     // A layer's enforcing forms are its write profile (docs/adr/0401 §8): an attribute change that
     // breaks one is refused.
+    let mut misfits: Vec<CommandWarning> = Vec::new();
     for c in &changes {
         if let Some(old) = doc.get(c.slot) {
             let after = c.entity.base();
             crate::forms::enforced(doc, c.slot, old, &after.layer_id, &after.attrs, "attrs")?;
+            // The record against its subtype (docs/adr/0422 §2); one warning for all of them.
+            let before = (old.base().layer_id == after.layer_id).then_some(&old.base().attrs);
+            if let Some(w) =
+                checks::subtype_fit(doc, &after.layer_id, before, &after.attrs, "attrs")?
+                && misfits.is_empty()
+            {
+                misfits.push(w);
+            }
         }
     }
     // On a hidden layer they vanish from the drawing: said when at least one moves there.
     let mut warnings: Vec<CommandWarning> = locked.into_iter().collect();
+    warnings.extend(misfits);
     if let Some((id, name)) = target
         && !layers.is_visible(id)
         && changes.iter().any(|c| c.moves)

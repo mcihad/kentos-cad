@@ -466,6 +466,35 @@ pub struct LayersTable {
     pub expected_revision: Option<String>,
 }
 
+/// Writes a layer's subtypes (Alt türler, docs/adr/0422).
+pub const CAD_LAYERS_SUBTYPES: &str = "cad.layers.subtypes";
+pub const CAD_LAYERS_SUBTYPES_VERSION: u32 = 1;
+
+/// Input of `cad.layers.subtypes` v1: a layer's subtypes written as one undo step “Alt türler”; none
+/// takes them away. A layer that already has them as given is left as it is (`changed` false).
+///
+/// Refusals, checked in this order: `invalid_revision`, `revision_conflict` (status `conflict`),
+/// `layer_not_found`, `not_a_layer`, `service_layer`; then `invalid_subtypes` (subtypes that do not fit
+/// the layer's fields, `subtypes_problem`, path `subtypes/<where>`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayersSubtypes {
+    /// The layer's id.
+    pub layer: String,
+    /// The subtypes; none: the layer has none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub subtypes: Option<crate::subtypes::LayerSubtypes>,
+    /// The document revision the input was prepared against, as decimal text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
 /// Writes a layer's actions and information card (docs/adr/0225 §4, §5).
 pub const CAD_LAYERS_INFO: &str = "cad.layers.info";
 pub const CAD_LAYERS_INFO_VERSION: u32 = 1;

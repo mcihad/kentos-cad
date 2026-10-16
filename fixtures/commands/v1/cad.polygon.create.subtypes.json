@@ -1,0 +1,1580 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.polygon.create",
+ "commandVersion": 1,
+ "title": "Alan çiz ve alt türler",
+ "note": "ADR 0422 §2: yeni kayıt alt türünün varsayılanlarını alır, alt türün sunmadığı değer reddedilir. Written by scripts/fixtures/subtypes_cases.py without KentOS code; do not edit by hand.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Alt türler",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 487000,
+   "y": 4420000
+  },
+  "layers": [
+   {
+    "id": "bina",
+    "name": "Bina",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Tür",
+      "kind": "text",
+      "values": [
+       {
+        "code": "konut",
+        "label": "Konut"
+       },
+       {
+        "code": "sanayi",
+        "label": "Sanayi"
+       },
+       {
+        "code": "depo",
+        "label": "Depo"
+       }
+      ]
+     },
+     {
+      "name": "Malzeme",
+      "kind": "text",
+      "values": [
+       {
+        "code": "ahsap",
+        "label": "Ahşap"
+       },
+       {
+        "code": "beton",
+        "label": "Betonarme"
+       },
+       {
+        "code": "celik",
+        "label": "Çelik"
+       },
+       {
+        "code": "tas",
+        "label": "Taş"
+       }
+      ],
+      "default": "ahsap"
+     },
+     {
+      "id": "kat-sayisi",
+      "name": "Kat",
+      "kind": "integer"
+     },
+     {
+      "name": "Not",
+      "kind": "text"
+     },
+     {
+      "name": "Etiket",
+      "kind": "text",
+      "multiple": true,
+      "values": [
+       {
+        "code": "a",
+        "label": "A"
+       },
+       {
+        "code": "b",
+        "label": "B"
+       }
+      ]
+     }
+    ],
+    "subtypes": {
+     "field": "Tür",
+     "types": [
+      {
+       "code": "konut",
+       "fields": [
+        {
+         "field": "kat-sayisi",
+         "default": "2"
+        }
+       ]
+      },
+      {
+       "code": "sanayi",
+       "label": "Sanayi binası",
+       "fields": [
+        {
+         "field": "Malzeme",
+         "values": [
+          "beton",
+          "celik"
+         ],
+         "default": "celik",
+         "required": true
+        },
+        {
+         "field": "Not",
+         "required": true
+        }
+       ]
+      },
+      {
+       "code": "depo",
+       "fields": [
+        {
+         "field": "Malzeme",
+         "values": [
+          "beton",
+          "tas"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "id": "fabrika",
+    "name": "Fabrika",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Tür",
+      "kind": "text",
+      "values": [
+       {
+        "code": "konut",
+        "label": "Konut"
+       },
+       {
+        "code": "sanayi",
+        "label": "Sanayi"
+       },
+       {
+        "code": "depo",
+        "label": "Depo"
+       }
+      ],
+      "default": "sanayi"
+     },
+     {
+      "name": "Malzeme",
+      "kind": "text",
+      "values": [
+       {
+        "code": "ahsap",
+        "label": "Ahşap"
+       },
+       {
+        "code": "beton",
+        "label": "Betonarme"
+       },
+       {
+        "code": "celik",
+        "label": "Çelik"
+       },
+       {
+        "code": "tas",
+        "label": "Taş"
+       }
+      ],
+      "default": "ahsap"
+     },
+     {
+      "id": "kat-sayisi",
+      "name": "Kat",
+      "kind": "integer"
+     },
+     {
+      "name": "Not",
+      "kind": "text"
+     },
+     {
+      "name": "Etiket",
+      "kind": "text",
+      "multiple": true,
+      "values": [
+       {
+        "code": "a",
+        "label": "A"
+       },
+       {
+        "code": "b",
+        "label": "B"
+       }
+      ]
+     }
+    ],
+    "subtypes": {
+     "field": "Tür",
+     "types": [
+      {
+       "code": "konut",
+       "fields": [
+        {
+         "field": "kat-sayisi",
+         "default": "2"
+        }
+       ]
+      },
+      {
+       "code": "sanayi",
+       "label": "Sanayi binası",
+       "fields": [
+        {
+         "field": "Malzeme",
+         "values": [
+          "beton",
+          "celik"
+         ],
+         "default": "celik",
+         "required": true
+        },
+        {
+         "field": "Not",
+         "required": true
+        }
+       ]
+      },
+      {
+       "code": "depo",
+       "fields": [
+        {
+         "field": "Malzeme",
+         "values": [
+          "beton",
+          "tas"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "id": "yol",
+    "name": "Yol",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "koruma",
+    "name": "Koruma alanı",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "kilitli",
+      "name": "Sit alanı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Tür",
+        "kind": "text",
+        "values": [
+         {
+          "code": "konut",
+          "label": "Konut"
+         },
+         {
+          "code": "sanayi",
+          "label": "Sanayi"
+         },
+         {
+          "code": "depo",
+          "label": "Depo"
+         }
+        ]
+       },
+       {
+        "name": "Malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ahsap",
+          "label": "Ahşap"
+         },
+         {
+          "code": "beton",
+          "label": "Betonarme"
+         },
+         {
+          "code": "celik",
+          "label": "Çelik"
+         },
+         {
+          "code": "tas",
+          "label": "Taş"
+         }
+        ],
+        "default": "ahsap"
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer"
+       },
+       {
+        "name": "Not",
+        "kind": "text"
+       },
+       {
+        "name": "Etiket",
+        "kind": "text",
+        "multiple": true,
+        "values": [
+         {
+          "code": "a",
+          "label": "A"
+         },
+         {
+          "code": "b",
+          "label": "B"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "altlik",
+    "name": "OpenStreetMap",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "service": {
+     "kind": "xyz",
+     "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+     "maxZoom": 19
+    }
+   }
+  ],
+  "activeLayer": "bina",
+  "entities": [],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "değersiz alan: alanın varsayılanı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Malzeme": "ahsap"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sanayi: alt türün varsayılanı alanınkinin yerine",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Tür": "sanayi"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Tür": "sanayi",
+         "Malzeme": "celik"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "konut: alt türün kat varsayılanı ve alanın malzemesi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Tür": "konut"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Tür": "konut",
+         "Malzeme": "ahsap",
+         "Kat": "2"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sanayi, verilen izinli değer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Tür": "sanayi",
+       "Malzeme": "beton"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Tür": "sanayi",
+         "Malzeme": "beton"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sanayi, verilen izinsiz değer reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Tür": "sanayi",
+       "Malzeme": "ahsap"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_attribute",
+       "message": "“Malzeme” alanına “ahsap”, “Sanayi binası” alt türünde verilemez: bu alt tür bu değeri sunmaz. Alt türün değerlerinden birini seçin.",
+       "path": "attrs.Malzeme"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "depo: alanın varsayılanını alt tür sunmuyor, yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Tür": "depo"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Tür": "depo"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "depo, taş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Tür": "depo",
+       "Malzeme": "tas"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Tür": "depo",
+         "Malzeme": "tas"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "depo, ahşap reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Tür": "depo",
+       "Malzeme": "ahsap"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_attribute",
+       "message": "“Malzeme” alanına “ahsap”, “Depo” alt türünde verilemez: bu alt tür bu değeri sunmaz. Alt türün değerlerinden birini seçin.",
+       "path": "attrs.Malzeme"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sanayi: yeni kayıtta zorunlu not reddedilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Tür": "sanayi",
+       "Kat": "4"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Tür": "sanayi",
+         "Kat": "4",
+         "Malzeme": "celik"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sanayi, notuyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Tür": "sanayi",
+       "Not": "Kalıp atölyesi"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Tür": "sanayi",
+         "Not": "Kalıp atölyesi",
+         "Malzeme": "celik"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "konut, verilen kat varsayılanın önünde",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Tür": "konut",
+       "Kat": "5"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Tür": "konut",
+         "Kat": "5",
+         "Malzeme": "ahsap"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "konut, taş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Tür": "konut",
+       "Malzeme": "tas"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Tür": "konut",
+         "Malzeme": "tas",
+         "Kat": "2"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "alt türü olmayan değer: daraltma yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Malzeme": "celik"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Malzeme": "celik"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "boşluklu kod: alt türü bulunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Tür": " sanayi "
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Tür": "sanayi",
+         "Malzeme": "celik"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "alt tür alanının varsayılanı alt türü verir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "fabrika",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Tür": "sanayi",
+         "Malzeme": "celik"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "alt tür alanının varsayılanı: izinsiz değer reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "fabrika",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Malzeme": "ahsap"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_attribute",
+       "message": "“Malzeme” alanına “ahsap”, “Sanayi binası” alt türünde verilemez: bu alt tür bu değeri sunmaz. Alt türün değerlerinden birini seçin.",
+       "path": "attrs.Malzeme"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "alt tür alanının varsayılanı verilen türün arkasında kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "fabrika",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Tür": "konut"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Tür": "konut",
+         "Malzeme": "ahsap",
+         "Kat": "2"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "fabrikada depo",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "fabrika",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Tür": "depo"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Tür": "depo"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "fabrikada depo, beton",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "fabrika",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Tür": "depo",
+       "Malzeme": "beton"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Tür": "depo",
+         "Malzeme": "beton"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çok değerli alan alt türden etkilenmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Tür": "sanayi",
+       "Etiket": "a; b"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Tür": "sanayi",
+         "Etiket": "a; b",
+         "Malzeme": "celik"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "depo, çelik reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Tür": "depo",
+       "Malzeme": "celik"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_attribute",
+       "message": "“Malzeme” alanına “celik”, “Depo” alt türünde verilemez: bu alt tür bu değeri sunmaz. Alt türün değerlerinden birini seçin.",
+       "path": "attrs.Malzeme"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

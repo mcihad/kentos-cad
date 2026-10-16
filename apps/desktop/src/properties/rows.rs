@@ -1527,7 +1527,15 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
     if !fields.is_empty() {
         let mut rows = form_rows(doc.model.settings(), &base.layer_id);
         let labels = crate::features::lookup_labels(&doc.model, &base.layer_id, &fields);
-        rows.extend(field_rows(slot, base, &fields, locked, &labels));
+        let subtypes = layers.get(&base.layer_id).and_then(|n| n.subtypes.clone());
+        rows.extend(field_rows(
+            slot,
+            base,
+            &fields,
+            subtypes.as_ref(),
+            locked,
+            &labels,
+        ));
         sections.push(Section {
             id: "fields",
             title: "Alanlar".into(),
@@ -1612,6 +1620,7 @@ fn field_rows(
     slot: Slot,
     base: &kentos_contracts::EntityBase,
     fields: &[kentos_contracts::LayerField],
+    subtypes: Option<&kentos_contracts::LayerSubtypes>,
     locked: bool,
     labels: &[(String, std::collections::BTreeMap<String, String>)],
 ) -> Vec<Row> {
@@ -1644,12 +1653,16 @@ fn field_rows(
             None
         } else if listed {
             let pairs: Vec<(String, String)> = match &f.values {
-                // A retired value only for the record holding it (docs/adr/0418).
-                Some(list) if !list.is_empty() => f
-                    .offered_values(&value)
+                // A retired value only for the record holding it (docs/adr/0418), narrowed to the
+                // record's subtype (docs/adr/0422).
+                Some(list) if !list.is_empty() => {
+                    kentos_contracts::offered_on(subtypes, fields, f, |n| {
+                        base.attrs.get(n).cloned()
+                    })
                     .into_iter()
                     .map(|c| (c.code, c.label))
-                    .collect(),
+                    .collect()
+                }
                 _ => vec![
                     ("true".to_owned(), "Evet".to_owned()),
                     ("false".to_owned(), "Hayır".to_owned()),

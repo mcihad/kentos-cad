@@ -200,6 +200,8 @@ pub enum Event {
     /// (docs/adr/0409 §3).
     NewRelated(String),
     FirstIssue,
+    /// Uymayanları boşalt (docs/adr/0422 §2): the values the record's subtype does not offer emptied.
+    ClearMisfits,
     Save,
     Cancel,
 }
@@ -241,6 +243,15 @@ impl fmt::Display for Opt<'_> {
 }
 
 impl Entry {
+    /// The fields' keys whose values the record's subtype does not offer (docs/adr/0422 §2).
+    pub(crate) fn misfits(&self) -> Vec<String> {
+        self.issues
+            .iter()
+            .filter(|i| i.code == kentos_forms::codes::VALUE_NOT_IN_SUBTYPE)
+            .filter_map(|i| i.field.clone())
+            .collect()
+    }
+
     /// A field's value as the record would hold it now.
     #[cfg(test)]
     pub(crate) fn after_value(&self, name: &str) -> Option<String> {
@@ -350,6 +361,14 @@ impl Entry {
         self.mixed = mixed;
     }
 
+    /// A field's label (its alias, else its name) by its key.
+    fn label_of(&self, key: &str) -> Option<&str> {
+        self.fields
+            .iter()
+            .find(|f| f.key() == key)
+            .map(|f| f.label())
+    }
+
     /// A field's name by its key.
     fn name_of(&self, key: &str) -> Option<&String> {
         self.fields.iter().find(|f| f.key() == key).map(|f| &f.name)
@@ -393,7 +412,7 @@ impl Entry {
         self.closed.contains(group)
     }
 
-    fn state(&self, id: &str) -> Option<&FormItemState> {
+    pub(crate) fn state(&self, id: &str) -> Option<&FormItemState> {
         self.items.iter().find(|s| s.id == id)
     }
 
@@ -1100,6 +1119,13 @@ impl App {
                 }
                 e.recompute(&doc.model);
             }
+            Event::ClearMisfits => {
+                for key in e.misfits() {
+                    e.touched.insert(key.clone());
+                    e.values.insert(key, String::new());
+                }
+                e.recompute(&doc.model);
+            }
             Event::Note(key, action) => {
                 let edit = action.is_edit();
                 if let Some(content) = e.notes.get_mut(&key) {
@@ -1455,6 +1481,30 @@ impl App {
                 Kind::Warn,
                 "Katman kilitli ya da yetkiniz yok: kayıt yalnız görüntülenir.",
             )]));
+        }
+        // The record's kind changed under values it does not offer (docs/adr/0422 §2): kept until the
+        // user chooses, never emptied silently.
+        let misfits = e.misfits();
+        if !misfits.is_empty() && !locked {
+            let names: Vec<&str> = misfits
+                .iter()
+                .map(|k| e.label_of(k).unwrap_or(k))
+                .collect();
+            body = body.push(
+                row![
+                    container(words::summary(vec![words::text_line(
+                        Kind::Warn,
+                        format!(
+                            "Kaydın alt türü şu değerleri sunmuyor: {}. Alt türün değerlerinden birini seçin ya da boşaltın.",
+                            names.join(", ")
+                        ),
+                    )]))
+                    .width(Fill),
+                    words::secondary("Uymayanları boşalt", Some(e.msg(Event::ClearMisfits))),
+                ]
+                .spacing(8)
+                .align_y(Center),
+            );
         }
         body = self.entry_pages(e, locked, body, height);
         if footer {

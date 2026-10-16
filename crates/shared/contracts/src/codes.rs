@@ -687,6 +687,10 @@ codes! {
     FIELD_NOT_FOUND = "field_not_found", Failed, false, "Katmanda adı verilen alan yok.";
     /// A field a form keeps unique left empty in a copy (Kaydı çoğalt, docs/adr/0415 §1).
     UNIQUE_CLEARED = "unique_cleared", Warning, false, "Formun tekil tuttuğu alan kopyada boş bırakıldı.";
+    /// A record keeps values its subtype does not allow (docs/adr/0422 §2).
+    SUBTYPE_MISFIT = "subtype_misfit", Warning, false, "Kaydın alt türüne uymayan değerleri var.";
+    /// A layer's subtypes that do not fit its fields (docs/adr/0422 §3).
+    INVALID_SUBTYPES = "invalid_subtypes", Failed, false, "Alt türler katmanın alanlarına uymuyor.";
     /// Records a form's recomputation left as they were (docs/adr/0421).
     FORM_CALC_FAILED = "form_calc_failed", Warning, false, "Formun hesabı bazı kayıtlarda alanına sığmadı; onlar olduğu gibi kaldı.";
     /// A layer's table rules against their rules (Koşullu biçim, docs/adr/0413 §1).

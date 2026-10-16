@@ -233,6 +233,7 @@ impl Judge<'_> {
             self.unit,
             &self.world,
         )
+        .map(|p| p.with_subtypes(find(self.tree, &form.layer).and_then(|n| n.subtypes.as_ref())))
         .map_err(|issues| first_error(&issues))
     }
 

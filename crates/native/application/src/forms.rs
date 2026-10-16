@@ -122,6 +122,14 @@ pub(crate) fn body<'a>(
         })
 }
 
+/// The layer's subtypes (docs/adr/0422), which a form over it reads.
+pub(crate) fn subtypes<'d>(
+    doc: &'d Document,
+    layer: &str,
+) -> Option<&'d kentos_contracts::LayerSubtypes> {
+    doc.layers().get(layer).and_then(|n| n.subtypes.as_ref())
+}
+
 /// The body prepared over the layer's fields with `variables`, its geometry values in the drawing's
 /// unit, or `form_preflight` at `path` with its first error.
 pub(crate) fn prepared(
@@ -138,6 +146,7 @@ pub(crate) fn prepared(
         crate::expression_unit::reading_unit(doc.settings()),
         &doc.form_world(body),
     )
+    .map(|p| p.with_subtypes(subtypes(doc, &form.layer)))
     .map_err(|issues| {
         let first = first_error(&issues);
         fail(
@@ -436,6 +445,7 @@ pub(crate) fn enforced(
             crate::expression_unit::reading_unit(doc.settings()),
             &doc.form_world(&release.body),
         )
+        .map(|p| p.with_subtypes(subtypes(doc, layer)))
         .map_err(|issues| refuse(first_error(&issues)))?;
         let mut probe = e.clone();
         probe.base_mut().attrs = after.clone();

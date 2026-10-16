@@ -15,6 +15,7 @@ pub mod designer;
 mod designer_view;
 pub mod entry;
 pub mod relations;
+pub mod subtypes;
 pub mod table_styles;
 
 use iced::Task;
@@ -25,12 +26,13 @@ use kentos_interaction::Level;
 use crate::app::{App, Message};
 
 /// The commands this module runs.
-pub const COMMANDS: [&str; 6] = [
+pub const COMMANDS: [&str; 7] = [
     "data.forms",
     "data.formEdit",
     "data.relations",
     "data.formAudit",
     "data.tableStyles",
+    "data.subtypes",
     "data.duplicate",
 ];
 
@@ -72,6 +74,7 @@ impl App {
             "data.relations" => self.open_relations(),
             "data.formAudit" => return self.open_form_audit(None),
             "data.tableStyles" => return self.open_table_styles(),
+            "data.subtypes" => return self.open_subtypes(),
             "data.duplicate" => return self.duplicate_selected(),
             _ => {}
         }

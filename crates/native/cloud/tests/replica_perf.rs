@@ -115,6 +115,7 @@ fn opened(n: usize) -> Opened {
     };
     let layers = vec![LayerNode {
         table_styles: Vec::new(),
+        subtypes: None,
         frozen: None,
         plot: None,
         id: "parsel".into(),

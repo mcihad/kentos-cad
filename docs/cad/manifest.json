@@ -1262,6 +1262,22 @@
    "tests": 1
   },
   {
+   "id": "data.subtypes",
+   "kind": "command",
+   "title": "Alt türler",
+   "level": "semantic",
+   "via": [
+    "cad.layers.subtypes"
+   ],
+   "operation": null,
+   "python": "kentos.cad.layers.subtypes",
+   "mcp": "cad.layers.subtypes",
+   "note": "Alt türler cad.layers.subtypes ile tek adımda yazılır; yazmalar ve formlar onları okur (ADR 0422).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "data.tableStyles",
    "kind": "command",
    "title": "Koşullu biçim",

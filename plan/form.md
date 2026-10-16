@@ -332,8 +332,8 @@ ArcGIS'in domain yaklaşımı; kodlu değer veya aralık, yeniden kullanım ve s
 - [ ] **FORM-DATA-14:** Domain code veya type değişikliği schema/data migration gerektirsin; label değişimi kodu ve geçmiş veriyi değiştirmesin.
 - [x] **FORM-DATA-15:** Retired domain değeri eski kayıtta görülebilsin; yeni seçim/yazma politikasını ayrı tanımla, kaydı otomatik boşaltma. — *Yapıldı (16 Ekim; ADR 0418: `retired`, tutan kayıtta kalır ve görünür, yeni seçimde sunulmaz, formla yeniden yazılmaz).*
 - [ ] **FORM-DATA-16:** Domain listesi büyükse yetkili search/page/cache kullansın; tüm değerler her forma indirilmesin.
-- [ ] **FORM-DATA-17:** Subtype; discriminator field/code, subtype label ve alanlara özel domain/default/required/style bağlantısı taşısın.
-- [ ] **FORM-DATA-18:** Subtype değişiminde eski değerler için preserve/clear/revalidate önerisini kullanıcıya göster; geçerli değerleri gereksiz silme.
+- [x] **FORM-DATA-17:** Subtype; discriminator field/code, subtype label ve alanlara özel domain/default/required/style bağlantısı taşısın. — *Yapıldı (17 Ekim; ADR 0422: `subtypes`, alanın değerleri, varsayılanı ve zorunluluğu; stil açık).*
+- [x] **FORM-DATA-18:** Subtype değişiminde eski değerler için preserve/clear/revalidate önerisini kullanıcıya göster; geçerli değerleri gereksiz silme. — *Yapıldı (17 Ekim; ADR 0422 §2: değerler silinmez, `subtype_misfit`, formda Uymayanları boşalt).*
 - [ ] **FORM-DATA-19:** Contingent field groups; izinli combinations, wildcard/null, subtype ve restrictive/advisory policy ile sürümlensin.
 - [x] **FORM-DATA-20:** Üst seçim değişince alt seçenekler aynı rule engine ile filtrelensin; önceki değer artık geçersizse açık validation ver. — *Yapıldı (16 Ekim; ADR 0402 §1 (`choiceFilter`, `form_choice_filtered`)).*
 - [x] **FORM-DATA-21:** Split/merge default/duplicate/sum/proportional gibi attribute politikaları domain/field modelinde açık olsun; geometri işlemlerine bağlantısı korunsun. — *Yapıldı (16 Ekim; ADR 0419: `split` ve `merge`, alan işlemleri ve Parçala, Kır, Birleştir aynı kuralla; toplam korunur).*

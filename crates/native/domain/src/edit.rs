@@ -198,7 +198,12 @@ impl Document {
             )));
         }
         // A key that a form, a list or a relation names stays (docs/adr/0414 §2).
-        let keyed = kentos_forms::field_refs::keyed(&self.settings, id);
+        let mut keyed = kentos_forms::field_refs::keyed(&self.settings, id);
+        for k in kentos_forms::field_refs::node_keyed(node) {
+            if !keyed.contains(&k) {
+                keyed.push(k);
+            }
+        }
         let fields = keep_field_ids(
             &node.fields,
             fields,
@@ -244,6 +249,11 @@ impl Document {
             kentos_forms::field_refs::rename_node(&mut next_node, old, new);
             kentos_forms::field_refs::rename_settings(&mut next_settings, id, old, new);
         }
+        // The subtypes follow the fields (docs/adr/0422 §1): what is gone leaves them.
+        next_node.subtypes = node
+            .subtypes
+            .as_ref()
+            .and_then(|s| kentos_contracts::follow_subtypes(s, &fields));
         if before == fields && changes.is_empty() {
             return Ok(false);
         }
@@ -527,6 +537,40 @@ impl Document {
             layer: id.to_owned(),
             before: node.table_styles.clone(),
             after: next,
+        };
+        self.record(vec![op], label);
+        Ok(true)
+    }
+
+    /// A layer's subtypes (Alt türler, docs/adr/0422) as one undo step `label`; whether they
+    /// changed. A group, or subtypes that do not fit the layer's fields, are refused.
+    pub fn set_layer_subtypes(
+        &mut self,
+        id: &str,
+        next: Option<kentos_contracts::LayerSubtypes>,
+        label: &str,
+    ) -> Result<bool, Refusal> {
+        let Some(node) = self.layers.get(id) else {
+            return Ok(false);
+        };
+        if next.is_some() && node.kind == LayerNodeType::Group {
+            return Err(Refusal(format!(
+                "“{}” bir grup; alt türler yalnız katmanın olur.",
+                node.name
+            )));
+        }
+        if let Some(s) = &next
+            && let Some((_, problem)) = kentos_contracts::subtypes_problem(&node.fields, s)
+        {
+            return Err(Refusal(format!("Alt türler: {problem}")));
+        }
+        if node.subtypes == next {
+            return Ok(false);
+        }
+        let op = Op::LayerSubtypes {
+            layer: id.to_owned(),
+            before: node.subtypes.clone().map(Box::new),
+            after: next.map(Box::new),
         };
         self.record(vec![op], label);
         Ok(true)
@@ -1053,6 +1097,13 @@ pub(crate) fn keep_field_ids(
 fn followed_ops(node: &kentos_contracts::LayerNode, next: &kentos_contracts::LayerNode) -> Vec<Op> {
     let layer = &node.id;
     let mut ops = Vec::new();
+    if node.subtypes != next.subtypes {
+        ops.push(Op::LayerSubtypes {
+            layer: layer.clone(),
+            before: node.subtypes.clone().map(Box::new),
+            after: next.subtypes.clone().map(Box::new),
+        });
+    }
     if node.table_styles != next.table_styles {
         ops.push(Op::LayerTableStyles {
             layer: layer.clone(),

@@ -478,6 +478,11 @@ pub struct LayerNode {
         )
     )]
     pub table_styles: Vec<crate::table_styles::TableStyle>,
+    /// Alt türler (docs/adr/0422): the field that sorts the records and what each kind narrows.
+    /// Only a layer holding objects has them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub subtypes: Option<crate::subtypes::LayerSubtypes>,
 }
 
 /// The snap kinds a layer can keep to (the settings' `snap.<kind>` and the
