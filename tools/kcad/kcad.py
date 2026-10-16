@@ -1399,10 +1399,16 @@ def fields_problem(fields):
                 return f"“{name}” alanının değer listesinde boş ya da iki kez yazılmış değer var"
             if f.get("multiple") and any(";" in c["code"] or ";" in c["label"] for c in vs):
                 return f"“{name}” çok değerli; değer listesinde “;” olamaz"
+            if all(c.get("retired") for c in vs):
+                return f"“{name}” alanının bütün değerleri kullanımdan kalkmış"
         if f.get("multiple") and kind != "text":
             return f"“{name}” alanı çok değerli olamaz"
         if "default" in f and not _default_fits(f, f["default"]):
             return f"“{name}” alanının varsayılanı alanın kurallarına uymuyor"
+        retired = [c["code"] for c in f.get("values", []) if c.get("retired")]
+        parts = f["default"].split("; ") if f.get("multiple") and "default" in f else [f.get("default")]
+        if "default" in f and any(p in retired for p in parts):
+            return f"“{name}” alanının varsayılanı kullanımdan kalkmış bir değer"
         key = _fold(name)
         if key in seen:
             return f"“{name}” adlı iki alan var"
@@ -3278,7 +3284,9 @@ class _Schema:
                 "alias": (self.text, False),
                 "scale": (self.uint(32), False),
                 "length": (self.uint(32), False),
-                "values": (self.array(self.fields({"code": (self.text, True), "label": (self.text, True)})), False),
+                # Schema 60 (docs/adr/0418): a retired value.
+                "values": (self.array(self.fields({"code": (self.text, True), "label": (self.text, True),
+                                                   **({"retired": (self.bool, False)} if self.forms else {})})), False),
                 "default": (self.text, False),
                 # Schema 60 (docs/adr/0408 §1): a listed text field holding several codes.
                 **({"multiple": (self.bool, False)} if self.forms else {}),
@@ -3288,6 +3296,8 @@ class _Schema:
         all_ = self.array(field)(v)
         if any(f.get("required") is False or f.get("multiple") is False for f in all_):
             self.fail("bad_value", "required ve multiple yalnız true yazılır")
+        if any(c.get("retired") is False for f in all_ for c in f.get("values", [])):
+            self.fail("bad_value", "retired yalnız true yazılır")
         problem = fields_problem(all_)
         if problem:
             self.fail("bad_value", problem)

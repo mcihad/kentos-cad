@@ -496,6 +496,26 @@ fn form_view(app: &mut App) {
     )));
 }
 
+/// The buildings with “Orta hasarlı” retired from the state's list (docs/adr/0418): B-3 and B-6 keep it.
+fn retired_state(app: &mut App) {
+    buildings_with_a_form(app);
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut fields = doc.model.layers().get("bina").expect("bina").fields.clone();
+    for c in fields[1].values.iter_mut().flatten() {
+        c.retired = c.code == "orta";
+    }
+    let _ = doc.model.set_layer_fields("bina", fields, &[]);
+}
+
+/// Alanlar's value list of the state: Orta hasarlı retired.
+fn retired_list(app: &mut App) {
+    retired_state(app);
+    let _ = app.open_layer_fields("bina");
+    let _ = app.update(Message::LayerFields(crate::layer_fields::Event::OpenList(
+        1,
+    )));
+}
+
 /// Formlar on the survey form, the floor count chosen: what reads it (plan FORM-DESIGN-09).
 fn designer_links(app: &mut App) {
     buildings_with_a_form(app);
@@ -1183,6 +1203,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-gorunumu", form_view),
         ("form-baglar", designer_links),
         ("form-hesap-degistir", overridden_height),
+        ("form-kalkmis-deger", retired_list),
     ]
 }
 
@@ -1245,6 +1266,60 @@ mod tests {
         let undone = app.document.as_mut().unwrap().model.undo();
         assert_eq!(undone.as_deref(), Some("Koşullu biçim"));
         assert_eq!(rules(&app).len(), 4, "one step undoes it");
+    }
+
+    #[test]
+    fn a_retired_value_stays_where_it_is_and_is_not_written_anew() {
+        let mut app = crate::files_testing::app_with_drawing();
+        retired_state(&mut app);
+        let field = app
+            .document
+            .as_ref()
+            .unwrap()
+            .model
+            .layers()
+            .get("bina")
+            .unwrap()
+            .fields[1]
+            .clone();
+        let codes = |v: &str| {
+            field
+                .offered_values(v)
+                .into_iter()
+                .map(|c| c.code)
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(codes("iyi"), ["iyi", "kotu"], "not offered anew");
+        assert_eq!(
+            codes("orta"),
+            ["iyi", "orta", "kotu"],
+            "offered to the record holding it"
+        );
+        // B-1 is in a good state: the form does not write “orta” anew.
+        app.selection.set([Slot(1)]);
+        run(&mut app, "data.formEdit");
+        let _ = app.update(Message::FormEntry(entry::Event::Value(
+            "Durum".into(),
+            "orta".into(),
+        )));
+        let _ = app.update(Message::FormEntry(entry::Event::Save));
+        assert!(app.form_entry.is_some(), "refused: the window stays");
+        assert_eq!(attrs(&app, 1).get("Durum").map(String::as_str), Some("iyi"));
+        let _ = app.update(Message::FormEntry(entry::Event::Cancel));
+        // B-3 holds it: its floor count is written and its state kept.
+        app.selection.set([Slot(3)]);
+        run(&mut app, "data.formEdit");
+        let _ = app.update(Message::FormEntry(entry::Event::Value(
+            "Kat".into(),
+            "3".into(),
+        )));
+        let _ = app.update(Message::FormEntry(entry::Event::Save));
+        assert!(app.form_entry.is_none());
+        assert_eq!(
+            attrs(&app, 3).get("Durum").map(String::as_str),
+            Some("orta")
+        );
+        assert_eq!(attrs(&app, 3).get("Kat").map(String::as_str), Some("3"));
     }
 
     #[test]

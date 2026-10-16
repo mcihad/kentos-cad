@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
+#[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
 
 pub const CAD_FIELDS_USAGE: &str = "cad.fields.usage";

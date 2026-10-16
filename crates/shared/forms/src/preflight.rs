@@ -237,6 +237,7 @@ impl Preflight<'_> {
             probe.values = Some(vec![kentos_contracts::FieldChoice {
                 code: "-".into(),
                 label: "-".into(),
+                retired: false,
             }]);
         }
         if let Err(code) = widget_fits(widget, &probe) {

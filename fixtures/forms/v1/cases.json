@@ -11998,6 +11998,627 @@
    "issues": []
   },
   {
+   "name": "kalkmış değer sunulmaz",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "required": true,
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ]
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Yükseklik",
+     "kind": "decimal",
+     "scale": 2
+    },
+    {
+     "name": "Taban",
+     "kind": "decimal",
+     "scale": 2
+    },
+    {
+     "name": "Riskli",
+     "kind": "boolean"
+    },
+    {
+     "name": "Kod",
+     "kind": "text",
+     "length": 20
+    },
+    {
+     "name": "Tür",
+     "kind": "text",
+     "values": [
+      {
+       "code": "konut",
+       "label": "Konut"
+      },
+      {
+       "code": "sanayi",
+       "label": "Sanayi"
+      }
+     ]
+    },
+    {
+     "name": "Malzeme",
+     "kind": "text",
+     "values": [
+      {
+       "code": "ahsap",
+       "label": "Ahşap",
+       "retired": true
+      },
+      {
+       "code": "beton",
+       "label": "Betonarme"
+      },
+      {
+       "code": "celik",
+       "label": "Çelik"
+      },
+      {
+       "code": "tas",
+       "label": "Taş"
+      }
+     ]
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Kayıt",
+     "kind": "text",
+     "length": 64
+    },
+    {
+     "name": "Puan",
+     "kind": "integer",
+     "min": "0",
+     "max": "10"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "group",
+      "id": "genel",
+      "label": "Genel",
+      "columns": 2,
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi"
+       },
+       {
+        "type": "field",
+        "id": "kod",
+        "field": "Kod",
+        "unique": true,
+        "defaultExpr": "'B-' || Kat"
+       },
+       {
+        "type": "field",
+        "id": "tur",
+        "field": "Tür"
+       },
+       {
+        "type": "field",
+        "id": "malzeme",
+        "field": "Malzeme",
+        "choiceFilter": "Tür <> 'sanayi' veya @secenek = 'beton' veya @secenek = 'celik'"
+       }
+      ]
+     },
+     {
+      "type": "group",
+      "id": "hesap",
+      "label": "Hesaplanan",
+      "collapsed": true,
+      "items": [
+       {
+        "type": "field",
+        "id": "yukseklik",
+        "field": "Yükseklik",
+        "calculate": "Kat * 3"
+       },
+       {
+        "type": "field",
+        "id": "taban",
+        "field": "Taban",
+        "calculate": "$alan"
+       },
+       {
+        "type": "field",
+        "id": "riskli",
+        "field": "Riskli",
+        "calculate": "Kat > 5"
+       },
+       {
+        "type": "field",
+        "id": "puan",
+        "field": "Puan",
+        "calculate": "Kat - 1"
+       },
+       {
+        "type": "note",
+        "id": "toplam",
+        "text": "Toplam alan {Kat * Taban} m², {$köşe} köşe."
+       }
+      ]
+     },
+     {
+      "type": "field",
+      "id": "aciklama",
+      "field": "Açıklama",
+      "visibleWhen": "Durum = 'inceleme'",
+      "checks": [
+       {
+        "rule": "uzunluk(Açıklama) >= 5",
+        "message": "Açıklama çok kısa."
+       },
+       {
+        "rule": "uzunluk(Açıklama) >= 20",
+        "message": "Açıklama kısa görünüyor.",
+        "warning": true
+       }
+      ]
+     },
+     {
+      "type": "field",
+      "id": "tarih",
+      "field": "Tarih",
+      "defaultExpr": "@tarih"
+     },
+     {
+      "type": "field",
+      "id": "kayit",
+      "field": "Kayıt",
+      "defaultExpr": "@kullanici"
+     }
+    ]
+   },
+   "variables": [
+    {
+     "name": "tarih",
+     "value": "2026-10-16"
+    },
+    {
+     "name": "simdi",
+     "value": "2026-10-16T14:30:00"
+    },
+    {
+     "name": "kullanici",
+     "value": "Ayşe Yılmaz"
+    }
+   ],
+   "object": {
+    "length": 40,
+    "area": 100,
+    "vertices": 4
+   },
+   "attrs": {
+    "Durum": "iyi",
+    "Kat": "3",
+    "Tür": "konut",
+    "Malzeme": "beton"
+   },
+   "items": [
+    {
+     "id": "genel",
+     "shown": true
+    },
+    {
+     "id": "durum",
+     "shown": true,
+     "required": true
+    },
+    {
+     "id": "kat",
+     "shown": true
+    },
+    {
+     "id": "kod",
+     "shown": true
+    },
+    {
+     "id": "tur",
+     "shown": true
+    },
+    {
+     "id": "malzeme",
+     "shown": true,
+     "choices": [
+      "beton",
+      "celik",
+      "tas"
+     ]
+    },
+    {
+     "id": "hesap",
+     "shown": true
+    },
+    {
+     "id": "yukseklik",
+     "shown": true,
+     "readOnly": true
+    },
+    {
+     "id": "taban",
+     "shown": true,
+     "readOnly": true
+    },
+    {
+     "id": "riskli",
+     "shown": true,
+     "readOnly": true
+    },
+    {
+     "id": "puan",
+     "shown": true,
+     "readOnly": true
+    },
+    {
+     "id": "toplam",
+     "shown": true,
+     "text": "Toplam alan  m², 4 köşe."
+    },
+    {
+     "id": "aciklama",
+     "shown": false
+    },
+    {
+     "id": "tarih",
+     "shown": true
+    },
+    {
+     "id": "kayit",
+     "shown": true
+    }
+   ],
+   "issues": []
+  },
+  {
+   "name": "kalkmış değeri tutan kayda o da sunulur, geçerlidir",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "required": true,
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ]
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Yükseklik",
+     "kind": "decimal",
+     "scale": 2
+    },
+    {
+     "name": "Taban",
+     "kind": "decimal",
+     "scale": 2
+    },
+    {
+     "name": "Riskli",
+     "kind": "boolean"
+    },
+    {
+     "name": "Kod",
+     "kind": "text",
+     "length": 20
+    },
+    {
+     "name": "Tür",
+     "kind": "text",
+     "values": [
+      {
+       "code": "konut",
+       "label": "Konut"
+      },
+      {
+       "code": "sanayi",
+       "label": "Sanayi"
+      }
+     ]
+    },
+    {
+     "name": "Malzeme",
+     "kind": "text",
+     "values": [
+      {
+       "code": "ahsap",
+       "label": "Ahşap",
+       "retired": true
+      },
+      {
+       "code": "beton",
+       "label": "Betonarme"
+      },
+      {
+       "code": "celik",
+       "label": "Çelik"
+      },
+      {
+       "code": "tas",
+       "label": "Taş"
+      }
+     ]
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Kayıt",
+     "kind": "text",
+     "length": 64
+    },
+    {
+     "name": "Puan",
+     "kind": "integer",
+     "min": "0",
+     "max": "10"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "group",
+      "id": "genel",
+      "label": "Genel",
+      "columns": 2,
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi"
+       },
+       {
+        "type": "field",
+        "id": "kod",
+        "field": "Kod",
+        "unique": true,
+        "defaultExpr": "'B-' || Kat"
+       },
+       {
+        "type": "field",
+        "id": "tur",
+        "field": "Tür"
+       },
+       {
+        "type": "field",
+        "id": "malzeme",
+        "field": "Malzeme",
+        "choiceFilter": "Tür <> 'sanayi' veya @secenek = 'beton' veya @secenek = 'celik'"
+       }
+      ]
+     },
+     {
+      "type": "group",
+      "id": "hesap",
+      "label": "Hesaplanan",
+      "collapsed": true,
+      "items": [
+       {
+        "type": "field",
+        "id": "yukseklik",
+        "field": "Yükseklik",
+        "calculate": "Kat * 3"
+       },
+       {
+        "type": "field",
+        "id": "taban",
+        "field": "Taban",
+        "calculate": "$alan"
+       },
+       {
+        "type": "field",
+        "id": "riskli",
+        "field": "Riskli",
+        "calculate": "Kat > 5"
+       },
+       {
+        "type": "field",
+        "id": "puan",
+        "field": "Puan",
+        "calculate": "Kat - 1"
+       },
+       {
+        "type": "note",
+        "id": "toplam",
+        "text": "Toplam alan {Kat * Taban} m², {$köşe} köşe."
+       }
+      ]
+     },
+     {
+      "type": "field",
+      "id": "aciklama",
+      "field": "Açıklama",
+      "visibleWhen": "Durum = 'inceleme'",
+      "checks": [
+       {
+        "rule": "uzunluk(Açıklama) >= 5",
+        "message": "Açıklama çok kısa."
+       },
+       {
+        "rule": "uzunluk(Açıklama) >= 20",
+        "message": "Açıklama kısa görünüyor.",
+        "warning": true
+       }
+      ]
+     },
+     {
+      "type": "field",
+      "id": "tarih",
+      "field": "Tarih",
+      "defaultExpr": "@tarih"
+     },
+     {
+      "type": "field",
+      "id": "kayit",
+      "field": "Kayıt",
+      "defaultExpr": "@kullanici"
+     }
+    ]
+   },
+   "variables": [
+    {
+     "name": "tarih",
+     "value": "2026-10-16"
+    },
+    {
+     "name": "simdi",
+     "value": "2026-10-16T14:30:00"
+    },
+    {
+     "name": "kullanici",
+     "value": "Ayşe Yılmaz"
+    }
+   ],
+   "object": {
+    "length": 40,
+    "area": 100,
+    "vertices": 4
+   },
+   "attrs": {
+    "Durum": "iyi",
+    "Kat": "3",
+    "Tür": "konut",
+    "Malzeme": "ahsap"
+   },
+   "items": [
+    {
+     "id": "genel",
+     "shown": true
+    },
+    {
+     "id": "durum",
+     "shown": true,
+     "required": true
+    },
+    {
+     "id": "kat",
+     "shown": true
+    },
+    {
+     "id": "kod",
+     "shown": true
+    },
+    {
+     "id": "tur",
+     "shown": true
+    },
+    {
+     "id": "malzeme",
+     "shown": true,
+     "choices": [
+      "ahsap",
+      "beton",
+      "celik",
+      "tas"
+     ]
+    },
+    {
+     "id": "hesap",
+     "shown": true
+    },
+    {
+     "id": "yukseklik",
+     "shown": true,
+     "readOnly": true
+    },
+    {
+     "id": "taban",
+     "shown": true,
+     "readOnly": true
+    },
+    {
+     "id": "riskli",
+     "shown": true,
+     "readOnly": true
+    },
+    {
+     "id": "puan",
+     "shown": true,
+     "readOnly": true
+    },
+    {
+     "id": "toplam",
+     "shown": true,
+     "text": "Toplam alan  m², 4 köşe."
+    },
+    {
+     "id": "aciklama",
+     "shown": false
+    },
+    {
+     "id": "tarih",
+     "shown": true
+    },
+    {
+     "id": "kayit",
+     "shown": true
+    }
+   ],
+   "issues": []
+  },
+  {
    "name": "değiştirilebilir hesap açıktır; öbür hesaplar salt okunur",
    "fields": [
     {
@@ -23882,6 +24503,786 @@
     "Taban": "100",
     "Riskli": "true",
     "Puan": "7"
+   },
+   "issues": []
+  },
+  {
+   "name": "kullanımdan kalkmış değer yeni yazılamaz",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "required": true,
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ]
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Yükseklik",
+     "kind": "decimal",
+     "scale": 2
+    },
+    {
+     "name": "Taban",
+     "kind": "decimal",
+     "scale": 2
+    },
+    {
+     "name": "Riskli",
+     "kind": "boolean"
+    },
+    {
+     "name": "Kod",
+     "kind": "text",
+     "length": 20
+    },
+    {
+     "name": "Tür",
+     "kind": "text",
+     "values": [
+      {
+       "code": "konut",
+       "label": "Konut"
+      },
+      {
+       "code": "sanayi",
+       "label": "Sanayi"
+      }
+     ]
+    },
+    {
+     "name": "Malzeme",
+     "kind": "text",
+     "values": [
+      {
+       "code": "ahsap",
+       "label": "Ahşap",
+       "retired": true
+      },
+      {
+       "code": "beton",
+       "label": "Betonarme"
+      },
+      {
+       "code": "celik",
+       "label": "Çelik"
+      },
+      {
+       "code": "tas",
+       "label": "Taş"
+      }
+     ]
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Kayıt",
+     "kind": "text",
+     "length": 64
+    },
+    {
+     "name": "Puan",
+     "kind": "integer",
+     "min": "0",
+     "max": "10"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "group",
+      "id": "genel",
+      "label": "Genel",
+      "columns": 2,
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi"
+       },
+       {
+        "type": "field",
+        "id": "kod",
+        "field": "Kod",
+        "unique": true,
+        "defaultExpr": "'B-' || Kat"
+       },
+       {
+        "type": "field",
+        "id": "tur",
+        "field": "Tür"
+       },
+       {
+        "type": "field",
+        "id": "malzeme",
+        "field": "Malzeme",
+        "choiceFilter": "Tür <> 'sanayi' veya @secenek = 'beton' veya @secenek = 'celik'"
+       }
+      ]
+     },
+     {
+      "type": "group",
+      "id": "hesap",
+      "label": "Hesaplanan",
+      "collapsed": true,
+      "items": [
+       {
+        "type": "field",
+        "id": "yukseklik",
+        "field": "Yükseklik",
+        "calculate": "Kat * 3"
+       },
+       {
+        "type": "field",
+        "id": "taban",
+        "field": "Taban",
+        "calculate": "$alan"
+       },
+       {
+        "type": "field",
+        "id": "riskli",
+        "field": "Riskli",
+        "calculate": "Kat > 5"
+       },
+       {
+        "type": "field",
+        "id": "puan",
+        "field": "Puan",
+        "calculate": "Kat - 1"
+       },
+       {
+        "type": "note",
+        "id": "toplam",
+        "text": "Toplam alan {Kat * Taban} m², {$köşe} köşe."
+       }
+      ]
+     },
+     {
+      "type": "field",
+      "id": "aciklama",
+      "field": "Açıklama",
+      "visibleWhen": "Durum = 'inceleme'",
+      "checks": [
+       {
+        "rule": "uzunluk(Açıklama) >= 5",
+        "message": "Açıklama çok kısa."
+       },
+       {
+        "rule": "uzunluk(Açıklama) >= 20",
+        "message": "Açıklama kısa görünüyor.",
+        "warning": true
+       }
+      ]
+     },
+     {
+      "type": "field",
+      "id": "tarih",
+      "field": "Tarih",
+      "defaultExpr": "@tarih"
+     },
+     {
+      "type": "field",
+      "id": "kayit",
+      "field": "Kayıt",
+      "defaultExpr": "@kullanici"
+     }
+    ]
+   },
+   "variables": [
+    {
+     "name": "tarih",
+     "value": "2026-10-16"
+    },
+    {
+     "name": "simdi",
+     "value": "2026-10-16T14:30:00"
+    },
+    {
+     "name": "kullanici",
+     "value": "Ayşe Yılmaz"
+    }
+   ],
+   "object": {
+    "length": 40,
+    "area": 100,
+    "vertices": 4
+   },
+   "before": {
+    "Durum": "iyi",
+    "Kat": "3",
+    "Yükseklik": "9",
+    "Taban": "100",
+    "Riskli": "false",
+    "Puan": "2",
+    "Tür": "konut"
+   },
+   "values": [
+    [
+     "Malzeme",
+     "ahsap"
+    ]
+   ],
+   "new": false,
+   "after": {
+    "Durum": "iyi",
+    "Kat": "3",
+    "Yükseklik": "9",
+    "Taban": "100",
+    "Riskli": "false",
+    "Puan": "2",
+    "Tür": "konut",
+    "Malzeme": "ahsap"
+   },
+   "issues": [
+    {
+     "code": "form_value_retired",
+     "severity": "error",
+     "item": "malzeme",
+     "field": "Malzeme"
+    }
+   ]
+  },
+  {
+   "name": "kayıt tuttuğu kalkmış değeri korur, başka alanı değişir",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "required": true,
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ]
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Yükseklik",
+     "kind": "decimal",
+     "scale": 2
+    },
+    {
+     "name": "Taban",
+     "kind": "decimal",
+     "scale": 2
+    },
+    {
+     "name": "Riskli",
+     "kind": "boolean"
+    },
+    {
+     "name": "Kod",
+     "kind": "text",
+     "length": 20
+    },
+    {
+     "name": "Tür",
+     "kind": "text",
+     "values": [
+      {
+       "code": "konut",
+       "label": "Konut"
+      },
+      {
+       "code": "sanayi",
+       "label": "Sanayi"
+      }
+     ]
+    },
+    {
+     "name": "Malzeme",
+     "kind": "text",
+     "values": [
+      {
+       "code": "ahsap",
+       "label": "Ahşap",
+       "retired": true
+      },
+      {
+       "code": "beton",
+       "label": "Betonarme"
+      },
+      {
+       "code": "celik",
+       "label": "Çelik"
+      },
+      {
+       "code": "tas",
+       "label": "Taş"
+      }
+     ]
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Kayıt",
+     "kind": "text",
+     "length": 64
+    },
+    {
+     "name": "Puan",
+     "kind": "integer",
+     "min": "0",
+     "max": "10"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "group",
+      "id": "genel",
+      "label": "Genel",
+      "columns": 2,
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi"
+       },
+       {
+        "type": "field",
+        "id": "kod",
+        "field": "Kod",
+        "unique": true,
+        "defaultExpr": "'B-' || Kat"
+       },
+       {
+        "type": "field",
+        "id": "tur",
+        "field": "Tür"
+       },
+       {
+        "type": "field",
+        "id": "malzeme",
+        "field": "Malzeme",
+        "choiceFilter": "Tür <> 'sanayi' veya @secenek = 'beton' veya @secenek = 'celik'"
+       }
+      ]
+     },
+     {
+      "type": "group",
+      "id": "hesap",
+      "label": "Hesaplanan",
+      "collapsed": true,
+      "items": [
+       {
+        "type": "field",
+        "id": "yukseklik",
+        "field": "Yükseklik",
+        "calculate": "Kat * 3"
+       },
+       {
+        "type": "field",
+        "id": "taban",
+        "field": "Taban",
+        "calculate": "$alan"
+       },
+       {
+        "type": "field",
+        "id": "riskli",
+        "field": "Riskli",
+        "calculate": "Kat > 5"
+       },
+       {
+        "type": "field",
+        "id": "puan",
+        "field": "Puan",
+        "calculate": "Kat - 1"
+       },
+       {
+        "type": "note",
+        "id": "toplam",
+        "text": "Toplam alan {Kat * Taban} m², {$köşe} köşe."
+       }
+      ]
+     },
+     {
+      "type": "field",
+      "id": "aciklama",
+      "field": "Açıklama",
+      "visibleWhen": "Durum = 'inceleme'",
+      "checks": [
+       {
+        "rule": "uzunluk(Açıklama) >= 5",
+        "message": "Açıklama çok kısa."
+       },
+       {
+        "rule": "uzunluk(Açıklama) >= 20",
+        "message": "Açıklama kısa görünüyor.",
+        "warning": true
+       }
+      ]
+     },
+     {
+      "type": "field",
+      "id": "tarih",
+      "field": "Tarih",
+      "defaultExpr": "@tarih"
+     },
+     {
+      "type": "field",
+      "id": "kayit",
+      "field": "Kayıt",
+      "defaultExpr": "@kullanici"
+     }
+    ]
+   },
+   "variables": [
+    {
+     "name": "tarih",
+     "value": "2026-10-16"
+    },
+    {
+     "name": "simdi",
+     "value": "2026-10-16T14:30:00"
+    },
+    {
+     "name": "kullanici",
+     "value": "Ayşe Yılmaz"
+    }
+   ],
+   "object": {
+    "length": 40,
+    "area": 100,
+    "vertices": 4
+   },
+   "before": {
+    "Durum": "iyi",
+    "Kat": "3",
+    "Yükseklik": "9",
+    "Taban": "100",
+    "Riskli": "false",
+    "Puan": "2",
+    "Tür": "konut",
+    "Malzeme": "ahsap"
+   },
+   "values": [
+    [
+     "kat-sayisi",
+     "4"
+    ]
+   ],
+   "new": false,
+   "after": {
+    "Durum": "iyi",
+    "Kat": "4",
+    "Yükseklik": "12",
+    "Taban": "100",
+    "Riskli": "false",
+    "Puan": "3",
+    "Tür": "konut",
+    "Malzeme": "ahsap"
+   },
+   "issues": []
+  },
+  {
+   "name": "kalkmış değerden geçerli değere geçilir",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "required": true,
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ]
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Yükseklik",
+     "kind": "decimal",
+     "scale": 2
+    },
+    {
+     "name": "Taban",
+     "kind": "decimal",
+     "scale": 2
+    },
+    {
+     "name": "Riskli",
+     "kind": "boolean"
+    },
+    {
+     "name": "Kod",
+     "kind": "text",
+     "length": 20
+    },
+    {
+     "name": "Tür",
+     "kind": "text",
+     "values": [
+      {
+       "code": "konut",
+       "label": "Konut"
+      },
+      {
+       "code": "sanayi",
+       "label": "Sanayi"
+      }
+     ]
+    },
+    {
+     "name": "Malzeme",
+     "kind": "text",
+     "values": [
+      {
+       "code": "ahsap",
+       "label": "Ahşap",
+       "retired": true
+      },
+      {
+       "code": "beton",
+       "label": "Betonarme"
+      },
+      {
+       "code": "celik",
+       "label": "Çelik"
+      },
+      {
+       "code": "tas",
+       "label": "Taş"
+      }
+     ]
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Kayıt",
+     "kind": "text",
+     "length": 64
+    },
+    {
+     "name": "Puan",
+     "kind": "integer",
+     "min": "0",
+     "max": "10"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "group",
+      "id": "genel",
+      "label": "Genel",
+      "columns": 2,
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi"
+       },
+       {
+        "type": "field",
+        "id": "kod",
+        "field": "Kod",
+        "unique": true,
+        "defaultExpr": "'B-' || Kat"
+       },
+       {
+        "type": "field",
+        "id": "tur",
+        "field": "Tür"
+       },
+       {
+        "type": "field",
+        "id": "malzeme",
+        "field": "Malzeme",
+        "choiceFilter": "Tür <> 'sanayi' veya @secenek = 'beton' veya @secenek = 'celik'"
+       }
+      ]
+     },
+     {
+      "type": "group",
+      "id": "hesap",
+      "label": "Hesaplanan",
+      "collapsed": true,
+      "items": [
+       {
+        "type": "field",
+        "id": "yukseklik",
+        "field": "Yükseklik",
+        "calculate": "Kat * 3"
+       },
+       {
+        "type": "field",
+        "id": "taban",
+        "field": "Taban",
+        "calculate": "$alan"
+       },
+       {
+        "type": "field",
+        "id": "riskli",
+        "field": "Riskli",
+        "calculate": "Kat > 5"
+       },
+       {
+        "type": "field",
+        "id": "puan",
+        "field": "Puan",
+        "calculate": "Kat - 1"
+       },
+       {
+        "type": "note",
+        "id": "toplam",
+        "text": "Toplam alan {Kat * Taban} m², {$köşe} köşe."
+       }
+      ]
+     },
+     {
+      "type": "field",
+      "id": "aciklama",
+      "field": "Açıklama",
+      "visibleWhen": "Durum = 'inceleme'",
+      "checks": [
+       {
+        "rule": "uzunluk(Açıklama) >= 5",
+        "message": "Açıklama çok kısa."
+       },
+       {
+        "rule": "uzunluk(Açıklama) >= 20",
+        "message": "Açıklama kısa görünüyor.",
+        "warning": true
+       }
+      ]
+     },
+     {
+      "type": "field",
+      "id": "tarih",
+      "field": "Tarih",
+      "defaultExpr": "@tarih"
+     },
+     {
+      "type": "field",
+      "id": "kayit",
+      "field": "Kayıt",
+      "defaultExpr": "@kullanici"
+     }
+    ]
+   },
+   "variables": [
+    {
+     "name": "tarih",
+     "value": "2026-10-16"
+    },
+    {
+     "name": "simdi",
+     "value": "2026-10-16T14:30:00"
+    },
+    {
+     "name": "kullanici",
+     "value": "Ayşe Yılmaz"
+    }
+   ],
+   "object": {
+    "length": 40,
+    "area": 100,
+    "vertices": 4
+   },
+   "before": {
+    "Durum": "iyi",
+    "Kat": "3",
+    "Yükseklik": "9",
+    "Taban": "100",
+    "Riskli": "false",
+    "Puan": "2",
+    "Tür": "konut",
+    "Malzeme": "ahsap"
+   },
+   "values": [
+    [
+     "Malzeme",
+     "tas"
+    ]
+   ],
+   "new": false,
+   "after": {
+    "Durum": "iyi",
+    "Kat": "3",
+    "Yükseklik": "9",
+    "Taban": "100",
+    "Riskli": "false",
+    "Puan": "2",
+    "Tür": "konut",
+    "Malzeme": "tas"
    },
    "issues": []
   },

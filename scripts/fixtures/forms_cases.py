@@ -680,9 +680,13 @@ class Form:
         if "choiceFilter" not in x:
             return None
         f = self.layer(x)
+        value = attrs.get(f["name"])
+        held = ([p.strip() for p in value.split(";")] if f.get("multiple") else [value]) if value is not None else []
+        # A retired value is offered only to the record that holds it (docs/adr/0418).
         return [c["code"] for c in f.get("values", [])
-                if holds(x["choiceFilter"], self.fields, attrs,
-                         self.ctx(obj, {CHOICE_CODE: c["code"], CHOICE_LABEL: c["label"]}))]
+                if (not c.get("retired") or c["code"] in held)
+                and holds(x["choiceFilter"], self.fields, attrs,
+                          self.ctx(obj, {CHOICE_CODE: c["code"], CHOICE_LABEL: c["label"]}))]
 
     def described(self, attrs, obj=None):
         states = self.states(attrs, obj)
@@ -864,6 +868,7 @@ class Form:
                 changed.append(key)
         after, completed = self.complete(written, obj, new)
         issues += self.locked(changed, after, obj)
+        issues += self.retired(changed, before, after)
         for key, name, value in asked:
             if after.get(name) != value:
                 issues.append(issue("form_read_only", True, self.item_of(key), key))
@@ -887,7 +892,24 @@ class Form:
                 changed.append(key_of(f))
             else:
                 issues.append(issue("form_not_on_form", True, None, key_of(f)))
-        return issues + self.locked(changed, completed, obj) + worked + self.validate(completed, obj)
+        return issues + self.locked(changed, completed, obj) + self.retired(changed, before, completed) + worked \
+            + self.validate(completed, obj)
+
+    def retired(self, changed, before, after):
+        """A changed field given a retired value its record did not hold (docs/adr/0418)."""
+        issues = []
+        for key in changed:
+            f = next(x for x in self.fields if key_of(x) == key)
+            gone = {c["code"] for c in f.get("values", []) if c.get("retired")}
+
+            def parts(v):
+                if v is None:
+                    return []
+                return [p.strip() for p in v.split(";")] if f.get("multiple") else [v]
+            held = [p for p in parts(before.get(f["name"])) if p in gone]
+            if any(p in gone and p not in held for p in parts(after.get(f["name"]))):
+                issues.append(issue("form_value_retired", True, self.item_of(key), key))
+        return issues
 
 
 def text_or_none(v):
@@ -1399,6 +1421,13 @@ def calc_cases():
     record("uyarı denetimi kaydı durdurmaz; sert denetim durdurur",
            {"Durum": "inceleme", "Kat": "3", "Açıklama": "Çatı"})
     record("yalnız uyarı", {"Durum": "inceleme", "Kat": "3", "Açıklama": "Çatı arası bakılmalı."})
+    old_fields = [dict(f, values=[dict(c, retired=True) if c["code"] == "ahsap" else c for c in f["values"]])
+                  if f["name"] == "Malzeme" else f for f in CALC_FIELDS]
+    for name, attrs in (("kalkmış değer sunulmaz", {"Durum": "iyi", "Kat": "3", "Tür": "konut", "Malzeme": "beton"}),
+                        ("kalkmış değeri tutan kayda o da sunulur, geçerlidir", {"Durum": "iyi", "Kat": "3", "Tür": "konut", "Malzeme": "ahsap"})):
+        form = Form(CALC_BODY, old_fields, GIVEN)
+        records.append({"name": name, "fields": old_fields, "body": CALC_BODY, "variables": GIVEN, "object": SQUARE,
+                        "attrs": attrs, "items": form.described(attrs, SQUARE), "issues": form.validate(attrs, SQUARE)})
     record("değiştirilebilir hesap açıktır; öbür hesaplar salt okunur",
            {"Durum": "iyi", "Kat": "3", "Yükseklik": "10"}, body=calc_with(lambda b: item(b, "yukseklik").update(overridable=True)))
 
@@ -1423,6 +1452,17 @@ def calc_cases():
     write("değiştirilebilir hesaba başka değer yazılır", base, [["Yükseklik", "10"]], body=over)
     write("değiştirilebilir hesap boşaltılınca yeniden hesaplanır", {**base, "Yükseklik": "10"}, [["Yükseklik", ""]], body=over)
     write("kat değişince yazılmış değer kalır", {**base, "Yükseklik": "10"}, [["kat-sayisi", "8"]], body=over)
+    old = [dict(f, values=[dict(c, retired=True) if c["code"] == "ahsap" else c for c in f["values"]]) if f["name"] == "Malzeme" else f
+           for f in CALC_FIELDS]
+
+    def aged(name, before, values):
+        after, issues = Form(CALC_BODY, old, GIVEN).assess(before, values, SQUARE, False)
+        assess.append({"name": name, "fields": old, "body": CALC_BODY, "variables": GIVEN, "object": SQUARE,
+                       "before": before, "values": values, "new": False, "after": after, "issues": issues})
+
+    aged("kullanımdan kalkmış değer yeni yazılamaz", {**base, "Tür": "konut"}, [["Malzeme", "ahsap"]])
+    aged("kayıt tuttuğu kalkmış değeri korur, başka alanı değişir", {**base, "Tür": "konut", "Malzeme": "ahsap"}, [["kat-sayisi", "4"]])
+    aged("kalkmış değerden geçerli değere geçilir", {**base, "Tür": "konut", "Malzeme": "ahsap"}, [["Malzeme", "tas"]])
 
     enforce = []
 

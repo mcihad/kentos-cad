@@ -1177,11 +1177,15 @@ impl<'d> Encoder<'d> {
                 e.open(values.len(), false)?;
                 for (i, c) in values.iter().enumerate() {
                     e.at(Seg::Index(i), |e| {
-                        e.open(2, true)?;
+                        e.open(2 + usize::from(c.retired), true)?;
                         e.key("code");
                         e.at(Seg::Name("code"), |e| e.text(&c.code))?;
                         e.key("label");
                         e.at(Seg::Name("label"), |e| e.text(&c.label))?;
+                        if c.retired {
+                            e.key("retired");
+                            e.w.bool(true);
+                        }
                         e.close();
                         Ok(())
                     })?;
@@ -1486,13 +1490,14 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
-    // Schema 60 (docs/adr/0401, 0408, 0410, 0412, 0413): a form of the project, a layer field's stable
-    // id, its several values or its date-and-time or time kind, a layer's table rules, or a record
-    // without a geometry.
+    // Schema 60 (docs/adr/0401, 0408, 0410, 0412, 0413, 0418): a form of the project, a layer field's
+    // stable id, its several values, a retired value or its date-and-time or time kind, a layer's
+    // table rules, or a record without a geometry.
     fn keyed(nodes: &[LayerNode]) -> bool {
         let later = |f: &kentos_contracts::LayerField| {
             f.id.is_some()
                 || f.multiple
+                || f.values.as_ref().is_some_and(|v| v.iter().any(|c| c.retired))
                 || matches!(
                     f.kind,
                     kentos_contracts::LayerFieldKind::DateTime

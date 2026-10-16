@@ -330,7 +330,7 @@ ArcGIS'in domain yaklaşımı; kodlu değer veya aralık, yeniden kullanım ve s
 - [ ] **FORM-DATA-12:** Range domain; inclusive/exclusive min/max, unit, exact decimal ve numeric/date type kurallarını desteklesin.
 - [ ] **FORM-DATA-13:** Aynı domain birden çok dataset/field'da kullanılabilsin; kullanım grafı ve type mismatch doğrulaması olsun.
 - [ ] **FORM-DATA-14:** Domain code veya type değişikliği schema/data migration gerektirsin; label değişimi kodu ve geçmiş veriyi değiştirmesin.
-- [ ] **FORM-DATA-15:** Retired domain değeri eski kayıtta görülebilsin; yeni seçim/yazma politikasını ayrı tanımla, kaydı otomatik boşaltma.
+- [x] **FORM-DATA-15:** Retired domain değeri eski kayıtta görülebilsin; yeni seçim/yazma politikasını ayrı tanımla, kaydı otomatik boşaltma. — *Yapıldı (16 Ekim; ADR 0418: `retired`, tutan kayıtta kalır ve görünür, yeni seçimde sunulmaz, formla yeniden yazılmaz).*
 - [ ] **FORM-DATA-16:** Domain listesi büyükse yetkili search/page/cache kullansın; tüm değerler her forma indirilmesin.
 - [ ] **FORM-DATA-17:** Subtype; discriminator field/code, subtype label ve alanlara özel domain/default/required/style bağlantısı taşısın.
 - [ ] **FORM-DATA-18:** Subtype değişiminde eski değerler için preserve/clear/revalidate önerisini kullanıcıya göster; geçerli değerleri gereksiz silme.

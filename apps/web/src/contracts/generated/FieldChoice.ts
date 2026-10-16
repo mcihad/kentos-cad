@@ -4,4 +4,9 @@
  * One value of a field's value list: the code written to the attribute
  * and the label shown for it.
  */
-export type FieldChoice = { code: string, label: string, };
+export type FieldChoice = { code: string, label: string, 
+/**
+ * Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new
+ * choice does not offer it, a form does not write it anew. Written only as `true`.
+ */
+retired?: boolean, };

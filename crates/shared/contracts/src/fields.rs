@@ -111,6 +111,71 @@ impl LayerFieldKind {
 pub struct FieldChoice {
     pub code: String,
     pub label: String,
+    /// Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new
+    /// choice does not offer it, a form does not write it anew. Written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub retired: bool,
+}
+
+impl FieldChoice {
+    /// A value offered for new choices.
+    pub fn new(code: impl Into<String>, label: impl Into<String>) -> FieldChoice {
+        FieldChoice {
+            code: code.into(),
+            label: label.into(),
+            retired: false,
+        }
+    }
+}
+
+impl LayerField {
+    /// Whether `code` is a retired value of the field's list (docs/adr/0418).
+    pub fn is_retired(&self, code: &str) -> bool {
+        self.values
+            .as_ref()
+            .is_some_and(|v| v.iter().any(|c| c.retired && c.code == code))
+    }
+
+    /// The list's values a choice offers to a record holding `value` (docs/adr/0418): every value
+    /// that is not retired, and a retired one the record holds, its label saying so.
+    pub fn offered_values(&self, value: &str) -> Vec<FieldChoice> {
+        let held = self.retired_in(value);
+        self.values
+            .iter()
+            .flatten()
+            .filter(|c| !c.retired || held.contains(&c.code))
+            .map(|c| FieldChoice {
+                label: if c.retired {
+                    format!("{} (kullanımdan kalktı)", c.label)
+                } else {
+                    c.label.clone()
+                },
+                ..c.clone()
+            })
+            .collect()
+    }
+
+    /// The codes of a value (each of a multiple field's) that are retired.
+    pub fn retired_in(&self, value: &str) -> Vec<String> {
+        if !self
+            .values
+            .as_ref()
+            .is_some_and(|v| v.iter().any(|c| c.retired))
+        {
+            return Vec::new();
+        }
+        let parts: Vec<&str> = if self.multiple {
+            value.split(';').map(js_trim).collect()
+        } else {
+            vec![value]
+        };
+        parts
+            .into_iter()
+            .filter(|p| self.is_retired(p))
+            .map(str::to_owned)
+            .collect()
+    }
 }
 
 /// A field of a layer (docs/adr/0199 §1): its name is the attribute's key.
@@ -828,6 +893,15 @@ pub fn field_problem(field: &LayerField) -> Option<String> {
             }
         }
     }
+    if field
+        .values
+        .as_ref()
+        .is_some_and(|v| !v.is_empty() && v.iter().all(|c| c.retired))
+    {
+        return Some(format!(
+            "“{name}” alanının bütün değerleri kullanımdan kalkmış; en az biri sunulmalı."
+        ));
+    }
     if field.multiple && kind != LayerFieldKind::Text {
         return Some(format!(
             "“{name}” alanı çok değerli olamaz: bu yalnız metin alanında olur."
@@ -842,6 +916,11 @@ pub fn field_problem(field: &LayerField) -> Option<String> {
         if !fits {
             return Some(format!(
                 "“{name}” alanının varsayılanı “{d}” alanın kurallarına uymuyor."
+            ));
+        }
+        if let Some(r) = field.retired_in(d).first() {
+            return Some(format!(
+                "“{name}” alanının varsayılanı “{r}” kullanımdan kalkmış bir değer."
             ));
         }
     }

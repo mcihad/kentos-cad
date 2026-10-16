@@ -1644,9 +1644,11 @@ fn field_rows(
             None
         } else if listed {
             let pairs: Vec<(String, String)> = match &f.values {
-                Some(list) if !list.is_empty() => list
-                    .iter()
-                    .map(|c| (c.code.clone(), c.label.clone()))
+                // A retired value only for the record holding it (docs/adr/0418).
+                Some(list) if !list.is_empty() => f
+                    .offered_values(&value)
+                    .into_iter()
+                    .map(|c| (c.code, c.label))
                     .collect(),
                 _ => vec![
                     ("true".to_owned(), "Evet".to_owned()),

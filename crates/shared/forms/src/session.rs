@@ -263,9 +263,15 @@ impl Prepared {
             );
         }
         let choices = b.choices.as_ref()?;
+        // A retired value is offered only to the record that holds it (docs/adr/0418).
+        let field = &self.fields[b.index];
+        let held = attrs
+            .get(&field.name)
+            .map_or_else(Vec::new, |v| field.retired_in(v));
         Some(
             choices
                 .iter()
+                .filter(|(code, _)| !field.is_retired(code) || held.contains(code))
                 .filter(|(_, e)| holds(e, attrs, object))
                 .map(|(code, _)| code.clone())
                 .collect(),
@@ -701,6 +707,7 @@ impl Prepared {
         }
         let (after, completed) = self.complete(&written, object, new);
         issues.extend(self.locked(&changed, &after, object));
+        issues.extend(self.retired(&changed, before, &after));
         // A calculated field given a value other than its calculation's.
         for (index, value) in asked {
             if after.get(&self.fields[index].name) != value.as_ref() {
@@ -769,12 +776,40 @@ impl Prepared {
             }
         }
         issues.extend(self.locked(&changed, &completed, object));
+        issues.extend(self.retired(&changed, before, &completed));
         issues.extend(worked);
         issues.extend(self.validate(&completed, object));
         issues
     }
 
     /// The changed fields the form hides or locks in the record after the change.
+    /// A changed field given a retired value its record did not hold (docs/adr/0418): a value the
+    /// record keeps stays, a new one is refused.
+    fn retired(&self, changed: &[usize], before: &Attrs, after: &Attrs) -> Vec<FormIssue> {
+        let mut issues = Vec::new();
+        for &index in changed {
+            let field = &self.fields[index];
+            let held = before
+                .get(&field.name)
+                .map_or_else(Vec::new, |v| field.retired_in(v));
+            let now = after
+                .get(&field.name)
+                .map_or_else(Vec::new, |v| field.retired_in(v));
+            if let Some(r) = now.iter().find(|r| !held.contains(r)) {
+                issues.push(refused(
+                    codes::VALUE_RETIRED,
+                    self.item_of(index),
+                    field.key(),
+                    format!(
+                        "“{}” alanının “{r}” değeri kullanımdan kalktı; başka bir değer seçin.",
+                        field.label()
+                    ),
+                ));
+            }
+        }
+        issues
+    }
+
     fn locked(&self, changed: &[usize], after: &Attrs, object: &Object) -> Vec<FormIssue> {
         let states = self.states(after, object);
         let mut issues = Vec::new();
@@ -1100,10 +1135,12 @@ mod tests {
             kentos_contracts::FieldChoice {
                 code: "a".into(),
                 label: "Ahşap".into(),
+                retired: false,
             },
             kentos_contracts::FieldChoice {
                 code: "b".into(),
                 label: "Betonarme".into(),
+                retired: false,
             },
         ]);
         let schema = crate::record::schema_of(std::slice::from_ref(&f), &[]);

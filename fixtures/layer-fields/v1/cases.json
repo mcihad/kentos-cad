@@ -1921,6 +1921,93 @@
         }
       ],
       "want": "“Vardiya” alanının varsayılanı “8:30” alanın kurallarına uymuyor."
+    },
+    {
+      "name": "kalkmış-değer",
+      "fields": [
+        {
+          "name": "Tür",
+          "kind": "text",
+          "values": [
+            {
+              "code": "K",
+              "label": "Konut"
+            },
+            {
+              "code": "E",
+              "label": "Eski",
+              "retired": true
+            }
+          ]
+        }
+      ],
+      "want": null
+    },
+    {
+      "name": "bütün-değerler-kalkmış",
+      "fields": [
+        {
+          "name": "Tür",
+          "kind": "text",
+          "values": [
+            {
+              "code": "E",
+              "label": "Eski",
+              "retired": true
+            }
+          ]
+        }
+      ],
+      "want": "“Tür” alanının bütün değerleri kullanımdan kalkmış; en az biri sunulmalı."
+    },
+    {
+      "name": "kalkmış-varsayılan",
+      "fields": [
+        {
+          "name": "Tür",
+          "kind": "text",
+          "values": [
+            {
+              "code": "K",
+              "label": "Konut"
+            },
+            {
+              "code": "E",
+              "label": "Eski",
+              "retired": true
+            }
+          ],
+          "default": "E"
+        }
+      ],
+      "want": "“Tür” alanının varsayılanı “E” kullanımdan kalkmış bir değer."
+    },
+    {
+      "name": "çok-değerli-kalkmış-varsayılan",
+      "fields": [
+        {
+          "name": "Kullanım",
+          "kind": "text",
+          "values": [
+            {
+              "code": "K",
+              "label": "Konut"
+            },
+            {
+              "code": "T",
+              "label": "Ticaret",
+              "retired": true
+            },
+            {
+              "code": "İ",
+              "label": "İşyeri"
+            }
+          ],
+          "multiple": true,
+          "default": "K; T"
+        }
+      ],
+      "want": "“Kullanım” alanının varsayılanı “T” kullanımdan kalkmış bir değer."
     }
   ],
   "infer": [

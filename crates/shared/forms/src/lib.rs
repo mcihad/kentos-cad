@@ -91,6 +91,8 @@ pub mod codes {
     pub const REQUIRED: &str = "form_required";
     /// A value does not keep its field's rules (kind, length, list, range).
     pub const VALUE_INVALID: &str = "form_value_invalid";
+    /// A value written anew is retired from its field's list (docs/adr/0418).
+    pub const VALUE_RETIRED: &str = "form_value_retired";
     /// A check of a shown, filled field is not true.
     pub const CHECK_FAILED: &str = "form_check_failed";
     /// A write to a field the form shows read-only.

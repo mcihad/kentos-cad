@@ -56,9 +56,11 @@ const BAR_ONE_ROW: f32 = 1370.0;
 /// or yes and no; with the one written now.
 fn choices_of(f: &LayerField, value: &str) -> (Vec<Choice>, Vec<String>, Option<usize>) {
     let pairs: Vec<(String, String)> = match &f.values {
-        Some(list) if !list.is_empty() => list
-            .iter()
-            .map(|c| (c.code.clone(), c.label.clone()))
+        // A retired value only for the record holding it (docs/adr/0418).
+        Some(list) if !list.is_empty() => f
+            .offered_values(value)
+            .into_iter()
+            .map(|c| (c.code, c.label))
             .collect(),
         _ => vec![
             ("true".to_owned(), "Evet".to_owned()),

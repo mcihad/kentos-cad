@@ -322,10 +322,12 @@ mod tests {
                     FieldChoice {
                         code: "K".into(),
                         label: "Konut".into(),
+                        retired: false,
                     },
                     FieldChoice {
                         code: "T".into(),
                         label: "Ticaret".into(),
+                        retired: false,
                     },
                 ]),
                 ..LayerField::new("Kullanım", LayerFieldKind::Text)

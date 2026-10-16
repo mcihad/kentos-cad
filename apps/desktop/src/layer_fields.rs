@@ -176,7 +176,7 @@ pub fn problem_of(rows: &[FieldRow]) -> Option<String> {
 #[derive(Debug, Clone)]
 pub struct Choices {
     row: usize,
-    list: Vec<(String, String)>,
+    list: Vec<FieldChoice>,
     /// Several of the values may be chosen (a text field's).
     multiple: bool,
 }
@@ -224,6 +224,8 @@ pub enum Event {
     OpenList(usize),
     ListCode(usize, String),
     ListLabel(usize, String),
+    /// Kullanımdan kalktı (docs/adr/0418).
+    ListRetired(usize, bool),
     ListAdd,
     ListRemove(usize),
     /// Birden çok değer seçilebilir (docs/adr/0408 §1).
@@ -419,10 +421,7 @@ impl App {
                     .rows
                     .get(i)
                     .and_then(|r| r.values.clone())
-                    .unwrap_or_default()
-                    .into_iter()
-                    .map(|c| (c.code, c.label))
-                    .collect();
+                    .unwrap_or_default();
                 let multiple = w.rows.get(i).is_some_and(|r| r.multiple);
                 w.chosen = Some(i);
                 w.choices = Some(Choices {
@@ -433,17 +432,22 @@ impl App {
             }
             Event::ListCode(i, t) => {
                 if let Some(c) = w.choices.as_mut().and_then(|c| c.list.get_mut(i)) {
-                    c.0 = t;
+                    c.code = t;
                 }
             }
             Event::ListLabel(i, t) => {
                 if let Some(c) = w.choices.as_mut().and_then(|c| c.list.get_mut(i)) {
-                    c.1 = t;
+                    c.label = t;
+                }
+            }
+            Event::ListRetired(i, on) => {
+                if let Some(c) = w.choices.as_mut().and_then(|c| c.list.get_mut(i)) {
+                    c.retired = on;
                 }
             }
             Event::ListAdd => {
                 if let Some(c) = w.choices.as_mut() {
-                    c.list.push((String::new(), String::new()));
+                    c.list.push(FieldChoice::new("", ""));
                 }
             }
             Event::ListRemove(i) => {
@@ -460,12 +464,7 @@ impl App {
                 if let Some(c) = w.choices.take()
                     && let Some(r) = w.rows.get_mut(c.row)
                 {
-                    r.values = (!c.list.is_empty()).then(|| {
-                        c.list
-                            .into_iter()
-                            .map(|(code, label)| FieldChoice { code, label })
-                            .collect()
-                    });
+                    r.values = (!c.list.is_empty()).then_some(c.list);
                     r.multiple = c.multiple && r.values.is_some();
                 }
             }
@@ -790,10 +789,13 @@ impl App {
             row![
                 container(label::caption("Kod")).width(Length::Fixed(140.0)),
                 container(label::caption("Etiket")).width(Length::Fixed(200.0)),
+                label::caption("Kalktı"),
             ]
             .spacing(6),
         );
-        for (i, (code, label_text)) in c.list.iter().enumerate() {
+        for (i, choice) in c.list.iter().enumerate() {
+            let (code, label_text) = (&choice.code, &choice.label);
+            let retired = choice.retired;
             list = list.push(
                 row![
                     container(
@@ -810,6 +812,13 @@ impl App {
                             .style(style::field::input)
                     )
                     .width(Length::Fixed(200.0)),
+                    kentos_ui::widget::tip(
+                        words::check(retired, "", Some(msg(Event::ListRetired(i, !retired)))),
+                        kentos_ui::widget::Tip::new("Kullanımdan kalktı").body(
+                            "Tutan kayıtta kalır ve görünür; yeni seçimde sunulmaz, formla yeniden yazılmaz."
+                        ),
+                        iced::widget::tooltip::Position::Top,
+                    ),
                     button(icon(kentos_ui::icon::Icon::Close).size(12.0))
                         .style(style::button::subtle)
                         .padding(4)

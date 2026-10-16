@@ -3704,6 +3704,10 @@
               },
               "label": {
                 "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -13619,6 +13623,10 @@
               },
               "label": {
                 "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -21484,6 +21492,10 @@
               },
               "label": {
                 "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -126913,6 +126925,10 @@
               },
               "label": {
                 "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -135619,6 +135635,10 @@
               },
               "label": {
                 "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -144448,6 +144468,10 @@
               },
               "label": {
                 "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -303325,6 +303349,10 @@
               },
               "label": {
                 "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -304182,6 +304210,10 @@
               },
               "label": {
                 "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -308210,6 +308242,10 @@
               },
               "label": {
                 "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -310620,6 +310656,10 @@
               },
               "label": {
                 "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -312757,6 +312797,10 @@
               },
               "label": {
                 "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -314897,6 +314941,10 @@
               },
               "label": {
                 "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -317043,6 +317091,10 @@
               },
               "label": {
                 "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -319965,6 +320017,10 @@
               },
               "label": {
                 "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -322424,6 +322480,10 @@
               },
               "label": {
                 "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -324303,6 +324363,10 @@
               },
               "label": {
                 "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -335906,6 +335970,10 @@
               },
               "label": {
                 "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -336106,6 +336174,10 @@
               },
               "label": {
                 "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [

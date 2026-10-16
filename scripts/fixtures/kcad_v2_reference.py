@@ -792,7 +792,8 @@ FIELD_KINDS = ("text", "integer", "decimal", "date", "boolean", "datetime", "tim
 def layer_field(f):
     """A layer's field (schema 26, docs/adr/0199 §1): its name and kind, then what it has; `required` only when true."""
     assert f.get("required", True) is True, f"alan {f.get('name')}: required yalnız true yazılır"
-    choice = lambda c: cmap(fields(c, {"code": (text, True), "label": (text, True)}, "değer"))
+    # Schema 60 (docs/adr/0418): a retired value.
+    choice = lambda c: cmap(fields(c, {"code": (text, True), "label": (text, True), "retired": (boolean, False)}, "değer"))
     table = {
         # Schema 60 (docs/adr/0401 §2): the field's stable id, when it has one.
         "id": (text, False),
@@ -1970,7 +1971,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
 
     # Schema 60 (docs/adr/0401): a form of the project, or a layer field's stable id.
     def keyed(nodes):
-        return any(any("id" in f or f.get("multiple") or f["kind"] in ("datetime", "time") for f in n.get("fields", []))
+        return any(any("id" in f or f.get("multiple") or f["kind"] in ("datetime", "time")
+                       or any(c.get("retired") for c in f.get("values", [])) for f in n.get("fields", []))
                    or keyed(n.get("children", [])) for n in nodes)
 
     # A record without a geometry is schema 60's too (docs/adr/0410 §2).
@@ -3687,18 +3689,35 @@ def build():
     assert keyed_payload.count(b"\x67version\x18\x3c") == 1, "a field's id alone is schema 60"
     out["broken/field-id-in-schema-59.kcad"] = container(keyed_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
     # A date and time field alone is schema 60's (docs/adr/0412 §4).
+    def unretired(d):
+        """The sample without its retired value: another rule of schema 60 alone."""
+        for f in d["layers"][0]["fields"]:
+            if "values" in f:
+                f["values"] = [c for c in f["values"] if not c.get("retired")]
+
     timed = copy.deepcopy(load("forms.json"))
     timed["settings"].pop("forms")
     timed["layers"][0]["fields"] = [f for f in timed["layers"][0]["fields"] if f["kind"] == "datetime"]
     timed["layers"][0].pop("tableStyles")
+    unretired(timed)
     timed_payload = document(timed)
     assert timed_payload.count(b"\x67version\x18\x3c") == 1, "a date and time field alone is schema 60"
     out["broken/field-datetime-in-schema-59.kcad"] = container(timed_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
+    # A retired value alone is schema 60's (docs/adr/0418).
+    aged = copy.deepcopy(load("forms.json"))
+    aged["settings"].pop("forms")
+    aged["layers"][0].pop("tableStyles")
+    aged["layers"][0]["fields"] = [{k: v for k, v in f.items() if k != "id"} for f in aged["layers"][0]["fields"]
+                                   if f["kind"] not in ("datetime", "time") and not f.get("multiple")]
+    aged_payload = document(aged)
+    assert aged_payload.count(b"\x67version\x18\x3c") == 1, "a retired value alone is schema 60"
+    out["broken/value-retired-in-schema-59.kcad"] = container(aged_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
     # A layer's table rules alone are schema 60's (docs/adr/0413 §3).
     styled = copy.deepcopy(load("forms.json"))
     styled["settings"].pop("forms")
     styled["layers"][0]["fields"] = [{k: v for k, v in f.items() if k != "id"} for f in styled["layers"][0]["fields"]
                                      if f["kind"] not in ("datetime", "time") and not f.get("multiple")]
+    unretired(styled)
     styled_payload = document(styled)
     assert styled_payload.count(b"\x67version\x18\x3c") == 1, "a table's rules alone are schema 60"
     out["broken/table-styles-in-schema-59.kcad"] = container(styled_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))

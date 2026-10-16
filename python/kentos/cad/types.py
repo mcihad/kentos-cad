@@ -10505,14 +10505,20 @@ class FeatureFeed(_Model):
 class FieldChoice(_Model):
     """One value of a field's value list: the code written to the attribute
     and the label shown for it.
+    Attributes:
+        retired: Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new
+            choice does not offer it, a form does not write it anew. Written only as `true`.
     """
     code: str
     label: str
+    retired: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["code"] = self.code
         out["label"] = self.label
+        if self.retired is not UNSET:
+            out["retired"] = self.retired
         return out
 
     @classmethod
@@ -10520,6 +10526,7 @@ class FieldChoice(_Model):
         return cls(
             code=data["code"],
             label=data["label"],
+            retired=data.get("retired", UNSET),
         )
 
 

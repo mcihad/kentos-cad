@@ -67,6 +67,7 @@ impl List {
             .map(|(code, label, _)| FieldChoice {
                 code: code.clone(),
                 label: label.clone(),
+                retired: false,
             })
             .collect()
     }

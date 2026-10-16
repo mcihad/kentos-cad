@@ -250,6 +250,11 @@
             {
               "code": "inceleme",
               "label": "Ek inceleme gerekli"
+            },
+            {
+              "code": "eski",
+              "label": "Eski sınıflama",
+              "retired": true
             }
           ]
         },

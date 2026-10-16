@@ -2156,9 +2156,11 @@ fn entry_control<'a>(
             })
             .unwrap_or_default()
     });
+    // A retired value only for the record holding it (docs/adr/0418).
+    let listed = field.offered_values(e.after.get(&field.name).map_or("", String::as_str));
     let choices: Vec<(String, String)> = match &field.values {
         _ if looked.is_some() => looked.clone().unwrap_or_default(),
-        Some(list) if !list.is_empty() => list
+        Some(list) if !list.is_empty() => listed
             .iter()
             .filter(|c| offered.is_none_or(|o| o.contains(&c.code)))
             .map(|c| (c.code.clone(), c.label.clone()))
@@ -2300,12 +2302,14 @@ fn entry_control<'a>(
             group.into()
         }
         FormWidget::Segmented if !read_only => {
+            let held = field.retired_in(e.after.get(&field.name).map_or("", String::as_str));
             let opts: Vec<Opt<'a>> = field
                 .values
                 .as_ref()
                 .filter(|v| !v.is_empty())
                 .map(|v| {
                     v.iter()
+                        .filter(|c| !c.retired || held.contains(&c.code))
                         .filter(|c| offered.is_none_or(|o| o.contains(&c.code)))
                         .enumerate()
                         .map(|(i, c)| Opt(i, c.label.as_str()))

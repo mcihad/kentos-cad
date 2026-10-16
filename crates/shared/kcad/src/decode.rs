@@ -1280,7 +1280,7 @@ fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
             "alias" => alias = Some(text(r)?),
             "scale" => scale = Some(count(r)?),
             "length" => length = Some(count(r)?),
-            "values" => values = Some(list(r, |r, _| field_choice(r))?),
+            "values" => values = Some(list(r, |r, _| field_choice(r, ids))?),
             "default" => default = Some(text(r)?),
             "required" => must = Some(r.bool()?),
             "multiple" if ids => many = Some(r.bool()?),
@@ -1310,19 +1310,28 @@ fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
     })
 }
 
-fn field_choice(r: &mut Reader<'_>) -> Result<FieldChoice, KcadError> {
-    let (mut code, mut label) = (None, None);
+/// A value of a field's list; `later`: schema 60's `retired` is read (docs/adr/0418).
+fn field_choice(r: &mut Reader<'_>, later: bool) -> Result<FieldChoice, KcadError> {
+    let (mut code, mut label, mut retired) = (None, None, None);
     map(r, |r, key| {
         match key {
             "code" => code = Some(text(r)?),
             "label" => label = Some(text(r)?),
+            "retired" if later => retired = Some(r.bool()?),
             _ => return Err(unknown(r)),
         }
         Ok(())
     })?;
+    if retired == Some(false) {
+        return Err(r.fail(
+            Code::BadValue,
+            "retired yalnız true yazılır; değilse yazılmaz",
+        ));
+    }
     Ok(FieldChoice {
         code: required(r, code, "code")?,
         label: required(r, label, "label")?,
+        retired: retired == Some(true),
     })
 }
 

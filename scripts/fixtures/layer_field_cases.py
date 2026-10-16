@@ -370,6 +370,9 @@ def field_problem(f):
                 return f"“{name}” çok değerli; değer listesinin kodlarında ve etiketlerinde “;” olamaz."
             codes.add(code)
             labels.add(folded(trim(label)))
+    # docs/adr/0418: at least one value is offered; the default is not retired.
+    if f.get("values") and all(v.get("retired") for v in f["values"]):
+        return f"“{name}” alanının bütün değerleri kullanımdan kalkmış; en az biri sunulmalı."
     if f.get("multiple") and k != "text":
         return f"“{name}” alanı çok değerli olamaz: bu yalnız metin alanında olur."
     if "default" in f:
@@ -377,6 +380,11 @@ def field_problem(f):
         r = check({**f, "required": False}, d)
         if trim(d) == "" or "error" in r or r["value"] != d:
             return f"“{name}” alanının varsayılanı “{d}” alanın kurallarına uymuyor."
+        gone = [v["code"] for v in f.get("values", []) if v.get("retired")]
+        parts = [trim(p) for p in d.split(";")] if f.get("multiple") else [d]
+        for p in parts:
+            if p in gone:
+                return f"“{name}” alanının varsayılanı “{p}” kullanımdan kalkmış bir değer."
     return None
 
 
@@ -529,6 +537,12 @@ PROBLEMS = [
     ("saatte-liste", [{**TM, "values": [{"code": "08:00:00", "label": "Sabah"}]}]),
     ("saat-varsayılanı", [{**TM, "default": "08:30:00"}, {**DT, "default": "2026-10-16T08:30:00"}]),
     ("saat-varsayılanı-tek-biçim", [{**TM, "default": "8:30"}]),
+    ("kalkmış-değer", [{"name": "Tür", "kind": "text", "values": [{"code": "K", "label": "Konut"}, {"code": "E", "label": "Eski", "retired": True}]}]),
+    ("bütün-değerler-kalkmış", [{"name": "Tür", "kind": "text", "values": [{"code": "E", "label": "Eski", "retired": True}]}]),
+    ("kalkmış-varsayılan", [{"name": "Tür", "kind": "text", "values": [{"code": "K", "label": "Konut"}, {"code": "E", "label": "Eski", "retired": True}],
+                             "default": "E"}]),
+    ("çok-değerli-kalkmış-varsayılan", [{**MANY, "values": [dict(v, retired=True) if v["code"] == "T" else v for v in MANY["values"]],
+                                         "default": "K; T"}]),
 ]
 
 INFER = [
