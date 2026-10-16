@@ -300,6 +300,18 @@
           "name": "Vardiya",
           "kind": "time"
         }
+      ],
+      "tableStyles": [
+        {
+          "condition": "Durum = 'inceleme'",
+          "background": "#FFF4E5",
+          "color": "#9A3412"
+        },
+        {
+          "field": "Kat",
+          "condition": "Kat > 5",
+          "bold": true
+        }
       ]
     }
   ],

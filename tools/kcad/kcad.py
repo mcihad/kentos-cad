@@ -2789,6 +2789,8 @@ class _Schema:
                 **({"compose": (self.layer_compose_, False)} if self.compose else {}),
                 **({"plot": (self.only_false, False)} if self.look else {}),
                 **({"frozen": (self.only_true, False)} if self.frozen else {}),
+                # Schema 60 (docs/adr/0413 §3): the attribute table's rules.
+                **({"tableStyles": (self.table_styles_, False)} if self.forms else {}),
                 "type": (self.enum(("group", "layer")), True),
                 "style": (self.layer_style, True),
                 "locked": (self.bool, True),
@@ -2821,7 +2823,40 @@ class _Schema:
             self.fail("bad_value", "grubun bilgi kartı olmaz; kart yalnız katmanındır")
         if "compose" in n and n["type"] == "group":
             self.fail("bad_value", "grubun katman çizimi olmaz; katman çizimi yalnız katmanındır")
+        if "tableStyles" in n and n["type"] == "group":
+            self.fail("bad_value", "grubun koşullu biçimi olmaz; yalnız katmanın olur")
         return n
+
+    # Schema 60's table rules (docs/adr/0413 §1): field by field, then the rules' rule; `bold` only true, the list not
+    # empty, at most 50.
+
+    def table_styles_(self, v):
+        def only_true(v):
+            if self.bool(v) is not True:
+                self.fail("bad_value", "bold yalnız true yazılır")
+            return True
+
+        rule = self.fields({"field": (self.text, False), "condition": (self.text, True), "background": (self.text, False),
+                            "color": (self.text, False), "bold": (only_true, False)})
+        rules = self.array(rule)(v)
+        if not rules:
+            self.fail("bad_value", "boş liste yazılmaz; kural yoksa alan hiç yazılmaz")
+        if len(rules) > 50:
+            self.fail("bad_value", f"Bir katmanın tablosunda en çok 50 biçim kuralı olur; {len(rules)} verildi.")
+        hexed = lambda c: len(c) == 7 and c[0] == "#" and all(x in "0123456789abcdefABCDEF" for x in c[1:])  # noqa: E731
+        for i, r in enumerate(rules, 1):
+            if not r["condition"].strip():
+                self.fail("bad_value", f"{i}. kuralın koşulu boş.")
+            if len(r["condition"]) > 2000:
+                self.fail("bad_value", f"{i}. kuralın koşulu en çok 2000 karakter olabilir.")
+            if "field" in r and not r["field"].strip():
+                self.fail("bad_value", f"{i}. kuralın alanı boş; satır için alanı vermeyin.")
+            for key, word in (("background", "zemin"), ("color", "yazı")):
+                if key in r and not hexed(r[key]):
+                    self.fail("bad_value", f"{i}. kuralın {word} rengi “{r[key]}” #RRGGBB biçiminde değil.")
+            if "background" not in r and "color" not in r and not r.get("bold"):
+                self.fail("bad_value", f"{i}. kural hiçbir şey vermiyor: zemin rengi, yazı rengi ya da kalınlık verin.")
+        return rules
 
     # Schema 41's composition (docs/adr/0226 §3, §4): read field by field, then checked by the contract's rule; what says
     # nothing (an opacity of 1, the normal mode, a mask's switch off) is not written.

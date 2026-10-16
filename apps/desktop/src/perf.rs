@@ -135,6 +135,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
         },
         home_view: None,
         layers: vec![LayerNode {
+            table_styles: Vec::new(),
             frozen: None,
             plot: None,
             id: "parsel".into(),

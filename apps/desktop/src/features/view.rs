@@ -251,6 +251,22 @@ impl App {
         let shown = rows.shown.clone();
         let slots = rows.slots.clone();
         let count = shown.len();
+        // Koşullu biçim (docs/adr/0413 §4): each object's cells' looks, the Tür column the row's.
+        let looks: Vec<Vec<kentos_contracts::CellLook>> = if rows.styles.is_empty() {
+            Vec::new()
+        } else {
+            (0..rows.slots.len())
+                .map(|at| {
+                    std::iter::once(rows.look(at, None))
+                        .chain(
+                            table_columns
+                                .iter()
+                                .map(|c| rows.look(at, c.key.as_deref())),
+                        )
+                        .collect()
+                })
+                .collect()
+        };
         let min_width = 56.0
             + table_columns
                 .iter()
@@ -264,6 +280,8 @@ impl App {
                 let at = shown[i];
                 let slot = slots[at];
                 let line = &table_rows[at];
+                let look_of = |j: usize| looks.get(at).and_then(|l| l.get(j)).cloned();
+                let row_look = look_of(0);
                 let mut cells: Vec<Element<'_, Message>> = vec![
                     mouse_area(label::muted((i + 1).to_string()))
                         .on_double_click(msg(Event::Zoom(i)))
@@ -333,6 +351,21 @@ impl App {
                         }
                         (None, false) => label::body(value).wrapping(Wrapping::None).into(),
                     };
+                    // The rules' look over the cell: the row's background is the line's tint, a
+                    // field's own background the cell's (docs/adr/0413 §4).
+                    let shown: Element<'_, Message> =
+                        match look_of(j + 1).filter(|l| !l.is_plain() && problem.is_none()) {
+                            Some(look) => styled_cell(
+                                &line.cells[j].shown,
+                                Face {
+                                    muted: c.key.is_none(),
+                                    number: c.order == "number",
+                                },
+                                look,
+                                row_look.as_ref().and_then(|r| r.background.clone()),
+                            ),
+                            None => shown,
+                        };
                     let shown: Element<'_, Message> = match problem {
                         Some(p) => tip(
                             shown,
@@ -350,6 +383,12 @@ impl App {
                     });
                 }
                 TableLine::new(cells)
+                    .tint(
+                        row_look
+                            .as_ref()
+                            .and_then(|l| l.background.as_deref())
+                            .and_then(hex_colour),
+                    )
                     .selected(selection.contains(slot))
                     .current(false)
                     .on_press(msg(Event::Press(i)))
@@ -369,5 +408,82 @@ impl App {
             .width(Fill)
             .height(Fill)
             .into()
+    }
+}
+
+/// How a column shows its values: Tür muted, numbers in figures.
+struct Face {
+    muted: bool,
+    number: bool,
+}
+
+fn hex_colour(hex: &str) -> Option<Color> {
+    let v = u32::from_str_radix(hex.strip_prefix('#')?, 16).ok()?;
+    Some(Color::from_rgb8((v >> 16) as u8, (v >> 8) as u8, v as u8))
+}
+
+/// The text that reads on a background the rules gave but no colour: dark on light, light on dark.
+pub(crate) fn readable_on(background: Color) -> Color {
+    let lum = 0.2126 * background.r + 0.7152 * background.g + 0.0722 * background.b;
+    if lum > 0.55 {
+        Color::from_rgb8(0x1F, 0x23, 0x28)
+    } else {
+        Color::WHITE
+    }
+}
+
+/// A cell by the table's rules (docs/adr/0413 §4): its own background when a field's rule gives one
+/// other than the row's, its text's colour (readable on the background when none is given) and weight.
+fn styled_cell<'a>(
+    value: &str,
+    face: Face,
+    look: kentos_contracts::CellLook,
+    row_background: Option<String>,
+) -> Element<'a, Message> {
+    let own = look
+        .background
+        .as_deref()
+        .filter(|b| Some(*b) != row_background.as_deref())
+        .and_then(hex_colour);
+    let under = own.or_else(|| look.background.as_deref().and_then(hex_colour));
+    let colour = look
+        .color
+        .as_deref()
+        .and_then(hex_colour)
+        .or_else(|| under.map(readable_on));
+    let font = match (face.number, look.bold) {
+        (true, true) => typography::mono_strong(),
+        (true, false) => typography::mono(),
+        (false, true) => typography::ui_strong(),
+        (false, false) => typography::ui(),
+    };
+    let text = if face.muted && colour.is_none() {
+        label::muted(value.to_owned())
+    } else {
+        label::body(value.to_owned())
+    }
+    .font(font)
+    .wrapping(Wrapping::None);
+    let text = match colour {
+        Some(c) => text.style(move |_: &Theme| iced::widget::text::Style { color: Some(c) }),
+        None => text,
+    };
+    match own {
+        None => text.into(),
+        Some(background) => container(text)
+            .width(Fill)
+            .height(Fill)
+            .align_x(if face.number {
+                iced::alignment::Horizontal::Right
+            } else {
+                iced::alignment::Horizontal::Left
+            })
+            .align_y(Center)
+            .padding([0, 4])
+            .style(move |_: &Theme| container::Style {
+                background: Some(iced::Background::Color(background)),
+                ..container::Style::default()
+            })
+            .into(),
     }
 }

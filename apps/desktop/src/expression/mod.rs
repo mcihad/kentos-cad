@@ -86,6 +86,8 @@ pub(crate) enum Target {
     Labels(crate::labelling::Field),
     /// A rule of Formlar's designer (forms/designer.rs, docs/adr/0401 §5).
     Form(crate::forms::designer::Rule),
+    /// Koşullu biçim's condition of the rule at this place (forms/table_styles.rs, docs/adr/0413).
+    TableStyle(usize),
 }
 
 /// A field's values listed in the help.
@@ -791,6 +793,18 @@ impl App {
         self.open_builder_on_layer(Target::Labels(field), context, layer, value)
     }
 
+    /// Koşullu biçim's ε (forms/table_styles.rs, docs/adr/0413): the builder on a rule's condition,
+    /// the layer's fields and objects.
+    pub(crate) fn open_builder_for_table_rule(
+        &mut self,
+        at: usize,
+        layer: &str,
+        value: &str,
+    ) -> Task<Message> {
+        let context = format!("{} · Koşul", crate::forms::table_styles::TITLE);
+        self.open_builder_on_layer(Target::TableStyle(at), context, layer, value)
+    }
+
     /// Formlar's ε (forms/designer.rs, docs/adr/0401 §5): the builder on a rule of the form, the
     /// layer's fields with their kinds (a yes/no field reads true or false), its objects to preview on.
     pub(crate) fn open_builder_for_form(
@@ -1190,6 +1204,7 @@ impl App {
                 return self.labelling_event(crate::labelling::Event::Expression(field, text));
             }
             Target::Form(rule) => return self.form_rule_written(rule, text),
+            Target::TableStyle(at) => return self.table_rule_written(at, text),
         }
         Task::none()
     }

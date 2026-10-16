@@ -681,6 +681,10 @@ codes! {
     INVALID_ACTIONS = "invalid_actions", Failed, false, "Katmanın eylemleri kurallarına uymuyor.";
     /// A layer's information card against its rules.
     INVALID_CARD = "invalid_card", Failed, false, "Katmanın bilgi kartı kurallarına uymuyor.";
+    /// A field a layer's table rule names that the layer does not have (docs/adr/0413 §2).
+    FIELD_NOT_FOUND = "field_not_found", Failed, false, "Katmanda adı verilen alan yok.";
+    /// A layer's table rules against their rules (Koşullu biçim, docs/adr/0413 §1).
+    INVALID_TABLE_STYLES = "invalid_table_styles", Failed, false, "Katmanın koşullu biçim kuralları kurallarına uymuyor: boş koşul, #RRGGBB olmayan renk, hiçbir şey vermeyen kural ya da 50'den çok kural.";
     /// A template whose braces do not close, are empty, or whose expression
     /// does not compile, reads `$sıra` or `$ölçek`, or looks at other layers.
     INVALID_TEMPLATE = "invalid_template", Failed, false, "Şablonun parantezleri kapanmıyor ya da boş; ya da ifadesi derlenmiyor, $sıra veya $ölçek okuyor ya da başka katmanlara bakıyor.";

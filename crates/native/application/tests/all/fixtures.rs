@@ -15,7 +15,7 @@ use kentos_domain::contracts::{
     AddressesDefine, BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT,
     CAD_ENTITIES_SET, DimensionsReassociate, EntitiesChamfer, EntitiesCreate, EntitiesFillet,
     EntitiesOffset, EntitiesOrder, EntitiesSetProperties, EntitiesTrim, LabelsPin, LayersCompose,
-    LayersEdit, LayersFilter, LayersFind, LayersInfo, LayersLabels, LayersRenderer, LayersService,
+    LayersEdit, LayersFilter, LayersFind, LayersInfo, LayersLabels, LayersTable, LayersRenderer, LayersService,
     LayersSet, LayersStates, LayersTime, LayersTranslate, LibraryEdit, LineTypesEdit,
     NetworkDefine, NurbsCreate, OffsetBy, ScenariosEdit, SettingsSet, SheetsEdit, StandardsApply,
     StandardsCheck, StylesEdit, StylesImpact, UcsSet, UcsTo, ViewsEdit, ViewsOp,
@@ -39,7 +39,7 @@ use kentos_native_application::{
     circle, curves_construct, delete, dimensions_reassociate, edit, entities_chamfer,
     entities_extend, entities_fillet, entities_order, entities_pick, entities_select,
     entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit, layers_filter,
-    layers_find, layers_info, layers_labels, layers_renderer, layers_service, layers_set,
+    layers_find, layers_info, layers_labels, layers_renderer, layers_service, layers_set, layers_table,
     layers_states, layers_time, layers_translate, line, network_define, nurbs, offset, point,
     points_construct, polygon, polygon_regular, polyline, rectangle_create, scenarios_edit, set,
     settings_set, sheets_edit, snap_find, styles_edit, transform, ucs_set, units_change,
@@ -541,6 +541,12 @@ impl Input for LayersFilter {
 }
 
 impl Input for LayersInfo {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for LayersTable {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -2100,6 +2106,7 @@ fn run_op(
         kentos_domain::contracts::CAD_SCENARIOS_EDIT => run!(scenarios_edit, ScenariosEdit),
         kentos_domain::contracts::CAD_LAYERS_FILTER => run!(layers_filter, LayersFilter),
         kentos_domain::contracts::CAD_LAYERS_INFO => run!(layers_info, LayersInfo),
+        kentos_domain::contracts::CAD_LAYERS_TABLE => run!(layers_table, LayersTable),
         kentos_domain::contracts::CAD_LAYERS_COMPOSE => run!(layers_compose, LayersCompose),
         kentos_domain::contracts::CAD_LAYERS_LABELS => run!(layers_labels, LayersLabels),
         kentos_domain::contracts::CAD_LABELS_PIN => run!(labels_pin, LabelsPin),

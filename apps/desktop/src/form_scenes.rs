@@ -402,6 +402,64 @@ fn timed(app: &mut App) {
     run(app, "data.formEdit");
 }
 
+/// The buildings of the damage survey, their table painted by Koşullu biçim (docs/adr/0413): a ruined
+/// building's row, a tall building's floor count bold, a note in blue.
+fn styled_buildings(app: &mut App) {
+    let mut o = Objects::new();
+    let rows = [
+        ("B-1", "iyi", "3", ""),
+        ("B-2", "kotu", "7", "Taşıyıcı sistemde çatlak."),
+        ("B-3", "orta", "2", ""),
+        ("B-4", "iyi", "9", "Asansör denetlenmeli."),
+        ("B-5", "kotu", "4", ""),
+        ("B-6", "orta", "6", ""),
+    ];
+    for (i, (code, state, floors, note)) in rows.iter().enumerate() {
+        let x = (i % 3) as f64 * 24.0;
+        let y = (i / 3) as f64 * 20.0;
+        let id = o.path(
+            "bina",
+            &[[x, y], [x + 18.0, y], [x + 18.0, y + 14.0], [x, y + 14.0]],
+            true,
+        );
+        let mut attrs = vec![("Kod", *code), ("Durum", *state), ("Kat", *floors)];
+        if !note.is_empty() {
+            attrs.push(("Not", *note));
+        }
+        o.data(id, &attrs, Some(code));
+    }
+    open_edited(app, o, |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut bina = crate::tools_scenes::layer("bina", "Bina", "#3E63DD", 0.35);
+        bina["fields"] = json!([{ "name": "Kod", "kind": "text" },
+                                { "name": "Durum", "kind": "text", "values": [
+                                    { "code": "iyi", "label": "İyi" }, { "code": "orta", "label": "Orta hasarlı" },
+                                    { "code": "kotu", "label": "Ağır hasarlı" }] },
+                                { "name": "Kat", "kind": "integer" },
+                                { "name": "Not", "kind": "text" }]);
+        bina["tableStyles"] = json!([
+            { "condition": "Durum = 'kotu'", "background": "#FDE2E1", "color": "#9F1239" },
+            { "condition": "Durum = 'orta'", "background": "#FEF3C7" },
+            { "field": "Kat", "condition": "Kat >= 6", "bold": true },
+            { "field": "Not", "condition": "[Not] <> ''", "color": "#1D4ED8" }
+        ]);
+        layers.push(bina);
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("bina");
+    });
+    app.features.layer = Some("bina".into());
+    let _ = app.update(Message::Run("data.featureTable"));
+}
+
+/// Koşullu biçim's window on the buildings' rules, the floor count's rule chosen.
+fn styles_window(app: &mut App) {
+    styled_buildings(app);
+    run(app, "data.tableStyles");
+    let _ = app.update(Message::TableStyles(
+        crate::forms::table_styles::Event::Choose(2),
+    ));
+}
+
 /// The owners' table (docs/adr/0410 §4): records without a geometry in the Tablo tab.
 fn owner_table(app: &mut App) {
     owners(app);
@@ -944,6 +1002,8 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-kayit-tablosu", owner_table),
         ("form-kayit-ekle", owner_added),
         ("form-tarih-saat", timed),
+        ("form-kosullu-tablo", styled_buildings),
+        ("form-kosullu-bicim", styles_window),
     ]
 }
 
@@ -951,6 +1011,62 @@ pub(crate) fn scenes() -> Vec<Scene> {
 mod tests {
     use super::*;
     use crate::app::App;
+
+    #[test]
+    fn a_tables_rules_are_written_through_the_window_in_one_step() {
+        use crate::forms::table_styles::Event;
+        let mut app = crate::files_testing::app_with_drawing();
+        styled_buildings(&mut app);
+        let rows = app.feature_rows(app.document.as_ref().unwrap());
+        assert_eq!(rows.styles.len(), 4, "the layer's rules reach the table");
+        // B-2 is ruined: its row is painted, its floor count bold.
+        let ruined = rows.look(1, Some("Kat"));
+        assert_eq!(ruined.background.as_deref(), Some("#FDE2E1"));
+        assert!(ruined.bold);
+        assert!(rows.look(0, Some("Kod")).is_plain());
+        run(&mut app, "data.tableStyles");
+        let step = |app: &mut App, e: Event| {
+            let _ = app.update(Message::TableStyles(e));
+        };
+        step(&mut app, Event::New);
+        step(&mut app, Event::Condition("Kat < 3".into()));
+        step(&mut app, Event::Bold(true));
+        step(&mut app, Event::Up);
+        // A condition that cannot be read keeps the window open and writes nothing.
+        step(&mut app, Event::Condition("Kat <".into()));
+        step(&mut app, Event::Save);
+        assert!(
+            app.table_styles.is_some(),
+            "a broken condition is not written"
+        );
+        step(&mut app, Event::Condition("Kat < 3".into()));
+        step(&mut app, Event::Save);
+        assert!(
+            app.table_styles.is_none(),
+            "Kaydet closes the window: {:?}",
+            app.log.lines().map(|l| &l.text).collect::<Vec<_>>()
+        );
+        let rules = |app: &App| {
+            app.document
+                .as_ref()
+                .unwrap()
+                .model
+                .layers()
+                .get("bina")
+                .unwrap()
+                .table_styles
+                .clone()
+        };
+        assert_eq!(rules(&app).len(), 5);
+        assert_eq!(
+            rules(&app)[3].condition,
+            "Kat < 3",
+            "Yukarı moved it above the last rule"
+        );
+        let undone = app.document.as_mut().unwrap().model.undo();
+        assert_eq!(undone.as_deref(), Some("Koşullu biçim"));
+        assert_eq!(rules(&app).len(), 4, "one step undoes it");
+    }
 
     fn attrs(app: &App, slot: u32) -> std::collections::BTreeMap<String, String> {
         app.document

@@ -287,6 +287,7 @@
     { "file": "broken/record-with-point.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/field-id-in-schema-59.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/field-datetime-in-schema-59.kcad", "sniff": "kcad", "error": "bad_value" },
+    { "file": "broken/table-styles-in-schema-59.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/forms-empty.kcad", "sniff": "kcad", "error": "bad_value" },
     { "file": "broken/forms-digest.kcad", "sniff": "kcad", "error": "bad_value" },
     { "file": "broken/forms-enforce-unreleased.kcad", "sniff": "kcad", "error": "bad_value" },

@@ -26,6 +26,7 @@ use crate::document::Document;
 
 fn layer(id: &str, color: &str, renderer: Option<Value>) -> LayerNode {
     LayerNode {
+        table_styles: Vec::new(),
         frozen: None,
         plot: None,
         id: id.into(),

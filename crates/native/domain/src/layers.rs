@@ -644,6 +644,17 @@ impl LayerTree {
         }
     }
 
+    /// A layer's table rules, as an undo or a redo puts them (docs/adr/0413 §2).
+    pub(crate) fn replace_table_styles(
+        &mut self,
+        id: &str,
+        styles: &[kentos_contracts::TableStyle],
+    ) {
+        if let Some(node) = self.node_mut(id) {
+            node.table_styles = styles.to_vec();
+        }
+    }
+
     pub(crate) fn replace_service(&mut self, id: &str, served: &crate::history::Served) {
         if let Some(node) = self.node_mut(id) {
             node.name.clone_from(&served.name);
@@ -664,6 +675,7 @@ impl LayerTree {
             None => self.next_id(),
         };
         LayerNode {
+            table_styles: Vec::new(),
             plot: new.plot.filter(|p| !p),
             frozen: new.frozen.filter(|f| *f),
             id,

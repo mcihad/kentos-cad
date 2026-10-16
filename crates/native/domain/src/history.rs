@@ -130,6 +130,12 @@ pub(crate) enum Op {
         before: Option<Box<kentos_contracts::LayerCompose>>,
         after: Option<Box<kentos_contracts::LayerCompose>>,
     },
+    /// A layer's table rules (Koşullu biçim, docs/adr/0413 §2), before and after.
+    LayerTableStyles {
+        layer: String,
+        before: Vec<kentos_contracts::TableStyle>,
+        after: Vec<kentos_contracts::TableStyle>,
+    },
     /// A layer or a group taken out of the tree with everything under it
     /// (`Document::remove_layer`), and its inverse, which puts it back; a
     /// new one (`Document::add_layer`) is a `LayerAdd`.
@@ -275,6 +281,15 @@ impl Op {
                 before,
                 after,
             } => Op::LayerCompose {
+                layer: layer.clone(),
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::LayerTableStyles {
+                layer,
+                before,
+                after,
+            } => Op::LayerTableStyles {
                 layer: layer.clone(),
                 before: after.clone(),
                 after: before.clone(),
@@ -705,6 +720,7 @@ impl Document {
                 | Op::LayerFilter { .. }
                 | Op::LayerInfo { .. }
                 | Op::LayerCompose { .. }
+                | Op::LayerTableStyles { .. }
                 | Op::LayerRemove(_)
                 | Op::LayerAdd(_)
                 | Op::LayerMove { .. }
@@ -858,6 +874,10 @@ impl Document {
             }
             Op::LayerCompose { layer, after, .. } => {
                 self.layers.replace_compose(layer, after.as_deref());
+                return;
+            }
+            Op::LayerTableStyles { layer, after, .. } => {
+                self.layers.replace_table_styles(layer, after);
                 return;
             }
             // A node still holding objects stays: taking it away would leave

@@ -26,7 +26,7 @@
 use iced::alignment::Horizontal;
 use iced::widget::text::{Fragment, IntoFragment};
 use iced::widget::{button, container, row, scrollable};
-use iced::{Center, Element, Fill, Length, Padding, Point};
+use iced::{Center, Color, Element, Fill, Length, Padding, Point};
 
 use crate::icon::{Icon, icon};
 use crate::label;
@@ -117,6 +117,7 @@ pub struct Row<'a, Message> {
     current: Option<bool>,
     on_press: Option<Message>,
     menu: Option<MenuBuilder<'a, Message>>,
+    tint: Option<Color>,
 }
 
 impl<'a, Message: 'a> Row<'a, Message> {
@@ -127,7 +128,15 @@ impl<'a, Message: 'a> Row<'a, Message> {
             current: None,
             on_press: None,
             menu: None,
+            tint: None,
         }
+    }
+
+    /// Satırın kendi zemini (koşullu biçim gibi): hücrelerin arasıyla bütün satırı boyar; seçim ve
+    /// üzerine gelme vurgusu onun yerine geçer.
+    pub fn tint(mut self, tint: Option<Color>) -> Self {
+        self.tint = tint;
+        self
     }
 
     /// Seçili satır vurgu zeminiyle gösterilir.
@@ -371,7 +380,11 @@ fn row_element<'a, Message: Clone + 'a>(
     }
     .on_press_maybe(row.on_press)
     .width(Fill)
-    .style(style::button::table_row(row.selected, current));
+    .style(style::button::table_row_tinted(
+        row.selected,
+        current,
+        row.tint,
+    ));
 
     match row.menu {
         Some(menu) => ContextMenu::new(content, menu).into(),

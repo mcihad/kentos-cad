@@ -15,6 +15,7 @@ pub mod designer;
 mod designer_view;
 pub mod entry;
 pub mod relations;
+pub mod table_styles;
 
 use iced::Task;
 use kentos_contracts::{LayerField, ProjectForm};
@@ -24,11 +25,12 @@ use kentos_interaction::Level;
 use crate::app::{App, Message};
 
 /// The commands this module runs.
-pub const COMMANDS: [&str; 4] = [
+pub const COMMANDS: [&str; 5] = [
     "data.forms",
     "data.formEdit",
     "data.relations",
     "data.formAudit",
+    "data.tableStyles",
 ];
 
 /// The drawing tools whose one new object opens its layer's form (docs/adr/0403 §4); a copy, an
@@ -68,6 +70,7 @@ impl App {
             "data.formEdit" => return self.open_form_entry(),
             "data.relations" => self.open_relations(),
             "data.formAudit" => return self.open_form_audit(None),
+            "data.tableStyles" => return self.open_table_styles(),
             _ => {}
         }
         Task::none()

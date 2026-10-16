@@ -194,6 +194,9 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-T` koşullu biçim (ADR 0413, 16 Ekim): web'de gerekenler: katmanın `tableStyles`'ı (TS türleri üretildi), `cad.layers.table`'ın
+  TS işleyicisi (`fixtures/commands/v1/cad.layers.table.json`), Öznitelik tablosunda hücre görünüşü (`fixtures/table-styles/v1/looks.json`)
+  ve Koşullu biçim penceresi, `.kcad` okuma.
 - [ ] `FORM-F` formların izinleri ve sunucunun bekçisi (ADR 0411, 16 Ekim): web'de gerekenler: `ProjectRole`/`GrantRole`'ün `entry`'si
   (`app/cloud/sharePlan.ts`'in rol adları, sırası, davet rolleri ve açıklamaları; `fixtures/cloud/v1/share.json` güncellendi),
   `ProjectPermission`'ın üç izni; sunucu bekçisi zaten bütün istemciler için.
@@ -1470,6 +1473,8 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-T` Öznitelik tablosunda koşullu biçim: satır ve alan kuralları, zemin, yazı rengi, kalınlık; `cad.layers.table`, Koşullu
+  biçim penceresi, `.kcad` şema 60. — **16 Ekim, [ADR 0413](docs/adr/0413-conditional-table-formatting.md).**
 - [x] `FORM-R` Alan düzeyinde okuma yetkisi: formun göstermediği alan Veri girişine gönderilmez, yazmasında korunur, Veri girişi
   indiremez. — **16 Ekim, ADR 0411 §6.**
 

@@ -266,6 +266,17 @@ const ENTRIES: &[Entry] = &[
         targets: || vec![target(None, &["*"], &[], None, None)],
     },
     Entry {
+        id: "cad.layers.table",
+        refusals: &[
+            &["invalid_table_styles"],
+            REVISION,
+            &["layer_not_found", "not_a_layer", "service_layer"],
+            &["field_not_found", "invalid_expression"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.records.create",
         refusals: &[&["invalid_count"], LAYER, REVISION, ATTRS],
         warnings: &["layer_hidden"],

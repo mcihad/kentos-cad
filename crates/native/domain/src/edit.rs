@@ -484,6 +484,38 @@ impl Document {
     /// group or when broken by the contract's rule; whether its mask's
     /// targets are the tree's other layers is the command's. An unknown id
     /// changes nothing; returns whether it changed.
+    /// A layer's table rules (Koşullu biçim, docs/adr/0413 §2) as one undo step `label`; whether
+    /// they changed. A group, or rules that break the contract's rule, are refused.
+    pub fn set_layer_table_styles(
+        &mut self,
+        id: &str,
+        next: Vec<kentos_contracts::TableStyle>,
+        label: &str,
+    ) -> Result<bool, Refusal> {
+        let Some(node) = self.layers.get(id) else {
+            return Ok(false);
+        };
+        if !next.is_empty() && node.kind == LayerNodeType::Group {
+            return Err(Refusal(format!(
+                "“{}” bir grup; koşullu biçim yalnız katmanın olur.",
+                node.name
+            )));
+        }
+        if let Some((_, problem)) = kentos_contracts::table_styles_problem(&next) {
+            return Err(Refusal(format!("Koşullu biçim: {problem}")));
+        }
+        if node.table_styles == next {
+            return Ok(false);
+        }
+        let op = Op::LayerTableStyles {
+            layer: id.to_owned(),
+            before: node.table_styles.clone(),
+            after: next,
+        };
+        self.record(vec![op], label);
+        Ok(true)
+    }
+
     pub fn set_layer_compose(
         &mut self,
         id: &str,

@@ -254,6 +254,7 @@ fn label(placement: LabelPlacement, size: f64) -> LabelStyle {
 
 fn node(id: &str, name: &str, style: LayerStyle) -> LayerNode {
     LayerNode {
+        table_styles: Vec::new(),
         frozen: None,
         plot: None,
         id: id.to_owned(),

@@ -1030,6 +1030,7 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
     let mut filter = None;
     let (mut actions, mut card, mut compose) = (None, None, None);
     let (mut plot, mut frozen) = (None, None);
+    let mut table_styles = Vec::new();
     map(r, |r, key| {
         match key {
             "id" => id = Some(text(r)?),
@@ -1046,6 +1047,39 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
             "card" if has.attachments => card = Some(info::info_card(r)?),
             "actions" if has.attachments => actions = Some(info::layer_actions(r)?),
             "compose" if has.compose => compose = Some(compose::layer_compose(r)?),
+            // Schema 60 (docs/adr/0413 §3): the table's rules, read whole and checked.
+            "tableStyles" if has.forms => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let list: Vec<kentos_contracts::TableStyle> = serde_json::from_value(value.clone())
+                    .map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(code, at, &format!("koşullu biçim okunamadı: {words}"))
+                    })?;
+                if serde_json::to_value(&list).ok().as_ref() != Some(&value) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "koşullu biçim yazıcının biçiminde değil (varsayılan değerinde bir alan yazılmış)",
+                    ));
+                }
+                if list.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boş liste yazılmaz; kural yoksa alan hiç yazılmaz",
+                    ));
+                }
+                if let Some((_, problem)) = kentos_contracts::table_styles_problem(&list) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                table_styles = list;
+            }
             "plot" if has.look => {
                 if r.bool()? {
                     return Err(r.fail(
@@ -1081,7 +1115,14 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
         }
         Ok(())
     })?;
+    if !table_styles.is_empty() && kind == Some(LayerNodeType::Group) {
+        return Err(r.fail(
+            Code::BadValue,
+            "grubun koşullu biçimi olmaz; yalnız katmanın olur",
+        ));
+    }
     Ok(LayerNode {
+        table_styles,
         plot,
         frozen,
         id: required(r, id, "id")?,

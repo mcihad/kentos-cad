@@ -114,6 +114,7 @@ fn opened(n: usize) -> Opened {
         address_locators: Vec::new(),
     };
     let layers = vec![LayerNode {
+        table_styles: Vec::new(),
         frozen: None,
         plot: None,
         id: "parsel".into(),

@@ -36,7 +36,7 @@ use crate::points::{click_pick, focus_field};
 mod records;
 #[cfg(test)]
 mod tests;
-mod view;
+pub(crate) mod view;
 
 /// The tab's words (the web's `FEATURE_TEXTS`).
 pub mod texts {
@@ -162,6 +162,25 @@ pub(crate) struct Rows {
     pub filter_error: Option<String>,
     /// The sorted column in the model's columns.
     pub sorted: Option<usize>,
+    /// Koşullu biçim (docs/adr/0413 §4): the layer's rules, and for each of them whether it holds
+    /// for each object (by its index in `slots`); a rule that cannot be read holds for none.
+    pub styles: Vec<kentos_contracts::TableStyle>,
+    pub holds: Vec<Vec<bool>>,
+}
+
+impl Rows {
+    /// What the rules give the cell of row `at` (its index in `slots`) under `field` (none: Tür).
+    pub(crate) fn look(&self, at: usize, field: Option<&str>) -> kentos_contracts::CellLook {
+        if self.styles.is_empty() {
+            return kentos_contracts::CellLook::default();
+        }
+        let holds: Vec<bool> = self
+            .holds
+            .iter()
+            .map(|h| h.get(at).copied().unwrap_or(false))
+            .collect();
+        kentos_contracts::cell_look(&self.styles, &holds, field)
+    }
 }
 
 /// The open drawing (its session), its changes, the selection's version, the
@@ -356,6 +375,22 @@ impl App {
         let first_selected = shown
             .iter()
             .position(|&i| self.selection.contains(slots[i]));
+        // Koşullu biçim: each rule's condition over every object, as the filter's (docs/adr/0413 §4).
+        let styles = layer
+            .as_deref()
+            .and_then(|l| model.layers().get(l))
+            .map(|n| n.table_styles.clone())
+            .unwrap_or_default();
+        let holds = styles
+            .iter()
+            .map(|s| {
+                filter_passes(&s.condition, &entities, model, &|| {
+                    self.expression_variables()
+                })
+                .0
+                .unwrap_or_else(|| vec![false; entities.len()])
+            })
+            .collect();
         let rows = Rows {
             layer,
             layers,
@@ -365,6 +400,8 @@ impl App {
             first_selected,
             filter_error,
             sorted,
+            styles,
+            holds,
         };
         *panel.cache.borrow_mut() = Some((key, rows.clone()));
         rows

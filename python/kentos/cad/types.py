@@ -13256,6 +13256,8 @@ class LayerNode(_Model):
             objects. Only a layer has it, never a group.
         snap: A layer's own snapping (docs/adr/0163 §4): off, or only some kinds;
             absent, the general kinds. Only a layer has it, never a group.
+        table_styles: Koşullu biçim (docs/adr/0413 §1): how the attribute table paints its rows and cells by
+            conditions; empty, plainly. Only a layer holding objects has them.
         time: A temporal layer's time setting (docs/adr/0210 §2): which attributes
             hold its objects' start and end. Only a layer has it, never a group.
     """
@@ -13279,6 +13281,7 @@ class LayerNode(_Model):
     scenario: ScenarioInfo | None | Unset = UNSET
     service: ServiceLayer | None | Unset = UNSET
     snap: LayerSnap | None | Unset = UNSET
+    table_styles: list[TableStyle] | Unset = UNSET
     time: LayerTime | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -13315,6 +13318,8 @@ class LayerNode(_Model):
             out["service"] = None if self.service is None else self.service.to_json()
         if self.snap is not UNSET:
             out["snap"] = None if self.snap is None else self.snap.to_json()
+        if self.table_styles is not UNSET:
+            out["tableStyles"] = [e0.to_json() for e0 in self.table_styles]
         if self.time is not UNSET:
             out["time"] = None if self.time is None else self.time.to_json()
         return out
@@ -13342,6 +13347,7 @@ class LayerNode(_Model):
             scenario=UNSET if "scenario" not in data else None if data["scenario"] is None else ScenarioInfo.from_json(data["scenario"]),
             service=UNSET if "service" not in data else None if data["service"] is None else ServiceLayer.from_json(data["service"]),
             snap=UNSET if "snap" not in data else None if data["snap"] is None else LayerSnap.from_json(data["snap"]),
+            table_styles=[TableStyle.from_json(e0) for e0 in data["tableStyles"]] if "tableStyles" in data else UNSET,
             time=UNSET if "time" not in data else None if data["time"] is None else LayerTime.from_json(data["time"]),
         )
 
@@ -14833,6 +14839,45 @@ class LayersStates(_Model):
             state=data.get("state", UNSET),
             states=UNSET if "states" not in data else None if data["states"] is None else list(data["states"]),
             styles=data.get("styles", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersTable(_Model):
+    """Input of `cad.layers.table` v1: a layer's table rules written as one undo step “Koşullu biçim”;
+    the layer's rules become exactly the ones given, in their order (none takes them away). A layer
+    that already has them as given is left as it is (`changed` false, no step).
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_table_styles` (the rules' rule,
+    `table_styles_problem`, path `styles/<i>`); then `invalid_revision`, `revision_conflict` (status
+    `conflict`), `layer_not_found`, `not_a_layer` (a group), `service_layer` (a layer drawn from a
+    service); then each rule in order: `field_not_found` (a field the layer does not have, path
+    `styles/<i>/field`), `invalid_expression` (a condition that does not compile over the layer's
+    fields, path `styles/<i>/condition`).
+    Attributes:
+        layer: The layer's id.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        styles: The rules, in their order: a field's first rule that holds gives its cell's look before the
+            row's.
+    """
+    layer: str
+    expected_revision: str | None | Unset = UNSET
+    styles: list[TableStyle] = field(default_factory=list)
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        out["styles"] = [e0.to_json() for e0 in self.styles]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersTable:
+        return cls(
+            layer=data["layer"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            styles=[TableStyle.from_json(e0) for e0 in data["styles"]] if "styles" in data else list(),
         )
 
 
@@ -21777,6 +21822,46 @@ class TableEntity(Entity):
             text_style=data.get("textStyle", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TableStyle(_Model):
+    """One rule of a layer's table (docs/adr/0413 §1).
+    Attributes:
+        condition: When it holds: an expression over the record (`Kat > 3 ve Durum = 'kotu'`).
+        background: The cell's background, `#RRGGBB`.
+        bold: Bold text. Only `true` is written.
+        color: The text's colour, `#RRGGBB`.
+        field: The field whose cell it paints, by name; absent: the whole row.
+    """
+    condition: str
+    background: str | None | Unset = UNSET
+    bold: bool | Unset = UNSET
+    color: str | None | Unset = UNSET
+    field: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["condition"] = self.condition
+        if self.background is not UNSET:
+            out["background"] = self.background
+        if self.bold is not UNSET:
+            out["bold"] = self.bold
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.field is not UNSET:
+            out["field"] = self.field
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TableStyle:
+        return cls(
+            condition=data["condition"],
+            background=data.get("background", UNSET),
+            bold=data.get("bold", UNSET),
+            color=data.get("color", UNSET),
+            field=data.get("field", UNSET),
         )
 
 
@@ -29069,6 +29154,7 @@ __all__ = [
     "LayersServiced",
     "LayersSet",
     "LayersStates",
+    "LayersTable",
     "LayersTime",
     "LayersTimePlan",
     "LayersTimed",
@@ -29407,6 +29493,7 @@ __all__ = [
     "TableGrid",
     "TableGridName",
     "TableSource",
+    "TableStyle",
     "TangentsCurveEdit",
     "TenantKind",
     "TenantKindName",

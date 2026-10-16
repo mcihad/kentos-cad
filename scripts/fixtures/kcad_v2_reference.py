@@ -1161,6 +1161,8 @@ def layer_entries(n):
                 "plot": (lambda b: boolean(b) if b is False else None, False),
                 # Schema 55 (docs/adr/0311 §1): a layer or group frozen; only `true` is written.
                 "frozen": (lambda b: boolean(b) if b is True else None, False),
+                # Schema 60 (docs/adr/0413 §3): the attribute table's rules, as their JSON.
+                "tableStyles": (opaque, False),
                 "type": (enum(("group", "layer")), True),
                 "visible": (boolean, True),
                 "locked": (boolean, True),
@@ -1972,7 +1974,10 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
                    or keyed(n.get("children", [])) for n in nodes)
 
     # A record without a geometry is schema 60's too (docs/adr/0410 §2).
-    if (settings or {}).get("forms") or (settings or {}).get("relations") or keyed(layers) or any(
+    def styled(nodes):
+        return any(n.get("tableStyles") or styled(n.get("children", [])) for n in nodes)
+
+    if (settings or {}).get("forms") or (settings or {}).get("relations") or keyed(layers) or styled(layers) or any(
         e["kind"] == "record" for e in entities
     ):
         return 60
@@ -3685,9 +3690,18 @@ def build():
     timed = copy.deepcopy(load("forms.json"))
     timed["settings"].pop("forms")
     timed["layers"][0]["fields"] = [f for f in timed["layers"][0]["fields"] if f["kind"] == "datetime"]
+    timed["layers"][0].pop("tableStyles")
     timed_payload = document(timed)
     assert timed_payload.count(b"\x67version\x18\x3c") == 1, "a date and time field alone is schema 60"
     out["broken/field-datetime-in-schema-59.kcad"] = container(timed_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
+    # A layer's table rules alone are schema 60's (docs/adr/0413 §3).
+    styled = copy.deepcopy(load("forms.json"))
+    styled["settings"].pop("forms")
+    styled["layers"][0]["fields"] = [{k: v for k, v in f.items() if k != "id"} for f in styled["layers"][0]["fields"]
+                                     if f["kind"] not in ("datetime", "time") and not f.get("multiple")]
+    styled_payload = document(styled)
+    assert styled_payload.count(b"\x67version\x18\x3c") == 1, "a table's rules alone are schema 60"
+    out["broken/table-styles-in-schema-59.kcad"] = container(styled_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
     form = lambda d: d["settings"]["forms"][0]  # noqa: E731
     out["broken/forms-empty.kcad"] = forms_broken(lambda d: d["settings"].update(forms=[]))
     out["broken/forms-digest.kcad"] = forms_broken(lambda d: form(d)["releases"][0]["body"].update(revision=9))

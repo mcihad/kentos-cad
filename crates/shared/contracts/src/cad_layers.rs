@@ -433,6 +433,39 @@ pub struct LayersComposePlan {
     pub revision: String,
 }
 
+/// Writes how the attribute table paints a layer's rows and cells (Koşullu biçim, docs/adr/0413).
+pub const CAD_LAYERS_TABLE: &str = "cad.layers.table";
+pub const CAD_LAYERS_TABLE_VERSION: u32 = 1;
+
+/// Input of `cad.layers.table` v1: a layer's table rules written as one undo step “Koşullu biçim”;
+/// the layer's rules become exactly the ones given, in their order (none takes them away). A layer
+/// that already has them as given is left as it is (`changed` false, no step).
+///
+/// Refusals (`CommandError.code`), checked in this order: `invalid_table_styles` (the rules' rule,
+/// `table_styles_problem`, path `styles/<i>`); then `invalid_revision`, `revision_conflict` (status
+/// `conflict`), `layer_not_found`, `not_a_layer` (a group), `service_layer` (a layer drawn from a
+/// service); then each rule in order: `field_not_found` (a field the layer does not have, path
+/// `styles/<i>/field`), `invalid_expression` (a condition that does not compile over the layer's
+/// fields, path `styles/<i>/condition`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayersTable {
+    /// The layer's id.
+    pub layer: String,
+    /// The rules, in their order: a field's first rule that holds gives its cell's look before the
+    /// row's.
+    #[serde(default)]
+    pub styles: Vec<crate::table_styles::TableStyle>,
+    /// The document revision the input was prepared against, as decimal text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
 /// Writes a layer's actions and information card (docs/adr/0225 §4, §5).
 pub const CAD_LAYERS_INFO: &str = "cad.layers.info";
 pub const CAD_LAYERS_INFO_VERSION: u32 = 1;

@@ -1158,6 +1158,13 @@
       ],
       "note": "Kayıt cad.forms.submit ile, birden çok kayıt cad.forms.fill ile tek adımda yazılır; pencerenin canlı denetimi cad.forms.validate'in çekirdeğidir (ADR 0401, 0403)."
     },
+    "data.tableStyles": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.table"
+      ],
+      "note": "Kurallar cad.layers.table ile tek adımda yazılır; tablo onları çizer (ADR 0413)."
+    },
     "data.formAudit": {
       "level": "semantic",
       "via": [

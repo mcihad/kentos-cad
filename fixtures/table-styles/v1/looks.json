@@ -1,0 +1,335 @@
+{
+  "format": "kentos.table-style-looks",
+  "version": 1,
+  "note": "Written by scripts/fixtures/table_styles_command_cases.py from docs/adr/0413 §1; do not edit by hand.",
+  "styles": [
+    {
+      "condition": "Durum = 'kotu'",
+      "background": "#FFE4E1",
+      "color": "#B91C1C"
+    },
+    {
+      "field": "Kat",
+      "condition": "Kat > 5",
+      "bold": true
+    },
+    {
+      "field": "Kat",
+      "condition": "Kat > 9",
+      "background": "#00FF00",
+      "color": "#0000FF"
+    },
+    {
+      "field": "Açıklama",
+      "condition": "Açıklama <> ''",
+      "color": "#1D4ED8"
+    },
+    {
+      "condition": "Kat > 0",
+      "background": "#EEEEEE",
+      "bold": true
+    }
+  ],
+  "cases": [
+    {
+      "holds": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "field": null,
+      "want": {
+        "background": "#FFE4E1",
+        "color": "#B91C1C",
+        "bold": true
+      }
+    },
+    {
+      "holds": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "field": "Kat",
+      "want": {
+        "background": "#00FF00",
+        "color": "#0000FF",
+        "bold": true
+      }
+    },
+    {
+      "holds": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "field": "Açıklama",
+      "want": {
+        "background": "#FFE4E1",
+        "color": "#1D4ED8",
+        "bold": true
+      }
+    },
+    {
+      "holds": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "field": "Durum",
+      "want": {
+        "background": "#FFE4E1",
+        "color": "#B91C1C",
+        "bold": true
+      }
+    },
+    {
+      "holds": [
+        false,
+        true,
+        true,
+        false,
+        true
+      ],
+      "field": null,
+      "want": {
+        "background": "#EEEEEE",
+        "color": null,
+        "bold": true
+      }
+    },
+    {
+      "holds": [
+        false,
+        true,
+        true,
+        false,
+        true
+      ],
+      "field": "Kat",
+      "want": {
+        "background": "#00FF00",
+        "color": "#0000FF",
+        "bold": true
+      }
+    },
+    {
+      "holds": [
+        false,
+        true,
+        true,
+        false,
+        true
+      ],
+      "field": "Açıklama",
+      "want": {
+        "background": "#EEEEEE",
+        "color": null,
+        "bold": true
+      }
+    },
+    {
+      "holds": [
+        false,
+        true,
+        true,
+        false,
+        true
+      ],
+      "field": "Durum",
+      "want": {
+        "background": "#EEEEEE",
+        "color": null,
+        "bold": true
+      }
+    },
+    {
+      "holds": [
+        true,
+        false,
+        false,
+        false,
+        false
+      ],
+      "field": null,
+      "want": {
+        "background": "#FFE4E1",
+        "color": "#B91C1C",
+        "bold": false
+      }
+    },
+    {
+      "holds": [
+        true,
+        false,
+        false,
+        false,
+        false
+      ],
+      "field": "Kat",
+      "want": {
+        "background": "#FFE4E1",
+        "color": "#B91C1C",
+        "bold": false
+      }
+    },
+    {
+      "holds": [
+        true,
+        false,
+        false,
+        false,
+        false
+      ],
+      "field": "Açıklama",
+      "want": {
+        "background": "#FFE4E1",
+        "color": "#B91C1C",
+        "bold": false
+      }
+    },
+    {
+      "holds": [
+        true,
+        false,
+        false,
+        false,
+        false
+      ],
+      "field": "Durum",
+      "want": {
+        "background": "#FFE4E1",
+        "color": "#B91C1C",
+        "bold": false
+      }
+    },
+    {
+      "holds": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "field": null,
+      "want": {
+        "background": null,
+        "color": null,
+        "bold": false
+      }
+    },
+    {
+      "holds": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "field": "Kat",
+      "want": {
+        "background": null,
+        "color": null,
+        "bold": false
+      }
+    },
+    {
+      "holds": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "field": "Açıklama",
+      "want": {
+        "background": null,
+        "color": null,
+        "bold": false
+      }
+    },
+    {
+      "holds": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "field": "Durum",
+      "want": {
+        "background": null,
+        "color": null,
+        "bold": false
+      }
+    },
+    {
+      "holds": [
+        false,
+        false,
+        true,
+        true,
+        false
+      ],
+      "field": null,
+      "want": {
+        "background": null,
+        "color": null,
+        "bold": false
+      }
+    },
+    {
+      "holds": [
+        false,
+        false,
+        true,
+        true,
+        false
+      ],
+      "field": "Kat",
+      "want": {
+        "background": "#00FF00",
+        "color": "#0000FF",
+        "bold": false
+      }
+    },
+    {
+      "holds": [
+        false,
+        false,
+        true,
+        true,
+        false
+      ],
+      "field": "Açıklama",
+      "want": {
+        "background": null,
+        "color": "#1D4ED8",
+        "bold": false
+      }
+    },
+    {
+      "holds": [
+        false,
+        false,
+        true,
+        true,
+        false
+      ],
+      "field": "Durum",
+      "want": {
+        "background": null,
+        "color": null,
+        "bold": false
+      }
+    }
+  ]
+}

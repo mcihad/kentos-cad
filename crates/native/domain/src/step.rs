@@ -491,6 +491,7 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
             | Op::LayerFilter { layer, .. }
             | Op::LayerInfo { layer, .. }
             | Op::LayerCompose { layer, .. }
+            | Op::LayerTableStyles { layer, .. }
             | Op::LayerMove { layer, .. } => report.layers.change(layer.clone()),
             Op::LayerAdd(place) => {
                 let mut ids = Vec::new();

@@ -3207,6 +3207,38 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Koşullu biçim (docs/adr/0413), held together by fixtures/commands/v1/cad.layers.table.json.
+        // The web is paused (docs/adr/0228).
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_TABLE.into(),
+            version: crate::CAD_LAYERS_TABLE_VERSION,
+            title: "Koşullu biçim".into(),
+            summary: "Öznitelik tablosunun katmanın satırlarını ve hücrelerini koşullarla nasıl göstereceğini yazar (QGIS'in koşullu biçimi). Her kural: koşul (condition; katmanın alanları adlarıyla, ifade dili), uygulandığı yer (field: bir alanın hücresi; verilmezse bütün satır), zemin rengi (background), yazı rengi (color, #RRGGBB) ve kalınlık (bold). \
+                      Bir hücrenin her biri için tutan ilk kural verir; alanın kuralları satırınkilerden önce gelir. En çok 50 kural. Kuralların listesi verilen olur; boş liste kaldırır. \
+                      Katman ağacının değişikliğidir: tek geri alma adımı “Koşullu biçim”; aynıysa hiçbir şey yazılmaz. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersTable>(),
+            output: schema::<crate::LayersComposed>(),
+            plan: Some(schema::<crate::LayersComposePlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Hasarlı binalar kırmızı, kat sayısı yüksekse kalın".into(),
+                input: json!({ "layer": "bina", "styles": [
+                    { "condition": "Durum = 'kotu'", "background": "#FFE4E1", "color": "#B91C1C" },
+                    { "field": "Kat", "condition": "Kat > 5", "bold": true }
+                ] }),
+                output: None,
+            }],
+        },
         // Katman çizimi (docs/adr/0226 §3, §4), held together by fixtures/commands/v1/cad.layers.compose.json.
         CommandDescriptor {
             id: crate::CAD_LAYERS_COMPOSE.into(),
@@ -5165,6 +5197,9 @@ mod tests {
                     crate::CAD_LAYERS_FILTER => {
                         serde_json::from_value::<crate::LayersFilter>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_LAYERS_TABLE => {
+                        serde_json::from_value::<crate::LayersTable>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_LAYERS_COMPOSE => {
                         serde_json::from_value::<crate::LayersCompose>(e.input.clone()).map(|_| ())
                     }
@@ -5433,6 +5468,10 @@ mod tests {
                                 .map(|_| ())
                         }
                         crate::CAD_LAYERS_COMPOSE => {
+                            serde_json::from_value::<crate::LayersComposed>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LAYERS_TABLE => {
                             serde_json::from_value::<crate::LayersComposed>(output.clone())
                                 .map(|_| ())
                         }

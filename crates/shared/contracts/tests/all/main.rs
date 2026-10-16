@@ -11,4 +11,5 @@ mod fields;
 mod identity;
 mod network_rules;
 mod service_rules;
+mod table_styles;
 mod temporal_rules;

@@ -11,6 +11,7 @@ import type { LayerStyle } from "./LayerStyle";
 import type { LayerTime } from "./LayerTime";
 import type { ScenarioInfo } from "./ScenarioInfo";
 import type { ServiceLayer } from "./ServiceLayer";
+import type { TableStyle } from "./TableStyle";
 
 /**
  * A node of the layer tree: a group or a layer.
@@ -86,4 +87,9 @@ plot?: boolean,
  * active layer is never frozen. A group's covers what it holds. Only
  * `true` is written.
  */
-frozen?: boolean, };
+frozen?: boolean, 
+/**
+ * Koşullu biçim (docs/adr/0413 §1): how the attribute table paints its rows and cells by
+ * conditions; empty, plainly. Only a layer holding objects has them.
+ */
+tableStyles?: Array<TableStyle>, };

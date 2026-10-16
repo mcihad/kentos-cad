@@ -466,6 +466,18 @@ pub struct LayerNode {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub frozen: Option<bool>,
+    /// Koşullu biçim (docs/adr/0413 §1): how the attribute table paints its rows and cells by
+    /// conditions; empty, plainly. Only a layer holding objects has them.
+    #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "tableStyles")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(
+            as = "Option<Vec<crate::table_styles::TableStyle>>",
+            optional,
+            rename = "tableStyles"
+        )
+    )]
+    pub table_styles: Vec<crate::table_styles::TableStyle>,
 }
 
 /// The snap kinds a layer can keep to (the settings' `snap.<kind>` and the

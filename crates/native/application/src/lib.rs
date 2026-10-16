@@ -126,6 +126,7 @@ pub mod layers_edit;
 pub mod layers_filter;
 pub mod layers_find;
 pub mod layers_info;
+pub mod layers_table;
 pub mod layers_labels;
 pub mod layers_renderer;
 pub mod layers_service;
@@ -236,6 +237,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_FORMS_AUDIT,
         kentos_contracts::CAD_FORMS_AUDIT_VERSION,
+    ),
+    // Koşullu biçim ([`layers_table`], docs/adr/0413).
+    (
+        kentos_contracts::CAD_LAYERS_TABLE,
+        kentos_contracts::CAD_LAYERS_TABLE_VERSION,
     ),
     // Records without a geometry ([`records`], docs/adr/0410).
     (

@@ -277,13 +277,22 @@ pub fn row(selected: bool) -> impl Fn(&Theme, Status) -> Style {
 /// Çoklu seçimli tablo satırı: seçili satırlar vurgu zeminiyle, birincil
 /// (`current`) satır ayrıca vurgu kenarıyla gösterilir.
 pub fn table_row(selected: bool, current: bool) -> impl Fn(&Theme, Status) -> Style {
+    table_row_tinted(selected, current, None)
+}
+
+/// Tablo satırı kendi zeminiyle: seçili ya da üzerine gelinen satırın vurgusu zeminin yerine geçer.
+pub fn table_row_tinted(
+    selected: bool,
+    current: bool,
+    tint: Option<Color>,
+) -> impl Fn(&Theme, Status) -> Style {
     move |theme, status| {
         let t = Tokens::of(theme);
 
         let background = match (selected, is_hovered(status)) {
             (true, _) => t.selection(),
             (false, true) => t.surface_hover,
-            (false, false) => Color::TRANSPARENT,
+            (false, false) => tint.unwrap_or(Color::TRANSPARENT),
         };
 
         style(

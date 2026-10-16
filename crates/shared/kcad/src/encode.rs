@@ -946,11 +946,12 @@ impl<'d> Encoder<'d> {
                 + usize::from(n.card.is_some())
                 + usize::from(compose.is_some())
                 + usize::from(n.plot == Some(false))
-                + usize::from(n.frozen == Some(true)),
+                + usize::from(n.frozen == Some(true))
+                + usize::from(!n.table_styles.is_empty()),
             true,
         )?;
         // id (2), card feed name plot snap time type (4), style (5), fields filter locked (6),
-        // actions compose service visible (7), children expanded replaces scenario (8).
+        // actions compose service visible (7), children expanded replaces scenario (8), tableStyles (11).
         if n.service.is_some() && n.feed.is_some() {
             return Err(self.fail(
                 Code::BadValue,
@@ -1049,6 +1050,26 @@ impl<'d> Encoder<'d> {
         if let Some(scenario) = &n.scenario {
             self.key("scenario");
             self.at(Seg::Name("scenario"), |e| e.scenario(n.kind, scenario))?;
+        }
+        // Schema 60 (docs/adr/0413 §3): the table's rules, as their JSON, on a layer.
+        if !n.table_styles.is_empty() {
+            self.key("tableStyles");
+            self.at(Seg::Name("tableStyles"), |e| {
+                if n.kind == LayerNodeType::Group {
+                    return Err(e.fail(
+                        Code::BadValue,
+                        "grubun koşullu biçimi olmaz; yalnız katmanın olur",
+                    ));
+                }
+                if let Some((_, problem)) =
+                    kentos_contracts::table_styles_problem(&n.table_styles)
+                {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(&n.table_styles)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
         }
         self.close();
         Ok(())
@@ -1465,8 +1486,9 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
-    // Schema 60 (docs/adr/0401, 0408, 0410, 0412): a form of the project, a layer field's stable id,
-    // its several values or its date-and-time or time kind, or a record without a geometry.
+    // Schema 60 (docs/adr/0401, 0408, 0410, 0412, 0413): a form of the project, a layer field's stable
+    // id, its several values or its date-and-time or time kind, a layer's table rules, or a record
+    // without a geometry.
     fn keyed(nodes: &[LayerNode]) -> bool {
         let later = |f: &kentos_contracts::LayerField| {
             f.id.is_some()
@@ -1477,9 +1499,9 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                         | kentos_contracts::LayerFieldKind::Time
                 )
         };
-        nodes
-            .iter()
-            .any(|n| n.fields.iter().any(later) || keyed(&n.children))
+        nodes.iter().any(|n| {
+            n.fields.iter().any(later) || !n.table_styles.is_empty() || keyed(&n.children)
+        })
     }
     if !doc.settings.forms.is_empty()
         || keyed(&doc.layers)
