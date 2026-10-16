@@ -167,7 +167,10 @@ use crate::layer::LineType;
 ///    values' JSON text. The web's copy stays 53.
 /// 69 (docs/adr/0320 §1): a dimension's references' `rule` (`curve`, `edges`): `.kcad` document schema 60; in the
 ///    typed columns the references' mask bits 3 and 4. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 69;
+/// 70 (docs/adr/0321): a dimension's and a dimension style's `options` and a dimension's `textShift` and `breaks`:
+///    `.kcad` document schema 61; in the typed columns the dimension's bit 29 and their JSON text. The web's copy
+///    stays 53.
+pub const FORMATS_VERSION: u32 = 70;
 
 // ── Every import ────────────────────────────────────────────────────────
 

@@ -520,6 +520,8 @@ def dimension_styles(styles):
         "suffix": (text, False),
         "font": (enum(DRAWING_FONTS), False),
         **LINE_FIELDS,
+        # Schema 61 (docs/adr/0321): its options, as their JSON.
+        "options": (opaque, False),
     }
     return array([cmap(fields(st, table, "dimensionStyle")) for st in styles])
 
@@ -1439,6 +1441,10 @@ KINDS = {
         **LINE_FIELDS,
         # Schema 43 (docs/adr/0249 §4): what its points follow; only in the drawing.
         "refs": (lambda r: dimension_refs(r), False),
+        # Schema 61 (docs/adr/0321): its options, its moved value and its breaks, as their JSON.
+        "options": (opaque, False),
+        "textShift": (opaque, False),
+        "breaks": (lambda b: opaque(b) if b else None, False),
     },
     # Schema 23 (docs/adr/0186): a pattern's name, scale and families, a gradient; the objects it follows, only in the drawing.
     "hatch": {
@@ -1956,6 +1962,11 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def line_patterned(nodes):
         return any("linePattern" in n.get("style", {}) or line_patterned(n.get("children", [])) for n in nodes)
 
+    # Schema 61 (docs/adr/0321): a dimension's options, moved value or breaks, or a dimension style's options.
+    optioned = lambda es: any(e["kind"] == "dimension" and any(k in e for k in ("options", "textShift", "breaks")) for e in es)  # noqa: E731
+    if (optioned(entities) or any(optioned(b["entities"]) for b in blocks or [])
+            or any("options" in st for st in (settings or {}).get("dimensionStyles", []))):
+        return 61
     # Schema 60 (docs/adr/0320 §1): a dimension's references' rule.
     if any(e["kind"] == "dimension" and "rule" in e.get("refs", {}) for e in entities):
         return 60
@@ -2311,7 +2322,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-61.kcad"] = container(root(cmap(parts), version=uint(61)))
+    files["schema-version-62.kcad"] = container(root(cmap(parts), version=uint(62)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2631,6 +2642,16 @@ def broken(minimal_content, minimal_file):
     # A rule is schema 60's (docs/adr/0320 §1): in schema 59 an unknown field; its name one of two.
     files["dimension-rule-in-schema-59.kcad"] = in_schema(59, dimension_of(cmap({"a": corner(0), "rule": text("curve")})))
     files["dimension-rule-unknown.kcad"] = in_schema(60, dimension_of(cmap({"a": corner(0), "rule": text("arc")})))
+    # Options, a moved value and breaks are schema 61's (docs/adr/0321): in schema 60 unknown fields; options not empty,
+    # an increment over 0, a symmetric tolerance without a lower value; a break's t within [0, 1]; no field unknown.
+    plain = lambda **extra: cmap({"dimension": cmap({**common, **dim_body, **extra})})  # noqa: E731
+    files["dimension-options-in-schema-60.kcad"] = in_schema(60, plain(options=cmap({"zeros": text("both")})))
+    files["dimension-options-empty.kcad"] = in_schema(61, plain(options=cmap({})))
+    files["dimension-options-round-zero.kcad"] = in_schema(61, plain(options=cmap({"round": f64(0.0)})))
+    files["dimension-options-symmetric-lower.kcad"] = in_schema(61, plain(options=cmap({"tolerance": cmap({"kind": text("symmetric"), "upper": f64(0.01), "lower": f64(0.01)})})))
+    files["dimension-options-unknown-field.kcad"] = in_schema(61, plain(options=cmap({"fit": text("auto"), "color": text("#FF0000")})))
+    files["dimension-breaks-t-above-one.kcad"] = in_schema(61, plain(breaks=array([cmap({"line": text("first"), "t": f64(1.5)})])))
+    files["dimension-text-shift-in-schema-60.kcad"] = in_schema(60, plain(textShift=cmap({"along": f64(1.0), "across": f64(0.0)})))
     files["dimension-refs-in-block.kcad"] = with_blocks([block(1, "Ölçü", [cmap({"dimension": cmap({"attrs": cmap({}), "layerId": text("0"), **dim_body, "refs": cmap({"a": corner(0)})})})])], version=43)
     # A closed and a wide polyline are schema 46's (docs/adr/0258): in schema 45 unknown fields; an area has neither;
     # `closed` only true; widths one pair of two numbers for each vertex, not below 0, the last pair 0 on an open
@@ -3588,6 +3609,7 @@ def build():
     out["addresses.kcad"] = container(document(load("addresses.json")))
     out["dimension-refs.kcad"] = container(document(load("dimension-refs.json")))
     out["dimension-rules.kcad"] = container(document(load("dimension-rules.json")))
+    out["dimension-options.kcad"] = container(document(load("dimension-options.json")))
     out["sheets.kcad"] = container(document(load("sheets.json")))
     out["requests.kcad"] = container(document(load("requests.json")))
     out["polyline-extras.kcad"] = container(document(load("polyline-extras.json")))

@@ -364,6 +364,8 @@ impl Fields {
                 path: self.path,
             }),
             "dimension" => Entity::Dimension(DimensionEntity {
+                text_shift: None,
+                breaks: Vec::new(),
                 base,
                 a: need(self.a, "a")?,
                 b: need(self.b, "b")?,
@@ -378,6 +380,7 @@ impl Fields {
                 zb: self.zb,
                 refs: None,
                 look: DimensionLook {
+                    options: None,
                     dim_style: self.dim_style,
                     arrow: match self.arrow.as_deref() {
                         Some(name) => Some(DimensionArrow::from_name(name).ok_or_else(|| {

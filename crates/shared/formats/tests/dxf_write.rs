@@ -387,6 +387,8 @@ fn objects() -> Vec<Entity> {
 fn dimensions() -> Vec<Entity> {
     let dim = |id: u32, style, a, b, offset, angle, c, text: Option<&str>| {
         Entity::Dimension(DimensionEntity {
+            text_shift: None,
+            breaks: Vec::new(),
             base: with("yazi", |b| {
                 b.id = id;
                 if id == 101 {

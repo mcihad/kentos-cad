@@ -73,6 +73,8 @@ mod data_compare;
 #[cfg(test)]
 mod dimension_follow_scenes;
 #[cfg(test)]
+mod dimension_option_scenes;
+#[cfg(test)]
 mod dimension_scenes;
 #[cfg(test)]
 mod divide_scenes;

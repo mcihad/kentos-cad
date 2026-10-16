@@ -109,6 +109,8 @@ pub enum Event {
     DimensionAxis(Vec<Slot>, f64),
     /// İlişki ▾'s Serbest bırak: the dimensions' points let go (docs/adr/0249 §3).
     DimensionFree(Vec<Slot>),
+    /// A dimension edit through `cad.dimensions.edit` (docs/adr/0321 §4): its options, its value home, its breaks off.
+    DimensionEdit(Vec<Slot>, DimensionOp),
     /// A dimension's line's colour (`#RRGGBB`; none: the object's), weight
     /// on paper (mm; none: a hairline) and type (none: continuous): the
     /// dimension line's and its arrowheads', the extension lines', the
@@ -193,6 +195,20 @@ pub enum Field {
     /// Slopes' first and second elevation, metres (docs/adr/0147 §7).
     DimensionZa(Vec<Slot>),
     DimensionZb(Vec<Slot>),
+    /// Dimensions' increment, and their tolerance's upper (true) or lower value, metres (docs/adr/0321 §2).
+    DimensionRound(Vec<Slot>),
+    DimensionTolerance(Vec<Slot>, bool),
+}
+
+/// What Öznitelikler's dimension rows ask of `cad.dimensions.edit` (docs/adr/0321 §4).
+#[derive(Debug, Clone, PartialEq)]
+pub enum DimensionOp {
+    /// The options as they become (none: none).
+    Options(Option<kentos_contracts::DimensionOptions>),
+    /// The value back in its place.
+    Home,
+    /// The lines whole again.
+    Unbreak,
 }
 
 /// Which vertices of an object a Kot cell sets.
@@ -653,6 +669,18 @@ impl App {
                 })
             }
             Event::DimensionFree(slots) => properties::free_dimensions(model, &slots),
+            Event::DimensionEdit(slots, op) => {
+                use kentos_contracts::DimensionEdit as E;
+                properties::edit_dimensions(model, &slots, |uids| match op {
+                    DimensionOp::Options(options) => E::Options { uids, options },
+                    DimensionOp::Unbreak => E::Unbreak { uids },
+                    DimensionOp::Home => E::MoveText {
+                        uid: uids[0].clone(),
+                        along: 0.0,
+                        across: 0.0,
+                    },
+                })
+            }
             Event::DimensionAxis(slots, angle) => {
                 let y = angle == 0.0;
                 properties::change_dimensions(model, &slots, |d| {
@@ -840,6 +868,40 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 })
             });
         }
+        Field::DimensionRound(slots) | Field::DimensionTolerance(slots, _) => {
+            let n = f.to_metres(web_number(text));
+            let empty = kentos_interaction::js_trim(text).is_empty();
+            if !(empty || n.is_finite()) {
+                return Vec::new();
+            }
+            let base = model
+                .get(slots[0])
+                .and_then(|e| match e {
+                    Entity::Dimension(d) => d.look.options.as_deref().cloned(),
+                    _ => None,
+                })
+                .unwrap_or_default();
+            let mut options = base;
+            match field {
+                Field::DimensionRound(_) => options.round = (!empty && n > 0.0).then_some(n),
+                Field::DimensionTolerance(_, upper) => {
+                    let Some(t) = options.tolerance.as_mut() else {
+                        return Vec::new();
+                    };
+                    let v = if empty { 0.0 } else { n };
+                    if *upper {
+                        t.upper = v;
+                    } else {
+                        t.lower = Some(v);
+                    }
+                }
+                _ => {}
+            }
+            let options = (!options.is_empty()).then_some(options);
+            return properties::edit_dimensions(model, slots, |uids| {
+                kentos_contracts::DimensionEdit::Options { uids, options }
+            });
+        }
         Field::DimensionZa(slots) | Field::DimensionZb(slots) => {
             let n = f.to_metres(web_number(text));
             if !n.is_finite() {
@@ -971,7 +1033,9 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::Attributes(..)
         | Field::Parameter(..)
         | Field::DimensionZa(_)
-        | Field::DimensionZb(_) => return Vec::new(),
+        | Field::DimensionZb(_)
+        | Field::DimensionRound(_)
+        | Field::DimensionTolerance(..) => return Vec::new(),
     };
     let Some(mut e) = model.get(slot).cloned() else {
         return Vec::new();

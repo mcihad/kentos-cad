@@ -1943,7 +1943,7 @@ pub fn catalog() -> CommandCatalog {
                       Ölçülen noktalar koordinat (kind at) ya da nesnenin yeri (kind place: kalıcı kimlik ve yer: node, start, end, center, vertex, mid) olarak verilir; kenarlar nesnenin kimliği ve tıklanan yerle (of, first, second: uid, near), o yere en yakın düz kenar, yay ya da daire ölçülür. \
                       Türler: aligned (Hizalı), linear (Doğrusal; angle 0 ΔY, 90 ΔX, yoksa at'ye göre), ordinate (Koordinat; çizgisi at'de biter), azimuth (Semt), slope (Eğim; za, zb ya da yerin köşesinin kotu), angle (iki düz kenar), angleVertex (köşe ve iki kol noktası), angleArc (yayın kendi açısı), radius, diameter, arcLength (between ile yayın iki nokta arası parçası), jogged (Kırıklı yarıçap: shownCentre ve on). \
                       at ölçü çizgisinin, yayının ya da çizgisinin geçtiği yerdir; offset verilirse onun yerine yazılan uzaklıktır (yarıçap, çap ve koordinat almaz: invalid_offset). dimensionStyle projenin ölçü stilinin adıdır (yoksa Standart); height verilmezse stilin yüksekliği, Standart'ta projenin Ölçü yüksekliği. \
-                      Hizalı, Doğrusal, Koordinat, Semt ve Eğim'de yer olarak verilen noktalar bağlanır: nesnesi değişince ölçü izler (ilişkili ölçü). Ölçülendirme aracı ölçüyü bu komutla yazar: araç, Python ve ajan aynı girdiye aynı ölçüyü alır. \
+                      Yer olarak verilen noktalar bağlanır: nesnesi değişince ölçü izler (ilişkili ölçü); kenarlardan açı kenarlarını, yarıçap, çap, kırıklı yarıçap, yay uzunluğu ve yaydan açı eğrisini izler (refs.rule). continue (Zincir ölçü) ve baseline (Baz ölçü) base ölçüden to noktasına sürer: ilk noktası temelinkini izler, stili ve görünüşü temelindir, at okunmaz. Ölçülendirme aracı ölçüyü bu komutla yazar: araç, Python ve ajan aynı girdiye aynı ölçüyü alır. \
                       Ölçü oluşmuyorsa (noktalar çakışıyor, kenarlar paralel, yay boş) no_dimension; nesnede aranan türde kenar yoksa not_measurable. Çıktı ve plan cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
             aliases: vec![],
@@ -1983,6 +1983,88 @@ pub fn catalog() -> CommandCatalog {
                     output: None,
                 },
             ],
+        },
+        // A dimension's spacing, breaks, moved value, written value and options (docs/adr/0321 §4), held together by
+        // fixtures/commands/v1/cad.dimensions.edit.json; the desktop's alone while the web is paused.
+        CommandDescriptor {
+            id: crate::CAD_DIMENSIONS_EDIT.into(),
+            version: crate::CAD_DIMENSIONS_EDIT_VERSION,
+            title: "Ölçüyü düzenle".into(),
+            summary: "Ölçülerde tek bir düzenleme yapar; tek geri alma adımı düzenlemenin adıyla. \
+                      space (Ölçü aralığı, DIMSPACE): base ölçüye paralel hizalı ve doğrusal ölçülerin çizgileri temelinkinden spacing kadar aralıkla dizilir (her yanda uzaklık sırasıyla; yoksa temel değer yüksekliğinin üç katı, 0 temelin çizgisine). \
+                      break (Ölçüyü kır, DIMBREAK): hizalı ve doğrusal ölçülerin ölçü ve uzatma çizgileri objects'in (yoksa görünen, ölçü ve yazı olmayan bütün nesnelerin) kestiği yerlerden boşlukla kırılır; kesen yoksa no_crossing uyarısı. unbreak kırmaları kaldırır. \
+                      moveText değeri kendi doğrultusunda (along) ve ona dik (across) kaydırır; 0 ve 0 yerine döndürür. text değerin yerine yazılanı koyar (<> ölçülen değerdir); null ölçülen değere döndürür. options sığdırma, yuvarlama, sıfırlar, ayak-inç biçimi, alternatif birim, tolerans ve kırma genişliğini yazar; null kaldırır. \
+                      Değişmeyen ölçü sayılmaz; hiçbiri değişmezse hiçbir şey yazılmaz. Kilitli katmandaki ölçü reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::DimensionsEdit>(),
+            output: schema::<crate::DimensionsEdited>(),
+            plan: Some(schema::<crate::DimensionsEditPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Üç ölçüyü temel ölçüden 2,5 m aralıkla diz".into(),
+                    input: json!({
+                        "edit": {
+                            "kind": "space",
+                            "base": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+                            "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3003"],
+                            "spacing": 2.5
+                        }
+                    }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3003"], "revision": "12" })),
+                },
+                CommandExample {
+                    title: "Ölçünün değerine simetrik tolerans ve mm alternatifi".into(),
+                    input: json!({
+                        "edit": {
+                            "kind": "options",
+                            "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"],
+                            "options": { "tolerance": { "kind": "symmetric", "upper": 0.01 }, "alt": { "unit": "mm", "decimals": 0 } }
+                        }
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        // What dimensions measure and show (docs/adr/0321 §3), held together by
+        // fixtures/commands/v1/cad.dimensions.query.json; the desktop's alone while the web is paused.
+        CommandDescriptor {
+            id: crate::CAD_DIMENSIONS_QUERY.into(),
+            version: crate::CAD_DIMENSIONS_QUERY_VERSION,
+            title: "Ölçüleri oku".into(),
+            summary: "Ölçülerin (uids, yoksa çizimin bütün ölçüleri) ne ölçtüğünü ve ne gösterdiğini okur; hiçbir şey yazmaz. \
+                      Her ölçü için: kind, geometrinin ölçtüğü değer (measured, unit: length metre, angle radyan, percent yüzde, coordinate metre), gösterilen yazı (shown: seçenekleriyle; elle yazılan değerde <> ölçülendir), \
+                      overridden (elle yazılan değer <> içermiyor: gösterilen ölçülen değil) ve bond (free, partial, bound, broken: noktaları neyi izliyor). \
+                      Çizimin boyutlarını okuyan program measured'ı okur: elle yazılan değer geometrinin ölçüsü değildir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::DimensionsQuery>(),
+            output: schema::<crate::DimensionsRead>(),
+            plan: Some(schema::<crate::DimensionsRead>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Çizimin bütün ölçüleri".into(),
+                input: json!({}),
+                output: Some(json!({ "dimensions": [{
+                    "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001", "kind": "aligned", "measured": 4.5, "unit": "length",
+                    "shown": "4.500", "overridden": false, "bond": "bound"
+                }], "revision": "12" })),
+            }],
         },
         // Buda, Uzat, Köşe yuvarla and Pah by their meaning (docs/adr/0250), held together by
         // fixtures/commands/v1/cad.entities.{trim,extend,fillet,chamfer}.json; the desktop's alone while the web is paused.
@@ -4925,6 +5007,12 @@ mod tests {
                         serde_json::from_value::<crate::DimensionsCreate>(e.input.clone())
                             .map(|_| ())
                     }
+                    crate::CAD_DIMENSIONS_EDIT => {
+                        serde_json::from_value::<crate::DimensionsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_DIMENSIONS_QUERY => {
+                        serde_json::from_value::<crate::DimensionsQuery>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_ENTITIES_TRIM | crate::CAD_ENTITIES_EXTEND => {
                         serde_json::from_value::<crate::EntitiesTrim>(e.input.clone()).map(|_| ())
                     }
@@ -5179,6 +5267,14 @@ mod tests {
                         }
                         crate::CAD_DIMENSIONS_REASSOCIATE => {
                             serde_json::from_value::<crate::DimensionsReassociated>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_DIMENSIONS_EDIT => {
+                            serde_json::from_value::<crate::DimensionsEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_DIMENSIONS_QUERY => {
+                            serde_json::from_value::<crate::DimensionsRead>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ENTITIES_TRIM | crate::CAD_ENTITIES_EXTEND => {

@@ -375,6 +375,22 @@ BlockUnitsName = Literal["mm", "cm", "m", "in", "ft", "unitless"]
 """The names of :class:`BlockUnits`, for a plain string."""
 
 
+class BreakLine(_StrEnum):
+    """Which of a dimension's lines a break is on.
+
+    - ``dimension``: The dimension line, from its first end (0) to its second (1).
+    - ``first``: The first extension line, from the measured point (0) to its far end (1).
+    - ``second``: The second.
+    """
+    DIMENSION = "dimension"
+    FIRST = "first"
+    SECOND = "second"
+
+
+BreakLineName = Literal["dimension", "first", "second"]
+"""The names of :class:`BreakLine`, for a plain string."""
+
+
 class CalloutKind(_StrEnum):
     """A callout's line.
 
@@ -574,6 +590,39 @@ DimensionArrowName = Literal["closed", "open", "dot", "none"]
 """The names of :class:`DimensionArrow`, for a plain string."""
 
 
+class DimensionBond(_StrEnum):
+    """What a dimension's points follow.
+
+    - ``free``: Nothing: its points are free.
+    - ``partial``: Some of its points follow places, all live.
+    - ``bound``: Every point it measures follows a place (or its rule's), all live.
+    - ``broken``: A reference broke.
+    """
+    FREE = "free"
+    PARTIAL = "partial"
+    BOUND = "bound"
+    BROKEN = "broken"
+
+
+DimensionBondName = Literal["free", "partial", "bound", "broken"]
+"""The names of :class:`DimensionBond`, for a plain string."""
+
+
+class DimensionFit(_StrEnum):
+    """Where the value goes when it does not fit between the extension lines (AutoCAD's DIMATFIT and DIMTIX): absent,
+    always between them.
+
+    - ``auto``: Beyond the second extension line when the value and the two arrowheads are longer than the line between them.
+    - ``outside``: Always beyond the second extension line, the arrowheads outside.
+    """
+    AUTO = "auto"
+    OUTSIDE = "outside"
+
+
+DimensionFitName = Literal["auto", "outside"]
+"""The names of :class:`DimensionFit`, for a plain string."""
+
+
 class DimensionPoint(_StrEnum):
     """A dimension's measured point: `a`, `b` or `c` (its third point: an
     angle's vertex, a radius's centre and the like).
@@ -643,6 +692,22 @@ class DimensionTextPlace(_StrEnum):
 
 DimensionTextPlaceName = Literal["centre"]
 """The names of :class:`DimensionTextPlace`, for a plain string."""
+
+
+class DimensionZeros(_StrEnum):
+    """Which zeros the number leaves out (AutoCAD's DIMZIN).
+
+    - ``both``
+    - ``leading``: The zero before the point: `0.50` → `.50`.
+    - ``trailing``: The decimals' trailing zeros, and a bare point: `2.500` → `2.5`, `4.000` → `4`.
+    """
+    BOTH = "both"
+    LEADING = "leading"
+    TRAILING = "trailing"
+
+
+DimensionZerosName = Literal["both", "leading", "trailing"]
+"""The names of :class:`DimensionZeros`, for a plain string."""
 
 
 class DivideEnds(_StrEnum):
@@ -2070,6 +2135,22 @@ TextScriptName = Literal["super", "sub"]
 """The names of :class:`TextScript`, for a plain string."""
 
 
+class ToleranceKind(_StrEnum):
+    """How a tolerance is written.
+
+    - ``symmetric``: ` ±upper`.
+    - ``deviation``: ` +upper -lower`.
+    - ``limits``: The largest and the smallest value instead of the number: `max/min`.
+    """
+    SYMMETRIC = "symmetric"
+    DEVIATION = "deviation"
+    LIMITS = "limits"
+
+
+ToleranceKindName = Literal["symmetric", "deviation", "limits"]
+"""The names of :class:`ToleranceKind`, for a plain string."""
+
+
 class TopologyRuleKind(_StrEnum):
     """The thirteen kinds (docs/adr/0202 §1–§2).
 
@@ -2510,6 +2591,31 @@ class CurveEdit(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> CurveEdit:
         return _variant(_CURVE_EDIT, "CurveEdit", "kind", data).from_json(data)
+
+
+class DimensionEdit(_Union):
+    """One edit of `cad.dimensions.edit` (docs/adr/0321 §4).
+
+    One of:
+
+    - :class:`SpaceDimensionEdit` (``kind: space``)
+    - :class:`BreakDimensionEdit` (``kind: break``)
+    - :class:`UnbreakDimensionEdit` (``kind: unbreak``)
+    - :class:`MoveTextDimensionEdit` (``kind: moveText``)
+    - :class:`TextDimensionEdit` (``kind: text``)
+    - :class:`OptionsDimensionEdit` (``kind: options``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionEdit:
+        return _variant(_DIMENSION_EDIT, "DimensionEdit", "kind", data).from_json(data)
 
 
 class DimensionMeasure(_Union):
@@ -3289,6 +3395,30 @@ class AddressesDefined(_Model):
         return cls(
             locators=[AddressLocator.from_json(e0) for e0 in data["locators"]],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AltUnits(_Model):
+    """An alternate unit written after the value in brackets (AutoCAD's DIMALT): `2.500 [2500]`.
+    Attributes:
+        decimals: Its decimals; absent: the project's length decimals. Unit: count.
+    """
+    unit: DrawingUnit | DrawingUnitName
+    decimals: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["unit"] = _enum_out(self.unit)
+        if self.decimals is not UNSET:
+            out["decimals"] = self.decimals
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AltUnits:
+        return cls(
+            unit=_enum_in(DrawingUnit, data["unit"]),
+            decimals=data.get("decimals", UNSET),
         )
 
 
@@ -6360,6 +6490,30 @@ class DatumTransform(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class DimensionBreak(_Model):
+    """A gap in one of a dimension's lines where another object crosses it (AutoCAD's DIMBREAK), at the fraction `t` of
+    the line; its width the options' `breakSize`.
+    Attributes:
+        t: Unit: 1.
+    """
+    line: BreakLine | BreakLineName
+    t: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["line"] = _enum_out(self.line)
+        out["t"] = float(self.t)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionBreak:
+        return cls(
+            line=_enum_in(BreakLine, data["line"]),
+            t=float(data["t"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DimensionEntity(Entity):
     """Fields every object has. `id` is the object's local id inside a v1 file.
     v1 keeps no persistent id: it is derived from the file's content when the
@@ -6378,6 +6532,7 @@ class DimensionEntity(Entity):
             `DEFAULT_ARROW` for the others. Unit: 1.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        breaks: The gaps in its lines where other objects cross them (docs/adr/0321 §1).
         by_layer: On a block's object, the parts without a value of their own that
             follow the object's layer instead of the insert; in order, once each,
             never one with a value of its own.
@@ -6409,6 +6564,7 @@ class DimensionEntity(Entity):
             object (docs/adr/0139). Unit: paper-mm.
         mask: The value is drawn over the drawing's background (docs/adr/0147, as a
             text's mask, docs/adr/0145).
+        options: Where the value goes when it does not fit and how it is written (docs/adr/0321 §1, §2).
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         prefix: Written before the value (and its kind's own prefix).
@@ -6418,6 +6574,7 @@ class DimensionEntity(Entity):
         text_color: The value's colour; absent: the object's.
         text_gap: The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`. Unit: 1.
         text_place: Where the value stands; absent: over the line.
+        text_shift: Its value moved from its place (docs/adr/0321 §1).
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         unit: The unit lengths and coordinates are written in; absent: the project's.
         wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
@@ -6437,6 +6594,7 @@ class DimensionEntity(Entity):
     arrow: DimensionArrow | DimensionArrowName | None | Unset = UNSET
     arrow_size: float | None | Unset = UNSET
     attachments: list[Attachment] | Unset = UNSET
+    breaks: list[DimensionBreak] | Unset = UNSET
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     c: Vec2 | None | Unset = UNSET
     color: str | None | Unset = UNSET
@@ -6458,6 +6616,7 @@ class DimensionEntity(Entity):
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     mask: bool | Unset = UNSET
+    options: DimensionOptions | None | Unset = UNSET
     order: int | None | Unset = UNSET
     prefix: str | None | Unset = UNSET
     refs: DimensionRefs | None | Unset = UNSET
@@ -6468,6 +6627,7 @@ class DimensionEntity(Entity):
     text_color: str | None | Unset = UNSET
     text_gap: float | None | Unset = UNSET
     text_place: DimensionTextPlace | DimensionTextPlaceName | None | Unset = UNSET
+    text_shift: TextShift | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
     unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
     wipeout: Wipeout | None | Unset = UNSET
@@ -6491,6 +6651,8 @@ class DimensionEntity(Entity):
             out["arrowSize"] = None if self.arrow_size is None else float(self.arrow_size)
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.breaks is not UNSET:
+            out["breaks"] = [e0.to_json() for e0 in self.breaks]
         if self.by_layer is not UNSET:
             out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.c is not UNSET:
@@ -6533,6 +6695,8 @@ class DimensionEntity(Entity):
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.mask is not UNSET:
             out["mask"] = self.mask
+        if self.options is not UNSET:
+            out["options"] = None if self.options is None else self.options.to_json()
         if self.order is not UNSET:
             out["order"] = self.order
         if self.prefix is not UNSET:
@@ -6553,6 +6717,8 @@ class DimensionEntity(Entity):
             out["textGap"] = None if self.text_gap is None else float(self.text_gap)
         if self.text_place is not UNSET:
             out["textPlace"] = None if self.text_place is None else _enum_out(self.text_place)
+        if self.text_shift is not UNSET:
+            out["textShift"] = None if self.text_shift is None else self.text_shift.to_json()
         if self.transparency is not UNSET:
             out["transparency"] = None if self.transparency is None else float(self.transparency)
         if self.unit is not UNSET:
@@ -6579,6 +6745,7 @@ class DimensionEntity(Entity):
             arrow=UNSET if "arrow" not in data else None if data["arrow"] is None else _enum_in(DimensionArrow, data["arrow"]),
             arrow_size=UNSET if "arrowSize" not in data else None if data["arrowSize"] is None else float(data["arrowSize"]),
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            breaks=[DimensionBreak.from_json(e0) for e0 in data["breaks"]] if "breaks" in data else UNSET,
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             c=UNSET if "c" not in data else None if data["c"] is None else Vec2.from_json(data["c"]),
             color=data.get("color", UNSET),
@@ -6600,6 +6767,7 @@ class DimensionEntity(Entity):
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             mask=data.get("mask", UNSET),
+            options=UNSET if "options" not in data else None if data["options"] is None else DimensionOptions.from_json(data["options"]),
             order=data.get("order", UNSET),
             prefix=data.get("prefix", UNSET),
             refs=UNSET if "refs" not in data else None if data["refs"] is None else DimensionRefs.from_json(data["refs"]),
@@ -6610,11 +6778,102 @@ class DimensionEntity(Entity):
             text_color=data.get("textColor", UNSET),
             text_gap=UNSET if "textGap" not in data else None if data["textGap"] is None else float(data["textGap"]),
             text_place=UNSET if "textPlace" not in data else None if data["textPlace"] is None else _enum_in(DimensionTextPlace, data["textPlace"]),
+            text_shift=UNSET if "textShift" not in data else None if data["textShift"] is None else TextShift.from_json(data["textShift"]),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(DrawingUnit, data["unit"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
             za=UNSET if "za" not in data else None if data["za"] is None else float(data["za"]),
             zb=UNSET if "zb" not in data else None if data["zb"] is None else float(data["zb"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionOptions(_Model):
+    """A dimension's options (docs/adr/0321 §1, §2): all absent, the dimension as it always was.
+    Attributes:
+        break_size: A break's width, times the value's height, over 0; absent: 1 (AutoCAD's DIMBREAK size). Unit: 1.
+        length_style: Feet and inches in an inch or foot unit (AutoCAD's DIMLUNIT, docs/adr/0262 §2); absent: the project's, unless
+            the dimension names its own unit.
+        round: Lengths and coordinates rounded to this increment, metres, over 0 (AutoCAD's DIMRND). Unit: length.
+    """
+    alt: AltUnits | None | Unset = UNSET
+    break_size: float | None | Unset = UNSET
+    fit: DimensionFit | DimensionFitName | None | Unset = UNSET
+    length_style: LengthStyle | LengthStyleName | None | Unset = UNSET
+    round: float | None | Unset = UNSET
+    tolerance: DimensionTolerance | None | Unset = UNSET
+    zeros: DimensionZeros | DimensionZerosName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.alt is not UNSET:
+            out["alt"] = None if self.alt is None else self.alt.to_json()
+        if self.break_size is not UNSET:
+            out["breakSize"] = None if self.break_size is None else float(self.break_size)
+        if self.fit is not UNSET:
+            out["fit"] = None if self.fit is None else _enum_out(self.fit)
+        if self.length_style is not UNSET:
+            out["lengthStyle"] = None if self.length_style is None else _enum_out(self.length_style)
+        if self.round is not UNSET:
+            out["round"] = None if self.round is None else float(self.round)
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else self.tolerance.to_json()
+        if self.zeros is not UNSET:
+            out["zeros"] = None if self.zeros is None else _enum_out(self.zeros)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionOptions:
+        return cls(
+            alt=UNSET if "alt" not in data else None if data["alt"] is None else AltUnits.from_json(data["alt"]),
+            break_size=UNSET if "breakSize" not in data else None if data["breakSize"] is None else float(data["breakSize"]),
+            fit=UNSET if "fit" not in data else None if data["fit"] is None else _enum_in(DimensionFit, data["fit"]),
+            length_style=UNSET if "lengthStyle" not in data else None if data["lengthStyle"] is None else _enum_in(LengthStyle, data["lengthStyle"]),
+            round=UNSET if "round" not in data else None if data["round"] is None else float(data["round"]),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else DimensionTolerance.from_json(data["tolerance"]),
+            zeros=UNSET if "zeros" not in data else None if data["zeros"] is None else _enum_in(DimensionZeros, data["zeros"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionRead(_Model):
+    """One dimension as `cad.dimensions.query` reads it.
+    Attributes:
+        kind: `aligned`, `linear`, `angular`, `radius`, `diameter`, `ordinate`, `arcLength`, `jogged`, `azimuth`, `slope`.
+        measured: What the geometry measures, in `unit`: metres, radians, per cent or a coordinate's metres. Unit: value.
+        unit: "length", "angle", "percent" or "coordinate".
+        shown: What it shows, as written (its options; a written value with `<>` the measured one).
+        overridden: Whether it shows a written value without `<>`: not the measured one.
+    """
+    uid: str
+    kind: str
+    measured: float
+    unit: str
+    shown: str
+    overridden: bool
+    bond: DimensionBond | DimensionBondName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["kind"] = self.kind
+        out["measured"] = float(self.measured)
+        out["unit"] = self.unit
+        out["shown"] = self.shown
+        out["overridden"] = self.overridden
+        out["bond"] = _enum_out(self.bond)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionRead:
+        return cls(
+            uid=data["uid"],
+            kind=data["kind"],
+            measured=float(data["measured"]),
+            unit=data["unit"],
+            shown=data["shown"],
+            overridden=data["overridden"],
+            bond=_enum_in(DimensionBond, data["bond"]),
         )
 
 
@@ -6665,6 +6924,7 @@ class DimensionStyleDef(_Model):
         ext_beyond: Unit: paper-mm.
         ext_offset: Unit: paper-mm.
         ext_weight: Unit: paper-mm.
+        options: The value's fit and writing (docs/adr/0321 §1, §2).
         text_gap: Unit: paper-mm.
     """
     id: str
@@ -6682,6 +6942,7 @@ class DimensionStyleDef(_Model):
     ext_offset: float | None | Unset = UNSET
     ext_weight: float | None | Unset = UNSET
     font: DrawingFont | DrawingFontName | None | Unset = UNSET
+    options: DimensionOptions | None | Unset = UNSET
     prefix: str | None | Unset = UNSET
     suffix: str | None | Unset = UNSET
     text_color: str | None | Unset = UNSET
@@ -6718,6 +6979,8 @@ class DimensionStyleDef(_Model):
             out["extWeight"] = None if self.ext_weight is None else float(self.ext_weight)
         if self.font is not UNSET:
             out["font"] = None if self.font is None else _enum_out(self.font)
+        if self.options is not UNSET:
+            out["options"] = None if self.options is None else self.options.to_json()
         if self.prefix is not UNSET:
             out["prefix"] = self.prefix
         if self.suffix is not UNSET:
@@ -6750,12 +7013,46 @@ class DimensionStyleDef(_Model):
             ext_offset=UNSET if "extOffset" not in data else None if data["extOffset"] is None else float(data["extOffset"]),
             ext_weight=UNSET if "extWeight" not in data else None if data["extWeight"] is None else float(data["extWeight"]),
             font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
+            options=UNSET if "options" not in data else None if data["options"] is None else DimensionOptions.from_json(data["options"]),
             prefix=data.get("prefix", UNSET),
             suffix=data.get("suffix", UNSET),
             text_color=data.get("textColor", UNSET),
             text_gap=UNSET if "textGap" not in data else None if data["textGap"] is None else float(data["textGap"]),
             text_place=UNSET if "textPlace" not in data else None if data["textPlace"] is None else _enum_in(DimensionTextPlace, data["textPlace"]),
             unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(DrawingUnit, data["unit"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionTolerance(_Model):
+    """A tolerance (AutoCAD's DIMTOL and DIMLIM), metres; lengths and coordinates only.
+    Attributes:
+        upper: Above the value, 0 or more. Unit: length.
+        decimals: Its decimals; absent: the value's. Unit: count.
+        lower: Below the value, 0 or more; a deviation's and limits' (absent: 0). Unit: length.
+    """
+    kind: ToleranceKind | ToleranceKindName
+    upper: float
+    decimals: int | None | Unset = UNSET
+    lower: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["upper"] = float(self.upper)
+        if self.decimals is not UNSET:
+            out["decimals"] = self.decimals
+        if self.lower is not UNSET:
+            out["lower"] = None if self.lower is None else float(self.lower)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionTolerance:
+        return cls(
+            kind=_enum_in(ToleranceKind, data["kind"]),
+            upper=float(data["upper"]),
+            decimals=data.get("decimals", UNSET),
+            lower=UNSET if "lower" not in data else None if data["lower"] is None else float(data["lower"]),
         )
 
 
@@ -6778,7 +7075,7 @@ class DimensionsCreate(_Model):
     Koordinat, Zincir or Baz, which take none), `invalid_revision`,
     `revision_conflict` (status `conflict`), `entity_not_found`,
     `no_such_place`, `not_measurable` (the object has no edge of the kind the
-    measure takes; a base not an aligned or a linear dimension), `missing_elevation`
+    measure takes), `not_straight` (a base not an aligned or a linear dimension), `missing_elevation`
     (Eğim's point with no elevation given or kept), `unknown_style`,
     `no_dimension` (no dimension forms there: the points meet, the edges are
     parallel, the arc spans nothing), then the layer's and the look's as
@@ -6865,6 +7162,127 @@ class DimensionsCreate(_Model):
             mask=data.get("mask", UNSET),
             offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
             symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionsEdit(_Model):
+    """Input of `cad.dimensions.edit` v1 (docs/adr/0321 §4): one edit of dimensions as one undo step named after it
+    (Ölçü aralığı, Ölçüyü kır, Kırmayı kaldır, Ölçü yazısını taşı, Ölçü değerini yaz, Ölçü seçenekleri). A dimension
+    the edit leaves as it was is not counted; when none changes, nothing is written.
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_uid` (the base's, then each dimension's, then each
+    object's), `no_entities` (no dimension), `not_finite` (`spacing`, `along`, `across`), `invalid_offset` (a spacing
+    below 0), `empty_text` (a written value of spaces), `invalid_style` (options that break their rules),
+    `invalid_revision`, `revision_conflict` (status `conflict`), `entity_not_found` (the base, each dimension, each
+    object), `not_a_dimension`, `layer_locked` (a dimension's layer), `not_straight` (Space's and Break's dimensions:
+    aligned or linear), `not_parallel` (Space's dimension not parallel to its base). Break warns `no_crossing` for a
+    dimension no object crosses.
+    """
+    edit: DimensionEdit
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["edit"] = self.edit.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionsEdit:
+        return cls(
+            edit=DimensionEdit.from_json(data["edit"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionsEditPlan(_Model):
+    """What `cad.dimensions.edit` would write (plan mode).
+    Attributes:
+        dimensions: The dimensions that would change, as execute would write them.
+    """
+    dimensions: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["dimensions"] = [e0.to_json() for e0 in self.dimensions]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionsEditPlan:
+        return cls(
+            dimensions=[Entity.from_json(e0) for e0 in data["dimensions"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionsEdited(_Model):
+    """Output of `cad.dimensions.edit` v1.
+    Attributes:
+        changed: The dimensions that changed, by their persistent ids, in the input's order.
+    """
+    changed: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = list(self.changed)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionsEdited:
+        return cls(
+            changed=list(data["changed"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionsQuery(_Model):
+    """Input of `cad.dimensions.query` v1 (docs/adr/0321 §3), read only: each dimension's measured value apart from the
+    value it shows (a written value is an override: what it says is not what the geometry measures), and what its
+    points follow. Refusals: `invalid_uid`, `entity_not_found`, `not_a_dimension`.
+    Attributes:
+        uids: The dimensions; absent: every dimension of the drawing, in its order.
+    """
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionsQuery:
+        return cls(
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionsRead(_Model):
+    """Output of `cad.dimensions.query` v1."""
+    dimensions: list[DimensionRead]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["dimensions"] = [e0.to_json() for e0 in self.dimensions]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionsRead:
+        return cls(
+            dimensions=[DimensionRead.from_json(e0) for e0 in data["dimensions"]],
+            revision=data["revision"],
         )
 
 
@@ -20936,6 +21354,31 @@ class TextRun(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TextShift(_Model):
+    """The value moved from its place (AutoCAD's text moved, DIMTMOVE 2): metres along the value's own direction and
+    across it (left positive).
+    Attributes:
+        along: Unit: length.
+        across: Unit: length.
+    """
+    along: float
+    across: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["along"] = float(self.along)
+        out["across"] = float(self.across)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TextShift:
+        return cls(
+            along=float(data["along"]),
+            across=float(data["across"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TextStyleDef(_Model):
     """A named text style (docs/adr/0183 §2).
     Attributes:
@@ -23356,6 +23799,152 @@ class ToPolylineCurveEdit(CurveEdit):
 
 
 @dataclass(kw_only=True, slots=True)
+class SpaceDimensionEdit(DimensionEdit):
+    """Ölçü aralığı (AutoCAD's DIMSPACE): the dimensions' lines put `spacing` apart from the base's, each side of it
+    in its order of distance; 0 lines them up with the base's. Aligned and linear dimensions parallel to the base.
+    Attributes:
+        base: The base dimension's persistent id; it does not move.
+        spacing: Metres between two lines, 0 or more; absent: three times the base's value height (Baz ölçü's level). Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "space"
+    base: str
+    uids: list[str]
+    spacing: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "space"}
+        out["base"] = self.base
+        out["uids"] = list(self.uids)
+        if self.spacing is not UNSET:
+            out["spacing"] = None if self.spacing is None else float(self.spacing)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpaceDimensionEdit:
+        return cls(
+            base=data["base"],
+            uids=list(data["uids"]),
+            spacing=UNSET if "spacing" not in data else None if data["spacing"] is None else float(data["spacing"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BreakDimensionEdit(DimensionEdit):
+    """Ölçüyü kır (AutoCAD's DIMBREAK): a gap in each of the dimensions' lines where `objects` (absent: every shown
+    object that is not a dimension) cross it; its breaks so far replaced. Aligned and linear dimensions.
+    """
+    TAG_VALUE: ClassVar[str] = "break"
+    uids: list[str]
+    objects: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "break"}
+        out["uids"] = list(self.uids)
+        if self.objects is not UNSET:
+            out["objects"] = None if self.objects is None else list(self.objects)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BreakDimensionEdit:
+        return cls(
+            uids=list(data["uids"]),
+            objects=UNSET if "objects" not in data else None if data["objects"] is None else list(data["objects"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UnbreakDimensionEdit(DimensionEdit):
+    """Kırmayı kaldır: the dimensions' lines whole again."""
+    TAG_VALUE: ClassVar[str] = "unbreak"
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "unbreak"}
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnbreakDimensionEdit:
+        return cls(
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MoveTextDimensionEdit(DimensionEdit):
+    """Ölçü yazısını taşı: the value moved along and across its own direction from its place; 0 and 0 home again.
+    Attributes:
+        along: Unit: length.
+        across: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "moveText"
+    uid: str
+    along: float
+    across: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "moveText"}
+        out["uid"] = self.uid
+        out["along"] = float(self.along)
+        out["across"] = float(self.across)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MoveTextDimensionEdit:
+        return cls(
+            uid=data["uid"],
+            along=float(data["along"]),
+            across=float(data["across"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TextDimensionEdit(DimensionEdit):
+    """Ölçü değerini yaz: the text written over the value, `<>` its measured value (AutoCAD's text override); null:
+    the measured value again.
+    """
+    TAG_VALUE: ClassVar[str] = "text"
+    uids: list[str]
+    text: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "text"}
+        out["uids"] = list(self.uids)
+        if self.text is not UNSET:
+            out["text"] = self.text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TextDimensionEdit:
+        return cls(
+            uids=list(data["uids"]),
+            text=data.get("text", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OptionsDimensionEdit(DimensionEdit):
+    """Ölçü seçenekleri: the dimensions' options (docs/adr/0321 §1, §2); null: none."""
+    TAG_VALUE: ClassVar[str] = "options"
+    uids: list[str]
+    options: DimensionOptions | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "options"}
+        out["uids"] = list(self.uids)
+        if self.options is not UNSET:
+            out["options"] = None if self.options is None else self.options.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OptionsDimensionEdit:
+        return cls(
+            uids=list(data["uids"]),
+            options=UNSET if "options" not in data else None if data["options"] is None else DimensionOptions.from_json(data["options"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AlignedDimensionMeasure(DimensionMeasure):
     """Hizalı: the distance from `a` to `b`."""
     TAG_VALUE: ClassVar[str] = "aligned"
@@ -24432,6 +25021,7 @@ class DimensionEntityGeometry(EntityGeometry):
         arrow: Its arrowheads; absent: oblique ticks.
         arrow_size: The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,
             `DEFAULT_ARROW` for the others. Unit: 1.
+        breaks: The gaps in its lines (docs/adr/0321 §1).
         c: Unit: length.
         decimals: A length's, a coordinate's or a slope's decimals; absent: the
             project's length decimals (a slope's 2). Angles keep the project's. Unit: count.
@@ -24447,12 +25037,14 @@ class DimensionEntityGeometry(EntityGeometry):
         ext_weight: The extension lines' weight, paper mm; absent: a hairline. Unit: paper-mm.
         font: The value's typeface; absent: the project's.
         mask: The value over the drawing's background (docs/adr/0147).
+        options: Where the value goes when it does not fit and how it is written (docs/adr/0321 §1, §2).
         prefix: Written before the value (and its kind's own prefix).
         refs: The objects its points follow (docs/adr/0249): an associative dimension; none, free points.
         suffix: Written after the value.
         text_color: The value's colour; absent: the object's.
         text_gap: The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`. Unit: 1.
         text_place: Where the value stands; absent: over the line.
+        text_shift: Its value moved from its place (docs/adr/0321 §1).
         unit: The unit lengths and coordinates are written in; absent: the project's.
         za: A slope's two elevations, metres (docs/adr/0147). Unit: elevation.
         zb: Unit: elevation.
@@ -24465,6 +25057,7 @@ class DimensionEntityGeometry(EntityGeometry):
     angle: float | None | Unset = UNSET
     arrow: DimensionArrow | DimensionArrowName | None | Unset = UNSET
     arrow_size: float | None | Unset = UNSET
+    breaks: list[DimensionBreak] | Unset = UNSET
     c: Vec2 | None | Unset = UNSET
     decimals: int | None | Unset = UNSET
     dim_line_color: str | None | Unset = UNSET
@@ -24478,6 +25071,7 @@ class DimensionEntityGeometry(EntityGeometry):
     ext_weight: float | None | Unset = UNSET
     font: DrawingFont | DrawingFontName | None | Unset = UNSET
     mask: bool | Unset = UNSET
+    options: DimensionOptions | None | Unset = UNSET
     prefix: str | None | Unset = UNSET
     refs: DimensionRefs | None | Unset = UNSET
     style: DimensionStyle | DimensionStyleName | None | Unset = UNSET
@@ -24486,6 +25080,7 @@ class DimensionEntityGeometry(EntityGeometry):
     text_color: str | None | Unset = UNSET
     text_gap: float | None | Unset = UNSET
     text_place: DimensionTextPlace | DimensionTextPlaceName | None | Unset = UNSET
+    text_shift: TextShift | None | Unset = UNSET
     unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
     za: float | None | Unset = UNSET
     zb: float | None | Unset = UNSET
@@ -24502,6 +25097,8 @@ class DimensionEntityGeometry(EntityGeometry):
             out["arrow"] = None if self.arrow is None else _enum_out(self.arrow)
         if self.arrow_size is not UNSET:
             out["arrowSize"] = None if self.arrow_size is None else float(self.arrow_size)
+        if self.breaks is not UNSET:
+            out["breaks"] = [e0.to_json() for e0 in self.breaks]
         if self.c is not UNSET:
             out["c"] = None if self.c is None else _vec2_out(self.c)
         if self.decimals is not UNSET:
@@ -24528,6 +25125,8 @@ class DimensionEntityGeometry(EntityGeometry):
             out["font"] = None if self.font is None else _enum_out(self.font)
         if self.mask is not UNSET:
             out["mask"] = self.mask
+        if self.options is not UNSET:
+            out["options"] = None if self.options is None else self.options.to_json()
         if self.prefix is not UNSET:
             out["prefix"] = self.prefix
         if self.refs is not UNSET:
@@ -24544,6 +25143,8 @@ class DimensionEntityGeometry(EntityGeometry):
             out["textGap"] = None if self.text_gap is None else float(self.text_gap)
         if self.text_place is not UNSET:
             out["textPlace"] = None if self.text_place is None else _enum_out(self.text_place)
+        if self.text_shift is not UNSET:
+            out["textShift"] = None if self.text_shift is None else self.text_shift.to_json()
         if self.unit is not UNSET:
             out["unit"] = None if self.unit is None else _enum_out(self.unit)
         if self.za is not UNSET:
@@ -24562,6 +25163,7 @@ class DimensionEntityGeometry(EntityGeometry):
             angle=UNSET if "angle" not in data else None if data["angle"] is None else float(data["angle"]),
             arrow=UNSET if "arrow" not in data else None if data["arrow"] is None else _enum_in(DimensionArrow, data["arrow"]),
             arrow_size=UNSET if "arrowSize" not in data else None if data["arrowSize"] is None else float(data["arrowSize"]),
+            breaks=[DimensionBreak.from_json(e0) for e0 in data["breaks"]] if "breaks" in data else UNSET,
             c=UNSET if "c" not in data else None if data["c"] is None else Vec2.from_json(data["c"]),
             decimals=data.get("decimals", UNSET),
             dim_line_color=data.get("dimLineColor", UNSET),
@@ -24575,6 +25177,7 @@ class DimensionEntityGeometry(EntityGeometry):
             ext_weight=UNSET if "extWeight" not in data else None if data["extWeight"] is None else float(data["extWeight"]),
             font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
             mask=data.get("mask", UNSET),
+            options=UNSET if "options" not in data else None if data["options"] is None else DimensionOptions.from_json(data["options"]),
             prefix=data.get("prefix", UNSET),
             refs=UNSET if "refs" not in data else None if data["refs"] is None else DimensionRefs.from_json(data["refs"]),
             style=UNSET if "style" not in data else None if data["style"] is None else _enum_in(DimensionStyle, data["style"]),
@@ -24583,6 +25186,7 @@ class DimensionEntityGeometry(EntityGeometry):
             text_color=data.get("textColor", UNSET),
             text_gap=UNSET if "textGap" not in data else None if data["textGap"] is None else float(data["textGap"]),
             text_place=UNSET if "textPlace" not in data else None if data["textPlace"] is None else _enum_in(DimensionTextPlace, data["textPlace"]),
+            text_shift=UNSET if "textShift" not in data else None if data["textShift"] is None else TextShift.from_json(data["textShift"]),
             unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(DrawingUnit, data["unit"]),
             za=UNSET if "za" not in data else None if data["za"] is None else float(data["za"]),
             zb=UNSET if "zb" not in data else None if data["zb"] is None else float(data["zb"]),
@@ -26950,6 +27554,9 @@ _CURVE_CONSTRUCTION: dict[str, type[CurveConstruction]] = {"circleTwoPoints": Ci
 _CURVE_EDIT: dict[str, type[CurveEdit]] = {"close": CloseCurveEdit, "open": OpenCurveEdit, "decurve": DecurveCurveEdit, "toSpline": ToSplineCurveEdit, "addFit": AddFitCurveEdit, "moveFit": MoveFitCurveEdit, "removeFit": RemoveFitCurveEdit, "tangents": TangentsCurveEdit, "moveControl": MoveControlCurveEdit, "weight": WeightCurveEdit, "removeControl": RemoveControlCurveEdit, "insertKnot": InsertKnotCurveEdit, "toPolyline": ToPolylineCurveEdit}
 
 
+_DIMENSION_EDIT: dict[str, type[DimensionEdit]] = {"space": SpaceDimensionEdit, "break": BreakDimensionEdit, "unbreak": UnbreakDimensionEdit, "moveText": MoveTextDimensionEdit, "text": TextDimensionEdit, "options": OptionsDimensionEdit}
+
+
 _DIMENSION_MEASURE: dict[str, type[DimensionMeasure]] = {"aligned": AlignedDimensionMeasure, "linear": LinearDimensionMeasure, "ordinate": OrdinateDimensionMeasure, "azimuth": AzimuthDimensionMeasure, "slope": SlopeDimensionMeasure, "angle": AngleDimensionMeasure, "angleVertex": AngleVertexDimensionMeasure, "angleArc": AngleArcDimensionMeasure, "radius": RadiusDimensionMeasure, "diameter": DiameterDimensionMeasure, "arcLength": ArcLengthDimensionMeasure, "jogged": JoggedDimensionMeasure, "continue": ContinueDimensionMeasure, "baseline": BaselineDimensionMeasure}
 
 
@@ -27041,6 +27648,7 @@ __all__ = [
     "AllTrimBoundaries",
     "AlongPointConstruction",
     "AlongSubPlace",
+    "AltUnits",
     "AngleArcDimensionMeasure",
     "AngleBlockParameter",
     "AngleDimensionMeasure",
@@ -27143,6 +27751,9 @@ __all__ = [
     "BlocksReplaced",
     "BothNetworkDirection",
     "Bounds",
+    "BreakDimensionEdit",
+    "BreakLine",
+    "BreakLineName",
     "CalloutKind",
     "CalloutKindName",
     "CellRange",
@@ -27223,11 +27834,19 @@ __all__ = [
     "DigitizedNetworkDirection",
     "DimensionArrow",
     "DimensionArrowName",
+    "DimensionBond",
+    "DimensionBondName",
+    "DimensionBreak",
+    "DimensionEdit",
     "DimensionEntity",
     "DimensionEntityGeometry",
+    "DimensionFit",
+    "DimensionFitName",
     "DimensionMeasure",
+    "DimensionOptions",
     "DimensionPoint",
     "DimensionPointName",
+    "DimensionRead",
     "DimensionRefs",
     "DimensionRule",
     "DimensionRuleName",
@@ -27236,7 +27855,15 @@ __all__ = [
     "DimensionStyleName",
     "DimensionTextPlace",
     "DimensionTextPlaceName",
+    "DimensionTolerance",
+    "DimensionZeros",
+    "DimensionZerosName",
     "DimensionsCreate",
+    "DimensionsEdit",
+    "DimensionsEditPlan",
+    "DimensionsEdited",
+    "DimensionsQuery",
+    "DimensionsRead",
     "DimensionsReassociate",
     "DimensionsReassociatePlan",
     "DimensionsReassociated",
@@ -27539,6 +28166,7 @@ __all__ = [
     "MoveBlockAction",
     "MoveControlCurveEdit",
     "MoveFitCurveEdit",
+    "MoveTextDimensionEdit",
     "MoveTransform",
     "NamedUcs",
     "NamedUcsTo",
@@ -27575,6 +28203,7 @@ __all__ = [
     "ObstacleKindName",
     "OffsetBy",
     "OpenCurveEdit",
+    "OptionsDimensionEdit",
     "OrderTo",
     "OrderToName",
     "OrdinateDimensionMeasure",
@@ -27762,6 +28391,7 @@ __all__ = [
     "SnapFound",
     "SnapKindName",
     "SnapKindNameName",
+    "SpaceDimensionEdit",
     "SplineEntity",
     "SplineEntityGeometry",
     "StackMode",
@@ -27805,12 +28435,14 @@ __all__ = [
     "TenantKindName",
     "TextAlign",
     "TextAlignName",
+    "TextDimensionEdit",
     "TextEntity",
     "TextEntityGeometry",
     "TextPath",
     "TextRun",
     "TextScript",
     "TextScriptName",
+    "TextShift",
     "TextStyleDef",
     "ThroughOffsetBy",
     "TileGrid",
@@ -27819,6 +28451,8 @@ __all__ = [
     "TmDefinition",
     "ToPolylineCurveEdit",
     "ToSplineCurveEdit",
+    "ToleranceKind",
+    "ToleranceKindName",
     "TopologyException",
     "TopologyRule",
     "TopologyRuleKind",
@@ -27839,6 +28473,7 @@ __all__ = [
     "UcsNow",
     "UcsSet",
     "UcsTo",
+    "UnbreakDimensionEdit",
     "UnitDecision",
     "UnitGeometry",
     "UnitGeometryName",

@@ -9,7 +9,7 @@ use crate::{
 };
 use kentos_contracts::{
     AddressesDefine, ArcCreate, ArraysEdit, BlocksDefine, BlocksEdit, CallOp, ChangesetApply,
-    CircleCreate, CurvesConstruct, CurvesEdit, DimensionsCreate, DimensionsReassociate,
+    CircleCreate, CurvesConstruct, CurvesEdit, DimensionsCreate, DimensionsEdit, DimensionsQuery, DimensionsReassociate,
     DrawingAudit, EntitiesArray, EntitiesBoundary, EntitiesBreak, EntitiesChamfer, EntitiesCleanup,
     EntitiesCopy, EntitiesCreate, EntitiesDelete, EntitiesDivide, EntitiesEdit, EntitiesExplode,
     EntitiesFillet, EntitiesHatch, EntitiesJoin, EntitiesLengthen, EntitiesMatch, EntitiesOffset,
@@ -33,7 +33,7 @@ use crate::standards::{apply as standards_apply, check as standards_check};
 use crate::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, arrays_edit, blocks_define,
     blocks_edit, changeset, circle, create, curves_construct, curves_edit, delete,
-    dimensions_create, dimensions_reassociate, divide, drawing_audit, edit, entities_boundary,
+    dimensions_create, dimensions_edit, dimensions_query, dimensions_reassociate, divide, drawing_audit, edit, entities_boundary,
     entities_break, entities_chamfer, entities_cleanup, entities_copy, entities_explode,
     entities_extend, entities_fillet, entities_hatch, entities_join, entities_lengthen,
     entities_match, entities_order, entities_paste, entities_pick, entities_reverse,
@@ -141,6 +141,8 @@ macro_rules! by_command {
                 $then!(dimensions_reassociate, DimensionsReassociate)
             }
             kentos_contracts::CAD_DIMENSIONS_CREATE => $then!(dimensions_create, DimensionsCreate),
+            kentos_contracts::CAD_DIMENSIONS_EDIT => $then!(dimensions_edit, DimensionsEdit),
+            kentos_contracts::CAD_DIMENSIONS_QUERY => $then!(dimensions_query, DimensionsQuery),
             kentos_contracts::CAD_ADDRESSES_DEFINE => $then!(address_define, AddressesDefine),
             kentos_contracts::CAD_LAYERS_TIME => $then!(layers_time, LayersTime),
             kentos_contracts::CAD_SCENARIOS_EDIT => $then!(scenarios_edit, ScenariosEdit),

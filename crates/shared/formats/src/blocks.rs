@@ -296,6 +296,7 @@ pub fn table_corners(t: &TableEntity) -> Vec<Vec2> {
 /// A dimension's look as the core takes it (docs/adr/0183 §3).
 pub(crate) fn core_look(l: &kentos_contracts::DimensionLook) -> Look {
     Look {
+        more: None,
         style: l.dim_style.clone(),
         arrow: l.arrow.and_then(|a| Arrow::from_name(a.name())),
         arrow_size: l.arrow_size,
@@ -326,6 +327,7 @@ pub(crate) fn contract_look(l: &Look) -> kentos_contracts::DimensionLook {
     use kentos_contracts::DrawingUnit;
     let lines = l.lines.as_deref().cloned().unwrap_or_default();
     kentos_contracts::DimensionLook {
+        options: None,
         dim_style: l.style.clone(),
         arrow: l
             .arrow
@@ -925,6 +927,8 @@ fn entity(s: &Shape) -> Option<Entity> {
             zb,
             look,
         } => Entity::Dimension(DimensionEntity {
+            text_shift: None,
+            breaks: Vec::new(),
             base,
             a: back(*a),
             b: back(*b),

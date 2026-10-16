@@ -36,7 +36,7 @@ use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, blocks_define, blocks_edit,
-    circle, curves_construct, delete, dimensions_reassociate, edit, entities_chamfer,
+    circle, curves_construct, delete, dimensions_edit, dimensions_query, dimensions_reassociate, edit, entities_chamfer,
     entities_extend, entities_fillet, entities_order, entities_pick, entities_select,
     entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit, layers_filter,
     layers_find, layers_info, layers_labels, layers_renderer, layers_service, layers_set,
@@ -1146,6 +1146,24 @@ impl Input for DimensionsReassociate {
     }
 }
 
+impl Input for kentos_domain::contracts::DimensionsEdit {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_domain::contracts::DimensionEdit as E;
+        match (&mut self.edit, path) {
+            (E::Space { spacing: Some(s), .. }, "edit.spacing") => Some(s),
+            (E::MoveText { along, .. }, "edit.along") => Some(along),
+            (E::MoveText { across, .. }, "edit.across") => Some(across),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::DimensionsQuery {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for LabelsPin {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
@@ -2030,6 +2048,12 @@ fn run_op(
         kentos_domain::contracts::CAD_ENTITIES_HATCH => run!(entities_hatch, EntitiesHatch),
         kentos_domain::contracts::CAD_DIMENSIONS_REASSOCIATE => {
             run!(dimensions_reassociate, DimensionsReassociate)
+        }
+        kentos_domain::contracts::CAD_DIMENSIONS_EDIT => {
+            run!(dimensions_edit, kentos_domain::contracts::DimensionsEdit)
+        }
+        kentos_domain::contracts::CAD_DIMENSIONS_QUERY => {
+            run!(dimensions_query, kentos_domain::contracts::DimensionsQuery)
         }
         kentos_domain::contracts::CAD_DIMENSIONS_CREATE => {
             run!(dimensions_create, DimensionsCreate)

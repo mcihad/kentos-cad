@@ -761,7 +761,7 @@ impl Edges {
                     _ => None,
                 };
                 let (d, g) = found
-                    .ok_or_else(|| refuse(codes::NOT_MEASURABLE, NO_BASE.into(), "measure.base"))?;
+                    .ok_or_else(|| refuse(codes::NOT_STRAIGHT, NO_BASE.into(), "measure.base"))?;
                 Edges::Base(Box::new((d, g)))
             }
             _ => Edges::None,
@@ -917,6 +917,8 @@ fn wire(p: Vec2) -> Point {
 fn objects(input: &DimensionsCreate, m: &Measured) -> kentos_contracts::EntitiesCreate {
     let g = &m.geom;
     let geometry = EntityGeometry::Dimension {
+        text_shift: None,
+        breaks: Vec::new(),
         a: wire(g.a),
         b: wire(g.b),
         offset: g.offset,

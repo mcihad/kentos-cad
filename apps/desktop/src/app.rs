@@ -2517,6 +2517,22 @@ impl App {
             "block.library" => self.blocks_builtin(),
             // Sabit bloğa çevir (docs/adr/0319 §4).
             "block.freeze" => self.blocks_freeze(),
+            "dimension.space" => self.dimensions_edit(|uids| {
+                let mut uids = uids.into_iter();
+                let base = uids.next().unwrap_or_default();
+                kentos_contracts::DimensionEdit::Space {
+                    base,
+                    uids: uids.collect(),
+                    spacing: None,
+                }
+            }),
+            "dimension.break" => self.dimensions_edit(|uids| kentos_contracts::DimensionEdit::Break {
+                uids,
+                objects: None,
+            }),
+            "dimension.unbreak" => {
+                self.dimensions_edit(|uids| kentos_contracts::DimensionEdit::Unbreak { uids })
+            }
             "block.sync" => {
                 if let Some(id) = self.block_at_hand() {
                     self.blocks_sync(id, false);

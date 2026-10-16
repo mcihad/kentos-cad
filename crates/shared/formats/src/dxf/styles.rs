@@ -543,6 +543,7 @@ pub fn dimension_style(
             .then_some(mm)
     };
     let style = DimensionStyleDef {
+        options: None,
         id,
         name: name.to_owned(),
         height,

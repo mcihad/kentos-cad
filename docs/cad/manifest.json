@@ -1207,6 +1207,54 @@
    "tests": 2
   },
   {
+   "id": "dimension.break",
+   "kind": "command",
+   "title": "Ölçüyü kır",
+   "level": "semantic",
+   "via": [
+    "cad.dimensions.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.dimensions.edit",
+   "mcp": "cad.dimensions.edit",
+   "note": "Seçili ölçüler görünen nesnelerin kestiği yerlerde kırılır (ADR 0321 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "dimension.space",
+   "kind": "command",
+   "title": "Ölçü aralığı",
+   "level": "semantic",
+   "via": [
+    "cad.dimensions.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.dimensions.edit",
+   "mcp": "cad.dimensions.edit",
+   "note": "Seçimin ilk ölçüsü temeldir; öbürleri aralıkla dizilir (ADR 0321 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "dimension.unbreak",
+   "kind": "command",
+   "title": "Kırmayı kaldır",
+   "level": "semantic",
+   "via": [
+    "cad.dimensions.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.dimensions.edit",
+   "mcp": "cad.dimensions.edit",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "draft.grid",
    "kind": "command",
    "title": "Izgara",

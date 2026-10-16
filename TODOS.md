@@ -180,6 +180,11 @@ Liste:
   `block_dynamic`'i WASM'la; yerleştirmenin değerleri depoya), `cad.blocks.parameters`'ın ve `cad.blocks.edit` `dynamic`'inin TS
   işleyicileri, Blok ekle'nin değerleri, KentOS blok kitaplığı komutu. Masaüstünde de açık: parametre noktalarının taşıma ve
   döndürme eylemleriyle zincirlenmesi (tutamaçlar yalnız çevirmelerin aynasını izler, ADR 0319).
+- [ ] `CAD-ANNO-08`, `09`, `10` ölçü aralığı, kırma, değerin yazımı ve elle yazılan değer (ADR 0321, 16 Ekim): web'de gerekenler:
+  `.kcad` şema 61'in `options`, `textShift` ve `breaks`'i, çizimin yerleşiminde sığdırma, taşınan değer ve kırmalar (çekirdek WASM'la),
+  değerin yazımı (`Format::dimension_value`'nun TS karşılığı, `dimension-values.json`), `cad.dimensions.edit` ve `cad.dimensions.query`'nin
+  TS işleyicileri, Öznitelikler'in satırları, şeridin Ölçü aralığı, Ölçüyü kır, Kırmayı kaldır'ı. Masaüstünde de açık: kırmaların nesneler
+  değişince kendiliğinden yenilenmesi; sığdırmada yazı tipinin ölçülen genişliği.
 - [ ] `CAD-ANNO-03`, `04`, `07` her türün ilişkili ölçüsü (ADR 0320, 16 Ekim): web'de gerekenler: `.kcad` şema 60'ın `refs.rule`'ü,
   belgenin kayıt öncesi izlemesinde kuralın uygulanması (`curve`: merkez ve dönen nokta; `edges`: kesişim ve kollar) ve Buda'nın
   bağları (`relocateTiesKeepingEnds`), `cad.dimensions.create`'in kenar ve eğri bağları, `continue` ve `baseline`'ı (Zincir ve Baz

@@ -443,11 +443,15 @@ pub const SCHEMA_WITH_DYNAMIC_BLOCKS: u32 = 59;
 /// follow, written only when a dimension has one; older readers refuse the file instead of leaving a radius's centre
 /// or an angle's vertex behind.
 pub const SCHEMA_WITH_DIMENSION_RULES: u32 = 60;
+/// Schema 61 (docs/adr/0321): a dimension's and a dimension style's `options` (fit, increment, zeros, feet and inches,
+/// alternate unit, tolerance, break size) and a dimension's `textShift` and `breaks`, written only when one has them;
+/// older readers refuse the file instead of writing the value without its tolerance or drawing a broken line whole.
+pub const SCHEMA_WITH_DIMENSION_OPTIONS: u32 = 61;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 59] = [
+pub const SCHEMAS: [u32; 60] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -507,6 +511,7 @@ pub const SCHEMAS: [u32; 59] = [
     SCHEMA_WITH_BLOCK_CARDS,
     SCHEMA_WITH_DYNAMIC_BLOCKS,
     SCHEMA_WITH_DIMENSION_RULES,
+    SCHEMA_WITH_DIMENSION_OPTIONS,
 ];
 
 /// The file a drawing is saved as.

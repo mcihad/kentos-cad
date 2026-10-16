@@ -39,6 +39,8 @@ fn v(x: f64, y: f64) -> Vec2 {
 /// An aligned dimension ten metres long, nothing optional.
 fn dimension() -> DimensionEntity {
     DimensionEntity {
+        text_shift: None,
+        breaks: Vec::new(),
         base: EntityBase {
             look: Default::default(),
             id: 0,

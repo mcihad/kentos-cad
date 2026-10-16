@@ -156,6 +156,23 @@ fn end_mark(
     }
 }
 
+/// A straight dimension's value's width, estimated (docs/adr/0321 §1): 0.6 of its height for each letter of the
+/// number in its look's unit and decimals (else metres and 3), its prefix and suffix.
+fn value_width(d: &DimensionGeom, value: f64) -> f64 {
+    let per_metre = match d.look.unit.as_deref() {
+        Some("mm") => 1000.0,
+        Some("cm") => 100.0,
+        Some("in") => 10_000.0 / 254.0,
+        Some("ft") => 10_000.0 / 3048.0,
+        _ => 1.0,
+    };
+    let decimals = d.look.decimals.unwrap_or(3) as usize;
+    let digits = crate::display::fixed(value * per_metre, decimals).chars().count();
+    let affixes = d.look.prefix.as_deref().map_or(0, |p| p.chars().count())
+        + d.look.suffix.as_deref().map_or(0, |p| p.chars().count());
+    0.6 * d.height * (digits + affixes) as f64
+}
+
 fn neg(v: Vec2) -> Vec2 {
     Vec2::new(-v.x, -v.y)
 }
@@ -185,6 +202,83 @@ fn extension(
 }
 
 pub fn layout_dimension(d: &DimensionGeom) -> Option<DimensionLayout> {
+    let mut l = kind_layout(d)?;
+    finish(d, &mut l);
+    Some(l)
+}
+
+/// The value moved and the breaks cut out of the lines (docs/adr/0321 §1).
+fn finish(d: &DimensionGeom, l: &mut DimensionLayout) {
+    if let Some((along, across)) = d.look.shift() {
+        let t = l.rotation * PI / 180.0;
+        let u = Vec2::new(cos(t), sin(t));
+        l.text_at = add(add(l.text_at, u, along), Vec2::new(-u.y, u.x), across);
+    }
+    let straight = matches!(d.style.as_deref(), None | Some("aligned" | "linear"));
+    if !straight || d.look.breaks().is_empty() {
+        return;
+    }
+    let half = d.look.break_size() * d.height / 2.0;
+    let mut cuts = Vec::new();
+    for &(line, t) in d.look.breaks() {
+        let (from, to) = match line {
+            0 => (l.d1, l.d2),
+            1 => (d.a, l.d1),
+            _ => (d.b, l.d2),
+        };
+        cuts.push(Vec2::new(from.x + (to.x - from.x) * t, from.y + (to.y - from.y) * t));
+    }
+    let mut lines = Vec::with_capacity(l.lines.len() + cuts.len());
+    let mut ext = Vec::new();
+    for (i, seg) in l.lines.iter().enumerate() {
+        let pieces = cut_segment(*seg, &cuts, half);
+        for p in pieces {
+            if l.ext.contains(&i) {
+                ext.push(lines.len());
+            }
+            lines.push(p);
+        }
+    }
+    l.lines = lines;
+    l.ext = ext;
+}
+
+/// A segment with a gap `half` each side of every cut point lying on it.
+fn cut_segment(seg: [Vec2; 2], cuts: &[Vec2], half: f64) -> Vec<[Vec2; 2]> {
+    let [a, b] = seg;
+    let len = js_hypot(b.x - a.x, b.y - a.y);
+    if len < 1e-12 {
+        return vec![seg];
+    }
+    let u = Vec2::new((b.x - a.x) / len, (b.y - a.y) / len);
+    let near = js_max(1e-9, 1e-12 * js_max(a.x.abs(), a.y.abs()));
+    let mut gaps: Vec<(f64, f64)> = cuts
+        .iter()
+        .filter_map(|p| {
+            let s = dot(Vec2::new(p.x - a.x, p.y - a.y), u);
+            let off = (p.x - a.x) * u.y - (p.y - a.y) * u.x;
+            (off.abs() <= near && s >= -near && s <= len + near).then_some((s - half, s + half))
+        })
+        .collect();
+    if gaps.is_empty() {
+        return vec![seg];
+    }
+    gaps.sort_by(|x, y| x.0.total_cmp(&y.0));
+    let mut out = Vec::new();
+    let mut from = 0.0;
+    for (g0, g1) in gaps {
+        if g0 > from {
+            out.push([add(a, u, from), add(a, u, js_min(g0, len))]);
+        }
+        from = js_max(from, g1);
+    }
+    if from < len {
+        out.push([add(a, u, from), b]);
+    }
+    out
+}
+
+fn kind_layout(d: &DimensionGeom) -> Option<DimensionLayout> {
     match d.style.as_deref().unwrap_or("aligned") {
         "linear" => linear(d, d.angle.unwrap_or(0.0)),
         "angular" => angular(d),
@@ -271,10 +365,26 @@ fn straight(d: &DimensionGeom, u: Vec2, offset: f64) -> Option<DimensionLayout> 
     let l = js_hypot(d2.x - d1.x, d2.y - d1.y);
     let along = Vec2::new((d2.x - d1.x) / l, (d2.y - d1.y) / l);
     let size = look.arrow_size() * h;
-    end_mark(&mut lines, &mut fills, look, d1, along, along, size);
-    end_mark(&mut lines, &mut fills, look, d2, along, neg(along), size);
     let mid = Vec2::new((d1.x + d2.x) / 2.0, (d1.y + d2.y) / 2.0);
-    let (text_at, rotation) = text_along(mid, along, lift(d));
+    // The value beyond the second extension line, the arrowheads outside (docs/adr/0321 §1): always, or when it and
+    // the two arrowheads are longer than the line.
+    let width = value_width(d, value);
+    let outside = match look.fit() {
+        Some("outside") => true,
+        Some("auto") => width + 2.0 * size > l,
+        _ => false,
+    };
+    let (text_at, rotation) = if outside {
+        lines.push([add(d1, along, -2.0 * size), d1]);
+        lines.push([d2, add(d2, along, 2.0 * size + width)]);
+        end_mark(&mut lines, &mut fills, look, d1, along, neg(along), size);
+        end_mark(&mut lines, &mut fills, look, d2, along, along, size);
+        text_along(add(d2, along, 2.0 * size + width / 2.0), along, lift(d))
+    } else {
+        end_mark(&mut lines, &mut fills, look, d1, along, along, size);
+        end_mark(&mut lines, &mut fills, look, d2, along, neg(along), size);
+        text_along(mid, along, lift(d))
+    };
     Some(DimensionLayout {
         lines,
         d1,

@@ -550,3 +550,28 @@ pub fn free_dimensions(doc: &mut Document, slots: &[Slot]) -> Vec<String> {
     doc.end_group(group);
     out
 }
+
+/// One `cad.dimensions.edit` on the dimensions at `slots` (docs/adr/0321 §4): Öznitelikler's options, written value,
+/// moved value and breaks, and the ribbon's Ölçü aralığı, Ölçüyü kır and Kırmayı kaldır. `make` builds the edit from
+/// the dimensions' persistent ids (the first the base for spacing). What to say.
+pub fn edit_dimensions(
+    doc: &mut Document,
+    slots: &[Slot],
+    make: impl FnOnce(Vec<String>) -> kentos_contracts::DimensionEdit,
+) -> Vec<String> {
+    use kentos_contracts::DimensionsEdit;
+    use kentos_native_application::dimensions_edit;
+    let uids: Vec<String> = slots
+        .iter()
+        .filter(|s| matches!(doc.get(**s), Some(Entity::Dimension(_))))
+        .filter_map(|s| doc.uid(*s).map(|u| u.to_string()))
+        .collect();
+    if uids.is_empty() {
+        return vec!["Seçimde ölçü yok; önce ölçüleri seçin.".into()];
+    }
+    let input = DimensionsEdit {
+        edit: make(uids),
+        expected_revision: None,
+    };
+    said(dimensions_edit::execute(&mut ExecutionContext::new(doc), input))
+}

@@ -73,6 +73,8 @@ pub mod curves_edit_cmd;
 pub mod delete;
 mod dimension;
 pub mod dimension_create;
+pub mod dimensions_edit;
+pub mod dimensions_query;
 pub mod dimensions_reassociate;
 pub mod divide;
 mod edge_commands;
@@ -346,6 +348,16 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_DIMENSIONS_CREATE,
         kentos_contracts::CAD_DIMENSIONS_CREATE_VERSION,
+    ),
+    // A dimension's spacing, breaks, moved value, written value and options ([`dimensions_edit`], docs/adr/0321 §4).
+    (
+        kentos_contracts::CAD_DIMENSIONS_EDIT,
+        kentos_contracts::CAD_DIMENSIONS_EDIT_VERSION,
+    ),
+    // What dimensions measure and show ([`dimensions_query`], docs/adr/0321 §3).
+    (
+        kentos_contracts::CAD_DIMENSIONS_QUERY,
+        kentos_contracts::CAD_DIMENSIONS_QUERY_VERSION,
     ),
     // Buda, Uzat, Köşe yuvarla and Pah by their meaning (docs/adr/0250).
     (

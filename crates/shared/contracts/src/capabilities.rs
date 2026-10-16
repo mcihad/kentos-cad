@@ -1234,6 +1234,46 @@ const ENTRIES: &[Entry] = &[
         },
     },
     Entry {
+        id: "cad.dimensions.edit",
+        refusals: &[
+            OBJECTS,
+            &[
+                "not_finite",
+                "invalid_offset",
+                "empty_text",
+                "invalid_style",
+                "not_a_dimension",
+                "not_straight",
+                "not_parallel",
+            ],
+            REVISION,
+        ],
+        warnings: &["no_crossing"],
+        targets: || {
+            vec![target(
+                None,
+                &["dimension"],
+                &[],
+                Some("not_a_dimension"),
+                None,
+            )]
+        },
+    },
+    Entry {
+        id: "cad.dimensions.query",
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_dimension"]],
+        warnings: &[],
+        targets: || {
+            vec![target(
+                None,
+                &["dimension"],
+                &[],
+                Some("not_a_dimension"),
+                None,
+            )]
+        },
+    },
+    Entry {
         id: "cad.dimensions.create",
         refusals: &[
             &[
@@ -1245,6 +1285,7 @@ const ENTRIES: &[Entry] = &[
                 "no_such_place",
                 "piece_gone",
                 "not_measurable",
+                "not_straight",
                 "missing_elevation",
                 "unknown_style",
                 "no_dimension",

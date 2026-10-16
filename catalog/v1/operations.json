@@ -1147,6 +1147,26 @@
         "cad.blocks.freeze"
       ],
       "note": "Dinamik bloğun yerleştirmeleri düz bloklara (ADR 0319 §4); vekil görünüş cad.blocks.proxy."
+    },
+    "dimension.space": {
+      "level": "semantic",
+      "via": [
+        "cad.dimensions.edit"
+      ],
+      "note": "Seçimin ilk ölçüsü temeldir; öbürleri aralıkla dizilir (ADR 0321 §4)."
+    },
+    "dimension.break": {
+      "level": "semantic",
+      "via": [
+        "cad.dimensions.edit"
+      ],
+      "note": "Seçili ölçüler görünen nesnelerin kestiği yerlerde kırılır (ADR 0321 §4)."
+    },
+    "dimension.unbreak": {
+      "level": "semantic",
+      "via": [
+        "cad.dimensions.edit"
+      ]
     }
   },
   "tools": {

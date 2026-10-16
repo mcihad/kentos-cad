@@ -45,7 +45,7 @@ nesnenin başı, sonu ya da köşesiyse o yer nesnenin şimdiki hâlinde izlenir
 ### 3. Zincir ve Baz komutu
 
 `cad.dimensions.create`'in iki yeni ölçüsü: `continue { base, to }` ve `baseline { base, to }`. Temel hizalı ya da doğrusal ölçüdür
-(değilse `not_measurable`); Zincir temelin ikinci noktasından `to`'ya, çizgisi temelinkinde; Baz temelin ilk noktasından, bir kat
+(değilse `not_straight`, ADR 0321); Zincir temelin ikinci noktasından `to`'ya, çizgisi temelinkinde; Baz temelin ilk noktasından, bir kat
 (değer yüksekliğinin üç katı) dışarıda. İlk noktaları temelin o noktasının bağını izler, `to` yerse bağlanır; stil, görünüş ve yükseklik
 temelindir (stil adı verilmedikçe). `at` okunmaz, `offset` `invalid_offset`'tir. Zincir ölçü ve Baz ölçü araçları bununla yazar,
 her yazılan bir sonrakinin temelidir; önizleme komutun hesabıdır (`continue_dimension`, `baseline_dimension`). İşlem manifestinde

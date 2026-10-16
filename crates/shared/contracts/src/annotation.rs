@@ -321,6 +321,10 @@ pub struct DimensionLook {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub text_color: Option<String>,
+    /// Where the value goes when it does not fit and how it is written (docs/adr/0321 §1, §2).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub options: Option<Box<crate::DimensionOptions>>,
 }
 
 /// Whether a dimension line's weight may be written: finite, 0 (the thinnest
@@ -410,6 +414,9 @@ impl DimensionLook {
     /// prefix or a suffix empty, too long or with a line break. None when it
     /// may be written.
     pub fn problem(&self) -> Option<(&'static str, String)> {
+        if let Some(words) = self.options.as_deref().and_then(crate::DimensionOptions::problem) {
+            return Some(("options", words));
+        }
         if self.dim_style.as_deref().is_some_and(str::is_empty) {
             return Some((
                 "dimStyle",
@@ -635,6 +642,10 @@ pub struct DimensionStyleDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub text_color: Option<String>,
+    /// The value's fit and writing (docs/adr/0321 §1, §2).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub options: Option<Box<crate::DimensionOptions>>,
 }
 
 /// The name rule both tables share: what is wrong with `names` (each its id
@@ -748,6 +759,9 @@ impl DimensionStyleDef {
     /// What is wrong with its values (its name aside); none when they hold.
     pub fn problem(&self) -> Option<String> {
         let name = &self.name;
+        if let Some(words) = self.options.as_deref().and_then(crate::DimensionOptions::problem) {
+            return Some(format!("“{name}” ölçü stili: {words}"));
+        }
         if !mm_holds(self.height, true) {
             return Some(format!(
                 "“{name}” ölçü stilinin değer yüksekliği {} mm; sıfırdan büyük, en çok {MAX_STYLE_MM} olmalı",
@@ -843,6 +857,7 @@ impl DimensionStyleDef {
             ext_weight: self.ext_weight,
             ext_line_type: self.ext_line_type,
             text_color: self.text_color.clone(),
+            options: self.options.clone(),
         }
     }
 
@@ -1036,6 +1051,7 @@ pub fn follow_dimension_style(
         ext_weight: pick(&look.ext_weight, &was.ext_weight, &now.ext_weight),
         ext_line_type: pick(&look.ext_line_type, &was.ext_line_type, &now.ext_line_type),
         text_color: pick(&look.text_color, &was.text_color, &now.text_color),
+        options: pick(&look.options, &was.options, &now.options),
     };
     let height = if height == old.height_at(plot_scale) {
         new.height_at(plot_scale)

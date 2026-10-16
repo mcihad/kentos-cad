@@ -60,7 +60,31 @@ pub struct Look {
     /// Its lines (docs/adr/0205 §6); none: the object's colour, hairlines,
     /// continuous.
     pub lines: Option<Box<LookLines>>,
+    /// Its options, its moved value and its breaks (docs/adr/0321); boxed, as few dimensions have them.
+    pub more: Option<Box<LookMore>>,
 }
+
+/// Where a break is: 0 the dimension line, 1 the first extension line, 2 the second; the fraction along it.
+pub type LookBreak = (u8, f64);
+
+/// A dimension's options (the contract's `DimensionOptions`, carried as its JSON for its owner, the layout reading
+/// `fit` and `breakSize`), its value moved along and across its own direction, and its breaks.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct LookMore {
+    pub options: Option<Json>,
+    pub shift: Option<(f64, f64)>,
+    pub breaks: Vec<LookBreak>,
+}
+
+impl LookMore {
+    /// Its box, or none when it says nothing.
+    pub fn boxed(self) -> Option<Box<LookMore>> {
+        (self != LookMore::default()).then(|| Box::new(self))
+    }
+}
+
+/// The names of a break's lines, by their number.
+pub const BREAK_LINES: [&str; 3] = ["dimension", "first", "second"];
 
 /// A dimension's lines (docs/adr/0205 §6), as the contract names them: the
 /// dimension line's and arrowheads' colour (`#RRGGBB`), weight (paper mm)
@@ -117,7 +141,40 @@ impl Look {
     pub fn text_gap(&self) -> f64 {
         self.text_gap.unwrap_or(DEFAULT_TEXT_GAP)
     }
+
+    /// Its options' `fit`: `auto`, `outside`, or none (between the extension lines).
+    pub fn fit(&self) -> Option<&str> {
+        match self.more.as_deref()?.options.as_ref()?.get("fit") {
+            Json::Str(s) => Some(s.as_str()),
+            _ => None,
+        }
+    }
+
+    /// A break's width, times the value's height.
+    pub fn break_size(&self) -> f64 {
+        let size = self
+            .more
+            .as_deref()
+            .and_then(|m| m.options.as_ref())
+            .map(|o| o.get("breakSize").clone());
+        match size {
+            Some(Json::Num(x)) => x,
+            _ => DEFAULT_BREAK_SIZE,
+        }
+    }
+
+    /// The value moved along and across its own direction, metres.
+    pub fn shift(&self) -> Option<(f64, f64)> {
+        self.more.as_deref()?.shift
+    }
+
+    pub fn breaks(&self) -> &[LookBreak] {
+        self.more.as_deref().map_or(&[], |m| m.breaks.as_slice())
+    }
 }
+
+/// A break's default width, times the value's height (docs/adr/0321 §1).
+pub const DEFAULT_BREAK_SIZE: f64 = 1.0;
 
 impl Flat for Look {
     const NAMES: &'static [&'static str] = &[
@@ -140,6 +197,9 @@ impl Flat for Look {
         "extWeight",
         "extLineType",
         "textColor",
+        "options",
+        "textShift",
+        "breaks",
     ];
 
     fn read_flat(v: &Json) -> Result<Look, String> {
@@ -188,6 +248,7 @@ impl Flat for Look {
                 text_color: text("textColor")?,
             }
             .boxed(),
+            more: read_more(v)?,
         })
     }
 
@@ -228,5 +289,78 @@ impl Flat for Look {
             field(out, first, "extLineType", &l.ext_line_type);
             field(out, first, "textColor", &l.text_color);
         }
+        if let Some(m) = &self.more {
+            field(out, first, "options", &m.options);
+            if let Some((along, across)) = m.shift {
+                let mut text = String::from("{");
+                let mut f = true;
+                field(&mut text, &mut f, "along", &along);
+                field(&mut text, &mut f, "across", &across);
+                text.push('}');
+                if !*first {
+                    out.push(',');
+                }
+                *first = false;
+                write_str(out, "textShift");
+                out.push(':');
+                out.push_str(&text);
+            }
+            if !m.breaks.is_empty() {
+                if !*first {
+                    out.push(',');
+                }
+                *first = false;
+                write_str(out, "breaks");
+                out.push_str(":[");
+                for (i, (line, t)) in m.breaks.iter().enumerate() {
+                    if i > 0 {
+                        out.push(',');
+                    }
+                    out.push('{');
+                    let mut f = true;
+                    field(out, &mut f, "line", BREAK_LINES[usize::from(*line).min(2)]);
+                    field(out, &mut f, "t", t);
+                    out.push('}');
+                }
+                out.push(']');
+            }
+        }
     }
+}
+
+/// The options, the moved value and the breaks of a dimension's JSON (docs/adr/0321).
+fn read_more(v: &Json) -> Result<Option<Box<LookMore>>, String> {
+    let options = match v.get("options") {
+        Json::Null => None,
+        o @ Json::Obj(_) => Some(o.clone()),
+        _ => return Err("“options”: nesne bekleniyordu".into()),
+    };
+    let shift = match v.get("textShift") {
+        Json::Null => None,
+        s => match (s.get("along"), s.get("across")) {
+            (Json::Num(a), Json::Num(b)) => Some((*a, *b)),
+            _ => return Err("“textShift”: along ve across sayı olmalı".into()),
+        },
+    };
+    let breaks = match v.get("breaks") {
+        Json::Null => Vec::new(),
+        Json::Arr(items) => items
+            .iter()
+            .map(|b| match (b.get("line"), b.get("t")) {
+                (Json::Str(line), Json::Num(t)) => BREAK_LINES
+                    .iter()
+                    .position(|n| n == line)
+                    .map(|k| (k as u8, *t))
+                    .ok_or_else(|| format!("“breaks”: bilinmeyen çizgi “{line}”")),
+                _ => Err("“breaks”: line ve t bekleniyordu".into()),
+            })
+            .collect::<Result<_, _>>()?,
+        _ => return Err("“breaks”: dizi bekleniyordu".into()),
+    };
+    Ok(LookMore {
+        options,
+        shift,
+        breaks,
+    }
+    .boxed())
 }

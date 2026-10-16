@@ -3,6 +3,8 @@ import type { AreaPart } from "./AreaPart";
 import type { BlockId } from "./BlockId";
 import type { CellRange } from "./CellRange";
 import type { DimensionArrow } from "./DimensionArrow";
+import type { DimensionBreak } from "./DimensionBreak";
+import type { DimensionOptions } from "./DimensionOptions";
 import type { DimensionRefs } from "./DimensionRefs";
 import type { DimensionStyle } from "./DimensionStyle";
 import type { DimensionTextPlace } from "./DimensionTextPlace";
@@ -23,6 +25,7 @@ import type { TableSource } from "./TableSource";
 import type { TextAlign } from "./TextAlign";
 import type { TextPath } from "./TextPath";
 import type { TextRun } from "./TextRun";
+import type { TextShift } from "./TextShift";
 import type { Vec2 } from "./Vec2";
 
 /**
@@ -149,6 +152,14 @@ za?: number, zb?: number,
  */
 refs?: DimensionRefs, 
 /**
+ * Its value moved from its place (docs/adr/0321 §1).
+ */
+textShift?: TextShift, 
+/**
+ * The gaps in its lines (docs/adr/0321 §1).
+ */
+breaks?: Array<DimensionBreak>, 
+/**
  * The project's dimension style it follows, by its id; absent: Standart.
  */
 dimStyle?: string, 
@@ -226,7 +237,11 @@ extLineType?: LineType,
 /**
  * The value's colour; absent: the object's.
  */
-textColor?: string, } | { "kind": "hatch", ring: Array<Vec2>, holes?: Array<Array<Vec2>>, pattern: HatchPattern, 
+textColor?: string, 
+/**
+ * Where the value goes when it does not fit and how it is written (docs/adr/0321 §1, §2).
+ */
+options?: DimensionOptions, } | { "kind": "hatch", ring: Array<Vec2>, holes?: Array<Array<Vec2>>, pattern: HatchPattern, 
 /**
  * The objects its region follows (docs/adr/0186 §6).
  */

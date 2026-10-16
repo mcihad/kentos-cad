@@ -1465,7 +1465,8 @@ impl Writer<'_> {
         };
         let def = dim::definition(d, &l);
         let own = d.text.clone().filter(|t| !t.is_empty());
-        let shown = own.clone().or_else(|| self.values.get(&d.base.id).cloned());
+        // The app's value first: it writes a text's `<>` and the options (docs/adr/0321 §2, §3).
+        let shown = self.values.get(&d.base.id).cloned().or_else(|| own.clone());
         if shown.is_none() && self.defining {
             // The app's values are the drawing's dimensions' (by id); a block's are in its own ids.
             self.report.note(

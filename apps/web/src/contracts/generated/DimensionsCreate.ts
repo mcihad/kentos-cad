@@ -20,7 +20,7 @@ import type { Vec2 } from "./Vec2";
  * Koordinat, Zincir or Baz, which take none), `invalid_revision`,
  * `revision_conflict` (status `conflict`), `entity_not_found`,
  * `no_such_place`, `not_measurable` (the object has no edge of the kind the
- * measure takes; a base not an aligned or a linear dimension), `missing_elevation`
+ * measure takes), `not_straight` (a base not an aligned or a linear dimension), `missing_elevation`
  * (Eğim's point with no elevation given or kept), `unknown_style`,
  * `no_dimension` (no dimension forms there: the points meet, the edges are
  * parallel, the arc spans nothing), then the layer's and the look's as

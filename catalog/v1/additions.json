@@ -89,6 +89,47 @@
       "status": "implemented"
     },
     {
+      "id": "dimension.space",
+      "title": "Ölçü aralığı",
+      "short": "Aralık",
+      "icon": "dimensionSpace",
+      "description": "Seçili paralel hizalı ve doğrusal ölçülerin çizgilerini seçimin ilk ölçüsünden (temel) eşit aralıkla dizer: her yanda uzaklık sırasıyla, aralık temelin değer yüksekliğinin üç katı (cad.dimensions.edit space; AutoCAD'in DIMSPACE'i).",
+      "aliases": [
+        "DIMSPACE",
+        "OLCUARALIGI"
+      ],
+      "shortcuts": [],
+      "category": "Açıklama",
+      "status": "implemented"
+    },
+    {
+      "id": "dimension.break",
+      "title": "Ölçüyü kır",
+      "short": "Kır",
+      "icon": "dimensionBreak",
+      "description": "Seçili hizalı ve doğrusal ölçülerin ölçü ve uzatma çizgilerini görünen nesnelerin kestiği yerlerde boşlukla kırar; nesneler değişince yeniden kırılır (cad.dimensions.edit break; AutoCAD'in DIMBREAK'i).",
+      "aliases": [
+        "DIMBREAK",
+        "OLCUKIR"
+      ],
+      "shortcuts": [],
+      "category": "Açıklama",
+      "status": "implemented"
+    },
+    {
+      "id": "dimension.unbreak",
+      "title": "Kırmayı kaldır",
+      "short": "Bütünle",
+      "icon": "dimensionUnbreak",
+      "description": "Seçili ölçülerin kırmalarını kaldırır: çizgileri yeniden bütün (cad.dimensions.edit unbreak).",
+      "aliases": [
+        "OLCUBUTUNLE"
+      ],
+      "shortcuts": [],
+      "category": "Açıklama",
+      "status": "implemented"
+    },
+    {
       "id": "tool.dimensionReassociate",
       "title": "Yeniden bağla",
       "icon": "dimensionReassociate",
@@ -755,6 +796,9 @@
     "addressReverseBatch": "<circle cx=\"4\" cy=\"4.5\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"6.5\" cy=\"10\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"3.5\" cy=\"15.5\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M8.6 10h2.6m-1.6-1.6 1.6 1.6-1.6 1.6\" stroke-width=\"1.2\"/><path d=\"M13.5 5h4.5M13.5 8.5h4.5M13.5 12h4.5M13.5 15.5h3\" stroke-width=\"1.2\"/>",
     "addressData": "<path d=\"M2.5 5.5 9 2.5l8.5 3v10l-7.5 2.5-7.5-3z\" stroke-dasharray=\"2.4 1.6\" stroke-width=\"1.1\"/><path d=\"M3.5 13 16.5 7\"/><circle cx=\"6.3\" cy=\"9.6\" r=\"1.2\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"10.8\" cy=\"7.6\" r=\"1.2\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"9.8\" cy=\"12.6\" r=\"1.2\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"14.4\" cy=\"10.7\" r=\"1.2\" fill=\"currentColor\" stroke=\"none\"/>",
     "addressProviders": "<circle cx=\"7.5\" cy=\"7.5\" r=\"5\"/><path d=\"M2.5 7.5h10M7.5 2.5c-1.5 1.5-2 3.2-2 5s.5 3.5 2 5M7.5 2.5c1.5 1.5 2 3.2 2 5s-.5 3.5-2 5\" stroke-width=\"1\"/><path d=\"M14.5 18.2s-3-2.9-3-5.6a3 3 0 0 1 6 0c0 2.7-3 5.6-3 5.6z\" fill=\"currentColor\" fill-opacity=\".25\"/><circle cx=\"14.5\" cy=\"12.6\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/>",
+    "dimensionSpace": "<path d=\"M3 4v13M17 4v13\"/><path d=\"M3 6h14M3 10.5h14M3 15h14\"/><path d=\"m15.4 4.8 1.6 1.2-1.6 1.2M4.6 13.8 3 15l1.6 1.2\" stroke-width=\"1.1\"/>",
+    "dimensionBreak": "<path d=\"M3 4v12M17 4v12\"/><path d=\"M3 9h5.2M11.8 9H17\"/><path d=\"M10 3v14\" stroke-dasharray=\"1.6 1.2\"/><path d=\"m4.6 7.8-1.6 1.2 1.6 1.2M15.4 7.8 17 9l-1.6 1.2\" stroke-width=\"1.1\"/>",
+    "dimensionUnbreak": "<path d=\"M3 4v12M17 4v12\"/><path d=\"M3 9h14\"/><path d=\"m4.6 7.8-1.6 1.2 1.6 1.2M15.4 7.8 17 9l-1.6 1.2\" stroke-width=\"1.1\"/><path d=\"M7.5 14.2l1.8 1.8 3.4-3.6\"/>",
     "dimensionReassociate": "<path d=\"M3 3.5v8M17 3.5v8\"/><path d=\"M3 6.5h14\"/><path d=\"m5.2 5 -2.2 1.5 2.2 1.5M14.8 5l2.2 1.5-2.2 1.5\"/><path d=\"M9.2 16.4l-.6.6a2 2 0 0 1-2.8-2.8l1.4-1.4a2 2 0 0 1 2.8 0\"/><path d=\"M10.8 13.6l.6-.6a2 2 0 0 1 2.8 2.8l-1.4 1.4a2 2 0 0 1-2.8 0\"/>",
     "nurbs": "<path d=\"M3 16.5C5 9 8 4.5 10.5 7.5S15.5 15 17 3.5\"/><path d=\"M3 16.5 6.5 5l7 8.5L17 3.5\" stroke-dasharray=\"1.4 1.3\" stroke-width=\"1.1\"/><rect x=\"5.3\" y=\"3.8\" width=\"2.4\" height=\"2.4\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"12.3\" y=\"12.3\" width=\"2.4\" height=\"2.4\" fill=\"currentColor\" stroke=\"none\"/>",
     "bringToFront": "<rect x=\"2.5\" y=\"2.5\" width=\"9\" height=\"9\" rx=\"1\" stroke-dasharray=\"1.6 1.2\" stroke-width=\"1.1\"/><rect x=\"8.5\" y=\"8.5\" width=\"9\" height=\"9\" rx=\"1\" fill=\"currentColor\" fill-opacity=\"0.35\"/><path d=\"M13 6V2.5m-1.6 1.6L13 2.5l1.6 1.6\" stroke-width=\"1.2\"/>",
@@ -918,6 +962,18 @@
       "items": [
         {
           "command": "tool.dimensionReassociate",
+          "size": "small"
+        },
+        {
+          "command": "dimension.space",
+          "size": "small"
+        },
+        {
+          "command": "dimension.break",
+          "size": "small"
+        },
+        {
+          "command": "dimension.unbreak",
           "size": "small"
         }
       ]

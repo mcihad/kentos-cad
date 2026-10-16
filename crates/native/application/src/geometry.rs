@@ -20,6 +20,7 @@ use kentos_geometry_core::entity::{
     Attrs, HatchAssoc as CoreAssoc, HatchPattern, Part, PointPart as CorePoint, Shape,
 };
 use kentos_geometry_core::geom::arrangement::Ring;
+use kentos_geometry_core::geom::dimension::look::LookMore;
 use kentos_geometry_core::geom::dimension::{Arrow, Look, LookLines};
 use kentos_geometry_core::geom::hatch_pattern::{
     Gradient as CoreGradient, PatternLine as CoreLine,
@@ -222,13 +223,80 @@ pub fn core_look(l: &kentos_contracts::DimensionLook) -> Look {
             text_color: l.text_color.clone(),
         }
         .boxed(),
+        more: LookMore {
+            options: l.options.as_deref().and_then(|o| {
+                let text = serde_json::to_string(o).ok()?;
+                kentos_geometry_core::api::json::Json::parse(&text).ok()
+            }),
+            shift: None,
+            breaks: Vec::new(),
+        }
+        .boxed(),
     }
+}
+
+/// A dimension's look as the core reads it, with its own moved value and breaks (docs/adr/0321 §1).
+pub fn core_dimension_look(d: &kentos_contracts::DimensionEntity) -> Look {
+    let mut look = core_look(&d.look);
+    with_place(&mut look, d.text_shift, &d.breaks);
+    look
+}
+
+/// `look` with a moved value and breaks.
+pub fn with_place(
+    look: &mut Look,
+    shift: Option<kentos_contracts::TextShift>,
+    breaks: &[kentos_contracts::DimensionBreak],
+) {
+    let mut more = look.more.take().map(|m| *m).unwrap_or_default();
+    more.shift = shift.map(|s| (s.along, s.across));
+    more.breaks = breaks
+        .iter()
+        .map(|b| {
+            let line = match b.line {
+                kentos_contracts::BreakLine::Dimension => 0,
+                kentos_contracts::BreakLine::First => 1,
+                kentos_contracts::BreakLine::Second => 2,
+            };
+            (line, b.t)
+        })
+        .collect();
+    look.more = more.boxed();
+}
+
+/// The moved value and the breaks a core look carries (docs/adr/0321 §1).
+pub fn place_of(look: &Look) -> (Option<kentos_contracts::TextShift>, Vec<kentos_contracts::DimensionBreak>) {
+    let Some(m) = look.more.as_deref() else {
+        return (None, Vec::new());
+    };
+    let shift = m
+        .shift
+        .map(|(along, across)| kentos_contracts::TextShift { along, across });
+    let breaks = m
+        .breaks
+        .iter()
+        .map(|&(line, t)| kentos_contracts::DimensionBreak {
+            line: match line {
+                0 => kentos_contracts::BreakLine::Dimension,
+                1 => kentos_contracts::BreakLine::First,
+                _ => kentos_contracts::BreakLine::Second,
+            },
+            t,
+        })
+        .collect();
+    (shift, breaks)
 }
 
 /// The core's look as the contract writes it.
 pub fn contract_look(l: Look) -> kentos_contracts::DimensionLook {
     use kentos_contracts::DrawingUnit;
     let lines = l.lines.map(|b| *b).unwrap_or_default();
+    let options = l
+        .more
+        .as_deref()
+        .and_then(|m| m.options.as_ref())
+        .and_then(|o| serde_json::from_str(&kentos_geometry_core::api::json::to_string(o)).ok())
+        .map(Box::new);
     kentos_contracts::DimensionLook {
         dim_style: l.style,
         arrow: l
@@ -246,6 +314,8 @@ pub fn contract_look(l: Look) -> kentos_contracts::DimensionLook {
             "mm" => Some(DrawingUnit::Mm),
             "cm" => Some(DrawingUnit::Cm),
             "m" => Some(DrawingUnit::M),
+            "in" => Some(DrawingUnit::In),
+            "ft" => Some(DrawingUnit::Ft),
             _ => None,
         }),
         prefix: l.prefix,
@@ -264,6 +334,7 @@ pub fn contract_look(l: Look) -> kentos_contracts::DimensionLook {
             .as_deref()
             .and_then(kentos_contracts::LineType::from_name),
         text_color: lines.text_color,
+        options,
     }
 }
 
@@ -721,7 +792,7 @@ pub fn shape(entity: &Entity) -> Shape {
             mask: d.mask.then_some(true),
             za: d.za,
             zb: d.zb,
-            look: core_look(&d.look),
+            look: core_dimension_look(d),
         },
         Entity::Hatch(h) => Shape::Hatch {
             ring: points(&h.ring),
@@ -1360,6 +1431,8 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             face,
         }),
         EntityGeometry::Dimension {
+            text_shift,
+            breaks,
             a,
             b,
             offset,
@@ -1374,6 +1447,8 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             refs,
             look,
         } => Entity::Dimension(DimensionEntity {
+            text_shift,
+            breaks,
             base,
             a,
             b,
@@ -1617,7 +1692,11 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             za,
             zb,
             look,
-        } => EntityGeometry::Dimension {
+        } => {
+            let (text_shift, breaks) = place_of(&look);
+            EntityGeometry::Dimension {
+            text_shift,
+            breaks,
             a: p(a),
             b: p(b),
             offset,
@@ -1635,7 +1714,8 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             // A tool's computed dimension follows nothing until the tool says what (docs/adr/0249 §3).
             refs: None,
             look: contract_look(look),
-        },
+        }
+        }
         Shape::Hatch {
             ring,
             holes,

@@ -108,8 +108,36 @@ pub fn layout(d: &DimensionEntity) -> Option<DimensionLayout> {
         c: d.c.map(core),
         za: d.za,
         zb: d.zb,
-        look: look_of(&d.look),
+        look: kentos_geometry_core::geom::dimension::Look {
+            more: more_of(d),
+            ..look_of(&d.look)
+        },
     })
+}
+
+/// A dimension's options, moved value and breaks as the core lays them out (docs/adr/0321 §1).
+pub fn more_of(d: &DimensionEntity) -> Option<Box<kentos_geometry_core::geom::dimension::look::LookMore>> {
+    use kentos_contracts::BreakLine;
+    kentos_geometry_core::geom::dimension::look::LookMore {
+        options: d.look.options.as_deref().and_then(|o| {
+            let text = serde_json::to_string(o).ok()?;
+            kentos_geometry_core::api::json::Json::parse(&text).ok()
+        }),
+        shift: d.text_shift.map(|s| (s.along, s.across)),
+        breaks: d
+            .breaks
+            .iter()
+            .map(|b| {
+                let line = match b.line {
+                    BreakLine::Dimension => 0,
+                    BreakLine::First => 1,
+                    BreakLine::Second => 2,
+                };
+                (line, b.t)
+            })
+            .collect(),
+    }
+    .boxed()
 }
 
 /// A dimension's look as the core lays it out (the arrowheads, sizes and the
@@ -117,6 +145,7 @@ pub fn layout(d: &DimensionEntity) -> Option<DimensionLayout> {
 pub fn look_of(l: &kentos_contracts::DimensionLook) -> kentos_geometry_core::geom::dimension::Look {
     use kentos_geometry_core::geom::dimension::{Arrow, Look, LookLines};
     Look {
+        more: None,
         style: l.dim_style.clone(),
         arrow: l.arrow.and_then(|a| Arrow::from_name(a.name())),
         arrow_size: l.arrow_size,
@@ -295,6 +324,8 @@ pub fn read_back(g: &Groups, k: &DimMeta, base: EntityBase, mask: bool) -> Optio
     };
     let slope = style == Some(DimensionStyle::Slope);
     let d = DimensionEntity {
+        text_shift: None,
+        breaks: Vec::new(),
         base,
         a,
         b,
@@ -343,6 +374,8 @@ pub fn foreign(g: &Groups, base: EntityBase, height: f64, mask: bool) -> Foreign
                 angle: Option<f64>,
                 c: Option<Vec2>| {
         DimensionEntity {
+            text_shift: None,
+            breaks: Vec::new(),
             base: base.clone(),
             a,
             b,

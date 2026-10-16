@@ -87,12 +87,18 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
     let mut dimension_values = BTreeMap::new();
     for e in &entities {
         if let Entity::Dimension(d) = e
-            && d.text.as_deref().is_none_or(str::is_empty)
             && let Some(l) = kentos_formats::dxf::dimension_layout(d)
         {
+            // A text written over the value shows it where it says `<>` (docs/adr/0321 §3).
             dimension_values.insert(
                 d.base.id,
-                format.dimension_in(l.prefix, l.unit, l.value, &d.look),
+                format.dimension_value(
+                    l.prefix,
+                    l.unit,
+                    l.value,
+                    &d.look,
+                    d.text.as_deref().filter(|t| !t.is_empty()),
+                ),
             );
         }
     }

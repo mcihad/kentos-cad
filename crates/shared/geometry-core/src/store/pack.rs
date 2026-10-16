@@ -546,6 +546,8 @@ impl Reader<'_> {
                             text_color,
                         }
                         .boxed(),
+                        // The page sends no options, moved values or breaks (docs/adr/0321; the web waits, ADR 0228).
+                        more: None,
                     },
                 }
             }

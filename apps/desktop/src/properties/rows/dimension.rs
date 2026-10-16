@@ -12,7 +12,7 @@ use kentos_interaction::{Format, dimension_layout, dist};
 
 use super::{Choice, Editor, Row, v};
 use crate::app::Message;
-use crate::properties::{Event, Field, Part};
+use crate::properties::{DimensionOp, Event, Field, Part};
 use crate::ribbon_panels::{LINE_TYPES, LINE_WEIGHTS, line_colors, weight_text};
 
 const MIXED: &str = "Çeşitli";
@@ -248,6 +248,8 @@ pub(super) fn rows(
             },
         );
     }
+    // Its measured value, options, moved value and breaks (docs/adr/0321).
+    rows.extend(option_rows(dims, slots, locked, f));
     // Its lines (docs/adr/0205 §6): the dimension line's (and its
     // arrowheads'), the extension lines', the value's colour.
     rows.extend([
@@ -359,4 +361,161 @@ fn common_relation(dims: &[&DimensionEntity]) -> Option<String> {
     } else {
         MIXED.to_owned()
     })
+}
+
+/// A dimension's measured value, its options, its moved value and its breaks (docs/adr/0321): Ölçülen değer (one
+/// dimension), Sığdırma, Yuvarlama, Sıfırlar, Alternatif birim, Tolerans with its values, Değerin yeri, Kırmalar; each
+/// change one `cad.dimensions.edit`.
+fn option_rows(dims: &[&DimensionEntity], slots: &[Slot], locked: bool, f: &Format) -> Vec<Row> {
+    use kentos_contracts::{AltUnits, DimensionFit, DimensionOptions, DimensionTolerance, DimensionZeros, ToleranceKind};
+    let edit = |editor: Editor| (!locked).then_some(editor);
+    let mut rows = Vec::new();
+    // What the geometry measures, apart from a written value (docs/adr/0321 §3).
+    if let [d] = dims
+        && let Some(l) = dimension_layout(&Entity::Dimension((*d).clone()))
+    {
+        let measured = f.dimension_value(l.prefix, l.unit, l.value, &d.look, None);
+        let label = if d.text.as_deref().is_some_and(|t| !t.is_empty() && !t.contains("<>")) {
+            "Ölçülen değer (elle yazılmış)"
+        } else {
+            "Ölçülen değer"
+        };
+        rows.push(Row::text(label, measured));
+    }
+    let options = common(dims, |d| d.look.options.as_deref().cloned().unwrap_or_default());
+    let Some(o) = options else {
+        rows.push(Row::text("Ölçü seçenekleri", MIXED));
+        return rows;
+    };
+    let with = |change: &dyn Fn(&mut DimensionOptions)| {
+        let mut next = o.clone();
+        change(&mut next);
+        Event::DimensionEdit(
+            slots.to_vec(),
+            DimensionOp::Options((!next.is_empty()).then_some(next)),
+        )
+    };
+    let fit_name = |fit: Option<DimensionFit>| match fit {
+        None => "İçeride",
+        Some(DimensionFit::Auto) => "Otomatik",
+        Some(DimensionFit::Outside) => "Dışarıda",
+    };
+    let fits = [None, Some(DimensionFit::Auto), Some(DimensionFit::Outside)];
+    rows.push(Row::text("Sığdırma", fit_name(o.fit)).editor(edit(select(
+        fit_name(o.fit),
+        fits.map(|fit| (fit_name(fit), o.fit == fit, with(&|n| n.fit = fit))),
+    ))));
+    rows.push(
+        match o.round {
+            Some(r) => Row::figure("Yuvarlama", f.length_bare(r)).unit(f.length_unit_label()),
+            None => Row::text("Yuvarlama", "Yok"),
+        }
+        .editor(edit(Editor::Number(Field::DimensionRound(slots.to_vec())))),
+    );
+    let zeros_name = |z: Option<DimensionZeros>| match z {
+        None => "Göster",
+        Some(DimensionZeros::Trailing) => "Sondakileri bastır",
+        Some(DimensionZeros::Leading) => "Baştakini bastır",
+        Some(DimensionZeros::Both) => "İkisini bastır",
+    };
+    let zeros = [
+        None,
+        Some(DimensionZeros::Trailing),
+        Some(DimensionZeros::Leading),
+        Some(DimensionZeros::Both),
+    ];
+    rows.push(Row::text("Sıfırlar", zeros_name(o.zeros)).editor(edit(select(
+        zeros_name(o.zeros),
+        zeros.map(|z| (zeros_name(z), o.zeros == z, with(&|n| n.zeros = z))),
+    ))));
+    let alt_name = |a: Option<AltUnits>| a.map_or("Yok", |a| a.unit.mark());
+    let alts = [
+        None,
+        Some(kentos_contracts::DrawingUnit::Mm),
+        Some(kentos_contracts::DrawingUnit::Cm),
+        Some(kentos_contracts::DrawingUnit::M),
+        Some(kentos_contracts::DrawingUnit::In),
+        Some(kentos_contracts::DrawingUnit::Ft),
+    ];
+    rows.push(Row::text("Alternatif birim", alt_name(o.alt)).editor(edit(select(
+        alt_name(o.alt),
+        alts.map(|u| {
+            let a = u.map(|unit| AltUnits {
+                unit,
+                decimals: o.alt.and_then(|a| a.decimals),
+            });
+            (
+                u.map_or("Yok", |u| u.mark()),
+                o.alt.map(|a| a.unit) == u,
+                with(&|n| n.alt = a),
+            )
+        }),
+    ))));
+    let kind_name = |k: Option<ToleranceKind>| match k {
+        None => "Yok",
+        Some(ToleranceKind::Symmetric) => "Simetrik (±)",
+        Some(ToleranceKind::Deviation) => "Sapma (+ −)",
+        Some(ToleranceKind::Limits) => "Sınırlar",
+    };
+    let kind = o.tolerance.map(|t| t.kind);
+    let kinds = [
+        None,
+        Some(ToleranceKind::Symmetric),
+        Some(ToleranceKind::Deviation),
+        Some(ToleranceKind::Limits),
+    ];
+    rows.push(Row::text("Tolerans", kind_name(kind)).editor(edit(select(
+        kind_name(kind),
+        kinds.map(|k| {
+            let t = k.map(|kind| DimensionTolerance {
+                kind,
+                upper: o.tolerance.map_or(0.0, |t| t.upper),
+                lower: (kind != ToleranceKind::Symmetric)
+                    .then(|| o.tolerance.and_then(|t| t.lower).unwrap_or(0.0)),
+                decimals: o.tolerance.and_then(|t| t.decimals),
+            });
+            (kind_name(k), kind == k, with(&|n| n.tolerance = t))
+        }),
+    ))));
+    if let Some(t) = o.tolerance {
+        rows.push(
+            Row::figure("Üst sapma", f.length_bare(t.upper))
+                .unit(f.length_unit_label())
+                .editor(edit(Editor::Number(Field::DimensionTolerance(slots.to_vec(), true)))),
+        );
+        if t.kind != ToleranceKind::Symmetric {
+            rows.push(
+                Row::figure("Alt sapma", f.length_bare(t.lower.unwrap_or(0.0)))
+                    .unit(f.length_unit_label())
+                    .editor(edit(Editor::Number(Field::DimensionTolerance(slots.to_vec(), false)))),
+            );
+        }
+    }
+    let moved = dims.iter().any(|d| d.text_shift.is_some());
+    let place = if moved { "Taşınmış" } else { "Yerinde" };
+    let row = Row::text("Değerin yeri", place);
+    rows.push(if moved && slots.len() == 1 {
+        row.editor(edit(select(
+            place,
+            [("Yerine döndür", false, Event::DimensionEdit(slots.to_vec(), DimensionOp::Home))],
+        )))
+    } else {
+        row
+    });
+    let breaks: usize = dims.iter().map(|d| d.breaks.len()).sum();
+    let text = if breaks == 0 {
+        "Yok".to_owned()
+    } else {
+        format!("{breaks} kırma")
+    };
+    let row = Row::text("Kırmalar", &text);
+    rows.push(if breaks > 0 {
+        row.editor(edit(select(
+            &text,
+            [("Kırmayı kaldır", false, Event::DimensionEdit(slots.to_vec(), DimensionOp::Unbreak))],
+        )))
+    } else {
+        row
+    });
+    rows
 }

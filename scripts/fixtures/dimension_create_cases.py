@@ -596,14 +596,14 @@ def chain_refusals():
     out = [
         refused("Zincir: temelin kimliği geçersiz", cont(BAD), "invalid_uid", bad_uid(BAD), "measure.base"),
         refused("Zincir: temel çizimde yok", cont(MISSING), "entity_not_found", not_found(MISSING), "measure.base"),
-        refused("Zincir: temel ölçü değil (çizgi)", cont(UID(11)), "not_measurable", NO_BASE, "measure.base"),
+        refused("Zincir: temel ölçü değil (çizgi)", cont(UID(11)), "not_straight", NO_BASE, "measure.base"),
         refused("Zincir ve baz uzaklık almaz", cont(UID(11), offset=2), "invalid_offset",
                 "Zincir ve baz ölçü uzaklık almaz; yerini temel ölçü verir. offset'i kaldırın.", "offset"),
     ]
     out.append({"name": "Baz: temel yarıçap ölçüsü; zincir ve baz yalnız hizalı ya da doğrusal ölçüden", "steps": [
         {"op": "execute", "input": radius, "result": completed({"created": [UID(NEXT)], "ids": [NEXT], "revision": "$current"})},
         {"op": "execute", "input": inp({"kind": "baseline", "base": UID(NEXT), "to": vertex(12, 0)}, (X, Y)),
-         "result": {"status": "failed", "error": {"code": "not_measurable", "message": NO_BASE, "path": "measure.base"}},
+         "result": {"status": "failed", "error": {"code": "not_straight", "message": NO_BASE, "path": "measure.base"}},
          "expect": {"ids": IDS + [NEXT]}}]})
     return out
 

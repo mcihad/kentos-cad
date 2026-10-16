@@ -1218,6 +1218,14 @@ pub struct DimensionEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub refs: Option<Box<crate::DimensionRefs>>,
+    /// Its value moved from its place (docs/adr/0321 §1).
+    #[serde(default, rename = "textShift", skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub text_shift: Option<crate::TextShift>,
+    /// The gaps in its lines where other objects cross them (docs/adr/0321 §1).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::DimensionBreak>>", optional))]
+    pub breaks: Vec<crate::DimensionBreak>,
     /// The style it follows, its arrowheads, sizes and value's writing (docs/adr/0183 §3).
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]

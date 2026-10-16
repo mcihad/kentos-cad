@@ -75,6 +75,8 @@ pub(super) enum Val<'d> {
     Int(i64),
     /// A block's object's parts that follow its layer (docs/adr/0260 §1).
     LookParts(&'d [kentos_contracts::LookPart]),
+    /// A contract's part written as its JSON (a dimension's options, moved value and breaks, docs/adr/0321).
+    Json(serde_json::Value),
     /// An area's mask (docs/adr/0310): `{ frame }`.
     Wipeout(kentos_contracts::Wipeout),
     /// A text's curve (§6.6, docs/adr/0196): its vertices and bulges.
@@ -673,6 +675,23 @@ impl<'d> Encoder<'d> {
                 if let Some(id) = &look.dim_style {
                     f.push(("dimStyle", Val::Text(id)));
                 }
+                // Its options, moved value and breaks (docs/adr/0321), as their JSON.
+                let json = |v: serde_json::Result<serde_json::Value>| v.unwrap_or_default();
+                if let Some(o) = &look.options {
+                    f.push(("options", Val::Json(json(serde_json::to_value(o)))));
+                }
+                if let Some(s) = &e.text_shift {
+                    if let Some(words) = s.problem() {
+                        return refuse(self, Code::BadValue, "textShift", &words);
+                    }
+                    f.push(("textShift", Val::Json(json(serde_json::to_value(s)))));
+                }
+                if !e.breaks.is_empty() {
+                    if let Some(words) = kentos_contracts::breaks_problem(&e.breaks) {
+                        return refuse(self, Code::BadValue, "breaks", &words);
+                    }
+                    f.push(("breaks", Val::Json(json(serde_json::to_value(&e.breaks)))));
+                }
                 if let Some(a) = look.arrow {
                     f.push(("arrow", Val::Name(a.name())));
                 }
@@ -1189,6 +1208,7 @@ impl<'d> Encoder<'d> {
                 self.w.uint(n);
                 Ok(())
             }
+            Val::Json(v) => self.json(&v),
             Val::Int(n) => {
                 self.w.int(n);
                 Ok(())

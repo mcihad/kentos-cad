@@ -497,6 +497,9 @@ impl Format {
         value: f64,
         look: &kentos_contracts::DimensionLook,
     ) -> String {
+        if matches!(unit, "length" | "coordinate") {
+            return self.dimension_value(prefix, unit, value, look, None);
+        }
         let number = match unit {
             "angle" => self.angle(value),
             "percent" => fixed(value, look.decimals.map_or(2, |d| d as usize)),
@@ -511,6 +514,108 @@ impl Format {
             look.prefix.as_deref().unwrap_or_default(),
             look.suffix.as_deref().unwrap_or_default()
         )
+    }
+
+    /// A dimension's value as written (docs/adr/0321 §2, §3; the cases of fixtures/text/v1/dimension-values.json): a
+    /// length or a coordinate rounded to its increment, in its unit and style (feet and inches in an inch or foot
+    /// unit, else its decimals with its zeros left out), its tolerance, its prefixes and suffix and its alternate unit;
+    /// an angle and a slope as `dimension_in` writes them. A text written over it is shown with `<>` as the value; one
+    /// without `<>` is shown alone.
+    pub fn dimension_value(
+        &self,
+        prefix: &str,
+        unit: &str,
+        value: f64,
+        look: &kentos_contracts::DimensionLook,
+        text: Option<&str>,
+    ) -> String {
+        let written = if matches!(unit, "length" | "coordinate") {
+            self.length_value(prefix, value, look)
+        } else {
+            self.dimension_in(prefix, unit, value, look)
+        };
+        match text {
+            Some(t) => t.replace("<>", &written),
+            None => written,
+        }
+    }
+
+    fn length_value(&self, prefix: &str, value: f64, look: &kentos_contracts::DimensionLook) -> String {
+        use kentos_contracts::ToleranceKind;
+        let options = look.options.as_deref().cloned().unwrap_or_default();
+        let rounded = match options.round {
+            Some(r) => (value / r).round() * r,
+            None => value,
+        };
+        let number = |v: f64, decimals: Option<u32>| self.dimension_number(v, look, &options, decimals);
+        let (body, tolerance) = match options.tolerance {
+            Some(t) if t.kind == ToleranceKind::Limits => (
+                format!(
+                    "{}/{}",
+                    number(rounded + t.upper, t.decimals),
+                    number(rounded - t.lower.unwrap_or(0.0), t.decimals)
+                ),
+                String::new(),
+            ),
+            Some(t) if t.kind == ToleranceKind::Symmetric => {
+                (number(rounded, None), format!(" ±{}", number(t.upper, t.decimals)))
+            }
+            Some(t) => (
+                number(rounded, None),
+                format!(
+                    " +{} -{}",
+                    number(t.upper, t.decimals),
+                    number(t.lower.unwrap_or(0.0), t.decimals)
+                ),
+            ),
+            None => (number(rounded, None), String::new()),
+        };
+        let mut out = format!(
+            "{}{prefix}{body}{tolerance}{}",
+            look.prefix.as_deref().unwrap_or_default(),
+            look.suffix.as_deref().unwrap_or_default()
+        );
+        if let Some(alt) = options.alt {
+            let decimals = alt.decimals.map_or(self.length_decimals, |d| d as usize);
+            out.push_str(&format!(" [{}]", fixed(value * alt.unit.per_metre(), decimals)));
+        }
+        out
+    }
+
+    /// A dimension's length in its unit and style: feet and inches with their marks, else decimal with its zeros.
+    fn dimension_number(
+        &self,
+        metres: f64,
+        look: &kentos_contracts::DimensionLook,
+        options: &kentos_contracts::DimensionOptions,
+        decimals: Option<u32>,
+    ) -> String {
+        use kentos_contracts::{DimensionZeros, DrawingUnit, LengthStyle};
+        let unit = look.unit.unwrap_or(self.unit);
+        let style = match (options.length_style, look.unit) {
+            (Some(LengthStyle::Architectural), _) => Style::Architectural,
+            (Some(LengthStyle::Engineering), _) => Style::Engineering,
+            (Some(LengthStyle::Fractional), _) => Style::Fractional,
+            (Some(LengthStyle::Decimal), _) | (None, Some(_)) => Style::Decimal,
+            (None, None) => self.style,
+        };
+        let d = decimals.or(look.decimals).map_or(self.length_decimals, |d| d as usize);
+        if matches!(unit, DrawingUnit::In | DrawingUnit::Ft) && style != Style::Decimal {
+            return format_inches(Self::inches(metres), style, d as u32);
+        }
+        let mut text = fixed(metres * unit.per_metre(), d);
+        let zeros = options.zeros;
+        if matches!(zeros, Some(DimensionZeros::Trailing | DimensionZeros::Both)) && text.contains('.') {
+            text = text.trim_end_matches('0').trim_end_matches('.').to_owned();
+        }
+        if matches!(zeros, Some(DimensionZeros::Leading | DimensionZeros::Both)) {
+            if let Some(rest) = text.strip_prefix("0.") {
+                text = format!(".{rest}");
+            } else if let Some(rest) = text.strip_prefix("-0.") {
+                text = format!("-.{rest}");
+            }
+        }
+        text
     }
 
     /// `Y 487012.000  X 4420000.000`: east first (CLAUDE.md §5), a CAD

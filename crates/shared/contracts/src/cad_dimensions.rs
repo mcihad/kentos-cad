@@ -185,7 +185,7 @@ pub enum DimensionMeasure {
 /// Koordinat, Zincir or Baz, which take none), `invalid_revision`,
 /// `revision_conflict` (status `conflict`), `entity_not_found`,
 /// `no_such_place`, `not_measurable` (the object has no edge of the kind the
-/// measure takes; a base not an aligned or a linear dimension), `missing_elevation`
+/// measure takes), `not_straight` (a base not an aligned or a linear dimension), `missing_elevation`
 /// (Eğim's point with no elevation given or kept), `unknown_style`,
 /// `no_dimension` (no dimension forms there: the points meet, the edges are
 /// parallel, the arc spans nothing), then the layer's and the look's as
@@ -375,6 +375,192 @@ pub struct DimensionsReassociatePlan {
     pub value: f64,
     pub unit: String,
     /// The document revision the plan was made against.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// Edits dimensions: their spacing, breaks, moved value, written value and options.
+pub const CAD_DIMENSIONS_EDIT: &str = "cad.dimensions.edit";
+pub const CAD_DIMENSIONS_EDIT_VERSION: u32 = 1;
+
+/// One edit of `cad.dimensions.edit` (docs/adr/0321 §4).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(tag = "kind", rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum DimensionEdit {
+    /// Ölçü aralığı (AutoCAD's DIMSPACE): the dimensions' lines put `spacing` apart from the base's, each side of it
+    /// in its order of distance; 0 lines them up with the base's. Aligned and linear dimensions parallel to the base.
+    Space {
+        /// The base dimension's persistent id; it does not move.
+        #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+        base: String,
+        #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+        uids: Vec<String>,
+        /// Metres between two lines, 0 or more; absent: three times the base's value height (Baz ölçü's level).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        spacing: Option<f64>,
+    },
+    /// Ölçüyü kır (AutoCAD's DIMBREAK): a gap in each of the dimensions' lines where `objects` (absent: every shown
+    /// object that is not a dimension) cross it; its breaks so far replaced. Aligned and linear dimensions.
+    Break {
+        #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+        uids: Vec<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+        objects: Option<Vec<String>>,
+    },
+    /// Kırmayı kaldır: the dimensions' lines whole again.
+    Unbreak {
+        #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+        uids: Vec<String>,
+    },
+    /// Ölçü yazısını taşı: the value moved along and across its own direction from its place; 0 and 0 home again.
+    MoveText {
+        #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+        uid: String,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        along: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        across: f64,
+    },
+    /// Ölçü değerini yaz: the text written over the value, `<>` its measured value (AutoCAD's text override); null:
+    /// the measured value again.
+    Text {
+        #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+        uids: Vec<String>,
+        text: Option<String>,
+    },
+    /// Ölçü seçenekleri: the dimensions' options (docs/adr/0321 §1, §2); null: none.
+    Options {
+        #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+        uids: Vec<String>,
+        options: Option<crate::DimensionOptions>,
+    },
+}
+
+/// Input of `cad.dimensions.edit` v1 (docs/adr/0321 §4): one edit of dimensions as one undo step named after it
+/// (Ölçü aralığı, Ölçüyü kır, Kırmayı kaldır, Ölçü yazısını taşı, Ölçü değerini yaz, Ölçü seçenekleri). A dimension
+/// the edit leaves as it was is not counted; when none changes, nothing is written.
+///
+/// Refusals (`CommandError.code`), checked in this order: `invalid_uid` (the base's, then each dimension's, then each
+/// object's), `no_entities` (no dimension), `not_finite` (`spacing`, `along`, `across`), `invalid_offset` (a spacing
+/// below 0), `empty_text` (a written value of spaces), `invalid_style` (options that break their rules),
+/// `invalid_revision`, `revision_conflict` (status `conflict`), `entity_not_found` (the base, each dimension, each
+/// object), `not_a_dimension`, `layer_locked` (a dimension's layer), `not_straight` (Space's and Break's dimensions:
+/// aligned or linear), `not_parallel` (Space's dimension not parallel to its base). Break warns `no_crossing` for a
+/// dimension no object crosses.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DimensionsEdit {
+    pub edit: DimensionEdit,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `cad.dimensions.edit` v1.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DimensionsEdited {
+    /// The dimensions that changed, by their persistent ids, in the input's order.
+    pub changed: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// What `cad.dimensions.edit` would write (plan mode).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DimensionsEditPlan {
+    /// The dimensions that would change, as execute would write them.
+    pub dimensions: Vec<Entity>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// Reads dimensions: what each measures and what it shows.
+pub const CAD_DIMENSIONS_QUERY: &str = "cad.dimensions.query";
+pub const CAD_DIMENSIONS_QUERY_VERSION: u32 = 1;
+
+/// Input of `cad.dimensions.query` v1 (docs/adr/0321 §3), read only: each dimension's measured value apart from the
+/// value it shows (a written value is an override: what it says is not what the geometry measures), and what its
+/// points follow. Refusals: `invalid_uid`, `entity_not_found`, `not_a_dimension`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DimensionsQuery {
+    /// The dimensions; absent: every dimension of the drawing, in its order.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+    pub uids: Option<Vec<String>>,
+}
+
+/// What a dimension's points follow.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum DimensionBond {
+    /// Nothing: its points are free.
+    Free,
+    /// Some of its points follow places, all live.
+    Partial,
+    /// Every point it measures follows a place (or its rule's), all live.
+    Bound,
+    /// A reference broke.
+    Broken,
+}
+
+/// One dimension as `cad.dimensions.query` reads it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DimensionRead {
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+    pub uid: String,
+    /// `aligned`, `linear`, `angular`, `radius`, `diameter`, `ordinate`, `arcLength`, `jogged`, `azimuth`, `slope`.
+    pub kind: String,
+    /// What the geometry measures, in `unit`: metres, radians, per cent or a coordinate's metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
+    pub measured: f64,
+    /// "length", "angle", "percent" or "coordinate".
+    pub unit: String,
+    /// What it shows, as written (its options; a written value with `<>` the measured one).
+    pub shown: String,
+    /// Whether it shows a written value without `<>`: not the measured one.
+    pub overridden: bool,
+    pub bond: DimensionBond,
+}
+
+/// Output of `cad.dimensions.query` v1.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DimensionsRead {
+    pub dimensions: Vec<DimensionRead>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

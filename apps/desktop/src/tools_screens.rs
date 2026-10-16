@@ -474,6 +474,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::block_attr_scenes::scenes());
     all.extend(crate::block_dynamic_scenes::scenes());
     all.extend(crate::dimension_follow_scenes::scenes());
+    all.extend(crate::dimension_option_scenes::scenes());
     all.extend(crate::match_scenes::scenes());
     all.extend(crate::cleanup_scenes::scenes());
     all.extend(crate::look_scenes::scenes());

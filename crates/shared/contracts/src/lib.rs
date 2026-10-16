@@ -226,6 +226,8 @@ pub use settings::*;
 pub use sheets::*;
 pub use style::*;
 pub use subref::*;
+pub mod dimension_options;
+pub use dimension_options::*;
 pub use table::*;
 pub use temporal::*;
 pub use topology::*;

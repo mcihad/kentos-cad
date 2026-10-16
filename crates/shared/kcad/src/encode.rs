@@ -1392,6 +1392,20 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 61 (docs/adr/0321): a dimension's options, moved value or breaks (of the drawing or of a block), or a
+    // dimension style's options.
+    let optioned = |list: &[Entity]| {
+        list.iter().any(|e| {
+            matches!(e, Entity::Dimension(d)
+                if d.look.options.is_some() || d.text_shift.is_some() || !d.breaks.is_empty())
+        })
+    };
+    if optioned(&doc.entities)
+        || doc.blocks.iter().any(|b| optioned(&b.entities))
+        || doc.settings.dimension_styles.iter().any(|s| s.options.is_some())
+    {
+        return crate::SCHEMA_WITH_DIMENSION_OPTIONS;
+    }
     // Schema 60 (docs/adr/0320 §1): a dimension's references' rule (in the drawing only: a block's dimensions keep none).
     if doc.entities.iter().any(|e| {
         matches!(e, Entity::Dimension(d) if d.refs.as_ref().is_some_and(|r| r.rule.is_some()))

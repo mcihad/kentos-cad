@@ -4988,7 +4988,7 @@
           "result": {
             "status": "failed",
             "error": {
-              "code": "not_measurable",
+              "code": "not_straight",
               "message": "Temel ölçü hizalı ya da doğrusal bir ölçü değil: zincir ve baz ölçü yalnız hizalı ya da doğrusal ölçüden sürer.",
               "path": "measure.base"
             }
@@ -5128,7 +5128,7 @@
           "result": {
             "status": "failed",
             "error": {
-              "code": "not_measurable",
+              "code": "not_straight",
               "message": "Temel ölçü hizalı ya da doğrusal bir ölçü değil: zincir ve baz ölçü yalnız hizalı ya da doğrusal ölçüden sürer.",
               "path": "measure.base"
             }

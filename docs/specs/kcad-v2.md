@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `60`'a bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-61.kcad`) |
+| `version` | tam sayı | `2`'den `61`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-62.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -308,6 +308,8 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 **Şema 54**, şema 53'ün kendisi ve alanın maskesidir (ADR 0310): alanın (`polygon`) `wipeout`'u (§6.6), AutoCAD'in WIPEOUT'u. Yazıcı `54`'ü **yalnız çizimin ya da bir blok tanımının bir alanı maskeyken** yazar. Başka her çizim şema 2–53'tür ve eskisiyle bayt bayt aynıdır. Şema 2–53 yükünde `wipeout` bilinmeyen alandır (`unknown_field`, `broken/wipeouts-in-schema-53.kcad`): eski okuyucu maskeyi sıradan alan gibi açmaz, dosyayı açmaz. Şema 54 şema 53'ü kapsar. Örnek dosya `wipeouts.kcad`.
 
 **Şema 60**, şema 59'un kendisi ve ölçünün başvurularının kuralıdır (ADR 0320 §1): ölçünün `refs`'inde `rule` (`curve`: yarıçap, çap, kırıklı yarıçap, yay uzunluğu ve yaydan açının merkezi eğrisinden; `edges`: kenarlardan açının köşesi iki kenarın kesişiminden), sütunlarda başvuru maskesinin 3. ve 4. bitleri. Yazıcı `60`'ı **yalnız bir ölçünün kuralı varken** yazar. Başka her çizim şema 2–59'dur ve eskisiyle bayt bayt aynıdır. Şema 2–59 yükünde `rule` bilinmeyen alandır (`unknown_field`, `broken/dimension-rule-in-schema-59.kcad`): eski okuyucu yarıçapın merkezini ya da açının köşesini geride bırakmaz, dosyayı açmaz. Şema 60 şema 59'u kapsar. Örnek dosya `dimension-rules.kcad`.
+
+**Şema 61**, şema 60'ın kendisi ve ölçünün seçenekleridir (ADR 0321): ölçünün ve ölçü stilinin `options`'ı (`fit`, `round`, `zeros`, `lengthStyle`, `alt`, `tolerance`, `breakSize`), ölçünün `textShift`'i (`along`, `across`) ve `breaks`'i (`line`: `dimension`, `first`, `second`; `t` 0–1, en çok 64); sözleşmenin JSON'u gibi, varsayılanlar yazılmadan, kanonik anahtar sırasıyla; sütunlarda ölçünün 29. biti ve bir JSON metni. Yazıcı `61`'i **yalnız bunlardan biri varken** yazar. Başka her çizim şema 2–60'tır ve eskisiyle bayt bayt aynıdır. Şema 2–60 yükünde bu anahtarlar bilinmeyen alandır (`unknown_field`, `broken/dimension-options-in-schema-60.kcad`, `broken/dimension-text-shift-in-schema-60.kcad`); boş seçenekler, sıfır artış, alt değerli simetrik tolerans ve 1'i aşan `t` `bad_value`'dur. Şema 61 şema 60'ı kapsar. Örnek dosya `dimension-options.kcad`.
 
 **Yeni şema eklemenin kuralı** (ADR 0265 §2): her yeni şema `n` için (1) yazıcı `n`'yi yalnız yeni özellik varken yazar; (2) `n`'de yazılmış geçerli bir örnek, bağımsız Python yazıcısıyla; (3) özelliğin `n − 1`'de yazılmış bozuk örneği (`broken/…-in-schema-<n−1>.kcad`) ve `broken/schema-version-<n+1>.kcad`; (4) önceki örneklerin hepsi okunmaya devam eder; (5) `tools/kcad/kcad.py` aynı kuralı okur; (6) örnek kodekten, tipli sütunlardan, bulutun kaynağından ve Python'un tipli katmanından geçer. Bir şema numarası yeniden kullanılmaz. `kentos-kcad`'in `schemas` testi (1)–(3)'ü zorlar.
 

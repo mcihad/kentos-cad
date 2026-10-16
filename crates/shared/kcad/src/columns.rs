@@ -40,7 +40,7 @@
 //! | nurbs | degree, n, m, curve flags (1 weights, 2 closed, 4 periodic, 8 fit, 16 fit tolerance, 32 start tangent, 64 end tangent), k if fit | ctrl (2n), knots (m), weights (n) if any, fit (2k) if any, fit tolerance if any, start and end tangents (2 each) if any | |
 //! | xline, ray | | p, dir | |
 //! | text | align if any (its place in `TextAlign::ALL`); r if runs, then per run: start, end, run flags; font if any (its place in `DrawingFont::ALL`); k if curved; b if its curve bends | p, height, rotation, width factor if any, label scale if linked, box width if any, line spacing if any, oblique if any, the curve's pts (2k) if curved, its bulges (b) if it bends | text, label's object if linked, each run's colour if it has one, text style if any |
-//! | dimension | style if any; arrow if any (its place in `DimensionArrow::ALL`), decimals if any, unit if any (mm, cm, m), font if any; line flags if lines, then the dimension line's type and the extension lines' type if any (their places in `LINE_TYPES`); refs' mask if refs (bits 0–2 a, b, c; 3 the curve rule, 4 the edges rule), then per reference its place's kind (`PLACE_KINDS`), its numbers and broken (0 or 1) | a, b, offset, height, angle if any, c if any, za if any, zb if any, arrow size, ext offset, ext beyond, text gap if any; the dimension line's and the extension lines' weights if any | text if any, dimension style if any, prefix if any, suffix if any; the dimension line's, the extension lines' and the value's colours if any; per reference its object's id (UUID text) and why it broke if it did |
+//! | dimension | style if any; arrow if any (its place in `DimensionArrow::ALL`), decimals if any, unit if any (mm, cm, m), font if any; line flags if lines, then the dimension line's type and the extension lines' type if any (their places in `LINE_TYPES`); refs' mask if refs (bits 0–2 a, b, c; 3 the curve rule, 4 the edges rule), then per reference its place's kind (`PLACE_KINDS`), its numbers and broken (0 or 1); its options, moved value and breaks as one JSON text if more (bit 29) | a, b, offset, height, angle if any, c if any, za if any, zb if any, arrow size, ext offset, ext beyond, text gap if any; the dimension line's and the extension lines' weights if any | text if any, dimension style if any, prefix if any, suffix if any; the dimension line's, the extension lines' and the value's colours if any; per reference its object's id (UUID text) and why it broke if it did |
 //! | hatch | n, pattern type; h if holes, then k per hole; f if families, then per family its dash count; gradient's shape and inverted (0 or 1) if any; i, k if tied | ring (2n), pattern angle, spacing, per hole: pts (2k); scale if any; per family: angle, origin, offset, dashes; seed if tied | name if any, gradient's second colour if any, tie's outer, islands (i) and cutouts (k) ids (UUID text) if tied |
 //! | insert | | p, scale, rotation | block (its id as UUID text) |
 //! | leader | n; arrow if any (its place in `LeaderArrow::ALL`) | pts (2n), height, rotation, arrow size if any | text if any |
@@ -269,6 +269,9 @@ const TEXT_COLOR: u32 = 64;
 /// the kind's numbers (an `along` place's `t` a float), the path's length and numbers when it has one
 /// (docs/adr/0263 §3) and whether it broke (0 or 1); its object's id (UUID text) and, when it broke, why.
 const REFS: u32 = 1 << 28;
+/// A dimension's options, moved value and breaks follow (docs/adr/0321): one text, their JSON
+/// (`{"options": …, "textShift": …, "breaks": […]}`, only those it has).
+const MORE: u32 = 1 << 29;
 /// A reference's place kinds, numbered as the columns hold them, and how many numbers each has.
 const PLACE_KINDS: [(&str, usize); 7] = [
     ("node", 1),
@@ -907,6 +910,8 @@ impl Packer {
                 }
             }
             Entity::Dimension(DimensionEntity {
+                text_shift,
+                breaks,
                 base: _,
                 a,
                 b,
@@ -1082,6 +1087,20 @@ impl Packer {
                             self.text(b);
                         }
                     }
+                }
+                if look.options.is_some() || text_shift.is_some() || !breaks.is_empty() {
+                    flags |= MORE;
+                    let mut more = serde_json::Map::new();
+                    if let Some(o) = &look.options {
+                        more.insert("options".into(), serde_json::to_value(o).unwrap_or_default());
+                    }
+                    if let Some(t) = text_shift {
+                        more.insert("textShift".into(), serde_json::to_value(t).unwrap_or_default());
+                    }
+                    if !breaks.is_empty() {
+                        more.insert("breaks".into(), serde_json::to_value(breaks).unwrap_or_default());
+                    }
+                    self.text(&serde_json::Value::Object(more).to_string());
                 }
             }
             Entity::Hatch(HatchEntity {
@@ -1993,7 +2012,7 @@ fn allowed(kind: u8) -> u32 {
         14 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
         // A dimension: text, style, angle, c, schema 9's mask, za, zb (docs/adr/0147), schema 21's look,
         // schema 30's lines (docs/adr/0205 §6).
-        11 => OPT.iter().fold(0, |m, b| m | b) | LINES | REFS,
+        11 => OPT.iter().fold(0, |m, b| m | b) | LINES | REFS | MORE,
         // A hatch: holes, schema 23's name, scale, families, gradient and tie (docs/adr/0186).
         12 => OPT[..6].iter().fold(0, |m, b| m | b),
         // An insert: mirror, its own y factor (docs/adr/0315 §3), its moved attributes (docs/adr/0317 §1), its
@@ -2460,7 +2479,32 @@ fn geometry(
             } else {
                 None
             };
+            // Its options, moved value and breaks (docs/adr/0321).
+            let mut more: serde_json::Map<String, serde_json::Value> = if flags & MORE != 0 {
+                let t = c.text(|| place("options"))?;
+                match serde_json::from_str(&t) {
+                    Ok(serde_json::Value::Object(m)) => m,
+                    _ => return Err(broken("ölçünün seçenekleri")),
+                }
+            } else {
+                serde_json::Map::new()
+            };
+            let mut part = |key: &str| more.remove(key);
+            let options: Option<Box<kentos_contracts::DimensionOptions>> = match part("options") {
+                Some(v) => Some(serde_json::from_value(v).map_err(|_| broken("ölçünün seçenekleri"))?),
+                None => None,
+            };
+            let text_shift: Option<kentos_contracts::TextShift> = match part("textShift") {
+                Some(v) => Some(serde_json::from_value(v).map_err(|_| broken("değerin kayması"))?),
+                None => None,
+            };
+            let breaks: Vec<kentos_contracts::DimensionBreak> = match part("breaks") {
+                Some(v) => serde_json::from_value(v).map_err(|_| broken("ölçünün kırmaları"))?,
+                None => Vec::new(),
+            };
             Entity::Dimension(DimensionEntity {
+                text_shift,
+                breaks,
                 base,
                 a,
                 b,
@@ -2475,6 +2519,7 @@ fn geometry(
                 zb,
                 refs: refs.map(Box::new),
                 look: DimensionLook {
+                    options,
                     dim_style,
                     arrow,
                     arrow_size,

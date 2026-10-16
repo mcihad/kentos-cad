@@ -504,6 +504,7 @@ fn command_tool(c: &Value) -> Value {
             | "cad.entities.offset"
             // It binds or frees a dimension's points (docs/adr/0249 §3).
             | "cad.dimensions.reassociate"
+            | "cad.dimensions.edit"
             // They cut, grow or round what is there; a trim takes objects away (docs/adr/0250).
             | "cad.entities.trim"
             | "cad.entities.extend"

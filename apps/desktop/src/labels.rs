@@ -1157,10 +1157,14 @@ impl Labels<'_> {
                     Entity::Dimension(d),
                 ) => {
                     // Its value in its look's writing and typeface (docs/adr/0183 §3).
-                    let text = match d.text.as_deref().filter(|t| !t.is_empty()) {
-                        Some(own) => own.to_owned(),
-                        None => self.format.dimension_in(prefix, unit, *value, &d.look),
-                    };
+                    // A text written over it shows the value where it says `<>` (docs/adr/0321 §3).
+                    let text = self.format.dimension_value(
+                        prefix,
+                        unit,
+                        *value,
+                        &d.look,
+                        d.text.as_deref().filter(|t| !t.is_empty()),
+                    );
                     // Its value's own colour when its look names one (docs/adr/0205 §6), else the object's.
                     let color = self.ink_of(
                         d.look
@@ -1364,10 +1368,13 @@ impl Labels<'_> {
                     _,
                 ) => {
                     let look = kentos_native_application::geometry::contract_look(look.clone());
-                    let text = match text {
-                        Some(own) => own.clone(),
-                        None => self.format.dimension_in(prefix, unit, *value, &look),
-                    };
+                    let text = self.format.dimension_value(
+                        prefix,
+                        unit,
+                        *value,
+                        &look,
+                        text.as_deref().filter(|t| !t.is_empty()),
+                    );
                     let color = self.ink_of(
                         look.text_color
                             .as_deref()

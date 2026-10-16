@@ -237,6 +237,21 @@ impl App {
 
     /// Sabit bloğa çevir (docs/adr/0319 §4): the selected dynamic blocks' inserts made inserts of plain blocks drawing
     /// what they drew, through `cad.blocks.freeze`, one undo step; the new blocks said.
+    /// Ölçü aralığı, Ölçüyü kır and Kırmayı kaldır on the selected dimensions (docs/adr/0321 §4), the first the base.
+    pub(crate) fn dimensions_edit(
+        &mut self,
+        make: impl FnOnce(Vec<String>) -> kentos_contracts::DimensionEdit,
+    ) {
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let slots = self.selection.ids().to_vec();
+        let said = kentos_interaction::properties::edit_dimensions(&mut doc.model, &slots, make);
+        for words in said {
+            self.warn(&words);
+        }
+    }
+
     pub(crate) fn blocks_freeze(&mut self) {
         use kentos_contracts::{CommandResult, Entity};
         let Some(doc) = self.document.as_mut() else {

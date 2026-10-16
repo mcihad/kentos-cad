@@ -216,6 +216,8 @@ pub(super) struct Features {
     pub(super) dynamic_blocks: bool,
     /// Schema 60: a dimension's references' `rule` (docs/adr/0320 §1).
     dimension_rules: bool,
+    /// Schema 61: a dimension's `options`, `textShift` and `breaks` (docs/adr/0321).
+    pub(super) dimension_options: bool,
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
     pub(super) look: bool,
@@ -291,6 +293,7 @@ impl Features {
             block_cards: schema >= crate::SCHEMA_WITH_BLOCK_CARDS,
             dynamic_blocks: schema >= crate::SCHEMA_WITH_DYNAMIC_BLOCKS,
             dimension_rules: schema >= crate::SCHEMA_WITH_DIMENSION_RULES,
+            dimension_options: schema >= crate::SCHEMA_WITH_DIMENSION_OPTIONS,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,
@@ -397,6 +400,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                         ))
                     // What its points follow names objects: only the drawing's dimensions (docs/adr/0249 §4).
                     || (has.dimension_refs && has.uids && key == "refs")
+                    || (has.dimension_options && matches!(key, "options" | "textShift" | "breaks"))
             }
             // A hatch's tie names objects: only the drawing's hatches (docs/adr/0186 §6).
             Kind::Hatch => {
@@ -564,6 +568,9 @@ struct Fields {
     assoc: Option<HatchAssoc>,
     /// A dimension's references (docs/adr/0249 §4).
     refs: Option<DimensionRefs>,
+    /// A dimension's moved value and breaks (docs/adr/0321).
+    text_shift: Option<kentos_contracts::TextShift>,
+    breaks: Vec<kentos_contracts::DimensionBreak>,
     block: Option<BlockId>,
     /// Where the insert's `block` is in the payload (for an unknown block).
     block_at: usize,
@@ -1079,6 +1086,31 @@ pub(super) fn object(
             "pattern" => f.pattern = Some(pattern(r, has)?),
             "assoc" => f.assoc = Some(hatch_assoc(r)?),
             "refs" => f.refs = Some(dimension_refs(r, has.subref_extras, has.dimension_rules)?),
+            // Schema 61 (docs/adr/0321): as their JSON, as the writer writes them.
+            "options" => {
+                let (o, at): (kentos_contracts::DimensionOptions, usize) = json_part(r, "seçenekler")?;
+                if let Some(words) = o.problem() {
+                    return Err(r.fail_at(Code::BadValue, at, &words));
+                }
+                f.look.options = Some(Box::new(o));
+            }
+            "textShift" => {
+                let (s, at): (kentos_contracts::TextShift, usize) = json_part(r, "değerin kayması")?;
+                if let Some(words) = s.problem() {
+                    return Err(r.fail_at(Code::BadValue, at, &words));
+                }
+                f.text_shift = Some(s);
+            }
+            "breaks" => {
+                let (b, at): (Vec<kentos_contracts::DimensionBreak>, usize) = json_part(r, "kırmalar")?;
+                if b.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş kırma listesi yazılmaz"));
+                }
+                if let Some(words) = kentos_contracts::breaks_problem(&b) {
+                    return Err(r.fail_at(Code::BadValue, at, &words));
+                }
+                f.breaks = b;
+            }
             "block" => {
                 f.block_at = r.position();
                 f.block = Some(BlockId(id16(r)?));
@@ -1658,6 +1690,8 @@ fn build(
                 ));
             }
             Entity::Dimension(DimensionEntity {
+                text_shift: f.text_shift.take(),
+                breaks: std::mem::take(&mut f.breaks),
                 base,
                 a: required(r, f.a, "a")?,
                 b: required(r, f.b, "b")?,
@@ -2781,4 +2815,31 @@ fn param_value(r: &mut Reader<'_>) -> Result<kentos_contracts::ParamValue, KcadE
         Some(b) if b >> 5 == 4 => V::Point(point(r)?),
         _ => V::Number(r.float()?),
     })
+}
+
+/// A contract's part written as its JSON (docs/adr/0321): read, checked against the writer's form (its defaults not
+/// written, floats as floats), and where it starts.
+pub(super) fn json_part<T: serde::de::DeserializeOwned + serde::Serialize>(
+    r: &mut Reader<'_>,
+    what: &str,
+) -> Result<(T, usize), KcadError> {
+    let at = r.position();
+    let value = r.opaque()?;
+    let read: T = serde_json::from_value(value.clone()).map_err(|e| {
+        let words = e.to_string();
+        let code = if words.contains("unknown field") {
+            Code::UnknownField
+        } else {
+            Code::BadValue
+        };
+        r.fail_at(code, at, &format!("{what} okunamadı: {words}"))
+    })?;
+    if serde_json::to_value(&read).ok().as_ref() != Some(&value) {
+        return Err(r.fail_at(
+            Code::BadValue,
+            at,
+            &format!("{what} yazıcının biçiminde değil (varsayılan değer yazılmış ya da ondalık yerine tam sayı)"),
+        ));
+    }
+    Ok((read, at))
 }

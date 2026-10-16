@@ -26,6 +26,8 @@ COMMANDS: dict[str, Any] = {
     "cad.curves.construct": curves.construct,
     "cad.curves.edit": curves.edit,
     "cad.dimensions.create": dimensions.create,
+    "cad.dimensions.edit": dimensions.edit,
+    "cad.dimensions.query": dimensions.query,
     "cad.dimensions.reassociate": dimensions.reassociate,
     "cad.drawing.audit": drawing.audit,
     "cad.entities.array": entities.array,

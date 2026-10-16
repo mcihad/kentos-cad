@@ -597,6 +597,15 @@ codes! {
     /// No dimension forms where it is placed.
     NO_DIMENSION = "no_dimension", Failed, false, "Bu yerde ölçü oluşmuyor; ölçülen noktalar çakışıyor, kenarlar paralel ya da yay boş.";
 
+    // ── Dimension edits (docs/adr/0320 §3, 0321) ────────────────────────
+    /// A dimension that is not aligned or linear where only those are taken (a chain's or a baseline's base, spacing,
+    /// breaks).
+    NOT_STRAIGHT = "not_straight", Failed, false, "Yalnız hizalı ya da doğrusal ölçü alınır (zincir ve baz temeli, aralık, kırma).";
+    /// A dimension not parallel to the base Ölçü aralığı spaces from.
+    NOT_PARALLEL = "not_parallel", Failed, false, "Ölçü temel ölçüye paralel değil; aralık yalnız paralel ölçülerde verilir.";
+    /// A dimension no object crosses: it is left without breaks.
+    NO_CROSSING = "no_crossing", Warning, false, "Ölçünün çizgilerini kesen nesne yok; kırma yapılmadı.";
+
     // ── A drawing's unit (docs/adr/0256 §1) ─────────────────────────────
     /// A unit change to the unit it already is.
     SAME_UNIT = "same_unit", Failed, false, "Çizimin birimi zaten bu; değişecek bir şey yok.";

@@ -369,6 +369,8 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
     let dim = add(
         &mut app,
         Entity::Dimension(DimensionEntity {
+            text_shift: None,
+            breaks: Vec::new(),
             base: base("cizim"),
             a: Wire { x: E, y: N },
             b: Wire { x: E + 10.0, y: N },
@@ -1954,6 +1956,8 @@ fn a_leaders_rows_write_its_note_height_turn_arrowhead_and_mask() {
 /// A dimension of `style` from (E + a, N) to (E + b, N), on Çizim.
 fn dimension(style: kentos_contracts::DimensionStyle, a: [f64; 2], b: [f64; 2]) -> DimensionEntity {
     DimensionEntity {
+        text_shift: None,
+        breaks: Vec::new(),
         base: base("cizim"),
         a: Wire {
             x: E + a[0],
@@ -2101,6 +2105,14 @@ fn a_dimensions_rows_write_its_mask_axis_and_elevations() {
         [
             "İlişki",
             "Zemin",
+            // Their options, value's place and breaks (docs/adr/0321).
+            "Sığdırma",
+            "Yuvarlama",
+            "Sıfırlar",
+            "Alternatif birim",
+            "Tolerans",
+            "Değerin yeri",
+            "Kırmalar",
             "Çizgi rengi",
             "Çizgi kalınlığı",
             "Çizgi tipi",
