@@ -168,6 +168,10 @@ pub enum Event {
     Tab(usize),
     /// A collapsed group's title: open or close it.
     Group(String),
+    /// A related object's form opens (docs/adr/0404 §4).
+    OpenRelated(String),
+    /// A related object, or the one a reference names, is shown in the drawing.
+    ShowObject(String),
     FirstIssue,
     Save,
     Cancel,
@@ -319,6 +323,14 @@ impl Entry {
     #[cfg(test)]
     pub(crate) fn is_mixed(&self, name: &str) -> bool {
         self.mixed.contains(name)
+    }
+
+    /// A related item's objects now.
+    #[cfg(test)]
+    pub(crate) fn related_of(&self, item: &str) -> Vec<String> {
+        self.state(item)
+            .and_then(|s| s.related.clone())
+            .unwrap_or_default()
     }
 
     /// Whether a group is closed now.
@@ -667,6 +679,43 @@ impl App {
         }
     }
 
+    /// A related object's form, when the record shown has nothing unsaved.
+    fn open_related(&mut self, uid: &str) -> Task<Message> {
+        if self.form_entry.as_ref().is_some_and(Entry::dirty) {
+            self.say(
+                Level::Warn,
+                "Kayıtta kaydedilmemiş değişiklik var: önce Kaydet’e ya da Vazgeç’e basın.",
+            );
+            return Task::none();
+        }
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
+        let Some(slot) = kentos_domain::Uuid::parse_str(uid)
+            .ok()
+            .and_then(|u| doc.model.slot_of(u))
+        else {
+            return Task::none();
+        };
+        let Some(layer) = doc.model.get(slot).map(|e| e.base().layer_id.clone()) else {
+            return Task::none();
+        };
+        match self.form_of_layer(&layer) {
+            Some(form) => {
+                self.form_entry = None;
+                self.selection.set([slot]);
+                self.open_entry(slot, &form)
+            }
+            None => {
+                self.say(
+                    Level::Warn,
+                    "İlişkili nesnenin katmanının formu yok; Formlar penceresinden bir form oluşturun.",
+                );
+                Task::none()
+            }
+        }
+    }
+
     fn entry_event(&mut self, preview: bool, event: Event) -> Task<Message> {
         let slot = if preview {
             &mut self.form_preview
@@ -710,6 +759,16 @@ impl App {
                 }
             }
             Event::Tab(i) => e.tab = i,
+            Event::OpenRelated(uid) => return self.open_related(&uid),
+            Event::ShowObject(uid) => {
+                let slot = kentos_domain::Uuid::parse_str(&uid)
+                    .ok()
+                    .and_then(|u| doc.model.slot_of(u));
+                if let Some(slot) = slot {
+                    self.selection.set([slot]);
+                    self.zoom_selection();
+                }
+            }
             Event::Group(id) => {
                 if !e.closed.remove(&id) {
                     e.closed.insert(id);
@@ -1140,6 +1199,12 @@ impl App {
                             .width(Fill),
                     );
                 }
+                FormItem::Related {
+                    id, label: title, ..
+                } => {
+                    out = flush(&mut run, out);
+                    out = out.push(self.related_box(e, id, title.as_deref()));
+                }
                 FormItem::Note { id, text } => {
                     out = flush(&mut run, out);
                     let text = e
@@ -1216,13 +1281,84 @@ impl App {
                         .unwrap_or_else(|| text.clone());
                     form = form.row(container(label::caption(text).style(muted)).width(Fill));
                 }
-                FormItem::Group { .. } => {
+                FormItem::Group { .. } | FormItem::Related { .. } => {
                     form = form.row(self.entry_block(e, std::slice::from_ref(*item), locked));
                 }
                 FormItem::Tab { .. } => {}
             }
         }
         form.into()
+    }
+
+    /// A related item (docs/adr/0404 §4): the objects referring to the record, each opened by its own
+    /// form or shown in the drawing (not from the designer's preview).
+    fn related_box<'a>(
+        &'a self,
+        e: &'a Entry,
+        id: &str,
+        title: Option<&str>,
+    ) -> Element<'a, Message> {
+        let uids = e
+            .state(id)
+            .and_then(|s| s.related.clone())
+            .unwrap_or_default();
+        let mut col = Column::new().spacing(6).push(
+            row![
+                icon(Icon::Link).size(13.0),
+                label::strong(title.unwrap_or("İlişkili kayıtlar").to_owned()),
+                label::caption(format!("{}", uids.len())).style(muted),
+            ]
+            .spacing(6)
+            .align_y(Center),
+        );
+        if uids.is_empty() {
+            col = col.push(label::caption("Bu kayda başvuran nesne yok.").style(muted));
+        }
+        let doc = self.document.as_ref();
+        for uid in uids.iter().take(50) {
+            let words = doc
+                .and_then(|d| {
+                    let slot = d.model.slot_of(kentos_domain::Uuid::parse_str(uid).ok()?)?;
+                    let e = d.model.get(slot)?;
+                    // Its label, else its first field's value, else its kind and id.
+                    let first = d
+                        .model
+                        .layers()
+                        .get(&e.base().layer_id)
+                        .and_then(|n| {
+                            n.fields
+                                .iter()
+                                .find_map(|f| e.base().attrs.get(&f.name).filter(|v| !v.is_empty()))
+                        })
+                        .cloned();
+                    Some(e.base().label.clone().or(first).unwrap_or_else(|| {
+                        format!(
+                            "{} {}",
+                            kentos_forms::kind_label(e),
+                            uid.chars().take(8).collect::<String>()
+                        )
+                    }))
+                })
+                .unwrap_or_else(|| uid.clone());
+            let live = !e.preview;
+            col = col.push(
+                row![
+                    label::body(words).width(Fill),
+                    words::ghost("Git", live.then(|| e.msg(Event::ShowObject(uid.clone())))),
+                    words::secondary("Aç", live.then(|| e.msg(Event::OpenRelated(uid.clone())))),
+                ]
+                .spacing(6)
+                .align_y(Center),
+            );
+        }
+        if uids.len() > 50 {
+            col = col.push(label::caption(format!("{} nesne daha.", uids.len() - 50)).style(muted));
+        }
+        container(col)
+            .padding(10)
+            .style(style::container::field_box)
+            .width(Fill)
+            .into()
     }
 
     /// The window's controls by their words (a trace's `dialog` step): a field by its label.
@@ -1293,7 +1429,19 @@ fn entry_control<'a>(
     };
     // What the item's choice filter offers for the record; every listed value without one.
     let offered = e.state(&item.id).and_then(|s| s.choices.as_ref());
+    // A list from another layer offers its values for the record (docs/adr/0404 §2).
+    let looked: Option<Vec<(String, String)>> = item.lookup.as_ref().map(|_| {
+        e.state(&item.id)
+            .and_then(|s| s.options.as_ref())
+            .map(|o| {
+                o.iter()
+                    .map(|c| (c.code.clone(), c.label.clone()))
+                    .collect()
+            })
+            .unwrap_or_default()
+    });
     let choices: Vec<(String, String)> = match &field.values {
+        _ if looked.is_some() => looked.clone().unwrap_or_default(),
         Some(list) if !list.is_empty() => list
             .iter()
             .filter(|c| offered.is_none_or(|o| o.contains(&c.code)))
@@ -1314,8 +1462,18 @@ fn entry_control<'a>(
         &value,
     )
     .unwrap_or_else(|_| value.clone());
-    let at = choices.iter().position(|(c, _)| *c == code);
-    match kentos_forms::widget_of(item, field) {
+    // A list from another layer: a label typed is its value's (as the core writes it).
+    let at = choices.iter().position(|(c, _)| *c == code).or_else(|| {
+        looked
+            .as_ref()
+            .and(choices.iter().position(|(_, l)| *l == value))
+    });
+    // A list from another layer is not known before the record: its segmented choice is a list.
+    let widget = match kentos_forms::widget_of(item, field) {
+        FormWidget::Segmented if looked.is_some() => FormWidget::List,
+        w => w,
+    };
+    match widget {
         FormWidget::Check | FormWidget::Switch if read_only => label::body(if code == "true" {
             "Evet"
         } else if code == "false" {

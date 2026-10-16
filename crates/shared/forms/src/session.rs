@@ -18,8 +18,9 @@ use kentos_expression::js::text::fold_turkish;
 use kentos_expression::template::{self, Template};
 use kentos_expression::{Expr, Schema, Unit, Variable, compile_with};
 
+use crate::lookup::{List, Related, World, list_of, related_of};
 use crate::record::{Attrs, Object, field_text_of, holds, schema_in, text_of};
-use crate::{codes, has_errors, issue, preflight};
+use crate::{codes, has_errors, issue};
 
 /// The `@` values that change with the moment or the user: a command gives them (`moment`, `user`),
 /// the document's following does not (docs/adr/0402 §5).
@@ -56,6 +57,8 @@ struct Node {
     visible: Option<Expr>,
     field: Option<Bound>,
     note: Option<Note>,
+    /// A related item's objects (docs/adr/0404 §4).
+    related: Option<Related>,
 }
 
 /// A note whose text puts values in.
@@ -82,6 +85,8 @@ struct Bound {
     default_waits: bool,
     /// The calculation reads a host's value that was not given: it is left out.
     calc_waits: bool,
+    /// The field's list from another layer (docs/adr/0404 §1).
+    lookup: Option<List>,
 }
 
 impl Prepared {
@@ -102,7 +107,19 @@ impl Prepared {
         variables: &[Variable],
         unit: Unit,
     ) -> Result<Prepared, Vec<FormIssue>> {
-        let issues = preflight(body, fields, variables);
+        Prepared::new_with(body, fields, variables, unit, &World::new())
+    }
+
+    /// [`Prepared::new_in`] reading the other layers `world` holds: the fields' lists from them and
+    /// the related items (docs/adr/0404).
+    pub fn new_with(
+        body: &FormBody,
+        fields: &[LayerField],
+        variables: &[Variable],
+        unit: Unit,
+        world: &World,
+    ) -> Result<Prepared, Vec<FormIssue>> {
+        let issues = crate::preflight_in(body, fields, variables, world);
         if has_errors(&issues) {
             return Err(issues);
         }
@@ -111,6 +128,9 @@ impl Prepared {
         let ctx = Ctx {
             fields,
             schema: &schema,
+            world,
+            variables,
+            unit,
         };
         walk(&body.items, None, &mut items, &ctx);
         let calc_order = calc_order(&items, fields).unwrap_or_default();
@@ -178,6 +198,8 @@ impl Prepared {
                 read_only,
                 choices: None,
                 text: None,
+                options: None,
+                related: None,
             });
         }
         out
@@ -188,12 +210,18 @@ impl Prepared {
     pub fn described(&self, attrs: &Attrs, object: &Object) -> Vec<FormItemState> {
         let notes = self.notes(attrs, object);
         let mut states = self.states(attrs, object);
-        for state in &mut states {
+        for (node, state) in self.items.iter().zip(&mut states) {
             state.choices = self.choices(&state.id, attrs, object);
             state.text = notes
                 .iter()
                 .find(|(id, _)| *id == state.id)
                 .map(|(_, t)| t.clone());
+            if let Some(list) = node.field.as_ref().and_then(|b| b.lookup.as_ref()) {
+                state.options = Some(list.choices(attrs));
+            }
+            if let Some(related) = &node.related {
+                state.related = Some(related.of(object));
+            }
         }
         states
     }
@@ -202,6 +230,14 @@ impl Prepared {
     /// has no filter (every listed value is offered).
     pub fn choices(&self, item: &str, attrs: &Attrs, object: &Object) -> Option<Vec<String>> {
         let b = self.items.iter().find(|n| n.id == item)?.field.as_ref()?;
+        if let Some(list) = &b.lookup {
+            return Some(
+                list.offered(attrs)
+                    .into_iter()
+                    .map(|r| r.0.clone())
+                    .collect(),
+            );
+        }
         let choices = b.choices.as_ref()?;
         Some(
             choices
@@ -415,6 +451,17 @@ impl Prepared {
                     continue;
                 }
             };
+            if let Some(list) = &b.lookup
+                && !list.offered(attrs).iter().any(|r| r.0 == canonical)
+            {
+                issues.push(at(
+                    codes::LOOKUP_MISSING,
+                    FormSeverity::Error,
+                    Some("lookup".into()),
+                    format!("“{label}” için “{value}” listede yok; listeden seçin."),
+                ));
+                continue;
+            }
             if let Some(choices) = &b.choices
                 && let Some((_, e)) = choices.iter().find(|(code, _)| *code == canonical)
                 && !holds(e, attrs, object)
@@ -555,6 +602,12 @@ impl Prepared {
                 ));
                 continue;
             }
+            // A list from another layer takes a value's label for its code (docs/adr/0404 §2).
+            let text = self
+                .bound()
+                .find(|(_, b)| b.index == index)
+                .and_then(|(_, b)| b.lookup.as_ref())
+                .map_or(text.as_str(), |list| list.code_of(text));
             match check_value(&loose(field), text) {
                 Ok(v) if v.is_empty() => {
                     written.remove(&field.name);
@@ -705,6 +758,9 @@ impl Prepared {
 struct Ctx<'a> {
     fields: &'a [LayerField],
     schema: &'a Schema,
+    world: &'a World,
+    variables: &'a [Variable],
+    unit: Unit,
 }
 
 fn walk(list: &[FormItem], parent: Option<usize>, out: &mut Vec<Node>, ctx: &Ctx) {
@@ -715,8 +771,18 @@ fn walk(list: &[FormItem], parent: Option<usize>, out: &mut Vec<Node>, ctx: &Ctx
     };
     for item in list {
         let at = out.len();
+        let mut related = None;
         let (visible, field, note) = match item {
             FormItem::Group { visible_when, .. } => (compile(visible_when), None, None),
+            FormItem::Related {
+                layer,
+                field,
+                visible_when,
+                ..
+            } => {
+                related = related_of(layer, field, ctx.world);
+                (compile(visible_when), None, None)
+            }
             FormItem::Field(f) => {
                 let index = ctx
                     .fields
@@ -743,6 +809,17 @@ fn walk(list: &[FormItem], parent: Option<usize>, out: &mut Vec<Node>, ctx: &Ctx
                         .choice_filter
                         .as_deref()
                         .map(|src| choice_filters(src, &ctx.fields[index], ctx.schema)),
+                    lookup: f.lookup.as_ref().and_then(|l| {
+                        let still: Vec<Variable> = ctx
+                            .variables
+                            .iter()
+                            .filter(|v| {
+                                !MOMENT.contains(&fold_turkish(&v.name).to_lowercase().as_str())
+                            })
+                            .cloned()
+                            .collect();
+                        list_of(l, ctx.fields, ctx.world, &still, ctx.unit)
+                    }),
                 };
                 (compile(&f.visible_when), Some(bound), None)
             }
@@ -755,6 +832,7 @@ fn walk(list: &[FormItem], parent: Option<usize>, out: &mut Vec<Node>, ctx: &Ctx
             visible,
             field,
             note,
+            related,
         });
         walk(item.items(), Some(at), out, ctx);
     }

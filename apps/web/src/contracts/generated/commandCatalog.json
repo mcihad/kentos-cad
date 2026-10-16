@@ -3870,6 +3870,17 @@
                       "null"
                     ]
                   },
+                  "lookup": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/FormLookup"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or\n`choiceFilter`."
+                  },
                   "placeholder": {
                     "description": "The empty box's hint.",
                     "type": [
@@ -3957,8 +3968,87 @@
                   "text"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "The objects of another layer whose field holds this record's persistent id (docs/adr/0404 §4):\na list in the form, each opened by its own form.",
+                "properties": {
+                  "field": {
+                    "description": "Its field's key that holds this record's id.",
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "layer": {
+                    "description": "The other layer's id.",
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "related",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "layer",
+                  "field"
+                ],
+                "type": "object"
               }
             ]
+          },
+          "FormLookup": {
+            "additionalProperties": false,
+            "description": "A field's list of values from another layer (docs/adr/0404 §1).",
+            "properties": {
+              "filter": {
+                "description": "Asked of each of the list's objects (its fields by name, the project's `@` values).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "Its field's key whose value is written; `$uid`: the object's persistent id (a reference).",
+                "type": "string"
+              },
+              "label": {
+                "description": "Its field's key shown; none: the key's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "description": "The list's layer id.",
+                "type": "string"
+              },
+              "matches": {
+                "description": "The list's object is offered when its field equals the record's (a chain: il, ilçe, mahalle).",
+                "items": {
+                  "$ref": "#/$defs/LookupMatch"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "layer",
+              "key"
+            ],
+            "type": "object"
           },
           "FormRelease": {
             "additionalProperties": false,
@@ -6847,6 +6937,25 @@
               "transparency"
             ],
             "type": "string"
+          },
+          "LookupMatch": {
+            "additionalProperties": false,
+            "description": "A field of the list's layer that must equal a field of the record.",
+            "properties": {
+              "field": {
+                "description": "The list's field's key.",
+                "type": "string"
+              },
+              "record": {
+                "description": "The record's field's key.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "field",
+              "record"
+            ],
+            "type": "object"
           },
           "LookupRow": {
             "additionalProperties": false,
@@ -13283,6 +13392,17 @@
                       "null"
                     ]
                   },
+                  "lookup": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/FormLookup"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or\n`choiceFilter`."
+                  },
                   "placeholder": {
                     "description": "The empty box's hint.",
                     "type": [
@@ -13370,8 +13490,87 @@
                   "text"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "The objects of another layer whose field holds this record's persistent id (docs/adr/0404 §4):\na list in the form, each opened by its own form.",
+                "properties": {
+                  "field": {
+                    "description": "Its field's key that holds this record's id.",
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "layer": {
+                    "description": "The other layer's id.",
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "related",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "layer",
+                  "field"
+                ],
+                "type": "object"
               }
             ]
+          },
+          "FormLookup": {
+            "additionalProperties": false,
+            "description": "A field's list of values from another layer (docs/adr/0404 §1).",
+            "properties": {
+              "filter": {
+                "description": "Asked of each of the list's objects (its fields by name, the project's `@` values).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "Its field's key whose value is written; `$uid`: the object's persistent id (a reference).",
+                "type": "string"
+              },
+              "label": {
+                "description": "Its field's key shown; none: the key's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "description": "The list's layer id.",
+                "type": "string"
+              },
+              "matches": {
+                "description": "The list's object is offered when its field equals the record's (a chain: il, ilçe, mahalle).",
+                "items": {
+                  "$ref": "#/$defs/LookupMatch"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "layer",
+              "key"
+            ],
+            "type": "object"
           },
           "FormRelease": {
             "additionalProperties": false,
@@ -15037,6 +15236,25 @@
             "required": [
               "base",
               "plane"
+            ],
+            "type": "object"
+          },
+          "LookupMatch": {
+            "additionalProperties": false,
+            "description": "A field of the list's layer that must equal a field of the record.",
+            "properties": {
+              "field": {
+                "description": "The list's field's key.",
+                "type": "string"
+              },
+              "record": {
+                "description": "The record's field's key.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "field",
+              "record"
             ],
             "type": "object"
           },
@@ -20796,6 +21014,17 @@
                       "null"
                     ]
                   },
+                  "lookup": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/FormLookup"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or\n`choiceFilter`."
+                  },
                   "placeholder": {
                     "description": "The empty box's hint.",
                     "type": [
@@ -20883,8 +21112,87 @@
                   "text"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "The objects of another layer whose field holds this record's persistent id (docs/adr/0404 §4):\na list in the form, each opened by its own form.",
+                "properties": {
+                  "field": {
+                    "description": "Its field's key that holds this record's id.",
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "layer": {
+                    "description": "The other layer's id.",
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "related",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "layer",
+                  "field"
+                ],
+                "type": "object"
               }
             ]
+          },
+          "FormLookup": {
+            "additionalProperties": false,
+            "description": "A field's list of values from another layer (docs/adr/0404 §1).",
+            "properties": {
+              "filter": {
+                "description": "Asked of each of the list's objects (its fields by name, the project's `@` values).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "Its field's key whose value is written; `$uid`: the object's persistent id (a reference).",
+                "type": "string"
+              },
+              "label": {
+                "description": "Its field's key shown; none: the key's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "description": "The list's layer id.",
+                "type": "string"
+              },
+              "matches": {
+                "description": "The list's object is offered when its field equals the record's (a chain: il, ilçe, mahalle).",
+                "items": {
+                  "$ref": "#/$defs/LookupMatch"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "layer",
+              "key"
+            ],
+            "type": "object"
           },
           "FormRelease": {
             "additionalProperties": false,
@@ -23773,6 +24081,25 @@
               "transparency"
             ],
             "type": "string"
+          },
+          "LookupMatch": {
+            "additionalProperties": false,
+            "description": "A field of the list's layer that must equal a field of the record.",
+            "properties": {
+              "field": {
+                "description": "The list's field's key.",
+                "type": "string"
+              },
+              "record": {
+                "description": "The record's field's key.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "field",
+              "record"
+            ],
+            "type": "object"
           },
           "LookupRow": {
             "additionalProperties": false,
@@ -322955,6 +323282,17 @@
                       "null"
                     ]
                   },
+                  "lookup": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/FormLookup"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or\n`choiceFilter`."
+                  },
                   "placeholder": {
                     "description": "The empty box's hint.",
                     "type": [
@@ -323042,8 +323380,87 @@
                   "text"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "The objects of another layer whose field holds this record's persistent id (docs/adr/0404 §4):\na list in the form, each opened by its own form.",
+                "properties": {
+                  "field": {
+                    "description": "Its field's key that holds this record's id.",
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "layer": {
+                    "description": "The other layer's id.",
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "related",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "layer",
+                  "field"
+                ],
+                "type": "object"
               }
             ]
+          },
+          "FormLookup": {
+            "additionalProperties": false,
+            "description": "A field's list of values from another layer (docs/adr/0404 §1).",
+            "properties": {
+              "filter": {
+                "description": "Asked of each of the list's objects (its fields by name, the project's `@` values).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "Its field's key whose value is written; `$uid`: the object's persistent id (a reference).",
+                "type": "string"
+              },
+              "label": {
+                "description": "Its field's key shown; none: the key's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "description": "The list's layer id.",
+                "type": "string"
+              },
+              "matches": {
+                "description": "The list's object is offered when its field equals the record's (a chain: il, ilçe, mahalle).",
+                "items": {
+                  "$ref": "#/$defs/LookupMatch"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "layer",
+              "key"
+            ],
+            "type": "object"
           },
           "FormWidget": {
             "description": "How a field is edited.",
@@ -323240,6 +323657,25 @@
                 "type": "object"
               }
             ]
+          },
+          "LookupMatch": {
+            "additionalProperties": false,
+            "description": "A field of the list's layer that must equal a field of the record.",
+            "properties": {
+              "field": {
+                "description": "The list's field's key.",
+                "type": "string"
+              },
+              "record": {
+                "description": "The record's field's key.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "field",
+              "record"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -323501,6 +323937,17 @@
                       "null"
                     ]
                   },
+                  "lookup": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/FormLookup"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or\n`choiceFilter`."
+                  },
                   "placeholder": {
                     "description": "The empty box's hint.",
                     "type": [
@@ -323588,8 +324035,87 @@
                   "text"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "The objects of another layer whose field holds this record's persistent id (docs/adr/0404 §4):\na list in the form, each opened by its own form.",
+                "properties": {
+                  "field": {
+                    "description": "Its field's key that holds this record's id.",
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "layer": {
+                    "description": "The other layer's id.",
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "related",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "layer",
+                  "field"
+                ],
+                "type": "object"
               }
             ]
+          },
+          "FormLookup": {
+            "additionalProperties": false,
+            "description": "A field's list of values from another layer (docs/adr/0404 §1).",
+            "properties": {
+              "filter": {
+                "description": "Asked of each of the list's objects (its fields by name, the project's `@` values).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "Its field's key whose value is written; `$uid`: the object's persistent id (a reference).",
+                "type": "string"
+              },
+              "label": {
+                "description": "Its field's key shown; none: the key's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "description": "The list's layer id.",
+                "type": "string"
+              },
+              "matches": {
+                "description": "The list's object is offered when its field equals the record's (a chain: il, ilçe, mahalle).",
+                "items": {
+                  "$ref": "#/$defs/LookupMatch"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "layer",
+              "key"
+            ],
+            "type": "object"
           },
           "FormRelease": {
             "additionalProperties": false,
@@ -323722,6 +324248,25 @@
                 "type": "string"
               }
             ]
+          },
+          "LookupMatch": {
+            "additionalProperties": false,
+            "description": "A field of the list's layer that must equal a field of the record.",
+            "properties": {
+              "field": {
+                "description": "The list's field's key.",
+                "type": "string"
+              },
+              "record": {
+                "description": "The record's field's key.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "field",
+              "record"
+            ],
+            "type": "object"
           },
           "ProjectForm": {
             "additionalProperties": false,
@@ -324048,6 +324593,17 @@
                       "null"
                     ]
                   },
+                  "lookup": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/FormLookup"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or\n`choiceFilter`."
+                  },
                   "placeholder": {
                     "description": "The empty box's hint.",
                     "type": [
@@ -324135,8 +324691,87 @@
                   "text"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "The objects of another layer whose field holds this record's persistent id (docs/adr/0404 §4):\na list in the form, each opened by its own form.",
+                "properties": {
+                  "field": {
+                    "description": "Its field's key that holds this record's id.",
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "layer": {
+                    "description": "The other layer's id.",
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "related",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "layer",
+                  "field"
+                ],
+                "type": "object"
               }
             ]
+          },
+          "FormLookup": {
+            "additionalProperties": false,
+            "description": "A field's list of values from another layer (docs/adr/0404 §1).",
+            "properties": {
+              "filter": {
+                "description": "Asked of each of the list's objects (its fields by name, the project's `@` values).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "Its field's key whose value is written; `$uid`: the object's persistent id (a reference).",
+                "type": "string"
+              },
+              "label": {
+                "description": "Its field's key shown; none: the key's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "description": "The list's layer id.",
+                "type": "string"
+              },
+              "matches": {
+                "description": "The list's object is offered when its field equals the record's (a chain: il, ilçe, mahalle).",
+                "items": {
+                  "$ref": "#/$defs/LookupMatch"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "layer",
+              "key"
+            ],
+            "type": "object"
           },
           "FormRelease": {
             "additionalProperties": false,
@@ -324269,6 +324904,25 @@
                 "type": "string"
               }
             ]
+          },
+          "LookupMatch": {
+            "additionalProperties": false,
+            "description": "A field of the list's layer that must equal a field of the record.",
+            "properties": {
+              "field": {
+                "description": "The list's field's key.",
+                "type": "string"
+              },
+              "record": {
+                "description": "The record's field's key.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "field",
+              "record"
+            ],
+            "type": "object"
           },
           "ProjectForm": {
             "additionalProperties": false,
@@ -324483,6 +325137,22 @@
       },
       "output": {
         "$defs": {
+          "FieldChoice": {
+            "description": "One value of a field's value list: the code written to the attribute\nand the label shown for it.",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "label"
+            ],
+            "type": "object"
+          },
           "FormIssue": {
             "additionalProperties": false,
             "description": "What a form's preflight or a record's validation found (docs/adr/0401 §4, §6): a stable code,\nwhere (the item, the field's key, the rule) and the sentence that says it.",
@@ -324543,8 +325213,28 @@
               "id": {
                 "type": "string"
               },
+              "options": {
+                "description": "A field's list from another layer for the record: codes and labels (docs/adr/0404 §2).",
+                "items": {
+                  "$ref": "#/$defs/FieldChoice"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "readOnly": {
                 "type": "boolean"
+              },
+              "related": {
+                "description": "A related item's objects: their persistent ids (docs/adr/0404 §4).",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "required": {
                 "type": "boolean"
@@ -324627,6 +325317,22 @@
       },
       "plan": {
         "$defs": {
+          "FieldChoice": {
+            "description": "One value of a field's value list: the code written to the attribute\nand the label shown for it.",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "label"
+            ],
+            "type": "object"
+          },
           "FormIssue": {
             "additionalProperties": false,
             "description": "What a form's preflight or a record's validation found (docs/adr/0401 §4, §6): a stable code,\nwhere (the item, the field's key, the rule) and the sentence that says it.",
@@ -324687,8 +325393,28 @@
               "id": {
                 "type": "string"
               },
+              "options": {
+                "description": "A field's list from another layer for the record: codes and labels (docs/adr/0404 §2).",
+                "items": {
+                  "$ref": "#/$defs/FieldChoice"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "readOnly": {
                 "type": "boolean"
+              },
+              "related": {
+                "description": "A related item's objects: their persistent ids (docs/adr/0404 §4).",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "required": {
                 "type": "boolean"

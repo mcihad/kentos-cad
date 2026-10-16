@@ -5,7 +5,7 @@
 //!
 //! ```text
 //! KENTOS_SHOTS_ONLY=form-tasarim,form-tasarim-sorun,form-yeni,form-duzenle,form-duzenle-sorun,form-duzenle-sekme,form-oznitelikler cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
-//! KENTOS_SHOTS_ONLY=form-hesap-tasarim,form-hesap-duzenle,form-hesap-sorun,form-onizleme,form-tasarim-tasima,form-toplu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=form-hesap-tasarim,form-hesap-duzenle,form-hesap-sorun,form-onizleme,form-tasarim-tasima,form-toplu,form-adres,form-adres-tasarim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! docs/adr/0402's: the calculating form in the designer (the material's choice filter), Formla
@@ -166,6 +166,165 @@ fn calc_buildings(app: &mut App) {
         },
         24.0,
     );
+}
+
+/// The address form (docs/adr/0404; `LOOK_BODY` of `scripts/fixtures/forms_cases.py`): the province, the district
+/// chained to it, the neighbourhood chained and filtered, the parcel by its persistent id, the meters that refer to
+/// the building.
+fn address_form() -> Value {
+    let body = json!({ "revision": 1, "items": [
+        { "type": "group", "id": "adres", "label": "Adres", "items": [
+            { "type": "field", "id": "il", "field": "İl", "lookup": { "layer": "il", "key": "kod", "label": "ad" } },
+            { "type": "field", "id": "ilce", "field": "İlçe",
+              "lookup": { "layer": "ilce", "key": "kod", "label": "ad", "matches": [{ "field": "il", "record": "İl" }] } },
+            { "type": "field", "id": "mahalle", "field": "Mahalle",
+              "lookup": { "layer": "mahalle", "key": "kod", "label": "ad", "matches": [{ "field": "ilce", "record": "İlçe" }],
+                          "filter": "durum = 'etkin'" } },
+            { "type": "field", "id": "parsel", "field": "Parsel",
+              "lookup": { "layer": "parsel", "key": "$uid", "label": "ada" } }
+        ]},
+        { "type": "related", "id": "sayaclar", "label": "Binanın sayaçları", "layer": "sayac", "field": "bina" }
+    ]});
+    let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).expect("a body");
+    json!({ "id": "adres", "name": "Bina adresi", "layer": "bina", "draft": body.clone(),
+            "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }] })
+}
+
+/// Buildings with the address form; the provinces, districts, neighbourhoods, parcels and meters on their own layers;
+/// the first building's two meters refer to it.
+fn address_buildings(app: &mut App) {
+    let mut o = Objects::new();
+    let mut ids = Vec::new();
+    for [x, y] in [[0.0, 0.0], [24.0, 0.0]] {
+        ids.push(o.path(
+            "bina",
+            &[[x, y], [x + 18.0, y], [x + 18.0, y + 14.0], [x, y + 14.0]],
+            true,
+        ));
+    }
+    let rows: [(&str, &[(&str, &str)]); 14] = [
+        ("il", &[("kod", "06"), ("ad", "Ankara")]),
+        ("il", &[("kod", "34"), ("ad", "İstanbul")]),
+        ("il", &[("kod", "35"), ("ad", "İzmir")]),
+        ("ilce", &[("kod", "0601"), ("ad", "Çankaya"), ("il", "06")]),
+        ("ilce", &[("kod", "0602"), ("ad", "Altındağ"), ("il", "06")]),
+        ("ilce", &[("kod", "3401"), ("ad", "Kadıköy"), ("il", "34")]),
+        (
+            "mahalle",
+            &[
+                ("kod", "M10"),
+                ("ad", "Kızılay"),
+                ("ilce", "0601"),
+                ("durum", "etkin"),
+            ],
+        ),
+        (
+            "mahalle",
+            &[
+                ("kod", "M2"),
+                ("ad", "Bahçelievler"),
+                ("ilce", "0601"),
+                ("durum", "etkin"),
+            ],
+        ),
+        (
+            "mahalle",
+            &[
+                ("kod", "M3"),
+                ("ad", "Eski mahalle"),
+                ("ilce", "0601"),
+                ("durum", "kapalı"),
+            ],
+        ),
+        (
+            "mahalle",
+            &[
+                ("kod", "M4"),
+                ("ad", "Ulus"),
+                ("ilce", "0602"),
+                ("durum", "etkin"),
+            ],
+        ),
+        ("parsel", &[("ada", "101/5")]),
+        ("parsel", &[("ada", "101/12")]),
+        ("sayac", &[("no", "S-1")]),
+        ("sayac", &[("no", "S-2")]),
+    ];
+    let mut meters = Vec::new();
+    for (k, (layer, attrs)) in rows.iter().enumerate() {
+        let at = [-10.0 + 4.0 * k as f64, 28.0];
+        let id = o.point(layer, at, None);
+        o.data(id, attrs, None);
+        if *layer == "sayac" {
+            meters.push(id);
+        }
+    }
+    let form = address_form();
+    open_edited(app, o, move |d| {
+        let text = |name: &str| json!({ "name": name, "kind": "text" });
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut bina = crate::tools_scenes::layer("bina", "Bina", "#3E63DD", 0.35);
+        bina["fields"] = json!([text("İl"), text("İlçe"), text("Mahalle"), text("Parsel")]);
+        layers.push(bina);
+        for (id, name, fields) in [
+            ("il", "İller", vec!["kod", "ad"]),
+            ("ilce", "İlçeler", vec!["kod", "ad", "il"]),
+            ("mahalle", "Mahalleler", vec!["kod", "ad", "ilce", "durum"]),
+            ("parsel", "Parseller", vec!["ada"]),
+            ("sayac", "Sayaçlar", vec!["no", "bina"]),
+        ] {
+            let mut l = crate::tools_scenes::layer(id, name, "#8E8C99", 0.25);
+            l["fields"] = Value::Array(fields.into_iter().map(text).collect());
+            layers.push(l);
+        }
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("bina");
+        d["settings"]["forms"] = json!([form]);
+    });
+    // The meters refer to the first building by its persistent id.
+    if let Some(doc) = app.document.as_mut() {
+        let building = doc
+            .model
+            .uid(Slot(ids[0]))
+            .map(|u| u.to_string())
+            .unwrap_or_default();
+        let uids: Vec<String> = meters
+            .iter()
+            .filter_map(|m| doc.model.uid(Slot(*m)).map(|u| u.to_string()))
+            .collect();
+        let _ = kentos_native_application::registry::run(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            kentos_contracts::CAD_ENTITIES_SET,
+            kentos_contracts::CallOp::Execute,
+            json!({ "uids": uids, "attrs": { "bina": building }, "operation": "attributes" }),
+        );
+    }
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 12.0,
+            min_y: N - 12.0,
+            max_x: E + 54.0,
+            max_y: N + 40.0,
+        },
+        24.0,
+    );
+}
+
+/// Formla düzenle on the first building through the address form: Ankara and Çankaya chosen, the
+/// neighbourhoods Çankaya has open offered, the meters referring to it.
+fn address_editing(app: &mut App) {
+    address_buildings(app);
+    app.selection.set([Slot(1)]);
+    run(app, "data.formEdit");
+    entry(app, entry::Event::Value("İl".into(), "Ankara".into()));
+    entry(app, entry::Event::Value("İlçe".into(), "Çankaya".into()));
+}
+
+/// Formlar: the neighbourhood's list from another layer: its layer, key, label, chain and filter.
+fn address_designing(app: &mut App) {
+    address_buildings(app);
+    run(app, "data.forms");
+    designer(app, designer::Event::SelectItem("mahalle".into()));
 }
 
 /// A street block of four buildings, two with records; the layer's form in the project.
@@ -379,6 +538,8 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-onizleme", calc_preview),
         ("form-tasarim-tasima", designing_moved),
         ("form-toplu", calc_many),
+        ("form-adres", address_editing),
+        ("form-adres-tasarim", address_designing),
     ]
 }
 
@@ -715,6 +876,67 @@ mod tests {
             std::collections::BTreeMap::new(),
             "one undo step"
         );
+    }
+
+    /// docs/adr/0404: the address chains province, district and open neighbourhood; labels are written as
+    /// their codes, the parcel as its persistent id; a district outside the chain is refused; the meters
+    /// referring to the building are listed and open their own form.
+    #[test]
+    fn lists_from_other_layers_chain_and_related_records_are_listed() {
+        let mut app = crate::files_testing::app_with_drawing();
+        address_buildings(&mut app);
+        app.selection.set([Slot(1)]);
+        run(&mut app, "data.formEdit");
+        let e = app.form_entry.as_ref().expect("the window");
+        assert_eq!(e.offered("ilce"), Some(vec![]), "no province: no district");
+        assert_eq!(e.related_of("sayaclar").len(), 2);
+        entry(&mut app, entry::Event::Value("İl".into(), "Ankara".into()));
+        entry(
+            &mut app,
+            entry::Event::Value("İlçe".into(), "Çankaya".into()),
+        );
+        let e = app.form_entry.as_ref().expect("the window");
+        assert_eq!(
+            e.offered("mahalle"),
+            Some(vec!["M2".to_owned(), "M10".to_owned()])
+        );
+        entry(
+            &mut app,
+            entry::Event::Value("Mahalle".into(), "Kızılay".into()),
+        );
+        entry(
+            &mut app,
+            entry::Event::Value("Parsel".into(), "101/12".into()),
+        );
+        entry(&mut app, entry::Event::Save);
+        assert!(app.form_entry.is_none());
+        let a = attrs(&app, 1);
+        assert_eq!(a.get("İl").map(String::as_str), Some("06"));
+        assert_eq!(a.get("İlçe").map(String::as_str), Some("0601"));
+        assert_eq!(a.get("Mahalle").map(String::as_str), Some("M10"));
+        assert_eq!(
+            a.get("Parsel").map(|p| p.len()),
+            Some(36),
+            "a persistent id"
+        );
+
+        run(&mut app, "data.formEdit");
+        entry(&mut app, entry::Event::Value("İl".into(), "34".into()));
+        entry(&mut app, entry::Event::Save);
+        assert!(app.form_entry.is_some(), "Çankaya is not İstanbul's");
+
+        // A meter opens its own layer's form only when it has one: said, the window stays.
+        entry(&mut app, entry::Event::Value("İl".into(), "06".into()));
+        let meter = app
+            .form_entry
+            .as_ref()
+            .expect("the window")
+            .related_of("sayaclar")[0]
+            .clone();
+        entry(&mut app, entry::Event::Cancel);
+        run(&mut app, "data.formEdit");
+        entry(&mut app, entry::Event::OpenRelated(meter));
+        assert!(app.form_entry.is_some(), "the meters' layer has no form");
     }
 
     /// docs/adr/0401 §9: a form made of the layer's fields, an item added, Kaydet writes the draft and

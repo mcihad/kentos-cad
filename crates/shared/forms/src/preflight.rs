@@ -9,11 +9,24 @@ use kentos_contracts::{
 use kentos_expression::js::text::fold_turkish;
 use kentos_expression::{Expr, Variable, compile_with, template};
 
+use crate::lookup::World;
 use crate::session::{CHOICE_CODE, CHOICE_LABEL, MOMENT, reads_moment, still_schema};
 use crate::{codes, issue, record::schema_of, widget_of};
 
-/// What is wrong with `body` over the layer's `fields`, errors and warnings, in the form's order.
+/// What is wrong with `body` over the layer's `fields`, errors and warnings, in the form's order. A
+/// list from another layer or a related item is said missing: [`preflight_in`] knows the others.
 pub fn preflight(body: &FormBody, fields: &[LayerField], variables: &[Variable]) -> Vec<FormIssue> {
+    preflight_in(body, fields, variables, &World::new())
+}
+
+/// [`preflight`] knowing the project's other layers (their fields): the lists from them and the
+/// related items are checked against them (docs/adr/0404 §2).
+pub fn preflight_in(
+    body: &FormBody,
+    fields: &[LayerField],
+    variables: &[Variable],
+    world: &World,
+) -> Vec<FormIssue> {
     if let Some(problem) = body_problem(body) {
         return vec![issue(
             codes::BODY_INVALID,
@@ -27,6 +40,8 @@ pub fn preflight(body: &FormBody, fields: &[LayerField], variables: &[Variable])
     let schema = schema_of(fields, variables);
     let mut p = Preflight {
         fields,
+        world,
+        variables,
         still: still_schema(&schema),
         schema,
         issues: Vec::new(),
@@ -108,6 +123,8 @@ struct Bound {
 
 struct Preflight<'a> {
     fields: &'a [LayerField],
+    world: &'a World,
+    variables: &'a [Variable],
     schema: kentos_expression::Schema,
     /// The schema without the moment's and the user's values.
     still: kentos_expression::Schema,
@@ -136,6 +153,18 @@ impl Preflight<'_> {
                 }
                 FormItem::Field(f) => self.field(f, hideable),
                 FormItem::Note { id, text } => self.note(id, text),
+                FormItem::Related {
+                    id,
+                    layer,
+                    field,
+                    visible_when,
+                    ..
+                } => {
+                    if let Some(rule) = visible_when {
+                        self.rule(id, None, None, "visibleWhen", rule);
+                    }
+                    self.related(id, layer, field);
+                }
             }
         }
     }
@@ -177,7 +206,15 @@ impl Preflight<'_> {
             return;
         };
         let widget = widget_of(f, layer);
-        if let Err(code) = widget_fits(widget, layer) {
+        // A list from another layer is a value list for the widgets.
+        let mut probe = layer.clone();
+        if f.lookup.is_some() {
+            probe.values = Some(vec![kentos_contracts::FieldChoice {
+                code: "-".into(),
+                label: "-".into(),
+            }]);
+        }
+        if let Err(code) = widget_fits(widget, &probe) {
             let message = if code == codes::WIDGET_UNFIT {
                 format!(
                     "“{}” bir {} alanı; {} onu düzenleyemez.",
@@ -233,6 +270,9 @@ impl Preflight<'_> {
                     layer.label()
                 ),
             ));
+        }
+        if let Some(lookup) = &f.lookup {
+            self.lookup(f, layer, lookup);
         }
         if f.read_only
             && f.required
@@ -302,6 +342,113 @@ impl Preflight<'_> {
             let kept = std::mem::replace(&mut self.schema, schema);
             self.rule(&f.id, Some(&f.field), None, "choiceFilter", text);
             self.schema = kept;
+        }
+    }
+
+    /// A field's list from another layer (docs/adr/0404 §2): its layer and fields exist, it is not
+    /// with the field's own list or a choice filter, its filter compiles over its layer.
+    fn lookup(&mut self, f: &FormField, layer: &LayerField, lookup: &kentos_contracts::FormLookup) {
+        let at = |code: &str, rule: &str, message: String| {
+            issue(
+                code,
+                FormSeverity::Error,
+                Some(&f.id),
+                Some(&f.field),
+                Some(rule),
+                message,
+            )
+        };
+        if layer.values.as_ref().is_some_and(|v| !v.is_empty()) || f.choice_filter.is_some() {
+            self.issues.push(at(
+                codes::RULE_CONFLICT,
+                "lookup",
+                format!(
+                    "“{}” alanının hem kendi değer listesi ya da seçenek süzgeci hem başka katmandan listesi var; birini bırakın.",
+                    layer.label()
+                ),
+            ));
+        }
+        let Some(other) = self.world.get(&lookup.layer) else {
+            self.issues.push(at(
+                codes::LOOKUP_LAYER,
+                "lookup",
+                format!(
+                    "“{}” alanının listesinin katmanı (“{}”) projede yok; başka bir katman seçin.",
+                    layer.label(),
+                    lookup.layer
+                ),
+            ));
+            return;
+        };
+        let has = |key: &str| other.fields.iter().any(|x| x.key() == key);
+        let mut missing: Vec<&str> = Vec::new();
+        for key in [Some(lookup.key.as_str()), lookup.label.as_deref()]
+            .into_iter()
+            .flatten()
+        {
+            if key != kentos_contracts::LOOKUP_UID && !has(key) {
+                missing.push(key);
+            }
+        }
+        for m in &lookup.matches {
+            if !has(&m.field) {
+                missing.push(&m.field);
+            }
+        }
+        for key in missing {
+            self.issues.push(at(
+                codes::LOOKUP_FIELD,
+                "lookup",
+                format!("“{}” katmanında “{key}” alanı yok.", other.name),
+            ));
+        }
+        for m in &lookup.matches {
+            if !self.fields.iter().any(|x| x.key() == m.record) {
+                self.issues.push(at(
+                    codes::LOOKUP_FIELD,
+                    "lookup",
+                    format!("Formun katmanında “{}” alanı yok.", m.record),
+                ));
+            }
+        }
+        if let Some(src) = &lookup.filter {
+            let schema = schema_of(&other.fields, self.variables);
+            if let Err(e) = compile_with(src, &schema) {
+                self.issues.push(at(
+                    codes::RULE_INVALID,
+                    "lookup.filter",
+                    format!("Listenin süzgeci okunamadı: {}", e.text()),
+                ));
+            }
+        }
+    }
+
+    /// A related item (docs/adr/0404 §4): its layer and its field exist.
+    fn related(&mut self, id: &str, layer: &str, field: &str) {
+        let at = |code: &str, message: String| {
+            issue(
+                code,
+                FormSeverity::Error,
+                Some(id),
+                None,
+                Some("related"),
+                message,
+            )
+        };
+        let Some(other) = self.world.get(layer) else {
+            self.issues.push(at(
+                codes::LOOKUP_LAYER,
+                format!(
+                    "İlişkili kayıtların katmanı (“{layer}”) projede yok; başka bir katman seçin."
+                ),
+            ));
+            return;
+        };
+        if !other.fields.iter().any(|x| x.key() == field) {
+            self.issues.push(at(
+                codes::LOOKUP_FIELD,
+                format!("“{}” katmanında “{field}” alanı yok.", other.name),
+            ));
         }
     }
 

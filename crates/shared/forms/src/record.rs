@@ -26,6 +26,8 @@ pub struct Object {
     pub measured: Measured,
     /// Its corners (`$köşe_sayısı`).
     pub vertices: Option<f64>,
+    /// Its persistent id: what a related item finds the objects referring to it by (docs/adr/0404 §4).
+    pub uid: Option<String>,
 }
 
 /// The expression schema of a layer's fields: each a user-defined field of its kind, so a rule reads

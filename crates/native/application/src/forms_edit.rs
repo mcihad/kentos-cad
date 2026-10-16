@@ -186,9 +186,10 @@ fn next(doc: &Document, input: &FormsEdit) -> Result<Next, Stop> {
         }
         FormsOp::Publish { id, note } => {
             let i = at(&s, id).ok_or_else(|| unknown(id))?;
-            let issues = kentos_forms::preflight(
+            let issues = forms::preflight_of(
+                doc,
                 &s.forms[i].draft,
-                forms::fields(doc, &s.forms[i].layer),
+                &s.forms[i].layer,
                 &forms::variables(doc),
             );
             if kentos_forms::has_errors(&issues) {
@@ -260,11 +261,7 @@ fn answer(
     revision: String,
 ) -> FormsEdited {
     let issues: Vec<FormIssue> = form.as_ref().map_or_else(Vec::new, |f| {
-        kentos_forms::preflight(
-            &f.draft,
-            forms::fields(doc, &f.layer),
-            &forms::variables(doc),
-        )
+        forms::preflight_of(doc, &f.draft, &f.layer, &forms::variables(doc))
     });
     FormsEdited {
         forms: forms::summaries(s),

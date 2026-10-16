@@ -9,7 +9,7 @@
 Bu belge araştırma, ürün sözleşmesi ve yapılacak iş listesidir; uygulama kodu değildir. API adları, JSON örneği, izin aileleri ve profiller öneridir. Kaynak incelemesi ile hedef kabul testleri ayrıdır; burada hedeflenen form özelliklerinin bugün çalıştığı veya test edildiği iddia edilmez.
 
 **İlerleme (16 Ekim 2026):** işaretli maddeler masaüstünde, çekirdekte, komutlarda, Python'da ve MCP'de yapıldı
-(ADR 0400–0403; TODOS.md §16.6). Web ertelendiği için (ADR 0228) web'in tarafı TODOS.md §0.2'dedir; web isteyen
+(ADR 0400–0404; TODOS.md §16.6). Web ertelendiği için (ADR 0228) web'in tarafı TODOS.md §0.2'dedir; web isteyen
 maddeler web gelene dek işaretsiz kalır.
 
 ## 1. Ürün hedefi ve kesin şartlar
@@ -390,7 +390,7 @@ QGIS ilişkili child form gösterimi ve reference widget desteğine sahiptir. Ar
 - [ ] **FORM-SRC-02:** Source connection/credential user/tenant sahipliği ile saklansın; form JSON'u veya mobil offline bundle parola/API key taşımasın.
 - [ ] **FORM-SRC-03:** Lookup/query şeması parametre, projection, sort, limit/cursor ve source version taşısın; serbest SQL/URL string normal binding yolu olmasın.
 - [ ] **FORM-SRC-04:** Lookup input'u typed parameters olarak bind edilsin; injection, key/type/collation ve özel karakterler denetlensin.
-- [ ] **FORM-SRC-05:** Cascading choice örnekleri kur: il→ilçe→mahalle, varlık tipi→model→parça, subtype→domain kombinasyonu.
+- [x] **FORM-SRC-05:** Cascading choice örnekleri kur: il→ilçe→mahalle, varlık tipi→model→parça, subtype→domain kombinasyonu. — *Yapıldı (16 Ekim; ADR 0404 §1: il → ilçe → mahalle zinciri başka katmanlardan; varlık tipi ve subtype örnekleri sonra).*
 - [ ] **FORM-SRC-06:** Autocomplete debounce/cancel, minimum search, pagination ve stale response sequence; eski sonuç yeni alana uygulanmasın.
 - [ ] **FORM-SRC-07:** Value copy ile live display/reference ayrı eylemler olsun; kopyalanan değerin kaynak/tarih/revision provenance'ı kalsın.
 - [ ] **FORM-SRC-08:** GIS spatial lookup; picked feature, containing/nearest/intersecting kaynak ve CRS/tolerance politikasını açık alsın.

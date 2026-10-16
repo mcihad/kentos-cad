@@ -15,9 +15,9 @@ use kentos_ui::{label, style};
 use kentos_ui::widget::tree_view::{self, Node, TreeView};
 
 use super::designer::{
-    ADD_GROUP, ADD_NOTE, ADD_TAB, CANCEL, CREATE, DOWN, ENFORCE, Event, NAME, NEW_FORM, PREVIEW,
-    PROPERTIES, PUBLISH, REDO, REMOVE_FORM, REMOVE_ITEM, Rule, SAVE, TITLE, Text, UNDO, UP, Window,
-    bound, find, issues_of, msg,
+    ADD_GROUP, ADD_NOTE, ADD_RELATED, ADD_TAB, CANCEL, CREATE, DOWN, ENFORCE, Event, NAME,
+    NEW_FORM, PREVIEW, PROPERTIES, PUBLISH, REDO, REMOVE_FORM, REMOVE_ITEM, Rule, SAVE, TITLE,
+    Text, UNDO, UP, Window, bound, find, msg,
 };
 use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
@@ -36,6 +36,15 @@ fn item_face(item: &FormItem, fields: &[LayerField]) -> (Icon, String, bool) {
             text.lines().next().unwrap_or("").to_owned(),
             false,
         ),
+        FormItem::Related {
+            label,
+            visible_when,
+            ..
+        } => (
+            Icon::Link,
+            label.clone().unwrap_or_else(|| "İlişkili kayıtlar".into()),
+            visible_when.is_some(),
+        ),
         FormItem::Field(f) => {
             let layer = fields.iter().find(|l| l.key() == f.field);
             let name = f
@@ -49,6 +58,7 @@ fn item_face(item: &FormItem, fields: &[LayerField]) -> (Icon, String, bool) {
                 || f.default_expr.is_some()
                 || f.calculate.is_some()
                 || f.choice_filter.is_some()
+                || f.lookup.is_some()
                 || !f.checks.is_empty();
             let mut words = name;
             if f.required || layer.is_some_and(|l| l.required) {
@@ -72,7 +82,7 @@ impl App {
         let issues = w
             .body
             .as_ref()
-            .map(|b| issues_of(b, &fields))
+            .map(|b| self.issues_of(b, &fields))
             .unwrap_or_default();
 
         let left = self.forms_list(w, locked.is_none(), &fields);
@@ -300,6 +310,7 @@ impl App {
             tool(ADD_TAB, Icon::Tabs, Some(Event::AddTab)),
             tool(ADD_GROUP, Icon::Layout, Some(Event::AddGroup)),
             tool(ADD_NOTE, Icon::Info, Some(Event::AddNote)),
+            tool(ADD_RELATED, Icon::Link, Some(Event::AddRelated)),
             space::horizontal().width(8),
             icon_tool(UP, Icon::ChevronUp, has_item.then_some(Event::Move(-1))),
             icon_tool(DOWN, Icon::ChevronDown, has_item.then_some(Event::Move(1))),
@@ -513,6 +524,52 @@ impl App {
                         Some(msg(Event::Collapsed(!*collapsed))),
                     ));
             }
+            FormItem::Related {
+                label: text,
+                layer,
+                field,
+                visible_when,
+                ..
+            } => {
+                let layers = self.form_layers();
+                let at = layers.iter().position(|(id, _)| id == layer);
+                let picks = layers.clone();
+                let pick_layer = Select::new(
+                    layers.iter().map(|(_, name)| Choice::new(name.clone())),
+                    at,
+                    move |i| msg(Event::RelatedLayer(picks[i].0.clone())),
+                )
+                .placeholder("Katman");
+                let their = self.layer_fields_of(layer);
+                let at_field = their.iter().position(|f| f.key() == field);
+                let keys: Vec<String> = their.iter().map(|f| f.key().to_owned()).collect();
+                let pick_field = Select::new(
+                    their.iter().map(|f| Choice::new(f.label().to_owned())),
+                    at_field,
+                    move |i| msg(Event::RelatedField(keys[i].clone())),
+                )
+                .placeholder("Bu kaydın kimliğini tutan alan");
+                col = col
+                    .push(label::strong("İlişkili kayıtlar"))
+                    .push(words::field(
+                        "Başlık",
+                        input("İlişkili kayıtlar", text.as_deref().unwrap_or(""), Text::Label),
+                        None,
+                    ))
+                    .push(words::field("Katman", pick_layer, error_of("related")))
+                    .push(words::field("Alan", pick_field, None))
+                    .push(
+                        label::caption(
+                            "Seçilen alanında bu kaydın kalıcı kimliğini tutan nesneler listelenir; her biri kendi formuyla açılır.",
+                        )
+                        .style(muted),
+                    )
+                    .push(rule_row(
+                        "Görünürlük",
+                        Rule::Visible(id.clone()),
+                        visible_when.as_deref().unwrap_or(""),
+                    ));
+            }
             FormItem::Note { text, .. } => {
                 col = col
                     .push(label::strong("Not"))
@@ -571,6 +628,7 @@ impl App {
                         None,
                     ))
                     .push(words::field("Öğe türü", widget, None))
+                    .push(self.lookup_rows(&id, f, error_of("lookup")))
                     .push(
                         row![
                             words::check(
@@ -767,6 +825,125 @@ impl App {
 }
 
 impl App {
+    /// A field's list from another layer (docs/adr/0404 §1): Kendi değerleri or a layer, its key
+    /// (Kimlik: the object's persistent id), its label, the chain's matches and the filter.
+    fn lookup_rows<'a>(
+        &'a self,
+        id: &str,
+        f: &kentos_contracts::FormField,
+        error: Option<String>,
+    ) -> Element<'a, Message> {
+        let layers = self.form_layers();
+        let at = f
+            .lookup
+            .as_ref()
+            .and_then(|l| layers.iter().position(|(lid, _)| *lid == l.layer))
+            .map_or(0, |i| i + 1);
+        let mut names = vec![Choice::new("Alanın kendi değerleri")];
+        names.extend(layers.iter().map(|(_, n)| Choice::new(n.clone())));
+        let picks = layers.clone();
+        let pick_layer = Select::new(names, Some(at), move |i| {
+            msg(Event::LookupLayer((i > 0).then(|| picks[i - 1].0.clone())))
+        });
+        let mut col =
+            Column::new()
+                .spacing(8)
+                .push(words::field("Değer listesi", pick_layer, error));
+        let Some(l) = &f.lookup else {
+            return col.into();
+        };
+        let their = self.layer_fields_of(&l.layer);
+        let mut keys: Vec<(String, String)> = vec![(
+            kentos_contracts::LOOKUP_UID.to_owned(),
+            "Kimlik (nesneye bağ)".to_owned(),
+        )];
+        keys.extend(
+            their
+                .iter()
+                .map(|x| (x.key().to_owned(), x.label().to_owned())),
+        );
+        let at_key = keys.iter().position(|(k, _)| *k == l.key);
+        let pk = keys.clone();
+        let pick_key = Select::new(
+            keys.iter().map(|(_, n)| Choice::new(n.clone())),
+            at_key,
+            move |i| msg(Event::LookupKey(pk[i].0.clone())),
+        );
+        let at_label = l
+            .label
+            .as_ref()
+            .and_then(|lab| keys.iter().position(|(k, _)| k == lab));
+        let pl = keys.clone();
+        let pick_label = Select::new(
+            keys.iter().map(|(_, n)| Choice::new(n.clone())),
+            at_label,
+            move |i| msg(Event::LookupLabel(Some(pl[i].0.clone()))),
+        )
+        .placeholder("Saklanan değer");
+        col = col
+            .push(words::field("Saklanan", pick_key, None))
+            .push(words::field("Gösterilen", pick_label, None));
+        let own = self
+            .chosen_form()
+            .map(|form| self.layer_fields_of(&form.layer))
+            .unwrap_or_default();
+        for (i, m) in l.matches.iter().enumerate() {
+            let tk: Vec<String> = their.iter().map(|x| x.key().to_owned()).collect();
+            let ok: Vec<String> = own.iter().map(|x| x.key().to_owned()).collect();
+            let theirs = Select::new(
+                their.iter().map(|x| Choice::new(x.label().to_owned())),
+                tk.iter().position(|k| *k == m.field),
+                move |j| msg(Event::MatchField(i, tk[j].clone())),
+            )
+            .placeholder("Listenin alanı");
+            let ours = Select::new(
+                own.iter().map(|x| Choice::new(x.label().to_owned())),
+                ok.iter().position(|k| *k == m.record),
+                move |j| msg(Event::MatchRecord(i, ok[j].clone())),
+            )
+            .placeholder("Kaydın alanı");
+            col = col.push(
+                row![
+                    container(theirs).width(Fill),
+                    label::caption("=").style(muted),
+                    container(ours).width(Fill),
+                    button(icon(Icon::Close).size(12.0))
+                        .on_press(msg(Event::RemoveMatch(i)))
+                        .padding([5, 6])
+                        .style(style::button::tool(false)),
+                ]
+                .spacing(4)
+                .align_y(Center),
+            );
+        }
+        let rule = Rule::LookupFilter(id.to_owned());
+        let r = rule.clone();
+        let filter = text_input(
+            "Süzgeç yok: bütün nesneler",
+            l.filter.as_deref().unwrap_or(""),
+        )
+        .size(typography::body())
+        .on_input(move |t| msg(Event::RuleText(r.clone(), t)))
+        .padding([5, 8])
+        .font(typography::mono())
+        .style(style::field::input);
+        col.push(words::secondary("Zincir ekle", Some(msg(Event::AddMatch))))
+            .push(words::field(
+                "Listenin süzgeci",
+                row![
+                    focus_ring(filter),
+                    button(label::body("ε"))
+                        .on_press(msg(Event::Builder(rule)))
+                        .padding([4, 8])
+                        .style(style::button::tool(false)),
+                ]
+                .spacing(4)
+                .align_y(Center),
+                None,
+            ))
+            .into()
+    }
+
     /// The preview of the copy: the form as Formla düzenle shows it, on the chosen object of its
     /// layer or a new record; typed values are not written.
     fn forms_preview<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {

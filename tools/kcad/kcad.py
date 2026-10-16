@@ -1515,6 +1515,14 @@ def body_problem(body):
                 return f"“{iid}” grubunun kuralı geçersiz"
         if t == "note" and (not i["text"].strip() or not _form_text_ok(i["text"], MOST_FORM_TEXT)):
             return f"“{iid}” notu geçersiz"
+        if t == "related":
+            # docs/adr/0404 §4: the objects of another layer whose field holds this record's id.
+            if "label" in i and not _form_name_ok(i["label"]):
+                return f"“{iid}” öğesinin adı geçersiz"
+            if any(not i[k].strip() or len(i[k]) > MOST_FORM_NAME for k in ("layer", "field")):
+                return f"“{iid}” öğesinin katmanı ve alanı yazılmalı"
+            if "visibleWhen" in i and not _rule_ok(i["visibleWhen"]):
+                return f"“{iid}” öğesinin kuralı geçersiz"
         if t == "field":
             if not i["field"].strip() or len(i["field"]) > MOST_FORM_NAME:
                 return f"“{iid}” öğesinin alanı yazılmamış"
@@ -1525,6 +1533,15 @@ def body_problem(body):
             if any(k in i and not _rule_ok(i[k]) for k in ("visibleWhen", "requiredWhen", "readOnlyWhen", "defaultExpr",
                                                          "calculate", "choiceFilter")):
                 return f"“{iid}” öğesinin kuralı geçersiz"
+            lk = i.get("lookup")
+            if lk is not None:
+                # docs/adr/0404 §1: a field's list from another layer.
+                names = [lk["layer"], lk["key"]] + ([lk["label"]] if "label" in lk else []) + \
+                    [n for m in lk.get("matches", []) for n in (m["field"], m["record"])]
+                if any(not n.strip() or len(n) > MOST_FORM_NAME for n in names) \
+                        or len(lk.get("matches", [])) > MOST_FORM_CHECKS \
+                        or ("filter" in lk and not _rule_ok(lk["filter"])):
+                    return f"“{iid}” alanının listesi geçersiz"
             checks = i.get("checks", [])
             if len(checks) > MOST_FORM_CHECKS or any(not _rule_ok(c["rule"]) or not c["message"].strip() or not _form_text_ok(c["message"], MOST_FORM_TEXT) for c in checks):
                 return f"“{iid}” alanının denetimi geçersiz"
@@ -3221,6 +3238,15 @@ class _Schema:
 
         widgets = ("text", "textArea", "number", "date", "check", "switch", "list", "radio", "segmented")
         check = self.fields({"rule": (self.text, True), "message": (self.text, True), "warning": (true_, False)})
+        # docs/adr/0404 §1: a field's list from another layer, its chain's matches.
+        match = self.fields({"field": (self.text, True), "record": (self.text, True)})
+        lookup = self.fields({
+            "layer": (self.text, True),
+            "key": (self.text, True),
+            "label": (self.text, False),
+            "matches": (nonempty(self.array(match)), False),
+            "filter": (self.text, False),
+        })
 
         def item(x):
             if type(x) is not dict:
@@ -3253,9 +3279,17 @@ class _Schema:
                     "choiceFilter": (self.text, False),
                     "unique": (true_, False),
                     "reuseLast": (true_, False),
+                    "lookup": (lookup, False),
                     "checks": (nonempty(self.array(check)), False),
                 },
                 "note": {"id": (self.text, True), "text": (self.text, True)},
+                "related": {
+                    "id": (self.text, True),
+                    "label": (self.text, False),
+                    "layer": (self.text, True),
+                    "field": (self.text, True),
+                    "visibleWhen": (self.text, False),
+                },
             }
             kind = x.get("type")
             if kind not in shapes:

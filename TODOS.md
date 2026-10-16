@@ -188,6 +188,9 @@ Liste:
   katmanın izlemesi (`form_follow.rs`'in kuralı, `cad.polygon.create.forms.json` ve `cad.entities.set.forms.json` durumları);
   Formla düzenle'de hesaplanan alanların kilidi, süzülen listeler, sarı uyarı, kapalı grup, son değer; tasarımcının yeni
   denetçi satırları; kapalı girişin soluk görünüşü ve `Form`'un uyarı satırı web'in form bileşenlerinde.
+- [ ] `FORM-H` başka katmandan liste ve ilişkili kayıtlar (ADR 0404, 16 Ekim): web'de gerekenler: sözleşmenin `lookup`'ı,
+  `related` öğesi, durumun `options` ve `related`'ı (TS türleri üretildi); WASM'daki form çekirdeğine öbür katmanların
+  verisi (`World`); Formla düzenle'nin listeleri ve ilişkili kayıtlar kutusu, tasarımcının liste denetçisi.
 - [ ] `FORM-G` tasarımcı ve giriş ekleri (ADR 0403, 16 Ekim): web'de gerekenler: `cad.forms.fill`'in TS işleyicisi
   (`fixtures/commands/v1/cad.forms.fill.json`), tasarımcının geri alması, ağaçta sürükleme ve canlı önizlemesi, çizilen nesnenin
   formu (`drafting.formOnCreate`), Formla düzenle'nin toplu kipi ve sürüm denetimi.
@@ -1413,8 +1416,11 @@ burada aşamaları izlenir.
   formun canlı önizlemesi (seçili nesnede ya da yeni kayıtta), çizim aracının yeni nesnesinde formun açılması
   (`drafting.formOnCreate`), çoklu düzenleme ve `cad.forms.fill`, Formla düzenle'nin sürüm denetimi. — **16 Ekim,
   [ADR 0403](docs/adr/0403-form-designer-and-entry-extras.md).**
-- [ ] `FORM-H` İlişkiler ve ana–ayrıntı (`relations/1`): başka katmandan seçenek listesi (QGIS'in Value Relation'ı), ilişki
-  başvurusu, ayrıntı tablosu formun içinde.
+- [x] `FORM-H` Başka katmandan seçenek listesi (QGIS'in Value Relation'ı: anahtar, etiket, zincirleme il → ilçe → mahalle,
+  ifadeyle süzgeç), ilişki başvurusu (`$uid`), formun içinde ilişkili kayıtlar (Aç, Git); bütün yazma yollarında aynı.
+  — **16 Ekim, [ADR 0404](docs/adr/0404-form-lookups-and-related-records.md).**
+- [ ] `FORM-I` İlişkiler ve ana–ayrıntı (`relations/1`): kalıcı ilişki tanımı (1:N, N:M bağlantı tablosu), silme politikası,
+  formun içinde alt kayıt ekleme ve bağlama, geometrisiz tablo katmanı.
 - [ ] `FORM-F` Merkezi yayın ve izinler (FM2, plan `FORM-FIRST-14`–`17`): bulutta form taslağı, yayın ve dağıtım kaynakları,
   `forms.design`, `forms.publish`, `forms.use` izinleri, sunucunun yazma bekçisi bütün yollarda.
 

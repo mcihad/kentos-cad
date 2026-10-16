@@ -25,15 +25,16 @@ fn answer(doc: &Document, input: &FormsValidate) -> Result<FormsValidated, Stop>
         None => None,
     };
     let fields = forms::fields(doc, &form.layer);
-    let mut issues = kentos_forms::preflight(body, fields, &variables);
+    let mut issues = forms::preflight_of(doc, body, &form.layer, &variables);
     let mut items = Vec::new();
     let mut attrs = None;
     if let Some((slot, e)) = record
-        && let Ok(prepared) = Prepared::new_in(
+        && let Ok(prepared) = Prepared::new_with(
             body,
             fields,
             &variables,
             crate::expression_unit::reading_unit(doc.settings()),
+            &doc.form_world(body),
         )
     {
         let object = forms::object(doc, slot, e);

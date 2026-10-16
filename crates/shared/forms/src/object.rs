@@ -64,5 +64,6 @@ pub fn object_of(e: &Entity, layer: &str, id: f64) -> Object {
         label: e.base().label.clone(),
         measured,
         vertices: corners,
+        uid: None,
     }
 }

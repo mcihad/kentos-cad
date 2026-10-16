@@ -12,4 +12,12 @@ columns?: number, visibleWhen?: string,
 /**
  * It opens closed (its title opens it); written only as `true`.
  */
-collapsed?: boolean, items: Array<FormItem>, } | { "type": "field" } & FormField | { "type": "note", id: string, text: string, };
+collapsed?: boolean, items: Array<FormItem>, } | { "type": "field" } & FormField | { "type": "note", id: string, text: string, } | { "type": "related", id: string, label?: string, 
+/**
+ * The other layer's id.
+ */
+layer: string, 
+/**
+ * Its field's key that holds this record's id.
+ */
+field: string, visibleWhen?: string, };

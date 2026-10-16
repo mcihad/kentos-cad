@@ -183,6 +183,40 @@ class FormsTests(unittest.TestCase):
         doc.undo()
         self.assertEqual({doc.entity(u).entity.attrs.get("Kat") for u in uids}, {None})
 
+    def test_a_list_from_another_layer_chains_and_writes_codes(self) -> None:
+        """docs/adr/0404: provinces on their own layer; a label is written as its code, a value the list does not offer
+        is refused."""
+        doc, layer = drawing()
+        cad.layers.edit(doc, operation="add", name="İller")
+        provinces = next(n.id for n in doc.layers() if n.name == "İller")
+        cad.layers.edit(
+            doc,
+            operation="fields",
+            layer=provinces,
+            fields=[cad.LayerField(name="kod", kind="text"), cad.LayerField(name="ad", kind="text")],
+        )
+        for code, name, x in (("06", "Ankara", 0.0), ("34", "İstanbul", 5.0)):
+            cad.point.create(doc, p=cad.Vec2(x, 50.0), layer_id=provinces, attrs={"kod": code, "ad": name})
+        cad.layers.edit(doc, operation="fields", layer=layer, fields=[cad.LayerField(name="İl", kind="text")])
+        body = cad.FormBody(
+            revision=1,
+            items=[
+                cad.FieldFormItem(
+                    id="il", field="İl", lookup=cad.FormLookup(layer=provinces, key="kod", label="ad")
+                )
+            ],
+        )
+        cad.forms.edit(doc, edit=cad.CreateFormsOp(name="Adres", layer=layer, id="adres", body=body))
+        poly = cad.polygon.create(doc, pts=[cad.Vec2(0.0, 0.0), cad.Vec2(10.0, 0.0), cad.Vec2(10.0, 8.0)], layer_id=layer)
+        asked = cad.forms.validate(doc, form="adres", draft=True, uid=poly.uid)
+        options = next(s.options for s in asked.items if s.id == "il")
+        self.assertEqual([(o.code, o.label) for o in options or []], [("06", "Ankara"), ("34", "İstanbul")])
+        written = cad.forms.submit(doc, form="adres", draft=True, uid=poly.uid, values={"İl": "Ankara"})
+        self.assertEqual(written.attrs, {"İl": "06"})
+        with self.assertRaises(cad.CommandFailed) as refused:
+            cad.forms.submit(doc, form="adres", draft=True, uid=poly.uid, values={"İl": "35"})
+        self.assertEqual(refused.exception.code, "form_invalid")
+
 
 if __name__ == "__main__":
     unittest.main()

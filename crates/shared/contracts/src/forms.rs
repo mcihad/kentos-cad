@@ -142,7 +142,63 @@ pub enum FormItem {
     /// A line of text: a hint for whoever fills the form. A `{…}` in it is an expression put in with
     /// the record's value (docs/adr/0225 §6's templates; docs/adr/0402 §1).
     Note { id: String, text: String },
+    /// The objects of another layer whose field holds this record's persistent id (docs/adr/0404 §4):
+    /// a list in the form, each opened by its own form.
+    Related {
+        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        label: Option<String>,
+        /// The other layer's id.
+        layer: String,
+        /// Its field's key that holds this record's id.
+        field: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        visible_when: Option<String>,
+    },
 }
+
+/// A field's list of values from another layer (docs/adr/0404 §1).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormLookup {
+    /// The list's layer id.
+    pub layer: String,
+    /// Its field's key whose value is written; `$uid`: the object's persistent id (a reference).
+    pub key: String,
+    /// Its field's key shown; none: the key's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub label: Option<String>,
+    /// The list's object is offered when its field equals the record's (a chain: il, ilçe, mahalle).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<LookupMatch>>", optional))]
+    pub matches: Vec<LookupMatch>,
+    /// Asked of each of the list's objects (its fields by name, the project's `@` values).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub filter: Option<String>,
+}
+
+/// A field of the list's layer that must equal a field of the record.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LookupMatch {
+    /// The list's field's key.
+    pub field: String,
+    /// The record's field's key.
+    pub record: String,
+}
+
+/// The lookup key that writes the object's persistent id (docs/adr/0404 §3).
+pub const LOOKUP_UID: &str = "$uid";
 
 /// A field of a form: the layer's field it edits (by its key) and how.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -221,6 +277,11 @@ pub struct FormField {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub reuse_last: bool,
+    /// The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or
+    /// `choiceFilter`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub lookup: Option<FormLookup>,
     /// What the record must satisfy, in order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FormCheck>>", optional))]
@@ -248,6 +309,7 @@ impl FormField {
             choice_filter: None,
             unique: false,
             reuse_last: false,
+            lookup: None,
             checks: Vec::new(),
         }
     }
@@ -385,13 +447,24 @@ pub struct FormItemState {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub text: Option<String>,
+    /// A field's list from another layer for the record: codes and labels (docs/adr/0404 §2).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub options: Option<Vec<crate::FieldChoice>>,
+    /// A related item's objects: their persistent ids (docs/adr/0404 §4).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub related: Option<Vec<String>>,
 }
 
 impl FormItem {
     /// The item's id.
     pub fn id(&self) -> &str {
         match self {
-            FormItem::Tab { id, .. } | FormItem::Group { id, .. } | FormItem::Note { id, .. } => id,
+            FormItem::Tab { id, .. }
+            | FormItem::Group { id, .. }
+            | FormItem::Note { id, .. }
+            | FormItem::Related { id, .. } => id,
             FormItem::Field(f) => &f.id,
         }
     }
@@ -561,6 +634,30 @@ pub fn body_problem(body: &FormBody) -> Option<String> {
                     return Some(rule_problem(id));
                 }
             }
+            FormItem::Related {
+                label,
+                layer,
+                field,
+                visible_when,
+                ..
+            } => {
+                if label.as_deref().is_some_and(|l| !form_name_ok(l)) {
+                    return Some(format!(
+                        "“{id}” öğesinin adı boş olamaz ve en çok {MOST_FORM_NAME} karakterdir."
+                    ));
+                }
+                if [layer, field]
+                    .iter()
+                    .any(|t| t.trim().is_empty() || t.chars().count() > MOST_FORM_NAME)
+                {
+                    return Some(format!(
+                        "“{id}” öğesinin katmanı ve alanı yazılmalı, en çok {MOST_FORM_NAME} karakterdir."
+                    ));
+                }
+                if visible_when.as_deref().is_some_and(|r| !rule_ok(r)) {
+                    return Some(rule_problem(id));
+                }
+            }
             FormItem::Note { text, .. } => {
                 if text.trim().is_empty() || !text_ok(text, MOST_FORM_TEXT) {
                     return Some(format!(
@@ -611,6 +708,22 @@ pub fn body_problem(body: &FormBody) -> Option<String> {
                     {
                         return Some(format!(
                             "“{id}” alanının denetiminin kuralı ve iletisi boş olamaz; kural en çok {MOST_FORM_RULE}, ileti en çok {MOST_FORM_TEXT} karakterdir."
+                        ));
+                    }
+                }
+                if let Some(l) = &f.lookup {
+                    let names = [Some(&l.layer), Some(&l.key), l.label.as_ref()]
+                        .into_iter()
+                        .flatten()
+                        .chain(l.matches.iter().flat_map(|m| [&m.field, &m.record]));
+                    if names
+                        .clone()
+                        .any(|t| t.trim().is_empty() || t.chars().count() > MOST_FORM_NAME)
+                        || l.matches.len() > MOST_FORM_CHECKS
+                        || l.filter.as_deref().is_some_and(|r| !rule_ok(r))
+                    {
+                        return Some(format!(
+                            "“{id}” alanının listesinin katmanı, alanları ve süzgeci yazılmalı; adlar en çok {MOST_FORM_NAME}, süzgeç {MOST_FORM_RULE} karakter, en çok {MOST_FORM_CHECKS} eşleşme olur."
                         ));
                     }
                 }

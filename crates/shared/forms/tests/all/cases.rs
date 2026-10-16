@@ -8,7 +8,7 @@
 
 use kentos_contracts::{FormBody, FormIssue, LayerField};
 use kentos_expression::{Measured, Value as ExprValue, Variable};
-use kentos_forms::{Attrs, Object, Prepared, generate, preflight};
+use kentos_forms::{Attrs, Object, OtherLayer, Prepared, World, generate, preflight_in};
 use serde_json::{Value, json};
 
 const CASES: &str = include_str!("../../../../../fixtures/forms/v1/cases.json");
@@ -52,6 +52,31 @@ fn variables(c: &Value) -> Vec<Variable> {
         .unwrap_or_default()
 }
 
+/// The other layers the case gives (docs/adr/0404): by id, their name, fields and objects.
+fn world(c: &Value) -> World {
+    let Some(all) = c["world"].as_object() else {
+        return World::new();
+    };
+    all.iter()
+        .map(|(id, l)| {
+            let rows = l["rows"]
+                .as_array()
+                .expect("rows")
+                .iter()
+                .map(|r| (r[0].as_str().expect("a uid").to_owned(), attrs(&r[1])))
+                .collect();
+            (
+                id.clone(),
+                OtherLayer {
+                    name: l["name"].as_str().expect("a name").to_owned(),
+                    fields: serde_json::from_value(l["fields"].clone()).expect("fields"),
+                    rows,
+                },
+            )
+        })
+        .collect()
+}
+
 /// The object the case gives: its measures in metres.
 fn object(c: &Value) -> Object {
     let o = &c["object"];
@@ -62,6 +87,7 @@ fn object(c: &Value) -> Object {
             anchor: None,
         },
         vertices: o["vertices"].as_f64(),
+        uid: o["uid"].as_str().map(str::to_owned),
         ..Object::default()
     }
 }
@@ -80,14 +106,25 @@ fn bare(issues: &[FormIssue]) -> Value {
 }
 
 fn prepared(c: &Value) -> Prepared {
-    Prepared::new(&body(c), &fields(c), &variables(c))
-        .unwrap_or_else(|i| panic!("{}: {i:?}", c["name"]))
+    Prepared::new_with(
+        &body(c),
+        &fields(c),
+        &variables(c),
+        kentos_expression::Unit::METRE,
+        &world(c),
+    )
+    .unwrap_or_else(|i| panic!("{}: {i:?}", c["name"]))
 }
 
 #[test]
 fn the_preflight_is_as_the_cases_say() {
     for c in cases("preflight") {
-        let got = bare(&preflight(&body(&c), &fields(&c), &variables(&c)));
+        let got = bare(&preflight_in(
+            &body(&c),
+            &fields(&c),
+            &variables(&c),
+            &world(&c),
+        ));
         assert_eq!(got, c["issues"], "{}", c["name"]);
     }
 }
@@ -185,5 +222,11 @@ fn the_defaults_and_the_generated_forms_are_as_the_cases_say() {
 fn a_form_with_an_error_is_not_prepared() {
     let c = &cases("preflight")[1];
     let issues = Prepared::new(&body(c), &fields(c), &[]).expect_err("refused");
+    // A list from another layer the world does not hold: refused, said by layer.
+    let looks = cases("preflight")
+        .into_iter()
+        .find(|c| c["world"].as_object().is_some_and(|w| w.is_empty()))
+        .expect("a case without the other layers");
+    assert!(Prepared::new(&body(&looks), &fields(&looks), &[]).is_err());
     assert!(kentos_forms::has_errors(&issues));
 }

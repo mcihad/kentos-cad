@@ -4939,6 +4939,1785 @@
      "rule": "defaultExpr"
     }
    ]
+  },
+  {
+   "name": "başka katmandan liste, zincir, süzgeç, nesneye bağ ve ilişkili kayıtlar: sorun yok",
+   "fields": [
+    {
+     "name": "İl",
+     "kind": "text"
+    },
+    {
+     "name": "İlçe",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Tür",
+     "kind": "text",
+     "values": [
+      {
+       "code": "k",
+       "label": "Konut"
+      }
+     ]
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "il",
+      "field": "İl",
+      "lookup": {
+       "layer": "il",
+       "key": "kod",
+       "label": "ad"
+      }
+     },
+     {
+      "type": "field",
+      "id": "ilce",
+      "field": "İlçe",
+      "lookup": {
+       "layer": "ilce",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "il",
+         "record": "İl"
+        }
+       ]
+      }
+     },
+     {
+      "type": "field",
+      "id": "mahalle",
+      "field": "Mahalle",
+      "widget": "radio",
+      "lookup": {
+       "layer": "mahalle",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "ilce",
+         "record": "İlçe"
+        }
+       ],
+       "filter": "durum = 'etkin'"
+      }
+     },
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "ada"
+      }
+     },
+     {
+      "type": "related",
+      "id": "sayaclar",
+      "label": "Sayaçlar",
+      "layer": "sayac",
+      "field": "bina",
+      "visibleWhen": "İl = '06'"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "il": {
+     "name": "İller",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+       {
+        "kod": "06",
+        "ad": "Ankara"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+       {
+        "kod": "34",
+        "ad": "İstanbul"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003",
+       {
+        "kod": "35",
+        "ad": "İzmir"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0004",
+       {
+        "ad": "Kodsuz"
+       }
+      ]
+     ]
+    },
+    "ilce": {
+     "name": "İlçeler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "il",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000b",
+       {
+        "kod": "0601",
+        "ad": "Çankaya",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000c",
+       {
+        "kod": "0602",
+        "ad": "Altındağ",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000d",
+       {
+        "kod": "3401",
+        "ad": "Kadıköy",
+        "il": "34"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000e",
+       {
+        "kod": "0601",
+        "ad": "Yineleme",
+        "il": "06"
+       }
+      ]
+     ]
+    },
+    "mahalle": {
+     "name": "Mahalleler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "ilce",
+       "kind": "text"
+      },
+      {
+       "name": "durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0015",
+       {
+        "kod": "M10",
+        "ad": "Kızılay",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0016",
+       {
+        "kod": "M2",
+        "ad": "Bahçelievler",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0017",
+       {
+        "kod": "M3",
+        "ad": "Eski mahalle",
+        "ilce": "0601",
+        "durum": "kapalı"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0018",
+       {
+        "kod": "M4",
+        "ad": "Ulus",
+        "ilce": "0602",
+        "durum": "etkin"
+       }
+      ]
+     ]
+    },
+    "parsel": {
+     "name": "Parseller",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+       {
+        "ada": "101/5"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+       {
+        "ada": "101/12"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021",
+       {}
+      ]
+     ]
+    },
+    "sayac": {
+     "name": "Sayaçlar",
+     "fields": [
+      {
+       "name": "no",
+       "kind": "text"
+      },
+      {
+       "name": "bina",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0029",
+       {
+        "no": "S-1",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002a",
+       {
+        "no": "S-2",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002b",
+       {
+        "no": "S-3",
+        "bina": "başka"
+       }
+      ]
+     ]
+    }
+   },
+   "issues": []
+  },
+  {
+   "name": "katmanlar bilinmezse listeler ve ilişkili öğe hatadır",
+   "fields": [
+    {
+     "name": "İl",
+     "kind": "text"
+    },
+    {
+     "name": "İlçe",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Tür",
+     "kind": "text",
+     "values": [
+      {
+       "code": "k",
+       "label": "Konut"
+      }
+     ]
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "il",
+      "field": "İl",
+      "lookup": {
+       "layer": "il",
+       "key": "kod",
+       "label": "ad"
+      }
+     },
+     {
+      "type": "field",
+      "id": "ilce",
+      "field": "İlçe",
+      "lookup": {
+       "layer": "ilce",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "il",
+         "record": "İl"
+        }
+       ]
+      }
+     },
+     {
+      "type": "field",
+      "id": "mahalle",
+      "field": "Mahalle",
+      "widget": "radio",
+      "lookup": {
+       "layer": "mahalle",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "ilce",
+         "record": "İlçe"
+        }
+       ],
+       "filter": "durum = 'etkin'"
+      }
+     },
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "ada"
+      }
+     },
+     {
+      "type": "related",
+      "id": "sayaclar",
+      "label": "Sayaçlar",
+      "layer": "sayac",
+      "field": "bina",
+      "visibleWhen": "İl = '06'"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {},
+   "issues": [
+    {
+     "code": "form_lookup_layer",
+     "severity": "error",
+     "item": "il",
+     "field": "İl",
+     "rule": "lookup"
+    },
+    {
+     "code": "form_lookup_layer",
+     "severity": "error",
+     "item": "ilce",
+     "field": "İlçe",
+     "rule": "lookup"
+    },
+    {
+     "code": "form_lookup_layer",
+     "severity": "error",
+     "item": "mahalle",
+     "field": "Mahalle",
+     "rule": "lookup"
+    },
+    {
+     "code": "form_lookup_layer",
+     "severity": "error",
+     "item": "parsel",
+     "field": "Parsel",
+     "rule": "lookup"
+    },
+    {
+     "code": "form_lookup_layer",
+     "severity": "error",
+     "item": "sayaclar",
+     "rule": "related"
+    }
+   ]
+  },
+  {
+   "name": "listenin olmayan alanları; kaydın olmayan alanı",
+   "fields": [
+    {
+     "name": "İl",
+     "kind": "text"
+    },
+    {
+     "name": "İlçe",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Tür",
+     "kind": "text",
+     "values": [
+      {
+       "code": "k",
+       "label": "Konut"
+      }
+     ]
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "il",
+      "field": "İl",
+      "lookup": {
+       "layer": "il",
+       "key": "kod",
+       "label": "isim"
+      }
+     },
+     {
+      "type": "field",
+      "id": "ilce",
+      "field": "İlçe",
+      "lookup": {
+       "layer": "ilce",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "il",
+         "record": "İl"
+        },
+        {
+         "field": "yok",
+         "record": "Semt"
+        }
+       ]
+      }
+     },
+     {
+      "type": "field",
+      "id": "mahalle",
+      "field": "Mahalle",
+      "widget": "radio",
+      "lookup": {
+       "layer": "mahalle",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "ilce",
+         "record": "İlçe"
+        }
+       ],
+       "filter": "durum = 'etkin'"
+      }
+     },
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "ada"
+      }
+     },
+     {
+      "type": "related",
+      "id": "sayaclar",
+      "label": "Sayaçlar",
+      "layer": "sayac",
+      "field": "bina",
+      "visibleWhen": "İl = '06'"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "il": {
+     "name": "İller",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+       {
+        "kod": "06",
+        "ad": "Ankara"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+       {
+        "kod": "34",
+        "ad": "İstanbul"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003",
+       {
+        "kod": "35",
+        "ad": "İzmir"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0004",
+       {
+        "ad": "Kodsuz"
+       }
+      ]
+     ]
+    },
+    "ilce": {
+     "name": "İlçeler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "il",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000b",
+       {
+        "kod": "0601",
+        "ad": "Çankaya",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000c",
+       {
+        "kod": "0602",
+        "ad": "Altındağ",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000d",
+       {
+        "kod": "3401",
+        "ad": "Kadıköy",
+        "il": "34"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000e",
+       {
+        "kod": "0601",
+        "ad": "Yineleme",
+        "il": "06"
+       }
+      ]
+     ]
+    },
+    "mahalle": {
+     "name": "Mahalleler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "ilce",
+       "kind": "text"
+      },
+      {
+       "name": "durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0015",
+       {
+        "kod": "M10",
+        "ad": "Kızılay",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0016",
+       {
+        "kod": "M2",
+        "ad": "Bahçelievler",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0017",
+       {
+        "kod": "M3",
+        "ad": "Eski mahalle",
+        "ilce": "0601",
+        "durum": "kapalı"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0018",
+       {
+        "kod": "M4",
+        "ad": "Ulus",
+        "ilce": "0602",
+        "durum": "etkin"
+       }
+      ]
+     ]
+    },
+    "parsel": {
+     "name": "Parseller",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+       {
+        "ada": "101/5"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+       {
+        "ada": "101/12"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021",
+       {}
+      ]
+     ]
+    },
+    "sayac": {
+     "name": "Sayaçlar",
+     "fields": [
+      {
+       "name": "no",
+       "kind": "text"
+      },
+      {
+       "name": "bina",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0029",
+       {
+        "no": "S-1",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002a",
+       {
+        "no": "S-2",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002b",
+       {
+        "no": "S-3",
+        "bina": "başka"
+       }
+      ]
+     ]
+    }
+   },
+   "issues": [
+    {
+     "code": "form_lookup_field",
+     "severity": "error",
+     "item": "il",
+     "field": "İl",
+     "rule": "lookup"
+    },
+    {
+     "code": "form_lookup_field",
+     "severity": "error",
+     "item": "ilce",
+     "field": "İlçe",
+     "rule": "lookup"
+    },
+    {
+     "code": "form_lookup_field",
+     "severity": "error",
+     "item": "ilce",
+     "field": "İlçe",
+     "rule": "lookup"
+    }
+   ]
+  },
+  {
+   "name": "kendi değer listesi olan alana başka katmandan liste olmaz",
+   "fields": [
+    {
+     "name": "İl",
+     "kind": "text"
+    },
+    {
+     "name": "İlçe",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Tür",
+     "kind": "text",
+     "values": [
+      {
+       "code": "k",
+       "label": "Konut"
+      }
+     ]
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "il",
+      "field": "İl",
+      "lookup": {
+       "layer": "il",
+       "key": "kod",
+       "label": "ad"
+      }
+     },
+     {
+      "type": "field",
+      "id": "ilce",
+      "field": "İlçe",
+      "lookup": {
+       "layer": "ilce",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "il",
+         "record": "İl"
+        }
+       ]
+      }
+     },
+     {
+      "type": "field",
+      "id": "mahalle",
+      "field": "Mahalle",
+      "widget": "radio",
+      "lookup": {
+       "layer": "mahalle",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "ilce",
+         "record": "İlçe"
+        }
+       ],
+       "filter": "durum = 'etkin'"
+      }
+     },
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "ada"
+      }
+     },
+     {
+      "type": "related",
+      "id": "sayaclar",
+      "label": "Sayaçlar",
+      "layer": "sayac",
+      "field": "bina",
+      "visibleWhen": "İl = '06'"
+     },
+     {
+      "type": "field",
+      "id": "tur",
+      "field": "Tür",
+      "lookup": {
+       "layer": "il",
+       "key": "kod"
+      }
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "il": {
+     "name": "İller",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+       {
+        "kod": "06",
+        "ad": "Ankara"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+       {
+        "kod": "34",
+        "ad": "İstanbul"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003",
+       {
+        "kod": "35",
+        "ad": "İzmir"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0004",
+       {
+        "ad": "Kodsuz"
+       }
+      ]
+     ]
+    },
+    "ilce": {
+     "name": "İlçeler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "il",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000b",
+       {
+        "kod": "0601",
+        "ad": "Çankaya",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000c",
+       {
+        "kod": "0602",
+        "ad": "Altındağ",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000d",
+       {
+        "kod": "3401",
+        "ad": "Kadıköy",
+        "il": "34"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000e",
+       {
+        "kod": "0601",
+        "ad": "Yineleme",
+        "il": "06"
+       }
+      ]
+     ]
+    },
+    "mahalle": {
+     "name": "Mahalleler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "ilce",
+       "kind": "text"
+      },
+      {
+       "name": "durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0015",
+       {
+        "kod": "M10",
+        "ad": "Kızılay",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0016",
+       {
+        "kod": "M2",
+        "ad": "Bahçelievler",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0017",
+       {
+        "kod": "M3",
+        "ad": "Eski mahalle",
+        "ilce": "0601",
+        "durum": "kapalı"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0018",
+       {
+        "kod": "M4",
+        "ad": "Ulus",
+        "ilce": "0602",
+        "durum": "etkin"
+       }
+      ]
+     ]
+    },
+    "parsel": {
+     "name": "Parseller",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+       {
+        "ada": "101/5"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+       {
+        "ada": "101/12"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021",
+       {}
+      ]
+     ]
+    },
+    "sayac": {
+     "name": "Sayaçlar",
+     "fields": [
+      {
+       "name": "no",
+       "kind": "text"
+      },
+      {
+       "name": "bina",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0029",
+       {
+        "no": "S-1",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002a",
+       {
+        "no": "S-2",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002b",
+       {
+        "no": "S-3",
+        "bina": "başka"
+       }
+      ]
+     ]
+    }
+   },
+   "issues": [
+    {
+     "code": "form_rule_conflict",
+     "severity": "error",
+     "item": "tur",
+     "field": "Tür",
+     "rule": "lookup"
+    }
+   ]
+  },
+  {
+   "name": "okunamayan süzgeç",
+   "fields": [
+    {
+     "name": "İl",
+     "kind": "text"
+    },
+    {
+     "name": "İlçe",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Tür",
+     "kind": "text",
+     "values": [
+      {
+       "code": "k",
+       "label": "Konut"
+      }
+     ]
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "il",
+      "field": "İl",
+      "lookup": {
+       "layer": "il",
+       "key": "kod",
+       "label": "ad"
+      }
+     },
+     {
+      "type": "field",
+      "id": "ilce",
+      "field": "İlçe",
+      "lookup": {
+       "layer": "ilce",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "il",
+         "record": "İl"
+        }
+       ]
+      }
+     },
+     {
+      "type": "field",
+      "id": "mahalle",
+      "field": "Mahalle",
+      "widget": "radio",
+      "lookup": {
+       "layer": "mahalle",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "ilce",
+         "record": "İlçe"
+        }
+       ],
+       "filter": "durum ="
+      }
+     },
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "ada"
+      }
+     },
+     {
+      "type": "related",
+      "id": "sayaclar",
+      "label": "Sayaçlar",
+      "layer": "sayac",
+      "field": "bina",
+      "visibleWhen": "İl = '06'"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "il": {
+     "name": "İller",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+       {
+        "kod": "06",
+        "ad": "Ankara"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+       {
+        "kod": "34",
+        "ad": "İstanbul"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003",
+       {
+        "kod": "35",
+        "ad": "İzmir"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0004",
+       {
+        "ad": "Kodsuz"
+       }
+      ]
+     ]
+    },
+    "ilce": {
+     "name": "İlçeler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "il",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000b",
+       {
+        "kod": "0601",
+        "ad": "Çankaya",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000c",
+       {
+        "kod": "0602",
+        "ad": "Altındağ",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000d",
+       {
+        "kod": "3401",
+        "ad": "Kadıköy",
+        "il": "34"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000e",
+       {
+        "kod": "0601",
+        "ad": "Yineleme",
+        "il": "06"
+       }
+      ]
+     ]
+    },
+    "mahalle": {
+     "name": "Mahalleler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "ilce",
+       "kind": "text"
+      },
+      {
+       "name": "durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0015",
+       {
+        "kod": "M10",
+        "ad": "Kızılay",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0016",
+       {
+        "kod": "M2",
+        "ad": "Bahçelievler",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0017",
+       {
+        "kod": "M3",
+        "ad": "Eski mahalle",
+        "ilce": "0601",
+        "durum": "kapalı"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0018",
+       {
+        "kod": "M4",
+        "ad": "Ulus",
+        "ilce": "0602",
+        "durum": "etkin"
+       }
+      ]
+     ]
+    },
+    "parsel": {
+     "name": "Parseller",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+       {
+        "ada": "101/5"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+       {
+        "ada": "101/12"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021",
+       {}
+      ]
+     ]
+    },
+    "sayac": {
+     "name": "Sayaçlar",
+     "fields": [
+      {
+       "name": "no",
+       "kind": "text"
+      },
+      {
+       "name": "bina",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0029",
+       {
+        "no": "S-1",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002a",
+       {
+        "no": "S-2",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002b",
+       {
+        "no": "S-3",
+        "bina": "başka"
+       }
+      ]
+     ]
+    }
+   },
+   "issues": [
+    {
+     "code": "form_rule_invalid",
+     "severity": "error",
+     "item": "mahalle",
+     "field": "Mahalle",
+     "rule": "lookup.filter"
+    }
+   ]
+  },
+  {
+   "name": "ilişkili kaydın alanı yok",
+   "fields": [
+    {
+     "name": "İl",
+     "kind": "text"
+    },
+    {
+     "name": "İlçe",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Tür",
+     "kind": "text",
+     "values": [
+      {
+       "code": "k",
+       "label": "Konut"
+      }
+     ]
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "il",
+      "field": "İl",
+      "lookup": {
+       "layer": "il",
+       "key": "kod",
+       "label": "ad"
+      }
+     },
+     {
+      "type": "field",
+      "id": "ilce",
+      "field": "İlçe",
+      "lookup": {
+       "layer": "ilce",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "il",
+         "record": "İl"
+        }
+       ]
+      }
+     },
+     {
+      "type": "field",
+      "id": "mahalle",
+      "field": "Mahalle",
+      "widget": "radio",
+      "lookup": {
+       "layer": "mahalle",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "ilce",
+         "record": "İlçe"
+        }
+       ],
+       "filter": "durum = 'etkin'"
+      }
+     },
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "ada"
+      }
+     },
+     {
+      "type": "related",
+      "id": "sayaclar",
+      "label": "Sayaçlar",
+      "layer": "sayac",
+      "field": "yapi",
+      "visibleWhen": "İl = '06'"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "il": {
+     "name": "İller",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+       {
+        "kod": "06",
+        "ad": "Ankara"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+       {
+        "kod": "34",
+        "ad": "İstanbul"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003",
+       {
+        "kod": "35",
+        "ad": "İzmir"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0004",
+       {
+        "ad": "Kodsuz"
+       }
+      ]
+     ]
+    },
+    "ilce": {
+     "name": "İlçeler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "il",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000b",
+       {
+        "kod": "0601",
+        "ad": "Çankaya",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000c",
+       {
+        "kod": "0602",
+        "ad": "Altındağ",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000d",
+       {
+        "kod": "3401",
+        "ad": "Kadıköy",
+        "il": "34"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000e",
+       {
+        "kod": "0601",
+        "ad": "Yineleme",
+        "il": "06"
+       }
+      ]
+     ]
+    },
+    "mahalle": {
+     "name": "Mahalleler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "ilce",
+       "kind": "text"
+      },
+      {
+       "name": "durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0015",
+       {
+        "kod": "M10",
+        "ad": "Kızılay",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0016",
+       {
+        "kod": "M2",
+        "ad": "Bahçelievler",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0017",
+       {
+        "kod": "M3",
+        "ad": "Eski mahalle",
+        "ilce": "0601",
+        "durum": "kapalı"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0018",
+       {
+        "kod": "M4",
+        "ad": "Ulus",
+        "ilce": "0602",
+        "durum": "etkin"
+       }
+      ]
+     ]
+    },
+    "parsel": {
+     "name": "Parseller",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+       {
+        "ada": "101/5"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+       {
+        "ada": "101/12"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021",
+       {}
+      ]
+     ]
+    },
+    "sayac": {
+     "name": "Sayaçlar",
+     "fields": [
+      {
+       "name": "no",
+       "kind": "text"
+      },
+      {
+       "name": "bina",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0029",
+       {
+        "no": "S-1",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002a",
+       {
+        "no": "S-2",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002b",
+       {
+        "no": "S-3",
+        "bina": "başka"
+       }
+      ]
+     ]
+    }
+   },
+   "issues": [
+    {
+     "code": "form_lookup_field",
+     "severity": "error",
+     "item": "sayaclar",
+     "rule": "related"
+    }
+   ]
   }
  ],
  "records": [
@@ -7966,6 +9745,2049 @@
     {
      "id": "kayit",
      "shown": true
+    }
+   ],
+   "issues": []
+  },
+  {
+   "name": "boş kayıt: il listesi doğal sırada, zincir boş; ilişkili sayaçlar gizli",
+   "fields": [
+    {
+     "name": "İl",
+     "kind": "text"
+    },
+    {
+     "name": "İlçe",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Tür",
+     "kind": "text",
+     "values": [
+      {
+       "code": "k",
+       "label": "Konut"
+      }
+     ]
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "il",
+      "field": "İl",
+      "lookup": {
+       "layer": "il",
+       "key": "kod",
+       "label": "ad"
+      }
+     },
+     {
+      "type": "field",
+      "id": "ilce",
+      "field": "İlçe",
+      "lookup": {
+       "layer": "ilce",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "il",
+         "record": "İl"
+        }
+       ]
+      }
+     },
+     {
+      "type": "field",
+      "id": "mahalle",
+      "field": "Mahalle",
+      "widget": "radio",
+      "lookup": {
+       "layer": "mahalle",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "ilce",
+         "record": "İlçe"
+        }
+       ],
+       "filter": "durum = 'etkin'"
+      }
+     },
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "ada"
+      }
+     },
+     {
+      "type": "related",
+      "id": "sayaclar",
+      "label": "Sayaçlar",
+      "layer": "sayac",
+      "field": "bina",
+      "visibleWhen": "İl = '06'"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "il": {
+     "name": "İller",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+       {
+        "kod": "06",
+        "ad": "Ankara"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+       {
+        "kod": "34",
+        "ad": "İstanbul"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003",
+       {
+        "kod": "35",
+        "ad": "İzmir"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0004",
+       {
+        "ad": "Kodsuz"
+       }
+      ]
+     ]
+    },
+    "ilce": {
+     "name": "İlçeler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "il",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000b",
+       {
+        "kod": "0601",
+        "ad": "Çankaya",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000c",
+       {
+        "kod": "0602",
+        "ad": "Altındağ",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000d",
+       {
+        "kod": "3401",
+        "ad": "Kadıköy",
+        "il": "34"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000e",
+       {
+        "kod": "0601",
+        "ad": "Yineleme",
+        "il": "06"
+       }
+      ]
+     ]
+    },
+    "mahalle": {
+     "name": "Mahalleler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "ilce",
+       "kind": "text"
+      },
+      {
+       "name": "durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0015",
+       {
+        "kod": "M10",
+        "ad": "Kızılay",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0016",
+       {
+        "kod": "M2",
+        "ad": "Bahçelievler",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0017",
+       {
+        "kod": "M3",
+        "ad": "Eski mahalle",
+        "ilce": "0601",
+        "durum": "kapalı"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0018",
+       {
+        "kod": "M4",
+        "ad": "Ulus",
+        "ilce": "0602",
+        "durum": "etkin"
+       }
+      ]
+     ]
+    },
+    "parsel": {
+     "name": "Parseller",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+       {
+        "ada": "101/5"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+       {
+        "ada": "101/12"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021",
+       {}
+      ]
+     ]
+    },
+    "sayac": {
+     "name": "Sayaçlar",
+     "fields": [
+      {
+       "name": "no",
+       "kind": "text"
+      },
+      {
+       "name": "bina",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0029",
+       {
+        "no": "S-1",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002a",
+       {
+        "no": "S-2",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002b",
+       {
+        "no": "S-3",
+        "bina": "başka"
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+   },
+   "attrs": {},
+   "items": [
+    {
+     "id": "il",
+     "shown": true,
+     "choices": [
+      "06",
+      "34",
+      "35"
+     ],
+     "options": [
+      {
+       "code": "06",
+       "label": "Ankara"
+      },
+      {
+       "code": "34",
+       "label": "İstanbul"
+      },
+      {
+       "code": "35",
+       "label": "İzmir"
+      }
+     ]
+    },
+    {
+     "id": "ilce",
+     "shown": true,
+     "choices": [],
+     "options": []
+    },
+    {
+     "id": "mahalle",
+     "shown": true,
+     "choices": [],
+     "options": []
+    },
+    {
+     "id": "parsel",
+     "shown": true,
+     "choices": [
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021"
+     ],
+     "options": [
+      {
+       "code": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+       "label": "101/5"
+      },
+      {
+       "code": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+       "label": "101/12"
+      },
+      {
+       "code": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021",
+       "label": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021"
+      }
+     ]
+    },
+    {
+     "id": "sayaclar",
+     "shown": false,
+     "related": [
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0029",
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002a"
+     ]
+    }
+   ],
+   "issues": []
+  },
+  {
+   "name": "Ankara: ilçeler, yinelenen kod bir kez; Çankaya'nın etkin mahalleleri doğal sırada; sayaçlar",
+   "fields": [
+    {
+     "name": "İl",
+     "kind": "text"
+    },
+    {
+     "name": "İlçe",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Tür",
+     "kind": "text",
+     "values": [
+      {
+       "code": "k",
+       "label": "Konut"
+      }
+     ]
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "il",
+      "field": "İl",
+      "lookup": {
+       "layer": "il",
+       "key": "kod",
+       "label": "ad"
+      }
+     },
+     {
+      "type": "field",
+      "id": "ilce",
+      "field": "İlçe",
+      "lookup": {
+       "layer": "ilce",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "il",
+         "record": "İl"
+        }
+       ]
+      }
+     },
+     {
+      "type": "field",
+      "id": "mahalle",
+      "field": "Mahalle",
+      "widget": "radio",
+      "lookup": {
+       "layer": "mahalle",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "ilce",
+         "record": "İlçe"
+        }
+       ],
+       "filter": "durum = 'etkin'"
+      }
+     },
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "ada"
+      }
+     },
+     {
+      "type": "related",
+      "id": "sayaclar",
+      "label": "Sayaçlar",
+      "layer": "sayac",
+      "field": "bina",
+      "visibleWhen": "İl = '06'"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "il": {
+     "name": "İller",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+       {
+        "kod": "06",
+        "ad": "Ankara"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+       {
+        "kod": "34",
+        "ad": "İstanbul"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003",
+       {
+        "kod": "35",
+        "ad": "İzmir"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0004",
+       {
+        "ad": "Kodsuz"
+       }
+      ]
+     ]
+    },
+    "ilce": {
+     "name": "İlçeler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "il",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000b",
+       {
+        "kod": "0601",
+        "ad": "Çankaya",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000c",
+       {
+        "kod": "0602",
+        "ad": "Altındağ",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000d",
+       {
+        "kod": "3401",
+        "ad": "Kadıköy",
+        "il": "34"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000e",
+       {
+        "kod": "0601",
+        "ad": "Yineleme",
+        "il": "06"
+       }
+      ]
+     ]
+    },
+    "mahalle": {
+     "name": "Mahalleler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "ilce",
+       "kind": "text"
+      },
+      {
+       "name": "durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0015",
+       {
+        "kod": "M10",
+        "ad": "Kızılay",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0016",
+       {
+        "kod": "M2",
+        "ad": "Bahçelievler",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0017",
+       {
+        "kod": "M3",
+        "ad": "Eski mahalle",
+        "ilce": "0601",
+        "durum": "kapalı"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0018",
+       {
+        "kod": "M4",
+        "ad": "Ulus",
+        "ilce": "0602",
+        "durum": "etkin"
+       }
+      ]
+     ]
+    },
+    "parsel": {
+     "name": "Parseller",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+       {
+        "ada": "101/5"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+       {
+        "ada": "101/12"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021",
+       {}
+      ]
+     ]
+    },
+    "sayac": {
+     "name": "Sayaçlar",
+     "fields": [
+      {
+       "name": "no",
+       "kind": "text"
+      },
+      {
+       "name": "bina",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0029",
+       {
+        "no": "S-1",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002a",
+       {
+        "no": "S-2",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002b",
+       {
+        "no": "S-3",
+        "bina": "başka"
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+   },
+   "attrs": {
+    "İl": "06",
+    "İlçe": "0601",
+    "Mahalle": "M2"
+   },
+   "items": [
+    {
+     "id": "il",
+     "shown": true,
+     "choices": [
+      "06",
+      "34",
+      "35"
+     ],
+     "options": [
+      {
+       "code": "06",
+       "label": "Ankara"
+      },
+      {
+       "code": "34",
+       "label": "İstanbul"
+      },
+      {
+       "code": "35",
+       "label": "İzmir"
+      }
+     ]
+    },
+    {
+     "id": "ilce",
+     "shown": true,
+     "choices": [
+      "0602",
+      "0601"
+     ],
+     "options": [
+      {
+       "code": "0602",
+       "label": "Altındağ"
+      },
+      {
+       "code": "0601",
+       "label": "Çankaya"
+      }
+     ]
+    },
+    {
+     "id": "mahalle",
+     "shown": true,
+     "choices": [
+      "M2",
+      "M10"
+     ],
+     "options": [
+      {
+       "code": "M2",
+       "label": "Bahçelievler"
+      },
+      {
+       "code": "M10",
+       "label": "Kızılay"
+      }
+     ]
+    },
+    {
+     "id": "parsel",
+     "shown": true,
+     "choices": [
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021"
+     ],
+     "options": [
+      {
+       "code": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+       "label": "101/5"
+      },
+      {
+       "code": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+       "label": "101/12"
+      },
+      {
+       "code": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021",
+       "label": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021"
+      }
+     ]
+    },
+    {
+     "id": "sayaclar",
+     "shown": true,
+     "related": [
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0029",
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002a"
+     ]
+    }
+   ],
+   "issues": []
+  },
+  {
+   "name": "zincirin dışında kalan ilçe ve kapalı mahalle hatadır",
+   "fields": [
+    {
+     "name": "İl",
+     "kind": "text"
+    },
+    {
+     "name": "İlçe",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Tür",
+     "kind": "text",
+     "values": [
+      {
+       "code": "k",
+       "label": "Konut"
+      }
+     ]
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "il",
+      "field": "İl",
+      "lookup": {
+       "layer": "il",
+       "key": "kod",
+       "label": "ad"
+      }
+     },
+     {
+      "type": "field",
+      "id": "ilce",
+      "field": "İlçe",
+      "lookup": {
+       "layer": "ilce",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "il",
+         "record": "İl"
+        }
+       ]
+      }
+     },
+     {
+      "type": "field",
+      "id": "mahalle",
+      "field": "Mahalle",
+      "widget": "radio",
+      "lookup": {
+       "layer": "mahalle",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "ilce",
+         "record": "İlçe"
+        }
+       ],
+       "filter": "durum = 'etkin'"
+      }
+     },
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "ada"
+      }
+     },
+     {
+      "type": "related",
+      "id": "sayaclar",
+      "label": "Sayaçlar",
+      "layer": "sayac",
+      "field": "bina",
+      "visibleWhen": "İl = '06'"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "il": {
+     "name": "İller",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+       {
+        "kod": "06",
+        "ad": "Ankara"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+       {
+        "kod": "34",
+        "ad": "İstanbul"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003",
+       {
+        "kod": "35",
+        "ad": "İzmir"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0004",
+       {
+        "ad": "Kodsuz"
+       }
+      ]
+     ]
+    },
+    "ilce": {
+     "name": "İlçeler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "il",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000b",
+       {
+        "kod": "0601",
+        "ad": "Çankaya",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000c",
+       {
+        "kod": "0602",
+        "ad": "Altındağ",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000d",
+       {
+        "kod": "3401",
+        "ad": "Kadıköy",
+        "il": "34"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000e",
+       {
+        "kod": "0601",
+        "ad": "Yineleme",
+        "il": "06"
+       }
+      ]
+     ]
+    },
+    "mahalle": {
+     "name": "Mahalleler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "ilce",
+       "kind": "text"
+      },
+      {
+       "name": "durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0015",
+       {
+        "kod": "M10",
+        "ad": "Kızılay",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0016",
+       {
+        "kod": "M2",
+        "ad": "Bahçelievler",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0017",
+       {
+        "kod": "M3",
+        "ad": "Eski mahalle",
+        "ilce": "0601",
+        "durum": "kapalı"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0018",
+       {
+        "kod": "M4",
+        "ad": "Ulus",
+        "ilce": "0602",
+        "durum": "etkin"
+       }
+      ]
+     ]
+    },
+    "parsel": {
+     "name": "Parseller",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+       {
+        "ada": "101/5"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+       {
+        "ada": "101/12"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021",
+       {}
+      ]
+     ]
+    },
+    "sayac": {
+     "name": "Sayaçlar",
+     "fields": [
+      {
+       "name": "no",
+       "kind": "text"
+      },
+      {
+       "name": "bina",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0029",
+       {
+        "no": "S-1",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002a",
+       {
+        "no": "S-2",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002b",
+       {
+        "no": "S-3",
+        "bina": "başka"
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+   },
+   "attrs": {
+    "İl": "34",
+    "İlçe": "0601",
+    "Mahalle": "M3"
+   },
+   "items": [
+    {
+     "id": "il",
+     "shown": true,
+     "choices": [
+      "06",
+      "34",
+      "35"
+     ],
+     "options": [
+      {
+       "code": "06",
+       "label": "Ankara"
+      },
+      {
+       "code": "34",
+       "label": "İstanbul"
+      },
+      {
+       "code": "35",
+       "label": "İzmir"
+      }
+     ]
+    },
+    {
+     "id": "ilce",
+     "shown": true,
+     "choices": [
+      "3401"
+     ],
+     "options": [
+      {
+       "code": "3401",
+       "label": "Kadıköy"
+      }
+     ]
+    },
+    {
+     "id": "mahalle",
+     "shown": true,
+     "choices": [
+      "M2",
+      "M10"
+     ],
+     "options": [
+      {
+       "code": "M2",
+       "label": "Bahçelievler"
+      },
+      {
+       "code": "M10",
+       "label": "Kızılay"
+      }
+     ]
+    },
+    {
+     "id": "parsel",
+     "shown": true,
+     "choices": [
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021"
+     ],
+     "options": [
+      {
+       "code": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+       "label": "101/5"
+      },
+      {
+       "code": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+       "label": "101/12"
+      },
+      {
+       "code": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021",
+       "label": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021"
+      }
+     ]
+    },
+    {
+     "id": "sayaclar",
+     "shown": false,
+     "related": [
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0029",
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002a"
+     ]
+    }
+   ],
+   "issues": [
+    {
+     "code": "form_lookup_missing",
+     "severity": "error",
+     "item": "ilce",
+     "field": "İlçe",
+     "rule": "lookup"
+    },
+    {
+     "code": "form_lookup_missing",
+     "severity": "error",
+     "item": "mahalle",
+     "field": "Mahalle",
+     "rule": "lookup"
+    }
+   ]
+  },
+  {
+   "name": "parsele nesnenin kimliğiyle bağ; olmayan kimlik hatadır",
+   "fields": [
+    {
+     "name": "İl",
+     "kind": "text"
+    },
+    {
+     "name": "İlçe",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Tür",
+     "kind": "text",
+     "values": [
+      {
+       "code": "k",
+       "label": "Konut"
+      }
+     ]
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "il",
+      "field": "İl",
+      "lookup": {
+       "layer": "il",
+       "key": "kod",
+       "label": "ad"
+      }
+     },
+     {
+      "type": "field",
+      "id": "ilce",
+      "field": "İlçe",
+      "lookup": {
+       "layer": "ilce",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "il",
+         "record": "İl"
+        }
+       ]
+      }
+     },
+     {
+      "type": "field",
+      "id": "mahalle",
+      "field": "Mahalle",
+      "widget": "radio",
+      "lookup": {
+       "layer": "mahalle",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "ilce",
+         "record": "İlçe"
+        }
+       ],
+       "filter": "durum = 'etkin'"
+      }
+     },
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "ada"
+      }
+     },
+     {
+      "type": "related",
+      "id": "sayaclar",
+      "label": "Sayaçlar",
+      "layer": "sayac",
+      "field": "bina",
+      "visibleWhen": "İl = '06'"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "il": {
+     "name": "İller",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+       {
+        "kod": "06",
+        "ad": "Ankara"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+       {
+        "kod": "34",
+        "ad": "İstanbul"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003",
+       {
+        "kod": "35",
+        "ad": "İzmir"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0004",
+       {
+        "ad": "Kodsuz"
+       }
+      ]
+     ]
+    },
+    "ilce": {
+     "name": "İlçeler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "il",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000b",
+       {
+        "kod": "0601",
+        "ad": "Çankaya",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000c",
+       {
+        "kod": "0602",
+        "ad": "Altındağ",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000d",
+       {
+        "kod": "3401",
+        "ad": "Kadıköy",
+        "il": "34"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000e",
+       {
+        "kod": "0601",
+        "ad": "Yineleme",
+        "il": "06"
+       }
+      ]
+     ]
+    },
+    "mahalle": {
+     "name": "Mahalleler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "ilce",
+       "kind": "text"
+      },
+      {
+       "name": "durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0015",
+       {
+        "kod": "M10",
+        "ad": "Kızılay",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0016",
+       {
+        "kod": "M2",
+        "ad": "Bahçelievler",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0017",
+       {
+        "kod": "M3",
+        "ad": "Eski mahalle",
+        "ilce": "0601",
+        "durum": "kapalı"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0018",
+       {
+        "kod": "M4",
+        "ad": "Ulus",
+        "ilce": "0602",
+        "durum": "etkin"
+       }
+      ]
+     ]
+    },
+    "parsel": {
+     "name": "Parseller",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+       {
+        "ada": "101/5"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+       {
+        "ada": "101/12"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021",
+       {}
+      ]
+     ]
+    },
+    "sayac": {
+     "name": "Sayaçlar",
+     "fields": [
+      {
+       "name": "no",
+       "kind": "text"
+      },
+      {
+       "name": "bina",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0029",
+       {
+        "no": "S-1",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002a",
+       {
+        "no": "S-2",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002b",
+       {
+        "no": "S-3",
+        "bina": "başka"
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+   },
+   "attrs": {
+    "İl": "06",
+    "Parsel": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d00ff"
+   },
+   "items": [
+    {
+     "id": "il",
+     "shown": true,
+     "choices": [
+      "06",
+      "34",
+      "35"
+     ],
+     "options": [
+      {
+       "code": "06",
+       "label": "Ankara"
+      },
+      {
+       "code": "34",
+       "label": "İstanbul"
+      },
+      {
+       "code": "35",
+       "label": "İzmir"
+      }
+     ]
+    },
+    {
+     "id": "ilce",
+     "shown": true,
+     "choices": [
+      "0602",
+      "0601"
+     ],
+     "options": [
+      {
+       "code": "0602",
+       "label": "Altındağ"
+      },
+      {
+       "code": "0601",
+       "label": "Çankaya"
+      }
+     ]
+    },
+    {
+     "id": "mahalle",
+     "shown": true,
+     "choices": [],
+     "options": []
+    },
+    {
+     "id": "parsel",
+     "shown": true,
+     "choices": [
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021"
+     ],
+     "options": [
+      {
+       "code": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+       "label": "101/5"
+      },
+      {
+       "code": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+       "label": "101/12"
+      },
+      {
+       "code": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021",
+       "label": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021"
+      }
+     ]
+    },
+    {
+     "id": "sayaclar",
+     "shown": true,
+     "related": [
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0029",
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002a"
+     ]
+    }
+   ],
+   "issues": [
+    {
+     "code": "form_lookup_missing",
+     "severity": "error",
+     "item": "parsel",
+     "field": "Parsel",
+     "rule": "lookup"
+    }
+   ]
+  },
+  {
+   "name": "bağsız nesnenin ilişkili kaydı yok",
+   "fields": [
+    {
+     "name": "İl",
+     "kind": "text"
+    },
+    {
+     "name": "İlçe",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Tür",
+     "kind": "text",
+     "values": [
+      {
+       "code": "k",
+       "label": "Konut"
+      }
+     ]
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "il",
+      "field": "İl",
+      "lookup": {
+       "layer": "il",
+       "key": "kod",
+       "label": "ad"
+      }
+     },
+     {
+      "type": "field",
+      "id": "ilce",
+      "field": "İlçe",
+      "lookup": {
+       "layer": "ilce",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "il",
+         "record": "İl"
+        }
+       ]
+      }
+     },
+     {
+      "type": "field",
+      "id": "mahalle",
+      "field": "Mahalle",
+      "widget": "radio",
+      "lookup": {
+       "layer": "mahalle",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "ilce",
+         "record": "İlçe"
+        }
+       ],
+       "filter": "durum = 'etkin'"
+      }
+     },
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "ada"
+      }
+     },
+     {
+      "type": "related",
+      "id": "sayaclar",
+      "label": "Sayaçlar",
+      "layer": "sayac",
+      "field": "bina",
+      "visibleWhen": "İl = '06'"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "il": {
+     "name": "İller",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+       {
+        "kod": "06",
+        "ad": "Ankara"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+       {
+        "kod": "34",
+        "ad": "İstanbul"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003",
+       {
+        "kod": "35",
+        "ad": "İzmir"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0004",
+       {
+        "ad": "Kodsuz"
+       }
+      ]
+     ]
+    },
+    "ilce": {
+     "name": "İlçeler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "il",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000b",
+       {
+        "kod": "0601",
+        "ad": "Çankaya",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000c",
+       {
+        "kod": "0602",
+        "ad": "Altındağ",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000d",
+       {
+        "kod": "3401",
+        "ad": "Kadıköy",
+        "il": "34"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000e",
+       {
+        "kod": "0601",
+        "ad": "Yineleme",
+        "il": "06"
+       }
+      ]
+     ]
+    },
+    "mahalle": {
+     "name": "Mahalleler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "ilce",
+       "kind": "text"
+      },
+      {
+       "name": "durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0015",
+       {
+        "kod": "M10",
+        "ad": "Kızılay",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0016",
+       {
+        "kod": "M2",
+        "ad": "Bahçelievler",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0017",
+       {
+        "kod": "M3",
+        "ad": "Eski mahalle",
+        "ilce": "0601",
+        "durum": "kapalı"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0018",
+       {
+        "kod": "M4",
+        "ad": "Ulus",
+        "ilce": "0602",
+        "durum": "etkin"
+       }
+      ]
+     ]
+    },
+    "parsel": {
+     "name": "Parseller",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+       {
+        "ada": "101/5"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+       {
+        "ada": "101/12"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021",
+       {}
+      ]
+     ]
+    },
+    "sayac": {
+     "name": "Sayaçlar",
+     "fields": [
+      {
+       "name": "no",
+       "kind": "text"
+      },
+      {
+       "name": "bina",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0029",
+       {
+        "no": "S-1",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002a",
+       {
+        "no": "S-2",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002b",
+       {
+        "no": "S-3",
+        "bina": "başka"
+       }
+      ]
+     ]
+    }
+   },
+   "object": {},
+   "attrs": {
+    "İl": "06"
+   },
+   "items": [
+    {
+     "id": "il",
+     "shown": true,
+     "choices": [
+      "06",
+      "34",
+      "35"
+     ],
+     "options": [
+      {
+       "code": "06",
+       "label": "Ankara"
+      },
+      {
+       "code": "34",
+       "label": "İstanbul"
+      },
+      {
+       "code": "35",
+       "label": "İzmir"
+      }
+     ]
+    },
+    {
+     "id": "ilce",
+     "shown": true,
+     "choices": [
+      "0602",
+      "0601"
+     ],
+     "options": [
+      {
+       "code": "0602",
+       "label": "Altındağ"
+      },
+      {
+       "code": "0601",
+       "label": "Çankaya"
+      }
+     ]
+    },
+    {
+     "id": "mahalle",
+     "shown": true,
+     "choices": [],
+     "options": []
+    },
+    {
+     "id": "parsel",
+     "shown": true,
+     "choices": [
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021"
+     ],
+     "options": [
+      {
+       "code": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+       "label": "101/5"
+      },
+      {
+       "code": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+       "label": "101/12"
+      },
+      {
+       "code": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021",
+       "label": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021"
+      }
+     ]
+    },
+    {
+     "id": "sayaclar",
+     "shown": true,
+     "related": []
     }
    ],
    "issues": []
@@ -13570,6 +17392,1366 @@
      "item": "aciklama",
      "field": "Açıklama",
      "rule": "checks/1"
+    }
+   ]
+  },
+  {
+   "name": "etiketler kodlarıyla yazılır",
+   "fields": [
+    {
+     "name": "İl",
+     "kind": "text"
+    },
+    {
+     "name": "İlçe",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Tür",
+     "kind": "text",
+     "values": [
+      {
+       "code": "k",
+       "label": "Konut"
+      }
+     ]
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "il",
+      "field": "İl",
+      "lookup": {
+       "layer": "il",
+       "key": "kod",
+       "label": "ad"
+      }
+     },
+     {
+      "type": "field",
+      "id": "ilce",
+      "field": "İlçe",
+      "lookup": {
+       "layer": "ilce",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "il",
+         "record": "İl"
+        }
+       ]
+      }
+     },
+     {
+      "type": "field",
+      "id": "mahalle",
+      "field": "Mahalle",
+      "widget": "radio",
+      "lookup": {
+       "layer": "mahalle",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "ilce",
+         "record": "İlçe"
+        }
+       ],
+       "filter": "durum = 'etkin'"
+      }
+     },
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "ada"
+      }
+     },
+     {
+      "type": "related",
+      "id": "sayaclar",
+      "label": "Sayaçlar",
+      "layer": "sayac",
+      "field": "bina",
+      "visibleWhen": "İl = '06'"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "il": {
+     "name": "İller",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+       {
+        "kod": "06",
+        "ad": "Ankara"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+       {
+        "kod": "34",
+        "ad": "İstanbul"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003",
+       {
+        "kod": "35",
+        "ad": "İzmir"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0004",
+       {
+        "ad": "Kodsuz"
+       }
+      ]
+     ]
+    },
+    "ilce": {
+     "name": "İlçeler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "il",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000b",
+       {
+        "kod": "0601",
+        "ad": "Çankaya",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000c",
+       {
+        "kod": "0602",
+        "ad": "Altındağ",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000d",
+       {
+        "kod": "3401",
+        "ad": "Kadıköy",
+        "il": "34"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000e",
+       {
+        "kod": "0601",
+        "ad": "Yineleme",
+        "il": "06"
+       }
+      ]
+     ]
+    },
+    "mahalle": {
+     "name": "Mahalleler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "ilce",
+       "kind": "text"
+      },
+      {
+       "name": "durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0015",
+       {
+        "kod": "M10",
+        "ad": "Kızılay",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0016",
+       {
+        "kod": "M2",
+        "ad": "Bahçelievler",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0017",
+       {
+        "kod": "M3",
+        "ad": "Eski mahalle",
+        "ilce": "0601",
+        "durum": "kapalı"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0018",
+       {
+        "kod": "M4",
+        "ad": "Ulus",
+        "ilce": "0602",
+        "durum": "etkin"
+       }
+      ]
+     ]
+    },
+    "parsel": {
+     "name": "Parseller",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+       {
+        "ada": "101/5"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+       {
+        "ada": "101/12"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021",
+       {}
+      ]
+     ]
+    },
+    "sayac": {
+     "name": "Sayaçlar",
+     "fields": [
+      {
+       "name": "no",
+       "kind": "text"
+      },
+      {
+       "name": "bina",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0029",
+       {
+        "no": "S-1",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002a",
+       {
+        "no": "S-2",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002b",
+       {
+        "no": "S-3",
+        "bina": "başka"
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+   },
+   "before": {},
+   "values": [
+    [
+     "İl",
+     "Ankara"
+    ],
+    [
+     "İlçe",
+     "Çankaya"
+    ],
+    [
+     "Mahalle",
+     "Kızılay"
+    ]
+   ],
+   "new": false,
+   "after": {
+    "İl": "06",
+    "İlçe": "0601",
+    "Mahalle": "M10"
+   },
+   "issues": []
+  },
+  {
+   "name": "parsel adasıyla seçilir, kimliği yazılır",
+   "fields": [
+    {
+     "name": "İl",
+     "kind": "text"
+    },
+    {
+     "name": "İlçe",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Tür",
+     "kind": "text",
+     "values": [
+      {
+       "code": "k",
+       "label": "Konut"
+      }
+     ]
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "il",
+      "field": "İl",
+      "lookup": {
+       "layer": "il",
+       "key": "kod",
+       "label": "ad"
+      }
+     },
+     {
+      "type": "field",
+      "id": "ilce",
+      "field": "İlçe",
+      "lookup": {
+       "layer": "ilce",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "il",
+         "record": "İl"
+        }
+       ]
+      }
+     },
+     {
+      "type": "field",
+      "id": "mahalle",
+      "field": "Mahalle",
+      "widget": "radio",
+      "lookup": {
+       "layer": "mahalle",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "ilce",
+         "record": "İlçe"
+        }
+       ],
+       "filter": "durum = 'etkin'"
+      }
+     },
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "ada"
+      }
+     },
+     {
+      "type": "related",
+      "id": "sayaclar",
+      "label": "Sayaçlar",
+      "layer": "sayac",
+      "field": "bina",
+      "visibleWhen": "İl = '06'"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "il": {
+     "name": "İller",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+       {
+        "kod": "06",
+        "ad": "Ankara"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+       {
+        "kod": "34",
+        "ad": "İstanbul"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003",
+       {
+        "kod": "35",
+        "ad": "İzmir"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0004",
+       {
+        "ad": "Kodsuz"
+       }
+      ]
+     ]
+    },
+    "ilce": {
+     "name": "İlçeler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "il",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000b",
+       {
+        "kod": "0601",
+        "ad": "Çankaya",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000c",
+       {
+        "kod": "0602",
+        "ad": "Altındağ",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000d",
+       {
+        "kod": "3401",
+        "ad": "Kadıköy",
+        "il": "34"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000e",
+       {
+        "kod": "0601",
+        "ad": "Yineleme",
+        "il": "06"
+       }
+      ]
+     ]
+    },
+    "mahalle": {
+     "name": "Mahalleler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "ilce",
+       "kind": "text"
+      },
+      {
+       "name": "durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0015",
+       {
+        "kod": "M10",
+        "ad": "Kızılay",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0016",
+       {
+        "kod": "M2",
+        "ad": "Bahçelievler",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0017",
+       {
+        "kod": "M3",
+        "ad": "Eski mahalle",
+        "ilce": "0601",
+        "durum": "kapalı"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0018",
+       {
+        "kod": "M4",
+        "ad": "Ulus",
+        "ilce": "0602",
+        "durum": "etkin"
+       }
+      ]
+     ]
+    },
+    "parsel": {
+     "name": "Parseller",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+       {
+        "ada": "101/5"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+       {
+        "ada": "101/12"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021",
+       {}
+      ]
+     ]
+    },
+    "sayac": {
+     "name": "Sayaçlar",
+     "fields": [
+      {
+       "name": "no",
+       "kind": "text"
+      },
+      {
+       "name": "bina",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0029",
+       {
+        "no": "S-1",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002a",
+       {
+        "no": "S-2",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002b",
+       {
+        "no": "S-3",
+        "bina": "başka"
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+   },
+   "before": {
+    "İl": "06"
+   },
+   "values": [
+    [
+     "Parsel",
+     "101/12"
+    ]
+   ],
+   "new": false,
+   "after": {
+    "İl": "06",
+    "Parsel": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020"
+   },
+   "issues": []
+  },
+  {
+   "name": "listede olmayan değer yazılmaz",
+   "fields": [
+    {
+     "name": "İl",
+     "kind": "text"
+    },
+    {
+     "name": "İlçe",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Tür",
+     "kind": "text",
+     "values": [
+      {
+       "code": "k",
+       "label": "Konut"
+      }
+     ]
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "il",
+      "field": "İl",
+      "lookup": {
+       "layer": "il",
+       "key": "kod",
+       "label": "ad"
+      }
+     },
+     {
+      "type": "field",
+      "id": "ilce",
+      "field": "İlçe",
+      "lookup": {
+       "layer": "ilce",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "il",
+         "record": "İl"
+        }
+       ]
+      }
+     },
+     {
+      "type": "field",
+      "id": "mahalle",
+      "field": "Mahalle",
+      "widget": "radio",
+      "lookup": {
+       "layer": "mahalle",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "ilce",
+         "record": "İlçe"
+        }
+       ],
+       "filter": "durum = 'etkin'"
+      }
+     },
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "ada"
+      }
+     },
+     {
+      "type": "related",
+      "id": "sayaclar",
+      "label": "Sayaçlar",
+      "layer": "sayac",
+      "field": "bina",
+      "visibleWhen": "İl = '06'"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "il": {
+     "name": "İller",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+       {
+        "kod": "06",
+        "ad": "Ankara"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+       {
+        "kod": "34",
+        "ad": "İstanbul"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003",
+       {
+        "kod": "35",
+        "ad": "İzmir"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0004",
+       {
+        "ad": "Kodsuz"
+       }
+      ]
+     ]
+    },
+    "ilce": {
+     "name": "İlçeler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "il",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000b",
+       {
+        "kod": "0601",
+        "ad": "Çankaya",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000c",
+       {
+        "kod": "0602",
+        "ad": "Altındağ",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000d",
+       {
+        "kod": "3401",
+        "ad": "Kadıköy",
+        "il": "34"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000e",
+       {
+        "kod": "0601",
+        "ad": "Yineleme",
+        "il": "06"
+       }
+      ]
+     ]
+    },
+    "mahalle": {
+     "name": "Mahalleler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "ilce",
+       "kind": "text"
+      },
+      {
+       "name": "durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0015",
+       {
+        "kod": "M10",
+        "ad": "Kızılay",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0016",
+       {
+        "kod": "M2",
+        "ad": "Bahçelievler",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0017",
+       {
+        "kod": "M3",
+        "ad": "Eski mahalle",
+        "ilce": "0601",
+        "durum": "kapalı"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0018",
+       {
+        "kod": "M4",
+        "ad": "Ulus",
+        "ilce": "0602",
+        "durum": "etkin"
+       }
+      ]
+     ]
+    },
+    "parsel": {
+     "name": "Parseller",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+       {
+        "ada": "101/5"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+       {
+        "ada": "101/12"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021",
+       {}
+      ]
+     ]
+    },
+    "sayac": {
+     "name": "Sayaçlar",
+     "fields": [
+      {
+       "name": "no",
+       "kind": "text"
+      },
+      {
+       "name": "bina",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0029",
+       {
+        "no": "S-1",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002a",
+       {
+        "no": "S-2",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002b",
+       {
+        "no": "S-3",
+        "bina": "başka"
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+   },
+   "before": {
+    "İl": "06"
+   },
+   "values": [
+    [
+     "İlçe",
+     "Kadıköy"
+    ]
+   ],
+   "new": false,
+   "after": {
+    "İl": "06",
+    "İlçe": "3401"
+   },
+   "issues": [
+    {
+     "code": "form_lookup_missing",
+     "severity": "error",
+     "item": "ilce",
+     "field": "İlçe",
+     "rule": "lookup"
+    }
+   ]
+  },
+  {
+   "name": "üst alan değişince alt alan zincirin dışında kalır",
+   "fields": [
+    {
+     "name": "İl",
+     "kind": "text"
+    },
+    {
+     "name": "İlçe",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Tür",
+     "kind": "text",
+     "values": [
+      {
+       "code": "k",
+       "label": "Konut"
+      }
+     ]
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "il",
+      "field": "İl",
+      "lookup": {
+       "layer": "il",
+       "key": "kod",
+       "label": "ad"
+      }
+     },
+     {
+      "type": "field",
+      "id": "ilce",
+      "field": "İlçe",
+      "lookup": {
+       "layer": "ilce",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "il",
+         "record": "İl"
+        }
+       ]
+      }
+     },
+     {
+      "type": "field",
+      "id": "mahalle",
+      "field": "Mahalle",
+      "widget": "radio",
+      "lookup": {
+       "layer": "mahalle",
+       "key": "kod",
+       "label": "ad",
+       "matches": [
+        {
+         "field": "ilce",
+         "record": "İlçe"
+        }
+       ],
+       "filter": "durum = 'etkin'"
+      }
+     },
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "ada"
+      }
+     },
+     {
+      "type": "related",
+      "id": "sayaclar",
+      "label": "Sayaçlar",
+      "layer": "sayac",
+      "field": "bina",
+      "visibleWhen": "İl = '06'"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "il": {
+     "name": "İller",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+       {
+        "kod": "06",
+        "ad": "Ankara"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+       {
+        "kod": "34",
+        "ad": "İstanbul"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003",
+       {
+        "kod": "35",
+        "ad": "İzmir"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0004",
+       {
+        "ad": "Kodsuz"
+       }
+      ]
+     ]
+    },
+    "ilce": {
+     "name": "İlçeler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "il",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000b",
+       {
+        "kod": "0601",
+        "ad": "Çankaya",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000c",
+       {
+        "kod": "0602",
+        "ad": "Altındağ",
+        "il": "06"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000d",
+       {
+        "kod": "3401",
+        "ad": "Kadıköy",
+        "il": "34"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000e",
+       {
+        "kod": "0601",
+        "ad": "Yineleme",
+        "il": "06"
+       }
+      ]
+     ]
+    },
+    "mahalle": {
+     "name": "Mahalleler",
+     "fields": [
+      {
+       "name": "kod",
+       "kind": "text"
+      },
+      {
+       "name": "ad",
+       "kind": "text"
+      },
+      {
+       "name": "ilce",
+       "kind": "text"
+      },
+      {
+       "name": "durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0015",
+       {
+        "kod": "M10",
+        "ad": "Kızılay",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0016",
+       {
+        "kod": "M2",
+        "ad": "Bahçelievler",
+        "ilce": "0601",
+        "durum": "etkin"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0017",
+       {
+        "kod": "M3",
+        "ad": "Eski mahalle",
+        "ilce": "0601",
+        "durum": "kapalı"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0018",
+       {
+        "kod": "M4",
+        "ad": "Ulus",
+        "ilce": "0602",
+        "durum": "etkin"
+       }
+      ]
+     ]
+    },
+    "parsel": {
+     "name": "Parseller",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d001f",
+       {
+        "ada": "101/5"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0020",
+       {
+        "ada": "101/12"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0021",
+       {}
+      ]
+     ]
+    },
+    "sayac": {
+     "name": "Sayaçlar",
+     "fields": [
+      {
+       "name": "no",
+       "kind": "text"
+      },
+      {
+       "name": "bina",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0029",
+       {
+        "no": "S-1",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002a",
+       {
+        "no": "S-2",
+        "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+       }
+      ],
+      [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002b",
+       {
+        "no": "S-3",
+        "bina": "başka"
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"
+   },
+   "before": {
+    "İl": "06",
+    "İlçe": "0601"
+   },
+   "values": [
+    [
+     "İl",
+     "34"
+    ]
+   ],
+   "new": false,
+   "after": {
+    "İl": "34",
+    "İlçe": "0601"
+   },
+   "issues": [
+    {
+     "code": "form_lookup_missing",
+     "severity": "error",
+     "item": "ilce",
+     "field": "İlçe",
+     "rule": "lookup"
     }
    ]
   }

@@ -2768,6 +2768,7 @@ class FormItem(_Union):
     - :class:`GroupFormItem` (``type: group``)
     - :class:`FieldFormItem` (``type: field``)
     - :class:`NoteFormItem` (``type: note``)
+    - :class:`RelatedFormItem` (``type: related``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "type"
@@ -10576,12 +10577,16 @@ class FormItemState(_Model):
     """An item's state for a record: shown (its own rule and its group's), required, read-only.
     Attributes:
         choices: The listed values a field with a choice filter offers for the record, in the list's order.
+        options: A field's list from another layer for the record: codes and labels (docs/adr/0404 §2).
+        related: A related item's objects: their persistent ids (docs/adr/0404 §4).
         text: A note's text with the record's values put in (a note whose text has `{…}`).
     """
     id: str
     shown: bool
     choices: list[str] | None | Unset = UNSET
+    options: list[FieldChoice] | None | Unset = UNSET
     read_only: bool | Unset = UNSET
+    related: list[str] | None | Unset = UNSET
     required: bool | Unset = UNSET
     text: str | None | Unset = UNSET
 
@@ -10591,8 +10596,12 @@ class FormItemState(_Model):
         out["shown"] = self.shown
         if self.choices is not UNSET:
             out["choices"] = None if self.choices is None else list(self.choices)
+        if self.options is not UNSET:
+            out["options"] = None if self.options is None else [e0.to_json() for e0 in self.options]
         if self.read_only is not UNSET:
             out["readOnly"] = self.read_only
+        if self.related is not UNSET:
+            out["related"] = None if self.related is None else list(self.related)
         if self.required is not UNSET:
             out["required"] = self.required
         if self.text is not UNSET:
@@ -10605,9 +10614,50 @@ class FormItemState(_Model):
             id=data["id"],
             shown=data["shown"],
             choices=UNSET if "choices" not in data else None if data["choices"] is None else list(data["choices"]),
+            options=UNSET if "options" not in data else None if data["options"] is None else [FieldChoice.from_json(e0) for e0 in data["options"]],
             read_only=data.get("readOnly", UNSET),
+            related=UNSET if "related" not in data else None if data["related"] is None else list(data["related"]),
             required=data.get("required", UNSET),
             text=data.get("text", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormLookup(_Model):
+    """A field's list of values from another layer (docs/adr/0404 §1).
+    Attributes:
+        layer: The list's layer id.
+        key: Its field's key whose value is written; `$uid`: the object's persistent id (a reference).
+        filter: Asked of each of the list's objects (its fields by name, the project's `@` values).
+        label: Its field's key shown; none: the key's.
+        matches: The list's object is offered when its field equals the record's (a chain: il, ilçe, mahalle).
+    """
+    layer: str
+    key: str
+    filter: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    matches: list[LookupMatch] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["key"] = self.key
+        if self.filter is not UNSET:
+            out["filter"] = self.filter
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.matches is not UNSET:
+            out["matches"] = [e0.to_json() for e0 in self.matches]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormLookup:
+        return cls(
+            layer=data["layer"],
+            key=data["key"],
+            filter=data.get("filter", UNSET),
+            label=data.get("label", UNSET),
+            matches=[LookupMatch.from_json(e0) for e0 in data["matches"]] if "matches" in data else UNSET,
         )
 
 
@@ -15481,6 +15531,30 @@ class LocalDefinition(_Model):
         return cls(
             base=CrsBase.from_json(data["base"]),
             plane=CrsPlane.from_json(data["plane"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LookupMatch(_Model):
+    """A field of the list's layer that must equal a field of the record.
+    Attributes:
+        field: The list's field's key.
+        record: The record's field's key.
+    """
+    field: str
+    record: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["field"] = self.field
+        out["record"] = self.record
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LookupMatch:
+        return cls(
+            field=data["field"],
+            record=data["record"],
         )
 
 
@@ -25525,6 +25599,8 @@ class FieldFormItem(FormItem):
             in), evaluated in the form's order. Not with `default`.
         help: A line under the field.
         label: The label; none: the field's alias or name.
+        lookup: The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or
+            `choiceFilter`.
         placeholder: The empty box's hint.
         read_only: Shown, never edited; written only as `true`.
         read_only_when: Locked when this expression is true.
@@ -25547,6 +25623,7 @@ class FieldFormItem(FormItem):
     default_expr: str | None | Unset = UNSET
     help: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    lookup: FormLookup | None | Unset = UNSET
     placeholder: str | None | Unset = UNSET
     read_only: bool | Unset = UNSET
     read_only_when: str | None | Unset = UNSET
@@ -25575,6 +25652,8 @@ class FieldFormItem(FormItem):
             out["help"] = self.help
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.lookup is not UNSET:
+            out["lookup"] = None if self.lookup is None else self.lookup.to_json()
         if self.placeholder is not UNSET:
             out["placeholder"] = self.placeholder
         if self.read_only is not UNSET:
@@ -25607,6 +25686,7 @@ class FieldFormItem(FormItem):
             default_expr=data.get("defaultExpr", UNSET),
             help=data.get("help", UNSET),
             label=data.get("label", UNSET),
+            lookup=UNSET if "lookup" not in data else None if data["lookup"] is None else FormLookup.from_json(data["lookup"]),
             placeholder=data.get("placeholder", UNSET),
             read_only=data.get("readOnly", UNSET),
             read_only_when=data.get("readOnlyWhen", UNSET),
@@ -25639,6 +25719,43 @@ class NoteFormItem(FormItem):
         return cls(
             id=data["id"],
             text=data["text"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RelatedFormItem(FormItem):
+    """The objects of another layer whose field holds this record's persistent id (docs/adr/0404 §4):
+    a list in the form, each opened by its own form.
+    Attributes:
+        layer: The other layer's id.
+        field: Its field's key that holds this record's id.
+    """
+    TAG_VALUE: ClassVar[str] = "related"
+    id: str
+    layer: str
+    field: str
+    label: str | None | Unset = UNSET
+    visible_when: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "related"}
+        out["id"] = self.id
+        out["layer"] = self.layer
+        out["field"] = self.field
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.visible_when is not UNSET:
+            out["visibleWhen"] = self.visible_when
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RelatedFormItem:
+        return cls(
+            id=data["id"],
+            layer=data["layer"],
+            field=data["field"],
+            label=data.get("label", UNSET),
+            visible_when=data.get("visibleWhen", UNSET),
         )
 
 
@@ -27770,7 +27887,7 @@ _EXPLODE_DENSITY: dict[str, type[ExplodeDensity]] = {"count": CountExplodeDensit
 _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange, "update": UpdateFeatureChange, "delete": DeleteFeatureChange}
 
 
-_FORM_ITEM: dict[str, type[FormItem]] = {"tab": TabFormItem, "group": GroupFormItem, "field": FieldFormItem, "note": NoteFormItem}
+_FORM_ITEM: dict[str, type[FormItem]] = {"tab": TabFormItem, "group": GroupFormItem, "field": FieldFormItem, "note": NoteFormItem, "related": RelatedFormItem}
 
 
 _FORMS_OP: dict[str, type[FormsOp]] = {"create": CreateFormsOp, "update": UpdateFormsOp, "rename": RenameFormsOp, "remove": RemoveFormsOp, "publish": PublishFormsOp, "enforce": EnforceFormsOp}
@@ -28157,6 +28274,7 @@ __all__ = [
     "FormIssue",
     "FormItem",
     "FormItemState",
+    "FormLookup",
     "FormRelease",
     "FormSeverity",
     "FormSeverityName",
@@ -28346,6 +28464,7 @@ __all__ = [
     "LookPart",
     "LookPartName",
     "LookupBlockParameter",
+    "LookupMatch",
     "LookupRow",
     "MatchProperty",
     "MatchPropertyName",
@@ -28528,6 +28647,7 @@ __all__ = [
     "RegistryDatumName",
     "RegularFrame",
     "RegularPolygonCreate",
+    "RelatedFormItem",
     "RemoveArrayEdit",
     "RemoveControlCurveEdit",
     "RemoveEntityEdit",

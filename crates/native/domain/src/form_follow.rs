@@ -9,9 +9,9 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
-use kentos_contracts::{ProjectForm, ProjectSettings, VariableValue};
+use kentos_contracts::{FormBody, FormItem, ProjectForm, ProjectSettings, VariableValue};
 use kentos_expression::{Unit, Value, Variable};
-use kentos_forms::Prepared;
+use kentos_forms::{OtherLayer, Prepared, World};
 use uuid::Uuid;
 
 use crate::Document;
@@ -19,6 +19,38 @@ use crate::history::Op;
 use crate::store::Stored;
 
 impl Document {
+    /// The other layers `body` reads (docs/adr/0404): its fields' lists and its related items, each
+    /// with its fields and its objects' persistent ids and attributes.
+    pub fn form_world(&self, body: &FormBody) -> World {
+        let mut world = World::new();
+        for (_, item) in body.walk() {
+            let layer = match item {
+                FormItem::Field(f) => f.lookup.as_ref().map(|l| l.layer.as_str()),
+                FormItem::Related { layer, .. } => Some(layer.as_str()),
+                _ => None,
+            };
+            let Some(layer) = layer else { continue };
+            if world.contains_key(layer) {
+                continue;
+            }
+            let Some(node) = self.layers.get(layer) else {
+                continue;
+            };
+            world.insert(
+                layer.to_owned(),
+                OtherLayer {
+                    name: node.name.clone(),
+                    fields: node.fields.clone(),
+                    rows: self
+                        .by_layer_with_uids(layer)
+                        .map(|(uid, e)| (uid.to_string(), e.base().attrs.clone()))
+                        .collect(),
+                },
+            );
+        }
+        world
+    }
+
     /// The ops that complete the records `ops` (a step about to be recorded, applied) added or changed
     /// on a layer whose form enforces its rules, applied: the step takes them in.
     pub(crate) fn follow_forms(&mut self, ops: &[Op]) -> Vec<Op> {
@@ -68,7 +100,7 @@ impl Document {
                     .layers
                     .get(&f.layer)
                     .map_or(&[][..], |n| n.fields.as_slice());
-                Prepared::new_in(body, fields, &variables, unit)
+                Prepared::new_with(body, fields, &variables, unit, &self.form_world(body))
                     .ok()
                     .map(|p| (f.layer.clone(), p))
             })
@@ -94,7 +126,8 @@ impl Document {
             let id = f64::from(current.slot().0);
             let mut entity = (*current.entity).clone();
             for (_, p) in prepared.iter().filter(|(l, _)| *l == layer) {
-                let object = kentos_forms::object_of(&entity, &name, id);
+                let mut object = kentos_forms::object_of(&entity, &name, id);
+                object.uid = Some(current.uid.to_string());
                 let (attrs, _) = p.complete(&entity.base().attrs, &object, added);
                 entity.base_mut().attrs = attrs;
             }

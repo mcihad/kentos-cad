@@ -131,11 +131,12 @@ pub(crate) fn prepared(
     variables: &[Variable],
     path: &str,
 ) -> Result<Prepared, Stop> {
-    Prepared::new_in(
+    Prepared::new_with(
         body,
         fields(doc, &form.layer),
         variables,
         crate::expression_unit::reading_unit(doc.settings()),
+        &doc.form_world(body),
     )
     .map_err(|issues| {
         let first = first_error(&issues);
@@ -148,6 +149,16 @@ pub(crate) fn prepared(
             path,
         )
     })
+}
+
+/// The preflight of `body` over the layer's fields, the other layers it reads known (docs/adr/0404).
+pub(crate) fn preflight_of(
+    doc: &Document,
+    body: &FormBody,
+    layer: &str,
+    variables: &[Variable],
+) -> Vec<FormIssue> {
+    kentos_forms::preflight_in(body, fields(doc, layer), variables, &doc.form_world(body))
 }
 
 /// The first error's sentence.
@@ -212,7 +223,9 @@ pub(crate) fn object(doc: &Document, slot: Slot, e: &Entity) -> Object {
         .layers()
         .get(&e.base().layer_id)
         .map_or("", |n| n.name.as_str());
-    kentos_forms::object_of(e, layer, f64::from(slot.0))
+    let mut object = kentos_forms::object_of(e, layer, f64::from(slot.0));
+    object.uid = doc.uid(slot).map(|u| u.to_string());
+    object
 }
 
 /// The attributes of the other objects of the layer: what a unique field is asked against.
@@ -399,11 +412,12 @@ pub(crate) fn enforced(
                 path,
             )
         };
-        let prepared = Prepared::new_in(
+        let prepared = Prepared::new_with(
             &release.body,
             fields(doc, layer),
             &variables(doc),
             crate::expression_unit::reading_unit(doc.settings()),
+            &doc.form_world(&release.body),
         )
         .map_err(|issues| refuse(first_error(&issues)))?;
         let mut probe = e.clone();

@@ -17,14 +17,16 @@
 //! a rule decides only what the form shows and asks.
 
 mod generate;
+mod lookup;
 mod object;
 mod preflight;
 mod record;
 mod session;
 
 pub use generate::{generate, item_id_of, widget_of};
+pub use lookup::{OtherLayer, World};
 pub use object::{kind_label, object_of};
-pub use preflight::{preflight, widget_fits};
+pub use preflight::{preflight, preflight_in, widget_fits};
 pub use record::{Attrs, Object, schema_in, schema_of};
 pub use session::{CHOICE_CODE, CHOICE_LABEL, HOST_ONLY, MOMENT, Prepared};
 
@@ -69,6 +71,10 @@ pub mod codes {
     /// A default or a calculation reads the moment or the user: only a command that gives them works
     /// it out (a warning).
     pub const MOMENT_ONLY: &str = "form_moment_only";
+    /// A list from another layer, or a related item, names a layer the project has not (docs/adr/0404).
+    pub const LOOKUP_LAYER: &str = "form_lookup_layer";
+    /// A list from another layer, or a related item, names a field its layer has not.
+    pub const LOOKUP_FIELD: &str = "form_lookup_field";
     // A record.
     /// A shown, required field is empty.
     pub const REQUIRED: &str = "form_required";
@@ -86,6 +92,8 @@ pub mod codes {
     pub const CALC_INVALID: &str = "form_calc_invalid";
     /// A value the field's choice filter does not offer for the record.
     pub const CHOICE_FILTERED: &str = "form_choice_filtered";
+    /// A value a field's list from another layer does not offer the record (docs/adr/0404 §2).
+    pub const LOOKUP_MISSING: &str = "form_lookup_missing";
     /// A soft check that is not true (a warning).
     pub const CHECK_WARNING: &str = "form_check_warning";
     /// A unique field's value another object of the layer has.

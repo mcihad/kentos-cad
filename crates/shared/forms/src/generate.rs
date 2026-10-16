@@ -61,7 +61,7 @@ pub fn widget_of(item: &FormField, field: &LayerField) -> FormWidget {
     if let Some(w) = item.widget {
         return w;
     }
-    if field.values.as_ref().is_some_and(|v| !v.is_empty()) {
+    if item.lookup.is_some() || field.values.as_ref().is_some_and(|v| !v.is_empty()) {
         return FormWidget::List;
     }
     match field.kind {

@@ -38,7 +38,19 @@
                   "label": "Kat sayısı",
                   "help": "Zemin ve çatı katı dahil.",
                   "unique": true,
-                  "reuseLast": true
+                  "reuseLast": true,
+                  "lookup": {
+                    "layer": "bina",
+                    "key": "$uid",
+                    "label": "Durum",
+                    "matches": [
+                      {
+                        "field": "Durum",
+                        "record": "Durum"
+                      }
+                    ],
+                    "filter": "Durum <> ''"
+                  }
                 },
                 {
                   "type": "field",
@@ -92,6 +104,13 @@
                   "type": "note",
                   "id": "bilgi",
                   "text": "Denetimi yapan kişi kaydeder; kat {Kat}."
+                },
+                {
+                  "type": "related",
+                  "id": "ilgili",
+                  "label": "Bağlı binalar",
+                  "layer": "bina",
+                  "field": "Not"
                 }
               ]
             }

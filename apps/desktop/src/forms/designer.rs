@@ -53,6 +53,7 @@ pub(super) const ADD_NOTE: &str = "Not";
 pub(super) const UP: &str = "Yukarı";
 pub(super) const DOWN: &str = "Aşağı";
 pub(super) const REMOVE_ITEM: &str = "Öğeyi sil";
+pub(super) const ADD_RELATED: &str = "İlişkili";
 pub(super) const UNDO: &str = "Geri al";
 pub(super) const PREVIEW: &str = "Önizleme";
 pub(super) const PROPERTIES: &str = "Özellikler";
@@ -73,6 +74,8 @@ pub enum Rule {
     Calculate(String),
     /// What a listed field offers (`@secenek` is each listed value).
     ChoiceFilter(String),
+    /// The filter of a field's list from another layer (docs/adr/0404 §1).
+    LookupFilter(String),
 }
 
 impl Rule {
@@ -84,7 +87,8 @@ impl Rule {
             | Rule::Check(i, _)
             | Rule::Default(i)
             | Rule::Calculate(i)
-            | Rule::ChoiceFilter(i) => i,
+            | Rule::ChoiceFilter(i)
+            | Rule::LookupFilter(i) => i,
         }
     }
 
@@ -98,6 +102,7 @@ impl Rule {
             Rule::Default(_) => "defaultExpr".into(),
             Rule::Calculate(_) => "calculate".into(),
             Rule::ChoiceFilter(_) => "choiceFilter".into(),
+            Rule::LookupFilter(_) => "lookup.filter".into(),
         }
     }
 }
@@ -158,6 +163,21 @@ pub enum Event {
     AddGroup,
     AddNote,
     AddField(String),
+    /// A related item (docs/adr/0404 §4) where the chosen item is.
+    AddRelated,
+    /// A field's list from another layer: its layer, none for the field's own list.
+    LookupLayer(Option<String>),
+    /// The list's key (`$uid`: the object's persistent id) and its label's field.
+    LookupKey(String),
+    LookupLabel(Option<String>),
+    /// The chain: a match added, its two fields, one removed.
+    AddMatch,
+    MatchField(usize, String),
+    MatchRecord(usize, String),
+    RemoveMatch(usize),
+    /// A related item's layer and field.
+    RelatedLayer(String),
+    RelatedField(String),
     Move(i32),
     /// An item dragged onto another in the tree, by their places in the tree's order.
     Drop(usize, usize, kentos_ui::widget::tree_view::Place),
@@ -406,11 +426,18 @@ fn remove(body: &mut FormBody, id: &str) {
 }
 
 /// The issues of the body over the layer's fields.
-pub fn issues_of(body: &FormBody, fields: &[LayerField]) -> Vec<FormIssue> {
-    kentos_forms::preflight(body, fields, &[])
-}
-
 impl App {
+    /// The issues of the copy over the layer's fields, the project's `@` values and the other layers
+    /// it reads known (docs/adr/0404).
+    pub(super) fn issues_of(&self, body: &FormBody, fields: &[LayerField]) -> Vec<FormIssue> {
+        let world = self
+            .document
+            .as_ref()
+            .map(|d| d.model.form_world(body))
+            .unwrap_or_default();
+        kentos_forms::preflight_in(body, fields, &self.expression_variables(), &world)
+    }
+
     /// Formlar (`data.forms`): the window, on `form` or the first.
     pub(crate) fn open_forms(&mut self, form: Option<String>) {
         if self.document.is_none() {
@@ -741,6 +768,126 @@ impl App {
                 edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
                 w.item = Some(id);
             }
+            Event::AddRelated => {
+                let taken = w.body.as_ref().map(|b| ids(&b.items)).unwrap_or_default();
+                let id = kentos_forms::item_id_of("iliskili", &taken);
+                let item = FormItem::Related {
+                    id: id.clone(),
+                    label: Some("İlişkili kayıtlar".into()),
+                    layer: String::new(),
+                    field: String::new(),
+                    visible_when: None,
+                };
+                edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
+                w.item = Some(id);
+            }
+            Event::LookupLayer(layer) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Field(f)) = find_mut(&mut b.items, &id) {
+                            f.lookup = layer.clone().map(|layer| kentos_contracts::FormLookup {
+                                layer,
+                                key: kentos_contracts::LOOKUP_UID.into(),
+                                label: None,
+                                matches: Vec::new(),
+                                filter: None,
+                            });
+                        }
+                    });
+                }
+            }
+            Event::LookupKey(key) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Field(f)) = find_mut(&mut b.items, &id)
+                            && let Some(l) = f.lookup.as_mut()
+                        {
+                            l.key = key.clone();
+                        }
+                    });
+                }
+            }
+            Event::LookupLabel(label) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Field(f)) = find_mut(&mut b.items, &id)
+                            && let Some(l) = f.lookup.as_mut()
+                        {
+                            l.label = label.clone();
+                        }
+                    });
+                }
+            }
+            Event::AddMatch => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Field(f)) = find_mut(&mut b.items, &id)
+                            && let Some(l) = f.lookup.as_mut()
+                        {
+                            l.matches.push(kentos_contracts::LookupMatch {
+                                field: String::new(),
+                                record: String::new(),
+                            });
+                        }
+                    });
+                }
+            }
+            Event::MatchField(i, key) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Field(f)) = find_mut(&mut b.items, &id)
+                            && let Some(m) = f.lookup.as_mut().and_then(|l| l.matches.get_mut(i))
+                        {
+                            m.field = key.clone();
+                        }
+                    });
+                }
+            }
+            Event::MatchRecord(i, key) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Field(f)) = find_mut(&mut b.items, &id)
+                            && let Some(m) = f.lookup.as_mut().and_then(|l| l.matches.get_mut(i))
+                        {
+                            m.record = key.clone();
+                        }
+                    });
+                }
+            }
+            Event::RemoveMatch(i) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Field(f)) = find_mut(&mut b.items, &id)
+                            && let Some(l) = f.lookup.as_mut()
+                            && i < l.matches.len()
+                        {
+                            l.matches.remove(i);
+                        }
+                    });
+                }
+            }
+            Event::RelatedLayer(layer) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Related {
+                            layer: l, field, ..
+                        }) = find_mut(&mut b.items, &id)
+                        {
+                            *l = layer.clone();
+                            field.clear();
+                        }
+                    });
+                }
+            }
+            Event::RelatedField(key) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Related { field, .. }) = find_mut(&mut b.items, &id) {
+                            *field = key.clone();
+                        }
+                    });
+                }
+            }
             Event::Move(by) => {
                 if let Some(id) = chosen_item.clone() {
                     edited(&mut w, &|b| shift(b, &id, by));
@@ -997,6 +1144,7 @@ impl App {
             Control::Press(ADD_TAB) => Some(msg(Event::AddTab)),
             Control::Press(ADD_GROUP) => Some(msg(Event::AddGroup)),
             Control::Press(ADD_NOTE) => Some(msg(Event::AddNote)),
+            Control::Press(ADD_RELATED) => Some(msg(Event::AddRelated)),
             Control::Press(ENFORCE) => self.chosen_form().map(|f| msg(Event::Enforce(!f.enforce))),
             Control::Press(UNDO) => Some(msg(Event::Undo)),
             Control::Press(REDO) => Some(msg(Event::Redo)),
@@ -1038,6 +1186,7 @@ fn item_named(items: &[FormItem], words: &str) -> Option<String> {
             FormItem::Group { label, .. } => label.as_deref(),
             FormItem::Field(f) => f.label.as_deref().or(Some(f.field.as_str())),
             FormItem::Note { .. } => None,
+            FormItem::Related { label, .. } => label.as_deref(),
         };
         if i.id() == words || label == Some(words) {
             Some(i.id().to_owned())
@@ -1052,6 +1201,7 @@ fn set_text(body: &mut FormBody, id: &str, which: &Text, text: &str) {
     match find_mut(&mut body.items, id) {
         Some(FormItem::Tab { label, .. }) if *which == Text::Label => *label = text.to_owned(),
         Some(FormItem::Group { label, .. }) if *which == Text::Label => *label = some(text),
+        Some(FormItem::Related { label, .. }) if *which == Text::Label => *label = some(text),
         Some(FormItem::Note { text: t, .. }) if *which == Text::Note => *t = text.to_owned(),
         Some(FormItem::Field(f)) => match which {
             Text::Label => f.label = some(text),
@@ -1072,6 +1222,8 @@ fn set_text(body: &mut FormBody, id: &str, which: &Text, text: &str) {
 fn rule_text(body: &FormBody, rule: &Rule) -> Option<String> {
     match (find(&body.items, rule.item())?, rule) {
         (FormItem::Group { visible_when, .. }, Rule::Visible(_)) => visible_when.clone(),
+        (FormItem::Related { visible_when, .. }, Rule::Visible(_)) => visible_when.clone(),
+        (FormItem::Field(f), Rule::LookupFilter(_)) => f.lookup.as_ref()?.filter.clone(),
         (FormItem::Field(f), Rule::Visible(_)) => f.visible_when.clone(),
         (FormItem::Field(f), Rule::Required(_)) => f.required_when.clone(),
         (FormItem::Field(f), Rule::ReadOnly(_)) => f.read_only_when.clone(),
@@ -1087,6 +1239,12 @@ fn set_rule(body: &mut FormBody, rule: &Rule, text: &str) {
     let value = (!text.trim().is_empty()).then(|| text.to_owned());
     match (find_mut(&mut body.items, rule.item()), rule) {
         (Some(FormItem::Group { visible_when, .. }), Rule::Visible(_)) => *visible_when = value,
+        (Some(FormItem::Related { visible_when, .. }), Rule::Visible(_)) => *visible_when = value,
+        (Some(FormItem::Field(f)), Rule::LookupFilter(_)) => {
+            if let Some(l) = f.lookup.as_mut() {
+                l.filter = value;
+            }
+        }
         (Some(FormItem::Field(f)), Rule::Visible(_)) => f.visible_when = value,
         (Some(FormItem::Field(f)), Rule::Required(_)) => f.required_when = value,
         (Some(FormItem::Field(f)), Rule::ReadOnly(_)) => f.read_only_when = value,

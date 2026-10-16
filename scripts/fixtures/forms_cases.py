@@ -50,6 +50,7 @@ el = load("expression_language", ROOT / "scripts/fixtures/expression_language.py
 kc = load("kcad_reader", ROOT / "tools/kcad/kcad.py")
 # The templates' independent splitting (docs/adr/0225 §6): a note's text with `{…}`.
 tc = load("template_cases", ROOT / "scripts/fixtures/template_cases.py")
+cc = load("chart_cases", ROOT / "scripts/fixtures/chart_cases.py")  # the natural order, ADR 0227
 
 # uzunluk(metin): the text's UTF-16 units, as JavaScript counts them.
 el.FUNCTIONS["UZUNLUK"] = (1, 1, lambda args: None if args[0] is None else float(el.units(el.text(args[0]))))
@@ -343,7 +344,12 @@ def fill(text, values):
     return "".join(out)
 
 
-def preflight(body, fields, variables=()):
+UID_KEY = "$uid"
+
+
+def preflight(body, fields, variables=(), world=None):
+    """`world`: the other layers by id, each {"name", "fields", "rows": [[uid, attrs], …]} (docs/adr/0404)."""
+    world = world or {}
     problem = kc.body_problem(body)
     if problem:
         return [issue("form_body_invalid", True)]
@@ -379,7 +385,8 @@ def preflight(body, fields, variables=()):
         w = widget_of(f, layer)
         if w not in FITS[layer["kind"]]:
             issues.append(issue("form_widget_unfit", True, f["id"], key))
-        elif w in ("list", "radio", "segmented") and not layer.get("values") and layer["kind"] != "boolean":
+        elif w in ("list", "radio", "segmented") and not layer.get("values") and layer["kind"] != "boolean" \
+                and "lookup" not in f:
             issues.append(issue("form_widget_needs_values", True, f["id"], key))
         if "default" in f and check_value(layer, f["default"])[1]:
             issues.append(issue("form_default_invalid", True, f["id"], key, "default"))
@@ -389,6 +396,8 @@ def preflight(body, fields, variables=()):
             issues.append(issue("form_rule_conflict", True, f["id"], key, "calculate"))
         if "choiceFilter" in f and not layer.get("values"):
             issues.append(issue("form_choice_unlisted", True, f["id"], key, "choiceFilter"))
+        if "lookup" in f:
+            lookup(f, layer)
         if f.get("readOnly") and f.get("required") and not any(k in f for k in ("default", "defaultExpr", "calculate")):
             issues.append(issue("form_required_read_only", True, f["id"], key))
         for at in ("visibleWhen", "requiredWhen", "readOnlyWhen"):
@@ -406,6 +415,36 @@ def preflight(body, fields, variables=()):
                 calcs.append((f["id"], key, layer["name"], fields_read(tree)))
         if "choiceFilter" in f:
             rule(f["id"], key, None, "choiceFilter", f["choiceFilter"], extra=(el.key(CHOICE_CODE), el.key(CHOICE_LABEL)))
+
+    def lookup(f, layer):
+        lk, key = f["lookup"], f["field"]
+        if layer.get("values") or "choiceFilter" in f:
+            issues.append(issue("form_rule_conflict", True, f["id"], key, "lookup"))
+        other = world.get(lk["layer"])
+        if other is None:
+            issues.append(issue("form_lookup_layer", True, f["id"], key, "lookup"))
+            return
+        has = lambda k: any(key_of(x) == k for x in other["fields"])  # noqa: E731
+        for k in [lk["key"], lk.get("label")]:
+            if k is not None and k != UID_KEY and not has(k):
+                issues.append(issue("form_lookup_field", True, f["id"], key, "lookup"))
+        for m in lk.get("matches", []):
+            if not has(m["field"]):
+                issues.append(issue("form_lookup_field", True, f["id"], key, "lookup"))
+        for m in lk.get("matches", []):
+            if not any(key_of(x) == m["record"] for x in fields):
+                issues.append(issue("form_lookup_field", True, f["id"], key, "lookup"))
+        if "filter" in lk and parse(lk["filter"]) is None:
+            issues.append(issue("form_rule_invalid", True, f["id"], key, "lookup.filter"))
+
+    def related(x):
+        if "visibleWhen" in x:
+            rule(x["id"], None, None, "visibleWhen", x["visibleWhen"])
+        other = world.get(x["layer"])
+        if other is None:
+            issues.append(issue("form_lookup_layer", True, x["id"], None, "related"))
+        elif not any(key_of(y) == x["field"] for y in other["fields"]):
+            issues.append(issue("form_lookup_field", True, x["id"], None, "related"))
 
     def note(x):
         sources = template_exprs(x["text"])
@@ -425,6 +464,8 @@ def preflight(body, fields, variables=()):
                 items(x["items"], hideable or "visibleWhen" in x)
             elif x["type"] == "field":
                 field(x, hideable)
+            elif x["type"] == "related":
+                related(x)
             else:
                 note(x)
 
@@ -466,8 +507,9 @@ class Form:
 
     ROUNDS = 3
 
-    def __init__(self, body, fields, variables=()):
-        assert not errors(preflight(body, fields, variables)), "a form with errors is not prepared"
+    def __init__(self, body, fields, variables=(), world=None):
+        world = world or {}
+        assert not errors(preflight(body, fields, variables, world)), "a form with errors is not prepared"
         self.fields = fields
         self.variables = {v["name"]: v["value"] for v in variables}
         self.clear_hidden = bool(body.get("clearHidden"))
@@ -480,6 +522,17 @@ class Form:
                 walk(x.get("items", []), at)
 
         walk(body["items"], None)
+        # The lists from other layers, made once (docs/adr/0404 §1), and the related items' objects.
+        still = {n: v for n, v in self.variables.items() if n not in MOMENT}
+        self.lists, self.related = {}, {}
+        for x, _ in self.nodes:
+            if x["type"] == "field" and "lookup" in x:
+                self.lists[x["id"]] = self.list_of(x["lookup"], world[x["lookup"]["layer"]], still)
+            elif x["type"] == "related":
+                other = world[x["layer"]]
+                name = next(y["name"] for y in other["fields"] if key_of(y) == x["field"])
+                self.related[x["id"]] = [(uid, a[name].strip(JS_SPACE)) for uid, a in other["rows"]
+                                         if a.get(name, "").strip(JS_SPACE)]
         # The calculated items in their order: each after the calculated fields it reads, else the form's.
         calcs = [k for k, (x, _) in enumerate(self.nodes) if x["type"] == "field" and "calculate" in x]
         reads = {k: fields_read(parse(self.nodes[k][0]["calculate"])) for k in calcs}
@@ -489,6 +542,47 @@ class Form:
                      and all(d in done for d in calcs if self.layer(self.nodes[d][0])["name"] in reads[k]))
             done.add(k)
             self.calc_order.append(k)
+
+    def list_of(self, lk, other, still):
+        def name(k):
+            return next((y["name"] for y in other["fields"] if key_of(y) == k), None)
+
+        def val(uid, attrs, k):
+            v = uid if k == UID_KEY else attrs.get(name(k) or "", "")
+            v = v.strip(JS_SPACE)
+            return v or None
+
+        rows, seen = [], set()
+        for uid, attrs in other["rows"]:
+            code = val(uid, attrs, lk["key"])
+            if code is None:
+                continue
+            if "filter" in lk and not holds(lk["filter"], other["fields"], attrs, {"variables": still, "object": {}}):
+                continue
+            if code in seen:
+                continue
+            seen.add(code)
+            label = (val(uid, attrs, lk["label"]) if "label" in lk else None) or code
+            keys = [val(uid, attrs, m["field"]) for m in lk.get("matches", [])]
+            rows.append((code, label, keys))
+        import functools
+        rows.sort(key=functools.cmp_to_key(lambda a, b: cc.natural_cmp(a[1], b[1]) or ((a[0] > b[0]) - (a[0] < b[0]))))
+        record = [next(f["name"] for f in self.fields if key_of(f) == m["record"]) for m in lk.get("matches", [])]
+        return rows, record
+
+    def offered(self, x, attrs):
+        rows, record = self.lists[x["id"]]
+        wanted = [attrs.get(n, "").strip(JS_SPACE) or None for n in record]
+        if any(w is None for w in wanted):
+            return []
+        return [r for r in rows if r[2] == wanted]
+
+    def code_of(self, x, text):
+        rows, _ = self.lists[x["id"]]
+        t = text.strip(JS_SPACE)
+        if any(r[0] == t for r in rows):
+            return t
+        return next((r[0] for r in rows if r[1] == t), t)
 
     def ctx(self, obj, extra=None):
         v = dict(self.variables)
@@ -512,7 +606,7 @@ class Form:
     def states(self, attrs, obj=None):
         shown, out = [], []
         for x, parent in self.nodes:
-            rule = x.get("visibleWhen") if x["type"] in ("group", "field") else None
+            rule = x.get("visibleWhen") if x["type"] in ("group", "field", "related") else None
             here = (parent is None or shown[parent]) and (rule is None or holds(rule, self.fields, attrs, self.ctx(obj)))
             shown.append(here)
             state = {"id": x["id"], "shown": here}
@@ -528,6 +622,8 @@ class Form:
         return out
 
     def choices(self, x, attrs, obj=None):
+        if "lookup" in x:
+            return [r[0] for r in self.offered(x, attrs)]
         if "choiceFilter" not in x:
             return None
         f = self.layer(x)
@@ -542,6 +638,11 @@ class Form:
                 c = self.choices(x, attrs, obj)
                 if c is not None:
                     state["choices"] = c
+                if "lookup" in x:
+                    state["options"] = [{"code": r[0], "label": r[1]} for r in self.offered(x, attrs)]
+            elif x["type"] == "related":
+                uid = (obj or {}).get("uid")
+                state["related"] = [own for own, held in self.related[x["id"]] if uid is not None and held == uid]
             elif x["type"] == "note" and not template_plain(x["text"]):
                 values = [text_or_none(value_of(src, self.fields, attrs, self.ctx(obj)))
                           for src in template_exprs(x["text"])]
@@ -617,7 +718,10 @@ class Form:
             if why:
                 issues.append(issue("form_value_invalid", True, x["id"], key_of(f)))
                 continue
-            offered = self.choices(x, attrs, obj)
+            if "lookup" in x and canonical not in [r[0] for r in self.offered(x, attrs)]:
+                issues.append(issue("form_lookup_missing", True, x["id"], key_of(f), "lookup"))
+                continue
+            offered = None if "lookup" in x else self.choices(x, attrs, obj)
             if offered is not None and canonical in [c["code"] for c in f.get("values", [])] and canonical not in offered:
                 issues.append(issue("form_choice_filtered", True, x["id"], key_of(f), "choiceFilter"))
                 continue
@@ -670,6 +774,9 @@ class Form:
             if key not in on_form:
                 issues.append(issue("form_not_on_form", True, None, key))
                 continue
+            x = next(x for x, _ in self.bound() if x["field"] == key)
+            if "lookup" in x:
+                text = self.code_of(x, text)
             v, why = check_value(f, text)
             if why:
                 issues.append(issue("form_value_invalid", True, self.item_of(key), key))
@@ -915,6 +1022,10 @@ def core():
     records.extend(calc_records)
     assess.extend(calc_assess)
     enforce.extend(calc_enforce)
+    look_pre, look_records, look_assess = lookup_cases()
+    pre.extend(look_pre)
+    records.extend(look_records)
+    assess.extend(look_assess)
 
     gen = []
     for name, fields in (
@@ -998,6 +1109,108 @@ def calc_with(change):
     b = copy.deepcopy(CALC_BODY)
     change(b)
     return b
+
+
+# ── Lists from other layers and related records (docs/adr/0404) ─────────
+
+def rows(*items):
+    return [[f"0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d{n:04x}", a] for n, a in items]
+
+
+LOOK_WORLD = {
+    "il": {"name": "İller", "fields": [{"name": "kod", "kind": "text"}, {"name": "ad", "kind": "text"}],
+           "rows": rows((1, {"kod": "06", "ad": "Ankara"}), (2, {"kod": "34", "ad": "İstanbul"}),
+                        (3, {"kod": "35", "ad": "İzmir"}), (4, {"ad": "Kodsuz"}))},
+    "ilce": {"name": "İlçeler",
+             "fields": [{"name": "kod", "kind": "text"}, {"name": "ad", "kind": "text"}, {"name": "il", "kind": "text"}],
+             "rows": rows((11, {"kod": "0601", "ad": "Çankaya", "il": "06"}), (12, {"kod": "0602", "ad": "Altındağ", "il": "06"}),
+                          (13, {"kod": "3401", "ad": "Kadıköy", "il": "34"}), (14, {"kod": "0601", "ad": "Yineleme", "il": "06"}))},
+    "mahalle": {"name": "Mahalleler",
+                "fields": [{"name": "kod", "kind": "text"}, {"name": "ad", "kind": "text"}, {"name": "ilce", "kind": "text"},
+                           {"name": "durum", "kind": "text"}],
+                "rows": rows((21, {"kod": "M10", "ad": "Kızılay", "ilce": "0601", "durum": "etkin"}),
+                             (22, {"kod": "M2", "ad": "Bahçelievler", "ilce": "0601", "durum": "etkin"}),
+                             (23, {"kod": "M3", "ad": "Eski mahalle", "ilce": "0601", "durum": "kapalı"}),
+                             (24, {"kod": "M4", "ad": "Ulus", "ilce": "0602", "durum": "etkin"}))},
+    "parsel": {"name": "Parseller", "fields": [{"name": "ada", "kind": "text"}],
+               "rows": rows((31, {"ada": "101/5"}), (32, {"ada": "101/12"}), (33, {}))},
+    "sayac": {"name": "Sayaçlar", "fields": [{"name": "no", "kind": "text"}, {"name": "bina", "kind": "text"}],
+              "rows": rows((41, {"no": "S-1", "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"}),
+                           (42, {"no": "S-2", "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"}),
+                           (43, {"no": "S-3", "bina": "başka"}))},
+}
+LOOK_FIELDS = [{"name": "İl", "kind": "text"}, {"name": "İlçe", "kind": "text"}, {"name": "Mahalle", "kind": "text"},
+               {"name": "Parsel", "kind": "text"}, {"name": "Tür", "kind": "text",
+                                                    "values": [{"code": "k", "label": "Konut"}]}]
+LOOK_BODY = {"revision": 1, "items": [
+    {"type": "field", "id": "il", "field": "İl", "lookup": {"layer": "il", "key": "kod", "label": "ad"}},
+    {"type": "field", "id": "ilce", "field": "İlçe",
+     "lookup": {"layer": "ilce", "key": "kod", "label": "ad", "matches": [{"field": "il", "record": "İl"}]}},
+    {"type": "field", "id": "mahalle", "field": "Mahalle", "widget": "radio",
+     "lookup": {"layer": "mahalle", "key": "kod", "label": "ad", "matches": [{"field": "ilce", "record": "İlçe"}],
+                "filter": "durum = 'etkin'"}},
+    {"type": "field", "id": "parsel", "field": "Parsel", "lookup": {"layer": "parsel", "key": "$uid", "label": "ada"}},
+    {"type": "related", "id": "sayaclar", "label": "Sayaçlar", "layer": "sayac", "field": "bina", "visibleWhen": "İl = '06'"},
+]}
+assert kc.body_problem(LOOK_BODY) is None
+# The building whose meters refer to it.
+LOOK_OBJECT = {"uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"}
+
+
+def look_with(change):
+    b = copy.deepcopy(LOOK_BODY)
+    change(b)
+    return b
+
+
+def lookup_cases():
+    pre = []
+
+    def case(name, body=LOOK_BODY, fields=LOOK_FIELDS, world=LOOK_WORLD):
+        pre.append({"name": name, "fields": fields, "body": body, "variables": [], "world": world,
+                    "issues": preflight(body, fields, (), world)})
+
+    case("başka katmandan liste, zincir, süzgeç, nesneye bağ ve ilişkili kayıtlar: sorun yok")
+    case("katmanlar bilinmezse listeler ve ilişkili öğe hatadır", world={})
+    case("listenin olmayan alanları; kaydın olmayan alanı",
+         look_with(lambda b: (item(b, "il")["lookup"].update(label="isim"),
+                              item(b, "ilce")["lookup"]["matches"].append({"field": "yok", "record": "Semt"}))))
+    case("kendi değer listesi olan alana başka katmandan liste olmaz",
+         look_with(lambda b: b["items"].append({"type": "field", "id": "tur", "field": "Tür",
+                                                "lookup": {"layer": "il", "key": "kod"}})))
+    case("okunamayan süzgeç", look_with(lambda b: item(b, "mahalle")["lookup"].update(filter="durum =")))
+    case("ilişkili kaydın alanı yok", look_with(lambda b: item(b, "sayaclar").update(field="yapi")))
+
+    records = []
+
+    def record(name, attrs, obj=LOOK_OBJECT):
+        form = Form(LOOK_BODY, LOOK_FIELDS, (), LOOK_WORLD)
+        records.append({"name": name, "fields": LOOK_FIELDS, "body": LOOK_BODY, "variables": [], "world": LOOK_WORLD,
+                        "object": obj, "attrs": attrs, "items": form.described(attrs, obj),
+                        "issues": form.validate(attrs, obj)})
+
+    record("boş kayıt: il listesi doğal sırada, zincir boş; ilişkili sayaçlar gizli", {})
+    record("Ankara: ilçeler, yinelenen kod bir kez; Çankaya'nın etkin mahalleleri doğal sırada; sayaçlar",
+           {"İl": "06", "İlçe": "0601", "Mahalle": "M2"})
+    record("zincirin dışında kalan ilçe ve kapalı mahalle hatadır",
+           {"İl": "34", "İlçe": "0601", "Mahalle": "M3"})
+    record("parsele nesnenin kimliğiyle bağ; olmayan kimlik hatadır",
+           {"İl": "06", "Parsel": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d00ff"})
+    record("bağsız nesnenin ilişkili kaydı yok", {"İl": "06"}, obj={})
+
+    assess = []
+
+    def write(name, before, values):
+        after, issues = Form(LOOK_BODY, LOOK_FIELDS, (), LOOK_WORLD).assess(before, values, LOOK_OBJECT, False)
+        assess.append({"name": name, "fields": LOOK_FIELDS, "body": LOOK_BODY, "variables": [], "world": LOOK_WORLD,
+                       "object": LOOK_OBJECT, "before": before, "values": values, "new": False, "after": after,
+                       "issues": issues})
+
+    write("etiketler kodlarıyla yazılır", {}, [["İl", "Ankara"], ["İlçe", "Çankaya"], ["Mahalle", "Kızılay"]])
+    write("parsel adasıyla seçilir, kimliği yazılır", {"İl": "06"}, [["Parsel", "101/12"]])
+    write("listede olmayan değer yazılmaz", {"İl": "06"}, [["İlçe", "Kadıköy"]])
+    write("üst alan değişince alt alan zincirin dışında kalır", {"İl": "06", "İlçe": "0601"}, [["İl", "34"]])
+    return pre, records, assess
 
 
 def calc_cases():
@@ -2062,8 +2275,149 @@ def command_file(command, title, note, cases):
     }
 
 
+# Lists from other layers through the commands (docs/adr/0404): the other layers' rows are the setup's objects, their
+# persistent ids `$uidOf:N` as the runner gives them.
+LOOK_LAYER_IDS = {"il": [3, 4, 5], "ilce": [6, 7, 8], "mahalle": [9, 10, 11, 12], "parsel": [13, 14], "sayac": [15, 16]}
+LOOK_ROW_ATTRS = {
+    3: {"kod": "06", "ad": "Ankara"}, 4: {"kod": "34", "ad": "İstanbul"}, 5: {"kod": "35", "ad": "İzmir"},
+    6: {"kod": "0601", "ad": "Çankaya", "il": "06"}, 7: {"kod": "0602", "ad": "Altındağ", "il": "06"},
+    8: {"kod": "3401", "ad": "Kadıköy", "il": "34"},
+    9: {"kod": "M10", "ad": "Kızılay", "ilce": "0601", "durum": "etkin"},
+    10: {"kod": "M2", "ad": "Bahçelievler", "ilce": "0601", "durum": "etkin"},
+    11: {"kod": "M3", "ad": "Eski mahalle", "ilce": "0601", "durum": "kapalı"},
+    12: {"kod": "M4", "ad": "Ulus", "ilce": "0602", "durum": "etkin"},
+    13: {"ada": "101/5"}, 14: {"ada": "101/12"}, 15: {"no": "S-1"}, 16: {"no": "S-2"},
+}
+LOOK_FORM = {"id": "adres", "name": "Bina adresi", "layer": "bina", "draft": copy.deepcopy(LOOK_BODY),
+             "releases": [release_of(LOOK_BODY, 1)]}
+LOOK_ENFORCED = {**copy.deepcopy(LOOK_FORM), "enforce": True}
+LOOK_IDS = [1, 2] + [i for ids in LOOK_LAYER_IDS.values() for i in ids]
+
+
+def look_setup(form=LOOK_FORM, first=None):
+    layers = [layer("bina", "Bina", LOOK_FIELDS)] + [
+        layer(i, LOOK_WORLD[i]["name"], LOOK_WORLD[i]["fields"]) for i in LOOK_LAYER_IDS]
+    entities = [{"kind": "polygon", "id": 1, "layerId": "bina", "attrs": first or {}, "pts": square(0, 0)},
+                {"kind": "polygon", "id": 2, "layerId": "bina", "attrs": {}, "pts": square(20, 0)}]
+    for lid, ids in LOOK_LAYER_IDS.items():
+        for k, i in enumerate(ids):
+            entities.append({"kind": "polygon", "id": i, "layerId": lid, "attrs": LOOK_ROW_ATTRS[i],
+                             "pts": square(40 + 12 * k, 20 + 12 * list(LOOK_LAYER_IDS).index(lid))})
+    settings = dict(SETTINGS)
+    settings["forms"] = [form]
+    return {"format": "kentos.document", "version": 1, "name": "Adresler", "settings": settings, "origin": P(E0, N0),
+            "layers": layers, "activeLayer": "bina", "entities": entities, "styles": {"items": [], "categories": []}}
+
+
+def look_world(meters=None):
+    """The world the commands see: the setup's rows by their `$uidOf:N`; `meters`: the meters' `bina` written."""
+    w = {}
+    for lid, ids in LOOK_LAYER_IDS.items():
+        rows = []
+        for i in ids:
+            a = dict(LOOK_ROW_ATTRS[i])
+            if lid == "sayac" and meters and i in meters:
+                a["bina"] = meters[i]
+            rows.append([f"$uidOf:{i}", a])
+        w[lid] = {"name": LOOK_WORLD[lid]["name"], "fields": LOOK_WORLD[lid]["fields"], "rows": rows}
+    return w
+
+
+def look_command_cases():
+    """cad.forms.validate, .submit, cad.entities.set and cad.forms.fill through a form with lists from other layers and a
+    related item (docs/adr/0404)."""
+    validate, submit, sets, fills = [], [], [], []
+    obj1 = {**SQUARE, "uid": "$uidOf:1"}
+
+    def answer(attrs, values=(), world=None, obj=obj1):
+        world = world or look_world()
+        f = Form(LOOK_BODY, LOOK_FIELDS, (), world)
+        after, found = f.assess(dict(attrs), utf8_sorted(dict(values)), obj, False)
+        issues = preflight(LOOK_BODY, LOOK_FIELDS, (), world) + found
+        return {"status": "completed", "output": {"issues": shown_issues(issues), "valid": not errors(issues),
+                                                  "items": f.described(after, obj), "version": 1, "attrs": after},
+                "warnings": []}
+
+    def ask(name, attrs, values, steps_before=(), meters=None):
+        inp = {"form": "adres", "uid": "$uidOf:1"}
+        if values:
+            inp["values"] = dict(values)
+        validate.append({"name": f"başka katmandan liste: {name}", "setup": look_setup(first=attrs), "steps": [
+            *steps_before, {"op": "plan", "input": inp, "result": answer(attrs, values, look_world(meters))}]})
+
+    ask("boş kayıt: iller doğal sırada, zincir boş", {}, ())
+    ask("etiketler yazılmış gibi: kodları, zincir ve süzgeç", {}, [("İl", "Ankara"), ("İlçe", "Çankaya")])
+    ask("zincirin dışında kalan ilçe", {"İl": "34"}, [("İlçe", "0601")])
+    meters_set = {"op": "execute", "command": "cad.entities.set", "input": {"uids": ["$uidOf:15", "$uidOf:16"], "attrs": {"bina": "$uidOf:1"},
+                                             "operation": "attributes"},
+                  "result": {"status": "completed", "output": {"changed": ["$uidOf:15", "$uidOf:16"], "ids": [15, 16],
+                                                                "revision": "$current"}, "warnings": []},
+                  "expect": {"ids": LOOK_IDS, "canUndo": True, "canRedo": False, "dirty": True, "revision": "changed"}}
+    ask("ilişkili sayaçlar binanın kimliğini tutar", {"İl": "06"}, (), [meters_set], {15: "$uidOf:1", 16: "$uidOf:1"})
+
+    def write(name, attrs, values, ok=True):
+        world = look_world()
+        f = Form(LOOK_BODY, LOOK_FIELDS, (), world)
+        after, issues = f.assess(dict(attrs), utf8_sorted(dict(values)), obj1, False)
+        inp = {"form": "adres", "uid": "$uidOf:1", "values": dict(values)}
+        if errors(issues):
+            first = errors(issues)[0]
+            path = f"values.{first['field']}" if first.get("field") in dict(values) else "values"
+            step = {"op": "execute", "input": inp, "result": failed("form_invalid", ANY, path),
+                    "expect": {"ids": LOOK_IDS, "fields": {"1": {"attrs": attrs}}, "canUndo": False, "canRedo": False,
+                               "revision": "same", "dirty": False}}
+        else:
+            changed = after != attrs
+            step = {"op": "execute", "input": inp,
+                    "result": {"status": "completed", "output": {"uid": "$uidOf:1", "attrs": after, "changed": changed,
+                                                                  "revision": "$current", "version": 1}, "warnings": []},
+                    "expect": {"ids": LOOK_IDS, "fields": {"1": {"attrs": after}}, "canUndo": changed, "canRedo": False,
+                               **({"dirty": True, "revision": "changed"} if changed else {"revision": "same"})}}
+        submit.append({"name": f"başka katmandan liste: {name}", "setup": look_setup(first=attrs), "steps": [step]})
+
+    write("etiketlerle il, ilçe ve mahalle kodlarıyla yazılır", {}, [("İl", "Ankara"), ("İlçe", "Çankaya"), ("Mahalle", "Bahçelievler")])
+    write("parsel adasıyla seçilir, nesnenin kimliği yazılır", {"İl": "06"}, [("Parsel", "101/12")])
+    write("kapalı mahalle yazılmaz", {"İl": "06", "İlçe": "0601"}, [("Mahalle", "M3")])
+    write("olmayan parsel kimliği yazılmaz", {"İl": "06"}, [("Parsel", UNKNOWN_UID)])
+
+    def guard(name, before, attrs):
+        world = look_world()
+        f = Form(LOOK_BODY, LOOK_FIELDS, (), world)
+        after = {**before, **attrs}
+        issues = f.enforce(before, after, obj1)
+        inp = {"uids": ["$uidOf:1"], "attrs": attrs, "operation": "attributes"}
+        if errors(issues):
+            step = {"op": "execute", "input": inp, "result": failed("form_rules", ANY, "attrs"),
+                    "expect": {"ids": LOOK_IDS, "fields": {"1": {"attrs": before}}, "canUndo": False, "canRedo": False,
+                               "revision": "same", "dirty": False}}
+        else:
+            step = {"op": "execute", "input": inp,
+                    "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "ids": [1], "revision": "$current"},
+                               "warnings": []},
+                    "expect": {"ids": LOOK_IDS, "fields": {"1": {"attrs": after}}, "canUndo": True, "canRedo": False,
+                               "dirty": True, "revision": "changed"}}
+        sets.append({"name": f"başka katmandan liste: {name}", "setup": look_setup(LOOK_ENFORCED, before), "steps": [step]})
+
+    guard("kuralları uygulanan formda zincire uyan yazılır", {"İl": "06"}, {"İlçe": "0602"})
+    guard("kuralları uygulanan formda listede olmayan değer başka yoldan da yazılamaz", {"İl": "06"}, {"İlçe": "3401"})
+
+    v = {"İl": "Ankara", "İlçe": "Altındağ"}
+    world = look_world()
+    f = Form(LOOK_BODY, LOOK_FIELDS, (), world)
+    a1, _ = f.assess({}, utf8_sorted(v), obj1, False)
+    a2, _ = f.assess({}, utf8_sorted(v), {**SQUARE, "uid": "$uidOf:2"}, False)
+    fills.append({"name": "başka katmandan liste: iki binaya aynı il ve ilçe etiketleriyle", "setup": look_setup(), "steps": [
+        {"op": "execute", "input": {"form": "adres", "uids": ["$uidOf:1", "$uidOf:2"], "values": v},
+         "result": {"status": "completed", "output": {"changed": ["$uidOf:1", "$uidOf:2"], "version": 1,
+                                                      "revision": "$current"}, "warnings": []},
+         "expect": {"ids": LOOK_IDS, "fields": {"1": {"attrs": a1}, "2": {"attrs": a2}}, "canUndo": True, "canRedo": False,
+                    "dirty": True, "revision": "changed"}}]})
+    return validate, submit, sets, fills
+
+
 def commands():
     d = ROOT / "fixtures/commands/v1"
+    look_v, look_s, look_set, look_fill = look_command_cases()
     return {
         d / "cad.forms.edit.json": command_file(
             "cad.forms.edit", "Formlar",
@@ -2073,19 +2427,19 @@ def commands():
         d / "cad.forms.validate.json": command_file(
             "cad.forms.validate", "Formu denetle",
             "ADR 0401 §9: formun ön denetimi ve bir kaydın öğeleri ve sorunları, değerler yazılmış gibi; hiçbir şey yazılmaz.",
-            validate_cases()),
+            validate_cases() + look_v),
         d / "cad.forms.submit.json": command_file(
             "cad.forms.submit", "Formla kaydet",
             "ADR 0401 §9: kaydın formla yazılması: değerler alan anahtarlarıyla, formun ve alanların kurallarıyla; bütün "
-            "kayıt ya da hiçbiri, tek geri alma adımı.", submit_cases()),
+            "kayıt ya da hiçbiri, tek geri alma adımı.", submit_cases() + look_s),
         d / "cad.entities.set.forms.json": command_file(
             "cad.entities.set", "Öznitelikler ve formun kuralları",
             "ADR 0401 §8, ADR 0402 §4: katmanın kurallarını uyguladığı formun son yayını, öznitelik yazmasının profilidir; "
-            "belge yazılan kaydın hesaplarını aynı adımda yeniler.", set_cases()),
+            "belge yazılan kaydın hesaplarını aynı adımda yeniler.", set_cases() + look_set),
         d / "cad.forms.fill.json": command_file(
             "cad.forms.fill", "Formla toplu yaz",
             "ADR 0403 §5: aynı değerler birden çok kayda formla yazılır; her kayıt kendi değerleri ve şekliyle denetlenir ve "
-            "tamamlanır, biri geçmezse hiçbiri yazılmaz.", fill_cases()),
+            "tamamlanır, biri geçmezse hiçbiri yazılmaz.", fill_cases() + look_fill),
         d / "cad.polygon.create.forms.json": {**command_file(
             "cad.polygon.create", "Alan çiz ve formun kuralları",
             "ADR 0402 §4: kurallarını uygulayan formun katmanına çizilen alan, aynı adımda formun varsayılanlarını ve "
