@@ -214,6 +214,15 @@ def check(f, text):
         if length is not None and n > length:
             return err("length", f"“{L}” alanı en çok {length} karakter alır; {n} karakter verildi.")
     values = f.get("values")
+    if not values and f.get("multiple") and f["kind"] == "text":
+        # docs/adr/0409 §1: an unlisted multiple field's values in their order, once each.
+        seen = []
+        for part in [trim(p) for p in s.split(";")]:
+            if part and part not in seen:
+                seen.append(part)
+        if not seen and f.get("required"):
+            return err("required", f"“{L}” alanı zorunlu; boş bırakılamaz.")
+        return {"value": "; ".join(seen)}
     if values and f.get("multiple") and f["kind"] == "text":
         # docs/adr/0408 §1: each part a label or a code, written in the list's order once each, joined with "; ".
         picked = set()
@@ -321,8 +330,8 @@ def field_problem(f):
                 return f"“{name}” çok değerli; değer listesinin kodlarında ve etiketlerinde “;” olamaz."
             codes.add(code)
             labels.add(folded(trim(label)))
-    if f.get("multiple") and (k != "text" or "values" not in f):
-        return f"“{name}” alanı çok değerli olamaz: bu yalnız değer listesi olan metin alanında olur."
+    if f.get("multiple") and k != "text":
+        return f"“{name}” alanı çok değerli olamaz: bu yalnız metin alanında olur."
     if "default" in f:
         d = f["default"]
         r = check({**f, "required": False}, d)
@@ -404,6 +413,8 @@ LIST_N = {"name": "Tür", "kind": "integer", "values": [{"code": "1", "label": "
 # docs/adr/0408 §1: several codes of the list.
 MANY = {**LIST_T, "multiple": True}
 MANY_REQ = {**MANY, "required": True}
+# docs/adr/0409 §1: several free values (objects' ids for a many-to-many reference).
+FREE = {"name": "Malikler", "kind": "text", "multiple": True}
 
 CHECKS = [
     (INT, "12"), (INT, "+012"), (INT, "-0"), (INT, " 42 "), (INT, "1.5"), (INT, "1,000"), (INT, "9007199254740991"),
@@ -419,6 +430,7 @@ CHECKS = [
     (LIST_N, "1"), (LIST_N, "01"), (LIST_N, "işyeri"), (LIST_N, "3"), (LIST_N, "x"),
     (MANY, "K"), (MANY, "T; K"), (MANY, "ticaret;konut; TİCARET"), (MANY, " İ ; ; K "), (MANY, "K; Sanayi"),
     (MANY, ";"), (MANY_REQ, " ; "), (MANY, "işyeri;İ"), (MANY, "K, T"),
+    (FREE, "b; a; b"), (FREE, " x ;; y "), ({**FREE, "required": True}, ";"), (FREE, "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001"),
 ]
 
 PROBLEMS = [

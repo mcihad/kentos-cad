@@ -253,6 +253,111 @@ pub(crate) fn pointed() -> Vec<crate::tools_screens::Pointed> {
     vec![("form-agac-oneri", tree_missing, name_focused)]
 }
 
+/// A published form of `layer` with `items`.
+fn published(id: &str, name: &str, layer: &str, items: Value) -> Value {
+    let body = json!({ "revision": 1, "items": items });
+    let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).expect("a body");
+    json!({ "id": id, "name": name, "layer": layer, "draft": body.clone(),
+            "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }] })
+}
+
+/// Three buildings and two owners (docs/adr/0409): an owner holds several buildings by their ids
+/// (a many-to-many field); a building's form lists its owners; the relation unlinks.
+fn owners(app: &mut App) {
+    let mut o = Objects::new();
+    let mut ids = Vec::new();
+    for (x, code) in [(0.0, "B-1"), (24.0, "B-2"), (48.0, "B-3")] {
+        let id = o.path(
+            "bina",
+            &[[x, 0.0], [x + 18.0, 0.0], [x + 18.0, 14.0], [x, 14.0]],
+            true,
+        );
+        o.data(id, &[("Kod", code)], Some(code));
+        ids.push(id);
+    }
+    let first = o.point("malik", [9.0, 24.0], None);
+    o.data(first, &[("Ad", "Ayşe Yılmaz")], Some("Ayşe Yılmaz"));
+    let second = o.point("malik", [33.0, 24.0], None);
+    o.data(second, &[("Ad", "Mehmet Kaya")], Some("Mehmet Kaya"));
+    let owner_form = published(
+        "malik-formu",
+        "Malik",
+        "malik",
+        json!([
+            { "type": "field", "id": "ad", "field": "Ad", "required": true },
+            { "type": "field", "id": "binalar", "field": "Binalar",
+              "lookup": { "layer": "bina", "key": "$uid", "label": "Kod" } }
+        ]),
+    );
+    let building_form = published(
+        "bina-formu",
+        "Bina",
+        "bina",
+        json!([
+            { "type": "field", "id": "kod", "field": "Kod" },
+            { "type": "related", "id": "malikler", "label": "Malikler", "layer": "malik", "field": "Binalar" }
+        ]),
+    );
+    open_edited(app, o, move |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut bina = crate::tools_scenes::layer("bina", "Bina", "#3E63DD", 0.35);
+        bina["fields"] = json!([{ "name": "Kod", "kind": "text" }]);
+        let mut malik = crate::tools_scenes::layer("malik", "Malik", "#E5484D", 0.35);
+        malik["fields"] = json!([{ "name": "Ad", "kind": "text" },
+                                 { "name": "Binalar", "kind": "text", "multiple": true }]);
+        layers.push(bina);
+        layers.push(malik);
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("bina");
+        d["settings"]["forms"] = json!([owner_form, building_form]);
+        d["settings"]["relations"] = json!([{ "id": "bina-malik", "name": "Binanın malikleri",
+                                              "parent": "bina", "child": "malik", "field": "Binalar" }]);
+    });
+    // The owners' buildings by their persistent ids, once the drawing has them.
+    let uid = |app: &App, slot: u32| {
+        app.document
+            .as_ref()
+            .and_then(|d| d.model.uid(Slot(slot)))
+            .map(|u| u.to_string())
+            .unwrap_or_default()
+    };
+    let (b1, b2) = (uid(app, ids[0]), uid(app, ids[1]));
+    for (slot, held) in [(first, format!("{b1}; {b2}")), (second, b2.clone())] {
+        let owner = uid(app, slot);
+        if let Some(doc) = app.document.as_mut() {
+            let _ = kentos_native_application::registry::run(
+                &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+                kentos_contracts::CAD_ENTITIES_SET,
+                kentos_contracts::CallOp::Execute,
+                json!({ "uids": [owner], "attrs": { "Binalar": held }, "operation": "attributes" }),
+            );
+        }
+    }
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 10.0,
+            min_y: N - 10.0,
+            max_x: E + 76.0,
+            max_y: N + 34.0,
+        },
+        24.0,
+    );
+}
+
+/// The first owner by its form: the buildings checked from the building layer.
+fn owner_editing(app: &mut App) {
+    owners(app);
+    app.selection.set([Slot(4)]);
+    run(app, "data.formEdit");
+}
+
+/// The second building by its form: its two owners, Yeni and Bağla.
+fn building_owners(app: &mut App) {
+    owners(app);
+    app.selection.set([Slot(2)]);
+    run(app, "data.formEdit");
+}
+
 /// Alanlar's value list of the care field: several of its values may be chosen (docs/adr/0408 §1).
 fn tree_fields(app: &mut App) {
     trees(app);
@@ -776,6 +881,8 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-agac-eksik", tree_missing),
         ("form-agac-tasarim", tree_designing),
         ("form-alan-coklu", tree_fields),
+        ("form-malik", owner_editing),
+        ("form-bina-malikler", building_owners),
     ]
 }
 
@@ -1338,6 +1445,57 @@ mod tests {
         run(&mut app, "data.formEdit");
         entry(&mut app, entry::Event::Step(1));
         assert_eq!(app.form_entry.as_ref().map(|e| e.uid_text()), uid(&app, 2));
+    }
+
+    /// docs/adr/0409: an owner holds several buildings; a building lists its owners, links one more
+    /// and unlinks it without touching the owner's other buildings; Yeni makes an owner linked to it.
+    #[test]
+    fn many_to_many_owners_are_linked_and_made() {
+        let mut app = crate::files_testing::app_with_drawing();
+        owners(&mut app);
+        let uid = |app: &App, slot: u32| {
+            app.document
+                .as_ref()
+                .and_then(|d| d.model.uid(Slot(slot)))
+                .map(|u| u.to_string())
+                .unwrap_or_default()
+        };
+        let (b1, b2, b3) = (uid(&app, 1), uid(&app, 2), uid(&app, 3));
+        let (o1, o2) = (uid(&app, 4), uid(&app, 5));
+        app.selection.set([Slot(2)]);
+        run(&mut app, "data.formEdit");
+        let listed = |app: &App| {
+            app.form_entry
+                .as_ref()
+                .map(|e| e.related_of("malikler"))
+                .unwrap_or_default()
+        };
+        assert_eq!(listed(&app), [o1.clone(), o2.clone()]);
+        // Building 3 takes the second owner; its other building stays.
+        app.selection.set([Slot(3)]);
+        run(&mut app, "data.formEdit");
+        entry(&mut app, entry::Event::Link("malikler".into(), o2.clone()));
+        assert_eq!(attrs(&app, 5).get("Binalar"), Some(&format!("{b2}; {b3}")));
+        entry(
+            &mut app,
+            entry::Event::Unlink("malikler".into(), o2.clone()),
+        );
+        assert_eq!(attrs(&app, 5).get("Binalar"), Some(&b2));
+        // Building 1's first owner is unlinked from it alone.
+        app.selection.set([Slot(1)]);
+        run(&mut app, "data.formEdit");
+        entry(
+            &mut app,
+            entry::Event::Unlink("malikler".into(), o1.clone()),
+        );
+        assert_eq!(attrs(&app, 4).get("Binalar"), Some(&b2));
+        // Yeni: an owner at the building, linked to it, opened by the owner's form.
+        entry(&mut app, entry::Event::NewRelated("malikler".into()));
+        assert_eq!(attrs(&app, 6).get("Binalar"), Some(&b1));
+        assert_eq!(
+            app.form_entry.as_ref().map(|e| e.uid_text()),
+            Some(uid(&app, 6))
+        );
     }
 
     /// docs/adr/0401 §9: a form made of the layer's fields, an item added, Kaydet writes the draft and

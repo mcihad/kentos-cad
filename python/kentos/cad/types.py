@@ -12987,8 +12987,9 @@ class LayerField(_Model):
         length: A text's most characters (1–10 000). Unit: count.
         max: A number's greatest value, in its canonical text; included.
         min: A number's least value, in its canonical text; included.
-        multiple: A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,
-            joined with `; `; written only as `true`.
+        multiple: A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the
+            list's order, an unlisted one its values in their order (objects' persistent ids for a
+            many-to-many reference), joined with `; `; written only as `true`.
         required: An object may not leave it empty; written only as `true`.
         scale: A decimal's most fraction digits (0–15). Unit: count.
         values: The values a text or a number takes, when only some.

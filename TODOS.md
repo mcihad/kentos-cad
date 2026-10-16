@@ -188,6 +188,9 @@ Liste:
   katmanın izlemesi (`form_follow.rs`'in kuralı, `cad.polygon.create.forms.json` ve `cad.entities.set.forms.json` durumları);
   Formla düzenle'de hesaplanan alanların kilidi, süzülen listeler, sarı uyarı, kapalı grup, son değer; tasarımcının yeni
   denetçi satırları; kapalı girişin soluk görünüşü ve `Form`'un uyarı satırı web'in form bileşenlerinde.
+- [ ] `FORM-M` çoktan çoğa ilişki ve yeni alt kayıt (ADR 0409, 16 Ekim): web'de gerekenler: listesiz çok değerli alanın
+  `check_value` yolu, çok değerli başvurunun formu ve ilişkili kayıtların “içerir” kuralı, silme politikasının çok değerli
+  bağı izlemesi (`cad.entities.delete.relations.json`), Bağla, Bağı kopar ve Yeni.
 - [ ] `FORM-L` çok değerli alan ve gezinme (ADR 0408, 16 Ekim): web'de gerekenler: alanın `multiple`'ı ve `check_value`'nun
   çok değerli yolu (`fixtures/layer-fields/v1`), `checkList` öğesi, Alanlar penceresinde seçenek, Formla düzenle'de ◀ ▶.
 - [ ] `FORM-K` ekler, renk ve öneri (ADR 0407, 16 Ekim): web'de gerekenler: sözleşmenin `attachments` öğesi
@@ -1440,7 +1443,12 @@ burada aşamaları izlenir.
   [ADR 0407](docs/adr/0407-form-attachments-colour-suggestions.md).**
 - [x] `FORM-L` Çok değerli alan (değer listesinden birden çok kod, çoklu seçim öğesi) ve Formla düzenle'de katmanın
   kayıtları arasında gezinme. — **16 Ekim, [ADR 0408](docs/adr/0408-multiple-values-and-record-stepping.md).**
-- [ ] `FORM-M` N:M bağlantı tablosu, geometrisiz tablo katmanı, formun içinden yeni alt kayıt.
+- [x] `FORM-M` Çoktan çoğa ilişki (çok değerli başvuru alanı, bağlantı tablosu olmadan; silme politikası öbür bağları
+  korur) ve formdan yeni alt kayıt. — **16 Ekim, [ADR 0409](docs/adr/0409-many-to-many-and-new-child.md).**
+- [ ] `FORM-N` Geometrisiz tablo katmanı (yeni nesne türü; `.kcad`, sunucu ve PostGIS'te geometrisiz satır).
+- [ ] `FORM-O` Çizim komutları (`cad.point.create`, `cad.polygon.create` …) verilen öznitelikleri alanların kuralıyla tek
+  biçime çevirmiyor ve denetlemiyor; yalnız `cad.entities.set` ve `.create` çeviriyor (16 Ekim'de FORM-M'de bulundu). Hepsi
+  `checks::field_values`'tan geçmeli; ortak durumları ve Python testiyle.
 - [ ] `FORM-F` Merkezi yayın ve izinler (FM2, plan `FORM-FIRST-14`–`17`): bulutta form taslağı, yayın ve dağıtım kaynakları,
   `forms.design`, `forms.publish`, `forms.use` izinleri, sunucunun yazma bekçisi bütün yollarda.
 

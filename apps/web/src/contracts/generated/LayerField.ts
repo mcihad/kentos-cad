@@ -44,7 +44,8 @@ required?: boolean,
  */
 default?: string, 
 /**
- * A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,
- * joined with `; `; written only as `true`.
+ * A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the
+ * list's order, an unlisted one its values in their order (objects' persistent ids for a
+ * many-to-many reference), joined with `; `; written only as `true`.
  */
 multiple?: boolean, };

@@ -61,7 +61,11 @@ pub fn widget_of(item: &FormField, field: &LayerField) -> FormWidget {
     if let Some(w) = item.widget {
         return w;
     }
-    if field.multiple {
+    // A multiple field with a list (its own or another layer's) checks its values; a free one is
+    // typed (docs/adr/0409 §1).
+    if field.multiple
+        && (item.lookup.is_some() || field.values.as_ref().is_some_and(|v| !v.is_empty()))
+    {
         return FormWidget::CheckList;
     }
     if item.lookup.is_some() || field.values.as_ref().is_some_and(|v| !v.is_empty()) {

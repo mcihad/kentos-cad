@@ -173,9 +173,10 @@ impl Related {
         let Some(uid) = object.uid.as_deref() else {
             return Vec::new();
         };
+        // A many-to-many field holds several ids (docs/adr/0409 §1); an id has no `;`.
         self.rows
             .iter()
-            .filter(|(_, held)| held == uid)
+            .filter(|(_, held)| held.split(';').any(|h| js_trim(h) == uid))
             .map(|(own, _)| own.clone())
             .collect()
     }

@@ -493,8 +493,15 @@ impl Prepared {
                 ));
                 continue;
             }
+            let held: Vec<&str> = if field.multiple {
+                field.codes_of(&canonical)
+            } else {
+                vec![canonical.as_str()]
+            };
             if let Some(list) = &b.lookup
-                && !list.offered(attrs).iter().any(|r| r.0 == canonical)
+                && held
+                    .iter()
+                    .any(|code| !list.offered(attrs).iter().any(|r| r.0 == *code))
             {
                 issues.push(at(
                     codes::LOOKUP_MISSING,
@@ -654,13 +661,22 @@ impl Prepared {
                 ));
                 continue;
             }
-            // A list from another layer takes a value's label for its code (docs/adr/0404 §2).
-            let text = self
+            // A list from another layer takes a value's label for its code (docs/adr/0404 §2), each
+            // of a multiple field's (docs/adr/0409 §1).
+            let list = self
                 .bound()
                 .find(|(_, b)| b.index == index)
-                .and_then(|(_, b)| b.lookup.as_ref())
-                .map_or(text.as_str(), |list| list.code_of(text));
-            match check_value(&loose(field), text) {
+                .and_then(|(_, b)| b.lookup.as_ref());
+            let coded: String = match list {
+                Some(list) if field.multiple => text
+                    .split(';')
+                    .map(|p| list.code_of(p))
+                    .collect::<Vec<_>>()
+                    .join(kentos_contracts::MULTIPLE_JOIN),
+                Some(list) => list.code_of(text).to_owned(),
+                None => text.clone(),
+            };
+            match check_value(&loose(field), &coded) {
                 Ok(v) if v.is_empty() => {
                     written.remove(&field.name);
                 }

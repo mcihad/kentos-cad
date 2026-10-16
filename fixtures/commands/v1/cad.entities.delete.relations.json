@@ -394,6 +394,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -632,6 +657,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -681,6 +732,11 @@
      "as": "o8"
     },
     {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
      "op": "execute",
      "command": "cad.entities.set",
      "input": {
@@ -714,7 +770,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -756,7 +813,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -798,7 +856,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -840,7 +899,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -882,7 +942,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -924,7 +985,51 @@
        5,
        6,
        7,
-       8
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -958,7 +1063,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "fields": {
        "2": {
@@ -1000,6 +1106,12 @@
         "attrs": {
          "ad": "Ayşe",
          "bina": "$uid:o1"
+        }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
         }
        }
       },
@@ -1133,6 +1245,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -1371,6 +1508,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -1420,6 +1583,11 @@
      "as": "o8"
     },
     {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
      "op": "execute",
      "command": "cad.entities.set",
      "input": {
@@ -1453,7 +1621,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -1495,7 +1664,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -1537,7 +1707,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -1579,7 +1750,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -1621,7 +1793,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -1663,7 +1836,51 @@
        5,
        6,
        7,
-       8
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -1697,7 +1914,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "fields": {
        "2": {
@@ -1737,6 +1955,12 @@
         "attrs": {
          "ad": "Ayşe",
          "bina": "$uid:o1"
+        }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
         }
        }
       },
@@ -1870,6 +2094,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -2108,6 +2357,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -2157,6 +2432,11 @@
      "as": "o8"
     },
     {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
      "op": "execute",
      "command": "cad.entities.set",
      "input": {
@@ -2190,7 +2470,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -2232,7 +2513,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -2274,7 +2556,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -2316,7 +2599,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -2358,7 +2642,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -2400,7 +2685,51 @@
        5,
        6,
        7,
-       8
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -2434,7 +2763,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "fields": {
        "2": {
@@ -2475,6 +2805,12 @@
          "ad": "Ayşe",
          "bina": "$uid:o1"
         }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
+        }
        }
       },
       "canUndo": true,
@@ -2493,7 +2829,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "fields": {
        "1": {
@@ -2540,6 +2877,12 @@
         "attrs": {
          "ad": "Ayşe",
          "bina": "$uid:o1"
+        }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
         }
        }
       },
@@ -2679,6 +3022,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -2917,6 +3285,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -2966,6 +3360,11 @@
      "as": "o8"
     },
     {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
      "op": "execute",
      "command": "cad.entities.set",
      "input": {
@@ -2999,7 +3398,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -3041,7 +3441,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -3083,7 +3484,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -3125,7 +3527,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -3167,7 +3570,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -3209,7 +3613,51 @@
        5,
        6,
        7,
-       8
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -3241,7 +3689,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "fields": {
        "2": {
@@ -3270,6 +3719,12 @@
         "attrs": {
          "ad": "Ayşe",
          "bina": "$uid:o1"
+        }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
         }
        }
       },
@@ -3412,6 +3867,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -3650,6 +4130,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -3699,6 +4205,11 @@
      "as": "o8"
     },
     {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
      "op": "execute",
      "command": "cad.entities.set",
      "input": {
@@ -3732,7 +4243,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -3774,7 +4286,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -3816,7 +4329,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -3858,7 +4372,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -3900,7 +4415,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -3942,7 +4458,51 @@
        5,
        6,
        7,
-       8
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -3973,7 +4533,8 @@
        2,
        5,
        7,
-       8
+       8,
+       9
       ],
       "fields": {
        "2": {
@@ -3997,6 +4558,12 @@
         "attrs": {
          "ad": "Ayşe",
          "bina": "$uid:o1"
+        }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
         }
        }
       },
@@ -4139,6 +4706,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -4377,6 +4969,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -4426,6 +5044,11 @@
      "as": "o8"
     },
     {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
      "op": "execute",
      "command": "cad.entities.set",
      "input": {
@@ -4459,7 +5082,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -4501,7 +5125,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -4543,7 +5168,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -4585,7 +5211,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -4627,7 +5254,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -4669,7 +5297,51 @@
        5,
        6,
        7,
-       8
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -4700,7 +5372,8 @@
        2,
        5,
        7,
-       8
+       8,
+       9
       ],
       "fields": {
        "2": {
@@ -4725,6 +5398,12 @@
          "ad": "Ayşe",
          "bina": "$uid:o1"
         }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
+        }
        }
       },
       "canUndo": true,
@@ -4743,7 +5422,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "fields": {
        "1": {
@@ -4790,6 +5470,12 @@
         "attrs": {
          "ad": "Ayşe",
          "bina": "$uid:o1"
+        }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
         }
        }
       },
@@ -4922,6 +5608,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -5160,6 +5871,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -5209,6 +5946,11 @@
      "as": "o8"
     },
     {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
      "op": "execute",
      "command": "cad.entities.set",
      "input": {
@@ -5242,7 +5984,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -5284,7 +6027,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -5326,7 +6070,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -5368,7 +6113,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -5410,7 +6156,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -5452,7 +6199,51 @@
        5,
        6,
        7,
-       8
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -5484,7 +6275,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "revision": "same"
      }
@@ -5622,6 +6414,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -5860,6 +6677,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -5909,6 +6752,11 @@
      "as": "o8"
     },
     {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
      "op": "execute",
      "command": "cad.entities.set",
      "input": {
@@ -5942,7 +6790,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -5984,7 +6833,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -6026,7 +6876,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -6068,7 +6919,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -6110,7 +6962,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -6152,7 +7005,51 @@
        5,
        6,
        7,
-       8
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -6188,7 +7085,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "fields": {
        "2": {
@@ -6217,6 +7115,12 @@
         "attrs": {
          "ad": "Ayşe",
          "bina": "$uid:o1"
+        }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
         }
        }
       },
@@ -6351,6 +7255,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -6589,6 +7518,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -6638,6 +7593,11 @@
      "as": "o8"
     },
     {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
      "op": "execute",
      "command": "cad.entities.set",
      "input": {
@@ -6671,7 +7631,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -6713,7 +7674,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -6755,7 +7717,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -6797,7 +7760,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -6839,7 +7803,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -6881,7 +7846,51 @@
        5,
        6,
        7,
-       8
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -6914,7 +7923,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "revision": "same"
      }
@@ -7045,6 +8055,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -7283,6 +8318,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -7332,6 +8393,11 @@
      "as": "o8"
     },
     {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
      "op": "execute",
      "command": "cad.entities.set",
      "input": {
@@ -7365,7 +8431,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -7407,7 +8474,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -7449,7 +8517,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -7491,7 +8560,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -7533,7 +8603,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -7575,7 +8646,51 @@
        5,
        6,
        7,
-       8
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -7609,7 +8724,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "fields": {
        "2": {
@@ -7651,6 +8767,12 @@
         "attrs": {
          "ad": "Ayşe",
          "bina": "$uid:o1"
+        }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
         }
        }
       },
@@ -7785,6 +8907,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -8023,6 +9170,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -8072,6 +9245,11 @@
      "as": "o8"
     },
     {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
      "op": "execute",
      "command": "cad.entities.set",
      "input": {
@@ -8105,7 +9283,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -8147,7 +9326,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -8189,7 +9369,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -8231,7 +9412,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -8273,7 +9455,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -8315,7 +9498,51 @@
        5,
        6,
        7,
-       8
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -8349,7 +9576,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "fields": {
        "1": {
@@ -8390,6 +9618,12 @@
         "attrs": {
          "ad": "Ayşe",
          "bina": "$uid:o1"
+        }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
         }
        }
       },
@@ -8523,6 +9757,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -8761,6 +10020,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -8810,6 +10095,11 @@
      "as": "o8"
     },
     {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
      "op": "execute",
      "command": "cad.entities.set",
      "input": {
@@ -8843,7 +10133,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -8885,7 +10176,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -8927,7 +10219,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -8969,7 +10262,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -9011,7 +10305,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -9053,7 +10348,51 @@
        5,
        6,
        7,
-       8
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -9088,7 +10427,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "fields": {
        "3": {
@@ -9122,6 +10462,12 @@
         "attrs": {
          "ad": "Ayşe",
          "bina": "$uid:o1"
+        }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
         }
        }
       },
@@ -9263,6 +10609,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -9501,6 +10872,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -9550,6 +10947,11 @@
      "as": "o8"
     },
     {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
      "op": "execute",
      "command": "cad.entities.set",
      "input": {
@@ -9583,7 +10985,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -9625,7 +11028,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -9667,7 +11071,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -9709,7 +11114,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -9751,7 +11157,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -9793,7 +11200,51 @@
        5,
        6,
        7,
-       8
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -9826,7 +11277,8 @@
        4,
        5,
        6,
-       7
+       7,
+       9
       ],
       "fields": {
        "2": {
@@ -9860,6 +11312,12 @@
         "attrs": {
          "no": "V-2",
          "sayac": "$uid:o5"
+        }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
         }
        }
       },
@@ -9994,6 +11452,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -10232,6 +11715,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -10281,6 +11790,11 @@
      "as": "o8"
     },
     {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
      "op": "execute",
      "command": "cad.entities.set",
      "input": {
@@ -10314,7 +11828,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -10356,7 +11871,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -10398,7 +11914,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -10440,7 +11957,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -10482,7 +12000,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -10524,7 +12043,51 @@
        5,
        6,
        7,
-       8
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -10558,7 +12121,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ]
      }
     },
@@ -10588,7 +12152,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "fields": {
        "2": {
@@ -10630,6 +12195,12 @@
         "attrs": {
          "ad": "Ayşe",
          "bina": "$uid:o1"
+        }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
         }
        }
       },
@@ -10764,6 +12335,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -11002,6 +12598,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -11051,6 +12673,11 @@
      "as": "o8"
     },
     {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
      "op": "execute",
      "command": "cad.entities.set",
      "input": {
@@ -11084,7 +12711,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -11126,7 +12754,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -11168,7 +12797,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -11210,7 +12840,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -11252,7 +12883,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -11294,7 +12926,51 @@
        5,
        6,
        7,
-       8
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -11328,7 +13004,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "fields": {
        "2": {
@@ -11370,6 +13047,12 @@
         "attrs": {
          "ad": "Ayşe",
          "bina": "$uid:o1"
+        }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
         }
        }
       },
@@ -11504,6 +13187,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -11742,6 +13450,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -11791,6 +13525,11 @@
      "as": "o8"
     },
     {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
      "op": "execute",
      "command": "cad.entities.set",
      "input": {
@@ -11824,7 +13563,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -11866,7 +13606,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -11908,7 +13649,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -11950,7 +13692,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -11992,7 +13735,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -12034,7 +13778,51 @@
        5,
        6,
        7,
-       8
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -12068,7 +13856,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "fields": {
        "1": {
@@ -12109,6 +13898,12 @@
         "attrs": {
          "ad": "Ayşe",
          "bina": "$uid:o1"
+        }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
         }
        }
       },
@@ -12243,6 +14038,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -12481,6 +14301,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -12530,6 +14376,11 @@
      "as": "o8"
     },
     {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
      "op": "execute",
      "command": "cad.entities.set",
      "input": {
@@ -12563,7 +14414,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -12605,7 +14457,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -12647,7 +14500,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -12689,7 +14543,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -12731,7 +14586,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -12773,7 +14629,51 @@
        5,
        6,
        7,
-       8
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -12806,7 +14706,8 @@
        4,
        5,
        7,
-       8
+       8,
+       9
       ],
       "fields": {
        "1": {
@@ -12841,6 +14742,12 @@
         "attrs": {
          "ad": "Ayşe",
          "bina": "$uid:o1"
+        }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
         }
        }
       },
@@ -12982,6 +14889,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -13220,6 +15152,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -13269,6 +15227,11 @@
      "as": "o8"
     },
     {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
      "op": "execute",
      "command": "cad.entities.set",
      "input": {
@@ -13302,7 +15265,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -13344,7 +15308,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -13386,7 +15351,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -13428,7 +15394,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -13470,7 +15437,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -13512,7 +15480,51 @@
        5,
        6,
        7,
-       8
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -13544,7 +15556,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "fields": {
        "2": {
@@ -13574,6 +15587,12 @@
          "ad": "Ayşe",
          "bina": "$uid:o1"
         }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
+        }
        }
       },
       "canUndo": true,
@@ -13592,7 +15611,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "fields": {
        "1": {
@@ -13639,6 +15659,12 @@
         "attrs": {
          "ad": "Ayşe",
          "bina": "$uid:o1"
+        }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
         }
        }
       },
@@ -13771,6 +15797,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -14009,6 +16060,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -14058,6 +16135,11 @@
      "as": "o8"
     },
     {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
      "op": "execute",
      "command": "cad.entities.set",
      "input": {
@@ -14091,7 +16173,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -14133,7 +16216,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -14175,7 +16259,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -14217,7 +16302,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -14259,7 +16345,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -14301,7 +16388,51 @@
        5,
        6,
        7,
-       8
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -14333,7 +16464,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "revision": "same"
      }
@@ -14464,6 +16596,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -14702,6 +16859,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -14751,6 +16934,11 @@
      "as": "o8"
     },
     {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
      "op": "execute",
      "command": "cad.entities.set",
      "input": {
@@ -14784,7 +16972,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -14826,7 +17015,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -14868,7 +17058,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -14910,7 +17101,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -14952,7 +17144,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -14994,7 +17187,51 @@
        5,
        6,
        7,
-       8
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -15026,7 +17263,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "revision": "same"
      }
@@ -15165,6 +17403,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -15403,6 +17666,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -15452,6 +17741,11 @@
      "as": "o8"
     },
     {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
      "op": "execute",
      "command": "cad.entities.set",
      "input": {
@@ -15485,7 +17779,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -15527,7 +17822,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -15569,7 +17865,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -15611,7 +17908,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -15653,7 +17951,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -15695,7 +17994,51 @@
        5,
        6,
        7,
-       8
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
       ],
       "canUndo": true,
       "canRedo": false,
@@ -15728,7 +18071,8 @@
        4,
        5,
        6,
-       7
+       7,
+       9
       ],
       "fields": {
        "2": {
@@ -15765,6 +18109,12 @@
          "no": "V-2",
          "sayac": "$uid:o5"
         }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
+        }
        }
       },
       "canUndo": true,
@@ -15783,7 +18133,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "fields": {
        "1": {
@@ -15831,9 +18182,4275 @@
          "ad": "Ayşe",
          "bina": "$uid:o1"
         }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
+        }
        }
       },
       "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "çoktan çoğa unlink: malik öbür binasıyla kalır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İlişkiler",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Binanın malikleri",
+       "parent": "bina",
+       "child": "malik",
+       "field": "binalar"
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "sayac",
+      "name": "Sayac",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "vana",
+      "name": "Vana",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "sayac",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "abone",
+      "name": "Abone",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "A"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "B"
+      },
+      "pts": [
+       {
+        "x": 487012,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420010
+       },
+       {
+        "x": 487012,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-1"
+      },
+      "pts": [
+       {
+        "x": 487024,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420010
+       },
+       {
+        "x": 487024,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-2"
+      },
+      "pts": [
+       {
+        "x": 487036,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420010
+       },
+       {
+        "x": 487036,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-3"
+      },
+      "pts": [
+       {
+        "x": 487048,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420010
+       },
+       {
+        "x": 487048,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-1"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-2"
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420010
+       },
+       {
+        "x": 487072,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "abone",
+      "attrs": {
+       "ad": "Ayşe"
+      },
+      "pts": [
+       {
+        "x": 487084,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420010
+       },
+       {
+        "x": 487084,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 1,
+     "as": "o1"
+    },
+    {
+     "op": "captureUid",
+     "id": 2,
+     "as": "o2"
+    },
+    {
+     "op": "captureUid",
+     "id": 3,
+     "as": "o3"
+    },
+    {
+     "op": "captureUid",
+     "id": 4,
+     "as": "o4"
+    },
+    {
+     "op": "captureUid",
+     "id": 5,
+     "as": "o5"
+    },
+    {
+     "op": "captureUid",
+     "id": 6,
+     "as": "o6"
+    },
+    {
+     "op": "captureUid",
+     "id": 7,
+     "as": "o7"
+    },
+    {
+     "op": "captureUid",
+     "id": 8,
+     "as": "o8"
+    },
+    {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o3"
+      ],
+      "attrs": {
+       "bina": "$uid:o1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o3"
+       ],
+       "ids": [
+        3
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o4"
+      ],
+      "attrs": {
+       "bina": "$uid:o1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o4"
+       ],
+       "ids": [
+        4
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o5"
+      ],
+      "attrs": {
+       "bina": "$uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o5"
+       ],
+       "ids": [
+        5
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o6"
+      ],
+      "attrs": {
+       "sayac": "$uid:o3"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o6"
+       ],
+       "ids": [
+        6
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o7"
+      ],
+      "attrs": {
+       "sayac": "$uid:o5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o7"
+       ],
+       "ids": [
+        7
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o8"
+      ],
+      "attrs": {
+       "bina": "$uid:o1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o8"
+       ],
+       "ids": [
+        8
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uid:o1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "removed": [
+        "$uid:o1"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "2": {
+        "attrs": {
+         "Ad": "B"
+        }
+       },
+       "3": {
+        "attrs": {
+         "no": "S-1",
+         "bina": "$uid:o1"
+        }
+       },
+       "4": {
+        "attrs": {
+         "no": "S-2",
+         "bina": "$uid:o1"
+        }
+       },
+       "5": {
+        "attrs": {
+         "no": "S-3",
+         "bina": "$uid:o2"
+        }
+       },
+       "6": {
+        "attrs": {
+         "no": "V-1",
+         "sayac": "$uid:o3"
+        }
+       },
+       "7": {
+        "attrs": {
+         "no": "V-2",
+         "sayac": "$uid:o5"
+        }
+       },
+       "8": {
+        "attrs": {
+         "ad": "Ayşe",
+         "bina": "$uid:o1"
+        }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o2"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çoktan çoğa cascade: öbür binası varken malik silinmez",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İlişkiler",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Binanın malikleri",
+       "parent": "bina",
+       "child": "malik",
+       "field": "binalar",
+       "onDelete": "cascade"
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "sayac",
+      "name": "Sayac",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "vana",
+      "name": "Vana",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "sayac",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "abone",
+      "name": "Abone",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "A"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "B"
+      },
+      "pts": [
+       {
+        "x": 487012,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420010
+       },
+       {
+        "x": 487012,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-1"
+      },
+      "pts": [
+       {
+        "x": 487024,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420010
+       },
+       {
+        "x": 487024,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-2"
+      },
+      "pts": [
+       {
+        "x": 487036,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420010
+       },
+       {
+        "x": 487036,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-3"
+      },
+      "pts": [
+       {
+        "x": 487048,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420010
+       },
+       {
+        "x": 487048,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-1"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-2"
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420010
+       },
+       {
+        "x": 487072,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "abone",
+      "attrs": {
+       "ad": "Ayşe"
+      },
+      "pts": [
+       {
+        "x": 487084,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420010
+       },
+       {
+        "x": 487084,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 1,
+     "as": "o1"
+    },
+    {
+     "op": "captureUid",
+     "id": 2,
+     "as": "o2"
+    },
+    {
+     "op": "captureUid",
+     "id": 3,
+     "as": "o3"
+    },
+    {
+     "op": "captureUid",
+     "id": 4,
+     "as": "o4"
+    },
+    {
+     "op": "captureUid",
+     "id": 5,
+     "as": "o5"
+    },
+    {
+     "op": "captureUid",
+     "id": 6,
+     "as": "o6"
+    },
+    {
+     "op": "captureUid",
+     "id": 7,
+     "as": "o7"
+    },
+    {
+     "op": "captureUid",
+     "id": 8,
+     "as": "o8"
+    },
+    {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o3"
+      ],
+      "attrs": {
+       "bina": "$uid:o1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o3"
+       ],
+       "ids": [
+        3
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o4"
+      ],
+      "attrs": {
+       "bina": "$uid:o1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o4"
+       ],
+       "ids": [
+        4
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o5"
+      ],
+      "attrs": {
+       "bina": "$uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o5"
+       ],
+       "ids": [
+        5
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o6"
+      ],
+      "attrs": {
+       "sayac": "$uid:o3"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o6"
+       ],
+       "ids": [
+        6
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o7"
+      ],
+      "attrs": {
+       "sayac": "$uid:o5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o7"
+       ],
+       "ids": [
+        7
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o8"
+      ],
+      "attrs": {
+       "bina": "$uid:o1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o8"
+       ],
+       "ids": [
+        8
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uid:o1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "removed": [
+        "$uid:o1"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "2": {
+        "attrs": {
+         "Ad": "B"
+        }
+       },
+       "3": {
+        "attrs": {
+         "no": "S-1",
+         "bina": "$uid:o1"
+        }
+       },
+       "4": {
+        "attrs": {
+         "no": "S-2",
+         "bina": "$uid:o1"
+        }
+       },
+       "5": {
+        "attrs": {
+         "no": "S-3",
+         "bina": "$uid:o2"
+        }
+       },
+       "6": {
+        "attrs": {
+         "no": "V-1",
+         "sayac": "$uid:o3"
+        }
+       },
+       "7": {
+        "attrs": {
+         "no": "V-2",
+         "sayac": "$uid:o5"
+        }
+       },
+       "8": {
+        "attrs": {
+         "ad": "Ayşe",
+         "bina": "$uid:o1"
+        }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o2"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çoktan çoğa cascade: iki binası da gidince malik silinir",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İlişkiler",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Binanın malikleri",
+       "parent": "bina",
+       "child": "malik",
+       "field": "binalar",
+       "onDelete": "cascade"
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "sayac",
+      "name": "Sayac",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "vana",
+      "name": "Vana",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "sayac",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "abone",
+      "name": "Abone",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "A"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "B"
+      },
+      "pts": [
+       {
+        "x": 487012,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420010
+       },
+       {
+        "x": 487012,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-1"
+      },
+      "pts": [
+       {
+        "x": 487024,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420010
+       },
+       {
+        "x": 487024,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-2"
+      },
+      "pts": [
+       {
+        "x": 487036,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420010
+       },
+       {
+        "x": 487036,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-3"
+      },
+      "pts": [
+       {
+        "x": 487048,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420010
+       },
+       {
+        "x": 487048,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-1"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-2"
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420010
+       },
+       {
+        "x": 487072,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "abone",
+      "attrs": {
+       "ad": "Ayşe"
+      },
+      "pts": [
+       {
+        "x": 487084,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420010
+       },
+       {
+        "x": 487084,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 1,
+     "as": "o1"
+    },
+    {
+     "op": "captureUid",
+     "id": 2,
+     "as": "o2"
+    },
+    {
+     "op": "captureUid",
+     "id": 3,
+     "as": "o3"
+    },
+    {
+     "op": "captureUid",
+     "id": 4,
+     "as": "o4"
+    },
+    {
+     "op": "captureUid",
+     "id": 5,
+     "as": "o5"
+    },
+    {
+     "op": "captureUid",
+     "id": 6,
+     "as": "o6"
+    },
+    {
+     "op": "captureUid",
+     "id": 7,
+     "as": "o7"
+    },
+    {
+     "op": "captureUid",
+     "id": 8,
+     "as": "o8"
+    },
+    {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o3"
+      ],
+      "attrs": {
+       "bina": "$uid:o1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o3"
+       ],
+       "ids": [
+        3
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o4"
+      ],
+      "attrs": {
+       "bina": "$uid:o1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o4"
+       ],
+       "ids": [
+        4
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o5"
+      ],
+      "attrs": {
+       "bina": "$uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o5"
+       ],
+       "ids": [
+        5
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o6"
+      ],
+      "attrs": {
+       "sayac": "$uid:o3"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o6"
+       ],
+       "ids": [
+        6
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o7"
+      ],
+      "attrs": {
+       "sayac": "$uid:o5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o7"
+       ],
+       "ids": [
+        7
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o8"
+      ],
+      "attrs": {
+       "bina": "$uid:o1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o8"
+       ],
+       "ids": [
+        8
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uid:o1",
+       "$uid:o2"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "removed": [
+        "$uid:o1",
+        "$uid:o2"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "fields": {
+       "3": {
+        "attrs": {
+         "no": "S-1",
+         "bina": "$uid:o1"
+        }
+       },
+       "4": {
+        "attrs": {
+         "no": "S-2",
+         "bina": "$uid:o1"
+        }
+       },
+       "5": {
+        "attrs": {
+         "no": "S-3",
+         "bina": "$uid:o2"
+        }
+       },
+       "6": {
+        "attrs": {
+         "no": "V-1",
+         "sayac": "$uid:o3"
+        }
+       },
+       "7": {
+        "attrs": {
+         "no": "V-2",
+         "sayac": "$uid:o5"
+        }
+       },
+       "8": {
+        "attrs": {
+         "ad": "Ayşe",
+         "bina": "$uid:o1"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ad": "A"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ad": "B"
+        }
+       },
+       "3": {
+        "attrs": {
+         "no": "S-1",
+         "bina": "$uid:o1"
+        }
+       },
+       "4": {
+        "attrs": {
+         "no": "S-2",
+         "bina": "$uid:o1"
+        }
+       },
+       "5": {
+        "attrs": {
+         "no": "S-3",
+         "bina": "$uid:o2"
+        }
+       },
+       "6": {
+        "attrs": {
+         "no": "V-1",
+         "sayac": "$uid:o3"
+        }
+       },
+       "7": {
+        "attrs": {
+         "no": "V-2",
+         "sayac": "$uid:o5"
+        }
+       },
+       "8": {
+        "attrs": {
+         "ad": "Ayşe",
+         "bina": "$uid:o1"
+        }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
+        }
+       }
+      },
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "çoktan çoğa unlink: iki bina gidince alan boşalır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İlişkiler",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Binanın malikleri",
+       "parent": "bina",
+       "child": "malik",
+       "field": "binalar"
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "sayac",
+      "name": "Sayac",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "vana",
+      "name": "Vana",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "sayac",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "abone",
+      "name": "Abone",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "A"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "B"
+      },
+      "pts": [
+       {
+        "x": 487012,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420010
+       },
+       {
+        "x": 487012,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-1"
+      },
+      "pts": [
+       {
+        "x": 487024,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420010
+       },
+       {
+        "x": 487024,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-2"
+      },
+      "pts": [
+       {
+        "x": 487036,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420010
+       },
+       {
+        "x": 487036,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-3"
+      },
+      "pts": [
+       {
+        "x": 487048,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420010
+       },
+       {
+        "x": 487048,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-1"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-2"
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420010
+       },
+       {
+        "x": 487072,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "abone",
+      "attrs": {
+       "ad": "Ayşe"
+      },
+      "pts": [
+       {
+        "x": 487084,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420010
+       },
+       {
+        "x": 487084,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 1,
+     "as": "o1"
+    },
+    {
+     "op": "captureUid",
+     "id": 2,
+     "as": "o2"
+    },
+    {
+     "op": "captureUid",
+     "id": 3,
+     "as": "o3"
+    },
+    {
+     "op": "captureUid",
+     "id": 4,
+     "as": "o4"
+    },
+    {
+     "op": "captureUid",
+     "id": 5,
+     "as": "o5"
+    },
+    {
+     "op": "captureUid",
+     "id": 6,
+     "as": "o6"
+    },
+    {
+     "op": "captureUid",
+     "id": 7,
+     "as": "o7"
+    },
+    {
+     "op": "captureUid",
+     "id": 8,
+     "as": "o8"
+    },
+    {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o3"
+      ],
+      "attrs": {
+       "bina": "$uid:o1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o3"
+       ],
+       "ids": [
+        3
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o4"
+      ],
+      "attrs": {
+       "bina": "$uid:o1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o4"
+       ],
+       "ids": [
+        4
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o5"
+      ],
+      "attrs": {
+       "bina": "$uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o5"
+       ],
+       "ids": [
+        5
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o6"
+      ],
+      "attrs": {
+       "sayac": "$uid:o3"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o6"
+       ],
+       "ids": [
+        6
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o7"
+      ],
+      "attrs": {
+       "sayac": "$uid:o5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o7"
+       ],
+       "ids": [
+        7
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o8"
+      ],
+      "attrs": {
+       "bina": "$uid:o1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o8"
+       ],
+       "ids": [
+        8
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uid:o2",
+       "$uid:o1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "removed": [
+        "$uid:o2",
+        "$uid:o1"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "attrs": {
+         "no": "S-1",
+         "bina": "$uid:o1"
+        }
+       },
+       "4": {
+        "attrs": {
+         "no": "S-2",
+         "bina": "$uid:o1"
+        }
+       },
+       "5": {
+        "attrs": {
+         "no": "S-3",
+         "bina": "$uid:o2"
+        }
+       },
+       "6": {
+        "attrs": {
+         "no": "V-1",
+         "sayac": "$uid:o3"
+        }
+       },
+       "7": {
+        "attrs": {
+         "no": "V-2",
+         "sayac": "$uid:o5"
+        }
+       },
+       "8": {
+        "attrs": {
+         "ad": "Ayşe",
+         "bina": "$uid:o1"
+        }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çoktan çoğa restrict: maliki olan bina silinmez",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İlişkiler",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Binanın malikleri",
+       "parent": "bina",
+       "child": "malik",
+       "field": "binalar",
+       "onDelete": "restrict"
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "sayac",
+      "name": "Sayac",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "vana",
+      "name": "Vana",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "sayac",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "abone",
+      "name": "Abone",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "A"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "B"
+      },
+      "pts": [
+       {
+        "x": 487012,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420010
+       },
+       {
+        "x": 487012,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-1"
+      },
+      "pts": [
+       {
+        "x": 487024,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420010
+       },
+       {
+        "x": 487024,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-2"
+      },
+      "pts": [
+       {
+        "x": 487036,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420010
+       },
+       {
+        "x": 487036,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-3"
+      },
+      "pts": [
+       {
+        "x": 487048,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420010
+       },
+       {
+        "x": 487048,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-1"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-2"
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420010
+       },
+       {
+        "x": 487072,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "abone",
+      "attrs": {
+       "ad": "Ayşe"
+      },
+      "pts": [
+       {
+        "x": 487084,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420010
+       },
+       {
+        "x": 487084,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 1,
+     "as": "o1"
+    },
+    {
+     "op": "captureUid",
+     "id": 2,
+     "as": "o2"
+    },
+    {
+     "op": "captureUid",
+     "id": 3,
+     "as": "o3"
+    },
+    {
+     "op": "captureUid",
+     "id": 4,
+     "as": "o4"
+    },
+    {
+     "op": "captureUid",
+     "id": 5,
+     "as": "o5"
+    },
+    {
+     "op": "captureUid",
+     "id": 6,
+     "as": "o6"
+    },
+    {
+     "op": "captureUid",
+     "id": 7,
+     "as": "o7"
+    },
+    {
+     "op": "captureUid",
+     "id": 8,
+     "as": "o8"
+    },
+    {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o3"
+      ],
+      "attrs": {
+       "bina": "$uid:o1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o3"
+       ],
+       "ids": [
+        3
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o4"
+      ],
+      "attrs": {
+       "bina": "$uid:o1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o4"
+       ],
+       "ids": [
+        4
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o5"
+      ],
+      "attrs": {
+       "bina": "$uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o5"
+       ],
+       "ids": [
+        5
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o6"
+      ],
+      "attrs": {
+       "sayac": "$uid:o3"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o6"
+       ],
+       "ids": [
+        6
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o7"
+      ],
+      "attrs": {
+       "sayac": "$uid:o5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o7"
+       ],
+       "ids": [
+        7
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o8"
+      ],
+      "attrs": {
+       "bina": "$uid:o1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o8"
+       ],
+       "ids": [
+        8
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uid:o2"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "relation_restricted",
+       "message": "“Binanın malikleri” ilişkisi alt kayıtları olan nesnenin silinmesine izin vermiyor. Önce alt kayıtları silin ya da bağlarını koparın.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same"
      }
     }
    ]

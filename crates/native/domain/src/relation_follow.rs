@@ -38,11 +38,11 @@ impl Document {
                 {
                     continue;
                 }
-                let Some(name) = self
+                let Some((name, many)) = self
                     .layers
                     .get(&r.child)
                     .and_then(|n| n.fields.iter().find(|f| f.key() == r.field))
-                    .map(|f| f.name.clone())
+                    .map(|f| (f.name.clone(), f.multiple))
                 else {
                     continue;
                 };
@@ -58,11 +58,42 @@ impl Document {
                             .base()
                             .attrs
                             .get(&name)
-                            .is_some_and(|v| v.trim() == id)
+                            .is_some_and(|v| holds_id(v, &id))
                     })
                     .cloned()
                     .collect();
                 for child in children {
+                    // A many-to-many child keeps its other parents: the gone one's id leaves its list,
+                    // and it is cascaded only when none is left (docs/adr/0409 §2).
+                    let left: Option<String> = many.then(|| {
+                        child
+                            .entity
+                            .base()
+                            .attrs
+                            .get(&name)
+                            .map(|v| {
+                                v.split(';')
+                                    .map(str::trim)
+                                    .filter(|h| !h.is_empty() && *h != id)
+                                    .collect::<Vec<_>>()
+                                    .join(kentos_contracts::MULTIPLE_JOIN)
+                            })
+                            .unwrap_or_default()
+                    });
+                    if let Some(rest) = left.as_ref().filter(|rest| !rest.is_empty()) {
+                        let mut entity = (*child.entity).clone();
+                        entity.base_mut().attrs.insert(name.clone(), rest.clone());
+                        let op = Op::Update {
+                            after: Stored {
+                                uid: child.uid,
+                                entity: Arc::new(entity),
+                            },
+                            before: child,
+                        };
+                        self.apply_op(&op);
+                        out.push(op);
+                        continue;
+                    }
                     let op = match r.on_delete {
                         RelationDelete::Cascade => {
                             if !seen.insert(child.uid) {
@@ -125,7 +156,7 @@ impl Document {
                             .base()
                             .attrs
                             .get(name)
-                            .is_some_and(|v| v.trim() == id)
+                            .is_some_and(|v| holds_id(v, &id))
                 });
                 if has {
                     out.push((*uid, r.name.clone()));
@@ -135,4 +166,10 @@ impl Document {
         }
         out
     }
+}
+
+/// Whether a reference field's value holds `id`: the id itself or one of a many-to-many field's ids
+/// (an id has no `;`).
+fn holds_id(value: &str, id: &str) -> bool {
+    value.split(';').any(|h| h.trim() == id)
 }

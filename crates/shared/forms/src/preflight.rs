@@ -107,9 +107,16 @@ pub fn widget_fits(widget: FormWidget, field: &LayerField) -> Result<(), &'stati
         LayerFieldKind::Date => widget == W::Date,
         LayerFieldKind::Boolean => matches!(widget, W::Check | W::Switch | W::Radio | W::Segmented),
     };
-    // A multiple field is edited by its check list, and the check list edits only it
-    // (docs/adr/0408 §2).
-    if !kind_fits || field.multiple != (widget == W::CheckList) {
+    // A listed multiple field is edited by its check list, a free one by text; the check list edits
+    // only a multiple field (docs/adr/0408 §2, 0409 §1).
+    let many_fits = if field.multiple && listed {
+        widget == W::CheckList
+    } else if field.multiple {
+        matches!(widget, W::Text | W::TextArea | W::CheckList)
+    } else {
+        widget != W::CheckList
+    };
+    if !kind_fits || !many_fits {
         return Err(codes::WIDGET_UNFIT);
     }
     // A slider runs between the field's least and most (docs/adr/0406 §2).

@@ -141,8 +141,9 @@ pub struct LayerField {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub default: Option<String>,
-    /// A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,
-    /// joined with `; `; written only as `true`.
+    /// A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the
+    /// list's order, an unlisted one its values in their order (objects' persistent ids for a
+    /// many-to-many reference), joined with `; `; written only as `true`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub multiple: bool,
@@ -170,9 +171,9 @@ impl LayerField {
         }
     }
 
-    /// Whether it holds several codes: a multiple listed text field.
+    /// Whether it holds several values: a multiple text field.
     pub fn holds_many(&self) -> bool {
-        self.multiple && self.kind == LayerFieldKind::Text && self.choices().is_some()
+        self.multiple && self.kind == LayerFieldKind::Text
     }
 
     /// A multiple field's codes in `value`, in its order (empty parts left out).
@@ -508,6 +509,22 @@ pub fn check_value(field: &LayerField, text: &str) -> Result<String, Refusal> {
         }
     }
     let choices = field.choices();
+    // A multiple field without a list: its values in their order once each (docs/adr/0409 §1).
+    if field.holds_many() && choices.is_none() {
+        let mut seen: Vec<&str> = Vec::new();
+        for part in field.codes_of(s) {
+            if !seen.contains(&part) {
+                seen.push(part);
+            }
+        }
+        if seen.is_empty() && field.required {
+            return Err(refusal(
+                "required",
+                format!("“{label}” alanı zorunlu; boş bırakılamaz."),
+            ));
+        }
+        return Ok(seen.join(MULTIPLE_JOIN));
+    }
     // A multiple field: each part a code or a label, written in the list's order once each.
     if field.holds_many()
         && let Some(choices) = choices
@@ -738,9 +755,9 @@ pub fn field_problem(field: &LayerField) -> Option<String> {
             }
         }
     }
-    if field.multiple && (kind != LayerFieldKind::Text || field.values.is_none()) {
+    if field.multiple && kind != LayerFieldKind::Text {
         return Some(format!(
-            "“{name}” alanı çok değerli olamaz: bu yalnız değer listesi olan metin alanında olur."
+            "“{name}” alanı çok değerli olamaz: bu yalnız metin alanında olur."
         ));
     }
     if let Some(d) = &field.default {

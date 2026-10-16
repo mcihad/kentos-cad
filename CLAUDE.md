@@ -373,7 +373,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   ve Revizyon bulutu yöntemleri, Düzgün çokgen'in çember içinde, dışında, kenardan'ı; Dikdörtgen'in Alan'ı (A) ve Boyutlarla, Alanla
   yöntemleri, Yardımcı çizgi'nin Paralel'i (P, Noktadan), Revizyon bulutu'nun Nesne'si (N); hesap çekirdekte (`rect_side_for_area`,
   `xline_offset`, `cloud_around`), yazma araçların kendi komutlarıyla (ADR 0287);
-  formlar (ADR 0400–0408): Tab ile alanlar arasında gezinme ve klavyeyle form öğeleri; katmanın veri giriş ekranı projede
+  formlar (ADR 0400–0409): Tab ile alanlar arasında gezinme ve klavyeyle form öğeleri; katmanın veri giriş ekranı projede
   (`.kcad` şema 60 `forms`, alanın kararlı `id`'si), çekirdek `kentos-forms` (ön denetim, kuralların durumu, kaydın doğrulaması,
   yazma profili), `cad.forms.edit`, `.validate`, `.submit` ve `cad.entities.set`'te `form_rules`; Formlar penceresi (tasarımcı) ve
   Formla düzenle; tipli evet/hayır ve sayı alanları ifadelerde türüyle okunur; Python `kentos.cad.forms`, MCP; ifadeli varsayılan,
@@ -386,7 +386,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   `cad.entities.delete`'te), İlişkiler penceresi, formda Bağla ve Bağı kopar; katmanın bütün kayıtları formla salt okunur
   `cad.forms.audit` ile (Kayıtları denetle), sayı alanında kaydırıcı (`slider`, aralık ister); formda ekler öğesi (kaydın
   fotoğrafları ve belgeleri, en az ve en çok), renk öğesi ve katmanın değerlerinden öneri (`suggest`); çok değerli alan
-  (`LayerField.multiple`, kodlar `; ` ile) ve çoklu seçim öğesi, Formla düzenle'de kayıtlar arasında ◀ ▶;
+  (`LayerField.multiple`, kodlar `; ` ile) ve çoklu seçim öğesi, Formla düzenle'de kayıtlar arasında ◀ ▶; çoktan çoğa
+  ilişki (çok değerli başvuru, silme politikası öbür bağları korur) ve ilişkili kayıtlarda Yeni;
   görünümler: adlı görünümler projenin ayarı (`.kcad` şema 52 `namedViews`, `cad.views.edit`: keep, rename, remove; Görünümler penceresi;
   Python, MCP), Görünümü döndür (iki nokta ya da açı, UCS'e göre, Kuzey yukarı; kamera dönüşü `crates/render/wgpu` kamerasında, dönmüş
   görünümde seçim kutusu çokgen sorgusu), Görünümü böl (yan yana iki model görünümü, etkin olan basmayla değişir) (ADR 0285);

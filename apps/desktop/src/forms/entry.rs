@@ -188,6 +188,9 @@ pub enum Event {
     AttachRemove(usize),
     /// The layer's previous (-1) or next (+1) record, by the form (docs/adr/0408 §3).
     Step(i32),
+    /// A related item's Yeni: a child at the record's place, linked to it, opened by its form
+    /// (docs/adr/0409 §3).
+    NewRelated(String),
     FirstIssue,
     Save,
     Cancel,
@@ -736,15 +739,43 @@ impl App {
             return Task::none();
         };
         let record = e.uid.clone();
-        let Some(name) = self
+        let Some((name, many)) = self
             .layer_fields_of(&layer)
             .iter()
             .find(|f| f.key() == field)
-            .map(|f| f.name.clone())
+            .map(|f| (f.name.clone(), f.multiple))
         else {
             return Task::none();
         };
-        let value = link.then_some(record);
+        // A many-to-many field keeps its other ids: the record's is added or taken off
+        // (docs/adr/0409 §1).
+        let held: Vec<String> = if many {
+            self.document
+                .as_ref()
+                .and_then(|d| {
+                    let slot = d.model.slot_of(kentos_domain::Uuid::parse_str(uid).ok()?)?;
+                    d.model.get(slot)?.base().attrs.get(&name).cloned()
+                })
+                .map(|v| {
+                    v.split(';')
+                        .map(|h| h.trim().to_owned())
+                        .filter(|h| !h.is_empty() && *h != record)
+                        .collect()
+                })
+                .unwrap_or_default()
+        } else {
+            Vec::new()
+        };
+        let value = match (many, link) {
+            (true, true) => Some(
+                [held, vec![record]]
+                    .concat()
+                    .join(kentos_contracts::MULTIPLE_JOIN),
+            ),
+            (true, false) => (!held.is_empty()).then(|| held.join(kentos_contracts::MULTIPLE_JOIN)),
+            (false, true) => Some(record),
+            (false, false) => None,
+        };
         let input = serde_json::json!({
             "uids": [uid],
             "attrs": { name: value },
@@ -776,6 +807,72 @@ impl App {
                 "Nesnenin kayda bağı koparıldı."
             },
         );
+        self.refresh_entry()
+    }
+
+    /// Yeni of a related item (docs/adr/0409 §3): a point of the other layer at the record's place,
+    /// its field holding the record's id (`cad.point.create`, the child's own form's rules too), then
+    /// opened by its layer's form.
+    fn new_related(&mut self, item: &str) -> Task<Message> {
+        let Some(e) = self.form_entry.as_ref() else {
+            return Task::none();
+        };
+        let Some(FormItem::Related { layer, field, .. }) =
+            crate::forms::designer::find(&e.body.items, item).cloned()
+        else {
+            return Task::none();
+        };
+        let Some((east, north)) = e.screen.object.measured.anchor else {
+            self.say(Level::Warn, "Kaydın yeri yok: alt kayıt elle çizilmeli.");
+            return Task::none();
+        };
+        let record = e.uid.clone();
+        let Some(name) = self
+            .layer_fields_of(&layer)
+            .iter()
+            .find(|f| f.key() == field)
+            .map(|f| f.name.clone())
+        else {
+            return Task::none();
+        };
+        let input = serde_json::json!({
+            "p": { "x": east, "y": north },
+            "layerId": layer,
+            "attrs": { name: record },
+        });
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let answer = kentos_native_application::registry::run(
+            &mut ExecutionContext::new(&mut doc.model),
+            kentos_contracts::CAD_POINT_CREATE,
+            kentos_contracts::CallOp::Execute,
+            input,
+        );
+        let made = match answer {
+            Ok(v) if v["status"] == "completed" => v["output"]["uid"]
+                .as_str()
+                .and_then(|u| kentos_domain::Uuid::parse_str(u).ok())
+                .and_then(|u| doc.model.slot_of(u)),
+            Ok(v) => {
+                let why = v["error"]["message"].as_str().unwrap_or("").to_owned();
+                self.say(Level::Warn, format!("Alt kayıt oluşturulamadı: {why}"));
+                return Task::none();
+            }
+            Err(e) => {
+                self.say(Level::Warn, format!("Alt kayıt oluşturulamadı: {e:?}"));
+                return Task::none();
+            }
+        };
+        let Some(slot) = made else {
+            return Task::none();
+        };
+        self.say(Level::Success, "Alt kayıt oluşturuldu ve kayda bağlandı.");
+        // The child's own form, else the record shows its new child.
+        if let Some(form) = self.form_of_layer(&layer) {
+            self.selection.set([slot]);
+            return self.open_entry(slot, &form);
+        }
         self.refresh_entry()
     }
 
@@ -897,7 +994,9 @@ impl App {
             | Event::AttachOpen(_)
             | Event::AttachRemove(_)
             | Event::Step(_)
+            | Event::NewRelated(_)
                 if preview => {}
+            Event::NewRelated(item) => return self.new_related(&item),
             Event::Step(step) => {
                 if e.dirty() {
                     self.say(
@@ -1725,18 +1824,29 @@ impl App {
         if uids.len() > 50 {
             col = col.push(label::caption(format!("{} nesne daha.", uids.len() - 50)).style(muted));
         }
+        let mut actions = Row::new().spacing(6).align_y(Center);
+        if live {
+            actions = actions.push(words::secondary(
+                "Yeni",
+                Some(e.msg(Event::NewRelated(id.to_owned()))),
+            ));
+        }
         if !candidates.is_empty() {
             let item = id.to_owned();
             let picks = candidates.clone();
-            col = col.push(
-                Select::new(
-                    candidates.iter().map(|(_, w)| Choice::new(w.clone())),
-                    None,
-                    move |i| Message::FormEntry(Event::Link(item.clone(), picks[i].0.clone())),
+            actions = actions.push(
+                container(
+                    Select::new(
+                        candidates.iter().map(|(_, w)| Choice::new(w.clone())),
+                        None,
+                        move |i| Message::FormEntry(Event::Link(item.clone(), picks[i].0.clone())),
+                    )
+                    .placeholder("Bağla: bir nesne seçin"),
                 )
-                .placeholder("Bağla: bağsız bir nesne seçin"),
+                .width(Fill),
             );
         }
+        col = col.push(actions);
         container(col)
             .padding(10)
             .style(style::container::field_box)

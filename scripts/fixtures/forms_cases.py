@@ -143,6 +143,13 @@ def check_value(f, text):
     if f["kind"] == "text" and "length" in f and len(text) > f["length"]:
         return None, "length"
     choices = f.get("values") or None
+    if not choices and f.get("multiple") and f["kind"] == "text":
+        # docs/adr/0409 §1: free values (ids of a many-to-many reference) in their order once each.
+        seen = []
+        for part in (p.strip(JS_SPACE) for p in s.split(";")):
+            if part and part not in seen:
+                seen.append(part)
+        return "; ".join(seen), None
     if choices and f.get("multiple") and f["kind"] == "text":
         # docs/adr/0408 §1: labels or codes, in the list's order once each, joined with "; ".
         picked = set()
@@ -313,7 +320,7 @@ FITS = {
 def widget_of(item, f):
     if "widget" in item:
         return item["widget"]
-    if f.get("multiple"):
+    if f.get("multiple") and (f.get("values") or "lookup" in item):
         return "checkList"
     if f.get("values"):
         return "list"
@@ -412,7 +419,12 @@ def preflight(body, fields, variables=(), world=None):
             issues.append(issue("form_field_unknown", True, f["id"], key))
             return
         w = widget_of(f, layer)
-        if w not in FITS[layer["kind"]] or bool(layer.get("multiple")) != (w == "checkList"):
+        listed = bool(layer.get("values")) or "lookup" in f
+        if layer.get("multiple"):
+            many_fits = w == "checkList" if listed else w in ("text", "textArea", "checkList")
+        else:
+            many_fits = w != "checkList"
+        if w not in FITS[layer["kind"]] or not many_fits:
             issues.append(issue("form_widget_unfit", True, f["id"], key))
         elif w == "slider" and ("min" not in layer or "max" not in layer):
             issues.append(issue("form_widget_needs_range", True, f["id"], key))
@@ -684,7 +696,8 @@ class Form:
                     state["attachments"] = n
             elif x["type"] == "related":
                 uid = (obj or {}).get("uid")
-                state["related"] = [own for own, held in self.related[x["id"]] if uid is not None and held == uid]
+                state["related"] = [own for own, held in self.related[x["id"]]
+                                    if uid is not None and uid in [h.strip(JS_SPACE) for h in held.split(";")]]
             elif x["type"] == "note" and not template_plain(x["text"]):
                 values = [text_or_none(value_of(src, self.fields, attrs, self.ctx(obj)))
                           for src in template_exprs(x["text"])]
@@ -769,7 +782,8 @@ class Form:
             if widget_of(x, f) == "color" and not is_colour(value):
                 issues.append(issue("form_color_invalid", True, x["id"], key_of(f)))
                 continue
-            if "lookup" in x and canonical not in [r[0] for r in self.offered(x, attrs)]:
+            held = [p.strip(JS_SPACE) for p in canonical.split(";") if p.strip(JS_SPACE)] if f.get("multiple") else [canonical]
+            if "lookup" in x and any(h not in [r[0] for r in self.offered(x, attrs)] for h in held):
                 issues.append(issue("form_lookup_missing", True, x["id"], key_of(f), "lookup"))
                 continue
             offered = None if "lookup" in x else self.choices(x, attrs, obj)
@@ -829,7 +843,7 @@ class Form:
                 continue
             x = next(x for x, _ in self.bound() if x["field"] == key)
             if "lookup" in x:
-                text = self.code_of(x, text)
+                text = "; ".join(self.code_of(x, p) for p in text.split(";")) if f.get("multiple") else self.code_of(x, text)
             v, why = check_value(f, text)
             if why:
                 issues.append(issue("form_value_invalid", True, self.item_of(key), key))
@@ -1202,7 +1216,9 @@ LOOK_WORLD = {
     "sayac": {"name": "Sayaçlar", "fields": [{"name": "no", "kind": "text"}, {"name": "bina", "kind": "text"}],
               "rows": rows((41, {"no": "S-1", "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"}),
                            (42, {"no": "S-2", "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"}),
-                           (43, {"no": "S-3", "bina": "başka"}))},
+                           (43, {"no": "S-3", "bina": "başka"}),
+                           # docs/adr/0409 §1: a meter shared by two buildings.
+                           (44, {"no": "S-4", "bina": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0050; 0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0063"}))},
 }
 LOOK_FIELDS = [{"name": "İl", "kind": "text"}, {"name": "İlçe", "kind": "text"}, {"name": "Mahalle", "kind": "text"},
                {"name": "Parsel", "kind": "text"}, {"name": "Tür", "kind": "text",
@@ -1275,6 +1291,27 @@ def lookup_cases():
     write("parsel adasıyla seçilir, kimliği yazılır", {"İl": "06"}, [["Parsel", "101/12"]])
     write("listede olmayan değer yazılmaz", {"İl": "06"}, [["İlçe", "Kadıköy"]])
     write("üst alan değişince alt alan zincirin dışında kalır", {"İl": "06", "İlçe": "0601"}, [["İl", "34"]])
+
+    # docs/adr/0409 §1: a many-to-many reference: several parcels by their ids.
+    nm_fields = LOOK_FIELDS + [{"name": "Parseller", "kind": "text", "multiple": True}]
+    nm_body = look_with(lambda b: b["items"].insert(4, {"type": "field", "id": "parseller", "field": "Parseller",
+                                                        "lookup": {"layer": "parsel", "key": "$uid", "label": "ada"}}))
+    case("çoktan çoğa: çok değerli alana başka katmandan çoklu seçim", nm_body, nm_fields)
+    case("çok değerli başvuruyu tek seçimli liste düzenleyemez",
+         look_with(lambda b: b["items"].insert(4, {"type": "field", "id": "parseller", "field": "Parseller", "widget": "list",
+                                                   "lookup": {"layer": "parsel", "key": "$uid", "label": "ada"}})), nm_fields)
+    p31, p32 = rows((31, {}), (32, {}))[0][0], rows((32, {}),)[0][0]
+    for name, attrs in (("iki parselin kimliği geçerli", {"İl": "06", "Parseller": f"{p31}; {p32}"}),
+                        ("olmayan parsel hatadır", {"İl": "06", "Parseller": f"{p31}; 0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d00ff"})):
+        form = Form(nm_body, nm_fields, (), LOOK_WORLD)
+        records.append({"name": f"çoktan çoğa: {name}", "fields": nm_fields, "body": nm_body, "variables": [], "world": LOOK_WORLD,
+                        "object": LOOK_OBJECT, "attrs": attrs, "items": form.described(attrs, LOOK_OBJECT),
+                        "issues": form.validate(attrs, LOOK_OBJECT)})
+    after, issues = Form(nm_body, nm_fields, (), LOOK_WORLD).assess({"İl": "06"}, [["Parseller", "101/12; 101/5; 101/12"]],
+                                                                    LOOK_OBJECT, False)
+    assess.append({"name": "çoktan çoğa: adalarıyla seçilir, kimlikleri yazılan sırayla bir kez", "fields": nm_fields,
+                   "body": nm_body, "variables": [], "world": LOOK_WORLD, "object": LOOK_OBJECT, "before": {"İl": "06"},
+                   "values": [["Parseller", "101/12; 101/5; 101/12"]], "new": False, "after": after, "issues": issues})
     return pre, records, assess
 
 
@@ -2832,13 +2869,22 @@ def tree_audit_cases():
 REL_FIELDS = {"bina": [{"name": "Ad", "kind": "text"}],
               "sayac": [{"name": "no", "kind": "text"}, {"name": "bina", "kind": "text"}],
               "vana": [{"name": "no", "kind": "text"}, {"name": "sayac", "kind": "text"}],
-              "abone": [{"name": "ad", "kind": "text"}, {"name": "bina", "kind": "text"}]}
+              "abone": [{"name": "ad", "kind": "text"}, {"name": "bina", "kind": "text"}],
+              # docs/adr/0409 §1: an owner of several buildings (many-to-many).
+              "malik": [{"name": "ad", "kind": "text"}, {"name": "binalar", "kind": "text", "multiple": True}]}
 # The objects: two buildings; meters of the first two and of the second one; valves of the meters; a subscriber.
 REL_OBJECTS = [(1, "bina", {"Ad": "A"}), (2, "bina", {"Ad": "B"}), (3, "sayac", {"no": "S-1"}), (4, "sayac", {"no": "S-2"}),
-               (5, "sayac", {"no": "S-3"}), (6, "vana", {"no": "V-1"}), (7, "vana", {"no": "V-2"}), (8, "abone", {"ad": "Ayşe"})]
+               (5, "sayac", {"no": "S-3"}), (6, "vana", {"no": "V-1"}), (7, "vana", {"no": "V-2"}), (8, "abone", {"ad": "Ayşe"}),
+               (9, "malik", {"ad": "Mehmet"})]
 # Who refers to whom: a child, its field and its parent.
-REL_LINKS = [(3, "bina", 1), (4, "bina", 1), (5, "bina", 2), (6, "sayac", 3), (7, "sayac", 5), (8, "bina", 1)]
+REL_LINKS = [(3, "bina", 1), (4, "bina", 1), (5, "bina", 2), (6, "sayac", 3), (7, "sayac", 5), (8, "bina", 1),
+             (9, "binalar", (1, 2))]
 REL_IDS = [o[0] for o in REL_OBJECTS]
+
+
+def parts(value):
+    """A reference field's ids: one, or a many-to-many field's several (docs/adr/0409 §1)."""
+    return [h.strip(JS_SPACE) for h in value.split(";") if h.strip(JS_SPACE)]
 
 
 def relation(i, parent, child, field, on_delete=None, name=None):
@@ -2930,9 +2976,10 @@ def delete_relation_cases():
     def links(relations):
         steps, state = [], {i: dict(a) for i, _, a in REL_OBJECTS}
         for child, field, parent in REL_LINKS:
-            state[child][field] = f"$uid:o{parent}"
+            held = "; ".join(f"$uid:o{p}" for p in (parent if isinstance(parent, tuple) else (parent,)))
+            state[child][field] = held
             steps.append({"op": "execute", "command": "cad.entities.set",
-                          "input": {"uids": [f"$uid:o{child}"], "attrs": {field: f"$uid:o{parent}"}, "operation": "attributes"},
+                          "input": {"uids": [f"$uid:o{child}"], "attrs": {field: held}, "operation": "attributes"},
                           "result": {"status": "completed", "output": {"changed": [f"$uid:o{child}"], "ids": [child],
                                                                         "revision": "$current"}, "warnings": []},
                           "expect": {"ids": REL_IDS, "canUndo": True, "canRedo": False, "dirty": True, "revision": "changed"}})
@@ -2950,11 +2997,17 @@ def delete_relation_cases():
                 pol = r.get("onDelete", "unlink")
                 if r["parent"] != layer_of[parent] or pol in ("keep", "restrict") or r["child"] in locked:
                     continue
-                names = [f["name"] for f in REL_FIELDS[r["child"]] if f["name"] == r["field"]]
-                if not names:
+                found = [f for f in REL_FIELDS[r["child"]] if f["name"] == r["field"]]
+                if not found:
                     continue
-                for c in [c for c in out if layer_of[c] == r["child"] and out[c].get(names[0], "").strip() == f"$uid:o{parent}"]:
-                    if pol == "cascade":
+                names = [found[0]["name"]]
+                me = f"$uid:o{parent}"
+                for c in [c for c in out if layer_of[c] == r["child"] and me in parts(out[c].get(names[0], ""))]:
+                    # docs/adr/0409 §2: a many-to-many child keeps its other parents; cascaded only when none is left.
+                    rest = [h for h in parts(out[c][names[0]]) if h != me] if found[0].get("multiple") else []
+                    if rest:
+                        out[c][names[0]] = "; ".join(rest)
+                    elif pol == "cascade":
                         out.pop(c)
                         gone.append(c)
                         queue.append(c)
@@ -2967,7 +3020,7 @@ def delete_relation_cases():
             for r in relations:
                 if r["parent"] != layer_of[i] or r.get("onDelete") != "restrict":
                     continue
-                if any(layer_of[c] == r["child"] and c not in ids and state[c].get(r["field"], "").strip() == f"$uid:o{i}"
+                if any(layer_of[c] == r["child"] and c not in ids and f"$uid:o{i}" in parts(state[c].get(r["field"], ""))
                        for c in state):
                     return k, r["name"]
         return None
@@ -3027,6 +3080,12 @@ def delete_relation_cases():
     case("ikinci binada restrict, ilk bina unlink ilişkisiyle", [R("restrict")], [2])
     case("restrict ilişkisi zincirin altında: sayaç silinmez", [V("restrict")], [5])
     case("abone cascade, sayaç keep", [R("keep"), A("cascade")], [1], undo=True)
+    M = lambda pol: relation("bina-malik", "bina", "malik", "binalar", pol, "Binanın malikleri")  # noqa: E731
+    case("çoktan çoğa unlink: malik öbür binasıyla kalır", [M("unlink")], [1])
+    case("çoktan çoğa cascade: öbür binası varken malik silinmez", [M("cascade")], [1])
+    case("çoktan çoğa cascade: iki binası da gidince malik silinir", [M("cascade")], [1, 2], undo=True)
+    case("çoktan çoğa unlink: iki bina gidince alan boşalır", [M("unlink")], [2, 1])
+    case("çoktan çoğa restrict: maliki olan bina silinmez", [M("restrict")], [2])
     return cases
 
 

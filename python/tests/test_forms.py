@@ -286,6 +286,36 @@ class FormsTests(unittest.TestCase):
             cad.entities.set(doc, uids=[tree], operation="attributes", attrs={"Bakım": "budama; gübre"})
         self.assertEqual(refused.exception.code, "invalid_attribute")
 
+    def test_many_to_many_owners(self) -> None:
+        """docs/adr/0409: an owner holds several buildings by their ids; a building gone leaves the others."""
+        doc = cad.Document.new("Mahalle", srid=5256)
+        for name in ("Bina", "Malik"):
+            cad.layers.edit(doc, operation="add", name=name)
+        building_layer = next(n.id for n in doc.layers() if n.name == "Bina")
+        owner_layer = next(n.id for n in doc.layers() if n.name == "Malik")
+        cad.layers.edit(
+            doc, operation="fields", layer=owner_layer,
+            fields=[cad.LayerField(name="Binalar", kind="text", multiple=True)],
+        )
+        cad.relations.edit(
+            doc,
+            edit=cad.CreateRelationsOp(
+                relation=cad.ProjectRelation(
+                    id="bina-malik", name="Malikler", parent=building_layer, child=owner_layer, field="Binalar",
+                    on_delete="cascade",
+                )
+            ),
+        )
+        square = lambda x: [cad.Vec2(x, 0.0), cad.Vec2(x + 5.0, 0.0), cad.Vec2(x + 5.0, 5.0)]  # noqa: E731
+        b1, b2 = (cad.polygon.create(doc, pts=square(x), layer_id=building_layer).uid for x in (0.0, 10.0))
+        owner = cad.point.create(doc, p=cad.Vec2(2.0, 8.0), layer_id=owner_layer).uid
+        cad.entities.set(doc, uids=[owner], operation="attributes", attrs={"Binalar": f"{b2}; {b1}; {b2}"})
+        self.assertEqual(doc.entity(owner).entity.attrs, {"Binalar": f"{b2}; {b1}"})
+        cad.entities.delete(doc, uids=[b1])
+        self.assertEqual(doc.entity(owner).entity.attrs, {"Binalar": b2})
+        cad.entities.delete(doc, uids=[b2])
+        self.assertEqual([r.uid for r in doc.entities(layer=owner_layer)], [])
+
     def test_a_relation_keeps_its_children(self) -> None:
         """docs/adr/0405: a meter refers to its building; the building deleted, its meters go with it (cascade); a
         restricting relation keeps a building with meters."""

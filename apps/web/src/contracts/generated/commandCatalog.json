@@ -5962,7 +5962,7 @@
                 ]
               },
               "multiple": {
-                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "description": "A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the\nlist's order, an unlisted one its values in their order (objects' persistent ids for a\nmany-to-many reference), joined with `; `; written only as `true`.",
                 "type": "boolean"
               },
               "name": {
@@ -14882,7 +14882,7 @@
                 ]
               },
               "multiple": {
-                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "description": "A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the\nlist's order, an unlisted one its values in their order (objects' persistent ids for a\nmany-to-many reference), joined with `; `; written only as `true`.",
                 "type": "boolean"
               },
               "name": {
@@ -23436,7 +23436,7 @@
                 ]
               },
               "multiple": {
-                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "description": "A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the\nlist's order, an unlisted one its values in their order (objects' persistent ids for a\nmany-to-many reference), joined with `; `; written only as `true`.",
                 "type": "boolean"
               },
               "name": {
@@ -125593,7 +125593,7 @@
                 ]
               },
               "multiple": {
-                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "description": "A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the\nlist's order, an unlisted one its values in their order (objects' persistent ids for a\nmany-to-many reference), joined with `; `; written only as `true`.",
                 "type": "boolean"
               },
               "name": {
@@ -134088,7 +134088,7 @@
                 ]
               },
               "multiple": {
-                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "description": "A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the\nlist's order, an unlisted one its values in their order (objects' persistent ids for a\nmany-to-many reference), joined with `; `; written only as `true`.",
                 "type": "boolean"
               },
               "name": {
@@ -142706,7 +142706,7 @@
                 ]
               },
               "multiple": {
-                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "description": "A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the\nlist's order, an unlisted one its values in their order (objects' persistent ids for a\nmany-to-many reference), joined with `; `; written only as `true`.",
                 "type": "boolean"
               },
               "name": {
@@ -296232,7 +296232,7 @@
                 ]
               },
               "multiple": {
-                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "description": "A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the\nlist's order, an unlisted one its values in their order (objects' persistent ids for a\nmany-to-many reference), joined with `; `; written only as `true`.",
                 "type": "boolean"
               },
               "name": {
@@ -297836,7 +297836,7 @@
                 ]
               },
               "multiple": {
-                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "description": "A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the\nlist's order, an unlisted one its values in their order (objects' persistent ids for a\nmany-to-many reference), joined with `; `; written only as `true`.",
                 "type": "boolean"
               },
               "name": {
@@ -301804,7 +301804,7 @@
                 ]
               },
               "multiple": {
-                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "description": "A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the\nlist's order, an unlisted one its values in their order (objects' persistent ids for a\nmany-to-many reference), joined with `; `; written only as `true`.",
                 "type": "boolean"
               },
               "name": {
@@ -304154,7 +304154,7 @@
                 ]
               },
               "multiple": {
-                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "description": "A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the\nlist's order, an unlisted one its values in their order (objects' persistent ids for a\nmany-to-many reference), joined with `; `; written only as `true`.",
                 "type": "boolean"
               },
               "name": {
@@ -306265,7 +306265,7 @@
                 ]
               },
               "multiple": {
-                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "description": "A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the\nlist's order, an unlisted one its values in their order (objects' persistent ids for a\nmany-to-many reference), joined with `; `; written only as `true`.",
                 "type": "boolean"
               },
               "name": {
@@ -308351,7 +308351,7 @@
                 ]
               },
               "multiple": {
-                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "description": "A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the\nlist's order, an unlisted one its values in their order (objects' persistent ids for a\nmany-to-many reference), joined with `; `; written only as `true`.",
                 "type": "boolean"
               },
               "name": {
@@ -311213,7 +311213,7 @@
                 ]
               },
               "multiple": {
-                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "description": "A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the\nlist's order, an unlisted one its values in their order (objects' persistent ids for a\nmany-to-many reference), joined with `; `; written only as `true`.",
                 "type": "boolean"
               },
               "name": {
@@ -313612,7 +313612,7 @@
                 ]
               },
               "multiple": {
-                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "description": "A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the\nlist's order, an unlisted one its values in their order (objects' persistent ids for a\nmany-to-many reference), joined with `; `; written only as `true`.",
                 "type": "boolean"
               },
               "name": {
@@ -314731,7 +314731,7 @@
                 ]
               },
               "multiple": {
-                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "description": "A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the\nlist's order, an unlisted one its values in their order (objects' persistent ids for a\nmany-to-many reference), joined with `; `; written only as `true`.",
                 "type": "boolean"
               },
               "name": {

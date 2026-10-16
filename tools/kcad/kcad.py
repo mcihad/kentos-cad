@@ -1399,7 +1399,7 @@ def fields_problem(fields):
                 return f"“{name}” alanının değer listesinde boş ya da iki kez yazılmış değer var"
             if f.get("multiple") and any(";" in c["code"] or ";" in c["label"] for c in vs):
                 return f"“{name}” çok değerli; değer listesinde “;” olamaz"
-        if f.get("multiple") and (kind != "text" or "values" not in f):
+        if f.get("multiple") and kind != "text":
             return f"“{name}” alanı çok değerli olamaz"
         if "default" in f and not _default_fits(f, f["default"]):
             return f"“{name}” alanının varsayılanı alanın kurallarına uymuyor"
@@ -1623,10 +1623,13 @@ def _default_fits(f, d):
         ok = "length" not in f or len(d) <= f["length"]
         codes = [c["code"] for c in f.get("values", [])]
         if f.get("multiple"):
-            # docs/adr/0408 §1: the codes in the list's order, once each, joined with "; ".
-            parts = [p for p in d.split("; ")]
-            return ok and bool(parts) and all(p in codes for p in parts) and \
-                [c for c in codes if c in parts] == parts
+            # docs/adr/0408 §1, 0409 §1: listed codes in the list's order, free values in theirs, once each,
+            # joined with "; ", each trimmed and not empty.
+            parts = d.split("; ")
+            ok = ok and all(p and p.strip(JS_SPACE) == p and ";" not in p for p in parts) and len(set(parts)) == len(parts)
+            if not codes:
+                return ok
+            return ok and all(p in codes for p in parts) and [c for c in codes if c in parts] == parts
         return ok and ("values" not in f or d in codes)
     if kind == "date":
         m = re.fullmatch(r"([0-9]{4})-([0-9]{2})-([0-9]{2})", d)

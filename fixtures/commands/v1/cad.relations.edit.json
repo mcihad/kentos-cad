@@ -394,6 +394,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -632,6 +657,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -680,7 +731,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": false,
       "canRedo": false,
@@ -813,6 +865,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -1051,6 +1128,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -1108,7 +1211,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": false,
       "canRedo": false,
@@ -1241,6 +1345,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -1479,6 +1608,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -1536,7 +1691,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": false,
       "canRedo": false,
@@ -1669,6 +1825,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -1907,6 +2088,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -1964,7 +2171,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": false,
       "canRedo": false,
@@ -2097,6 +2305,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -2335,6 +2568,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -2390,7 +2649,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": false,
       "canRedo": false,
@@ -2523,6 +2783,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -2761,6 +3046,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -2811,7 +3122,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": false,
       "canRedo": false,
@@ -2944,6 +3256,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -3182,6 +3519,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -3230,7 +3593,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": false,
       "canRedo": false,
@@ -3362,6 +3726,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -3600,6 +3989,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -3634,7 +4049,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": false,
       "canRedo": false,
@@ -3767,6 +4183,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -4005,6 +4446,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -4062,7 +4529,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": false,
       "canRedo": false,
@@ -4194,6 +4662,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -4432,6 +4925,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -4471,7 +4990,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": false,
       "canRedo": false,
@@ -5297,6 +5817,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -5535,6 +6080,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -5575,7 +6146,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": false,
       "canRedo": false,
@@ -5708,6 +6280,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -5946,6 +6543,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -5986,7 +6609,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": false,
       "canRedo": false,
@@ -6119,6 +6743,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -6357,6 +7006,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -6390,7 +7065,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": false,
       "canRedo": false,
@@ -6514,6 +7190,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -6752,6 +7453,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -6792,7 +7519,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": false,
       "canRedo": false,
@@ -6916,6 +7644,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -7154,6 +7907,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -7194,7 +7973,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": false,
       "canRedo": false,
@@ -7318,6 +8098,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -7556,6 +8361,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -7596,7 +8427,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": false,
       "canRedo": false,
@@ -7720,6 +8552,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -7958,6 +8815,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -7991,7 +8874,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": false,
       "canRedo": false,
@@ -8115,6 +8999,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -8353,6 +9262,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -8393,7 +9328,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": false,
       "canRedo": false,
@@ -8517,6 +9453,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -8755,6 +9716,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -8795,7 +9782,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": false,
       "canRedo": false,
@@ -8919,6 +9907,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -9157,6 +10170,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -9197,7 +10236,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": false,
       "canRedo": false,
@@ -9321,6 +10361,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -9559,6 +10624,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -9600,7 +10691,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": false,
       "canRedo": false,
@@ -9724,6 +10816,31 @@
       ]
      },
      {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
       "id": "grup",
       "name": "Grup",
       "type": "group",
@@ -9962,6 +11079,32 @@
         "y": 4420010
        }
       ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
      }
     ],
     "styles": {
@@ -10004,7 +11147,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "canUndo": false,
       "canRedo": false,
