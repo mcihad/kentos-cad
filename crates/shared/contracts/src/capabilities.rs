@@ -1439,6 +1439,17 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.fields.usage",
+        refusals: &[&[
+            "layer_not_found",
+            "not_a_layer",
+            "service_layer",
+            "field_not_found",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.layers.find",
         refusals: &[&[
             "invalid_pattern",

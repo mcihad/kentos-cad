@@ -280,7 +280,36 @@ impl App {
         Task::none()
     }
 
+    /// Where a saved field of `layer` is named (docs/adr/0414 §1), by its saved name.
+    pub(crate) fn saved_field_uses(
+        &self,
+        layer: &str,
+        name: &str,
+    ) -> Vec<kentos_contracts::FieldUse> {
+        let Some(doc) = &self.document else {
+            return Vec::new();
+        };
+        let model = &doc.model;
+        model
+            .layers()
+            .get(layer)
+            .and_then(|n| n.fields.iter().find(|f| f.name == name))
+            .map(|f| {
+                kentos_forms::field_refs::uses(model.settings(), model.layers().nodes(), layer, f)
+            })
+            .unwrap_or_default()
+    }
+
     pub(crate) fn layer_fields_event(&mut self, event: Event) -> Task<Message> {
+        // Sil on a field named elsewhere says what it breaks (docs/adr/0414 §4).
+        let removed = match &event {
+            Event::Remove => self.layer_fields.as_ref().and_then(|w| {
+                let r = w.chosen.and_then(|i| w.rows.get(i))?;
+                let from = r.from.as_deref()?;
+                Some((r.name.clone(), self.saved_field_uses(&w.layer, from).len()))
+            }),
+            _ => None,
+        };
         let Some(w) = self.layer_fields.as_mut() else {
             return Task::none();
         };
@@ -333,6 +362,14 @@ impl App {
                 if let Some(i) = w.chosen.filter(|&i| i < w.rows.len()) {
                     w.rows.remove(i);
                     w.chosen = (!w.rows.is_empty()).then(|| i.min(w.rows.len() - 1));
+                }
+                if let Some((name, n)) = removed.filter(|(_, n)| *n > 0) {
+                    w.said = Some((
+                        Kind::Warn,
+                        format!(
+                            "“{name}” alanı {n} yerde kullanılıyor; kaydederseniz oralar bozulur. Vazgeç alanları kaydetmeden kapatır."
+                        ),
+                    ));
                 }
             }
             Event::Up | Event::Down => {
@@ -506,6 +543,77 @@ impl App {
         Task::none()
     }
 
+    /// Kullanıldığı yerler (docs/adr/0414 §4): the chosen saved field's places; a rename says what
+    /// follows it and what a published release keeps.
+    fn field_usage_box<'a>(&self, w: &Window) -> Element<'a, Message> {
+        let Some(r) = w.chosen.and_then(|i| w.rows.get(i)) else {
+            return iced::widget::space().into();
+        };
+        let Some(from) = r.from.as_deref() else {
+            return container(label::muted(
+                "Yeni alan: kaydedilince formlarda, koşullarda ve kurallarda kullanılabilir.",
+            ))
+            .into();
+        };
+        let uses = self.saved_field_uses(&w.layer, from);
+        if uses.is_empty() {
+            return container(label::muted(format!(
+                "“{from}” alanı başka bir yerde kullanılmıyor."
+            )))
+            .into();
+        }
+        let kept = uses.iter().filter(|u| u.kept).count();
+        let mut list = Column::new().spacing(2);
+        for u in &uses {
+            let mut line = row![
+                icon(from_web(Some(match u.how {
+                    kentos_contracts::FieldUseHow::Key => "formEdit",
+                    kentos_contracts::FieldUseHow::Name => "layerFields",
+                    kentos_contracts::FieldUseHow::Expression => "expression",
+                    kentos_contracts::FieldUseHow::Template => "text",
+                })))
+                .size(14.0),
+                label::body(u.place.clone()),
+            ]
+            .spacing(6)
+            .align_y(Center);
+            if u.kept {
+                line = line.push(label::muted("yayımlanmış sürüm, değişmez"));
+            }
+            list = list.push(line);
+        }
+        let mut out = Column::new().spacing(6).push(label::strong(format!(
+            "Kullanıldığı yerler ({})",
+            uses.len()
+        )));
+        if r.name != from {
+            let follows = uses
+                .iter()
+                .filter(|u| !u.kept && u.how != kentos_contracts::FieldUseHow::Key)
+                .count();
+            let mut said = format!(
+                "“{from}” adı “{}” olunca {follows} yer yeni adla güncellenecek; alanın anahtarıyla bağlı olanlar bağlı kalır.",
+                r.name
+            );
+            if kept > 0 {
+                said.push_str(&format!(
+                    " Yayımlanmış sürümlerdeki {kept} yer değişmez: formu yeniden yayınlayın."
+                ));
+            }
+            out = out.push(words::text_line(Kind::Warn, said));
+        }
+        out.push(
+            container(
+                iced::widget::scrollable(container(list).padding([4, 8]).width(Fill))
+                    .width(Fill)
+                    .height(Length::Fixed(typography::scaled(100.0))),
+            )
+            .style(style::container::field_box)
+            .width(Fill),
+        )
+        .into()
+    }
+
     pub(crate) fn layer_fields_view(&self) -> Element<'_, Message> {
         let (Some(w), Some(doc)) = (&self.layer_fields, &self.document) else {
             return text("").into();
@@ -587,12 +695,16 @@ impl App {
                 .padding(8),
             );
         }
+        // As tall as its rows, at most 300 px; 200 px while the places of a field are listed under it.
+        let most = if w.chosen.is_some() { 200.0 } else { 300.0 };
+        let rows_height = (w.rows.len().max(3) as f32 * 36.0 + 8.0).min(most);
         let table = container(
             Column::new()
                 .push(container(head).padding([4, 8]))
                 .push(kentos_ui::widget::horizontal_divider())
                 .push(
-                    iced::widget::scrollable(rows).height(Length::Fixed(typography::scaled(300.0))),
+                    iced::widget::scrollable(rows)
+                        .height(Length::Fixed(typography::scaled(rows_height))),
                 ),
         )
         .style(style::container::field_box)
@@ -627,6 +739,7 @@ impl App {
         ]
         .spacing(8)
         .align_y(Center);
+        let usage = self.field_usage_box(w);
         let problem = problem_of(&w.rows);
         let renamed = renames_of(&w.rows).len();
         let line = match (&w.said, &problem) {
@@ -657,6 +770,7 @@ impl App {
                         .push(label::muted(format!("Katman: {path}")))
                         .push(table)
                         .push(actions)
+                        .push(usage)
                         .push(words::summary(vec![line])),
                 )
                 .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))

@@ -2727,12 +2727,13 @@
    "title": "Alanlar…",
    "level": "semantic",
    "via": [
-    "cad.layers.edit"
+    "cad.layers.edit",
+    "cad.fields.usage"
    ],
    "operation": "fields",
-   "python": "kentos.cad.layers.edit",
-   "mcp": "cad.layers.edit",
-   "note": null,
+   "python": "kentos.cad.layers.edit, kentos.cad.fields.usage",
+   "mcp": "cad.layers.edit, cad.fields.usage",
+   "note": "Alanlar cad.layers.edit ile yazılır; adı değişen alanı anan kurallar aynı adımda izler, kullanıldığı yerler cad.fields.usage ile listelenir (ADR 0414).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import addresses, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, file, forms, labels, layers, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, records, rectangle, relations, scenarios, settings, sheets, snap, standards, styles, ucs, units, views
+from . import addresses, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, fields, file, forms, labels, layers, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, records, rectangle, relations, scenarios, settings, sheets, snap, standards, styles, ucs, units, views
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.define": addresses.define,
@@ -54,6 +54,7 @@ COMMANDS: dict[str, Any] = {
     "cad.entities.transform": entities.transform,
     "cad.entities.trim": entities.trim,
     "cad.entities.vertex": entities.vertex,
+    "cad.fields.usage": fields.usage,
     "cad.forms.audit": forms.audit,
     "cad.forms.edit": forms.edit,
     "cad.forms.fill": forms.fill,
@@ -126,4 +127,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("addresses", "arc", "arrays", "blocks", "changeset", "circle", "curves", "dimensions", "drawing", "entities", "file", "forms", "labels", "layers", "library", "line", "linetypes", "network", "nurbs", "point", "points", "polygon", "polyline", "project", "records", "rectangle", "relations", "scenarios", "settings", "sheets", "snap", "standards", "styles", "ucs", "units", "views",)
+NAMESPACES = ("addresses", "arc", "arrays", "blocks", "changeset", "circle", "curves", "dimensions", "drawing", "entities", "fields", "file", "forms", "labels", "layers", "library", "line", "linetypes", "network", "nurbs", "point", "points", "polygon", "polyline", "project", "records", "rectangle", "relations", "scenarios", "settings", "sheets", "snap", "standards", "styles", "ucs", "units", "views",)

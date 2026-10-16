@@ -853,6 +853,24 @@ FeedKindName = Literal["wfs", "ogcFeatures", "arcgis", "geojson"]
 """The names of :class:`FeedKind`, for a plain string."""
 
 
+class FieldUseHow(_StrEnum):
+    """How a place names a field.
+
+    - ``key``: By its key (its stable id, else its name): a form item, a list, a relation.
+    - ``name``: By its name: an attribute's name (the time, the card's fields, a table rule's field).
+    - ``expression``: In an expression (İfadeyle seç's language).
+    - ``template``: In a template's `{…}` expressions.
+    """
+    KEY = "key"
+    NAME = "name"
+    EXPRESSION = "expression"
+    TEMPLATE = "template"
+
+
+FieldUseHowName = Literal["key", "name", "expression", "template"]
+"""The names of :class:`FieldUseHow`, for a plain string."""
+
+
 class FileUnit(_StrEnum):
     """A unit a file's lengths may be read in, whatever the file says
     (docs/adr/0257 §1): DXF's `$INSUNITS` most used.
@@ -10524,6 +10542,84 @@ class FieldRename(_Model):
         return cls(
             from_=data["from"],
             to=data["to"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FieldUse(_Model):
+    """One place that names a field.
+    Attributes:
+        place: The place in words: “Bina denetimi” formu › “Not” öğesi › Görünme koşulu.
+        path: Where it is in the drawing: `settings/forms/0/draft/items/2/visibleWhen`, `layers/<id>/…`.
+        kept: In a published release of a form, which a rename does not change. Only `true` is written.
+    """
+    place: str
+    path: str
+    how: FieldUseHow | FieldUseHowName
+    kept: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["place"] = self.place
+        out["path"] = self.path
+        out["how"] = _enum_out(self.how)
+        if self.kept is not UNSET:
+            out["kept"] = self.kept
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldUse:
+        return cls(
+            place=data["place"],
+            path=data["path"],
+            how=_enum_in(FieldUseHow, data["how"]),
+            kept=data.get("kept", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FieldsUsage(_Model):
+    """Input of `cad.fields.usage` v1: a layer's field by its name."""
+    layer: str
+    field: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["field"] = self.field
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldsUsage:
+        return cls(
+            layer=data["layer"],
+            field=data["field"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FieldsUsed(_Model):
+    """Output of `cad.fields.usage` v1: the places, in the order of docs/adr/0414 §1."""
+    layer: str
+    field: str
+    uses: list[FieldUse]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["field"] = self.field
+        out["uses"] = [e0.to_json() for e0 in self.uses]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldsUsed:
+        return cls(
+            layer=data["layer"],
+            field=data["field"],
+            uses=[FieldUse.from_json(e0) for e0 in data["uses"]],
+            revision=data["revision"],
         )
 
 
@@ -28993,6 +29089,11 @@ __all__ = [
     "FieldFormItem",
     "FieldNetworkDirection",
     "FieldRename",
+    "FieldUse",
+    "FieldUseHow",
+    "FieldUseHowName",
+    "FieldsUsage",
+    "FieldsUsed",
     "FileCommit",
     "FileCommitted",
     "FileTableSource",

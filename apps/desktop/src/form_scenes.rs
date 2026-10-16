@@ -451,6 +451,38 @@ fn styled_buildings(app: &mut App) {
     let _ = app.update(Message::Run("data.featureTable"));
 }
 
+/// The buildings with a published survey form that names the floor count in its rules (docs/adr/0414).
+fn buildings_with_a_form(app: &mut App) {
+    styled_buildings(app);
+    let form = published(
+        "hasar",
+        "Hasar tespiti",
+        "bina",
+        json!([
+            { "type": "field", "id": "durum", "field": "Durum", "visibleWhen": "Kat > 0" },
+            { "type": "field", "id": "kat", "field": "Kat", "checks": [{ "rule": "Kat < 40", "message": "Kat 40'tan az olmalı." }] },
+            { "type": "note", "id": "bilgi", "text": "Bu bina {Kat} katlı." }
+        ]),
+    );
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut settings = doc.model.settings().clone();
+    settings.forms = vec![serde_json::from_value(form).expect("a form")];
+    doc.model.set_settings(settings);
+}
+
+/// Alanlar on the buildings: the floor count chosen and being renamed, its places listed.
+fn field_usage(app: &mut App) {
+    use crate::layer_fields::{Cell, Event};
+    buildings_with_a_form(app);
+    let _ = app.open_layer_fields("bina");
+    let _ = app.update(Message::LayerFields(Event::Choose(2)));
+    let _ = app.update(Message::LayerFields(Event::Type(
+        2,
+        Cell::Name,
+        "Kat sayısı".into(),
+    )));
+}
+
 /// Koşullu biçim's window on the buildings' rules, the floor count's rule chosen.
 fn styles_window(app: &mut App) {
     styled_buildings(app);
@@ -1004,6 +1036,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-tarih-saat", timed),
         ("form-kosullu-tablo", styled_buildings),
         ("form-kosullu-bicim", styles_window),
+        ("form-alan-kullanim", field_usage),
     ]
 }
 
@@ -1066,6 +1099,50 @@ mod tests {
         let undone = app.document.as_mut().unwrap().model.undo();
         assert_eq!(undone.as_deref(), Some("Koşullu biçim"));
         assert_eq!(rules(&app).len(), 4, "one step undoes it");
+    }
+
+    #[test]
+    fn a_renamed_field_is_followed_by_the_rules_that_name_it() {
+        use crate::layer_fields::Event;
+        let mut app = crate::files_testing::app_with_drawing();
+        field_usage(&mut app);
+        let uses = app.saved_field_uses("bina", "Kat");
+        assert_eq!(uses.len(), 10, "{uses:#?}");
+        assert!(
+            uses.iter().any(|u| u.kept),
+            "the published release is listed"
+        );
+        let _ = app.update(Message::LayerFields(Event::Save));
+        assert!(app.layer_fields.is_none(), "Kaydet closes the window");
+        let doc = app.document.as_ref().unwrap();
+        let bina = doc.model.layers().get("bina").unwrap();
+        let kat = bina.fields.iter().find(|f| f.name == "Kat sayısı").unwrap();
+        assert_eq!(
+            kat.id.as_deref(),
+            Some("Kat"),
+            "the form names it by its key: it keeps it"
+        );
+        assert_eq!(bina.table_styles[2].field.as_deref(), Some("Kat sayısı"));
+        assert_eq!(bina.table_styles[2].condition, "[Kat sayısı] >= 6");
+        let form = &doc.model.settings().forms[0];
+        let durum = serde_json::to_value(&form.draft.items[0]).unwrap();
+        assert_eq!(durum["visibleWhen"], "[Kat sayısı] > 0");
+        let kept = serde_json::to_value(&form.releases[0].body.items[0]).unwrap();
+        assert_eq!(
+            kept["visibleWhen"], "Kat > 0",
+            "a published release is kept"
+        );
+        assert_eq!(
+            doc.model
+                .by_layer("bina")
+                .next()
+                .unwrap()
+                .base()
+                .attrs
+                .get("Kat sayısı")
+                .map(String::as_str),
+            Some("3")
+        );
     }
 
     fn attrs(app: &App, slot: u32) -> std::collections::BTreeMap<String, String> {

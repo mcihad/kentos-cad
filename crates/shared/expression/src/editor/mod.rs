@@ -23,6 +23,7 @@ mod complete;
 pub mod flow;
 mod lex;
 mod place;
+mod rename;
 pub mod units;
 
 pub use catalog::{
@@ -32,6 +33,7 @@ pub use check::{Check, Diagnostic, check};
 pub use complete::{Bracket, Completion, Signature, SignatureArg, bracket, complete, signature};
 pub use lex::{Class, Span, tokens};
 pub use place::place;
+pub use rename::{fields_of, names_field, rename_field, rename_in_template, template_names_field};
 
 /// What an entry of the completion list or of the tree is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

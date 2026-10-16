@@ -328564,6 +328564,228 @@
       ]
     },
     {
+      "id": "cad.fields.usage",
+      "version": 1,
+      "title": "Alanın kullanıldığı yerler",
+      "summary": "Bir katman alanının adının geçtiği yerler: alanın katmanının formlarının taslağı ve yayımlanmış sürümleri (öğe, koşullar, hesap, varsayılan, seçenek süzgeci, denetimler, notun metni), başka formların bu katmandan listeleri ve ilişkili kayıtları, ilişkiler, katmanın koşullu biçimi, süzgeci, etiketleri, zamanı, bilgi kartı ve eylemleri. Her yerin Türkçe adı, yolu, alanı nasıl andığı (anahtar, ad, ifade, şablon) ve yayımlanmış sürümde olup olmadığı. Çizimi değiştirmez; plan aynı cevabı verir.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.fields.usage` v1: a layer's field by its name.",
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "layer": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer",
+          "field"
+        ],
+        "title": "FieldsUsage",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "FieldUse": {
+            "additionalProperties": false,
+            "description": "One place that names a field.",
+            "properties": {
+              "how": {
+                "$ref": "#/$defs/FieldUseHow"
+              },
+              "kept": {
+                "description": "In a published release of a form, which a rename does not change. Only `true` is written.",
+                "type": "boolean"
+              },
+              "path": {
+                "description": "Where it is in the drawing: `settings/forms/0/draft/items/2/visibleWhen`, `layers/<id>/…`.",
+                "type": "string"
+              },
+              "place": {
+                "description": "The place in words: “Bina denetimi” formu › “Not” öğesi › Görünme koşulu.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "place",
+              "path",
+              "how"
+            ],
+            "type": "object"
+          },
+          "FieldUseHow": {
+            "description": "How a place names a field.",
+            "oneOf": [
+              {
+                "const": "key",
+                "description": "By its key (its stable id, else its name): a form item, a list, a relation.",
+                "type": "string"
+              },
+              {
+                "const": "name",
+                "description": "By its name: an attribute's name (the time, the card's fields, a table rule's field).",
+                "type": "string"
+              },
+              {
+                "const": "expression",
+                "description": "In an expression (İfadeyle seç's language).",
+                "type": "string"
+              },
+              {
+                "const": "template",
+                "description": "In a template's `{…}` expressions.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.fields.usage` v1: the places, in the order of docs/adr/0414 §1.",
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uses": {
+            "items": {
+              "$ref": "#/$defs/FieldUse"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "layer",
+          "field",
+          "uses",
+          "revision"
+        ],
+        "title": "FieldsUsed",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "FieldUse": {
+            "additionalProperties": false,
+            "description": "One place that names a field.",
+            "properties": {
+              "how": {
+                "$ref": "#/$defs/FieldUseHow"
+              },
+              "kept": {
+                "description": "In a published release of a form, which a rename does not change. Only `true` is written.",
+                "type": "boolean"
+              },
+              "path": {
+                "description": "Where it is in the drawing: `settings/forms/0/draft/items/2/visibleWhen`, `layers/<id>/…`.",
+                "type": "string"
+              },
+              "place": {
+                "description": "The place in words: “Bina denetimi” formu › “Not” öğesi › Görünme koşulu.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "place",
+              "path",
+              "how"
+            ],
+            "type": "object"
+          },
+          "FieldUseHow": {
+            "description": "How a place names a field.",
+            "oneOf": [
+              {
+                "const": "key",
+                "description": "By its key (its stable id, else its name): a form item, a list, a relation.",
+                "type": "string"
+              },
+              {
+                "const": "name",
+                "description": "By its name: an attribute's name (the time, the card's fields, a table rule's field).",
+                "type": "string"
+              },
+              {
+                "const": "expression",
+                "description": "In an expression (İfadeyle seç's language).",
+                "type": "string"
+              },
+              {
+                "const": "template",
+                "description": "In a template's `{…}` expressions.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.fields.usage` v1: the places, in the order of docs/adr/0414 §1.",
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uses": {
+            "items": {
+              "$ref": "#/$defs/FieldUse"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "layer",
+          "field",
+          "uses",
+          "revision"
+        ],
+        "title": "FieldsUsed",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "layer_not_found",
+          "not_a_layer",
+          "service_layer",
+          "field_not_found"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bina katmanının Kat alanı nerede kullanılıyor",
+          "input": {
+            "field": "Kat",
+            "layer": "bina"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.layers.find",
       "version": 1,
       "title": "Katmanları bul",

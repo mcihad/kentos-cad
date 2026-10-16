@@ -194,6 +194,9 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-U` alanın kullanıldığı yerler (ADR 0414, 16 Ekim): web'de gerekenler: `cad.fields.usage`'in TS işleyicisi
+  (`fixtures/commands/v1/cad.fields.usage.json`), `cad.layers.edit`'in yeniden adlandırmada başvuruları izlemesi
+  (`cad.layers.edit.renames.json`; ifadenin ve şablonun adları dilin sözcükleriyle), Alanlar penceresinde Kullanıldığı yerler.
 - [ ] `FORM-T` koşullu biçim (ADR 0413, 16 Ekim): web'de gerekenler: katmanın `tableStyles`'ı (TS türleri üretildi), `cad.layers.table`'ın
   TS işleyicisi (`fixtures/commands/v1/cad.layers.table.json`), Öznitelik tablosunda hücre görünüşü (`fixtures/table-styles/v1/looks.json`)
   ve Koşullu biçim penceresi, `.kcad` okuma.
@@ -1473,6 +1476,9 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-U` Alanın kullanıldığı yerler ve yeniden adlandırmanın izlenmesi: `cad.fields.usage`, adı değişen alanı anan ifade,
+  şablon ve adlar aynı adımda, anahtarla anılan alan kimliğini tutar, yayımlanmış sürüm değişmez; Alanlar penceresinde liste ve
+  silme uyarısı. — **16 Ekim, [ADR 0414](docs/adr/0414-field-usage-and-renames.md).**
 - [x] `FORM-T` Öznitelik tablosunda koşullu biçim: satır ve alan kuralları, zemin, yazı rengi, kalınlık; `cad.layers.table`, Koşullu
   biçim penceresi, `.kcad` şema 60. — **16 Ekim, [ADR 0413](docs/adr/0413-conditional-table-formatting.md).**
 - [x] `FORM-R` Alan düzeyinde okuma yetkisi: formun göstermediği alan Veri girişine gönderilmez, yazmasında korunur, Veri girişi

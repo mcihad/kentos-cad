@@ -124,6 +124,7 @@ pub mod layer_filter;
 pub mod layers_compose;
 pub mod layers_edit;
 pub mod layers_filter;
+pub mod fields_usage;
 pub mod layers_find;
 pub mod layers_info;
 pub mod layers_table;
@@ -490,6 +491,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_LAYERS_STATES,
         kentos_contracts::CAD_LAYERS_STATES_VERSION,
+    ),
+    // Where a layer's field is named ([`fields_usage`], docs/adr/0414).
+    (
+        kentos_contracts::CAD_FIELDS_USAGE,
+        kentos_contracts::CAD_FIELDS_USAGE_VERSION,
     ),
     // The layers found by a name pattern and their properties, and layers
     // translated to a standard's ([`layers_find`], [`layers_translate`], docs/adr/0311).

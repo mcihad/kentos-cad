@@ -3610,6 +3610,33 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Alanın kullanıldığı yerler (docs/adr/0414 §3), held together by fixtures/commands/v1/cad.fields.usage.json.
+        CommandDescriptor {
+            id: crate::CAD_FIELDS_USAGE.into(),
+            version: crate::CAD_FIELDS_USAGE_VERSION,
+            title: "Alanın kullanıldığı yerler".into(),
+            summary: "Bir katman alanının adının geçtiği yerler: alanın katmanının formlarının taslağı ve yayımlanmış sürümleri (öğe, koşullar, hesap, varsayılan, seçenek süzgeci, denetimler, notun metni), \
+                      başka formların bu katmandan listeleri ve ilişkili kayıtları, ilişkiler, katmanın koşullu biçimi, süzgeci, etiketleri, zamanı, bilgi kartı ve eylemleri. \
+                      Her yerin Türkçe adı, yolu, alanı nasıl andığı (anahtar, ad, ifade, şablon) ve yayımlanmış sürümde olup olmadığı. Çizimi değiştirmez; plan aynı cevabı verir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::FieldsUsage>(),
+            output: schema::<crate::FieldsUsed>(),
+            plan: Some(schema::<crate::FieldsUsed>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bina katmanının Kat alanı nerede kullanılıyor".into(),
+                input: json!({ "layer": "bina", "field": "Kat" }),
+                output: None,
+            }],
+        },
         // Katmanları bul (docs/adr/0311 §4), held together by fixtures/commands/v1/cad.layers.find.json.
         CommandDescriptor {
             id: crate::CAD_LAYERS_FIND.into(),
@@ -5227,6 +5254,9 @@ mod tests {
                     crate::CAD_LAYERS_FIND => {
                         serde_json::from_value::<crate::LayersFind>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_FIELDS_USAGE => {
+                        serde_json::from_value::<crate::FieldsUsage>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_LAYERS_TRANSLATE => {
                         serde_json::from_value::<crate::LayersTranslate>(e.input.clone()).map(|_| ())
                     }
@@ -5505,6 +5535,10 @@ mod tests {
                         }
                         crate::CAD_LAYERS_FIND => {
                             serde_json::from_value::<crate::LayersFound>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_FIELDS_USAGE => {
+                            serde_json::from_value::<crate::FieldsUsed>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_LAYERS_TRANSLATE => {

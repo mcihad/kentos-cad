@@ -433,9 +433,11 @@
     "layer.fields": {
       "level": "semantic",
       "via": [
-        "cad.layers.edit"
+        "cad.layers.edit",
+        "cad.fields.usage"
       ],
-      "operation": "fields"
+      "operation": "fields",
+      "note": "Alanlar cad.layers.edit ile yazılır; adı değişen alanı anan kurallar aynı adımda izler, kullanıldığı yerler cad.fields.usage ile listelenir (ADR 0414)."
     },
     "layer.list": {
       "level": "query",

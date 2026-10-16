@@ -197,11 +197,14 @@ impl Document {
                 node.name
             )));
         }
+        // A key that a form, a list or a relation names stays (docs/adr/0414 §2).
+        let keyed = kentos_forms::field_refs::keyed(&self.settings, id);
         let fields = keep_field_ids(
             &node.fields,
             fields,
             renames,
             &kentos_contracts::forms_of_layer(&self.settings.forms, id),
+            &keyed,
         );
         if let Some(problem) = fields_problem(&fields) {
             return Err(Refusal(problem));
@@ -233,22 +236,35 @@ impl Document {
                 changes.push((Slot(e.base().id), entity));
             }
         }
+        // The places that name a renamed field by its name, in an expression or in a template follow
+        // it (docs/adr/0414 §2): the layer's own in the same step, the forms' drafts in the settings.
+        let mut next_node = node.clone();
+        let mut next_settings = self.settings.clone();
+        for (old, new) in renames.iter().filter(|(old, new)| old != new) {
+            kentos_forms::field_refs::rename_node(&mut next_node, old, new);
+            kentos_forms::field_refs::rename_settings(&mut next_settings, id, old, new);
+        }
         if before == fields && changes.is_empty() {
             return Ok(false);
         }
+        let mut ops = Vec::new();
         let layer = id.to_owned();
+        if before != fields {
+            ops.push(Op::LayerFields {
+                layer: layer.clone(),
+                before,
+                after: fields,
+            });
+        }
+        ops.extend(followed_ops(node, &next_node));
         let _ = self.transact(labels::LAYER_FIELDS, |doc| {
-            if before != fields {
-                let op = Op::LayerFields {
-                    layer,
-                    before,
-                    after: fields,
-                };
-                doc.record(vec![op], labels::LAYER_FIELDS);
+            if !ops.is_empty() {
+                doc.record(ops, labels::LAYER_FIELDS);
             }
             doc.update_many(changes, labels::LAYER_FIELDS);
             Ok::<(), Refusal>(())
         });
+        self.set_settings(next_settings);
         Ok(true)
     }
 
@@ -992,8 +1008,13 @@ pub(crate) fn keep_field_ids(
     mut fields: Vec<LayerField>,
     renames: &[(String, String)],
     forms: &[&kentos_contracts::ProjectForm],
+    keyed: &[String],
 ) -> Vec<LayerField> {
-    let bound: HashSet<&str> = forms.iter().flat_map(|f| f.bound_keys()).collect();
+    let bound: HashSet<&str> = forms
+        .iter()
+        .flat_map(|f| f.bound_keys())
+        .chain(keyed.iter().map(String::as_str))
+        .collect();
     for f in fields.iter_mut().filter(|f| f.id.is_none()) {
         let source = renames
             .iter()
@@ -1025,4 +1046,61 @@ pub(crate) fn keep_field_ids(
         f.id = Some(fresh);
     }
     fields
+}
+
+/// The undo step's parts for a layer's own places that a rename changed (docs/adr/0414 §2): its
+/// table rules, filter, labels, time, card and actions.
+fn followed_ops(node: &kentos_contracts::LayerNode, next: &kentos_contracts::LayerNode) -> Vec<Op> {
+    let layer = &node.id;
+    let mut ops = Vec::new();
+    if node.table_styles != next.table_styles {
+        ops.push(Op::LayerTableStyles {
+            layer: layer.clone(),
+            before: node.table_styles.clone(),
+            after: next.table_styles.clone(),
+        });
+    }
+    if node.filter != next.filter {
+        ops.push(Op::LayerFilter {
+            layer: layer.clone(),
+            before: node.filter.clone().map(Box::new),
+            after: next.filter.clone().map(Box::new),
+        });
+    }
+    if node.style != next.style {
+        ops.push(Op::LayerStyle {
+            layer: layer.clone(),
+            before: Box::new(node.style.clone()),
+            after: Box::new(next.style.clone()),
+        });
+    }
+    if node.time != next.time {
+        let was = crate::history::Temporal {
+            time: node.time.clone(),
+            scenario: node.scenario.clone(),
+            replaces: node.replaces.clone(),
+        };
+        ops.push(Op::LayerTemporal {
+            layer: layer.clone(),
+            after: Box::new(crate::history::Temporal {
+                time: next.time.clone(),
+                ..was.clone()
+            }),
+            before: Box::new(was),
+        });
+    }
+    if node.actions != next.actions || node.card != next.card {
+        ops.push(Op::LayerInfo {
+            layer: layer.clone(),
+            before: Box::new(crate::history::LayerInfo {
+                actions: node.actions.clone(),
+                card: node.card.clone(),
+            }),
+            after: Box::new(crate::history::LayerInfo {
+                actions: next.actions.clone(),
+                card: next.card.clone(),
+            }),
+        });
+    }
+    ops
 }

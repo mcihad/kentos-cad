@@ -15,7 +15,7 @@ use kentos_domain::contracts::{
     AddressesDefine, BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT,
     CAD_ENTITIES_SET, DimensionsReassociate, EntitiesChamfer, EntitiesCreate, EntitiesFillet,
     EntitiesOffset, EntitiesOrder, EntitiesSetProperties, EntitiesTrim, LabelsPin, LayersCompose,
-    LayersEdit, LayersFilter, LayersFind, LayersInfo, LayersLabels, LayersTable, LayersRenderer, LayersService,
+    FieldsUsage, LayersEdit, LayersFilter, LayersFind, LayersInfo, LayersLabels, LayersTable, LayersRenderer, LayersService,
     LayersSet, LayersStates, LayersTime, LayersTranslate, LibraryEdit, LineTypesEdit,
     NetworkDefine, NurbsCreate, OffsetBy, ScenariosEdit, SettingsSet, SheetsEdit, StandardsApply,
     StandardsCheck, StylesEdit, StylesImpact, UcsSet, UcsTo, ViewsEdit, ViewsOp,
@@ -39,7 +39,7 @@ use kentos_native_application::{
     circle, curves_construct, delete, dimensions_reassociate, edit, entities_chamfer,
     entities_extend, entities_fillet, entities_order, entities_pick, entities_select,
     entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit, layers_filter,
-    layers_find, layers_info, layers_labels, layers_renderer, layers_service, layers_set, layers_table,
+    fields_usage, layers_find, layers_info, layers_labels, layers_renderer, layers_service, layers_set, layers_table,
     layers_states, layers_time, layers_translate, line, network_define, nurbs, offset, point,
     points_construct, polygon, polygon_regular, polyline, rectangle_create, scenarios_edit, set,
     settings_set, sheets_edit, snap_find, styles_edit, transform, ucs_set, units_change,
@@ -1236,6 +1236,12 @@ impl Input for LayersStates {
     }
 }
 
+impl Input for FieldsUsage {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for LayersFind {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         (path == "lineWeight").then_some(())?;
@@ -2115,6 +2121,7 @@ fn run_op(
         kentos_domain::contracts::CAD_LAYERS_SET => run!(layers_set, LayersSet),
         kentos_domain::contracts::CAD_LAYERS_STATES => run!(layers_states, LayersStates),
         kentos_domain::contracts::CAD_LAYERS_FIND => run!(layers_find, LayersFind),
+        kentos_domain::contracts::CAD_FIELDS_USAGE => run!(fields_usage, FieldsUsage),
         kentos_domain::contracts::CAD_LAYERS_TRANSLATE => run!(layers_translate, LayersTranslate),
         kentos_domain::contracts::CAD_STANDARDS_CHECK => run!(standards_check, StandardsCheck),
         kentos_domain::contracts::CAD_STANDARDS_APPLY => run!(standards_apply, StandardsApply),

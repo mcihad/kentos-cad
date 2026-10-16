@@ -319,7 +319,7 @@ ArcGIS'in domain yaklaşımı; kodlu değer veya aralık, yeniden kullanım ve s
 - [x] **FORM-DATA-04:** Date/time/datetime/timezone, reference/UUID, enum/collection, attachment ve geometry desteklerini aşamalı şema genişletmesiyle ekle. — *Yapıldı (16 Ekim; ADR 0412 tarih ve saat, saat; ADR 0409 başvuru/UUID ve çok değerli alan; ADR 0407 ekler; geometri nesnenin kendisi). Saat dilimi açık.*
 - [ ] **FORM-DATA-05:** Mevcut canonical string attributes için lossless migration; null/blank/absent, unknown attr ve geçmiş kaydı koru.
 - [ ] **FORM-DATA-06:** Kayıt oluştururken incomplete draft ile committed/submitted kayıt farklı validation profile kullansın; eksik zorunlu değeri sessizce kalıcı geçerli kayıt yapma.
-- [ ] **FORM-DATA-07:** Field rename/drop/type change için bağlı form/domain/relation/processing/expression kullanım grafını göster; breaking değişiklik planlı migration olsun.
+- [x] **FORM-DATA-07:** Field rename/drop/type change için bağlı form/domain/relation/processing/expression kullanım grafını göster; breaking değişiklik planlı migration olsun. — *Yapıldı (16 Ekim; ADR 0414: `cad.fields.usage`, Alanlar penceresinde kullanıldığı yerler ve silme uyarısı; yeniden adlandırmada ifade, şablon ve adlar aynı adımda izler, anahtar kalır. Tür değişimi ve işleme modelleri açık).*
 - [x] **FORM-DATA-08:** Schema owner/design/publish izinleri data edit'ten ayrışsın; saha personeli feature.write ile şemayı değiştiremesin. — *Yapıldı (16 Ekim; ADR 0411: `forms.design`, `forms.publish` ayrı izin; Veri girişi şemayı değiştiremez).*
 - [ ] **FORM-DATA-09:** Local `.kcad`, cloud dataset ve offline replica aynı schema/version/value codec'ini taşısın.
 
