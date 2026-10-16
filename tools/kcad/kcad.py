@@ -211,6 +211,13 @@ SCHEMA_WITH_OVERRIDES = 63
 SCHEMA_WITH_ANNOTATIVE = 64
 # Schema 65: schema 64, a multi-line text's `layout` (indents, tab stops, columns) and a run's `stack` script (docs/adr/0324).
 SCHEMA_WITH_PARAGRAPH_LAYOUT = 65
+# Schema 66: schema 65, a text's `fields`: ranges of its letters bound to a source (docs/adr/0325).
+SCHEMA_WITH_TEXT_FIELDS = 66
+FIELD_OBJECT_VALUES = ("area", "perimeter", "length", "layer", "label", "attribute", "text", "x", "y")
+FIELD_PROJECT_VALUES = ("name", "scale", "unit", "crs", "variable")
+FIELD_UNITS = ("mm", "cm", "m", "km", "m2", "donum", "ha")
+FIELD_BROKEN = ("removed", "noValue", "notNamed", "cycle")
+MAX_FIELDS = 256
 # A layout's numbers in the text's height, at most this much; at most this many tab stops (docs/adr/0324 §1).
 MAX_PARAGRAPH_HEIGHTS = 1000.0
 MAX_TABS = 32
@@ -402,7 +409,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1913,6 +1920,7 @@ class _Schema:
         self.overrides = version >= SCHEMA_WITH_OVERRIDES
         self.annotative = version >= SCHEMA_WITH_ANNOTATIVE
         self.paragraph_layout = version >= SCHEMA_WITH_PARAGRAPH_LAYOUT
+        self.text_fields = version >= SCHEMA_WITH_TEXT_FIELDS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -3408,6 +3416,10 @@ class _Schema:
                 self.path.append("layout")
                 self.layout_rules(fields["layout"], "boxWidth" in fields)
                 self.path.pop()
+            if kind == "text" and "fields" in fields:
+                self.path.append("fields")
+                self.text_fields_rules(fields["text"], fields["fields"])
+                self.path.pop()
             # A text along a curve or linked to an object is not annotative (docs/adr/0323 §1).
             if kind == "text" and "annotative" in fields and ("path" in fields or "labelOf" in fields):
                 self.path.append("annotative")
@@ -3727,6 +3739,61 @@ class _Schema:
 
         floats = lambda a: [self.float(x) for x in self.array(lambda x: x)(a)]  # noqa: E731
         return self.fields({"indent": (self.float, False), "leftIndent": (self.float, False), "tabs": (floats, False), "columns": (columns, False)})(v)
+
+    def text_fields_of(self, v):
+        """A text's fields (docs/adr/0325 §1): ranges of its letters bound to an object's or the project's value."""
+        def uid(u):
+            if type(u) is not str or not re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", u):
+                self.fail("bad_value", "nesnenin kimliği küçük harfli, tireli bir UUID olmalı")
+            return u
+
+        def source(src):
+            if type(src) is not dict:
+                self.fail("wrong_type", "harita olmalı")
+            if src.get("kind") == "object":
+                return self.fields({"kind": (self.text, True), "uid": (uid, True), "value": (self.enum(FIELD_OBJECT_VALUES), True), "name": (self.text, False)})(src)
+            if src.get("kind") == "project":
+                return self.fields({"kind": (self.text, True), "value": (self.enum(FIELD_PROJECT_VALUES), True), "name": (self.text, False)})(src)
+            self.fail("bad_value", f"alanın kaynağı {src.get('kind')!r}: object ya da project olmalı")
+
+        fmt = self.fields({"decimals": (self.uint(8), False), "unit": (self.enum(FIELD_UNITS), False), "comma": (self.true_flag, False), "prefix": (self.text, False), "suffix": (self.text, False)})
+        one = self.fields({"start": (self.uint(32), True), "end": (self.uint(32), True), "source": (source, True), "format": (fmt, False), "broken": (self.enum(FIELD_BROKEN), False)})
+        return self.array(one)(v)
+
+    def text_fields_rules(self, text, fields):
+        """The fields as the contract allows them (`text_fields_problem`): some, in the letters, in order, apart, the
+        names they need, a format that sets something, a unit of their value's kind, a broken one's letters ####."""
+        letters = len(text)
+        if not fields:
+            self.fail("bad_value", "boş alan listesi yazılmaz")
+        if len(fields) > MAX_FIELDS:
+            self.fail("bad_value", f"bir yazıda en çok {MAX_FIELDS} alan olur")
+        last = 0
+        for i, f in enumerate(fields):
+            n = i + 1
+            if f["start"] >= f["end"] or f["end"] > letters or (i > 0 and f["start"] < last):
+                self.fail("bad_value", f"{n}. alan {f['start']}–{f['end']}: yazının {letters} harfi içinde, sırayla ve ayrı olmalı")
+            last = f["end"]
+            src = f["source"]
+            needs = src["value"] in ("attribute", "variable")
+            named = bool(src.get("name", "").strip())
+            if needs != named:
+                self.fail("bad_value", f"{n}. alan: ad yalnız öznitelik ve değişken alanında, onlarda zorunlu")
+            fm = f.get("format")
+            if fm is not None:
+                if fm.get("decimals", 0) > 10:
+                    self.fail("bad_value", f"{n}. alan: basamak en çok 10 olur")
+                if not fm:
+                    self.fail("bad_value", f"{n}. alan: boş biçim yazılmaz")
+                unit = fm.get("unit")
+                if unit is not None:
+                    if src["kind"] == "project":
+                        self.fail("bad_value", f"{n}. alan: projenin değeri birimle yazılmaz")
+                    number = src["value"] in ("area", "perimeter", "length", "x", "y")
+                    if not number or (unit in ("m2", "donum", "ha")) != (src["value"] == "area"):
+                        self.fail("bad_value", f"{n}. alan: {src['value']} değeri {unit} biriminde yazılamaz")
+            if "broken" in f and text[f["start"]:f["end"]] != "####":
+                self.fail("bad_value", f"{n}. alan kopuk: harfleri #### olmalı")
 
     def layout_rules(self, layout, boxed):
         """The layout as the contract allows it (`ParagraphLayout::problem`): not empty, in range, columns in a box."""
@@ -4873,6 +4940,7 @@ ENTITY_KINDS = {
         # Schema 64 (docs/adr/0323): its scales.
         **({"annotative": (s.annotative_of("text"), False)} if s.annotative else {}),
         **({"layout": (s.layout_of, False)} if s.paragraph_layout else {}),
+        **({"fields": (s.text_fields_of, False)} if s.text_fields else {}),
     },
     # Schema 9 (docs/adr/0147): five more kinds, `mask` only when true, a slope's two elevations.
     "dimension": lambda s: {

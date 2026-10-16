@@ -897,6 +897,89 @@
       "shortcuts": [],
       "category": "Açıklama",
       "status": "implemented"
+    },
+    {
+      "id": "text.fieldInsert",
+      "title": "Alan ekle",
+      "short": "Alan ekle",
+      "icon": "textField",
+      "description": "Seçili yazının sonuna bir alan ekler: bir nesnenin alanı, çevresi, uzunluğu, katmanı, etiketi, özniteliği, yazısı ya da yeri, ya da projenin adı, ölçeği, birimi, koordinat sistemi ya da değişkeni; basamak, birim, ön ve son ekle. Kaynak değişince değer aynı adımda yenilenir, okunamazsa #### olur (cad.fields.edit insert; AutoCAD'in FIELD'ı).",
+      "aliases": [
+        "FIELD",
+        "ALANEKLE"
+      ],
+      "shortcuts": [],
+      "category": "Açıklama",
+      "status": "implemented"
+    },
+    {
+      "id": "text.fieldsUpdate",
+      "title": "Alanları yenile",
+      "short": "Alanları yenile",
+      "icon": "textFieldsUpdate",
+      "description": "Seçili yazıların (seçim yoksa bütün yazıların) alanlarını yeniden yazar (cad.fields.edit update; AutoCAD'in UPDATEFIELD'ı).",
+      "aliases": [
+        "UPDATEFIELD",
+        "ALANYENILE"
+      ],
+      "shortcuts": [],
+      "category": "Açıklama",
+      "status": "implemented"
+    },
+    {
+      "id": "text.number",
+      "title": "Numarala",
+      "short": "Numarala",
+      "icon": "textNumber",
+      "description": "Seçili yazıları seçildikleri sırayla numaralar: başlangıç, artış, basamak, ön ve son ek; yazının yerine, başına ya da sonuna (cad.texts.edit number; AutoCAD'in TCOUNT'u).",
+      "aliases": [
+        "TCOUNT",
+        "YAZINUMARALA"
+      ],
+      "shortcuts": [],
+      "category": "Açıklama",
+      "status": "implemented"
+    },
+    {
+      "id": "text.combine",
+      "title": "Yazıları birleştir",
+      "short": "Birleştir",
+      "icon": "textCombine",
+      "description": "Seçili yazıları yukarıdan aşağıya tek çok satırlı yazı yapar: en üsttekinin yerinde ve görünüşüyle, biçimleri ve alanlarıyla (cad.texts.edit combine; AutoCAD'in TXT2MTXT'i).",
+      "aliases": [
+        "TXT2MTXT",
+        "YAZIBIRLESTIR"
+      ],
+      "shortcuts": [],
+      "category": "Açıklama",
+      "status": "implemented"
+    },
+    {
+      "id": "text.split",
+      "title": "Satırlara ayır",
+      "short": "Satırlara ayır",
+      "icon": "textSplit",
+      "description": "Seçili çok satırlı yazının her paragrafını durduğu yerde, biçimleri ve alanlarıyla ayrı yazı yapar (cad.texts.edit split).",
+      "aliases": [
+        "SATIRAYIR"
+      ],
+      "shortcuts": [],
+      "category": "Açıklama",
+      "status": "implemented"
+    },
+    {
+      "id": "text.check",
+      "title": "Yazı denetimi",
+      "short": "Yazı denetimi",
+      "icon": "textCheck",
+      "description": "Seçili yazıların (seçim yoksa görünen bütün yazıların) çift boşluk, yinelenen sözcük, kapanmayan parantez ve tırnak ile kopuk alanlarını listeler; sözlükle yazım denetimi yapılmaz (cad.texts.check).",
+      "aliases": [
+        "YAZIDENETIMI",
+        "TEXTCHECK"
+      ],
+      "shortcuts": [],
+      "category": "Açıklama",
+      "status": "implemented"
     }
   ],
   "icons": {
@@ -997,7 +1080,13 @@
     "textList": "<path d=\"M4 5h.5M4 10h.5M4 15h.5\"/><path d=\"M8 5h9M8 10h9M8 15h9\"/>",
     "textNumbered": "<path d=\"M3.2 4.2l1.3-.9v4.2\"/><path d=\"M3 12.3c.3-.7 1-.9 1.6-.8.7.1 1 .7.8 1.3-.2.6-.8.9-1.3 1.4L3 15.5h2.6\"/><path d=\"M8.5 5.5h8.5M8.5 13.5h8.5\"/>",
     "textListOff": "<path d=\"M4 5h.5M4 10h.5M4 15h.5\"/><path d=\"M8 5h9M8 10h4M8 15h3\"/><path d=\"M12.5 12.5l5 5M17.5 12.5l-5 5\"/>",
-    "textFonts": "<path d=\"M3 16.5 7.5 4.5l4.5 12\"/><path d=\"M5 12.5h5\"/><path d=\"M13.5 9.5h4M15.5 9.5v7\"/><path d=\"M14 16.5h3\"/>"
+    "textFonts": "<path d=\"M3 16.5 7.5 4.5l4.5 12\"/><path d=\"M5 12.5h5\"/><path d=\"M13.5 9.5h4M15.5 9.5v7\"/><path d=\"M14 16.5h3\"/>",
+    "textField": "<path d=\"M2.5 5h7M6 5v10\"/><path d=\"M14 4c-1.5 0-1.8.8-1.8 2.5V8c0 1.2-.6 2-1.6 2 1 0 1.6.8 1.6 2v1.5c0 1.7.3 2.5 1.8 2.5\"/><path d=\"M16 4c1.5 0 1.8.8 1.8 2.5V8c0 1.2.6 2 1.6 2-1 0-1.6.8-1.6 2v1.5c0 1.7-.3 2.5-1.8 2.5\"/>",
+    "textFieldsUpdate": "<path d=\"M16.5 10a6.5 6.5 0 1 1-2-4.7\"/><path d=\"M15 2.5v3.5h-3.5\"/><path d=\"M9 7.5c-1 0-1.2.6-1.2 1.4v.4c0 .4-.3.7-.8.7.5 0 .8.3.8.7v.4c0 .8.2 1.4 1.2 1.4\"/><path d=\"M11 7.5c1 0 1.2.6 1.2 1.4v.4c0 .4.3.7.8.7-.5 0-.8.3-.8.7v.4c0 .8-.2 1.4-1.2 1.4\"/>",
+    "textNumber": "<path d=\"M6 3.5 4.5 16.5M10 3.5 8.5 16.5M3 8h8.5M2.5 12h8.5\"/><path d=\"m13.5 6.5 2.5-2.5v12.5\"/><path d=\"M13.5 16.5h5\"/>",
+    "textCombine": "<path d=\"M2.5 4.5h6M2.5 8.5h6M2.5 12.5h6M2.5 16.5h4\"/><path d=\"M10 10.5h3.5\"/><path d=\"m12 8.5 2 2-2 2\"/><rect x=\"15.5\" y=\"3.5\" width=\"3\" height=\"14\" rx=\"1\"/>",
+    "textSplit": "<rect x=\"1.5\" y=\"3.5\" width=\"6\" height=\"13\" rx=\"1\"/><path d=\"M3.5 7h2M3.5 10h2M3.5 13h2\"/><path d=\"M9 10h3.5\"/><path d=\"m11 8 2 2-2 2\"/><path d=\"M14.5 5.5h4M14.5 10h4M14.5 14.5h4\"/>",
+    "textCheck": "<path d=\"M2.5 14V8.5a2.75 2.75 0 0 1 5.5 0V14M2.5 11h5.5\"/><path d=\"m10.5 11.5 2.5 2.5 5-6\"/>"
   },
   "ribbon": [
     {
@@ -1586,6 +1675,30 @@
       "items": [
         {
           "command": "text.fonts",
+          "size": "small"
+        },
+        {
+          "command": "text.fieldInsert",
+          "size": "small"
+        },
+        {
+          "command": "text.fieldsUpdate",
+          "size": "small"
+        },
+        {
+          "command": "text.number",
+          "size": "small"
+        },
+        {
+          "command": "text.combine",
+          "size": "small"
+        },
+        {
+          "command": "text.split",
+          "size": "small"
+        },
+        {
+          "command": "text.check",
           "size": "small"
         }
       ]

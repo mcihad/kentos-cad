@@ -504,6 +504,8 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
                     if let EntityGeometry::Text { layout: None, .. } = geometry {
                         now.paragraph.layout = was.paragraph.layout.clone();
                     }
+                    // Its fields (docs/adr/0325 §2): the document keeps those the edit's letters did not touch.
+                    now.paragraph.fields = was.paragraph.fields.clone();
                 }
                 // A dimension keeps its references when the edit names none (docs/adr/0249 §3): the
                 // document lets a point go when the edit moved it, its object unchanged.
@@ -1013,6 +1015,7 @@ pub(crate) fn check_geometry(
     {
         // An empty layout is the edit's way to take one away (docs/adr/0324 §3), not a layout to check.
         let paragraph = kentos_contracts::Paragraph {
+            fields: Vec::new(),
             layout: layout.clone().filter(|l| !l.is_plain()),
             box_width: *box_width,
             line_spacing: *line_spacing,

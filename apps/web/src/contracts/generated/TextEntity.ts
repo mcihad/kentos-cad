@@ -8,6 +8,7 @@ import type { LineType } from "./LineType";
 import type { LookPart } from "./LookPart";
 import type { ParagraphLayout } from "./ParagraphLayout";
 import type { TextAlign } from "./TextAlign";
+import type { TextField } from "./TextField";
 import type { TextPath } from "./TextPath";
 import type { TextRun } from "./TextRun";
 import type { Vec2 } from "./Vec2";
@@ -141,6 +142,10 @@ runs?: Array<TextRun>,
  * `DEFAULT_TAB` heights, one column.
  */
 layout?: ParagraphLayout, 
+/**
+ * Ranges of its letters bound to a source (docs/adr/0325 §1), in order, not overlapping; absent: none.
+ */
+fields?: Array<TextField>, 
 /**
  * The project's text style it follows, by its id; absent: Standart.
  */

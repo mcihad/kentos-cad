@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import addresses, annotations, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, file, fonts, labels, layers, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, rectangle, scenarios, settings, sheets, snap, standards, styles, ucs, units, views
+from . import addresses, annotations, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, fields, file, fonts, labels, layers, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, rectangle, scenarios, settings, sheets, snap, standards, styles, texts, ucs, units, views
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.define": addresses.define,
@@ -59,6 +59,7 @@ COMMANDS: dict[str, Any] = {
     "cad.entities.transform": entities.transform,
     "cad.entities.trim": entities.trim,
     "cad.entities.vertex": entities.vertex,
+    "cad.fields.edit": fields.edit,
     "cad.fonts.report": fonts.report,
     "cad.labels.pin": labels.pin,
     "cad.layers.compose": layers.compose,
@@ -92,6 +93,8 @@ COMMANDS: dict[str, Any] = {
     "cad.standards.check": standards.check,
     "cad.styles.edit": styles.edit,
     "cad.styles.impact": styles.impact,
+    "cad.texts.check": texts.check,
+    "cad.texts.edit": texts.edit,
     "cad.ucs.set": ucs.set,
     "cad.units.change": units.change,
     "cad.views.edit": views.edit,
@@ -124,4 +127,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("addresses", "annotations", "arc", "arrays", "blocks", "changeset", "circle", "curves", "dimensions", "drawing", "entities", "file", "fonts", "labels", "layers", "library", "line", "linetypes", "network", "nurbs", "point", "points", "polygon", "polyline", "project", "rectangle", "scenarios", "settings", "sheets", "snap", "standards", "styles", "ucs", "units", "views",)
+NAMESPACES = ("addresses", "annotations", "arc", "arrays", "blocks", "changeset", "circle", "curves", "dimensions", "drawing", "entities", "fields", "file", "fonts", "labels", "layers", "library", "line", "linetypes", "network", "nurbs", "point", "points", "polygon", "polyline", "project", "rectangle", "scenarios", "settings", "sheets", "snap", "standards", "styles", "texts", "ucs", "units", "views",)

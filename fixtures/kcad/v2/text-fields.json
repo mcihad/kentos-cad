@@ -1,0 +1,142 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Yazının alanları",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 100.0
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {
+        "Ad": "Salon"
+      },
+      "pts": [
+        {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500006.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500006.0,
+          "y": 4400004.0
+        },
+        {
+          "x": 500000.0,
+          "y": 4400004.0
+        }
+      ]
+    },
+    {
+      "kind": "text",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+        "x": 500001.0,
+        "y": 4400002.0
+      },
+      "text": "Salon 24.00 m²",
+      "height": 0.25,
+      "rotation": 0.0,
+      "fields": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": {
+            "kind": "object",
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3f01",
+            "value": "attribute",
+            "name": "Ad"
+          }
+        },
+        {
+          "start": 6,
+          "end": 14,
+          "source": {
+            "kind": "object",
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3f01",
+            "value": "area"
+          },
+          "format": {
+            "decimals": 2,
+            "suffix": " m²"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "text",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+        "x": 500001.0,
+        "y": 4399998.0
+      },
+      "text": "Ölçek 1:100, kapı ####",
+      "height": 0.25,
+      "rotation": 0.0,
+      "fields": [
+        {
+          "start": 6,
+          "end": 11,
+          "source": {
+            "kind": "project",
+            "value": "scale"
+          }
+        },
+        {
+          "start": 18,
+          "end": 22,
+          "source": {
+            "kind": "object",
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3f09",
+            "value": "label"
+          },
+          "broken": "removed"
+        }
+      ]
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3f01",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3f02",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3f03"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

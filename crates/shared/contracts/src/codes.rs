@@ -732,6 +732,20 @@ codes! {
     INVALID_ANNOTATIVE = "invalid_annotative", Failed, false, "Ölçekli nesnenin ölçekleri kurallarına uymuyor.";
     /// A typeface KentOS does not have (an SHX line font, Times …), drawn in another (docs/adr/0324 §5).
     FONT_SUBSTITUTED = "font_substituted", Warning, false, "Yazı tipi KentOS'ta yok; yazılar stilin yazı tipiyle çizilir.";
+    /// An object given as a text that is not one (docs/adr/0325 §3).
+    NOT_A_TEXT = "not_a_text", Failed, false, "Verilen nesne bir yazı değil.";
+    /// A text's field against its rules: its range, source or format.
+    INVALID_TEXT_FIELD = "invalid_text_field", Failed, false, "Yazının alanı kurallarına uymuyor.";
+    /// A field's number a text does not have.
+    FIELD_NOT_FOUND = "field_not_found", Failed, false, "Yazıda bu sırada alan yok.";
+    /// A field whose value cannot be read, written `####`.
+    FIELD_BROKEN = "field_broken", Warning, false, "Alanın değeri okunamadı; harfleri ####.";
+    /// A text Satırlara ayır cannot split: one paragraph, columns or a curve.
+    NOT_SPLITTABLE = "not_splittable", Failed, false, "Yazı satırlara ayrılamaz: tek paragraf, sütunlu ya da eğri boyunca.";
+    /// A text Bul ve değiştir would leave blank, left as it was.
+    TEXT_LEFT_BLANK = "text_left_blank", Warning, false, "Değiştirince boş kalacak yazı olduğu gibi bırakıldı.";
+    /// Numarala's start, step or digits out of their bounds.
+    INVALID_NUMBER = "invalid_number", Failed, false, "Numaranın başlangıcı, artışı ya da basamağı sınırlarını aşıyor.";
     /// A .kstil file that does not read.
     INVALID_KSTIL = "invalid_kstil", Failed, false, ".kstil dosyası okunamadı.";
     /// An id the project's library has.

@@ -620,6 +620,9 @@ impl Document {
         let ends = std::mem::take(&mut self.relocated_ends);
         let dims = self.follow_dimensions(ops, &relocated, &ends);
         ops.extend(dims);
+        // After the objects settled: the texts' fields read their values (docs/adr/0325 §2).
+        let fields = self.follow_fields(ops);
+        ops.extend(fields);
         // Last: the style fields the step set apart by hand (docs/adr/0322 §5).
         let marks = self.mark_overrides(ops);
         ops.extend(marks);

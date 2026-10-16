@@ -1392,6 +1392,13 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 66 (docs/adr/0325): a text's fields (of the drawing or of a block).
+    let fielded = |list: &[Entity]| {
+        list.iter().any(|e| matches!(e, Entity::Text(t) if !t.paragraph.fields.is_empty()))
+    };
+    if fielded(&doc.entities) || doc.blocks.iter().any(|b| fielded(&b.entities)) {
+        return crate::SCHEMA_WITH_TEXT_FIELDS;
+    }
     // Schema 65 (docs/adr/0324): a text's layout or a stacked fraction (of the drawing or of a block).
     let laid = |list: &[Entity]| {
         list.iter().any(|e| match e {

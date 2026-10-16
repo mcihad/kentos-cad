@@ -1286,6 +1286,10 @@ impl Writer<'_> {
         self.grow(t.p);
         let mut meta = meta;
         meta.face = face_json(&t.face);
+        // Its fields in its KENTOS data (docs/adr/0325 §1); TEXT holds their letters.
+        if !t.paragraph.fields.is_empty() {
+            meta.fields = serde_json::to_string(&t.paragraph.fields).ok();
+        }
         self.end(meta);
         true
     }

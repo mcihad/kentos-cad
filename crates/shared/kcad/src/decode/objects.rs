@@ -226,6 +226,8 @@ pub(super) struct Features {
     annotative: bool,
     /// Schema 65: a text's `layout` and a run's `stack` script (docs/adr/0324).
     paragraph_layout: bool,
+    /// Schema 66: a text's `fields` (docs/adr/0325).
+    text_fields: bool,
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
     pub(super) look: bool,
@@ -306,6 +308,7 @@ impl Features {
             overrides: schema >= crate::SCHEMA_WITH_OVERRIDES,
             annotative: schema >= crate::SCHEMA_WITH_ANNOTATIVE,
             paragraph_layout: schema >= crate::SCHEMA_WITH_PARAGRAPH_LAYOUT,
+            text_fields: schema >= crate::SCHEMA_WITH_TEXT_FIELDS,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,
@@ -375,6 +378,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                     || (has.linked_texts && has.uids && matches!(key, "labelOf" | "labelScale"))
                     || (has.paragraphs && matches!(key, "boxWidth" | "lineSpacing" | "runs"))
                     || (has.paragraph_layout && key == "layout")
+                    || (has.text_fields && key == "fields")
                     || (has.styles
                         && matches!(key, "textStyle" | "font" | "bold" | "italic" | "oblique"))
                     || (has.text_paths && key == "path")
@@ -629,6 +633,7 @@ struct Fields {
     look: DimensionLook,
     runs_at: usize,
     layout_at: usize,
+    fields_at: usize,
     /// A table's own fields (docs/adr/0184), and where each is (for a refusal).
     rows: Option<Vec<f64>>,
     columns: Option<Vec<f64>>,
@@ -1118,6 +1123,15 @@ pub(super) fn object(
                 let (l, at): (kentos_contracts::ParagraphLayout, usize) = json_part(r, "yazının düzeni")?;
                 f.layout_at = at;
                 f.paragraph.layout = Some(Box::new(l));
+            }
+            // Schema 66 (docs/adr/0325 §1): a text's fields, as their JSON; checked with its letters.
+            "fields" => {
+                let (l, at): (Vec<kentos_contracts::TextField>, usize) = json_part(r, "yazının alanları")?;
+                f.fields_at = at;
+                if l.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş alan listesi yazılmaz; alanı olmayan yazıda alan yoktur"));
+                }
+                f.paragraph.fields = l;
             }
             // Schema 64 (docs/adr/0323): the scales, as their JSON; the whole object's rule is checked once it is read.
             "annotative" => {
@@ -1702,6 +1716,10 @@ fn build(
                 if let Some((_, words)) = l.problem(f.paragraph.box_width.is_some()) {
                     return Err(r.fail_at(Code::BadValue, f.layout_at, &words));
                 }
+            }
+            // Its fields: in its letters, in order, their sources and formats right (docs/adr/0325 §1).
+            if let Some(words) = kentos_contracts::text_fields_problem(&f.paragraph.fields, &text) {
+                return Err(r.fail_at(Code::BadValue, f.fields_at, &words));
             }
             // Bold, italic and a slant need a typeface (docs/adr/0183 §2).
             if let Some((_, words)) = f.face.problem() {

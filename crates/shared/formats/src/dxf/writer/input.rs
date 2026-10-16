@@ -106,6 +106,8 @@ struct Fields {
     runs: Option<Vec<TextRun>>,
     /// A multi-line text's indents, tabs and columns (docs/adr/0324).
     layout: Option<Box<kentos_contracts::ParagraphLayout>>,
+    /// A text's fields (docs/adr/0325).
+    fields: Option<Vec<kentos_contracts::TextField>>,
     /// A text's curve (docs/adr/0196).
     path: Option<kentos_contracts::TextPath>,
     /// A leader's or a dimension's arrowhead by its name (the kind says which).
@@ -353,6 +355,7 @@ impl Fields {
                 label_of: None,
                 label_scale: None,
                 paragraph: Paragraph {
+                    fields: self.fields.unwrap_or_default(),
                     layout: self.layout,
                     box_width: self.box_width,
                     line_spacing: self.line_spacing,
@@ -554,6 +557,7 @@ impl<'de> Deserialize<'de> for Wire {
                         "lineSpacing" => f.line_spacing = map.next_value()?,
                         "runs" => f.runs = map.next_value()?,
                         "layout" => f.layout = map.next_value()?,
+                        "fields" => f.fields = map.next_value()?,
                         "path" => f.path = map.next_value()?,
                         "arrow" => f.arrow = map.next_value()?,
                         "textStyle" => f.text_style = map.next_value()?,

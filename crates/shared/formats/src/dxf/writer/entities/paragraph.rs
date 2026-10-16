@@ -270,6 +270,10 @@ impl Writer<'_> {
         if !t.face.is_plain() {
             meta.face = serde_json::to_string(&t.face).ok();
         }
+        // Its fields in its KENTOS data (docs/adr/0325 §1); MTEXT holds their letters.
+        if !t.paragraph.fields.is_empty() {
+            meta.fields = serde_json::to_string(&t.paragraph.fields).ok();
+        }
         let (s, c) = sin_cos_deg(t.rotation);
         self.out.xyz(11, v(c, s));
         if let Some(spacing) = t.paragraph.line_spacing {

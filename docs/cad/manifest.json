@@ -6723,17 +6723,81 @@
    "tests": 2
   },
   {
+   "id": "text.check",
+   "kind": "command",
+   "title": "Yazı denetimi",
+   "level": "query",
+   "via": [
+    "cad.texts.check"
+   ],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Pencere komutun bulgularını gösterir (ADR 0325).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "text.combine",
+   "kind": "command",
+   "title": "Yazıları birleştir",
+   "level": "semantic",
+   "via": [
+    "cad.texts.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.texts.edit",
+   "mcp": "cad.texts.edit",
+   "note": "Seçili yazıların kimlikleri combine işlemine verilir (ADR 0325).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "text.fieldInsert",
+   "kind": "command",
+   "title": "Alan ekle",
+   "level": "semantic",
+   "via": [
+    "cad.fields.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.fields.edit",
+   "mcp": "cad.fields.edit",
+   "note": "Pencere yazının, kaynağın (çizimden seçilen nesne ya da proje) ve biçimin kimliklerini ve değerlerini komutun insert işlemine verir; önizleme komutun planıdır (ADR 0325).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "text.fieldsUpdate",
+   "kind": "command",
+   "title": "Alanları yenile",
+   "level": "semantic",
+   "via": [
+    "cad.fields.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.fields.edit",
+   "mcp": "cad.fields.edit",
+   "note": "Seçili yazıların kimlikleri update işlemine verilir (ADR 0325).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "text.findReplace",
    "kind": "command",
    "title": "Bul ve değiştir",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.texts.edit"
    ],
-   "operation": "replaceText",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.texts.edit",
+   "mcp": "cad.texts.edit",
+   "note": "Bul, Değiştir, Büyük küçük harf ve Tam sözcük komutun replace işlemine seçilen satırların kimlikleriyle verilir; Joker açıkken cad.entities.edit'in replaceText'iyle yazar (desen bütün yazıyı alır; ADR 0325).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -6750,6 +6814,38 @@
    "python": null,
    "mcp": null,
    "note": "Pencere komutun cevabını gösterir: stillerin yazı tipleri, nasıl çözüldükleri ve PDF'in gömdükleri (ADR 0324).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "text.number",
+   "kind": "command",
+   "title": "Numarala",
+   "level": "semantic",
+   "via": [
+    "cad.texts.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.texts.edit",
+   "mcp": "cad.texts.edit",
+   "note": "Seçili yazıların kimlikleri seçim sırasıyla ve pencerenin değerleri number işlemine verilir; önizleme komutun planıdır (ADR 0325).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "text.split",
+   "kind": "command",
+   "title": "Satırlara ayır",
+   "level": "semantic",
+   "via": [
+    "cad.texts.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.texts.edit",
+   "mcp": "cad.texts.edit",
+   "note": "Seçili yazının kimliği split işlemine verilir (ADR 0325).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

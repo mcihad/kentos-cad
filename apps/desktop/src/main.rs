@@ -84,6 +84,8 @@ mod annotative_scenes;
 #[cfg(test)]
 mod paragraph_layout_scenes;
 #[cfg(test)]
+mod text_field_scenes;
+#[cfg(test)]
 mod dimension_option_scenes;
 #[cfg(test)]
 mod dimension_scenes;
@@ -141,6 +143,7 @@ mod layer_filters;
 mod layer_info;
 mod layer_list;
 mod font_report;
+mod text_tools;
 mod layer_merge;
 mod layer_purge;
 mod layer_snap;

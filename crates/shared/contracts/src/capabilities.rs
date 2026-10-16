@@ -1279,6 +1279,32 @@ const ENTRIES: &[Entry] = &[
         },
     },
     Entry {
+        id: "cad.fields.edit",
+        refusals: &[
+            &["invalid_uid", "entity_not_found", "layer_locked"],
+            &["not_a_text", "invalid_text_field", "field_not_found"],
+            REVISION,
+        ],
+        warnings: &["field_broken"],
+        targets: || vec![target(None, &["text"], &[], Some("not_a_text"), None)],
+    },
+    Entry {
+        id: "cad.texts.edit",
+        refusals: &[
+            OBJECTS,
+            &["not_a_text", "empty_text", "too_few_objects", "not_splittable", "invalid_number"],
+            REVISION,
+        ],
+        warnings: &["text_left_blank", "layer_locked", "field_broken"],
+        targets: || vec![target(None, &["text"], &[], Some("not_a_text"), None)],
+    },
+    Entry {
+        id: "cad.texts.check",
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_text"]],
+        warnings: &[],
+        targets: || vec![target(None, &["text"], &[], Some("not_a_text"), None)],
+    },
+    Entry {
         id: "cad.fonts.report",
         refusals: &[&["empty_name", "invalid_name"]],
         warnings: &["font_substituted"],

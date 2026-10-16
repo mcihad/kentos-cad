@@ -53,6 +53,7 @@ mod snapshot;
 mod step;
 mod store;
 mod style_overrides;
+pub mod text_fields;
 mod units;
 
 pub use calls::{REFUSED_CALLS, RefusedAs, RefusedCall};

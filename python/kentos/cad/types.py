@@ -946,6 +946,39 @@ FeedKindName = Literal["wfs", "ogcFeatures", "arcgis", "geojson"]
 """The names of :class:`FeedKind`, for a plain string."""
 
 
+class FieldBroken(_StrEnum):
+    """Why a field's value cannot be read.
+
+    - ``removed``: The object is gone.
+    - ``noValue``: The object has no such value (an open object's area, a line's text).
+    - ``notNamed``: The attribute or the variable named is not there.
+    - ``cycle``: Texts whose fields read each other in a ring.
+    """
+    REMOVED = "removed"
+    NO_VALUE = "noValue"
+    NOT_NAMED = "notNamed"
+    CYCLE = "cycle"
+
+
+FieldBrokenName = Literal["removed", "noValue", "notNamed", "cycle"]
+"""The names of :class:`FieldBroken`, for a plain string."""
+
+
+class FieldUnit(_StrEnum):
+    """The unit a field writes a number in."""
+    MM = "mm"
+    CM = "cm"
+    M = "m"
+    KM = "km"
+    M2 = "m2"
+    DONUM = "donum"
+    HA = "ha"
+
+
+FieldUnitName = Literal["mm", "cm", "m", "km", "m2", "donum", "ha"]
+"""The names of :class:`FieldUnit`, for a plain string."""
+
+
 class FileUnit(_StrEnum):
     """A unit a file's lengths may be read in, whatever the file says
     (docs/adr/0257 §1): DXF's `$INSUNITS` most used.
@@ -1599,6 +1632,50 @@ NetworkKindName = Literal["road", "utility"]
 """The names of :class:`NetworkKind`, for a plain string."""
 
 
+class NumberPlace(_StrEnum):
+    """Where Numarala writes a number.
+
+    - ``replace``: The text becomes the number.
+    - ``prefix``: Before the text.
+    - ``suffix``: After the text.
+    """
+    REPLACE = "replace"
+    PREFIX = "prefix"
+    SUFFIX = "suffix"
+
+
+NumberPlaceName = Literal["replace", "prefix", "suffix"]
+"""The names of :class:`NumberPlace`, for a plain string."""
+
+
+class ObjectValue(_StrEnum):
+    """An object's value a field writes.
+
+    - ``y``
+    - ``area``: A closed object's area, its holes taken off.
+    - ``perimeter``: A closed object's perimeter.
+    - ``length``: A line's, an arc's, a path's or a curve's length.
+    - ``layer``: Its layer's name.
+    - ``label``: Its label.
+    - ``attribute``: The attribute named: a block insert's attribute value, else the object's attribute.
+    - ``text``: A text's letters (a cross reference).
+    - ``x``: Its east and north: a point's place, a text's, a block's or a table's insertion point, else where its label goes.
+    """
+    Y = "y"
+    AREA = "area"
+    PERIMETER = "perimeter"
+    LENGTH = "length"
+    LAYER = "layer"
+    LABEL = "label"
+    ATTRIBUTE = "attribute"
+    TEXT = "text"
+    X = "x"
+
+
+ObjectValueName = Literal["y", "area", "perimeter", "length", "layer", "label", "attribute", "text", "x"]
+"""The names of :class:`ObjectValue`, for a plain string."""
+
+
 class ObstacleKind(_StrEnum):
     """What of an obstacle area a label avoids.
 
@@ -1830,6 +1907,26 @@ class ProjectType(_StrEnum):
 
 ProjectTypeName = Literal["cad", "gis", "landReadjustment", "zoningPlan", "subdivision", "road", "architecture"]
 """The names of :class:`ProjectType`, for a plain string."""
+
+
+class ProjectValue(_StrEnum):
+    """The project's value a field writes.
+
+    - ``name``: The project's name.
+    - ``scale``: The drawing's scale, `1:500`.
+    - ``unit``: The drawing unit, `m`.
+    - ``crs``: The coordinate system, `EPSG:5254`, or `Yerel`.
+    - ``variable``: The project's variable named (docs/adr/0214 §4).
+    """
+    NAME = "name"
+    SCALE = "scale"
+    UNIT = "unit"
+    CRS = "crs"
+    VARIABLE = "variable"
+
+
+ProjectValueName = Literal["name", "scale", "unit", "crs", "variable"]
+"""The names of :class:`ProjectValue`, for a plain string."""
 
 
 class PropertiesOperation(_StrEnum):
@@ -2181,6 +2278,24 @@ class TextAlign(_StrEnum):
 
 TextAlignName = Literal["baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", "bottomRight", "middleLeft", "middleCenter", "middleRight", "topLeft", "topCenter", "topRight"]
 """The names of :class:`TextAlign`, for a plain string."""
+
+
+class TextFindingKind(_StrEnum):
+    """What a text's finding is.
+
+    - ``doubleSpace``: Two spaces or more in a row inside a line.
+    - ``repeatedWord``: A word written twice in a row (“ve ve”).
+    - ``unbalanced``: A bracket or a quote that is not closed or not opened.
+    - ``brokenField``: A field that cannot be read.
+    """
+    DOUBLE_SPACE = "doubleSpace"
+    REPEATED_WORD = "repeatedWord"
+    UNBALANCED = "unbalanced"
+    BROKEN_FIELD = "brokenField"
+
+
+TextFindingKindName = Literal["doubleSpace", "repeatedWord", "unbalanced", "brokenField"]
+"""The names of :class:`TextFindingKind`, for a plain string."""
 
 
 class TextScript(_StrEnum):
@@ -2910,6 +3025,54 @@ class FeatureChange(_Union):
         return _variant(_FEATURE_CHANGE, "FeatureChange", "op", data).from_json(data)
 
 
+class FieldEdit(_Union):
+    """One edit of `cad.fields.edit` (docs/adr/0325 §3).
+
+    One of:
+
+    - :class:`InsertFieldEdit` (``kind: insert``)
+    - :class:`RemoveFieldEdit` (``kind: remove``)
+    - :class:`FormatFieldEdit` (``kind: format``)
+    - :class:`UpdateFieldEdit` (``kind: update``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldEdit:
+        return _variant(_FIELD_EDIT, "FieldEdit", "kind", data).from_json(data)
+
+
+class FieldSource(_Union):
+    """Where a field's value comes from.
+
+    One of:
+
+    - :class:`ObjectFieldSource` (``kind: object``)
+    - :class:`ProjectFieldSource` (``kind: project``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    if TYPE_CHECKING:
+        # Every variant has these.
+        name: str | None | Unset
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldSource:
+        return _variant(_FIELD_SOURCE, "FieldSource", "kind", data).from_json(data)
+
+
 class HatchRegion(_Union):
     """Where Tarama hatches.
 
@@ -3214,6 +3377,29 @@ class TableSource(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> TableSource:
         return _variant(_TABLE_SOURCE, "TableSource", "kind", data).from_json(data)
+
+
+class TextEdit(_Union):
+    """One edit of `cad.texts.edit` (docs/adr/0325 §3).
+
+    One of:
+
+    - :class:`ReplaceTextEdit` (``kind: replace``)
+    - :class:`NumberTextEdit` (``kind: number``)
+    - :class:`CombineTextEdit` (``kind: combine``)
+    - :class:`SplitTextEdit` (``kind: split``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TextEdit:
+        return _variant(_TEXT_EDIT, "TextEdit", "kind", data).from_json(data)
 
 
 class Transform(_Union):
@@ -11110,6 +11296,45 @@ class FieldChoice(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FieldFormat(_Model):
+    """How a field writes a number.
+    Attributes:
+        comma: A decimal comma (`24,35`) instead of a point.
+        decimals: Absent: the project's length or area decimals. Unit: count.
+        unit: Absent: the drawing unit for a length or a place, the project's area unit for an area.
+    """
+    comma: bool | Unset = UNSET
+    decimals: int | None | Unset = UNSET
+    prefix: str | Unset = UNSET
+    suffix: str | Unset = UNSET
+    unit: FieldUnit | FieldUnitName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.comma is not UNSET:
+            out["comma"] = self.comma
+        if self.decimals is not UNSET:
+            out["decimals"] = self.decimals
+        if self.prefix is not UNSET:
+            out["prefix"] = self.prefix
+        if self.suffix is not UNSET:
+            out["suffix"] = self.suffix
+        if self.unit is not UNSET:
+            out["unit"] = None if self.unit is None else _enum_out(self.unit)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldFormat:
+        return cls(
+            comma=data.get("comma", UNSET),
+            decimals=data.get("decimals", UNSET),
+            prefix=data.get("prefix", UNSET),
+            suffix=data.get("suffix", UNSET),
+            unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(FieldUnit, data["unit"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FieldRename(_Model):
     """A field renamed on a layer's objects (`cad.layers.edit`'s `fields`): the
     key `from` becomes `to`, its values kept.
@@ -11128,6 +11353,53 @@ class FieldRename(_Model):
         return cls(
             from_=data["from"],
             to=data["to"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FieldsEdit(_Model):
+    """Input of `cad.fields.edit` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_text`, `layer_locked`,
+    `invalid_text_field`, `field_not_found`. A field that cannot be read is written `####` with a `field_broken`
+    warning.
+    """
+    edit: FieldEdit
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["edit"] = self.edit.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldsEdit:
+        return cls(
+            edit=FieldEdit.from_json(data["edit"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FieldsEdited(_Model):
+    """Output of `cad.fields.edit` v1.
+    Attributes:
+        changed: The texts that changed, by their persistent ids.
+    """
+    changed: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = list(self.changed)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldsEdited:
+        return cls(
+            changed=list(data["changed"]),
+            revision=data["revision"],
         )
 
 
@@ -21619,6 +21891,7 @@ class TextEntity(Entity):
             follow the object's layer instead of the insert; in order, once each,
             never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
+        fields: Ranges of its letters bound to a source (docs/adr/0325 §1), in order, not overlapping; absent: none.
         font: Its typeface; absent: the project's, in the look of docs/adr/0055.
         label_of: The object whose label this text writes (Etiketleri yazıya çevir's
             “Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text
@@ -21675,6 +21948,7 @@ class TextEntity(Entity):
     box_width: float | None | Unset = UNSET
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
+    fields: list[TextField] | Unset = UNSET
     font: DrawingFont | DrawingFontName | None | Unset = UNSET
     italic: bool | Unset = UNSET
     label: str | None | Unset = UNSET
@@ -21722,6 +21996,8 @@ class TextEntity(Entity):
             out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
+        if self.fields is not UNSET:
+            out["fields"] = [e0.to_json() for e0 in self.fields]
         if self.font is not UNSET:
             out["font"] = None if self.font is None else _enum_out(self.font)
         if self.italic is not UNSET:
@@ -21787,6 +22063,7 @@ class TextEntity(Entity):
             box_width=UNSET if "boxWidth" not in data else None if data["boxWidth"] is None else float(data["boxWidth"]),
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
+            fields=[TextField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
             font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
             italic=data.get("italic", UNSET),
             label=data.get("label", UNSET),
@@ -21810,6 +22087,78 @@ class TextEntity(Entity):
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             width_factor=UNSET if "widthFactor" not in data else None if data["widthFactor"] is None else float(data["widthFactor"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TextField(_Model):
+    """A range of a text's letters bound to a source (docs/adr/0325 §1).
+    Attributes:
+        start: Its first letter and the one past its last, counting Unicode scalar values (as a run's); its letters are the
+            value last written. Unit: index.
+        end: Unit: index.
+        broken: Why its value cannot be read; its letters are then `####`. Absent: it reads.
+        format: How a number is written; absent: the project's decimals and unit.
+    """
+    start: int
+    end: int
+    source: FieldSource
+    broken: FieldBroken | FieldBrokenName | None | Unset = UNSET
+    format: FieldFormat | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["start"] = self.start
+        out["end"] = self.end
+        out["source"] = self.source.to_json()
+        if self.broken is not UNSET:
+            out["broken"] = None if self.broken is None else _enum_out(self.broken)
+        if self.format is not UNSET:
+            out["format"] = None if self.format is None else self.format.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TextField:
+        return cls(
+            start=data["start"],
+            end=data["end"],
+            source=FieldSource.from_json(data["source"]),
+            broken=UNSET if "broken" not in data else None if data["broken"] is None else _enum_in(FieldBroken, data["broken"]),
+            format=UNSET if "format" not in data else None if data["format"] is None else FieldFormat.from_json(data["format"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TextFinding(_Model):
+    """One finding of `cad.texts.check`.
+    Attributes:
+        start: The letters it is about, counting Unicode scalar values. Unit: index.
+        end: Unit: index.
+        words: What it is, for the user.
+    """
+    uid: str
+    kind: TextFindingKind | TextFindingKindName
+    start: int
+    end: int
+    words: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["kind"] = _enum_out(self.kind)
+        out["start"] = self.start
+        out["end"] = self.end
+        out["words"] = self.words
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TextFinding:
+        return cls(
+            uid=data["uid"],
+            kind=_enum_in(TextFindingKind, data["kind"]),
+            start=data["start"],
+            end=data["end"],
+            words=data["words"],
         )
 
 
@@ -21968,6 +22317,143 @@ class TextStyleDef(_Model):
             italic=data.get("italic", UNSET),
             oblique=UNSET if "oblique" not in data else None if data["oblique"] is None else float(data["oblique"]),
             width_factor=UNSET if "widthFactor" not in data else None if data["widthFactor"] is None else float(data["widthFactor"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TextsCheck(_Model):
+    """Input of `cad.texts.check` v1, read only. Refusals: `invalid_uid`, `entity_not_found`, `not_a_text`.
+    Attributes:
+        uids: The texts to check; empty: every shown text.
+    """
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TextsCheck:
+        return cls(
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TextsChecked(_Model):
+    """Output of `cad.texts.check` v1: the findings, text by text in the drawing's order, each text's by place.
+    Attributes:
+        texts: How many texts were read. Unit: count.
+    """
+    findings: list[TextFinding]
+    texts: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["findings"] = [e0.to_json() for e0 in self.findings]
+        out["texts"] = self.texts
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TextsChecked:
+        return cls(
+            findings=[TextFinding.from_json(e0) for e0 in data["findings"]],
+            texts=data["texts"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TextsEdit(_Model):
+    """Input of `cad.texts.edit` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_text`, `layer_locked`,
+    `no_entities`, `empty_text` (an empty `find`), `too_few_objects` (combining one text), `not_splittable` (one
+    paragraph, columns, a curve), `invalid_number`.
+    """
+    edit: TextEdit
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["edit"] = self.edit.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TextsEdit:
+        return cls(
+            edit=TextEdit.from_json(data["edit"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TextsEdited(_Model):
+    """Output of `cad.texts.edit` v1.
+    Attributes:
+        changed: The texts that changed, by their persistent ids.
+        added: The texts it added (Satırlara ayır), in order.
+        removed: The texts it took away.
+        replaced: How many places Bul ve değiştir replaced. Unit: count.
+    """
+    changed: list[str]
+    revision: str
+    added: list[str] | Unset = UNSET
+    removed: list[str] | Unset = UNSET
+    replaced: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = list(self.changed)
+        out["revision"] = self.revision
+        if self.added is not UNSET:
+            out["added"] = list(self.added)
+        if self.removed is not UNSET:
+            out["removed"] = list(self.removed)
+        if self.replaced is not UNSET:
+            out["replaced"] = self.replaced
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TextsEdited:
+        return cls(
+            changed=list(data["changed"]),
+            revision=data["revision"],
+            added=list(data["added"]) if "added" in data else UNSET,
+            removed=list(data["removed"]) if "removed" in data else UNSET,
+            replaced=data.get("replaced", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TextsPlan(_Model):
+    """What `cad.fields.edit` and `cad.texts.edit` would write (plan mode).
+    Attributes:
+        texts: The texts as execute would write them: those changed, then those added.
+        removed: The texts it would take away, by their persistent ids.
+    """
+    texts: list[Entity]
+    revision: str
+    removed: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["texts"] = [e0.to_json() for e0 in self.texts]
+        out["revision"] = self.revision
+        if self.removed is not UNSET:
+            out["removed"] = list(self.removed)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TextsPlan:
+        return cls(
+            texts=[Entity.from_json(e0) for e0 in data["texts"]],
+            revision=data["revision"],
+            removed=list(data["removed"]) if "removed" in data else UNSET,
         )
 
 
@@ -26234,6 +26720,166 @@ class DeleteFeatureChange(FeatureChange):
 
 
 @dataclass(kw_only=True, slots=True)
+class InsertFieldEdit(FieldEdit):
+    """Alan ekle: a field in place of text `uid`'s letters `start..end` (equal: put in at that letter), its value
+    written at once.
+    Attributes:
+        start: Unit: index.
+        end: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "insert"
+    uid: str
+    start: int
+    end: int
+    source: FieldSource
+    format: FieldFormat | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "insert"}
+        out["uid"] = self.uid
+        out["start"] = self.start
+        out["end"] = self.end
+        out["source"] = self.source.to_json()
+        if self.format is not UNSET:
+            out["format"] = None if self.format is None else self.format.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> InsertFieldEdit:
+        return cls(
+            uid=data["uid"],
+            start=data["start"],
+            end=data["end"],
+            source=FieldSource.from_json(data["source"]),
+            format=UNSET if "format" not in data else None if data["format"] is None else FieldFormat.from_json(data["format"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveFieldEdit(FieldEdit):
+    """Alanı kaldır: text `uid`'s field `index` (from 0) taken out; its letters stay as text.
+    Attributes:
+        index: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "remove"
+    uid: str
+    index: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "remove"}
+        out["uid"] = self.uid
+        out["index"] = self.index
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveFieldEdit:
+        return cls(
+            uid=data["uid"],
+            index=data["index"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormatFieldEdit(FieldEdit):
+    """Text `uid`'s field `index` written with `format` (null: the project's decimals and unit).
+    Attributes:
+        index: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "format"
+    uid: str
+    index: int
+    format: FieldFormat | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "format"}
+        out["uid"] = self.uid
+        out["index"] = self.index
+        if self.format is not UNSET:
+            out["format"] = None if self.format is None else self.format.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormatFieldEdit:
+        return cls(
+            uid=data["uid"],
+            index=data["index"],
+            format=UNSET if "format" not in data else None if data["format"] is None else FieldFormat.from_json(data["format"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UpdateFieldEdit(FieldEdit):
+    """Alanları yenile: the fields of `uids` (empty: every text with fields) written again now."""
+    TAG_VALUE: ClassVar[str] = "update"
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "update"}
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UpdateFieldEdit:
+        return cls(
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ObjectFieldSource(FieldSource):
+    """An object, by its persistent id.
+    Attributes:
+        name: The attribute's name, with `attribute`.
+    """
+    TAG_VALUE: ClassVar[str] = "object"
+    uid: str
+    value: ObjectValue | ObjectValueName
+    name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "object"}
+        out["uid"] = self.uid
+        out["value"] = _enum_out(self.value)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ObjectFieldSource:
+        return cls(
+            uid=data["uid"],
+            value=_enum_in(ObjectValue, data["value"]),
+            name=data.get("name", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProjectFieldSource(FieldSource):
+    """The project.
+    Attributes:
+        name: The variable's name, with `variable`.
+    """
+    TAG_VALUE: ClassVar[str] = "project"
+    value: ProjectValue | ProjectValueName
+    name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "project"}
+        out["value"] = _enum_out(self.value)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProjectFieldSource:
+        return cls(
+            value=_enum_in(ProjectValue, data["value"]),
+            name=data.get("name", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PointHatchRegion(HatchRegion):
     """The region around `at`.
     Attributes:
@@ -27536,6 +28182,129 @@ class FileTableSource(TableSource):
 
 
 @dataclass(kw_only=True, slots=True)
+class ReplaceTextEdit(TextEdit):
+    """Bul ve değiştir: every `find` in the texts `uids` (empty: every shown text) replaced by `with`; a text left
+    blank, or on a locked layer, is left as it was and said.
+    Attributes:
+        match_case: Big and small letters apart (Turkish İ and ı); absent: alike.
+        whole_word: Only a whole word.
+    """
+    TAG_VALUE: ClassVar[str] = "replace"
+    find: str
+    match_case: bool | Unset = UNSET
+    uids: list[str] | Unset = UNSET
+    whole_word: bool | Unset = UNSET
+    with_: str = ""
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "replace"}
+        out["find"] = self.find
+        if self.match_case is not UNSET:
+            out["matchCase"] = self.match_case
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        if self.whole_word is not UNSET:
+            out["wholeWord"] = self.whole_word
+        out["with"] = self.with_
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReplaceTextEdit:
+        return cls(
+            find=data["find"],
+            match_case=data.get("matchCase", UNSET),
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+            whole_word=data.get("wholeWord", UNSET),
+            with_=data["with"] if "with" in data else "",
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NumberTextEdit(TextEdit):
+    """Numarala (TCOUNT): the texts `uids`, in their order, numbered `start`, `start + step` …, each written with at
+    least `digits` digits (zeros before), `prefix` and `suffix` around it, in place of the text, before or after.
+    Attributes:
+        digits: Unit: count.
+        start: Unit: count.
+        step: Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "number"
+    uids: list[str]
+    digits: int | None | Unset = UNSET
+    place: NumberPlace | NumberPlaceName = NumberPlace.REPLACE
+    prefix: str | Unset = UNSET
+    start: int = 1
+    step: int = 1
+    suffix: str | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "number"}
+        out["uids"] = list(self.uids)
+        if self.digits is not UNSET:
+            out["digits"] = self.digits
+        out["place"] = _enum_out(self.place)
+        if self.prefix is not UNSET:
+            out["prefix"] = self.prefix
+        out["start"] = self.start
+        out["step"] = self.step
+        if self.suffix is not UNSET:
+            out["suffix"] = self.suffix
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NumberTextEdit:
+        return cls(
+            uids=list(data["uids"]),
+            digits=data.get("digits", UNSET),
+            place=_enum_in(NumberPlace, data["place"]) if "place" in data else NumberPlace.REPLACE,
+            prefix=data.get("prefix", UNSET),
+            start=data["start"] if "start" in data else 1,
+            step=data["step"] if "step" in data else 1,
+            suffix=data.get("suffix", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CombineTextEdit(TextEdit):
+    """Yazıları birleştir (TXT2MTXT): the texts `uids` as one text, from the highest down (then from the left), at
+    the top of the highest, with its look; the others taken away.
+    """
+    TAG_VALUE: ClassVar[str] = "combine"
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "combine"}
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CombineTextEdit:
+        return cls(
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SplitTextEdit(TextEdit):
+    """Satırlara ayır: text `uid`'s paragraphs (its lines between line breaks) as texts of their own, each where it
+    stood, with its formats and fields; the text taken away.
+    """
+    TAG_VALUE: ClassVar[str] = "split"
+    uid: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "split"}
+        out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SplitTextEdit:
+        return cls(
+            uid=data["uid"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class MoveTransform(Transform):
     """Move (taşı) by a displacement: `dx` east, `dy` north.
     Attributes:
@@ -28226,6 +28995,12 @@ _EXPLODE_DENSITY: dict[str, type[ExplodeDensity]] = {"count": CountExplodeDensit
 _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange, "update": UpdateFeatureChange, "delete": DeleteFeatureChange}
 
 
+_FIELD_EDIT: dict[str, type[FieldEdit]] = {"insert": InsertFieldEdit, "remove": RemoveFieldEdit, "format": FormatFieldEdit, "update": UpdateFieldEdit}
+
+
+_FIELD_SOURCE: dict[str, type[FieldSource]] = {"object": ObjectFieldSource, "project": ProjectFieldSource}
+
+
 _HATCH_REGION: dict[str, type[HatchRegion]] = {"point": PointHatchRegion, "objects": ObjectsHatchRegion}
 
 
@@ -28263,6 +29038,9 @@ _SUB_PLACE: dict[str, type[SubPlace]] = {"node": NodeSubPlace, "start": StartSub
 
 
 _TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSource, "areas": AreasTableSource, "attributes": AttributesTableSource, "file": FileTableSource}
+
+
+_TEXT_EDIT: dict[str, type[TextEdit]] = {"replace": ReplaceTextEdit, "number": NumberTextEdit, "combine": CombineTextEdit, "split": SplitTextEdit}
 
 
 _TRANSFORM: dict[str, type[Transform]] = {"move": MoveTransform, "rotate": RotateTransform, "scale": ScaleTransform, "mirror": MirrorTransform, "align": AlignTransform, "similarity": SimilarityTransform, "affine": AffineTransform, "projective": ProjectiveTransform, "rubbersheet": RubbersheetTransform, "arrange": ArrangeTransform}
@@ -28451,6 +29229,7 @@ __all__ = [
     "CloudRender",
     "CloudRenderName",
     "CloudSource",
+    "CombineTextEdit",
     "CommitResult",
     "ConstructedCurve",
     "ConstructionEntity",
@@ -28625,9 +29404,18 @@ __all__ = [
     "FeedKind",
     "FeedKindName",
     "FenceSelectRegion",
+    "FieldBroken",
+    "FieldBrokenName",
     "FieldChoice",
+    "FieldEdit",
+    "FieldFormat",
     "FieldNetworkDirection",
     "FieldRename",
+    "FieldSource",
+    "FieldUnit",
+    "FieldUnitName",
+    "FieldsEdit",
+    "FieldsEdited",
     "FileCommit",
     "FileCommitted",
     "FileTableSource",
@@ -28641,6 +29429,7 @@ __all__ = [
     "FontMatchName",
     "FontsReport",
     "FontsReported",
+    "FormatFieldEdit",
     "FoundSnap",
     "FrameUcsTo",
     "FrozenBlock",
@@ -28677,6 +29466,7 @@ __all__ = [
     "InscribedRegularFrame",
     "InsertEntity",
     "InsertEntityGeometry",
+    "InsertFieldEdit",
     "InsertKnotCurveEdit",
     "InsertParameters",
     "InsertProxy",
@@ -28850,7 +29640,10 @@ __all__ = [
     "NetworkLayer",
     "NewObject",
     "NodeSubPlace",
+    "NumberPlace",
+    "NumberPlaceName",
     "NumberRule",
+    "NumberTextEdit",
     "NurbsBy",
     "NurbsCreate",
     "NurbsCreated",
@@ -28858,7 +29651,10 @@ __all__ = [
     "NurbsEntityGeometry",
     "NurbsPlan",
     "ObjectEnd",
+    "ObjectFieldSource",
     "ObjectUcsTo",
+    "ObjectValue",
+    "ObjectValueName",
     "ObjectsHatchRegion",
     "ObjectsSelectRegion",
     "ObjectsTrimBoundaries",
@@ -28946,6 +29742,7 @@ __all__ = [
     "ProjectDuplicate",
     "ProjectDuplicated",
     "ProjectFavorite",
+    "ProjectFieldSource",
     "ProjectGrant",
     "ProjectImport",
     "ProjectImported",
@@ -28972,6 +29769,8 @@ __all__ = [
     "ProjectSummary",
     "ProjectType",
     "ProjectTypeName",
+    "ProjectValue",
+    "ProjectValueName",
     "ProjectVariable",
     "ProjectiveTransform",
     "PropertiesOperation",
@@ -29002,11 +29801,13 @@ __all__ = [
     "RemoveArrayEdit",
     "RemoveControlCurveEdit",
     "RemoveEntityEdit",
+    "RemoveFieldEdit",
     "RemoveFitCurveEdit",
     "RenameViewsOp",
     "RenamedBlock",
     "ReplaceArrayEdit",
     "ReplaceEntityEdit",
+    "ReplaceTextEdit",
     "ResetArrayEdit",
     "ResourceKind",
     "ResourceKindName",
@@ -29058,6 +29859,7 @@ __all__ = [
     "SpaceDimensionEdit",
     "SplineEntity",
     "SplineEntityGeometry",
+    "SplitTextEdit",
     "StackMode",
     "StackModeName",
     "StandardDimensionStyle",
@@ -29102,14 +29904,24 @@ __all__ = [
     "TextAlignName",
     "TextColumns",
     "TextDimensionEdit",
+    "TextEdit",
     "TextEntity",
     "TextEntityGeometry",
+    "TextField",
+    "TextFinding",
+    "TextFindingKind",
+    "TextFindingKindName",
     "TextPath",
     "TextRun",
     "TextScript",
     "TextScriptName",
     "TextShift",
     "TextStyleDef",
+    "TextsCheck",
+    "TextsChecked",
+    "TextsEdit",
+    "TextsEdited",
+    "TextsPlan",
     "ThroughOffsetBy",
     "TileGrid",
     "TileMatrix",
@@ -29151,6 +29963,7 @@ __all__ = [
     "UpdateBlockChange",
     "UpdateEntityEdit",
     "UpdateFeatureChange",
+    "UpdateFieldEdit",
     "VariableKind",
     "VariableKindName",
     "VariableValue",

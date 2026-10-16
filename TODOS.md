@@ -191,6 +191,11 @@ Liste:
   Sütunlar satırları, düzenleyicinin Kesir ve Liste ▾'si, Yazı tipleri penceresi, PDF'in `widthFactor` ve `lean`'i (web'in PDF'i), DXF'in
   `\p`, `^I`, `\S` okuma ve yazması (biçim işçisi aynı çekirdekten). Masaüstünde de açık: paragraf başına hiza ve iki yana yaslama,
   kullanıcının kendi TTF/OTF yazı tipleri.
+- [ ] `CAD-ANNO-22`…`24` alanlar ve yazının komutları (ADR 0325, 17 Ekim): web'de gerekenler: `.kcad` şema 66 (`fields`), belgenin
+  alan yenilemesi (`model/` içinde `text_fields.rs`'in ikizi: kaynağı değişen, elle düzenlenen, döngü, kopuk), `cad.fields.edit`,
+  `cad.texts.edit`, `cad.texts.check` TS işleyicileri (ortak durumlar `fixtures/commands/v1`), Alan ekle, Numarala, Yazı denetimi
+  pencereleri, Öznitelikler'in Alan satırları, Bul ve değiştir'in komutla yazması, DXF'in KENTOS verisindeki `fields`'ı. Masaüstünde de
+  açık: ifadeli alan, AutoCAD'in FIELD kodları, sözlükle yazım denetimi.
 - [ ] `CAD-ANNO-11`, `16`, `17` merkez işareti, eksen, kot, stil dosyaları ve stilden ayrılan alanlar (ADR 0322, 16 Ekim): web'de
   gerekenler: `.kcad` şema 62 ve 63 (`centerMark`, `centerLine`, `elevation`, `pair`, yazının ve ölçünün `overrides`'ı), çekirdeğin üç
   yerleşimi WASM'la ve `level`, `none` birimleri, belgenin `pair` kuralı, kotun izlemesi ve `mark_overrides`'ı, `cad.dimensions.create`'in üç

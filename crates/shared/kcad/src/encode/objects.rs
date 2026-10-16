@@ -499,6 +499,10 @@ impl<'d> Encoder<'d> {
                 if let Some(l) = &para.layout {
                     f.push(("layout", Val::Json(serde_json::to_value(l).unwrap_or_default())));
                 }
+                // Schema 66 (docs/adr/0325 §1): its fields, as their JSON.
+                if !para.fields.is_empty() {
+                    f.push(("fields", Val::Json(serde_json::to_value(&para.fields).unwrap_or_default())));
+                }
                 // The object whose label it writes (docs/adr/0175 §4): both fields or neither, and only the
                 // drawing's texts (a block definition's objects have no persistent ids to name).
                 if e.label_of.is_some() || e.label_scale.is_some() {

@@ -815,11 +815,11 @@
       "level": "host"
     },
     "text.findReplace": {
-      "level": "geometry",
+      "level": "semantic",
       "via": [
-        "cad.entities.edit"
+        "cad.texts.edit"
       ],
-      "operation": "replaceText"
+      "note": "Bul, Değiştir, Büyük küçük harf ve Tam sözcük komutun replace işlemine seçilen satırların kimlikleriyle verilir; Joker açıkken cad.entities.edit'in replaceText'iyle yazar (desen bütün yazıyı alır; ADR 0325)."
     },
     "topology.check": {
       "level": "query"
@@ -1224,6 +1224,48 @@
         "cad.fonts.report"
       ],
       "note": "Pencere komutun cevabını gösterir: stillerin yazı tipleri, nasıl çözüldükleri ve PDF'in gömdükleri (ADR 0324)."
+    },
+    "text.fieldInsert": {
+      "level": "semantic",
+      "via": [
+        "cad.fields.edit"
+      ],
+      "note": "Pencere yazının, kaynağın (çizimden seçilen nesne ya da proje) ve biçimin kimliklerini ve değerlerini komutun insert işlemine verir; önizleme komutun planıdır (ADR 0325)."
+    },
+    "text.fieldsUpdate": {
+      "level": "semantic",
+      "via": [
+        "cad.fields.edit"
+      ],
+      "note": "Seçili yazıların kimlikleri update işlemine verilir (ADR 0325)."
+    },
+    "text.number": {
+      "level": "semantic",
+      "via": [
+        "cad.texts.edit"
+      ],
+      "note": "Seçili yazıların kimlikleri seçim sırasıyla ve pencerenin değerleri number işlemine verilir; önizleme komutun planıdır (ADR 0325)."
+    },
+    "text.combine": {
+      "level": "semantic",
+      "via": [
+        "cad.texts.edit"
+      ],
+      "note": "Seçili yazıların kimlikleri combine işlemine verilir (ADR 0325)."
+    },
+    "text.split": {
+      "level": "semantic",
+      "via": [
+        "cad.texts.edit"
+      ],
+      "note": "Seçili yazının kimliği split işlemine verilir (ADR 0325)."
+    },
+    "text.check": {
+      "level": "query",
+      "via": [
+        "cad.texts.check"
+      ],
+      "note": "Pencere komutun bulgularını gösterir (ADR 0325)."
     }
   },
   "tools": {

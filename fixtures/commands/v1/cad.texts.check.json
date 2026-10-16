@@ -1,0 +1,1336 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.texts.check",
+  "commandVersion": 1,
+  "title": "Yazıları denetle",
+  "note": "Written by scripts/fixtures/text_command_cases.py from docs/adr/0325; do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Kentsel proje",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 500,
+      "workspace": "cad"
+    },
+    "origin": {
+      "x": 500000,
+      "y": 4400000
+    },
+    "layers": [
+      {
+        "id": "mekan",
+        "name": "Mekanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "yazi",
+        "name": "Yazılar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "yazi",
+    "entities": [
+      {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "mekan",
+        "attrs": {
+          "Ad": "Salon",
+          "No": "101",
+          "Boş": ""
+        },
+        "label": "S-1",
+        "pts": [
+          {
+            "x": 500000,
+            "y": 4400000
+          },
+          {
+            "x": 500006,
+            "y": 4400000
+          },
+          {
+            "x": 500006,
+            "y": 4400004
+          },
+          {
+            "x": 500000,
+            "y": 4400004
+          }
+        ]
+      },
+      {
+        "kind": "text",
+        "id": 2,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "text": "Bodrum  kat",
+        "height": 0.25,
+        "rotation": 0
+      },
+      {
+        "kind": "text",
+        "id": 3,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4399999
+        },
+        "text": "  girinti\n  ikinci satır",
+        "height": 0.25,
+        "rotation": 0
+      },
+      {
+        "kind": "text",
+        "id": 4,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4399998
+        },
+        "text": "ve Ve ve",
+        "height": 0.25,
+        "rotation": 0
+      },
+      {
+        "kind": "text",
+        "id": 5,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4399997
+        },
+        "text": "İzmir izmir IŞIK ışık",
+        "height": 0.25,
+        "rotation": 0
+      },
+      {
+        "kind": "text",
+        "id": 6,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4399996
+        },
+        "text": "1 1 adet",
+        "height": 0.25,
+        "rotation": 0
+      },
+      {
+        "kind": "text",
+        "id": 7,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4399995
+        },
+        "text": "(açık [iç] kapalı)",
+        "height": 0.25,
+        "rotation": 0
+      },
+      {
+        "kind": "text",
+        "id": 8,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4399994
+        },
+        "text": "(kapanmayan ve) fazla)",
+        "height": 0.25,
+        "rotation": 0
+      },
+      {
+        "kind": "text",
+        "id": 9,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4399993
+        },
+        "text": "“tırnak” ve \"tek",
+        "height": 0.25,
+        "rotation": 0
+      },
+      {
+        "kind": "text",
+        "id": 10,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4399992
+        },
+        "text": "kat\nkat",
+        "height": 0.25,
+        "rotation": 0
+      },
+      {
+        "kind": "text",
+        "id": 11,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4399991
+        },
+        "text": "temiz yazı",
+        "height": 0.25,
+        "rotation": 0
+      },
+      {
+        "kind": "text",
+        "id": 12,
+        "layerId": "gizli",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4399990
+        },
+        "text": "gizli  yazı",
+        "height": 0.25,
+        "rotation": 0
+      },
+      {
+        "kind": "text",
+        "id": 13,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4399989
+        },
+        "text": "{süslü] ters",
+        "height": 0.25,
+        "rotation": 0
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "blocks": []
+  },
+  "cases": [
+    {
+      "name": "Bütün görünen yazılar: gizli katmandaki okunmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "uid": "$uidOf:2",
+                  "kind": "doubleSpace",
+                  "start": 6,
+                  "end": 8,
+                  "words": "Art arda 2 boşluk."
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "kind": "repeatedWord",
+                  "start": 3,
+                  "end": 5,
+                  "words": "“Ve” art arda iki kez yazılmış."
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "kind": "repeatedWord",
+                  "start": 6,
+                  "end": 8,
+                  "words": "“ve” art arda iki kez yazılmış."
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "kind": "repeatedWord",
+                  "start": 6,
+                  "end": 11,
+                  "words": "“izmir” art arda iki kez yazılmış."
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "kind": "repeatedWord",
+                  "start": 17,
+                  "end": 21,
+                  "words": "“ışık” art arda iki kez yazılmış."
+                },
+                {
+                  "uid": "$uidOf:8",
+                  "kind": "unbalanced",
+                  "start": 21,
+                  "end": 22,
+                  "words": "“)” açılmamış."
+                },
+                {
+                  "uid": "$uidOf:9",
+                  "kind": "unbalanced",
+                  "start": 12,
+                  "end": 13,
+                  "words": "Tırnak (\") kapanmıyor."
+                },
+                {
+                  "uid": "$uidOf:10",
+                  "kind": "repeatedWord",
+                  "start": 4,
+                  "end": 7,
+                  "words": "“kat” art arda iki kez yazılmış."
+                },
+                {
+                  "uid": "$uidOf:13",
+                  "kind": "unbalanced",
+                  "start": 0,
+                  "end": 1,
+                  "words": "“{” kapanmıyor."
+                },
+                {
+                  "uid": "$uidOf:13",
+                  "kind": "unbalanced",
+                  "start": 6,
+                  "end": 7,
+                  "words": "“]” açılmamış."
+                }
+              ],
+              "texts": 11,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çift boşluk",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:2"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "uid": "$uidOf:2",
+                  "kind": "doubleSpace",
+                  "start": 6,
+                  "end": 8,
+                  "words": "Art arda 2 boşluk."
+                }
+              ],
+              "texts": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Satır başındaki boşluk girintidir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:3"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "texts": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yinelenen sözcük, büyük-küçük harf bir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:4"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "uid": "$uidOf:4",
+                  "kind": "repeatedWord",
+                  "start": 3,
+                  "end": 5,
+                  "words": "“Ve” art arda iki kez yazılmış."
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "kind": "repeatedWord",
+                  "start": 6,
+                  "end": 8,
+                  "words": "“ve” art arda iki kez yazılmış."
+                }
+              ],
+              "texts": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Türkçe İ ve I",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:5"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "uid": "$uidOf:5",
+                  "kind": "repeatedWord",
+                  "start": 6,
+                  "end": 11,
+                  "words": "“izmir” art arda iki kez yazılmış."
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "kind": "repeatedWord",
+                  "start": 17,
+                  "end": 21,
+                  "words": "“ışık” art arda iki kez yazılmış."
+                }
+              ],
+              "texts": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sayılar sözcük değildir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:6"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "texts": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "İç içe parantezler dengeli",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:7"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "texts": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fazladan kapanan parantez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "uid": "$uidOf:8",
+                  "kind": "unbalanced",
+                  "start": 21,
+                  "end": 22,
+                  "words": "“)” açılmamış."
+                }
+              ],
+              "texts": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tek kalan düz tırnak",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:9"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "uid": "$uidOf:9",
+                  "kind": "unbalanced",
+                  "start": 12,
+                  "end": 13,
+                  "words": "Tırnak (\") kapanmıyor."
+                }
+              ],
+              "texts": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Satır sonu da boşluktur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "uid": "$uidOf:10",
+                  "kind": "repeatedWord",
+                  "start": 4,
+                  "end": 7,
+                  "words": "“kat” art arda iki kez yazılmış."
+                }
+              ],
+              "texts": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Temiz yazı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:11"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "texts": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ters parantez çifti",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:13"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "uid": "$uidOf:13",
+                  "kind": "unbalanced",
+                  "start": 0,
+                  "end": 1,
+                  "words": "“{” kapanmıyor."
+                },
+                {
+                  "uid": "$uidOf:13",
+                  "kind": "unbalanced",
+                  "start": 6,
+                  "end": 7,
+                  "words": "“]” açılmamış."
+                }
+              ],
+              "texts": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gizli katmandaki yazı verilince okunur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "uid": "$uidOf:12",
+                  "kind": "doubleSpace",
+                  "start": 5,
+                  "end": 7,
+                  "words": "Art arda 2 boşluk."
+                }
+              ],
+              "texts": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Verilen yazılar çizimin sırasıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8",
+              "$uidOf:2",
+              "$uidOf:8"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "uid": "$uidOf:2",
+                  "kind": "doubleSpace",
+                  "start": 6,
+                  "end": 8,
+                  "words": "Art arda 2 boşluk."
+                },
+                {
+                  "uid": "$uidOf:8",
+                  "kind": "unbalanced",
+                  "start": 21,
+                  "end": 22,
+                  "words": "“)” açılmamış."
+                }
+              ],
+              "texts": 2,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boş çizim",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kentsel proje",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "mekan",
+            "name": "Mekanlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "yazi",
+            "name": "Yazılar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "texts": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kopuk alan bulgudur",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kentsel proje",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "mekan",
+            "name": "Mekanlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "yazi",
+            "name": "Yazılar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "polygon",
+            "id": 1,
+            "layerId": "mekan",
+            "attrs": {
+              "Ad": "Salon",
+              "No": "101",
+              "Boş": ""
+            },
+            "label": "S-1",
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400000
+              },
+              {
+                "x": 500006,
+                "y": 4400000
+              },
+              {
+                "x": 500006,
+                "y": 4400004
+              },
+              {
+                "x": 500000,
+                "y": 4400004
+              }
+            ]
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "Alan ",
+            "height": 0.25,
+            "rotation": 0
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:2",
+              "start": 5,
+              "end": 5,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "area"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:2"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "2": {
+                "kind": "text",
+                "id": 2,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "Alan 24.00",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 5,
+                    "end": 10,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "area"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "command": "cad.fields.edit"
+        },
+        {
+          "op": "captureUid",
+          "as": "o1",
+          "id": 1,
+          "command": "cad.fields.edit"
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "removed": [
+                "$uid:o1"
+              ],
+              "locked": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "2": {
+                "kind": "text",
+                "id": 2,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "Alan ####",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 5,
+                    "end": 9,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uid:o1",
+                      "value": "area"
+                    },
+                    "broken": "removed"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "uid": "$uidOf:2",
+                  "kind": "brokenField",
+                  "start": 5,
+                  "end": 9,
+                  "words": "Alan okunamadı: nesne silindi."
+                }
+              ],
+              "texts": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kimlik değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "R-12"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“R-12” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazı yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3fff"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3fff” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazı değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_text",
+              "message": "Verilen nesne bir yazı değil; bu komut yalnız yazıları değiştirir.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Planla execute ile aynıdır",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "uid": "$uidOf:2",
+                  "kind": "doubleSpace",
+                  "start": 6,
+                  "end": 8,
+                  "words": "Art arda 2 boşluk."
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "kind": "repeatedWord",
+                  "start": 3,
+                  "end": 5,
+                  "words": "“Ve” art arda iki kez yazılmış."
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "kind": "repeatedWord",
+                  "start": 6,
+                  "end": 8,
+                  "words": "“ve” art arda iki kez yazılmış."
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "kind": "repeatedWord",
+                  "start": 6,
+                  "end": 11,
+                  "words": "“izmir” art arda iki kez yazılmış."
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "kind": "repeatedWord",
+                  "start": 17,
+                  "end": 21,
+                  "words": "“ışık” art arda iki kez yazılmış."
+                },
+                {
+                  "uid": "$uidOf:8",
+                  "kind": "unbalanced",
+                  "start": 21,
+                  "end": 22,
+                  "words": "“)” açılmamış."
+                },
+                {
+                  "uid": "$uidOf:9",
+                  "kind": "unbalanced",
+                  "start": 12,
+                  "end": 13,
+                  "words": "Tırnak (\") kapanmıyor."
+                },
+                {
+                  "uid": "$uidOf:10",
+                  "kind": "repeatedWord",
+                  "start": 4,
+                  "end": 7,
+                  "words": "“kat” art arda iki kez yazılmış."
+                },
+                {
+                  "uid": "$uidOf:13",
+                  "kind": "unbalanced",
+                  "start": 0,
+                  "end": 1,
+                  "words": "“{” kapanmıyor."
+                },
+                {
+                  "uid": "$uidOf:13",
+                  "kind": "unbalanced",
+                  "start": 6,
+                  "end": 7,
+                  "words": "“]” açılmamış."
+                }
+              ],
+              "texts": 11,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

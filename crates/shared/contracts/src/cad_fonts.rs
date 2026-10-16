@@ -6,7 +6,9 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
-use crate::{DrawingFont, REVISION_TEXT};
+use crate::DrawingFont;
+#[cfg(feature = "schema")]
+use crate::cad::REVISION_TEXT;
 
 pub const CAD_FONTS_REPORT: &str = "cad.fonts.report";
 pub const CAD_FONTS_REPORT_VERSION: u32 = 1;

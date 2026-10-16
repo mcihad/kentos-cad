@@ -2152,6 +2152,118 @@ pub fn catalog() -> CommandCatalog {
                 })),
             }],
         },
+        // Alanlar (docs/adr/0325 §1–§3), held together by fixtures/commands/v1/cad.fields.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_FIELDS_EDIT.into(),
+            version: crate::CAD_FIELDS_EDIT_VERSION,
+            title: "Yazının alanlarını düzenle".into(),
+            summary: "Yazının alanlarında tek bir düzenleme yapar; tek geri alma adımı. Alan, yazının harflerinden bir aralığın bir kaynağa bağlanmasıdır; \
+                      harfleri kaynağın son yazılan değeridir ve kaynak değişince çizim aynı adımda yeniden yazar (sonraki biçim dilimleri ve alanlar kayar). \
+                      Kaynak: object (uid'li nesnenin area alanı, perimeter çevresi, length uzunluğu, layer katmanının adı, label etiketi, attribute name adlı özniteliği, \
+                      text yazının harfleri, x ve y yeri) ya da project (name proje adı, scale çizim ölçeği 1:500, unit çizim birimi, crs koordinat sistemi, variable name adlı değişkeni). \
+                      format: decimals (yoksa projenin basamağı), unit (mm, cm, m, km uzunlukta; m2, donum, ha alanda; yoksa çizim birimi ve projenin alan birimi), comma ondalık virgül, prefix, suffix. \
+                      insert uid'li yazının start–end harflerinin yerine alan koyar (eşitse o harfe ekler), değeri hemen yazılır; remove index'inci alanı kaldırır (harfleri yazı olarak kalır); \
+                      format biçimini yazar (null projeninki); update uids'in (boşsa bütün alanlı yazıların) alanlarını yeniden yazar. \
+                      Değeri okunamayan alanın harfleri #### olur, nedeni broken'da (removed nesne silindi, noValue değeri yok, notNamed öznitelik ya da değişken yok, cycle yazılar birbirini okuyor) ve field_broken uyarısıdır. \
+                      Kilitli katmandaki yazı reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::FieldsEdit>(),
+            output: schema::<crate::FieldsEdited>(),
+            plan: Some(schema::<crate::TextsPlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Mahal etiketine odanın alanını iki basamakla yaz".into(),
+                input: json!({
+                    "edit": {
+                        "kind": "insert", "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001", "start": 6, "end": 6,
+                        "source": { "kind": "object", "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002", "value": "area" },
+                        "format": { "decimals": 2, "suffix": " m²" }
+                    }
+                }),
+                output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"], "revision": "12" })),
+            }],
+        },
+        // Yazının komutları (docs/adr/0325 §3), held together by fixtures/commands/v1/cad.texts.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_TEXTS_EDIT.into(),
+            version: crate::CAD_TEXTS_EDIT_VERSION,
+            title: "Yazıları düzenle".into(),
+            summary: "Yazılarda tek bir düzenleme yapar; tek geri alma adımı düzenlemenin adıyla. \
+                      replace (Bul ve değiştir): uids'in (boşsa görünen bütün yazıların) her find'ı with olur; matchCase büyük-küçük harfi ayırır (Türkçe İ ve ı), wholeWord yalnız bütün sözcük; \
+                      biçim dilimleri ve alanlar kayar, değiştirilen harflere değen alan kalkar; boş kalacak yazı (text_left_blank) ve kilitli katmandaki yazı (layer_locked) uyarıyla atlanır. \
+                      number (Numarala, TCOUNT): uids sırayla start, start+step … sayılarını alır, en az digits basamakla (önüne sıfır), prefix ve suffix'le; place replace yazının yerine, prefix başına, suffix sonuna. \
+                      combine (Yazıları birleştir, TXT2MTXT): yazılar en yukarıdan aşağıya (eşitse soldan) satır satır tek yazı olur; en yukarıdakinin yerinde (üstünden), yüksekliği ve görünüşüyle, öbürleri silinir. \
+                      split (Satırlara ayır): yazının her paragrafı (satır sonları arası) durduğu yerde, biçimleri ve alanlarıyla ayrı yazı olur; yazı silinir. Tek paragraflı, sütunlu ya da eğri boyunca yazı not_splittable. \
+                      combine, split ve number'da kilitli katmandaki yazı reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TextsEdit>(),
+            output: schema::<crate::TextsEdited>(),
+            plan: Some(schema::<crate::TextsPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bütün yazılarda “Kat” sözcüğünü “Blok” yap".into(),
+                    input: json!({ "edit": { "kind": "replace", "find": "Kat", "with": "Blok", "wholeWord": true } }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"], "replaced": 1, "revision": "12" })),
+                },
+                CommandExample {
+                    title: "Üç kapı etiketini K-01'den numarala".into(),
+                    input: json!({ "edit": {
+                        "kind": "number",
+                        "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3003"],
+                        "start": 1, "step": 1, "digits": 2, "prefix": "K-"
+                    } }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3003"], "revision": "13" })),
+                },
+            ],
+        },
+        // Yazı denetimi (docs/adr/0325 §3), held together by fixtures/commands/v1/cad.texts.check.json.
+        CommandDescriptor {
+            id: crate::CAD_TEXTS_CHECK.into(),
+            version: crate::CAD_TEXTS_CHECK_VERSION,
+            title: "Yazıları denetle".into(),
+            summary: "Yazıların biçim sorunlarını bulur; hiçbir şey yazmaz. doubleSpace: satırın içinde art arda iki ya da daha çok boşluk; \
+                      repeatedWord: art arda iki kez yazılmış sözcük (“ve ve”, büyük-küçük harf Türkçe kuralıyla bir; sayılar değil); \
+                      unbalanced: kapanmayan ya da açılmayan parantez ((), [], {}), açılmayan “ ” ve tek kalan \"; brokenField: değeri okunamayan alan. \
+                      Sözlükle yazım denetimi yoktur. uids boşsa görünen bütün yazılar okunur; bulgular çizimin sırasıyla, her yazınınki yerine göre."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TextsCheck>(),
+            output: schema::<crate::TextsChecked>(),
+            plan: Some(schema::<crate::TextsChecked>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bütün yazıları denetle".into(),
+                input: json!({}),
+                output: Some(json!({ "findings": [{
+                    "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001", "kind": "repeatedWord", "start": 6, "end": 8,
+                    "words": "“ve” art arda iki kez yazılmış."
+                }], "texts": 4, "revision": "12" })),
+            }],
+        },
         // Buda, Uzat, Köşe yuvarla and Pah by their meaning (docs/adr/0250), held together by
         // fixtures/commands/v1/cad.entities.{trim,extend,fillet,chamfer}.json; the desktop's alone while the web is paused.
         CommandDescriptor {
@@ -5109,6 +5221,15 @@ mod tests {
                         serde_json::from_value::<crate::DimensionsQuery>(e.input.clone())
                             .map(|_| ())
                     }
+                    crate::CAD_FIELDS_EDIT => {
+                        serde_json::from_value::<crate::FieldsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_TEXTS_EDIT => {
+                        serde_json::from_value::<crate::TextsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_TEXTS_CHECK => {
+                        serde_json::from_value::<crate::TextsCheck>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_FONTS_REPORT => {
                         serde_json::from_value::<crate::FontsReport>(e.input.clone()).map(|_| ())
                     }
@@ -5359,6 +5480,15 @@ mod tests {
                         crate::CAD_ENTITIES_ORDER => {
                             serde_json::from_value::<crate::EntitiesOrdered>(output.clone())
                                 .map(|_| ())
+                        }
+                        crate::CAD_FIELDS_EDIT => {
+                            serde_json::from_value::<crate::FieldsEdited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_TEXTS_EDIT => {
+                            serde_json::from_value::<crate::TextsEdited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_TEXTS_CHECK => {
+                            serde_json::from_value::<crate::TextsChecked>(output.clone()).map(|_| ())
                         }
                         crate::CAD_FONTS_REPORT => {
                             serde_json::from_value::<crate::FontsReported>(output.clone())

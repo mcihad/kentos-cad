@@ -3,8 +3,9 @@
 //! rule changes (`text::edit::replace`), each with its layer and whether it
 //! may be written. A text on a locked layer is listed but not written; one
 //! that would become empty neither (a text is never empty). The changed
-//! texts go in one step “Bul ve değiştir” (`cad.entities.edit`'s
-//! `replaceText`). The window is the desktop's `find_replace`.
+//! texts go in one step “Bul ve değiştir”: `cad.texts.edit`'s replace (docs/adr/0325 §3; the runs and fields move
+//! with the letters), with Joker `cad.entities.edit`'s `replaceText` (the pattern takes the whole text). The window
+//! is the desktop's `find_replace`.
 
 use kentos_contracts::Entity;
 use kentos_domain::{Document, Slot};
@@ -104,3 +105,40 @@ pub fn write(doc: &mut Document, picked: &[Match]) -> (usize, Vec<String>) {
     let said = properties::replace_texts(doc, &changes);
     (if said.is_empty() { n } else { 0 }, said)
 }
+
+/// [`write`] for the query `q`: without Joker by `cad.texts.edit`'s replace over the picked texts (docs/adr/0325 §3),
+/// with it as [`write`]. How many texts changed and what to say.
+pub fn write_query(doc: &mut Document, picked: &[Match], q: &Query) -> (usize, Vec<String>) {
+    if q.how.wildcard {
+        return write(doc, picked);
+    }
+    let uids: Vec<String> = picked
+        .iter()
+        .filter(|m| m.blocked.is_none())
+        .filter_map(|m| doc.uid(m.slot))
+        .map(|u| u.to_string())
+        .collect();
+    if uids.is_empty() {
+        return (0, Vec::new());
+    }
+    let input = kentos_contracts::TextsEdit {
+        edit: kentos_contracts::TextEdit::Replace {
+            uids,
+            find: q.find.clone(),
+            with: q.replace.clone(),
+            match_case: !q.how.caseless,
+            whole_word: q.how.whole_word,
+        },
+        expected_revision: None,
+    };
+    let result = kentos_native_application::texts_edit::execute(
+        &mut kentos_native_application::ExecutionContext::new(doc),
+        input,
+    );
+    let n = match &result {
+        kentos_contracts::CommandResult::Completed { output, .. } => output.changed.len(),
+        _ => 0,
+    };
+    (n, properties::said(result))
+}
+

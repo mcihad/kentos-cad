@@ -605,6 +605,10 @@ pub struct Paragraph {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub layout: Option<Box<ParagraphLayout>>,
+    /// Ranges of its letters bound to a source (docs/adr/0325 §1), in order, not overlapping; absent: none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::TextField>>", optional))]
+    pub fields: Vec<crate::TextField>,
 }
 
 /// A multi-line text's indents, tab stops and columns (docs/adr/0324 §1), in its height (MTEXT's `\p` codes):
@@ -776,7 +780,10 @@ impl Paragraph {
                 return Some(p);
             }
         }
-        self.runs_problem(text).map(|words| ("runs", words))
+        if let Some(words) = self.runs_problem(text) {
+            return Some(("runs", words));
+        }
+        crate::text_fields_problem(&self.fields, text).map(|words| ("fields", words))
     }
 
     /// What is wrong with the runs for `text`, as `problem` says it.

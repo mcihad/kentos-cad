@@ -142,6 +142,7 @@ impl Placing {
                         label_of: None,
                         label_scale: None,
                         paragraph: kentos_contracts::Paragraph {
+                            fields: Vec::new(),
                             layout: contract_layout(flow.as_deref()),
                             box_width,
                             line_spacing,
@@ -954,6 +955,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             label_of: None,
             label_scale: None,
             paragraph: kentos_contracts::Paragraph {
+                fields: Vec::new(),
                 layout: contract_layout(flow.as_deref()),
                 box_width: *box_width,
                 line_spacing: *line_spacing,

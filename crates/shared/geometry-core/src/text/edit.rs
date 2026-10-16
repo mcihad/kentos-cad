@@ -51,7 +51,7 @@ crate::json_struct!(Find {
 
 /// A character as a caseless match takes it: Turkish I → ı, İ → i, any other
 /// its lowercase when that is one character.
-pub(crate) fn fold(c: char) -> char {
+pub fn fold(c: char) -> char {
     match c {
         'I' => 'ı',
         'İ' => 'i',
@@ -128,6 +128,30 @@ pub fn replace(text: &str, find: &str, with: &str, how: Find) -> Option<String> 
         i += 1;
     }
     hit.then_some(out)
+}
+
+/// Where `find` is in `text` as [`replace`] without wildcards takes it: each match's first letter and the one past
+/// its last, counting characters, left to right, none overlapping (`cad.texts.edit`'s replace, docs/adr/0325 §3).
+pub fn find_all(text: &str, find: &str, caseless: bool, whole_word: bool) -> Vec<(usize, usize)> {
+    let text: Vec<char> = text.chars().collect();
+    let find: Vec<char> = find.chars().collect();
+    let mut out = Vec::new();
+    if find.is_empty() {
+        return out;
+    }
+    let mut i = 0;
+    while i < text.len() {
+        if at(&text, i, &find, caseless) {
+            let end = i + find.len();
+            if !whole_word || bounded(&text, i, end) {
+                out.push((i, end));
+                i = end;
+                continue;
+            }
+        }
+        i += 1;
+    }
+    out
 }
 
 /// Whether `text` answers a search for `pattern` (the point editor's

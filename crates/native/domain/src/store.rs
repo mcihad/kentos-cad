@@ -60,6 +60,36 @@ pub(crate) struct Store {
     ties: HashMap<Uuid, BTreeSet<Slot>>,
     /// The dimensions with a broken reference (docs/adr/0249 §3): what the drawing marks.
     broken: BTreeSet<Slot>,
+    /// The texts whose fields read an object, by that object's persistent id (docs/adr/0325 §2).
+    fielded: HashMap<Uuid, BTreeSet<Slot>>,
+    /// The texts with a project's or a layer's field: written again at every step.
+    always: BTreeSet<Slot>,
+    /// Every text with fields.
+    with_fields: BTreeSet<Slot>,
+}
+
+/// The objects a text's fields read, and whether one reads the project or a layer's name (docs/adr/0325 §2).
+fn fields_of(stored: &Stored) -> Option<(Vec<Uuid>, bool)> {
+    let Entity::Text(t) = &*stored.entity else {
+        return None;
+    };
+    if t.paragraph.fields.is_empty() {
+        return None;
+    }
+    let mut of = Vec::new();
+    let mut always = false;
+    for f in &t.paragraph.fields {
+        match &f.source {
+            kentos_contracts::FieldSource::Object { uid, value, .. } => {
+                of.push(Uuid::from_bytes(uid.0));
+                always |= *value == kentos_contracts::ObjectValue::Layer;
+            }
+            kentos_contracts::FieldSource::Project { .. } => always = true,
+        }
+    }
+    of.sort_unstable();
+    of.dedup();
+    Some((of, always))
 }
 
 /// The objects a hatch's region follows: its closed object, islands and
@@ -145,7 +175,36 @@ impl Store {
         all.into_iter().collect()
     }
 
+    /// The texts whose fields read the object with persistent id `of`, in slot order.
+    pub fn fielded_from(&self, of: Uuid) -> impl Iterator<Item = Slot> + '_ {
+        self.fielded.get(&of).into_iter().flatten().copied()
+    }
+
+    /// The texts with a project's or a layer's field, in slot order.
+    pub fn always_fielded_slots(&self) -> impl Iterator<Item = Slot> + '_ {
+        self.always.iter().copied()
+    }
+
+    /// Whether any text has fields.
+    pub fn has_fields(&self) -> bool {
+        !self.with_fields.is_empty()
+    }
+
+    /// How many texts have fields.
+    pub fn fielded_count(&self) -> usize {
+        self.with_fields.len()
+    }
+
     fn link(&mut self, stored: &Stored) {
+        if let Some((of, always)) = fields_of(stored) {
+            for uid in of {
+                self.fielded.entry(uid).or_default().insert(stored.slot());
+            }
+            if always {
+                self.always.insert(stored.slot());
+            }
+            self.with_fields.insert(stored.slot());
+        }
         if let Some(of) = link_of(stored) {
             self.links.entry(of).or_default().insert(stored.slot());
         }
@@ -158,6 +217,18 @@ impl Store {
     }
 
     fn unlink(&mut self, stored: &Stored) {
+        if let Some((of, _)) = fields_of(stored) {
+            for uid in of {
+                if let Some(texts) = self.fielded.get_mut(&uid) {
+                    texts.remove(&stored.slot());
+                    if texts.is_empty() {
+                        self.fielded.remove(&uid);
+                    }
+                }
+            }
+            self.always.remove(&stored.slot());
+            self.with_fields.remove(&stored.slot());
+        }
         if let Some(of) = link_of(stored)
             && let Some(texts) = self.links.get_mut(&of)
         {

@@ -1175,6 +1175,8 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
             e.width_factor = width_factor;
             e.mask = mask == Some(true);
             e.paragraph = kentos_contracts::Paragraph {
+                // Its fields stay; the document shifts them with its letters (docs/adr/0325 §2).
+                fields: std::mem::take(&mut e.paragraph.fields),
                 layout: contract_layout(flow.as_deref()),
                 box_width,
                 line_spacing,
@@ -1479,6 +1481,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             // A spacing of 1 is no spacing (docs/adr/0182): one spelling.
             // An empty layout is no layout: one spelling.
             paragraph: kentos_contracts::Paragraph {
+                fields: Vec::new(),
                 layout: layout.filter(|l| !l.is_plain()),
                 box_width,
                 line_spacing: line_spacing.filter(|s| *s != 1.0),
@@ -1896,6 +1899,16 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
         s @ Shape::Raster { .. } => EntityGeometry::Raster(contract_raster(s)?),
         s @ Shape::PointCloud { .. } => EntityGeometry::PointCloud(contract_cloud(s)?),
     })
+}
+
+/// A text's laid out lines (docs/adr/0182 §2), each one's first letter and the one past its last: what Satırlara
+/// ayır reads its paragraphs' lines from (docs/adr/0325 §3).
+pub fn text_lines(doc: &kentos_domain::Document, t: &kentos_contracts::TextEntity) -> Vec<(usize, usize)> {
+    let s = shape(&Entity::Text(t.clone()));
+    let font = drawing_font(doc.settings().drawing_font);
+    kentos_geometry_core::entity::TextPlace::of(&s)
+        .map(|p| p.layout(font).lines.iter().map(|l| (l.start, l.end)).collect())
+        .unwrap_or_default()
 }
 
 #[cfg(test)]

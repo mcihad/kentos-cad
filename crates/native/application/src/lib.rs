@@ -76,7 +76,10 @@ mod dimension;
 pub mod dimension_create;
 pub mod dimensions_edit;
 pub mod dimensions_query;
+pub mod fields_edit;
 pub mod fonts_report;
+pub mod texts_check;
+pub mod texts_edit;
 pub mod dimensions_reassociate;
 pub mod divide;
 mod edge_commands;
@@ -222,6 +225,19 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_VIEWS_EDIT,
         kentos_contracts::CAD_VIEWS_EDIT_VERSION,
+    ),
+    // Alanlar and the text commands ([`fields_edit`], [`texts_edit`], [`texts_check`], docs/adr/0325 §3).
+    (
+        kentos_contracts::CAD_FIELDS_EDIT,
+        kentos_contracts::CAD_FIELDS_EDIT_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_TEXTS_EDIT,
+        kentos_contracts::CAD_TEXTS_EDIT_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_TEXTS_CHECK,
+        kentos_contracts::CAD_TEXTS_CHECK_VERSION,
     ),
     // Yazı tipleri ([`fonts_report`], docs/adr/0324 §5).
     (

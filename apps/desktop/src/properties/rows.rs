@@ -1328,6 +1328,8 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             geo.extend(text_rows(&[t], &ids, locked));
             // Bağlı nesne (docs/adr/0175 §4).
             geo.extend(link_rows(&doc.model, &[t], &ids, locked));
+            // Alanlar (docs/adr/0325 §4).
+            geo.extend(text_field_rows(&doc.model, t, slot, locked));
             // Along a curve, its curve's length (docs/adr/0196 §4).
             if let Some(path) = &t.path {
                 let curve = kentos_native_application::geometry::core_curve(path);
@@ -2052,6 +2054,70 @@ fn link_rows(
         items,
     });
     vec![Row::text("Bağlı nesne", value).editor(editor)]
+}
+
+/// A text's fields (docs/adr/0325 §4): each its source and value, or why it is broken; its menu selects the source
+/// object and takes the field out (its letters stay as text).
+fn text_field_rows(model: &kentos_domain::Document, t: &kentos_contracts::TextEntity, slot: Slot, locked: bool) -> Vec<Row> {
+    use kentos_contracts::FieldSource;
+    t.paragraph
+        .fields
+        .iter()
+        .enumerate()
+        .map(|(i, f)| {
+            let object = f
+                .source
+                .object()
+                .and_then(|id| model.slot_of(kentos_domain::Uuid::from_bytes(id.0)))
+                .and_then(|s| Some((s, model.get(s)?)));
+            let named = |what: &str, name: &Option<String>| match name {
+                Some(n) => format!("{what} “{n}”"),
+                None => what.to_owned(),
+            };
+            let source = match &f.source {
+                FieldSource::Object { value, name, .. } => {
+                    let of = object.map_or("silinmiş nesne", |(_, e)| kind_title(e.kind()));
+                    format!("{of}: {}", named(value.label(), name))
+                }
+                FieldSource::Project { value, name } => format!("Proje: {}", named(value.label(), name)),
+            };
+            let letters: String = t.text.chars().skip(f.start as usize).take((f.end - f.start) as usize).collect();
+            // The value first (what the row has room for), the source in the menu's title.
+            let value = match f.broken {
+                Some(b) => format!("Kopuk: {}", b.words()),
+                None => letters,
+            };
+            let action = |label: &str, message: Message| Choice::Pick {
+                label: label.to_owned(),
+                swatch: None,
+                icon: None,
+                wide: false,
+                chosen: false,
+                enabled: true,
+                message,
+            };
+            // The source, as a title the menu does not act on.
+            let mut items = vec![Choice::Pick {
+                label: source,
+                swatch: None,
+                icon: None,
+                wide: false,
+                chosen: true,
+                enabled: false,
+                message: Message::TextTools(crate::text_tools::Event::Close),
+            }];
+            if let Some((s, _)) = object {
+                items.push(action("Kaynağı seç", Message::Properties(Event::SelectObject(s))));
+            }
+            if !locked {
+                items.push(action("Alanı kaldır", Message::TextTools(crate::text_tools::Event::Remove(slot, i as u32))));
+            }
+            let editor = (!items.is_empty()).then(|| Editor::Select { text: value.clone(), swatch: None, icon: None, items });
+            let mut row = Row::text(format!("Alan {}", i + 1), value).editor(editor);
+            row.warn = f.broken.is_some();
+            row
+        })
+        .collect()
 }
 
 /// A hatch's rows (docs/adr/0186 §7): Desen (every choice with its icon,

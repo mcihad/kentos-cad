@@ -1418,6 +1418,8 @@ KINDS = {
         "annotative": (opaque, False),
         # Schema 65 (docs/adr/0324 §1): its indents, tab stops and columns, as their JSON.
         "layout": (opaque, False),
+        # Schema 66 (docs/adr/0325 §1): its fields, as their JSON.
+        "fields": (opaque, False),
     },
     # Schema 9 (docs/adr/0147): five more kinds by name, `mask` only when true, a slope's two elevations.
     "dimension": {
@@ -1977,6 +1979,10 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def line_patterned(nodes):
         return any("linePattern" in n.get("style", {}) or line_patterned(n.get("children", [])) for n in nodes)
 
+    # Schema 66 (docs/adr/0325): a text's fields.
+    fielded = lambda es: any(e["kind"] == "text" and "fields" in e for e in es)  # noqa: E731
+    if fielded(entities) or any(fielded(b["entities"]) for b in blocks or []):
+        return 66
     # Schema 65 (docs/adr/0324): a text's layout or a stacked fraction.
     laid = lambda es: any(e["kind"] == "text" and ("layout" in e or any(r.get("script") == "stack" for r in e.get("runs", []))) for e in es)  # noqa: E731
     if laid(entities) or any(laid(b["entities"]) for b in blocks or []):
@@ -2353,7 +2359,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-66.kcad"] = container(root(cmap(parts), version=uint(66)))
+    files["schema-version-67.kcad"] = container(root(cmap(parts), version=uint(67)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2556,6 +2562,17 @@ def broken(minimal_content, minimal_file):
     files["text-layout-columns-boxless.kcad"] = in_schema(65, text_of(layout=cmap({"columns": cmap({"count": uint(2), "gap": f64(1.0), "height": f64(10.0)})})))
     files["text-layout-columns-one.kcad"] = in_schema(65, text_of(boxWidth=f64(20.0), layout=cmap({"columns": cmap({"count": uint(1), "gap": f64(1.0), "height": f64(10.0)})})))
     files["text-stack-without-mark.kcad"] = in_schema(65, text_of(runs=array([run_of(0, 2, script=text("stack"))])))
+    # Fields are schema 66's (docs/adr/0325 §1): in schema 65 an unknown field; not empty, in the letters, in order,
+    # an attribute's name, a broken field's letters ####, a known source.
+    src = cmap({"kind": text("project"), "value": text("scale")})
+    fld = lambda s, e, source=src, **more: cmap({"start": uint(s), "end": uint(e), "source": source, **more})  # noqa: E731
+    files["text-fields-in-schema-65.kcad"] = in_schema(65, text_of(fields=array([fld(0, 2)])))
+    files["text-fields-empty.kcad"] = in_schema(66, text_of(fields=array([])))
+    files["text-field-out-of-text.kcad"] = in_schema(66, text_of(fields=array([fld(0, 99)])))
+    files["text-fields-overlapping.kcad"] = in_schema(66, text_of(fields=array([fld(0, 3), fld(2, 4)])))
+    files["text-field-attribute-nameless.kcad"] = in_schema(66, text_of(fields=array([fld(0, 2, source=cmap({"kind": text("object"), "uid": text("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"), "value": text("attribute")}))])))
+    files["text-field-broken-letters.kcad"] = in_schema(66, text_of(fields=array([fld(0, 2, broken=text("removed"))])))
+    files["text-field-source-unknown.kcad"] = in_schema(66, text_of(fields=array([fld(0, 2, source=cmap({"kind": text("sheet"), "value": text("name")}))])))
     files["paragraph-run-empty-color.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, color=text(""))])))
     files["paragraph-run-script-unknown.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, script=text("upper"))])))
     files["paragraph-run-unknown-field.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, size=f64(2.0))])))
@@ -3675,6 +3692,7 @@ def build():
     out["overrides.kcad"] = container(document(load("overrides.json")))
     out["annotative.kcad"] = container(document(load("annotative.json")))
     out["paragraph-layout.kcad"] = container(document(load("paragraph-layout.json")))
+    out["text-fields.kcad"] = container(document(load("text-fields.json")))
     out["sheets.kcad"] = container(document(load("sheets.json")))
     out["requests.kcad"] = container(document(load("requests.json")))
     out["polyline-extras.kcad"] = container(document(load("polyline-extras.json")))

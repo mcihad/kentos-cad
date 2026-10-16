@@ -59,7 +59,8 @@
 //! (docs/adr/0175), box width, line spacing, runs (docs/adr/0182; a run's
 //! flags: 1 bold, 2 italic, 4 underline, 8 raised, 16 lowered, 8 and 16 stacked (docs/adr/0324), 32 colour),
 //! text style, font, bold (no value), italic (no value), oblique
-//! (docs/adr/0183), curve, its bulges (docs/adr/0196); dimension: text, style, angle, c, mask (no value), za, zb
+//! (docs/adr/0183), curve, its bulges (docs/adr/0196), overrides (docs/adr/0322), scales (docs/adr/0323), layout
+//! (docs/adr/0324), fields (docs/adr/0325); dimension: text, style, angle, c, mask (no value), za, zb
 //! (docs/adr/0147), dimension style, arrow, arrow size, ext offset, ext
 //! beyond, text gap, centred (no value), decimals, unit, prefix, suffix, font
 //! (docs/adr/0183), and bit 27 (`LINES`) for its line fields (docs/adr/0205
@@ -925,6 +926,11 @@ impl Packer {
                 if let Some(l) = &paragraph.layout {
                     flags |= OPT[16];
                     self.text(&serde_json::to_string(l).unwrap_or_default());
+                }
+                // Its fields (docs/adr/0325 §1), as their JSON.
+                if !paragraph.fields.is_empty() {
+                    flags |= OPT[17];
+                    self.text(&serde_json::to_string(&paragraph.fields).unwrap_or_default());
                 }
             }
             Entity::Dimension(DimensionEntity {
@@ -2061,8 +2067,8 @@ fn allowed(kind: u8) -> u32 {
         // spacing and runs, schema 21's face (docs/adr/0183), schema 25's curve and its bulges
         // (docs/adr/0196); a leader's three and schema 30's arrowhead size (docs/adr/0205 §7).
         // Schema 63's overrides (docs/adr/0322 §5), schema 64's scales (docs/adr/0323), schema 65's layout
-        // (docs/adr/0324).
-        10 => OPT[..17].iter().fold(0, |m, b| m | b),
+        // (docs/adr/0324), schema 66's fields (docs/adr/0325).
+        10 => OPT[..18].iter().fold(0, |m, b| m | b),
         14 => OPT[0] | OPT[1] | OPT[2] | OPT[3] | OPT[4],
         // A dimension: text, style, angle, c, schema 9's mask, za, zb (docs/adr/0147), schema 21's look,
         // schema 30's lines (docs/adr/0205 §6).
@@ -2333,6 +2339,12 @@ fn geometry(
             } else {
                 None
             };
+            let fields: Vec<kentos_contracts::TextField> = if has(17) {
+                let t = c.text(|| place("fields"))?;
+                serde_json::from_str(&t).map_err(|_| broken("yazının alanları"))?
+            } else {
+                Vec::new()
+            };
             Entity::Text(TextEntity {
                 annotative,
                 base,
@@ -2346,6 +2358,7 @@ fn geometry(
                 label_of,
                 label_scale,
                 paragraph: Paragraph {
+                    fields,
                     layout,
                     box_width,
                     line_spacing,

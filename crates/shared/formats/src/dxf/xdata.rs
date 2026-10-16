@@ -114,6 +114,9 @@ pub struct Meta {
     /// A multi-line text's indents, tab stops and columns as the contract's JSON (docs/adr/0324 §4): MTEXT's
     /// `\p` holds the indents and tabs, not the columns KentOS lays out.
     pub layout: Option<String>,
+    /// A text's fields as the contract's JSON (docs/adr/0325 §1): other programs read their letters, the values last
+    /// written; KentOS reads the bindings back.
+    pub fields: Option<String>,
 }
 
 /// A STYLE record's `face` when KentOS wrote it for a styleless face
@@ -307,6 +310,9 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
     }
     if let Some(l) = &meta.layout {
         item("layout", &mut out, |o| string(l, o));
+    }
+    if let Some(f) = &meta.fields {
+        item("fields", &mut out, |o| string(f, o));
     }
     if let Some(c) = &meta.along {
         item("along", &mut out, |o| string(c, o));
@@ -530,6 +536,7 @@ pub fn read(groups: &[(i32, String)]) -> Option<Meta> {
             "table" => m.table = text(a).or(m.table),
             "along" => m.along = text(a).or(m.along),
             "layout" => m.layout = text(a).or(m.layout),
+            "fields" => m.fields = text(a).or(m.fields),
             "hatch" => m.hatch = text(a).or(m.hatch),
             "noteturn" => m.note_turn = real(a).or(m.note_turn),
             "arrowsize" => m.arrow_size = real(a).or(m.arrow_size),
@@ -582,6 +589,7 @@ mod tests {
         attrs.insert("Uzun".to_string(), "ğ".repeat(400));
         let meta = Meta {
             layout: None,
+            fields: Some("[]".into()),
             label: Some("attr".into()),
             attrs,
             symbol: Some("mpyy.konut".into()),

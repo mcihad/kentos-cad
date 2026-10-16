@@ -1,0 +1,3936 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.fields.edit",
+  "commandVersion": 1,
+  "title": "Yazının alanlarını düzenle",
+  "note": "Written by scripts/fixtures/text_command_cases.py from docs/adr/0325; do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Kentsel proje",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 500,
+      "workspace": "cad",
+      "variables": [
+        {
+          "name": "is_no",
+          "label": "İş numarası",
+          "kind": "text",
+          "value": "2026/41"
+        },
+        {
+          "name": "oran",
+          "kind": "number",
+          "value": 0.125
+        },
+        {
+          "name": "onay",
+          "kind": "bool",
+          "value": true
+        },
+        {
+          "name": "bos",
+          "kind": "text"
+        }
+      ]
+    },
+    "origin": {
+      "x": 500000,
+      "y": 4400000
+    },
+    "layers": [
+      {
+        "id": "mekan",
+        "name": "Mekanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "yazi",
+        "name": "Yazılar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "yazi",
+    "entities": [
+      {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "mekan",
+        "attrs": {
+          "Ad": "Salon",
+          "No": "101",
+          "Boş": ""
+        },
+        "label": "S-1",
+        "pts": [
+          {
+            "x": 500000,
+            "y": 4400000
+          },
+          {
+            "x": 500006,
+            "y": 4400000
+          },
+          {
+            "x": 500006,
+            "y": 4400004
+          },
+          {
+            "x": 500000,
+            "y": 4400004
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 2,
+        "layerId": "mekan",
+        "attrs": {},
+        "a": {
+          "x": 500000,
+          "y": 4399998
+        },
+        "b": {
+          "x": 500003,
+          "y": 4399994
+        }
+      },
+      {
+        "kind": "point",
+        "id": 3,
+        "layerId": "mekan",
+        "attrs": {},
+        "p": {
+          "x": 500003.25,
+          "y": 4400001.5
+        }
+      },
+      {
+        "kind": "text",
+        "id": 4,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500001,
+          "y": 4400002
+        },
+        "text": "Salon ",
+        "height": 0.25,
+        "rotation": 0
+      },
+      {
+        "kind": "text",
+        "id": 5,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500001,
+          "y": 4400001
+        },
+        "text": "Alan: XX",
+        "height": 0.25,
+        "rotation": 0
+      },
+      {
+        "kind": "text",
+        "id": 6,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500001,
+          "y": 4400007
+        },
+        "text": "Kat 1 planı",
+        "height": 0.25,
+        "rotation": 0,
+        "runs": [
+          {
+            "start": 6,
+            "end": 11,
+            "bold": true
+          }
+        ]
+      },
+      {
+        "kind": "text",
+        "id": 7,
+        "layerId": "kilitli",
+        "attrs": {},
+        "p": {
+          "x": 500001,
+          "y": 4400008
+        },
+        "text": "Kilitli",
+        "height": 0.25,
+        "rotation": 0
+      },
+      {
+        "kind": "text",
+        "id": 8,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500001,
+          "y": 4400009
+        },
+        "text": "Ref: ",
+        "height": 0.25,
+        "rotation": 0
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "blocks": []
+  },
+  "cases": [
+    {
+      "name": "Mahal etiketine odanın alanı, iki basamak ve m² ile",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "area"
+              },
+              "format": {
+                "decimals": 2,
+                "suffix": " m²"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 24.00 m²",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 14,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "area"
+                    },
+                    "format": {
+                      "decimals": 2,
+                      "suffix": " m²"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Harflerin yerine alan: XX odanın alanı olur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:5",
+              "start": 6,
+              "end": 8,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "area"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:5"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "5": {
+                "kind": "text",
+                "id": 5,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400001
+                },
+                "text": "Alan: 24.00",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 11,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "area"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çevre projenin uzunluk basamağıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "perimeter"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 20.000",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 12,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "perimeter"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizginin uzunluğu santimetre, basamaksız",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:2",
+                "value": "length"
+              },
+              "format": {
+                "decimals": 0,
+                "unit": "cm",
+                "suffix": " cm"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 500 cm",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 12,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:2",
+                      "value": "length"
+                    },
+                    "format": {
+                      "decimals": 0,
+                      "unit": "cm",
+                      "suffix": " cm"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Katmanın adı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "layer"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon Mekanlar",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 14,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "layer"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Etiket",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "label"
+              },
+              "format": {
+                "prefix": "(",
+                "suffix": ")"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon (S-1)",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 11,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "label"
+                    },
+                    "format": {
+                      "prefix": "(",
+                      "suffix": ")"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Öznitelik adıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 0,
+              "end": 5,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "attribute",
+                "name": "No"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "101 ",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 0,
+                    "end": 3,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "attribute",
+                      "name": "No"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan öznitelik kopuk: ####, uyarıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "attribute",
+                "name": "Yok"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "field_broken",
+                "message": "“Salon ####” yazısının 1. alanı okunamadı: adı verilen öznitelik ya da değişken yok; harfleri ####.",
+                "path": "edit"
+              }
+            ]
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon ####",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 10,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "attribute",
+                      "name": "Yok"
+                    },
+                    "broken": "notNamed"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boş öznitelik kopuk: değeri yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "attribute",
+                "name": "Boş"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "field_broken",
+                "message": "“Salon ####” yazısının 1. alanı okunamadı: nesnenin bu değeri yok; harfleri ####.",
+                "path": "edit"
+              }
+            ]
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon ####",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 10,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "attribute",
+                      "name": "Boş"
+                    },
+                    "broken": "noValue"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Noktanın doğusu ve kuzeyi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:3",
+                "value": "x"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 500003.250",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 16,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:3",
+                      "value": "x"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 16,
+              "end": 16,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:3",
+                "value": "y"
+              },
+              "format": {
+                "decimals": 2,
+                "prefix": " / "
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 500003.250 / 4400001.50",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 16,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:3",
+                      "value": "x"
+                    }
+                  },
+                  {
+                    "start": 16,
+                    "end": 29,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:3",
+                      "value": "y"
+                    },
+                    "format": {
+                      "decimals": 2,
+                      "prefix": " / "
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Açık çizginin alanı yok: kopuk",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:2",
+                "value": "area"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "field_broken",
+                "message": "“Salon ####” yazısının 1. alanı okunamadı: nesnenin bu değeri yok; harfleri ####.",
+                "path": "edit"
+              }
+            ]
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon ####",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 10,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:2",
+                      "value": "area"
+                    },
+                    "broken": "noValue"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Başka yazının harfleri (çapraz başvuru)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:8",
+              "start": 5,
+              "end": 5,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:6",
+                "value": "text"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:8"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "8": {
+                "kind": "text",
+                "id": 8,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400009
+                },
+                "text": "Ref: Kat 1 planı",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 5,
+                    "end": 16,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:6",
+                      "value": "text"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazı kendini okuyamaz: döngü",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:8",
+              "start": 5,
+              "end": 5,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:8",
+                "value": "text"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:8"
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "field_broken",
+                "message": "“Ref: ####” yazısının 1. alanı okunamadı: yazılar birbirini okuyor (döngü); harfleri ####.",
+                "path": "edit"
+              }
+            ]
+          },
+          "expect": {
+            "entities": {
+              "8": {
+                "kind": "text",
+                "id": 8,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400009
+                },
+                "text": "Ref: ####",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 5,
+                    "end": 9,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:8",
+                      "value": "text"
+                    },
+                    "broken": "cycle"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birbirini okuyan iki yazı: ikincisi döngüyü kapatır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:8",
+              "start": 5,
+              "end": 5,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:4",
+                "value": "text"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:8"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "8": {
+                "kind": "text",
+                "id": 8,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400009
+                },
+                "text": "Ref: Salon ",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 5,
+                    "end": 11,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:4",
+                      "value": "text"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:8",
+                "value": "text"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "field_broken",
+                "message": "“Salon ####” yazısının 1. alanı okunamadı: yazılar birbirini okuyor (döngü); harfleri ####.",
+                "path": "edit"
+              }
+            ]
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon ####",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 10,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:8",
+                      "value": "text"
+                    },
+                    "broken": "cycle"
+                  }
+                ]
+              },
+              "8": {
+                "kind": "text",
+                "id": 8,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400009
+                },
+                "text": "Ref: ####",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 5,
+                    "end": 9,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:4",
+                      "value": "text"
+                    },
+                    "broken": "cycle"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projenin ölçeği, birimi ve koordinat sistemi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "project",
+                "value": "scale"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 1:500",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 11,
+                    "source": {
+                      "kind": "project",
+                      "value": "scale"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 11,
+              "end": 11,
+              "source": {
+                "kind": "project",
+                "value": "unit"
+              },
+              "format": {
+                "prefix": ", "
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 1:500, m",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 11,
+                    "source": {
+                      "kind": "project",
+                      "value": "scale"
+                    }
+                  },
+                  {
+                    "start": 11,
+                    "end": 14,
+                    "source": {
+                      "kind": "project",
+                      "value": "unit"
+                    },
+                    "format": {
+                      "prefix": ", "
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 14,
+              "end": 14,
+              "source": {
+                "kind": "project",
+                "value": "crs"
+              },
+              "format": {
+                "prefix": ", "
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 1:500, m, EPSG:5256",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 11,
+                    "source": {
+                      "kind": "project",
+                      "value": "scale"
+                    }
+                  },
+                  {
+                    "start": 11,
+                    "end": 14,
+                    "source": {
+                      "kind": "project",
+                      "value": "unit"
+                    },
+                    "format": {
+                      "prefix": ", "
+                    }
+                  },
+                  {
+                    "start": 14,
+                    "end": 25,
+                    "source": {
+                      "kind": "project",
+                      "value": "crs"
+                    },
+                    "format": {
+                      "prefix": ", "
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projenin adı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 0,
+              "end": 0,
+              "source": {
+                "kind": "project",
+                "value": "name"
+              },
+              "format": {
+                "suffix": " — "
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Kentsel proje — Salon ",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 0,
+                    "end": 16,
+                    "source": {
+                      "kind": "project",
+                      "value": "name"
+                    },
+                    "format": {
+                      "suffix": " — "
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değişkenler: metin, sayı basamakla ve basamaksız, evet/hayır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "project",
+                "value": "variable",
+                "name": "is_no"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 2026/41",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 13,
+                    "source": {
+                      "kind": "project",
+                      "value": "variable",
+                      "name": "is_no"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 13,
+              "end": 13,
+              "source": {
+                "kind": "project",
+                "value": "variable",
+                "name": "oran"
+              },
+              "format": {
+                "decimals": 2,
+                "comma": true,
+                "prefix": " "
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 2026/41 0,13",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 13,
+                    "source": {
+                      "kind": "project",
+                      "value": "variable",
+                      "name": "is_no"
+                    }
+                  },
+                  {
+                    "start": 13,
+                    "end": 18,
+                    "source": {
+                      "kind": "project",
+                      "value": "variable",
+                      "name": "oran"
+                    },
+                    "format": {
+                      "decimals": 2,
+                      "comma": true,
+                      "prefix": " "
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 18,
+              "end": 18,
+              "source": {
+                "kind": "project",
+                "value": "variable",
+                "name": "oran"
+              },
+              "format": {
+                "prefix": " "
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 2026/41 0,13 0.125",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 13,
+                    "source": {
+                      "kind": "project",
+                      "value": "variable",
+                      "name": "is_no"
+                    }
+                  },
+                  {
+                    "start": 13,
+                    "end": 18,
+                    "source": {
+                      "kind": "project",
+                      "value": "variable",
+                      "name": "oran"
+                    },
+                    "format": {
+                      "decimals": 2,
+                      "comma": true,
+                      "prefix": " "
+                    }
+                  },
+                  {
+                    "start": 18,
+                    "end": 24,
+                    "source": {
+                      "kind": "project",
+                      "value": "variable",
+                      "name": "oran"
+                    },
+                    "format": {
+                      "prefix": " "
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 24,
+              "end": 24,
+              "source": {
+                "kind": "project",
+                "value": "variable",
+                "name": "onay"
+              },
+              "format": {
+                "prefix": " "
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 2026/41 0,13 0.125 Evet",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 13,
+                    "source": {
+                      "kind": "project",
+                      "value": "variable",
+                      "name": "is_no"
+                    }
+                  },
+                  {
+                    "start": 13,
+                    "end": 18,
+                    "source": {
+                      "kind": "project",
+                      "value": "variable",
+                      "name": "oran"
+                    },
+                    "format": {
+                      "decimals": 2,
+                      "comma": true,
+                      "prefix": " "
+                    }
+                  },
+                  {
+                    "start": 18,
+                    "end": 24,
+                    "source": {
+                      "kind": "project",
+                      "value": "variable",
+                      "name": "oran"
+                    },
+                    "format": {
+                      "prefix": " "
+                    }
+                  },
+                  {
+                    "start": 24,
+                    "end": 29,
+                    "source": {
+                      "kind": "project",
+                      "value": "variable",
+                      "name": "onay"
+                    },
+                    "format": {
+                      "prefix": " "
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değeri olmayan ve olmayan değişken kopuk",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "project",
+                "value": "variable",
+                "name": "bos"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "field_broken",
+                "message": "“Salon ####” yazısının 1. alanı okunamadı: nesnenin bu değeri yok; harfleri ####.",
+                "path": "edit"
+              }
+            ]
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon ####",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 10,
+                    "source": {
+                      "kind": "project",
+                      "value": "variable",
+                      "name": "bos"
+                    },
+                    "broken": "noValue"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 10,
+              "end": 10,
+              "source": {
+                "kind": "project",
+                "value": "variable",
+                "name": "yok"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "field_broken",
+                "message": "“Salon ########” yazısının 1. alanı okunamadı: nesnenin bu değeri yok; harfleri ####.",
+                "path": "edit"
+              },
+              {
+                "code": "field_broken",
+                "message": "“Salon ########” yazısının 2. alanı okunamadı: adı verilen öznitelik ya da değişken yok; harfleri ####.",
+                "path": "edit"
+              }
+            ]
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon ########",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 10,
+                    "source": {
+                      "kind": "project",
+                      "value": "variable",
+                      "name": "bos"
+                    },
+                    "broken": "noValue"
+                  },
+                  {
+                    "start": 10,
+                    "end": 14,
+                    "source": {
+                      "kind": "project",
+                      "value": "variable",
+                      "name": "yok"
+                    },
+                    "broken": "notNamed"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ondalık virgülle dönüm",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "area"
+              },
+              "format": {
+                "decimals": 3,
+                "unit": "donum",
+                "comma": true,
+                "suffix": " dönüm"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 0,024 dönüm",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 17,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "area"
+                    },
+                    "format": {
+                      "decimals": 3,
+                      "unit": "donum",
+                      "comma": true,
+                      "suffix": " dönüm"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Biçim dilimi alanın arkasında kayar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:6",
+              "start": 4,
+              "end": 5,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "attribute",
+                "name": "No"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:6"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "6": {
+                "kind": "text",
+                "id": 6,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400007
+                },
+                "text": "Kat 101 planı",
+                "height": 0.25,
+                "rotation": 0,
+                "runs": [
+                  {
+                    "start": 8,
+                    "end": 13,
+                    "bold": true
+                  }
+                ],
+                "fields": [
+                  {
+                    "start": 4,
+                    "end": 7,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "attribute",
+                      "name": "No"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Öndeki alan arkadakini kaydırır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "area"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 24.00",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 11,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "area"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 0,
+              "end": 0,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "label"
+              },
+              "format": {
+                "suffix": " "
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "S-1 Salon 24.00",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 0,
+                    "end": 4,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "label"
+                    },
+                    "format": {
+                      "suffix": " "
+                    }
+                  },
+                  {
+                    "start": 10,
+                    "end": 15,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "area"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Etiket değişince alan aynı adımda izler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "label"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon S-1",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 9,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "label"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.set",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "label": "Salon-2",
+            "operation": "label"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:1"
+              ],
+              "ids": [
+                1
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon Salon-2",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 13,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "label"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oda büyüyünce alanı izler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "area"
+              },
+              "format": {
+                "decimals": 2
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 24.00",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 11,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "area"
+                    },
+                    "format": {
+                      "decimals": 2
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "transform": {
+              "kind": "scale",
+              "center": {
+                "x": 500000,
+                "y": 4400000
+              },
+              "factor": 2
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:1"
+              ],
+              "created": [],
+              "locked": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 96.00",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 11,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "area"
+                    },
+                    "format": {
+                      "decimals": 2
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oda silinince alan kopar, geri alınca döner",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "area"
+              },
+              "format": {
+                "decimals": 2
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 24.00",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 11,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "area"
+                    },
+                    "format": {
+                      "decimals": 2
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "captureUid",
+          "as": "o1",
+          "id": 1
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "removed": [
+                "$uid:o1"
+              ],
+              "locked": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon ####",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 10,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uid:o1",
+                      "value": "area"
+                    },
+                    "format": {
+                      "decimals": 2
+                    },
+                    "broken": "removed"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Sil",
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 24.00",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 11,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uid:o1",
+                      "value": "area"
+                    },
+                    "format": {
+                      "decimals": 2
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Okuduğu yazı değişince zincir izler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:8",
+              "start": 5,
+              "end": 5,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:4",
+                "value": "text"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:8"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "8": {
+                "kind": "text",
+                "id": 8,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400009
+                },
+                "text": "Ref: Salon ",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 5,
+                    "end": 11,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:4",
+                      "value": "text"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "label"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon S-1",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 9,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "label"
+                    }
+                  }
+                ]
+              },
+              "8": {
+                "kind": "text",
+                "id": 8,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400009
+                },
+                "text": "Ref: Salon S-1",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 5,
+                    "end": 14,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:4",
+                      "value": "text"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alanı kaldır: harfleri yazı olarak kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "area"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 24.00",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 11,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "area"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "remove",
+              "uid": "$uidOf:4",
+              "index": 0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 24.00",
+                "height": 0.25,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Biçimi değiştir ve projeninkine dön",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "area"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 24.00",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 11,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "area"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "format",
+              "uid": "$uidOf:4",
+              "index": 0,
+              "format": {
+                "decimals": 0,
+                "suffix": " m²"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 24 m²",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 11,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "area"
+                    },
+                    "format": {
+                      "decimals": 0,
+                      "suffix": " m²"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "format",
+              "uid": "$uidOf:4",
+              "index": 0,
+              "format": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 24.00",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 11,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "area"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alanları yenile: değişen yoksa adım yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "area"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 24.00",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 11,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "area"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "update"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Planla: yazı nasıl olacak, çizim değişmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "area"
+              },
+              "format": {
+                "decimals": 1
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "texts": [
+                {
+                  "kind": "text",
+                  "id": 4,
+                  "layerId": "yazi",
+                  "attrs": {},
+                  "p": {
+                    "x": 500001,
+                    "y": 4400002
+                  },
+                  "text": "Salon 24.0",
+                  "height": 0.25,
+                  "rotation": 0,
+                  "fields": [
+                    {
+                      "start": 6,
+                      "end": 10,
+                      "source": {
+                        "kind": "object",
+                        "uid": "$uidOf:1",
+                        "value": "area"
+                      },
+                      "format": {
+                        "decimals": 1
+                      }
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geri al alanı ve harflerini kaldırır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "area"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 24.00",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 11,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "area"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Alan ekle",
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon ",
+                "height": 0.25,
+                "rotation": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kimlik değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "R-12",
+              "start": 0,
+              "end": 0,
+              "source": {
+                "kind": "project",
+                "value": "scale"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“R-12” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+              "path": "edit.uid"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazı yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3fff",
+              "start": 0,
+              "end": 0,
+              "source": {
+                "kind": "project",
+                "value": "scale"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3fff” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "edit.uid"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazı değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:1",
+              "start": 0,
+              "end": 0,
+              "source": {
+                "kind": "project",
+                "value": "scale"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_text",
+              "message": "Verilen nesne bir yazı değil; bu komut yalnız yazıları değiştirir.",
+              "path": "edit.uid"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli katmandaki yazı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:7",
+              "start": 0,
+              "end": 0,
+              "source": {
+                "kind": "project",
+                "value": "scale"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli” katmanı kilitli; üzerindeki yazı değişmez. Kilidi Katmanlar panelinden açın.",
+              "path": "edit.uid"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yer yazının dışında",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 3,
+              "end": 9,
+              "source": {
+                "kind": "project",
+                "value": "scale"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_text_field",
+              "message": "Alanın yeri 3–9: başı sonundan sonra olamaz, sonu yazının harf sayısını (6) aşamaz.",
+              "path": "edit.start"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kaynak nesne yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3fff",
+                "value": "area"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "Alanın kaynağı “0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3fff” çizimde yok. Var olan bir nesnenin kimliğini verin.",
+              "path": "edit.source.uid"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alanlar üst üste gelmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:5",
+              "start": 6,
+              "end": 8,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "area"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:5"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "5": {
+                "kind": "text",
+                "id": 5,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400001
+                },
+                "text": "Alan: 24.00",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 11,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "area"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:5",
+              "start": 7,
+              "end": 7,
+              "source": {
+                "kind": "project",
+                "value": "scale"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_text_field",
+              "message": "Alanın yeri 7–7 yazının 1. alanına değiyor; alanlar üst üste gelmez.",
+              "path": "edit.start"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Öznitelik adsız",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "attribute"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_text_field",
+              "message": "1. alan: Öznitelik alanı özniteliğin adını ister (`name`).",
+              "path": "edit"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alan uzunluk biriminde yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "area"
+              },
+              "format": {
+                "unit": "cm"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_text_field",
+              "message": "1. alan: Alan değeri cm biriminde yazılamaz.",
+              "path": "edit"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boş biçim",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "area"
+              },
+              "format": {}
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_text_field",
+              "message": "1. alan: Boş biçim yazılmaz; alanı kaldırın.",
+              "path": "edit"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sürüm yazısı geçersiz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "project",
+                "value": "scale"
+              }
+            },
+            "expectedRevision": "on iki"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eski sürüme hazırlanmış alan yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "old"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "area"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500001,
+                  "y": 4400002
+                },
+                "text": "Salon 24.00",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 11,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "area"
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:5",
+              "start": 0,
+              "end": 0,
+              "source": {
+                "kind": "project",
+                "value": "scale"
+              }
+            },
+            "expectedRevision": "$old"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kaldırılacak alan yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "remove",
+              "uid": "$uidOf:4",
+              "index": 0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "field_not_found",
+              "message": "Yazının 0 alanı var; 0. sıradaki yok (sıra 0'dan başlar).",
+              "path": "edit.index"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

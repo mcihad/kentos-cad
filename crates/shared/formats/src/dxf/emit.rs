@@ -2053,7 +2053,13 @@ impl<'l> Emitter<'l> {
             style,
         };
         match self.text_frame(ctx, &t, &words, e) {
-            Ok(frame) => self.push_text(&frame, words, false, Paragraph::default(), b),
+            Ok(frame) => {
+                let paragraph = Paragraph {
+                    fields: kept_fields(e, &words),
+                    ..Paragraph::default()
+                };
+                self.push_text(&frame, words, false, paragraph, b)
+            }
             Err(why) => self.skip(&e.name, why, e.line),
         }
     }
@@ -2369,6 +2375,7 @@ impl<'l> Emitter<'l> {
             .filter(|l| l.problem(box_width.is_some()).is_none())
             .map(Box::new);
         let paragraph = Paragraph {
+            fields: kept_fields(e, &content.text),
             layout,
             box_width,
             line_spacing: (spacing.is_finite() && spacing > 0.0 && spacing != 1.0)
@@ -2993,6 +3000,17 @@ fn path_points(path: &Path) -> Boundary {
     }
 }
 
+/// A text's fields from its KENTOS data (docs/adr/0325 §1), when they hold for its letters; none else (the letters
+/// stay, the bindings go).
+fn kept_fields(e: &Parsed, text: &str) -> Vec<kentos_contracts::TextField> {
+    e.meta
+        .as_ref()
+        .and_then(|m| m.fields.as_deref())
+        .and_then(|json| serde_json::from_str::<Vec<kentos_contracts::TextField>>(json).ok())
+        .filter(|f| kentos_contracts::text_fields_problem(f, text).is_none())
+        .unwrap_or_default()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -3047,3 +3065,4 @@ mod tests {
         assert_eq!((b.pts.len(), b.curved, b.rough), (6, true, true));
     }
 }
+

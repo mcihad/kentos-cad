@@ -505,6 +505,8 @@ fn command_tool(c: &Value) -> Value {
             // It binds or frees a dimension's points (docs/adr/0249 §3).
             | "cad.dimensions.reassociate"
             | "cad.dimensions.edit"
+            | "cad.fields.edit"
+            | "cad.texts.edit"
             // It takes an object's scales away (docs/adr/0323 §4).
             | "cad.annotations.scales"
             // They cut, grow or round what is there; a trim takes objects away (docs/adr/0250).
