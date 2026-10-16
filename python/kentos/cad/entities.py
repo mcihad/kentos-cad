@@ -2864,7 +2864,7 @@ class _EntitiesOffset(LocalCommand[EntitiesOffset, EntitiesOffsetMade, EntitiesO
     yapar; deleteSource (Kaynağı sil) kopyası yapılan kaynakları aynı adımda siler;
     layerId kopyaların katmanıdır, verilmezse her kopya kaynağının katmanına gider.
     Çizgi, çoklu çizgi (yaylarıyla, çok parçalısı parça parça), kapalı alan, daire, yay,
-    elips ve yardımcı çizgi ile ışın ötelenir; öbür türler not_offsettable ile
+    elips ve yardımcı çizgi ile ışın ötelenir; diğer türler not_offsettable ile
     reddedilir. Kopyayı ortak geometri çekirdeği hesaplar: Ötele aracı, Python ve ajan
     aynı nesneyi aynı mesafeyle öteleyince aynı kopyayı bulur. Kopya kaynağının
     katmanını, rengini ve çizgi kalınlığını alır; özniteliklerini, etiketini, simgesini
@@ -2909,7 +2909,7 @@ class _EntitiesOffset(LocalCommand[EntitiesOffset, EntitiesOffsetMade, EntitiesO
         yapılan kaynakları aynı adımda siler; layerId kopyaların katmanıdır, verilmezse her
         kopya kaynağının katmanına gider. Çizgi, çoklu çizgi (yaylarıyla, çok parçalısı
         parça parça), kapalı alan, daire, yay, elips ve yardımcı çizgi ile ışın ötelenir;
-        öbür türler not_offsettable ile reddedilir. Kopyayı ortak geometri çekirdeği
+        diğer türler not_offsettable ile reddedilir. Kopyayı ortak geometri çekirdeği
         hesaplar: Ötele aracı, Python ve ajan aynı nesneyi aynı mesafeyle öteleyince aynı
         kopyayı bulur. Kopya kaynağının katmanını, rengini ve çizgi kalınlığını alır;
         özniteliklerini, etiketini, simgesini ve eklerini almaz; köşeler kaynağın

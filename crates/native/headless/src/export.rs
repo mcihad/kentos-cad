@@ -89,7 +89,7 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
         notes.push(kentos_contracts::ReportItem {
             what: "Ölçekli açıklama".into(),
             count: u32::try_from(scaled).unwrap_or(u32::MAX),
-            reason: "Kendi ölçeğindeki hâliyle yazıldı; öbür ölçekleri ve oradaki yerleri DXF'e yazılmadı.".into(),
+            reason: "Kendi ölçeğindeki hâliyle yazıldı; diğer ölçekleri ve oradaki yerleri DXF'e yazılmadı.".into(),
             lines: Vec::new(),
         });
     }

@@ -518,11 +518,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   (`kentos.annotation-styles`, stil pencerelerinde Dışa aktar… ve Al…); yazının ve ölçünün stilden ayrılan alanları `overrides`
   (adımın elle değiştirdikleri, `kentos_domain::style_overrides`; stil değişince korunur; `.kcad` şema 63, `FORMATS_VERSION` 72),
   Öznitelikler'de Stilden ayrılan ve Stile döndür (ADR 0322);
-  ölçekli açıklamalar: yazının, ölçünün ve kılavuzun `annotative`'i (kendi ölçeği `at`, öbür ölçekler ve her birinin ayrı yeri,
+  ölçekli açıklamalar: yazının, ölçünün ve kılavuzun `annotative`'i (kendi ölçeği `at`, diğer ölçekler ve her birinin ayrı yeri,
   doğrultusu, ölçünün uzaklığı ve değerinin yeri; `.kcad` şema 64, `FORMATS_VERSION` 73), temsil kuralı sözleşmede (`at_scale`,
   `rebase_annotative`), paftanın haritası ölçeğindeki kopyayı çizer (`Document::at_scale`, masaüstünün pafta kipi ve başsız PDF), çizim
   ölçeği değişince ölçekli nesne yeni ölçeğe taşınır (açık göç: eskiler değişmez); `cad.annotations.scales` (make, unmake, add, remove,
-  set, reset), Öznitelikler'de Ölçekli, Kendi ölçeği, Öbür ölçekler, Ayrı değerler; CAD › Açıklama › Ölçek ve Ölçekteki yeri aracı
+  set, reset), Öznitelikler'de Ölçekli, Kendi ölçeği, Diğer ölçekler, Ayrı değerler; CAD › Açıklama › Ölçek ve Ölçekteki yeri aracı
   (`kentos_interaction::annotative`); kâğıttaki ölçünün kuralı (ölçek bir kez) (ADR 0323);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);

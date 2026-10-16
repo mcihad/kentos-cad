@@ -188,7 +188,7 @@ pub fn annotative_problem(e: &Entity) -> Option<String> {
         }
         if same_scale(s.scale, a.at) {
             return Some(format!(
-                "1:{} nesnenin kendi ölçeği; öbür ölçeklerde yinelenmez.",
+                "1:{} nesnenin kendi ölçeği; diğer ölçeklerde yinelenmez.",
                 s.scale
             ));
         }

@@ -96,7 +96,7 @@
       ]
     },
     {
-      "name": "Ölçekliliği kaldır: tek yükseklik, nesnenin kendisi; öbür ölçekler gider",
+      "name": "Ölçekliliği kaldır: tek yükseklik, nesnenin kendisi; diğer ölçekler gider",
       "steps": [
         {"op": "execute", "input": {"operation": "unmake", "uids": ["$uidOf:7"]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:7"], "ids": [7], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0}}, "canUndo": true, "dirty": true}},
         {"op": "undo", "returns": "Ölçekliliği kaldır", "expect": {"entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50, "point": {"x": 487010.5, "y": 4420000.25}}]}}}}},
@@ -208,7 +208,7 @@
       ]
     },
     {
-      "name": "Ölçeği sıfırla: bütün öbür ölçeklerde ayrı değer kalmaz",
+      "name": "Ölçeği sıfırla: bütün diğer ölçeklerde ayrı değer kalmaz",
       "steps": [
         {"op": "execute", "input": {"operation": "reset", "uids": ["$uidOf:7", "$uidOf:8"]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:7", "$uidOf:8"], "ids": [7, 8], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50}]}}, "8": {"kind": "dimension", "id": 8, "layerId": "yazi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487004, "y": 4420050}, "offset": 0.5, "height": 0.25, "annotative": {"at": 100, "scales": [{"scale": 50}]}}}, "canUndo": true, "dirty": true}},
         {"op": "undo", "returns": "Ölçeği sıfırla", "expect": {"entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50, "point": {"x": 487010.5, "y": 4420000.25}}]}}, "8": {"kind": "dimension", "id": 8, "layerId": "yazi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487004, "y": 4420050}, "offset": 0.5, "height": 0.25, "annotative": {"at": 100, "scales": [{"scale": 50, "offset": 0.3}]}}}}},
@@ -260,7 +260,7 @@
       ]
     },
     {
-      "name": "Çizim ölçeği 1:100'den 1:50'ye: ölçekli yazı ve ölçünün kendisi 1:50 temsili olur, 1:100 öbür ölçeklerine geçer; öbürleri yüksekliği izler",
+      "name": "Çizim ölçeği 1:100'den 1:50'ye: ölçekli yazı ve ölçünün kendisi 1:50 temsili olur, 1:100 diğer ölçeklerine geçer; diğerleri yüksekliği izler",
       "note": "Yazı 7'nin 1:50 yeri kendi yeri olur, eski yeri 1:100'ün yeridir; ölçü 8'in 1:50 uzaklığı (0,3) kendisinin, 1:100'ün uzaklığı 0,5.",
       "steps": [
         {"op": "execute", "command": "cad.settings.set", "input": {"plotScale": 50}, "result": {"status": "completed", "output": {"changed": ["plotScale"], "followed": 6, "locked": 1, "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "entities": {"1": {"kind": "text", "id": 1, "layerId": "yazi", "attrs": {}, "p": {"x": 487000, "y": 4420000}, "text": "SALON", "height": 0.125, "rotation": 0}, "2": {"kind": "dimension", "id": 2, "layerId": "yazi", "attrs": {}, "a": {"x": 487000, "y": 4420010}, "b": {"x": 487004, "y": 4420010}, "offset": 0.5, "height": 0.125}, "3": {"kind": "leader", "id": 3, "layerId": "yazi", "attrs": {}, "pts": [{"x": 487002, "y": 4420002}, {"x": 487003, "y": 4420003}], "text": "Kapı", "height": 0.125, "rotation": 0}, "4": {"kind": "text", "id": 4, "layerId": "yazi", "attrs": {}, "p": {"x": 487000, "y": 4420020}, "text": "DERE", "height": 0.125, "rotation": 0, "path": {"pts": [{"x": 5, "y": 0}]}}, "7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010.5, "y": 4420000.25}, "text": "MUTFAK", "height": 0.125, "rotation": 0, "annotative": {"at": 50, "scales": [{"scale": 100, "point": {"x": 487010, "y": 4420000}}]}}, "8": {"kind": "dimension", "id": 8, "layerId": "yazi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487004, "y": 4420050}, "offset": 0.3, "height": 0.125, "annotative": {"at": 50, "scales": [{"scale": 100, "offset": 0.5}]}}}, "settings": {"plotScale": 50}}}

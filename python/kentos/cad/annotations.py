@@ -30,16 +30,16 @@ class _AnnotationsScales(LocalCommand[AnnotationsScales, AnnotationsScaled, Anno
     yazı, ölçü ve kılavuzları ölçekli yapar ve ölçeklerini düzenler; tek geri alma
     adımıdır. Ölçekli nesne katıldığı her ölçekte kâğıtta aynı yükseklikte çizilir:
     kendi geometrisi annotative.at ölçeğindeki (yapıldığında projenin çizim ölçeği)
-    temsilidir, öbür ölçeklerde ölçek/at kadar büyür, o ölçeğin ayrı değerleriyle
+    temsilidir, diğer ölçeklerde ölçek/at kadar büyür, o ölçeğin ayrı değerleriyle
     (yazının ve notun yeri ve doğrultusu, ölçünün çizgisinin uzaklığı ve değerinin
     yeri); katılmadığı ölçekte çizilmez. Paftanın haritası her nesneyi kendi ölçeğinde
     çizer. make (Ölçekli yap; scales eklenir), unmake (tek yükseklik, nesnenin kendisi),
     add ve remove (scales; kendi ölçeği kaldırılmaz: own_scale), set (scale ölçeğinde
-    point, rotation; ölçüde offset, textShift), reset (scales ya da bütün öbür
+    point, rotation; ölçüde offset, textShift), reset (scales ya da bütün diğer
     ölçeklerde ayrı değer kalmaz). Ölçekli olmayan ya da olamayan nesne (eğri boyunca
-    yazı, bağlı yazı, öbür türler) not_annotative uyarısıyla atlanır, hiçbiri kalmazsa
+    yazı, bağlı yazı, diğer türler) not_annotative uyarısıyla atlanır, hiçbiri kalmazsa
     ret; kilitli katmandakiler layer_locked uyarısıyla atlanır. Çizim ölçeği değişince
-    ölçekli nesnenin kendi geometrisi yeni ölçeğin temsili olur, eski ölçeği öbür
+    ölçekli nesnenin kendi geometrisi yeni ölçeğin temsili olur, eski ölçeği diğer
     ölçeklerine geçer; ölçekli olmayan nesneler eskisi gibi izler. expectedRevision
     verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
@@ -72,17 +72,17 @@ class _AnnotationsScales(LocalCommand[AnnotationsScales, AnnotationsScaled, Anno
         """Açıklamanın ölçekleri: Kalıcı kimlikleriyle verilen yazı, ölçü ve kılavuzları
         ölçekli yapar ve ölçeklerini düzenler; tek geri alma adımıdır. Ölçekli nesne
         katıldığı her ölçekte kâğıtta aynı yükseklikte çizilir: kendi geometrisi
-        annotative.at ölçeğindeki (yapıldığında projenin çizim ölçeği) temsilidir, öbür
+        annotative.at ölçeğindeki (yapıldığında projenin çizim ölçeği) temsilidir, diğer
         ölçeklerde ölçek/at kadar büyür, o ölçeğin ayrı değerleriyle (yazının ve notun yeri
         ve doğrultusu, ölçünün çizgisinin uzaklığı ve değerinin yeri); katılmadığı ölçekte
         çizilmez. Paftanın haritası her nesneyi kendi ölçeğinde çizer. make (Ölçekli yap;
         scales eklenir), unmake (tek yükseklik, nesnenin kendisi), add ve remove (scales;
         kendi ölçeği kaldırılmaz: own_scale), set (scale ölçeğinde point, rotation; ölçüde
-        offset, textShift), reset (scales ya da bütün öbür ölçeklerde ayrı değer kalmaz).
-        Ölçekli olmayan ya da olamayan nesne (eğri boyunca yazı, bağlı yazı, öbür türler)
+        offset, textShift), reset (scales ya da bütün diğer ölçeklerde ayrı değer kalmaz).
+        Ölçekli olmayan ya da olamayan nesne (eğri boyunca yazı, bağlı yazı, diğer türler)
         not_annotative uyarısıyla atlanır, hiçbiri kalmazsa ret; kilitli katmandakiler
         layer_locked uyarısıyla atlanır. Çizim ölçeği değişince ölçekli nesnenin kendi
-        geometrisi yeni ölçeğin temsili olur, eski ölçeği öbür ölçeklerine geçer; ölçekli
+        geometrisi yeni ölçeğin temsili olur, eski ölçeği diğer ölçeklerine geçer; ölçekli
         olmayan nesneler eskisi gibi izler. expectedRevision verilmişse ve çizim o sürümde
         değilse hiçbir şey yazılmaz, sonuç conflict olur.
 

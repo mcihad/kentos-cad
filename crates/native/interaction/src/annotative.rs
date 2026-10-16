@@ -1,6 +1,6 @@
-//! Ölçekli açıklamalar from the interface (docs/adr/0323 §4): Öznitelikler's Ölçekli, Öbür ölçekler and Ayrı değerler, the
+//! Ölçekli açıklamalar from the interface (docs/adr/0323 §4): Öznitelikler's Ölçekli, Diğer ölçekler and Ayrı değerler, the
 //! ribbon's Ölçekli yap and Ölçeği sıfırla on the selection, and the tool Ölçekteki yeri. Each writes by
-//! `cad.annotations.scales`; Öbür ölçekler's add and remove are one undo step.
+//! `cad.annotations.scales`; Diğer ölçekler's add and remove are one undo step.
 //!
 //! **Ölçekteki yeri**: a click on an annotative text, dimension or leader, then where it goes at one of its other
 //! scales (Ölçek (Ö) chooses which; the first by default): a text's point, a leader's landing start, a dimension's
@@ -34,7 +34,7 @@ pub fn ratio(scale: f64) -> String {
     format!("1:{text}")
 }
 
-/// An object's other scales as Öznitelikler's Öbür ölçekler says them: `1:50*, 1:200` (a scale that sets something
+/// An object's other scales as Öznitelikler's Diğer ölçekler says them: `1:50*, 1:200` (a scale that sets something
 /// apart with an asterisk), or `Yok`; none when it is not annotative.
 pub fn others_text(e: &Entity) -> Option<String> {
     let a = annotative_of(e)?;
@@ -55,7 +55,7 @@ pub fn others_text(e: &Entity) -> Option<String> {
     Some(parts.join(", "))
 }
 
-/// The other scales typed in Öznitelikler's Öbür ölçekler: `1:50, 200; 1:500` (`Yok` or nothing: none); `Err` with
+/// The other scales typed in Öznitelikler's Diğer ölçekler: `1:50, 200; 1:500` (`Yok` or nothing: none); `Err` with
 /// what to say.
 pub fn parse_scales(text: &str) -> Result<Vec<f64>, String> {
     let mut out: Vec<f64> = Vec::new();

@@ -43,7 +43,7 @@ impl App {
                     let scale = doc.model.settings().plot_scale;
                     self.output(match operation {
                         AnnotativeOperation::Make => format!(
-                            "{what}: {n} nesne {} ölçeğinde ölçekli; öbür ölçekleri Öznitelikler › Ölçekler'den ekleyin.",
+                            "{what}: {n} nesne {} ölçeğinde ölçekli; diğer ölçekleri Öznitelikler › Diğer ölçekler'den ekleyin.",
                             kentos_interaction::annotative::ratio(scale)
                         ),
                         _ => format!("{what}: {n} nesne."),

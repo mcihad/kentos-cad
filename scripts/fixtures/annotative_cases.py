@@ -250,7 +250,7 @@ case("Ölçekli yap ölçekli nesnede yalnız ölçekleri ekler; ayrı değerler
 # ── Ölçekliliği kaldır ──────────────────────────────────────────────────
 nope = E(7)
 del nope["annotative"]
-case("Ölçekliliği kaldır: tek yükseklik, nesnenin kendisi; öbür ölçekler gider", run("unmake", [7], {"7": nope}))
+case("Ölçekliliği kaldır: tek yükseklik, nesnenin kendisi; diğer ölçekler gider", run("unmake", [7], {"7": nope}))
 case("Ölçekliliği kaldır: ölçekli olmayan yazı reddedilir", refused("unmake", [1], "not_annotative", NOT_YET, "uids[0]"))
 
 # ── Ölçek ekle ve kaldır ────────────────────────────────────────────────
@@ -284,7 +284,7 @@ case("Ölçekteki yeri değersiz: no_value",
      refused("set", [7], "no_value", "Ölçekteki yeri için değer verilmedi: yazının ve kılavuzun point ya da rotation'ı, ölçünün offset ya da textShift'i.", "point", scale=50))
 
 # ── Ölçeği sıfırla ──────────────────────────────────────────────────────
-case("Ölçeği sıfırla: bütün öbür ölçeklerde ayrı değer kalmaz", run("reset", [7, 8], {"7": with_scales(E(7), 100, [{"scale": 50}]), "8": with_scales(E(8), 100, [{"scale": 50}])}))
+case("Ölçeği sıfırla: bütün diğer ölçeklerde ayrı değer kalmaz", run("reset", [7, 8], {"7": with_scales(E(7), 100, [{"scale": 50}]), "8": with_scales(E(8), 100, [{"scale": 50}])}))
 case("Ölçeği sıfırla yalnız 1:200: 1:50'nin yeri kalır",
      [{"op": "execute", "input": {"operation": "reset", "uids": [uid(7)], "scales": [200]}, "result": unchanged(), "expect": {"ids": IDS, "entities": {"7": E(7)}}}])
 case("Kimliksiz: no_entities", [{"op": "execute", "input": {"operation": "make", "uids": []}, "result": failed("no_entities", "Ölçekleri değişecek nesne verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "uids"), "expect": {"ids": IDS}}])
@@ -315,7 +315,7 @@ for e in ENTITIES:
         f = copy.deepcopy(e)
         f["height"] = 0.125
         follow[str(e["id"])] = f
-case("Çizim ölçeği 1:100'den 1:50'ye: ölçekli yazı ve ölçünün kendisi 1:50 temsili olur, 1:100 öbür ölçeklerine geçer; öbürleri yüksekliği izler",
+case("Çizim ölçeği 1:100'den 1:50'ye: ölçekli yazı ve ölçünün kendisi 1:50 temsili olur, 1:100 diğer ölçeklerine geçer; diğerleri yüksekliği izler",
      [{"op": "execute", "command": "cad.settings.set", "input": {"plotScale": 50},
        "result": {"status": "completed", "output": {"changed": ["plotScale"], "followed": len(follow), "locked": 1, "revision": "$current"}, "warnings": []},
        "expect": {"ids": IDS, "entities": follow, "settings": {"plotScale": 50}}}],

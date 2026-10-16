@@ -183,7 +183,7 @@ Liste:
 - [ ] `CAD-ANNO-12`…`15` ölçekli açıklamalar (ADR 0323, 16 Ekim): web'de gerekenler: `.kcad` şema 64 (`annotative`), sözleşmenin
   temsil kuralı (`at_scale`, `rebase_annotative`; ortak `fixtures/annotative/v1/cases.json`), `cad.annotations.scales`'in TS işleyicisi,
   çizim ölçeği değişince ölçekli nesnenin yeni ölçeğe taşınması, pafta haritasının ölçeğindeki kopya (web'in harita çizimi ve PDF'i),
-  Öznitelikler'in Ölçekli, Kendi ölçeği, Öbür ölçekler ve Ayrı değerler satırları, Ölçek paneli ve Ölçekteki yeri aracı. Masaüstünde de
+  Öznitelikler'in Ölçekli, Kendi ölçeği, Diğer ölçekler ve Ayrı değerler satırları, Ölçek paneli ve Ölçekteki yeri aracı. Masaüstünde de
   açık: kâğıt üstündeki ölçü öğesi (kuralı ADR 0323 §5'te), ölçekli nesnenin DXF'te AutoCAD'in ölçek bağlamlarıyla yazılması.
 - [ ] `CAD-ANNO-11`, `16`, `17` merkez işareti, eksen, kot, stil dosyaları ve stilden ayrılan alanlar (ADR 0322, 16 Ekim): web'de
   gerekenler: `.kcad` şema 62 ve 63 (`centerMark`, `centerLine`, `elevation`, `pair`, yazının ve ölçünün `overrides`'ı), çekirdeğin üç

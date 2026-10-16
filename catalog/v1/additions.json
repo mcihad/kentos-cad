@@ -834,7 +834,7 @@
       "title": "Ölçekli yap",
       "short": "Ölçekli",
       "icon": "annotationMake",
-      "description": "Seçili yazı, ölçü ve kılavuzları ölçekli yapar: kâğıtta aynı yükseklikte, katıldıkları her ölçekte çizilirler; kendileri projenin çizim ölçeğindeki temsilleridir. Öbür ölçekler Öznitelikler › Ölçekler'den eklenir; paftanın haritası her nesneyi kendi ölçeğinde çizer (cad.annotations.scales, make; AutoCAD'in ANNOTATIVE'i).",
+      "description": "Seçili yazı, ölçü ve kılavuzları ölçekli yapar: kâğıtta aynı yükseklikte, katıldıkları her ölçekte çizilirler; kendileri projenin çizim ölçeğindeki temsilleridir. Diğer ölçekler Öznitelikler › Diğer ölçekler'den eklenir; paftanın haritası her nesneyi kendi ölçeğinde çizer (cad.annotations.scales, make; AutoCAD'in ANNOTATIVE'i).",
       "aliases": [
         "ANNOTATIVE",
         "OLCEKLIYAP"
@@ -848,7 +848,7 @@
       "title": "Ölçekliliği kaldır",
       "short": "Kaldır",
       "icon": "annotationUnmake",
-      "description": "Seçili ölçekli açıklamaları tek yükseklikli yapar: kendileri kalır, öbür ölçekleri ve oradaki yerleri gider (cad.annotations.scales, unmake).",
+      "description": "Seçili ölçekli açıklamaları tek yükseklikli yapar: kendileri kalır, diğer ölçekleri ve oradaki yerleri gider (cad.annotations.scales, unmake).",
       "aliases": [
         "OLCEKLIKALDIR"
       ],
@@ -861,7 +861,7 @@
       "title": "Ölçekteki yeri",
       "short": "Yeri",
       "icon": "annotativePlace",
-      "description": "Ölçekli bir yazının, kılavuzun ya da ölçünün başka bir ölçekteki yerini verir: nesneye tıklanır, Ölçek (Ö) ile ölçek seçilir, yeni yer tıklanır; yazının noktası, kılavuzun notu, ölçünün çizgisi o ölçekte orada çizilir, öbür ölçekler değişmez (cad.annotations.scales, set; AutoCAD'in ANNORESET'inin tersi).",
+      "description": "Ölçekli bir yazının, kılavuzun ya da ölçünün başka bir ölçekteki yerini verir: nesneye tıklanır, Ölçek (Ö) ile ölçek seçilir, yeni yer tıklanır; yazının noktası, kılavuzun notu, ölçünün çizgisi o ölçekte orada çizilir, diğer ölçekler değişmez (cad.annotations.scales, set; AutoCAD'in ANNORESET'inin tersi).",
       "aliases": [
         "OLCEKTEKIYERI",
         "ANNOPLACE"
@@ -875,7 +875,7 @@
       "title": "Ölçeği sıfırla",
       "short": "Sıfırla",
       "icon": "annotationReset",
-      "description": "Seçili ölçekli açıklamaların öbür ölçeklerindeki ayrı yerleri ve değerleri kaldırır: her ölçekte nesnenin kendi yerinde, ölçekle büyüyerek çizilirler (cad.annotations.scales, reset; AutoCAD'in ANNORESET'i).",
+      "description": "Seçili ölçekli açıklamaların diğer ölçeklerindeki ayrı yerleri ve değerleri kaldırır: her ölçekte nesnenin kendi yerinde, ölçekle büyüyerek çizilirler (cad.annotations.scales, reset; AutoCAD'in ANNORESET'i).",
       "aliases": [
         "ANNORESET",
         "OLCEKSIFIRLA"

@@ -1,5 +1,5 @@
 //! The pictures of docs/adr/0323: a room's name and its dimension made annotative for 1:100 with 1:50 and 1:200
-//! too, the name's 1:50 place set apart, selected with Öznitelikler's Ölçekli, Kendi ölçeği, Öbür ölçekler and Ayrı değerler and the
+//! too, the name's 1:50 place set apart, selected with Öznitelikler's Ölçekli, Kendi ölçeği, Diğer ölçekler and Ayrı değerler and the
 //! Açıklama tab's Ölçek panel (olcekli-oznitelik); Ölçekteki yeri moving the name at 1:50, its preview at the cursor
 //! (olcekli-yeri). `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!

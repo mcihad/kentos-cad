@@ -1673,7 +1673,7 @@ fn field_rows(
     rows
 }
 
-/// Ölçekli, Kendi ölçeği, Öbür ölçekler and Ayrı değerler (docs/adr/0323 §4): whether the texts, dimensions or
+/// Ölçekli, Kendi ölçeği, Diğer ölçekler and Ayrı değerler (docs/adr/0323 §4): whether the texts, dimensions or
 /// leaders are annotative, the scale their own geometry is drawn at, their other scales (one that sets something
 /// apart with an asterisk; typed to add or remove) and Sıfırla; none when none of them can be (a text along a curve,
 /// a linked text).
@@ -1729,7 +1729,7 @@ fn scale_rows(objects: &[&Entity], slots: &[Slot], locked: bool) -> Vec<Row> {
     );
     rows.push(Row::text("Kendi ölçeği", own));
     rows.push(
-        Row::text("Öbür ölçekler", others)
+        Row::text("Diğer ölçekler", others)
             .editor((!locked).then_some(Editor::Text(Field::AnnotativeScales(slots.to_vec())))),
     );
     let apart: Vec<String> = objects

@@ -10,7 +10,7 @@
 
 Açıklamanın (yazı, ölçü, kılavuz) yüksekliği çizim biriminde tek bir sayıdır: projenin çizim ölçeğinde kâğıtta 2,5 mm olsun diye
 `2,5 / 1000 × ölçek` yazılır (ADR 0205). Aynı çizim iki paftada iki ölçekte (1:50 kat planı, 1:100 vaziyet) basılınca yazı birinde yarı
-boyda kalır, öbüründe iki kat olur. Paftanın haritası küçük yazıyı yazmaz bile. AutoCAD bunu ölçekli (annotative) nesnelerle çözer: nesne
+boyda kalır, diğerinde iki kat olur. Paftanın haritası küçük yazıyı yazmaz bile. AutoCAD bunu ölçekli (annotative) nesnelerle çözer: nesne
 katıldığı her ölçekte bir temsil taşır; görünüm alanı kendi ölçeğindeki temsili çizer.
 
 ## Karar
@@ -20,9 +20,9 @@ katıldığı her ölçekte bir temsil taşır; görünüm alanı kendi ölçeğ
 Yazının, ölçünün ve kılavuzun yeni `annotative` alanı (`kentos_contracts::Annotative`):
 
 - `at`: nesnenin kendi geometrisinin ölçeği (1:N'nin N'si). Nesnenin kendisi o ölçeğin temsilidir; çizim alanı onu çizer.
-- `scales`: öbür ölçekler, küçükten büyüğe, birer kez, `at` olmadan, en çok 32. Her öğe ölçek ve o ölçeğin ayrı değerleri: yazı ve
+- `scales`: diğer ölçekler, küçükten büyüğe, birer kez, `at` olmadan, en çok 32. Her öğe ölçek ve o ölçeğin ayrı değerleri: yazı ve
   kılavuzda `point` (yazının noktası, kılavuzun kolunun başı) ve `rotation`; ölçüde `offset` (çizginin uzaklığı) ve `textShift`
-  (değerin yeri). Değerler mutlaktır: bir ölçeğin değeri değişince öbür ölçeklerin temsilleri değişmez.
+  (değerin yeri). Değerler mutlaktır: bir ölçeğin değeri değişince diğer ölçeklerin temsilleri değişmez.
 - Eğri boyunca yazı (harfleri eğrisinin çerçevesinde) ve nesneye bağlı yazı (kendi etiket ölçeğini izler) ölçekli olmaz; tablo,
   koordinat yazısı ve km yazısı ADR 0205'in kuralında kalır.
 
@@ -46,7 +46,7 @@ dört ölçek); başsız kitap PDF'i (`kentos_plot::book_pdf`) ölçek başına 
 ### 3. Çizim ölçeği değişince (`CAD-ANNO-14`)
 
 ADR 0205'in izlemesi ölçekli nesnede yüksekliği ayrıca değiştirmez; nesnenin kendisi yeni ölçeğin temsili olur
-(`rebase_annotative`): yeni ölçek nesnenin ölçeklerinde yoksa eklenir, eski kendi ölçeği öbür ölçeklerine geçer ve her ölçek eskisi gibi
+(`rebase_annotative`): yeni ölçek nesnenin ölçeklerinde yoksa eklenir, eski kendi ölçeği diğer ölçeklerine geçer ve her ölçek eskisi gibi
 çizilir (eski temsilin değerleri, yenisinden farklıysa, o ölçeğin ayrı değerleri olur). Tür yüksekliği (Yazı, Ölçü, Kılavuz) aynı adımda
 değiştiyse ve nesne o yükseklikteyse yeni yüksekliği alır. Yazılması ADR 0205'in “Yazı yüksekliklerini uydur” adımıdır
 (`cad.entities.edit`'in `annotationScale`'i); `EntityGeometry`'nin yeni `annotative`'i ölçekleri taşır.
@@ -61,11 +61,11 @@ Taşı, Kopyala, Döndür, Ölçekle, Aynala ve Hizala ayrı noktaları nesneyle
 `cad.annotations.scales` (anlamsal, tek geri alma adımı): `make` (Ölçekli yap; kendi ölçeği projenin çizim ölçeği, `scales`
 eklenir; ölçekli nesnede yalnız ölçekleri ekler), `unmake`, `add`, `remove` (kendi ölçeği kaldırılmaz: `own_scale`), `set` (`scale`'de
 `point`, `rotation`, `offset`, `textShift`; kendi ölçeği `own_scale`, katılmadığı ölçek `scale_not_taken`, türün almadığı değer
-`invalid_annotative`), `reset` (verilen ya da bütün öbür ölçeklerde ayrı değer kalmaz). Olamayan ya da (make dışında) ölçekli olmayan
+`invalid_annotative`), `reset` (verilen ya da bütün diğer ölçeklerde ayrı değer kalmaz). Olamayan ya da (make dışında) ölçekli olmayan
 nesne `not_annotative` uyarısıyla atlanır, hiçbiri kalmazsa ret; kilitli katmandakiler `layer_locked` uyarısıyla. Python
 `kentos.cad.annotations.scales`, MCP aracı katalogdan (yıkıcı listede: ölçekleri kaldırır).
 
-Masaüstünde Öznitelikler'in **Ölçekli** (Evet/Hayır), **Kendi ölçeği**, **Öbür ölçekler** (yazılarak eklenir ve kaldırılır, tek adım;
+Masaüstünde Öznitelikler'in **Ölçekli** (Evet/Hayır), **Kendi ölçeği**, **Diğer ölçekler** (yazılarak eklenir ve kaldırılır, tek adım;
 ayrı değeri olan ölçek yıldızlı) ve **Ayrı değerler** › Sıfırla satırları; CAD › Açıklama'nın **Ölçek** paneli: Ölçekli yap, Ölçekteki
 yeri, Ölçeği sıfırla, Ölçekliliği kaldır. **Ölçekteki yeri** aracı ölçekli nesneye tıklanınca, Ölçek (Ö) ile seçilen ölçekte yeni yerin
 tıklanmasını bekler (ölçüde çizginin geçeceği yer) ve önizlemesi o ölçeğin temsilidir.
@@ -87,7 +87,7 @@ Pafta çekirdeğinde kâğıt üstünde ölçü öğesi yoktur; bu karar kuralı
 
 ## Sonuçlar
 
-- Bir yazı, ölçü ya da kılavuz 1:50 ve 1:100 paftada aynı kâğıt yüksekliğinde basılır; bir ölçekteki yeri öbürünü bozmaz.
+- Bir yazı, ölçü ya da kılavuz 1:50 ve 1:100 paftada aynı kâğıt yüksekliğinde basılır; bir ölçekteki yeri diğerini bozmaz.
 - Çizim ölçeği değişince ölçekli nesne yeni ölçekte kendisi olur; eski ölçeği kaybolmaz.
 - Eski çizimler değişmez; ölçekli yapmak açık bir adımdır.
 - Çizim alanı yalnız nesnenin kendi ölçeğini gösterir; başka ölçeğin temsili pafta kipinde ve Ölçekteki yeri'nin önizlemesinde görülür.
