@@ -75,6 +75,15 @@ impl Params {
         self.0.iter().find(|(k, _)| k == name).map(|(_, v)| v)
     }
 
+    /// These values with `name` set to `value`, in the names' order (the contract's map keeps them sorted).
+    pub fn with(&self, name: &str, value: ParamValue) -> Params {
+        let mut list: Vec<(String, ParamValue)> =
+            self.0.iter().filter(|(k, _)| k != name).cloned().collect();
+        list.push((name.to_owned(), value));
+        list.sort_by(|a, b| a.0.cmp(&b.0));
+        Params(list)
+    }
+
     /// The values as one text, a variant's key: the same values give the same text.
     pub fn key(&self) -> String {
         let mut out = String::new();
@@ -89,7 +98,9 @@ impl Params {
                     out.push_str(t);
                     out.push('"');
                 }
-                ParamValue::Point(q) => out.push_str(&format!("{:x},{:x}", q.x.to_bits(), q.y.to_bits())),
+                ParamValue::Point(q) => {
+                    out.push_str(&format!("{:x},{:x}", q.x.to_bits(), q.y.to_bits()))
+                }
             }
             out.push(';');
         }

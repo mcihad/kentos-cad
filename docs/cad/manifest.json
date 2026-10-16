@@ -473,6 +473,22 @@
    "tests": 0
   },
   {
+   "id": "block.freeze",
+   "kind": "command",
+   "title": "Sabit bloğa çevir",
+   "level": "semantic",
+   "via": [
+    "cad.blocks.freeze"
+   ],
+   "operation": null,
+   "python": "kentos.cad.blocks.freeze",
+   "mcp": "cad.blocks.freeze",
+   "note": "Dinamik bloğun yerleştirmeleri düz bloklara (ADR 0319 §4); vekil görünüş cad.blocks.proxy.",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "block.import",
    "kind": "command",
    "title": "Blokları al",

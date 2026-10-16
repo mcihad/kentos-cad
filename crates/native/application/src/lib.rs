@@ -49,6 +49,9 @@ pub mod blocks_define;
 pub mod blocks_edit;
 pub mod blocks_insert;
 pub mod block_params;
+pub mod block_variants;
+pub mod blocks_freeze;
+pub mod blocks_proxy;
 pub mod blocks_query;
 pub mod blocks_replace;
 pub mod blocks_sync;
@@ -494,6 +497,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_BLOCKS_PARAMETERS,
         kentos_contracts::CAD_BLOCKS_PARAMETERS_VERSION,
+    ),
+    // What an insert draws, and a dynamic block's inserts made plain ([`block_variants`], docs/adr/0319 §4).
+    (
+        kentos_contracts::CAD_BLOCKS_PROXY,
+        kentos_contracts::CAD_BLOCKS_PROXY_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_BLOCKS_FREEZE,
+        kentos_contracts::CAD_BLOCKS_FREEZE_VERSION,
     ),
     // The project's style library and a change's reach ([`library_edit`], [`styles_impact`], docs/adr/0314).
     (

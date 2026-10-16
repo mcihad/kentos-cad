@@ -24,6 +24,7 @@ mod inserts;
 pub mod labels;
 pub mod legible;
 pub mod overview;
+mod param_grips;
 mod pack;
 pub mod pick;
 pub mod placing;

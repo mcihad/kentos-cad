@@ -20,6 +20,7 @@ use super::{Event, Field, Spot};
 pub(crate) mod attachments;
 pub(crate) mod cloud;
 mod dimension;
+pub(crate) mod params;
 pub(crate) mod raster;
 
 use crate::app::Message;
@@ -1491,6 +1492,17 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             .unwrap_or_default(),
         _ => Vec::new(),
     };
+    // A dynamic block's parameters (docs/adr/0319 §3).
+    if let Entity::Insert(i) = e {
+        let rows = params::rows(doc, slot, i, locked);
+        if !rows.is_empty() {
+            sections.push(Section {
+                id: "blockParams",
+                title: "Blok parametreleri".into(),
+                rows,
+            });
+        }
+    }
     if !tags.is_empty() {
         sections.push(Section {
             id: "blockAttrs",

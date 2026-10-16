@@ -178,9 +178,14 @@ Liste:
 - [ ] `CAD-BLOCK-13`, `14`, `15`, `16` dinamik bloklar ve KentOS blok kitaplığı (ADR 0318, 16 Ekim): web'de gerekenler: `.kcad`
   şema 59'un tanım `dynamic`'i ve yerleştirme `parameters`'ı (web'in kopyası 55'te), deponun ve stilli çizimin varyantları (çekirdeğin
   `block_dynamic`'i WASM'la; yerleştirmenin değerleri depoya), `cad.blocks.parameters`'ın ve `cad.blocks.edit` `dynamic`'inin TS
-  işleyicileri, Blok ekle'nin değerleri, KentOS blok kitaplığı komutu. Masaüstünde de açık: parametrelerin tutamaçları ve
-  Öznitelikler'deki satırları (CAD-BLOCK-17, 18), parametre noktalarının eylemlerle zincirlenmesi, DXF'e değerli yerleştirmenin
-  varyantı (CAD-BLOCK-20).
+  işleyicileri, Blok ekle'nin değerleri, KentOS blok kitaplığı komutu. Masaüstünde de açık: parametre noktalarının taşıma ve
+  döndürme eylemleriyle zincirlenmesi (tutamaçlar yalnız çevirmelerin aynasını izler, ADR 0319).
+- [ ] `CAD-BLOCK-17`, `18`, `19`, `20` dinamik bloğun tutamaçları, değerleri, vekil görünüşü ve DXF'i (ADR 0319, 16 Ekim): web'de
+  gerekenler: seçim aracının parametre tutamaçları (çekirdeğin `Store::param_grips`, `param_value`, `varied_outlines`'ı WASM'la) ve
+  çizimi, Öznitelikler'in Blok parametreleri bölümü, `cad.blocks.proxy`'nin ve `cad.blocks.freeze`'in TS işleyicileri, Sabit bloğa
+  çevir komutu, DXF'e değerli yerleştirmenin varyantı (`plain_for_export`'un TS karşılığı; WASM'ın `WriteInput`'u `notes`'u
+  okumuyor). Masaüstünde de açık: AutoCAD'in dinamik blok verisinin (`AcDbDynamicBlockGUID`, `ACAD_ENHANCEDBLOCK`) gerçek bir dosya
+  korpusuyla sınanması; sahibin örnek DXF/DWG dosyalarını bekler (plan/cad.md `CAD-BLOCK-20`).
 - [ ] `CAD-BLOCK-08`, `09`, `10`, `12` öznitelik seçenekleri, eşitleme, değiştirme, sorgu ve kartlar (ADR 0317, 16 Ekim): web'de
   gerekenler: `.kcad` şema 58'in öznitelik seçenekleri, `attributePlaces`'i ve bloğun `card`'ı (web'in kopyası 55'te); deponun ve
   stilli çizimin seçeneklere göre öznitelik yazısı (görünmez, sabit, taşınmış yer, çok satırlı kutu); `cad.blocks.edit`'in `sync`,

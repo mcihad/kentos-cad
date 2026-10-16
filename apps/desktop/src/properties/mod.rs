@@ -85,6 +85,10 @@ pub enum Event {
     InsertBlock(Slot, BlockId),
     /// Aynalı ▾ of an insert.
     InsertMirror(Slot, bool),
+    /// A dynamic block's insert's value chosen (docs/adr/0319 §3): a flip, a visibility state, a lookup row.
+    Parameter(Slot, String, kentos_contracts::ParamValue),
+    /// Değerler ▾ › Hepsini varsayılana döndür.
+    ParametersReset(Slot),
     /// Kaynak ▾'s Göm of a linked picture: its file read and kept in the
     /// project's library, the picture embedded (docs/adr/0192 §2).
     EmbedImage(Slot),
@@ -142,6 +146,8 @@ pub enum Field {
     TextAngle(Slot),
     /// An attribute, by its key.
     Attribute(Slot, String),
+    /// A dynamic block's insert's typed value, by its parameter's name (docs/adr/0319 §3).
+    Parameter(Slot, String),
     /// An attribute of several objects, by its key (Ortak öznitelikler, docs/adr/0286).
     Attributes(Vec<Slot>, String),
     /// A line's start or end elevation, or every vertex's of a polyline or an
@@ -611,6 +617,13 @@ impl App {
             },
             Event::EmbedImage(slot) => crate::pictures::embed(model, slot, folder.as_deref()),
             Event::EmbedRaster(slot) => crate::rasters::embed(model, slot, folder.as_deref()),
+            Event::Parameter(slot, name, value) => properties::set_parameters(
+                model,
+                slot,
+                Some(BTreeMap::from([(name, value)])),
+                None,
+            ),
+            Event::ParametersReset(slot) => properties::set_parameters(model, slot, None, None),
             Event::InsertMirror(slot, mirror) => match model.get(slot) {
                 Some(Entity::Insert(i)) => {
                     let mut i = i.clone();
@@ -875,6 +888,34 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         input.attrs = Some(BTreeMap::from([(key.clone(), Some(text.to_owned()))]));
         return properties::set_properties(model, input);
     }
+    if let Field::Parameter(slot, name) = field {
+        let Some(Entity::Insert(i)) = model.get(*slot) else {
+            return Vec::new();
+        };
+        let Some(p) = model
+            .block(i.block)
+            .and_then(|b| b.dynamic.as_ref())
+            .and_then(|d| d.parameters.iter().find(|p| p.name() == name))
+        else {
+            return Vec::new();
+        };
+        let Some(value) = rows::params::typed(p, text) else {
+            return vec![format!(
+                "“{name}” için {} yazın.",
+                match p {
+                    kentos_contracts::BlockParameter::Angle { .. } => "derece olarak bir açı",
+                    kentos_contracts::BlockParameter::Linear { .. } => "bir sayı",
+                    _ => "“doğu, kuzey” olarak iki sayı",
+                }
+            )];
+        };
+        return properties::set_parameters(
+            model,
+            *slot,
+            Some(BTreeMap::from([(name.clone(), value)])),
+            None,
+        );
+    }
     if let Field::Attribute(slot, key) = field {
         let Some(base) = model.get(*slot).map(Entity::base) else {
             return Vec::new();
@@ -928,6 +969,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::LeaderTurn(_)
         | Field::LeaderArrowSize(_)
         | Field::Attributes(..)
+        | Field::Parameter(..)
         | Field::DimensionZa(_)
         | Field::DimensionZb(_) => return Vec::new(),
     };

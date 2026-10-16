@@ -4747,6 +4747,56 @@ class BlocksEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class BlocksFreeze(_Model):
+    """Input of `cad.blocks.freeze` v1, one undo step “Sabit bloğa çevir”.
+    Attributes:
+        uids: The inserts, by persistent id; each of a dynamic block.
+        name: The new blocks' name: the first variant's, the next ones' with “ 2”, “ 3” …; absent: the block's name and
+            “(sabit)”, “(sabit 2)” … past the names taken.
+    """
+    uids: list[str]
+    expected_revision: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.name is not UNSET:
+            out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksFreeze:
+        return cls(
+            uids=list(data["uids"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            name=data.get("name", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksFrozen(_Model):
+    """Output of `cad.blocks.freeze` v1: a new block for each distinct block and values, in the order first given."""
+    blocks: list[FrozenBlock]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["blocks"] = [e0.to_json() for e0 in self.blocks]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksFrozen:
+        return cls(
+            blocks=[FrozenBlock.from_json(e0) for e0 in data["blocks"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class BlocksInsert(_Model):
     """Input of `cad.blocks.insert` v1 (docs/adr/0315 §4): an insert of a block, named by its id or its name, at `at`
     on `layerId`. Everything it depends on is here (TODOS.md CMD-07): Blok ekle gives the active layer, the current
@@ -4940,6 +4990,43 @@ class BlocksParametersOut(_Model):
             inserts=[InsertParameters.from_json(e0) for e0 in data["inserts"]],
             changed=list(data["changed"]),
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksProxied(_Model):
+    """Output of `cad.blocks.proxy` v1, the inserts in the order given."""
+    inserts: list[InsertProxy]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["inserts"] = [e0.to_json() for e0 in self.inserts]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksProxied:
+        return cls(
+            inserts=[InsertProxy.from_json(e0) for e0 in data["inserts"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksProxy(_Model):
+    """Input of `cad.blocks.proxy` v1: the inserts whose drawn objects are asked for.
+    Attributes:
+        uids: The inserts, by persistent id; a plain block's draws its definition.
+    """
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksProxy:
+        return cls(
+            uids=list(data["uids"]),
         )
 
 
@@ -10421,6 +10508,39 @@ class FoundSnap(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FrozenBlock(_Model):
+    """A plain block made of a variant.
+    Attributes:
+        from_: The dynamic block it was made of, and the values that drew it (every parameter's).
+        inserts: The inserts now its, by persistent id, in the order given.
+    """
+    block: str
+    name: str
+    from_: str
+    values: dict[str, ParamValue]
+    inserts: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["block"] = self.block
+        out["name"] = self.name
+        out["from"] = self.from_
+        out["values"] = dict(self.values)
+        out["inserts"] = list(self.inserts)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FrozenBlock:
+        return cls(
+            block=data["block"],
+            name=data["name"],
+            from_=data["from"],
+            values=dict(data["values"]),
+            inserts=list(data["inserts"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class GeographicDefinition(_Model):
     """Latitude and longitude on a datum.
     Attributes:
@@ -11372,6 +11492,41 @@ class InsertParameters(_Model):
             uid=data["uid"],
             block=data["block"],
             values=dict(data["values"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class InsertProxy(_Model):
+    """One insert's drawn objects.
+    Attributes:
+        default: Whether it draws its definition as it is: a plain block, or every value its default.
+        values: Every parameter's value (`cad.blocks.parameters`' `get`); empty for a plain block.
+        entities: Its definition's objects as its values draw them, in the definition's coordinates and order, a hidden state's
+            left out, an array's copies after the objects with local ids of their own; a nested insert stays an insert.
+    """
+    uid: str
+    block: str
+    default: bool
+    values: dict[str, ParamValue]
+    entities: list[Entity]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["block"] = self.block
+        out["default"] = self.default
+        out["values"] = dict(self.values)
+        out["entities"] = [e0.to_json() for e0 in self.entities]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> InsertProxy:
+        return cls(
+            uid=data["uid"],
+            block=data["block"],
+            default=data["default"],
+            values=dict(data["values"]),
+            entities=[Entity.from_json(e0) for e0 in data["entities"]],
         )
 
 
@@ -26895,10 +27050,14 @@ __all__ = [
     "BlocksEdit",
     "BlocksEditPlan",
     "BlocksEdited",
+    "BlocksFreeze",
+    "BlocksFrozen",
     "BlocksInsert",
     "BlocksInsertPlan",
     "BlocksParameters",
     "BlocksParametersOut",
+    "BlocksProxied",
+    "BlocksProxy",
     "BlocksQueried",
     "BlocksQuery",
     "BlocksReplace",
@@ -27113,6 +27272,7 @@ __all__ = [
     "FlipBlockParameter",
     "FoundSnap",
     "FrameUcsTo",
+    "FrozenBlock",
     "GeographicCrsSystem",
     "GeographicDefinition",
     "GradientShape",
@@ -27148,6 +27308,7 @@ __all__ = [
     "InsertEntityGeometry",
     "InsertKnotCurveEdit",
     "InsertParameters",
+    "InsertProxy",
     "InvertSelectRegion",
     "InvitationChange",
     "InvitationRevoke",

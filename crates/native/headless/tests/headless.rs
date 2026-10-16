@@ -866,7 +866,10 @@ fn a_block_is_written_to_a_file_and_read_into_another_drawing() {
             json!({ "path": q, "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d9999"] }),
             "entity_not_found",
         ),
-        (json!({ "path": "kare.kcad", "block": block }), "invalid_file_path"),
+        (
+            json!({ "path": "kare.kcad", "block": block }),
+            "invalid_file_path",
+        ),
     ] {
         let answer = s
             .call(json!({ "command": "file.export.block", "input": input }))
@@ -874,4 +877,69 @@ fn a_block_is_written_to_a_file_and_read_into_another_drawing() {
         assert_eq!(answer["error"]["code"], code, "{answer}");
     }
     assert!(!std::path::Path::new(&q).exists());
+}
+
+#[test]
+fn a_varied_dynamic_insert_goes_to_dxf_as_the_block_it_draws() {
+    // DXF has no place for KentOS's parameters (docs/adr/0319 §5): an insert of the library's door 1.2 m wide and
+    // left-handed is written as a plain block “Kapı V1” of what it draws; one at its defaults places “Kapı” as it is;
+    // the report says the parameters were not written.
+    let dir = scratch("dynamic-dxf");
+    let mut s = new_drawing();
+    let layer = s.summary()["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
+    let library = s
+        .call(json!({ "command": "cad.blocks.edit", "input": { "operation": "import", "name": "kentos-temel" } }))
+        .expect("answers");
+    assert_eq!(library["status"], "completed", "{library}");
+    for (x, values) in [
+        (423500.0, json!({ "Genişlik": 1.2, "Sol el": true })),
+        (423505.0, json!({})),
+        (423510.0, json!({ "Genişlik": 1.2, "Sol el": true })),
+    ] {
+        let placed = s
+            .call(json!({ "command": "cad.blocks.insert", "input": {
+                "name": "Kapı", "at": { "x": x, "y": 4512300.0 }, "layerId": layer, "parameters": values } }))
+            .expect("answers");
+        assert_eq!(placed["status"], "completed", "{placed}");
+    }
+    let path = dir.join("kapilar.dxf");
+    let written = s
+        .call(json!({ "command": "file.export.dxf", "input": { "path": path.display().to_string() } }))
+        .expect("answers");
+    assert_eq!(written["status"], "completed", "{written}");
+    let notes = written["output"]["report"]["notes"].to_string();
+    assert!(notes.contains("Dinamik blok"), "{notes}");
+    assert!(notes.contains("“Kapı V1”"), "{notes}");
+    let text = String::from_utf8_lossy(&std::fs::read(&path).expect("written")).into_owned();
+    // Both blocks, the variant once though two inserts place it.
+    assert_eq!(
+        text.matches("  2\r\nKapı V1\r\n").count(),
+        4,
+        "BLOCK, its record and two INSERTs"
+    );
+    assert!(text.contains("  2\r\nKapı\r\n"));
+    // Read back, the variant is a plain block whose leaf reaches 1.2 m from the hinge, to the left.
+    let read = kentos_formats::dxf::read(
+        &std::fs::read(&path).expect("written"),
+        &kentos_contracts::DxfReadOptions::default(),
+    )
+    .expect("reads");
+    let variant = read
+        .blocks
+        .iter()
+        .find(|b| b.name == "Kapı V1")
+        .expect("the variant block");
+    assert!(variant.dynamic.is_none());
+    let min_x = variant
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            kentos_contracts::Entity::Line(l) => Some(l.a.x.min(l.b.x)),
+            _ => None,
+        })
+        .fold(f64::INFINITY, f64::min);
+    assert!((min_x + 1.2).abs() < 1e-9, "{min_x}");
 }

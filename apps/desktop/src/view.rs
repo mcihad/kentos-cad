@@ -691,6 +691,18 @@ impl App {
         ids.iter().map(|id| self.checked(id)).collect()
     }
 
+    /// The selected dynamic blocks' parameter grips (docs/adr/0319 §1), as many objects' as the other grips.
+    fn param_grip_marks(&self) -> Vec<kentos_geometry_core::block_dynamic::ParamGrip> {
+        if self.selection.len() > kentos_interaction::select::GRIP_LIMIT {
+            return Vec::new();
+        }
+        self.spatial
+            .param_grips(self.selection.ids())
+            .into_iter()
+            .map(|(_, g)| g)
+            .collect()
+    }
+
     fn drawing_area(&self) -> Element<'_, Message> {
         match &self.document {
             // The open drawing on KentOS's own wgpu pipeline (viewport.rs, docs/adr/0019),
@@ -710,6 +722,7 @@ impl App {
                     snap_note: self.snap_marker_note(),
                     select: self.session.select_box(),
                     grips,
+                    params: self.param_grip_marks(),
                     hot: self.session.hot_grips(),
                     marked: self.marked_points(),
                     found: self.address_mark_label().or_else(|| self.data_mark_label()),
@@ -863,6 +876,7 @@ impl App {
             snap_note: None,
             select: None,
             grips,
+            params: self.param_grip_marks(),
             hot: self.session.hot_grips(),
             marked: self.marked_points(),
             found: self.address_mark_label().or_else(|| self.data_mark_label()),

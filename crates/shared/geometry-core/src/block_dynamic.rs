@@ -7,7 +7,7 @@ use crate::api::json::{FromJson, Json};
 use crate::entity::{Entity, ParamValue, Params};
 use crate::geom::affine::{Affine, compose, translation};
 use crate::geometry::Bounds;
-use crate::jsmath::{atan2, cos, js_hypot, js_max, sin};
+use crate::jsmath::{atan2, cos, js_hypot, js_max, js_round, sin};
 use crate::ops::stretch::stretch_entity;
 use crate::ops::transform::transform_shape;
 use crate::vec2::Vec2;
@@ -19,16 +19,19 @@ pub enum Parameter {
         name: String,
         from: Vec2,
         to: Vec2,
+        rule: Rule,
     },
     Polar {
         name: String,
         from: Vec2,
         to: Vec2,
+        rule: Rule,
     },
     Angle {
         name: String,
         center: Vec2,
         base: f64,
+        rule: Rule,
     },
     Point {
         name: String,
@@ -77,6 +80,98 @@ impl Parameter {
             Parameter::Lookup { .. } => return None,
         })
     }
+}
+
+/// A number parameter's rule as its grip keeps it (the contract's `NumberRule`): the values within `min` and `max`,
+/// on `step`s from `min` (from 0 without one), one of `list`; a parameter its expression computes has no grip.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct Rule {
+    pub min: Option<f64>,
+    pub max: Option<f64>,
+    pub step: Option<f64>,
+    pub list: Vec<f64>,
+    pub derived: bool,
+}
+
+impl Rule {
+    fn read(p: &Json) -> Rule {
+        let r = p.get("rule");
+        Rule {
+            min: number(r, "min"),
+            max: number(r, "max"),
+            step: number(r, "step").filter(|s| *s > 0.0),
+            list: match r.get("list") {
+                Json::Arr(xs) => xs
+                    .iter()
+                    .filter_map(|x| match x {
+                        Json::Num(n) => Some(*n),
+                        _ => None,
+                    })
+                    .collect(),
+                _ => Vec::new(),
+            },
+            derived: matches!(r.get("expression"), Json::Str(_)),
+        }
+    }
+
+    /// The rule's value nearest `v` (docs/adr/0319 §1): the nearest of the list (the first of two as near); else `v`
+    /// within `min` and `max`, on the nearest step, a step back inside when that one falls out.
+    pub fn nearest(&self, v: f64) -> f64 {
+        if !self.list.is_empty() {
+            let mut best = self.list[0];
+            for &x in &self.list[1..] {
+                if (x - v).abs() < (best - v).abs() {
+                    best = x;
+                }
+            }
+            return best;
+        }
+        let mut x = v;
+        if let Some(max) = self.max
+            && x > max
+        {
+            x = max;
+        }
+        if let Some(min) = self.min
+            && x < min
+        {
+            x = min;
+        }
+        if let Some(step) = self.step {
+            let from = self.min.unwrap_or(0.0);
+            x = from + js_round((x - from) / step) * step;
+            if self.max.is_some_and(|max| x > max) {
+                x -= step;
+            }
+            if self.min.is_some_and(|min| x < min) {
+                x += step;
+            }
+        }
+        x
+    }
+}
+
+/// What a parameter's grip does (docs/adr/0319 §1): a linear's slides along its line, a polar's and a point's go
+/// anywhere, an angle's turns about its centre, a flip's is clicked.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GripKind {
+    Linear,
+    Polar,
+    Angle,
+    Point,
+    Flip,
+}
+
+/// A parameter's grip in the definition's coordinates, where the insert's values put it; `from` the point it is
+/// measured from (a linear's and a polar's start, an angle's centre), for the dashed line its tag draws.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ParamGrip {
+    pub name: String,
+    pub kind: GripKind,
+    pub at: Vec2,
+    pub from: Option<Vec2>,
+    /// The direction a linear grip slides in (unit), for its arrow.
+    pub along: Option<Vec2>,
 }
 
 /// What an action does to its objects.
@@ -148,33 +243,51 @@ impl Dynamic {
                 let Some(name) = text(p, "name") else {
                     continue;
                 };
-                let read = match text(p, "kind").as_deref() {
-                    Some("linear") => point(p, "from")
-                        .zip(point(p, "to"))
-                        .map(|(from, to)| Parameter::Linear { name, from, to }),
-                    Some("polar") => point(p, "from")
-                        .zip(point(p, "to"))
-                        .map(|(from, to)| Parameter::Polar { name, from, to }),
-                    Some("angle") => point(p, "center")
-                        .zip(number(p, "base"))
-                        .map(|(center, base)| Parameter::Angle { name, center, base }),
-                    Some("point") => point(p, "at").map(|at| Parameter::Point { name, at }),
-                    Some("flip") => point(p, "a")
-                        .zip(point(p, "b"))
-                        .map(|(a, b)| Parameter::Flip { name, a, b }),
-                    Some("visibility") => match p.get("states") {
-                        Json::Arr(states) => Some(Parameter::Visibility {
-                            name,
-                            states: states
-                                .iter()
-                                .filter_map(|s| Some((text(s, "name")?, ids(s.get("hidden")))))
-                                .collect(),
+                let read =
+                    match text(p, "kind").as_deref() {
+                        Some("linear") => point(p, "from").zip(point(p, "to")).map(|(from, to)| {
+                            Parameter::Linear {
+                                name,
+                                from,
+                                to,
+                                rule: Rule::read(p),
+                            }
                         }),
+                        Some("polar") => point(p, "from").zip(point(p, "to")).map(|(from, to)| {
+                            Parameter::Polar {
+                                name,
+                                from,
+                                to,
+                                rule: Rule::read(p),
+                            }
+                        }),
+                        Some("angle") => {
+                            point(p, "center")
+                                .zip(number(p, "base"))
+                                .map(|(center, base)| Parameter::Angle {
+                                    name,
+                                    center,
+                                    base,
+                                    rule: Rule::read(p),
+                                })
+                        }
+                        Some("point") => point(p, "at").map(|at| Parameter::Point { name, at }),
+                        Some("flip") => point(p, "a")
+                            .zip(point(p, "b"))
+                            .map(|(a, b)| Parameter::Flip { name, a, b }),
+                        Some("visibility") => match p.get("states") {
+                            Json::Arr(states) => Some(Parameter::Visibility {
+                                name,
+                                states: states
+                                    .iter()
+                                    .filter_map(|s| Some((text(s, "name")?, ids(s.get("hidden")))))
+                                    .collect(),
+                            }),
+                            _ => None,
+                        },
+                        Some("lookup") => Some(Parameter::Lookup { name }),
                         _ => None,
-                    },
-                    Some("lookup") => Some(Parameter::Lookup { name }),
-                    _ => None,
-                };
+                    };
                 d.parameters.extend(read);
             }
         }
@@ -230,9 +343,197 @@ impl Dynamic {
         })
     }
 
+    /// The grips of the parameters a hand sets (docs/adr/0319 §1), in the definition's order, where the values put
+    /// them: a linear's at its length along its line, a polar's and a point's at their point, an angle's `reach` from
+    /// its centre, a flip's in the middle of its line. A visibility state and a lookup row are chosen from a list, a
+    /// parameter its expression computes is not set: they have none.
+    pub fn grips(&self, values: Option<&Params>, reach: f64) -> Vec<ParamGrip> {
+        let mirror = self.mirror(values);
+        let mut out = Vec::new();
+        for p in &self.parameters {
+            let value = self.value(p, values);
+            let grip = match (p, value) {
+                (
+                    Parameter::Linear {
+                        name,
+                        from,
+                        to,
+                        rule,
+                    },
+                    Some(ParamValue::Number(now)),
+                ) if !rule.derived => {
+                    let len = dist(*from, *to);
+                    if len == 0.0 {
+                        continue;
+                    }
+                    let u = Vec2::new((to.x - from.x) / len, (to.y - from.y) / len);
+                    ParamGrip {
+                        name: name.clone(),
+                        kind: GripKind::Linear,
+                        at: Vec2::new(from.x + u.x * now, from.y + u.y * now),
+                        from: Some(*from),
+                        along: Some(u),
+                    }
+                }
+                (
+                    Parameter::Polar {
+                        name, from, rule, ..
+                    },
+                    Some(ParamValue::Point(q)),
+                ) if !rule.derived => ParamGrip {
+                    name: name.clone(),
+                    kind: GripKind::Polar,
+                    at: q,
+                    from: Some(*from),
+                    along: None,
+                },
+                (
+                    Parameter::Angle {
+                        name, center, rule, ..
+                    },
+                    Some(ParamValue::Number(a)),
+                ) if !rule.derived => ParamGrip {
+                    name: name.clone(),
+                    kind: GripKind::Angle,
+                    at: Vec2::new(center.x + reach * cos(a), center.y + reach * sin(a)),
+                    from: Some(*center),
+                    along: None,
+                },
+                (Parameter::Point { name, .. }, Some(ParamValue::Point(q))) => ParamGrip {
+                    name: name.clone(),
+                    kind: GripKind::Point,
+                    at: q,
+                    from: None,
+                    along: None,
+                },
+                (Parameter::Flip { name, a, b }, _) => ParamGrip {
+                    name: name.clone(),
+                    kind: GripKind::Flip,
+                    at: Vec2::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0),
+                    from: None,
+                    along: None,
+                },
+                _ => continue,
+            };
+            // A flip that is on mirrors what the other grips measure: they stand where the objects went.
+            let grip = match (&mirror, grip.kind) {
+                (Some(m), kind) if kind != GripKind::Flip => ParamGrip {
+                    at: crate::geom::affine::apply(m, grip.at),
+                    from: grip.from.map(|f| crate::geom::affine::apply(m, f)),
+                    along: grip.along.map(|u| crate::geom::affine::apply_linear(m, u)),
+                    ..grip
+                },
+                _ => grip,
+            };
+            out.push(grip);
+        }
+        out
+    }
+
+    /// The flips that are on, one after another in the actions' order (docs/adr/0319 §1): what the grips stand
+    /// in; none when no flip is on.
+    fn mirror(&self, values: Option<&Params>) -> Option<Affine> {
+        let mut m: Option<Affine> = None;
+        for action in &self.actions {
+            let (Act::Flip, Some(p @ Parameter::Flip { a, b, .. })) =
+                (&action.act, self.parameter(&action.parameter))
+            else {
+                continue;
+            };
+            if self.value(p, values) != Some(ParamValue::Flag(true)) {
+                continue;
+            }
+            let r = reflection(*a, *b);
+            m = Some(match m {
+                Some(m) => compose(&r, &m),
+                None => r,
+            });
+        }
+        m
+    }
+
+    /// The flips that are on undone: a point where a grip stands back in the definition's coordinates.
+    fn unmirror(&self, values: Option<&Params>, at: Vec2) -> Vec2 {
+        let mut flips: Vec<Affine> = Vec::new();
+        for action in &self.actions {
+            if let (Act::Flip, Some(p @ Parameter::Flip { a, b, .. })) =
+                (&action.act, self.parameter(&action.parameter))
+                && self.value(p, values) == Some(ParamValue::Flag(true))
+            {
+                flips.push(reflection(*a, *b));
+            }
+        }
+        flips
+            .iter()
+            .rev()
+            .fold(at, |q, r| crate::geom::affine::apply(r, q))
+    }
+
+    /// The value parameter `name` takes with its grip at `at` (the definition's coordinates; docs/adr/0319 §1), its
+    /// rule kept: a linear's length along its line (none at or behind its start), a polar's point at the rule's
+    /// distance in that direction (none on its start), an angle's turn toward `at` (the turn nearest its default,
+    /// none on its centre), a point's `at`. None for the other kinds, and for a parameter its expression computes.
+    pub fn value_at(&self, name: &str, at: Vec2, values: Option<&Params>) -> Option<ParamValue> {
+        let at = self.unmirror(values, at);
+        match self.parameter(name)? {
+            Parameter::Linear { from, to, rule, .. } if !rule.derived => {
+                let len = dist(*from, *to);
+                if len == 0.0 {
+                    return None;
+                }
+                let t =
+                    ((at.x - from.x) * (to.x - from.x) + (at.y - from.y) * (to.y - from.y)) / len;
+                let v = rule.nearest(t);
+                (v > 0.0 && v.is_finite()).then_some(ParamValue::Number(v))
+            }
+            Parameter::Polar { from, rule, .. } if !rule.derived => {
+                let d = dist(*from, at);
+                if !(d > 0.0) {
+                    return None;
+                }
+                let k = rule.nearest(d) / d;
+                (k > 0.0 && k.is_finite()).then(|| {
+                    ParamValue::Point(Vec2::new(
+                        from.x + (at.x - from.x) * k,
+                        from.y + (at.y - from.y) * k,
+                    ))
+                })
+            }
+            Parameter::Angle {
+                center, base, rule, ..
+            } if !rule.derived => {
+                if at.x == center.x && at.y == center.y {
+                    return None;
+                }
+                let a = atan2(at.y - center.y, at.x - center.x);
+                // The turn nearest the default: within half a turn of it.
+                let tau = 2.0 * std::f64::consts::PI;
+                let mut a = a - js_round((a - base) / tau) * tau;
+                a = rule.nearest(a);
+                a.is_finite().then_some(ParamValue::Number(a))
+            }
+            Parameter::Point { .. } => Some(ParamValue::Point(at)),
+            _ => None,
+        }
+    }
+
     /// The definition's objects as the values draw them (docs/adr/0318 §2).
     pub fn vary(&self, entities: &[Entity], values: Option<&Params>) -> Vec<Entity> {
+        self.vary_traced(entities, values)
+            .into_iter()
+            .map(|(e, _)| e)
+            .collect()
+    }
+
+    /// [`Dynamic::vary`] with each object's source: the index in `entities` of the object it is, or an array's copy
+    /// was made of (docs/adr/0319 §4: a variant written as a plain block keeps its objects' other fields).
+    pub fn vary_traced(
+        &self,
+        entities: &[Entity],
+        values: Option<&Params>,
+    ) -> Vec<(Entity, usize)> {
         let mut out: Vec<Entity> = entities.to_vec();
+        let mut sources: Vec<usize> = (0..out.len()).collect();
         let mut next_id = out
             .iter()
             .filter_map(local_id)
@@ -301,17 +602,22 @@ impl Dynamic {
                     let held = |x: f64| ((x / spacing) + 1e-9).floor();
                     let n = (held(now) - held(len) + 1.0).clamp(1.0, 1000.0) as u32;
                     let (ux, uy) = ((to.x - from.x) / len, (to.y - from.y) / len);
-                    let originals: Vec<Entity> =
-                        out.iter().filter(|e| chosen(e)).cloned().collect();
+                    let originals: Vec<(Entity, usize)> = out
+                        .iter()
+                        .zip(&sources)
+                        .filter(|(e, _)| chosen(e))
+                        .map(|(e, s)| (e.clone(), *s))
+                        .collect();
                     for k in 1..n {
                         let shift =
                             translation(ux * spacing * f64::from(k), uy * spacing * f64::from(k));
-                        for e in &originals {
+                        for (e, source) in &originals {
                             let mut copy = e.clone();
                             copy.shape = transform_shape(&e.shape, &shift);
                             set_local_id(&mut copy, next_id);
                             next_id = next_id.saturating_add(1);
                             out.push(copy);
+                            sources.push(*source);
                         }
                     }
                 }
@@ -350,10 +656,17 @@ impl Dynamic {
                 && let Some(ParamValue::Text(state)) = self.value(p, values)
                 && let Some((_, hidden)) = states.iter().find(|(n, _)| *n == state)
             {
-                out.retain(|e| local_id(e).is_none_or(|id| !hidden.contains(&id)));
+                let kept: Vec<bool> = out
+                    .iter()
+                    .map(|e| local_id(e).is_none_or(|id| !hidden.contains(&id)))
+                    .collect();
+                let mut k = kept.iter();
+                out.retain(|_| *k.next().unwrap_or(&true));
+                let mut k = kept.iter();
+                sources.retain(|_| *k.next().unwrap_or(&true));
             }
         }
-        out
+        out.into_iter().zip(sources).collect()
     }
 }
 

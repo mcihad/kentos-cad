@@ -686,6 +686,7 @@ impl<'de> Deserialize<'de> for WriteInput {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<WriteInput, D::Error> {
         let i = Input::deserialize(d)?;
         Ok(WriteInput(DxfWriteInput {
+            notes: Vec::new(),
             entities: i.entities.0,
             layers: i.layers,
             scale: i.scale,

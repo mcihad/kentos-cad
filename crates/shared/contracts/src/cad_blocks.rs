@@ -919,3 +919,99 @@ pub struct BlocksQueried {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rows: Vec<Vec<ScheduleCell>>,
 }
+
+/// What an insert draws, as plain objects (docs/adr/0319 §4): a reader that does not know dynamic blocks, a DXF and
+/// Sabit bloğa çevir take this. Nothing is written.
+pub const CAD_BLOCKS_PROXY: &str = "cad.blocks.proxy";
+pub const CAD_BLOCKS_PROXY_VERSION: u32 = 1;
+
+/// Input of `cad.blocks.proxy` v1: the inserts whose drawn objects are asked for.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlocksProxy {
+    /// The inserts, by persistent id; a plain block's draws its definition.
+    pub uids: Vec<String>,
+}
+
+/// One insert's drawn objects.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct InsertProxy {
+    pub uid: String,
+    pub block: BlockId,
+    /// Whether it draws its definition as it is: a plain block, or every value its default.
+    pub default: bool,
+    /// Every parameter's value (`cad.blocks.parameters`' `get`); empty for a plain block.
+    pub values: BTreeMap<String, crate::block_dynamic::ParamValue>,
+    /// Its definition's objects as its values draw them, in the definition's coordinates and order, a hidden state's
+    /// left out, an array's copies after the objects with local ids of their own; a nested insert stays an insert.
+    pub entities: Vec<Entity>,
+}
+
+/// Output of `cad.blocks.proxy` v1, the inserts in the order given.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlocksProxied {
+    pub inserts: Vec<InsertProxy>,
+}
+
+/// A dynamic block's inserts made inserts of plain blocks drawing what they drew (docs/adr/0319 §4).
+pub const CAD_BLOCKS_FREEZE: &str = "cad.blocks.freeze";
+pub const CAD_BLOCKS_FREEZE_VERSION: u32 = 1;
+
+/// Input of `cad.blocks.freeze` v1, one undo step “Sabit bloğa çevir”.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlocksFreeze {
+    /// The inserts, by persistent id; each of a dynamic block.
+    pub uids: Vec<String>,
+    /// The new blocks' name: the first variant's, the next ones' with “ 2”, “ 3” …; absent: the block's name and
+    /// “(sabit)”, “(sabit 2)” … past the names taken.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// A plain block made of a variant.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FrozenBlock {
+    pub block: BlockId,
+    pub name: String,
+    /// The dynamic block it was made of, and the values that drew it (every parameter's).
+    pub from: BlockId,
+    pub values: BTreeMap<String, crate::block_dynamic::ParamValue>,
+    /// The inserts now its, by persistent id, in the order given.
+    pub inserts: Vec<String>,
+}
+
+/// Output of `cad.blocks.freeze` v1: a new block for each distinct block and values, in the order first given.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlocksFrozen {
+    pub blocks: Vec<FrozenBlock>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}

@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""The shared cases of dynamic blocks (docs/adr/0318; plan/cad.md CAD-BLOCK-14, 15, 16).
+"""The shared cases of dynamic blocks (docs/adr/0318, 0319; plan/cad.md CAD-BLOCK-14, 15, 16, 19).
 
     python3 scripts/fixtures/dynamic_block_cases.py           # writes the files
     python3 scripts/fixtures/dynamic_block_cases.py --check   # writes nothing; compares
 
 Writes fixtures/commands/v1/cad.blocks.parameters.json (get, set, reset; Blok ekle's values) and
-cad.blocks.edit.dynamic.json (a definition's parameters and actions, their rules, the inserts' values refitted), with
+cad.blocks.edit.dynamic.json (a definition's parameters and actions, their rules, the inserts' values refitted),
+cad.blocks.proxy.json (what an insert draws as plain objects) and cad.blocks.freeze.json (Sabit bloğa çevir), with
 Python's standard library and no KentOS code. The rules are written here from the ADR on their own:
 
 - an insert keeps only the values that differ from the defaults: a linear's default is the length of its line, an
@@ -652,6 +653,356 @@ bad("ret: ifadenin sonucu kurala uymuyor", lambda dy: dy["parameters"][4]["rule"
     "dynamic.parameters[4].rule.expression", "“Kapı” bloğunun “Kanat” parametresinin ifadesi: ifadenin sonucu 1.8: en büyük değer 1.")
 
 
+# ── cad.blocks.proxy and cad.blocks.freeze (docs/adr/0319 §4) ────────────
+#
+# A variant written out here from the ADR: the actions in order, each moving its objects (local ids) by its
+# parameter's change from the default (move: by the moved point; scale: about the linear's start by now / default;
+# array: copies `spacing` apart along the line, as many more as the length holds more spacings than the default, new
+# local ids past the largest, after the objects; rotate: about the centre by now − base; flip: mirrored in the axis
+# when on); then the visibility state's hidden objects left out. A line moves its ends, a circle its centre (its
+# radius times the factor), an arc its centre and its ends, its angles taken again (a mirror swaps its ends).
+
+TAU = 2 * math.pi
+
+
+def affine_apply(m, p):
+    a, b, c, d, e, f = m
+    return P(a * p["x"] + c * p["y"] + e, b * p["x"] + d * p["y"] + f)
+
+
+def moved(e, m):
+    """`e` with its geometry through the affine `m`."""
+    e = copy.deepcopy(e)
+    a, b, c, d, _, _ = m
+    det = a * d - b * c
+    k = math.sqrt(abs(det))
+    if e["kind"] == "line":
+        e["a"], e["b"] = affine_apply(m, e["a"]), affine_apply(m, e["b"])
+    elif e["kind"] == "circle":
+        e["c"], e["r"] = affine_apply(m, e["c"]), e["r"] * k
+    elif e["kind"] == "arc":
+        c0, r = e["c"], e["r"]
+        start = affine_apply(m, P(c0["x"] + r * math.cos(e["a0"]), c0["y"] + r * math.sin(e["a0"])))
+        end = affine_apply(m, P(c0["x"] + r * math.cos(e["a1"]), c0["y"] + r * math.sin(e["a1"])))
+        cc = affine_apply(m, c0)
+        ang = lambda q: math.atan2(q["y"] - cc["y"], q["x"] - cc["x"]) % TAU
+        e["c"], e["r"] = cc, r * k
+        e["a0"], e["a1"] = (ang(end), ang(start)) if det < 0 else (ang(start), ang(end))
+    else:
+        raise ValueError(e["kind"])
+    return e
+
+
+def change(p, v):
+    if p["kind"] == "linear":
+        length = dist(p["from"], p["to"])
+        t = (v - length) / length
+        return P((p["to"]["x"] - p["from"]["x"]) * t, (p["to"]["y"] - p["from"]["y"]) * t)
+    if p["kind"] in ("polar", "point"):
+        at = p["to"] if p["kind"] == "polar" else p["at"]
+        return P(v["x"] - at["x"], v["y"] - at["y"])
+    return None
+
+
+def vary(block, kept):
+    """The objects an insert keeping `kept` draws (docs/adr/0319 §4)."""
+    dy = block.get("dynamic")
+    out = copy.deepcopy(block["entities"])
+    if dy is None or not kept:
+        return out
+    by_name = {p["name"]: p for p in dy["parameters"]}
+    value = lambda p: kept.get(p["name"], default(p))
+    next_id = max(e["id"] for e in out) + 1
+    for act in dy.get("actions", []):
+        p = by_name[act["parameter"]]
+        v = value(p)
+        chosen = [i for i, e in enumerate(out) if e["id"] in act["pieces"]]
+        if act["kind"] == "move":
+            dd = change(p, v)
+            if dd and (dd["x"] or dd["y"]):
+                for i in chosen:
+                    out[i] = moved(out[i], (1, 0, 0, 1, dd["x"], dd["y"]))
+        elif act["kind"] == "scale":
+            base = dist(p["from"], p["to"])
+            now = v if p["kind"] == "linear" else dist(p["from"], v)
+            k = now / base
+            if k != 1:
+                f = p["from"]
+                for i in chosen:
+                    out[i] = moved(out[i], (k, 0, 0, k, f["x"] * (1 - k), f["y"] * (1 - k)))
+        elif act["kind"] == "array":
+            length = dist(p["from"], p["to"])
+            held = lambda x: math.floor(x / act["spacing"] + 1e-9)
+            n = max(1, min(1000, held(v) - held(length) + 1))
+            ux, uy = (p["to"]["x"] - p["from"]["x"]) / length, (p["to"]["y"] - p["from"]["y"]) / length
+            originals = [out[i] for i in chosen]
+            for k in range(1, n):
+                for e in originals:
+                    copy_ = moved(e, (1, 0, 0, 1, ux * act["spacing"] * k, uy * act["spacing"] * k))
+                    copy_["id"] = next_id
+                    next_id += 1
+                    out.append(copy_)
+        elif act["kind"] == "rotate":
+            turn = v - p["base"]
+            if turn:
+                c, s_ = math.cos(turn), math.sin(turn)
+                o = p["center"]
+                m = (c, s_, -s_, c, o["x"] - c * o["x"] + s_ * o["y"], o["y"] - s_ * o["x"] - c * o["y"])
+                for i in chosen:
+                    out[i] = moved(out[i], m)
+        elif act["kind"] == "flip":
+            if v is True:
+                a, b = p["a"], p["b"]
+                t = 2 * math.atan2(b["y"] - a["y"], b["x"] - a["x"])
+                c, s_ = math.cos(t), math.sin(t)
+                m = (c, s_, s_, -c, a["x"] - c * a["x"] - s_ * a["y"], a["y"] - s_ * a["x"] + c * a["y"])
+                for i in chosen:
+                    out[i] = moved(out[i], m)
+    for p in dy["parameters"]:
+        if p["kind"] == "visibility":
+            state = next(st for st in p["states"] if st["name"] == value(p))
+            out = [e for e in out if e["id"] not in state.get("hidden", [])]
+    return out
+
+
+def block_of(block_id):
+    return next(b for b in BLOCKS if b["id"] == block_id)
+
+
+proxy = []
+WITHIN = 1e-9
+
+
+def proxy_entry(i):
+    e = E(i)
+    b = block_of(e["block"])
+    kept = e.get("parameters", {})
+    values = current(b["dynamic"], kept) if "dynamic" in b else {}
+    return {"uid": uid(i), "block": e["block"], "default": not kept, "values": values, "entities": vary(b, kept)}
+
+
+def proxy_case(name, slots, note=None):
+    case = {"name": name, "steps": [
+        {"op": "execute", "input": {"uids": [uid(i) for i in slots]},
+         "result": done({"inserts": [proxy_entry(i) for i in dict.fromkeys(slots)]}), "within": WITHIN, "expect": NOTHING},
+    ]}
+    if note:
+        case["note"] = note
+    proxy.append(case)
+
+
+def proxy_of(block_id, kept, i=None):
+    """What an insert of `block_id` keeping `kept` draws: a set step's effect checked through the proxy."""
+    b = block_of(block_id)
+    return {"uid": uid(i), "block": block_id, "default": not kept,
+            "values": current(b["dynamic"], kept) if "dynamic" in b else {}, "entities": vary(b, kept)}
+
+
+proxy_case("varsayılan kapı: tanımın nesneleri olduğu gibi", [1])
+proxy_case("genişletilmiş ve çevrilmiş kapı: ölçek, taşıma ve ayna sırayla; yay uçlarıyla yeniden", [2])
+proxy_case("görünürlük durumu: gizlenen yay yok", [3], "Kilitli katmandaki yerleştirme okunur: hiçbir şey yazılmaz.")
+proxy_case("raf varsayılanıyla", [4])
+proxy_case("düz blok: tanımın kendisi, değeri yok", [5])
+proxy_case("üç yerleştirme verildiği sırayla", [5, 2, 1])
+proxy_case("aynı kimlik iki kez: bir kez", [1, 1])
+
+
+def proxy_after_set(name, slot, given, note=None):
+    e = E(slot)
+    b = block_of(e["block"])
+    kept, refusal = resolve(b["dynamic"], e.get("parameters", {}), given)
+    assert refusal is None, refusal
+    case = {"name": name, "steps": [
+        {"op": "execute", "command": "cad.blocks.parameters", "input": {"operation": "set", "uids": [uid(slot)], "values": given},
+         "result": done(out([(slot, e["block"], current(b["dynamic"], kept))], [slot] if kept != e.get("parameters", {}) else [])),
+         "expect": {"entities": {str(slot): with_params(e, kept)}}},
+        {"op": "execute", "input": {"uids": [uid(slot)]},
+         "result": done({"inserts": [proxy_of(e["block"], kept, slot)]}), "within": WITHIN, "expect": {"revision": "same"}},
+    ]}
+    if note:
+        case["note"] = note
+    proxy.append(case)
+
+
+proxy_after_set("en geniş kapı", 1, {"Genişlik": 1.2})
+proxy_after_set("en dar kapı tablonun satırıyla", 1, {"Tip": "Dar"})
+proxy_after_set("çevrilmiş kapı: yay ve kanat aynada, yayın uçları yer değiştirir", 1, {"Yön": True})
+proxy_after_set("sade kapı: yay gizli", 1, {"Görünüş": "Sade"})
+proxy_after_set("sade, geniş ve çevrilmiş kapı", 1, {"Görünüş": "Sade", "Genişlik": 1.1, "Yön": True})
+proxy_after_set("rafın uzunluğu 1,5: dizi bir kopya ekler, yeni yerel kimlikle sonda", 4, {"Uzunluk": 1.5})
+proxy_after_set("rafın uzunluğu 3: dört kopya", 4, {"Uzunluk": 3.0})
+proxy_after_set("raf 0,5: kopya yok", 4, {"Uzunluk": 0.5})
+proxy_after_set("raf dik: çizgi ve daire döner, dizinin kopyası dönmez", 4, {"Uzunluk": 1.5, "Açı": QUARTER},
+                "Dizinin kopyaları sonraki eylemin parçaları arasında değildir (yerel kimlikleri yeni).")
+proxy_after_set("rafın etiketi taşınır", 4, {"Etiket": P(0.25, 0.75)})
+
+
+def proxy_refused(name, inp, result):
+    proxy.append({"name": name, "steps": [{"op": "execute", "input": inp, "result": result, "expect": NOTHING}]})
+
+
+proxy_refused("ret: yerleştirme verilmedi", {"uids": []},
+              failed("no_entities", "Çizdiği nesneler sorulacak yerleştirme verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "uids"))
+proxy_refused("ret: çizimde olmayan nesne", {"uids": [MISSING]},
+              failed("entity_not_found", f"“{MISSING}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.", "uids[0]"))
+proxy_refused("ret: yerleştirme olmayan nesne", {"uids": [uid(1), uid(6)]},
+              failed("not_insert", "Verilen nesne bir blok yerleştirmesi değil. Bir bloğun yerleştirmesini verin.", "uids[1]"))
+proxy_refused("ret: geçersiz kimlik", {"uids": ["abc"]}, failed("invalid_uid", "$any", "uids[0]"))
+proxy.append({"name": "planla: aynı cevap, yazmaz", "steps": [
+    {"op": "plan", "input": {"uids": [uid(2)]}, "result": done({"inserts": [proxy_entry(2)]}), "within": WITHIN, "expect": NOTHING},
+]})
+
+
+freeze = []
+UNLOCKED = [i for i in IDS if i != 3]
+
+
+def freeze_case(name, slots, given_name=None, note=None, warnings=()):
+    """Sabit bloğa çevir: one new block each distinct block and values in the order first given; the inserts point
+    at it, their values dropped; the new block draws what they drew (checked through the proxy)."""
+    groups = []
+    for i in dict.fromkeys(slots):
+        e = E(i)
+        if e["layerId"] == "kilitli":
+            continue
+        key = (e["block"], json.dumps(e.get("parameters", {}), sort_keys=True))
+        g = next((g for g in groups if g["key"] == key), None)
+        if g is None:
+            g = {"key": key, "block": e["block"], "kept": e.get("parameters", {}), "members": []}
+            groups.append(g)
+        g["members"].append(i)
+    taken = [fold(b["name"]) for b in BLOCKS]
+    for k, g in enumerate(groups):
+        src = block_of(g["block"])
+        if given_name is not None:
+            name = given_name if k == 0 else f"{given_name} {k + 1}"
+        else:
+            n = 1
+            while True:
+                name = f"{src['name']} (sabit)" if n == 1 else f"{src['name']} (sabit {n})"
+                if fold(name) not in taken:
+                    break
+                n += 1
+        taken.append(fold(name))
+        g["name"] = name
+    output = {"blocks": [{"block": f"$blockOf:{g['name']}", "name": g["name"], "from": g["block"],
+                          "values": current(block_of(g["block"])["dynamic"], g["kept"]), "inserts": [uid(i) for i in g["members"]]}
+                         for g in groups], "revision": "$current"}
+    changed = {}
+    for g in groups:
+        for i in g["members"]:
+            e = E(i)
+            e["block"] = f"$blockOf:{g['name']}"
+            e.pop("parameters", None)
+            changed[str(i)] = e
+    new_blocks = []
+    for g in groups:
+        src = block_of(g["block"])
+        nb = {"name": g["name"], "base": src["base"], "entities": "$any"}
+        new_blocks.append(nb)
+    inp = {"uids": [uid(i) for i in slots]}
+    if given_name is not None:
+        inp["name"] = given_name
+    steps = [{"op": "execute", "input": inp, "result": done(output, warnings),
+              "expect": {"entities": changed, "blockIds": {g["name"]: "new" for g in groups}, "canUndo": True, "revision": "changed"}}]
+    # Each new block draws what its inserts drew: their proxy now a plain block's, at its defaults.
+    for g in groups:
+        i = g["members"][0]
+        steps.append({"op": "execute", "command": "cad.blocks.proxy", "input": {"uids": [uid(i)]},
+                      "result": done({"inserts": [{"uid": uid(i), "block": f"$blockOf:{g['name']}", "default": True, "values": {},
+                                                    "entities": vary(block_of(g["block"]), g["kept"])}]}),
+                      "within": WITHIN, "expect": {"revision": "same"}})
+    steps.append({"op": "undo", "returns": "Sabit bloğa çevir", "expect": {"entities": {k: E(int(k)) for k in changed}}})
+    case = {"name": name, "steps": steps}
+    if note:
+        case["note"] = note
+    freeze.append(case)
+
+
+freeze_case("genişletilmiş kapı sabit blok olur: adı kaynağınki ve (sabit), yerleştirmenin değerleri kalkar; geri alınır", [2])
+freeze_case("varsayılan kapı da sabitlenebilir: tanımın kopyası", [1])
+freeze_case("iki ayrı değer iki blok, verildiği sırayla", [2, 1])
+freeze_case("raf: dizinin kopyası yeni bloğun nesnesi", [4])
+freeze_case("ad verilir", [2], "Kapı 100")
+freeze_case("ad verilir: ikinci bloğa 2", [2, 1], "Sabit kapı")
+freeze_case("kilitli katmandaki atlanır ve söylenir", [2, 3], None, None, [LOCKED_SKIP])
+freeze_case("aynı kimlik iki kez: bir kez", [2, 2])
+
+
+def freeze_after_set(name, slot, given):
+    e = E(slot)
+    b = block_of(e["block"])
+    kept, refusal = resolve(b["dynamic"], e.get("parameters", {}), given)
+    assert refusal is None
+    nm = f"{b['name']} (sabit)"
+    after = with_params(e, kept)
+    frozen = copy.deepcopy(after)
+    frozen["block"] = f"$blockOf:{nm}"
+    frozen.pop("parameters", None)
+    freeze.append({"name": name, "steps": [
+        {"op": "execute", "command": "cad.blocks.parameters", "input": {"operation": "set", "uids": [uid(slot)], "values": given},
+         "result": done(out([(slot, e["block"], current(b["dynamic"], kept))], [slot])), "expect": {"entities": {str(slot): after}}},
+        {"op": "execute", "input": {"uids": [uid(slot)]},
+         "result": done({"blocks": [{"block": f"$blockOf:{nm}", "name": nm, "from": e["block"], "values": current(b["dynamic"], kept),
+                                     "inserts": [uid(slot)]}], "revision": "$current"}),
+         "expect": {"entities": {str(slot): frozen}, "blockIds": {nm: "new"}}},
+        {"op": "execute", "command": "cad.blocks.proxy", "input": {"uids": [uid(slot)]},
+         "result": done({"inserts": [{"uid": uid(slot), "block": f"$blockOf:{nm}", "default": True, "values": {}, "entities": vary(b, kept)}]}),
+         "within": WITHIN, "expect": {"revision": "same"}},
+    ]})
+
+
+freeze_after_set("sade kapı: gizlenen yay yeni blokta yok", 1, {"Görünüş": "Sade"})
+freeze_after_set("dik raf", 4, {"Uzunluk": 2.0, "Açı": QUARTER})
+freeze.append({"name": "adı alınmışsa sonraki numara: (sabit 2)", "steps": [
+    {"op": "execute", "input": {"uids": [uid(2)]},
+     "result": done({"blocks": [{"block": "$blockOf:Kapı (sabit)", "name": "Kapı (sabit)", "from": KAPI,
+                                 "values": current(DOOR_DYNAMIC, E(2)["parameters"]), "inserts": [uid(2)]}], "revision": "$current"}),
+     "expect": {"blockIds": {"Kapı (sabit)": "new"}}},
+    {"op": "execute", "input": {"uids": [uid(1)]},
+     "result": done({"blocks": [{"block": "$blockOf:Kapı (sabit 2)", "name": "Kapı (sabit 2)", "from": KAPI,
+                                 "values": current(DOOR_DYNAMIC, {}), "inserts": [uid(1)]}], "revision": "$current"}),
+     "expect": {"blockIds": {"Kapı (sabit 2)": "new"}}},
+]})
+freeze.append({"name": "planla: yeni bloklar boş kimlikle, yazmaz", "steps": [
+    {"op": "plan", "input": {"uids": [uid(2)]},
+     "result": done({"blocks": [{"block": "00000000-0000-0000-0000-000000000000", "name": "Kapı (sabit)", "from": KAPI,
+                                 "values": current(DOOR_DYNAMIC, E(2)["parameters"]), "inserts": [uid(2)]}], "revision": "$current"}),
+     "expect": NOTHING},
+]})
+
+
+def freeze_refused(name, inp, result):
+    freeze.append({"name": name, "steps": [{"op": "execute", "input": inp, "result": result, "expect": NOTHING}]})
+
+
+freeze_refused("ret: yerleştirme verilmedi", {"uids": []},
+               failed("no_entities", "Sabit bloğa çevrilecek yerleştirme verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "uids"))
+freeze_refused("ret: boş ad", {"uids": [uid(2)], "name": "  "},
+               failed("empty_name", "Blok adı boş olamaz; bir ad yazın ya da adı vermeyin (kaynağın adı ve “(sabit)”).", "name"))
+freeze_refused("ret: alınmış ad (Türkçe büyük küçük harf ayırmadan)", {"uids": [uid(2)], "name": "MASA"},
+               failed("duplicate_block", "Çizimde “MASA” adında bir blok var; başka bir ad verin.", "name"))
+freeze_refused("ret: ikinci bloğun adı alınmış", {"uids": [uid(2), uid(1)], "name": "Raf"},
+               failed("duplicate_block", "Çizimde “Raf” adında bir blok var; başka bir ad verin.", "name"))
+freeze_refused("ret: dinamik olmayan blok", {"uids": [uid(2), uid(5)]},
+               failed("not_dynamic", "“Masa” bloğu dinamik değil; zaten sabit. Dinamik bir bloğun yerleştirmesini verin.", "uids[1]"))
+freeze_refused("ret: yerleştirme olmayan nesne", {"uids": [uid(6)]},
+               failed("not_insert", "Verilen nesne bir blok yerleştirmesi değil. Bir bloğun yerleştirmesini verin.", "uids[0]"))
+freeze_refused("ret: çizimde olmayan nesne", {"uids": [MISSING]},
+               failed("entity_not_found", f"“{MISSING}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.", "uids[0]"))
+freeze_refused("ret: bütünü kilitli", {"uids": [uid(3)]},
+               failed("layer_locked", "“Kilitli” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.", "uids[0]"))
+freeze_refused("ret: geçersiz kimlik", {"uids": ["abc"]}, failed("invalid_uid", "$any", "uids[0]"))
+freeze.append({"name": "ret: çizim değişmişse hiçbir şey yazılmaz", "steps": [
+    {"op": "execute", "input": {"uids": [uid(2)], "expectedRevision": "999"},
+     "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "$any", "path": "expectedRevision", "revision": "$current"}}, "expect": NOTHING},
+]})
+freeze.append({"name": "ret: okunamayan sürüm", "steps": [
+    {"op": "execute", "input": {"uids": [uid(2)], "expectedRevision": "yedi"},
+     "result": failed("invalid_revision", "$any", "expectedRevision"), "expect": NOTHING},
+]})
+
+
 # ── Writing ──────────────────────────────────────────────────────────────
 
 
@@ -677,24 +1028,27 @@ def text_of(command, title, note, cases):
 
 
 NOTE = "Written by scripts/fixtures/dynamic_block_cases.py from docs/adr/0318; do not edit by hand."
+NOTE19 = "Written by scripts/fixtures/dynamic_block_cases.py from docs/adr/0319 §4; do not edit by hand."
 FILES = {
     "cad.blocks.parameters.json": text_of("cad.blocks.parameters", "Blok parametreleri: oku, değiştir, sıfırla; Blok ekle'nin değerleri", NOTE, params),
     "cad.blocks.edit.dynamic.json": text_of("cad.blocks.edit", "Blok düzenle: dinamik parametreler ve eylemler, kuralları, yerleştirmelerin değerleri", NOTE, edit),
+    "cad.blocks.proxy.json": text_of("cad.blocks.proxy", "Bloğun vekil görünüşü: yerleştirmenin çizdiği düz nesneler", NOTE19, proxy),
+    "cad.blocks.freeze.json": text_of("cad.blocks.freeze", "Sabit bloğa çevir: dinamik bloğun yerleştirmeleri düz bloklara", NOTE19, freeze),
 }
 
 
 def main():
-    for name, cases in (("parameters", params), ("edit", edit)):
+    for name, cases in (("parameters", params), ("edit", edit), ("proxy", proxy), ("freeze", freeze)):
         assert len(cases) >= 20, (name, len(cases))
     if "--check" in sys.argv[1:]:
         for name, text in FILES.items():
             if (OUT / name).read_text(encoding="utf-8") != text:
                 sys.exit(f"fixtures/commands/v1/{name} güncel değil")
-        print(f"{len(params)} + {len(edit)} durum tutarlı")
+        print(f"{len(params)} + {len(edit)} + {len(proxy)} + {len(freeze)} durum tutarlı")
         return
     for name, text in FILES.items():
         (OUT / name).write_text(text, encoding="utf-8")
-    print(f"{len(params)} + {len(edit)} durum yazıldı")
+    print(f"{len(params)} + {len(edit)} + {len(proxy)} + {len(freeze)} durum yazıldı")
 
 
 main()

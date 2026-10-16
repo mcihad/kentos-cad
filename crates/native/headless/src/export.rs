@@ -72,10 +72,14 @@ fn write_layer(doc: &Document, id: &str) -> Option<DxfWriteLayer> {
 
 /// The writer's input for `chosen` (from [`by_layer`]).
 pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteInput {
-    let entities: Vec<Entity> = chosen
+    let mut entities: Vec<Entity> = chosen
         .iter()
         .flat_map(|(_, list)| list.iter().map(|e| (*e).clone()))
         .collect();
+    // A dynamic block's inserts as the plain blocks they draw (docs/adr/0319 §5): DXF has no place for KentOS's
+    // parameters and actions.
+    let (variants, notes) =
+        kentos_native_application::block_variants::plain_for_export(doc.blocks(), &mut entities);
     let settings = doc.settings();
     let format = Format::of(settings);
     // What a dimension without its own text shows (project units): its
@@ -93,6 +97,7 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
         }
     }
     DxfWriteInput {
+        notes,
         // The project's line types and their scale (docs/adr/0313 §6).
         line_type_scale: settings.line_type_scale,
         line_types: settings.line_types.clone(),
@@ -106,7 +111,12 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
         grads: settings.angle_unit == AngleUnit::Grad,
         dimension_values,
         // The writer takes those the objects place (docs/adr/0144 §5).
-        blocks: doc.blocks().iter().map(|b| (**b).clone()).collect(),
+        blocks: doc
+            .blocks()
+            .iter()
+            .map(|b| (**b).clone())
+            .chain(variants)
+            .collect(),
         // A local project's drawing goes out in its unit (docs/adr/0165 §2).
         unit: (!settings.has_system()).then(|| settings.unit()),
         // The project's styles as STYLE and DIMSTYLE records (docs/adr/0183 §7).

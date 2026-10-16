@@ -878,6 +878,40 @@ impl Spatial {
         out
     }
 
+    /// The parameter grips of the selected dynamic blocks' inserts, on the drawing (docs/adr/0319 §1): each with its
+    /// object. None past the grips' limit, as the other grips.
+    pub fn param_grips(
+        &self,
+        slots: &[Slot],
+    ) -> Vec<(Slot, kentos_geometry_core::block_dynamic::ParamGrip)> {
+        let mut out = Vec::new();
+        for &slot in slots {
+            for g in self.store.param_grips(f64::from(slot.0)) {
+                out.push((slot, g));
+            }
+        }
+        out
+    }
+
+    /// The value insert `slot`'s parameter `name` takes with its grip at `at`, its rule kept (docs/adr/0319 §1).
+    pub fn param_value(
+        &self,
+        slot: Slot,
+        name: &str,
+        at: Vec2,
+    ) -> Option<kentos_geometry_core::entity::ParamValue> {
+        self.store.param_value(f64::from(slot.0), name, at)
+    }
+
+    /// Insert `slot` as `values` would draw it: its pieces' outlines (`outline_paths`'s layout).
+    pub fn varied_outlines(
+        &self,
+        slot: Slot,
+        values: &kentos_geometry_core::entity::Params,
+    ) -> Vec<f64> {
+        self.store.varied_outlines(f64::from(slot.0), values)
+    }
+
     /// The box around every object, as zoom to extents takes it (`PickIndex.extent`).
     pub fn extent(&self) -> Option<Bounds> {
         self.store.extent(None)

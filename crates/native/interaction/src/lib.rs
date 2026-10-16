@@ -196,6 +196,7 @@ pub mod pick_objects;
 pub mod plan_road;
 pub mod point;
 pub mod point_calc;
+mod param_grip;
 mod points;
 pub mod polar;
 pub mod polygonize;

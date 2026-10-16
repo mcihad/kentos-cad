@@ -47,6 +47,7 @@ mod multipart;
 mod navigate;
 mod nurbs;
 mod overlap;
+mod param_grips;
 mod photos;
 mod pick_objects;
 mod polygon;

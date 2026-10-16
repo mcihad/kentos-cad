@@ -2507,6 +2507,8 @@ impl App {
             "block.schedule" => self.open_block_schedule(None),
             // KentOS's own blocks (blocks_files.rs, docs/adr/0318 §4).
             "block.library" => self.blocks_builtin(),
+            // Sabit bloğa çevir (docs/adr/0319 §4).
+            "block.freeze" => self.blocks_freeze(),
             "block.sync" => {
                 if let Some(id) = self.block_at_hand() {
                     self.blocks_sync(id, false);

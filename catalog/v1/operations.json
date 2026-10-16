@@ -1140,6 +1140,13 @@
         "cad.blocks.edit"
       ],
       "note": "import işlemi, name kentos-temel: KentOS'un blok kitaplığı (ADR 0318 §4)."
+    },
+    "block.freeze": {
+      "level": "semantic",
+      "via": [
+        "cad.blocks.freeze"
+      ],
+      "note": "Dinamik bloğun yerleştirmeleri düz bloklara (ADR 0319 §4); vekil görünüş cad.blocks.proxy."
     }
   },
   "tools": {

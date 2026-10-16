@@ -82,6 +82,8 @@ pub struct Marks {
     pub snap_note: Option<String>,
     pub select: Option<SelectBox>,
     pub grips: Vec<GripSet>,
+    /// The selected dynamic blocks' parameter grips (docs/adr/0319 §1), in the info blue.
+    pub params: Vec<kentos_geometry_core::block_dynamic::ParamGrip>,
     /// The grip being moved.
     /// The hot grips: the one being moved and those made hot with Shift (docs/adr/0280).
     pub hot: Vec<(Slot, usize)>,
@@ -192,6 +194,7 @@ impl Marks {
         self.snap.is_none()
             && self.select.is_none()
             && self.grips.is_empty()
+            && self.params.is_empty()
             && self.marked.is_empty()
             && self.found.is_none()
             && self.problem.is_none()
@@ -223,6 +226,7 @@ impl<Message> canvas::Program<Message> for Marks {
             &self.colors,
             accent,
         );
+        param_grips(&mut frame, &self.params, &self.camera, &self.colors);
         marked(&mut frame, &self.marked, &self.camera, &self.colors, accent);
         if let Some((p, words)) = &self.found {
             found(&mut frame, *p, words, &self.camera, &self.colors, accent);
@@ -336,6 +340,77 @@ fn grips(
             &Path::rectangle(Point::new(x - 4.5, y - 4.5), Size::new(9.0, 9.0)),
             edge(1.5, accent),
         );
+    }
+}
+
+/// A dynamic block's parameter grips (docs/adr/0319 §1), as AutoCAD's are told apart by their shapes: a linear's a
+/// pair of arrowheads along its line, a polar's a diamond, an angle's a disc with a ring, a point's a disc, a flip's
+/// two arrowheads facing each other; in the window box's blue, on a halo.
+fn param_grips(
+    frame: &mut canvas::Frame,
+    grips: &[kentos_geometry_core::block_dynamic::ParamGrip],
+    camera: &Camera,
+    colors: &MarkColors,
+) {
+    use kentos_geometry_core::block_dynamic::GripKind;
+    let fill = colors.window;
+    let edge = Stroke::default().with_color(colors.halo).with_width(1.0);
+    // A triangle with its tip `r` px from (x, y) along (ux, uy).
+    let head = |x: f32, y: f32, ux: f32, uy: f32, r: f32| {
+        let (px, py) = (-uy, ux);
+        Path::new(|b| {
+            b.move_to(Point::new(x + ux * r, y + uy * r));
+            b.line_to(Point::new(x + px * 4.5, y + py * 4.5));
+            b.line_to(Point::new(x - px * 4.5, y - py * 4.5));
+            b.close();
+        })
+    };
+    for g in grips {
+        let s = camera.world_to_screen(g.at);
+        let (x, y) = (s[0].round() as f32 + 0.5, s[1].round() as f32 + 0.5);
+        match g.kind {
+            GripKind::Linear => {
+                // The screen's y runs down: the drawing's direction with its y turned.
+                let (ux, uy) = g.along.map_or((1.0, 0.0), |u| (u.x as f32, -(u.y as f32)));
+                for (sx, sy) in [(ux, uy), (-ux, -uy)] {
+                    let p = head(x + sx * 3.0, y + sy * 3.0, sx, sy, 6.0);
+                    frame.fill(&p, fill);
+                    frame.stroke(&p, edge);
+                }
+            }
+            GripKind::Polar => {
+                let p = Path::new(|b| {
+                    b.move_to(Point::new(x, y - 6.0));
+                    b.line_to(Point::new(x + 6.0, y));
+                    b.line_to(Point::new(x, y + 6.0));
+                    b.line_to(Point::new(x - 6.0, y));
+                    b.close();
+                });
+                frame.fill(&p, fill);
+                frame.stroke(&p, edge);
+            }
+            GripKind::Angle => {
+                let ring = Path::circle(Point::new(x, y), 6.0);
+                frame.stroke(
+                    &ring,
+                    Stroke::default().with_color(colors.halo).with_width(3.5),
+                );
+                frame.stroke(&ring, Stroke::default().with_color(fill).with_width(2.0));
+                frame.fill(&Path::circle(Point::new(x, y), 2.5), fill);
+            }
+            GripKind::Point => {
+                let p = Path::circle(Point::new(x, y), 5.0);
+                frame.fill(&p, fill);
+                frame.stroke(&p, edge);
+            }
+            GripKind::Flip => {
+                for sx in [1.0f32, -1.0] {
+                    let p = head(x + sx * 7.0, y, -sx, 0.0, 6.0);
+                    frame.fill(&p, fill);
+                    frame.stroke(&p, edge);
+                }
+            }
+        }
     }
 }
 

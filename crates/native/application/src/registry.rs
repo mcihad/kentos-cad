@@ -4,6 +4,9 @@
 //! set (`changeset.rs`), the headless host, Python and MCP reach a command
 //! through here, so they all run the same handler the tools run.
 
+use crate::{
+    block_params, blocks_freeze, blocks_proxy, blocks_query, blocks_replace, file_import_block,
+};
 use kentos_contracts::{
     AddressesDefine, ArcCreate, ArraysEdit, BlocksDefine, BlocksEdit, CallOp, ChangesetApply,
     CircleCreate, CurvesConstruct, CurvesEdit, DimensionsCreate, DimensionsReassociate,
@@ -19,10 +22,13 @@ use kentos_contracts::{
     RegularPolygonCreate, ScenariosEdit, SettingsSet, SheetsEdit, SnapFind, StandardsApply,
     StandardsCheck, StylesEdit, StylesImpact, UcsSet, UnitsChange, ViewsEdit, codes,
 };
-use kentos_contracts::{BlocksInsert, BlocksParameters, BlocksQuery, BlocksReplace, ImportBlock};
-use crate::{block_params, blocks_query, blocks_replace, file_import_block};
+use kentos_contracts::{
+    BlocksFreeze, BlocksInsert, BlocksParameters, BlocksProxy, BlocksQuery, BlocksReplace,
+    ImportBlock,
+};
 use serde_json::Value;
 
+use crate::blocks_insert;
 use crate::standards::{apply as standards_apply, check as standards_check};
 use crate::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, arrays_edit, blocks_define,
@@ -38,7 +44,6 @@ use crate::{
     polygon_regular, polyline, rectangle_create, scenarios_edit, set, settings_set, sheets_edit,
     snap_find, stretch, styles_edit, styles_impact, transform, ucs_set, units_change, views_edit,
 };
-use crate::blocks_insert;
 
 /// Why a command was not run: not a refusal of the command (that is its
 /// `CommandResult`), but a command this host does not run or input that is
@@ -159,6 +164,8 @@ macro_rules! by_command {
             kentos_contracts::CAD_BLOCKS_REPLACE => $then!(blocks_replace, BlocksReplace),
             kentos_contracts::CAD_BLOCKS_QUERY => $then!(blocks_query, BlocksQuery),
             kentos_contracts::CAD_BLOCKS_PARAMETERS => $then!(block_params, BlocksParameters),
+            kentos_contracts::CAD_BLOCKS_PROXY => $then!(blocks_proxy, BlocksProxy),
+            kentos_contracts::CAD_BLOCKS_FREEZE => $then!(blocks_freeze, BlocksFreeze),
             kentos_contracts::FILE_IMPORT_BLOCK => $then!(file_import_block, ImportBlock),
             kentos_contracts::CAD_STYLES_EDIT => $then!(styles_edit, StylesEdit),
             kentos_contracts::CAD_SETTINGS_SET => $then!(settings_set, SettingsSet),

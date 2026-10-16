@@ -297,6 +297,10 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
         &scaled
     };
     let mut report = Report::default();
+    // The caller's notes first (docs/adr/0319 §5).
+    for n in &input.notes {
+        report.note_n(&n.what, &n.reason, n.lines.first().copied().unwrap_or(0), n.count);
+    }
     let scale = if input.scale.is_finite() && input.scale > 0.0 {
         input.scale
     } else {

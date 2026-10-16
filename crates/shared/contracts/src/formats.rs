@@ -1166,6 +1166,11 @@ pub struct DxfWriteInput {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type_scale: Option<f64>,
+    /// What the caller made of the drawing for DXF, said in the report beside the writer's own notes: a dynamic
+    /// block's inserts written as the plain blocks they draw (docs/adr/0319 §5).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ReportItem>>", optional))]
+    pub notes: Vec<ReportItem>,
 }
 
 /// What a writer did besides writing: counts, and anything it could not write as it was.

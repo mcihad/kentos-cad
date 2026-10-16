@@ -5,6 +5,7 @@ import type { DrawingUnit } from "./DrawingUnit";
 import type { DxfWriteLayer } from "./DxfWriteLayer";
 import type { Entity } from "./Entity";
 import type { LineTypeDef } from "./LineTypeDef";
+import type { ReportItem } from "./ReportItem";
 import type { TextStyleDef } from "./TextStyleDef";
 
 /**
@@ -54,4 +55,9 @@ lineTypes?: Array<LineTypeDef>,
 /**
  * The project's line type scale ($LTSCALE); absent: 1.
  */
-lineTypeScale?: number, };
+lineTypeScale?: number, 
+/**
+ * What the caller made of the drawing for DXF, said in the report beside the writer's own notes: a dynamic
+ * block's inserts written as the plain blocks they draw (docs/adr/0319 §5).
+ */
+notes?: Array<ReportItem>, };

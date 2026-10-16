@@ -52,8 +52,8 @@ use kentos_native_application::{
     entities_reverse, file_import, stretch,
 };
 use kentos_native_application::{
-    block_params, blocks_insert, blocks_query, blocks_replace, file_import_block, library_edit, line_types_edit,
-    styles_impact,
+    block_params, blocks_freeze, blocks_insert, blocks_proxy, blocks_query, blocks_replace,
+    file_import_block, library_edit, line_types_edit, styles_impact,
 };
 use serde_json::{Value, json};
 
@@ -1401,6 +1401,18 @@ impl Input for kentos_domain::contracts::BlocksParameters {
     }
 }
 
+impl Input for kentos_domain::contracts::BlocksProxy {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::BlocksFreeze {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_domain::contracts::ImportBlock {
     /// No number to make not finite.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
@@ -2041,6 +2053,12 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_BLOCKS_PARAMETERS => {
             run!(block_params, kentos_domain::contracts::BlocksParameters)
+        }
+        kentos_domain::contracts::CAD_BLOCKS_PROXY => {
+            run!(blocks_proxy, kentos_domain::contracts::BlocksProxy)
+        }
+        kentos_domain::contracts::CAD_BLOCKS_FREEZE => {
+            run!(blocks_freeze, kentos_domain::contracts::BlocksFreeze)
         }
         kentos_domain::contracts::CAD_LAYERS_SERVICE => run!(layers_service, LayersService),
         kentos_domain::contracts::CAD_NETWORK_DEFINE => run!(network_define, NetworkDefine),

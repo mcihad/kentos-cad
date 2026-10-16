@@ -408,14 +408,26 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.entities.copy",
-        refusals: &[&["no_entities", "invalid_uid", "not_finite", "entity_not_found"]],
+        refusals: &[&[
+            "no_entities",
+            "invalid_uid",
+            "not_finite",
+            "entity_not_found",
+        ]],
         warnings: &[],
         targets: none,
     },
     Entry {
         id: "cad.entities.paste",
         refusals: &[
-            &["no_entities", "invalid_clip", "not_finite", "empty_name", "not_a_layer", "layer_locked"],
+            &[
+                "no_entities",
+                "invalid_clip",
+                "not_finite",
+                "empty_name",
+                "not_a_layer",
+                "layer_locked",
+            ],
             REVISION,
         ],
         warnings: &["units_differ", "layer_hidden"],
@@ -423,14 +435,29 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.entities.explode",
-        refusals: &[OBJECTS, &["invalid_density", "not_explodable", "slots_exhausted"], REVISION],
+        refusals: &[
+            OBJECTS,
+            &["invalid_density", "not_explodable", "slots_exhausted"],
+            REVISION,
+        ],
         warnings: &["layer_locked", "not_explodable"],
         targets: || {
             vec![target(
                 None,
                 &[
-                    "polyline", "polygon", "circle", "arc", "ellipse", "spline", "nurbs", "dimension", "hatch",
-                    "leader", "table", "insert", "point",
+                    "polyline",
+                    "polygon",
+                    "circle",
+                    "arc",
+                    "ellipse",
+                    "spline",
+                    "nurbs",
+                    "dimension",
+                    "hatch",
+                    "leader",
+                    "table",
+                    "insert",
+                    "point",
                 ],
                 &[],
                 Some("not_explodable"),
@@ -467,7 +494,9 @@ const ENTRIES: &[Entry] = &[
                 &["polyline", "nurbs"],
                 &[],
                 Some("not_a_curve"),
-                Some("Çoklu çizginin düzenlemeleri ile NURBS eğrisininkiler ayrı; öbürünün düzenlemesi edit_not_applicable."),
+                Some(
+                    "Çoklu çizginin düzenlemeleri ile NURBS eğrisininkiler ayrı; öbürünün düzenlemesi edit_not_applicable.",
+                ),
             )]
         },
     },
@@ -694,6 +723,31 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.blocks.proxy",
+        refusals: &[
+            &["no_entities", "invalid_uid"],
+            &["entity_not_found", "not_insert"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.blocks.freeze",
+        refusals: &[
+            &["no_entities", "invalid_uid", "empty_name"],
+            REVISION,
+            &[
+                "entity_not_found",
+                "not_insert",
+                "not_dynamic",
+                "duplicate_block",
+                "layer_locked",
+            ],
+        ],
+        warnings: &["layer_locked"],
+        targets: none,
+    },
+    Entry {
         id: "cad.blocks.replace",
         refusals: &[
             &["no_block", "same_block"],
@@ -867,7 +921,12 @@ const ENTRIES: &[Entry] = &[
         id: "cad.entities.trim",
         refusals: &[
             OBJECTS,
-            &["too_few_points", "not_finite", "not_trimmable", "trim_failed"],
+            &[
+                "too_few_points",
+                "not_finite",
+                "not_trimmable",
+                "trim_failed",
+            ],
             REVISION,
         ],
         warnings: &["trim_failed", "layer_locked"],
@@ -1041,7 +1100,9 @@ const ENTRIES: &[Entry] = &[
                 REVERSE_KINDS,
                 &[],
                 Some("not_reversible"),
-                Some("Yay, daire ve elips hep saat yönünün tersine gider; yönsüz türler gibi atlanır."),
+                Some(
+                    "Yay, daire ve elips hep saat yönünün tersine gider; yönsüz türler gibi atlanır.",
+                ),
             )]
         },
     },
@@ -1719,21 +1780,27 @@ const ENTRIES: &[Entry] = &[
                     TANGENT_KINDS,
                     &[],
                     Some("not_tangent_kind"),
-                    Some("Doğru ve çoklu çizginin düz kenarı bütün doğrusuyla, yay ve yaylı kenar bütün çemberiyle sayılır."),
+                    Some(
+                        "Doğru ve çoklu çizginin düz kenarı bütün doğrusuyla, yay ve yaylı kenar bütün çemberiyle sayılır.",
+                    ),
                 ),
                 target(
                     Some("circleTangents"),
                     TANGENT_KINDS,
                     &[],
                     Some("not_tangent_kind"),
-                    Some("Doğru ve çoklu çizginin düz kenarı bütün doğrusuyla, yay ve yaylı kenar bütün çemberiyle sayılır."),
+                    Some(
+                        "Doğru ve çoklu çizginin düz kenarı bütün doğrusuyla, yay ve yaylı kenar bütün çemberiyle sayılır.",
+                    ),
                 ),
                 target(
                     Some("arcContinue"),
                     &["line", "polyline", "arc"],
                     &[],
                     Some("not_an_end"),
-                    Some("Devam çizginin, çoklu çizginin ya da yayın bitişinden yönüyle, başlangıcından tersine sürer; kapalı çoklu çizginin başlangıcı yoktur."),
+                    Some(
+                        "Devam çizginin, çoklu çizginin ya da yayın bitişinden yönüyle, başlangıcından tersine sürer; kapalı çoklu çizginin başlangıcı yoktur.",
+                    ),
                 ),
             ]
         },
@@ -1757,7 +1824,15 @@ const ENTRIES: &[Entry] = &[
             "too_few_points",
         ]],
         warnings: &["neighbour_locked", "neighbour_invalid"],
-        targets: || vec![target(None, &["line", "polyline", "polygon"], &[], None, None)],
+        targets: || {
+            vec![target(
+                None,
+                &["line", "polyline", "polygon"],
+                &[],
+                None,
+                None,
+            )]
+        },
     },
     Entry {
         id: "cad.entities.pick",
@@ -1824,11 +1899,7 @@ const ENTRIES: &[Entry] = &[
             &["invalid_file_path"],
             &["file_not_found", "import_unreadable"],
             REVISION,
-            &[
-                "nothing_to_import",
-                "unknown_block",
-                "block_refused",
-            ],
+            &["nothing_to_import", "unknown_block", "block_refused"],
         ],
         warnings: &["objects_left_out"],
         targets: none,

@@ -499,6 +499,7 @@ fn command_tool(c: &Value) -> Value {
             | "cad.blocks.replace"
             // It writes the inserts' parameter values (docs/adr/0318 §3).
             | "cad.blocks.parameters"
+            | "cad.blocks.freeze"
             // deleteSource deletes the objects it offsets (docs/adr/0246).
             | "cad.entities.offset"
             // It binds or frees a dimension's points (docs/adr/0249 §3).

@@ -235,6 +235,60 @@ impl App {
         self.show_blocks_panel();
     }
 
+    /// Sabit bloğa çevir (docs/adr/0319 §4): the selected dynamic blocks' inserts made inserts of plain blocks drawing
+    /// what they drew, through `cad.blocks.freeze`, one undo step; the new blocks said.
+    pub(crate) fn blocks_freeze(&mut self) {
+        use kentos_contracts::{CommandResult, Entity};
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let uids: Vec<String> = self
+            .selection
+            .ids()
+            .iter()
+            .filter(|s| matches!(doc.model.get(**s), Some(Entity::Insert(_))))
+            .filter_map(|s| doc.model.uid(*s))
+            .map(|u| u.to_string())
+            .collect();
+        if uids.is_empty() {
+            self.warn("Dinamik bir bloğun yerleştirmesini seçin; Sabit bloğa çevir onu çizdiği hâliyle düz bir bloğa geçirir.");
+            return;
+        }
+        let input = kentos_contracts::BlocksFreeze {
+            uids,
+            name: None,
+            expected_revision: None,
+        };
+        let ran = kentos_native_application::blocks_freeze::execute(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            input,
+        );
+        match ran {
+            CommandResult::Completed { output, warnings } => {
+                let names: Vec<String> = output
+                    .blocks
+                    .iter()
+                    .map(|b| format!("“{}”", b.name))
+                    .collect();
+                let inserts: usize = output.blocks.iter().map(|b| b.inserts.len()).sum();
+                self.say(
+                    Level::Success,
+                    format!(
+                        "{inserts} yerleştirme sabit bloğa çevrildi: {}. Parametreleri kalktı; çizdikleri değişmedi.",
+                        names.join(", ")
+                    ),
+                );
+                for w in warnings {
+                    self.warn(w.message);
+                }
+            }
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => self.warn(error.message),
+            CommandResult::Queued { .. } | CommandResult::Cancelled => {}
+        }
+    }
+
     /// The block a ribbon command works on: the selected insert's, else the Bloklar panel's chosen row.
     pub(crate) fn block_at_hand(&mut self) -> Option<BlockId> {
         let doc = self.document.as_ref()?;

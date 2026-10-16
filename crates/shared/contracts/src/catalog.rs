@@ -2770,6 +2770,63 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // An insert's drawn objects (docs/adr/0319 §4), held together by fixtures/commands/v1/cad.blocks.proxy.json.
+        CommandDescriptor {
+            id: crate::CAD_BLOCKS_PROXY.into(),
+            version: crate::CAD_BLOCKS_PROXY_VERSION,
+            title: "Bloğun vekil görünüşü".into(),
+            summary: "Yerleştirmelerin çizdiği nesneleri düz nesneler olarak verir: dinamik bir bloğun yerleştirmesinde tanımın nesneleri parametrelerin değerleriyle (eylemler sırayla, dizinin kopyaları yerel kimlikleriyle sonda, görünürlük durumunun gizledikleri yok), düz bir bloğunkinde tanımın kendisi. \
+                      Nesneler tanımın koordinatlarındadır; iç içe yerleştirme yerleştirme kalır. default yerleştirmenin tanımı olduğu gibi çizip çizmediğini, values bütün değerleri söyler. \
+                      Dinamik bloğu bilmeyen okuyucu (DXF) ve Sabit bloğa çevir bunu alır. Hiçbir şey yazılmaz."
+                .into(),
+            aliases: vec!["blokvekil".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::BlocksProxy>(),
+            output: schema::<crate::BlocksProxied>(),
+            plan: Some(schema::<crate::BlocksProxied>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Genişletilmiş kapının çizdiği nesneler".into(),
+                input: json!({ "uids": ["01925f3e-7c1c-7b22-8d33-4c5e6f708193"] }),
+                output: None,
+            }],
+        },
+        // A dynamic block's inserts made plain (docs/adr/0319 §4), held together by
+        // fixtures/commands/v1/cad.blocks.freeze.json.
+        CommandDescriptor {
+            id: crate::CAD_BLOCKS_FREEZE.into(),
+            version: crate::CAD_BLOCKS_FREEZE_VERSION,
+            title: "Sabit bloğa çevir".into(),
+            summary: "Dinamik bir bloğun yerleştirmelerini çizdikleriyle aynı düz bloklara geçirir; tek geri alma adımı, adı Sabit bloğa çevir. \
+                      Aynı blok ve aynı değerler tek yeni blok olur: nesneleri cad.blocks.proxy'ninkiler, taban noktası, birimi, öznitelik tanımları, açıklaması ve kartı kaynağınki, dinamik parçası yok. \
+                      Yeni bloğun adı name (sonrakilere 2, 3 …) ya da kaynağın adı ve (sabit), alınmış adlar atlanarak. \
+                      Yerleştirme yerini, ölçeğini, dönüşünü, katmanını, görünüşünü ve özniteliklerinin değerlerini korur, parametreleri kalkar. Kilitli katmandaki yerleştirme atlanır. \
+                      Bağımsız geometriye çevirmek için Patlat (cad.entities.explode) aynı görünüşü nesnelere açar."
+                .into(),
+            aliases: vec!["bloksabitle".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::BlocksFreeze>(),
+            output: schema::<crate::BlocksFrozen>(),
+            plan: Some(schema::<crate::BlocksFrozen>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Geniş kapıyı sabit bloğa çevir".into(),
+                input: json!({ "uids": ["01925f3e-7c1c-7b22-8d33-4c5e6f708193"], "name": "Kapı 100" }),
+                output: None,
+            }],
+        },
         // A dynamic block's inserts' parameters (docs/adr/0318 §3), held together by
         // fixtures/commands/v1/cad.blocks.parameters.json.
         CommandDescriptor {
@@ -4829,7 +4886,8 @@ mod tests {
                         serde_json::from_value::<crate::ArraysEdit>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ENTITIES_EXPLODE => {
-                        serde_json::from_value::<crate::EntitiesExplode>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::EntitiesExplode>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_CURVES_EDIT => {
                         serde_json::from_value::<crate::CurvesEdit>(e.input.clone()).map(|_| ())
@@ -4838,7 +4896,8 @@ mod tests {
                         serde_json::from_value::<crate::EntitiesMatch>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ENTITIES_CLEANUP => {
-                        serde_json::from_value::<crate::EntitiesCleanup>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::EntitiesCleanup>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_DRAWING_AUDIT => {
                         serde_json::from_value::<crate::DrawingAudit>(e.input.clone()).map(|_| ())
@@ -4927,7 +4986,14 @@ mod tests {
                         serde_json::from_value::<crate::BlocksQuery>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_BLOCKS_PARAMETERS => {
-                        serde_json::from_value::<crate::BlocksParameters>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::BlocksParameters>(e.input.clone())
+                            .map(|_| ())
+                    }
+                    crate::CAD_BLOCKS_PROXY => {
+                        serde_json::from_value::<crate::BlocksProxy>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_BLOCKS_FREEZE => {
+                        serde_json::from_value::<crate::BlocksFreeze>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_IMPORT_BLOCK => {
                         serde_json::from_value::<crate::ImportBlock>(e.input.clone()).map(|_| ())
@@ -4982,7 +5048,8 @@ mod tests {
                         serde_json::from_value::<crate::LayersFind>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_LAYERS_TRANSLATE => {
-                        serde_json::from_value::<crate::LayersTranslate>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::LayersTranslate>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_STANDARDS_CHECK => {
                         serde_json::from_value::<crate::StandardsCheck>(e.input.clone()).map(|_| ())
@@ -5041,15 +5108,13 @@ mod tests {
                             .map(|_| ())
                     }
                     crate::CAD_ENTITIES_VERTEX => {
-                        serde_json::from_value::<crate::EntitiesVertex>(e.input.clone())
-                            .map(|_| ())
+                        serde_json::from_value::<crate::EntitiesVertex>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ENTITIES_PICK => {
                         serde_json::from_value::<crate::EntitiesPick>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ENTITIES_SELECT => {
-                        serde_json::from_value::<crate::EntitiesSelect>(e.input.clone())
-                            .map(|_| ())
+                        serde_json::from_value::<crate::EntitiesSelect>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_POINTS_CONSTRUCT => {
                         serde_json::from_value::<crate::PointsConstruct>(e.input.clone())
@@ -5233,8 +5298,7 @@ mod tests {
                                 .map(|_| ())
                         }
                         crate::CAD_LAYERS_FIND => {
-                            serde_json::from_value::<crate::LayersFound>(output.clone())
-                                .map(|_| ())
+                            serde_json::from_value::<crate::LayersFound>(output.clone()).map(|_| ())
                         }
                         crate::CAD_LAYERS_TRANSLATE => {
                             serde_json::from_value::<crate::LayersTranslated>(output.clone())
@@ -5253,8 +5317,7 @@ mod tests {
                                 .map(|_| ())
                         }
                         crate::CAD_STYLES_IMPACT => {
-                            serde_json::from_value::<crate::StyleImpact>(output.clone())
-                                .map(|_| ())
+                            serde_json::from_value::<crate::StyleImpact>(output.clone()).map(|_| ())
                         }
                         crate::CAD_BLOCKS_INSERT => {
                             serde_json::from_value::<crate::BlockInserted>(output.clone())
@@ -5270,6 +5333,14 @@ mod tests {
                         }
                         crate::CAD_BLOCKS_PARAMETERS => {
                             serde_json::from_value::<crate::BlocksParametersOut>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_BLOCKS_PROXY => {
+                            serde_json::from_value::<crate::BlocksProxied>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_BLOCKS_FREEZE => {
+                            serde_json::from_value::<crate::BlocksFrozen>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_STANDARDS_APPLY => {
@@ -5288,8 +5359,7 @@ mod tests {
                             serde_json::from_value::<crate::UcsChanged>(output.clone()).map(|_| ())
                         }
                         crate::CAD_VIEWS_EDIT => {
-                            serde_json::from_value::<crate::ViewsEdited>(output.clone())
-                                .map(|_| ())
+                            serde_json::from_value::<crate::ViewsEdited>(output.clone()).map(|_| ())
                         }
                         crate::CAD_SHEETS_EDIT => {
                             serde_json::from_value::<crate::SheetsEdited>(output.clone())

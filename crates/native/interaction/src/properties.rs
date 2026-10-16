@@ -36,6 +36,36 @@ pub fn set_properties(doc: &mut Document, input: EntitiesSetProperties) -> Vec<S
     said(set::execute(&mut ExecutionContext::new(doc), input))
 }
 
+/// A dynamic block's insert's values (docs/adr/0319 §3): `values` set, or `reset` the names given (none: all),
+/// through `cad.blocks.parameters`, one undo step “Blok parametreleri”; what to say: the command's refusal (an
+/// unknown or computed parameter, a value its rule refuses, a locked layer).
+pub fn set_parameters(
+    doc: &mut Document,
+    slot: Slot,
+    values: Option<std::collections::BTreeMap<String, kentos_contracts::ParamValue>>,
+    reset: Option<Vec<String>>,
+) -> Vec<String> {
+    let Some(uid) = doc.uid(slot) else {
+        return Vec::new();
+    };
+    let operation = if values.is_some() {
+        kentos_contracts::ParametersOperation::Set
+    } else {
+        kentos_contracts::ParametersOperation::Reset
+    };
+    let input = kentos_contracts::BlocksParameters {
+        operation,
+        uids: vec![uid.to_string()],
+        values,
+        names: reset,
+        expected_revision: None,
+    };
+    said(kentos_native_application::block_params::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
+}
+
 /// The object at `slot` given `entity`'s geometry in its place, as the step
 /// “Değiştir” (its layer, colour, attributes, label and symbol stay); what
 /// to say: the command's refusal (a locked layer, an empty text).

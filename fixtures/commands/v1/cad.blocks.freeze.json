@@ -1,0 +1,172 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.blocks.freeze",
+  "commandVersion": 1,
+  "title": "Sabit bloğa çevir: dinamik bloğun yerleştirmeleri düz bloklara",
+  "note": "Written by scripts/fixtures/dynamic_block_cases.py from docs/adr/0319 §4; do not edit by hand.",
+  "setup": {"format": "kentos.document", "version": 1, "name": "Dinamik bloklar", "settings": {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg", "plotScale": 50, "workspace": "cad", "drawingFont": "barlow"}, "origin": {"x": 0, "y": 0}, "layers": [{"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}, {"id": "kapilar", "name": "Kapılar", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}, {"id": "kilitli", "name": "Kilitli", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}], "activeLayer": "yapi", "entities": [{"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 5, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Genişlik": 1.0, "Kanat": 0.5, "Yön": true}}, {"kind": "insert", "id": 3, "layerId": "kilitli", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 10, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Görünüş": "Sade"}}, {"kind": "insert", "id": 4, "layerId": "yapi", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8002", "p": {"x": 0, "y": 5}, "scale": 1, "rotation": 0}, {"kind": "insert", "id": 5, "layerId": "yapi", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8003", "p": {"x": 0, "y": 10}, "scale": 1, "rotation": 0}, {"kind": "line", "id": 6, "layerId": "yapi", "attrs": {}, "a": {"x": 0, "y": 20}, "b": {"x": 5, "y": 20}}], "styles": {"items": [], "categories": []}, "blocks": [{"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "name": "Kapı", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0.9}}, {"kind": "arc", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0}, "r": 0.9, "a0": 0, "a1": 1.5707963267948966}, {"kind": "line", "id": 3, "layerId": "", "attrs": {}, "a": {"x": 0, "y": -0.1}, "b": {"x": 0, "y": 0}}, {"kind": "line", "id": 4, "layerId": "", "attrs": {}, "a": {"x": 0.9, "y": -0.1}, "b": {"x": 0.9, "y": 0}}], "dynamic": {"parameters": [{"kind": "linear", "name": "Genişlik", "from": {"x": 0.0, "y": 0.0}, "to": {"x": 0.9, "y": 0.0}, "rule": {"min": 0.6, "max": 1.2, "step": 0.05}}, {"kind": "flip", "name": "Yön", "a": {"x": 0.45, "y": 0.0}, "b": {"x": 0.45, "y": 1.0}}, {"kind": "visibility", "name": "Görünüş", "states": [{"name": "Açılım"}, {"name": "Sade", "hidden": [2]}]}, {"kind": "lookup", "name": "Tip", "rows": [{"label": "Dar", "values": {"Genişlik": 0.7}}, {"label": "Standart", "values": {"Genişlik": 0.9}}, {"label": "Geniş", "values": {"Genişlik": 1.2}}]}, {"kind": "linear", "name": "Kanat", "from": {"x": 0.0, "y": 0.0}, "to": {"x": 0.0, "y": 0.45}, "rule": {"expression": "@Genişlik / 2"}}], "actions": [{"kind": "scale", "parameter": "Genişlik", "pieces": [1, 2]}, {"kind": "move", "parameter": "Genişlik", "pieces": [4]}, {"kind": "flip", "parameter": "Yön", "pieces": [1, 2, 3, 4]}]}}, {"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8002", "name": "Raf", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0.4, "y": 0}}, {"kind": "circle", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0.5}, "r": 0.05}], "dynamic": {"parameters": [{"kind": "linear", "name": "Uzunluk", "from": {"x": 0.0, "y": 0.0}, "to": {"x": 1.0, "y": 0.0}, "rule": {"min": 0.5, "max": 3.0, "step": 0.5}}, {"kind": "angle", "name": "Açı", "center": {"x": 0.0, "y": 0.0}, "base": 0.0, "rule": {"list": [0.0, 1.5707963267948966]}}, {"kind": "point", "name": "Etiket", "at": {"x": 0.0, "y": 0.5}}], "actions": [{"kind": "array", "parameter": "Uzunluk", "pieces": [1], "spacing": 0.5}, {"kind": "rotate", "parameter": "Açı", "pieces": [1, 2]}, {"kind": "move", "parameter": "Etiket", "pieces": [2]}]}}, {"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8003", "name": "Masa", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": -0.6, "y": 0}, "b": {"x": 0.6, "y": 0}}]}]},
+  "cases": [
+    {
+      "name": "Kapı (sabit)",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2"]}, "result": {"status": "completed", "output": {"blocks": [{"block": "$blockOf:Kapı (sabit)", "name": "Kapı (sabit)", "from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 1.0, "Görünüş": "Açılım", "Kanat": 0.5, "Yön": true}, "inserts": ["$uidOf:2"]}], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {}, "block": "$blockOf:Kapı (sabit)", "p": {"x": 5, "y": 0}, "scale": 1, "rotation": 0}}, "blockIds": {"Kapı (sabit)": "new"}, "canUndo": true, "revision": "changed"}},
+        {"op": "execute", "command": "cad.blocks.proxy", "input": {"uids": ["$uidOf:2"]}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:2", "block": "$blockOf:Kapı (sabit)", "default": true, "values": {}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0.9, "y": -5.5109105961630896e-17}, "b": {"x": 0.9000000000000001, "y": 1.0}}, {"kind": "arc", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0.9, "y": -5.5109105961630896e-17}, "r": 1.0, "a0": 1.5707963267948966, "a1": 3.141592653589793}, {"kind": "line", "id": 3, "layerId": "", "attrs": {}, "a": {"x": 0.9, "y": -0.10000000000000006}, "b": {"x": 0.9, "y": -5.5109105961630896e-17}}, {"kind": "line", "id": 4, "layerId": "", "attrs": {}, "a": {"x": -0.09999999999999998, "y": -0.09999999999999994}, "b": {"x": -0.09999999999999998, "y": 6.735557395310443e-17}}]}]}, "warnings": []}, "within": 1e-09, "expect": {"revision": "same"}},
+        {"op": "undo", "returns": "Sabit bloğa çevir", "expect": {"entities": {"2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 5, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Genişlik": 1.0, "Kanat": 0.5, "Yön": true}}}}}
+      ]
+    },
+    {
+      "name": "Kapı (sabit)",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1"]}, "result": {"status": "completed", "output": {"blocks": [{"block": "$blockOf:Kapı (sabit)", "name": "Kapı (sabit)", "from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 0.9, "Görünüş": "Açılım", "Kanat": 0.45, "Tip": "Standart", "Yön": false}, "inserts": ["$uidOf:1"]}], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {}, "block": "$blockOf:Kapı (sabit)", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}}, "blockIds": {"Kapı (sabit)": "new"}, "canUndo": true, "revision": "changed"}},
+        {"op": "execute", "command": "cad.blocks.proxy", "input": {"uids": ["$uidOf:1"]}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:1", "block": "$blockOf:Kapı (sabit)", "default": true, "values": {}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0.9}}, {"kind": "arc", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0}, "r": 0.9, "a0": 0, "a1": 1.5707963267948966}, {"kind": "line", "id": 3, "layerId": "", "attrs": {}, "a": {"x": 0, "y": -0.1}, "b": {"x": 0, "y": 0}}, {"kind": "line", "id": 4, "layerId": "", "attrs": {}, "a": {"x": 0.9, "y": -0.1}, "b": {"x": 0.9, "y": 0}}]}]}, "warnings": []}, "within": 1e-09, "expect": {"revision": "same"}},
+        {"op": "undo", "returns": "Sabit bloğa çevir", "expect": {"entities": {"1": {"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}}}}
+      ]
+    },
+    {
+      "name": "Kapı (sabit 2)",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2", "$uidOf:1"]}, "result": {"status": "completed", "output": {"blocks": [{"block": "$blockOf:Kapı (sabit)", "name": "Kapı (sabit)", "from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 1.0, "Görünüş": "Açılım", "Kanat": 0.5, "Yön": true}, "inserts": ["$uidOf:2"]}, {"block": "$blockOf:Kapı (sabit 2)", "name": "Kapı (sabit 2)", "from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 0.9, "Görünüş": "Açılım", "Kanat": 0.45, "Tip": "Standart", "Yön": false}, "inserts": ["$uidOf:1"]}], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {}, "block": "$blockOf:Kapı (sabit)", "p": {"x": 5, "y": 0}, "scale": 1, "rotation": 0}, "1": {"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {}, "block": "$blockOf:Kapı (sabit 2)", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}}, "blockIds": {"Kapı (sabit)": "new", "Kapı (sabit 2)": "new"}, "canUndo": true, "revision": "changed"}},
+        {"op": "execute", "command": "cad.blocks.proxy", "input": {"uids": ["$uidOf:2"]}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:2", "block": "$blockOf:Kapı (sabit)", "default": true, "values": {}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0.9, "y": -5.5109105961630896e-17}, "b": {"x": 0.9000000000000001, "y": 1.0}}, {"kind": "arc", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0.9, "y": -5.5109105961630896e-17}, "r": 1.0, "a0": 1.5707963267948966, "a1": 3.141592653589793}, {"kind": "line", "id": 3, "layerId": "", "attrs": {}, "a": {"x": 0.9, "y": -0.10000000000000006}, "b": {"x": 0.9, "y": -5.5109105961630896e-17}}, {"kind": "line", "id": 4, "layerId": "", "attrs": {}, "a": {"x": -0.09999999999999998, "y": -0.09999999999999994}, "b": {"x": -0.09999999999999998, "y": 6.735557395310443e-17}}]}]}, "warnings": []}, "within": 1e-09, "expect": {"revision": "same"}},
+        {"op": "execute", "command": "cad.blocks.proxy", "input": {"uids": ["$uidOf:1"]}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:1", "block": "$blockOf:Kapı (sabit 2)", "default": true, "values": {}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0.9}}, {"kind": "arc", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0}, "r": 0.9, "a0": 0, "a1": 1.5707963267948966}, {"kind": "line", "id": 3, "layerId": "", "attrs": {}, "a": {"x": 0, "y": -0.1}, "b": {"x": 0, "y": 0}}, {"kind": "line", "id": 4, "layerId": "", "attrs": {}, "a": {"x": 0.9, "y": -0.1}, "b": {"x": 0.9, "y": 0}}]}]}, "warnings": []}, "within": 1e-09, "expect": {"revision": "same"}},
+        {"op": "undo", "returns": "Sabit bloğa çevir", "expect": {"entities": {"2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 5, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Genişlik": 1.0, "Kanat": 0.5, "Yön": true}}, "1": {"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}}}}
+      ]
+    },
+    {
+      "name": "Raf (sabit)",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:4"]}, "result": {"status": "completed", "output": {"blocks": [{"block": "$blockOf:Raf (sabit)", "name": "Raf (sabit)", "from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8002", "values": {"Açı": 0.0, "Etiket": {"x": 0.0, "y": 0.5}, "Uzunluk": 1.0}, "inserts": ["$uidOf:4"]}], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"4": {"kind": "insert", "id": 4, "layerId": "yapi", "attrs": {}, "block": "$blockOf:Raf (sabit)", "p": {"x": 0, "y": 5}, "scale": 1, "rotation": 0}}, "blockIds": {"Raf (sabit)": "new"}, "canUndo": true, "revision": "changed"}},
+        {"op": "execute", "command": "cad.blocks.proxy", "input": {"uids": ["$uidOf:4"]}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:4", "block": "$blockOf:Raf (sabit)", "default": true, "values": {}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0.4, "y": 0}}, {"kind": "circle", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0.5}, "r": 0.05}]}]}, "warnings": []}, "within": 1e-09, "expect": {"revision": "same"}},
+        {"op": "undo", "returns": "Sabit bloğa çevir", "expect": {"entities": {"4": {"kind": "insert", "id": 4, "layerId": "yapi", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8002", "p": {"x": 0, "y": 5}, "scale": 1, "rotation": 0}}}}
+      ]
+    },
+    {
+      "name": "Kapı 100",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2"], "name": "Kapı 100"}, "result": {"status": "completed", "output": {"blocks": [{"block": "$blockOf:Kapı 100", "name": "Kapı 100", "from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 1.0, "Görünüş": "Açılım", "Kanat": 0.5, "Yön": true}, "inserts": ["$uidOf:2"]}], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {}, "block": "$blockOf:Kapı 100", "p": {"x": 5, "y": 0}, "scale": 1, "rotation": 0}}, "blockIds": {"Kapı 100": "new"}, "canUndo": true, "revision": "changed"}},
+        {"op": "execute", "command": "cad.blocks.proxy", "input": {"uids": ["$uidOf:2"]}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:2", "block": "$blockOf:Kapı 100", "default": true, "values": {}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0.9, "y": -5.5109105961630896e-17}, "b": {"x": 0.9000000000000001, "y": 1.0}}, {"kind": "arc", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0.9, "y": -5.5109105961630896e-17}, "r": 1.0, "a0": 1.5707963267948966, "a1": 3.141592653589793}, {"kind": "line", "id": 3, "layerId": "", "attrs": {}, "a": {"x": 0.9, "y": -0.10000000000000006}, "b": {"x": 0.9, "y": -5.5109105961630896e-17}}, {"kind": "line", "id": 4, "layerId": "", "attrs": {}, "a": {"x": -0.09999999999999998, "y": -0.09999999999999994}, "b": {"x": -0.09999999999999998, "y": 6.735557395310443e-17}}]}]}, "warnings": []}, "within": 1e-09, "expect": {"revision": "same"}},
+        {"op": "undo", "returns": "Sabit bloğa çevir", "expect": {"entities": {"2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 5, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Genişlik": 1.0, "Kanat": 0.5, "Yön": true}}}}}
+      ]
+    },
+    {
+      "name": "Sabit kapı 2",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2", "$uidOf:1"], "name": "Sabit kapı"}, "result": {"status": "completed", "output": {"blocks": [{"block": "$blockOf:Sabit kapı", "name": "Sabit kapı", "from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 1.0, "Görünüş": "Açılım", "Kanat": 0.5, "Yön": true}, "inserts": ["$uidOf:2"]}, {"block": "$blockOf:Sabit kapı 2", "name": "Sabit kapı 2", "from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 0.9, "Görünüş": "Açılım", "Kanat": 0.45, "Tip": "Standart", "Yön": false}, "inserts": ["$uidOf:1"]}], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {}, "block": "$blockOf:Sabit kapı", "p": {"x": 5, "y": 0}, "scale": 1, "rotation": 0}, "1": {"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {}, "block": "$blockOf:Sabit kapı 2", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}}, "blockIds": {"Sabit kapı": "new", "Sabit kapı 2": "new"}, "canUndo": true, "revision": "changed"}},
+        {"op": "execute", "command": "cad.blocks.proxy", "input": {"uids": ["$uidOf:2"]}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:2", "block": "$blockOf:Sabit kapı", "default": true, "values": {}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0.9, "y": -5.5109105961630896e-17}, "b": {"x": 0.9000000000000001, "y": 1.0}}, {"kind": "arc", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0.9, "y": -5.5109105961630896e-17}, "r": 1.0, "a0": 1.5707963267948966, "a1": 3.141592653589793}, {"kind": "line", "id": 3, "layerId": "", "attrs": {}, "a": {"x": 0.9, "y": -0.10000000000000006}, "b": {"x": 0.9, "y": -5.5109105961630896e-17}}, {"kind": "line", "id": 4, "layerId": "", "attrs": {}, "a": {"x": -0.09999999999999998, "y": -0.09999999999999994}, "b": {"x": -0.09999999999999998, "y": 6.735557395310443e-17}}]}]}, "warnings": []}, "within": 1e-09, "expect": {"revision": "same"}},
+        {"op": "execute", "command": "cad.blocks.proxy", "input": {"uids": ["$uidOf:1"]}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:1", "block": "$blockOf:Sabit kapı 2", "default": true, "values": {}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0.9}}, {"kind": "arc", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0}, "r": 0.9, "a0": 0, "a1": 1.5707963267948966}, {"kind": "line", "id": 3, "layerId": "", "attrs": {}, "a": {"x": 0, "y": -0.1}, "b": {"x": 0, "y": 0}}, {"kind": "line", "id": 4, "layerId": "", "attrs": {}, "a": {"x": 0.9, "y": -0.1}, "b": {"x": 0.9, "y": 0}}]}]}, "warnings": []}, "within": 1e-09, "expect": {"revision": "same"}},
+        {"op": "undo", "returns": "Sabit bloğa çevir", "expect": {"entities": {"2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 5, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Genişlik": 1.0, "Kanat": 0.5, "Yön": true}}, "1": {"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}}}}
+      ]
+    },
+    {
+      "name": "Kapı (sabit)",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2", "$uidOf:3"]}, "result": {"status": "completed", "output": {"blocks": [{"block": "$blockOf:Kapı (sabit)", "name": "Kapı (sabit)", "from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 1.0, "Görünüş": "Açılım", "Kanat": 0.5, "Yön": true}, "inserts": ["$uidOf:2"]}], "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"entities": {"2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {}, "block": "$blockOf:Kapı (sabit)", "p": {"x": 5, "y": 0}, "scale": 1, "rotation": 0}}, "blockIds": {"Kapı (sabit)": "new"}, "canUndo": true, "revision": "changed"}},
+        {"op": "execute", "command": "cad.blocks.proxy", "input": {"uids": ["$uidOf:2"]}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:2", "block": "$blockOf:Kapı (sabit)", "default": true, "values": {}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0.9, "y": -5.5109105961630896e-17}, "b": {"x": 0.9000000000000001, "y": 1.0}}, {"kind": "arc", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0.9, "y": -5.5109105961630896e-17}, "r": 1.0, "a0": 1.5707963267948966, "a1": 3.141592653589793}, {"kind": "line", "id": 3, "layerId": "", "attrs": {}, "a": {"x": 0.9, "y": -0.10000000000000006}, "b": {"x": 0.9, "y": -5.5109105961630896e-17}}, {"kind": "line", "id": 4, "layerId": "", "attrs": {}, "a": {"x": -0.09999999999999998, "y": -0.09999999999999994}, "b": {"x": -0.09999999999999998, "y": 6.735557395310443e-17}}]}]}, "warnings": []}, "within": 1e-09, "expect": {"revision": "same"}},
+        {"op": "undo", "returns": "Sabit bloğa çevir", "expect": {"entities": {"2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 5, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Genişlik": 1.0, "Kanat": 0.5, "Yön": true}}}}}
+      ]
+    },
+    {
+      "name": "Kapı (sabit)",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2", "$uidOf:2"]}, "result": {"status": "completed", "output": {"blocks": [{"block": "$blockOf:Kapı (sabit)", "name": "Kapı (sabit)", "from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 1.0, "Görünüş": "Açılım", "Kanat": 0.5, "Yön": true}, "inserts": ["$uidOf:2"]}], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {}, "block": "$blockOf:Kapı (sabit)", "p": {"x": 5, "y": 0}, "scale": 1, "rotation": 0}}, "blockIds": {"Kapı (sabit)": "new"}, "canUndo": true, "revision": "changed"}},
+        {"op": "execute", "command": "cad.blocks.proxy", "input": {"uids": ["$uidOf:2"]}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:2", "block": "$blockOf:Kapı (sabit)", "default": true, "values": {}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0.9, "y": -5.5109105961630896e-17}, "b": {"x": 0.9000000000000001, "y": 1.0}}, {"kind": "arc", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0.9, "y": -5.5109105961630896e-17}, "r": 1.0, "a0": 1.5707963267948966, "a1": 3.141592653589793}, {"kind": "line", "id": 3, "layerId": "", "attrs": {}, "a": {"x": 0.9, "y": -0.10000000000000006}, "b": {"x": 0.9, "y": -5.5109105961630896e-17}}, {"kind": "line", "id": 4, "layerId": "", "attrs": {}, "a": {"x": -0.09999999999999998, "y": -0.09999999999999994}, "b": {"x": -0.09999999999999998, "y": 6.735557395310443e-17}}]}]}, "warnings": []}, "within": 1e-09, "expect": {"revision": "same"}},
+        {"op": "undo", "returns": "Sabit bloğa çevir", "expect": {"entities": {"2": {"kind": "insert", "id": 2, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 5, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Genişlik": 1.0, "Kanat": 0.5, "Yön": true}}}}}
+      ]
+    },
+    {
+      "name": "sade kapı: gizlenen yay yeni blokta yok",
+      "steps": [
+        {"op": "execute", "command": "cad.blocks.parameters", "input": {"operation": "set", "uids": ["$uidOf:1"], "values": {"Görünüş": "Sade"}}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:1", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 0.9, "Görünüş": "Sade", "Kanat": 0.45, "Tip": "Standart", "Yön": false}}], "changed": ["$uidOf:1"], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0, "parameters": {"Görünüş": "Sade"}}}}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1"]}, "result": {"status": "completed", "output": {"blocks": [{"block": "$blockOf:Kapı (sabit)", "name": "Kapı (sabit)", "from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 0.9, "Görünüş": "Sade", "Kanat": 0.45, "Tip": "Standart", "Yön": false}, "inserts": ["$uidOf:1"]}], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {}, "block": "$blockOf:Kapı (sabit)", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}}, "blockIds": {"Kapı (sabit)": "new"}}},
+        {"op": "execute", "command": "cad.blocks.proxy", "input": {"uids": ["$uidOf:1"]}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:1", "block": "$blockOf:Kapı (sabit)", "default": true, "values": {}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0.9}}, {"kind": "line", "id": 3, "layerId": "", "attrs": {}, "a": {"x": 0, "y": -0.1}, "b": {"x": 0, "y": 0}}, {"kind": "line", "id": 4, "layerId": "", "attrs": {}, "a": {"x": 0.9, "y": -0.1}, "b": {"x": 0.9, "y": 0}}]}]}, "warnings": []}, "within": 1e-09, "expect": {"revision": "same"}}
+      ]
+    },
+    {
+      "name": "dik raf",
+      "steps": [
+        {"op": "execute", "command": "cad.blocks.parameters", "input": {"operation": "set", "uids": ["$uidOf:4"], "values": {"Uzunluk": 2.0, "Açı": 1.5707963267948966}}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:4", "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8002", "values": {"Açı": 1.5707963267948966, "Etiket": {"x": 0.0, "y": 0.5}, "Uzunluk": 2.0}}], "changed": ["$uidOf:4"], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"4": {"kind": "insert", "id": 4, "layerId": "yapi", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8002", "p": {"x": 0, "y": 5}, "scale": 1, "rotation": 0, "parameters": {"Açı": 1.5707963267948966, "Uzunluk": 2.0}}}}},
+        {"op": "execute", "input": {"uids": ["$uidOf:4"]}, "result": {"status": "completed", "output": {"blocks": [{"block": "$blockOf:Raf (sabit)", "name": "Raf (sabit)", "from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8002", "values": {"Açı": 1.5707963267948966, "Etiket": {"x": 0.0, "y": 0.5}, "Uzunluk": 2.0}, "inserts": ["$uidOf:4"]}], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"4": {"kind": "insert", "id": 4, "layerId": "yapi", "attrs": {}, "block": "$blockOf:Raf (sabit)", "p": {"x": 0, "y": 5}, "scale": 1, "rotation": 0}}, "blockIds": {"Raf (sabit)": "new"}}},
+        {"op": "execute", "command": "cad.blocks.proxy", "input": {"uids": ["$uidOf:4"]}, "result": {"status": "completed", "output": {"inserts": [{"uid": "$uidOf:4", "block": "$blockOf:Raf (sabit)", "default": true, "values": {}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0.0, "y": 0.0}, "b": {"x": 2.4492935982947065e-17, "y": 0.4}}, {"kind": "circle", "id": 2, "layerId": "", "attrs": {}, "c": {"x": -0.5, "y": 3.061616997868383e-17}, "r": 0.05}, {"kind": "line", "id": 3, "layerId": "", "attrs": {}, "a": {"x": 0.5, "y": 0.0}, "b": {"x": 0.9, "y": 0.0}}, {"kind": "line", "id": 4, "layerId": "", "attrs": {}, "a": {"x": 1.0, "y": 0.0}, "b": {"x": 1.4, "y": 0.0}}]}]}, "warnings": []}, "within": 1e-09, "expect": {"revision": "same"}}
+      ]
+    },
+    {
+      "name": "adı alınmışsa sonraki numara: (sabit 2)",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2"]}, "result": {"status": "completed", "output": {"blocks": [{"block": "$blockOf:Kapı (sabit)", "name": "Kapı (sabit)", "from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 1.0, "Görünüş": "Açılım", "Kanat": 0.5, "Yön": true}, "inserts": ["$uidOf:2"]}], "revision": "$current"}, "warnings": []}, "expect": {"blockIds": {"Kapı (sabit)": "new"}}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1"]}, "result": {"status": "completed", "output": {"blocks": [{"block": "$blockOf:Kapı (sabit 2)", "name": "Kapı (sabit 2)", "from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 0.9, "Görünüş": "Açılım", "Kanat": 0.45, "Tip": "Standart", "Yön": false}, "inserts": ["$uidOf:1"]}], "revision": "$current"}, "warnings": []}, "expect": {"blockIds": {"Kapı (sabit 2)": "new"}}}
+      ]
+    },
+    {
+      "name": "planla: yeni bloklar boş kimlikle, yazmaz",
+      "steps": [
+        {"op": "plan", "input": {"uids": ["$uidOf:2"]}, "result": {"status": "completed", "output": {"blocks": [{"block": "00000000-0000-0000-0000-000000000000", "name": "Kapı (sabit)", "from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8001", "values": {"Genişlik": 1.0, "Görünüş": "Açılım", "Kanat": 0.5, "Yön": true}, "inserts": ["$uidOf:2"]}], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: yerleştirme verilmedi",
+      "steps": [
+        {"op": "execute", "input": {"uids": []}, "result": {"status": "failed", "error": {"code": "no_entities", "message": "Sabit bloğa çevrilecek yerleştirme verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "path": "uids"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: boş ad",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2"], "name": "  "}, "result": {"status": "failed", "error": {"code": "empty_name", "message": "Blok adı boş olamaz; bir ad yazın ya da adı vermeyin (kaynağın adı ve “(sabit)”).", "path": "name"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: alınmış ad (Türkçe büyük küçük harf ayırmadan)",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2"], "name": "MASA"}, "result": {"status": "failed", "error": {"code": "duplicate_block", "message": "Çizimde “MASA” adında bir blok var; başka bir ad verin.", "path": "name"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: ikinci bloğun adı alınmış",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2", "$uidOf:1"], "name": "Raf"}, "result": {"status": "failed", "error": {"code": "duplicate_block", "message": "Çizimde “Raf” adında bir blok var; başka bir ad verin.", "path": "name"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: dinamik olmayan blok",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2", "$uidOf:5"]}, "result": {"status": "failed", "error": {"code": "not_dynamic", "message": "“Masa” bloğu dinamik değil; zaten sabit. Dinamik bir bloğun yerleştirmesini verin.", "path": "uids[1]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: yerleştirme olmayan nesne",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:6"]}, "result": {"status": "failed", "error": {"code": "not_insert", "message": "Verilen nesne bir blok yerleştirmesi değil. Bir bloğun yerleştirmesini verin.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: çizimde olmayan nesne",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8fff"]}, "result": {"status": "failed", "error": {"code": "entity_not_found", "message": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d8fff” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: bütünü kilitli",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:3"]}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Kilitli” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: geçersiz kimlik",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["abc"]}, "result": {"status": "failed", "error": {"code": "invalid_uid", "message": "$any", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: çizim değişmişse hiçbir şey yazılmaz",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2"], "expectedRevision": "999"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "$any", "path": "expectedRevision", "revision": "$current"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ret: okunamayan sürüm",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2"], "expectedRevision": "yedi"}, "result": {"status": "failed", "error": {"code": "invalid_revision", "message": "$any", "path": "expectedRevision"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    }
+  ]
+}

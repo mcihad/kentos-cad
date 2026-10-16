@@ -42,11 +42,11 @@ use crate::api::json::Json;
 use crate::block_dynamic::Dynamic;
 use crate::entity::{Attrs, Entity, Places, Shape, entity_bounds_in};
 use crate::geom::affine::{Affine, apply, compose, translation};
-use crate::ops::warp::{Warp, warp_shape};
 use crate::geometry::{Bounds, empty_bounds, extend_bounds};
 use crate::jsmath::{PI, atan2, cos, js_hypot, js_max, js_min, sin};
 use crate::ops::curve_cuts::Cut;
 use crate::ops::transform::transform_shape;
+use crate::ops::warp::{Warp, warp_shape};
 use crate::text::{Font, TextAlign};
 use crate::vec2::Vec2;
 
@@ -116,7 +116,12 @@ impl Attribute {
 /// An attribute piece's shape in its definition's coordinates relative to the base point (docs/adr/0317 §1): the
 /// value the insert shows (`attrs`; a constant attribute's is the definition's), at the place the insert moved it to
 /// (`places`; a movable attribute's only). Any other piece's shape as it is.
-fn attribute_piece(flat: &Flat, piece: &Piece, attrs: Option<&Attrs>, places: Option<&Places>) -> Shape {
+fn attribute_piece(
+    flat: &Flat,
+    piece: &Piece,
+    attrs: Option<&Attrs>,
+    places: Option<&Places>,
+) -> Shape {
     let Some(tag) = &piece.attribute else {
         return piece.shape.clone();
     };
@@ -316,6 +321,11 @@ impl Blocks {
         Ok(Blocks::new(defs))
     }
 
+    /// A dynamic definition's parameters and actions (docs/adr/0318); none for a plain one.
+    pub fn dynamic_of(&self, id: &str) -> Option<&Dynamic> {
+        self.dynamic.get(id)?.dynamic.as_deref()
+    }
+
     pub fn is_empty(&self) -> bool {
         self.by_id.is_empty()
     }
@@ -393,7 +403,10 @@ impl Blocks {
     ) -> Option<Vec<u32>> {
         let local = |e: &Entity| number_field(&e.rest, "id");
         let once = |list: &[Entity], id: f64| {
-            let mut found = list.iter().enumerate().filter(|(_, e)| local(e) == Some(id));
+            let mut found = list
+                .iter()
+                .enumerate()
+                .filter(|(_, e)| local(e) == Some(id));
             match (found.next(), found.next()) {
                 (Some((i, _)), None) => Some(i),
                 _ => None,
@@ -749,7 +762,11 @@ pub fn insert_through(shape: &Shape, m: &Affine) -> Option<Shape> {
         return None;
     }
     let flip = u.x * v.y - u.y * v.x < 0.0;
-    let sy = if (su - sv).abs() <= 1e-15 * su { su } else { sv };
+    let sy = if (su - sv).abs() <= 1e-15 * su {
+        su
+    } else {
+        sv
+    };
     Some(Shape::Insert {
         params: params.clone(),
         block: block.clone(),
@@ -954,8 +971,7 @@ fn flat_of(
                     continue;
                 }
                 // A part that follows a layer takes nothing from the nested insert.
-                let follows =
-                    |bit: u8| piece.by_layer.iter().any(|(_, m)| m & bit != 0);
+                let follows = |bit: u8| piece.by_layer.iter().any(|(_, m)| m & bit != 0);
                 // A part the piece takes from the nested insert (BYBLOCK) and the insert has none of its own:
                 // the insert's own `byLayer` part follows the insert's layer.
                 let mut via = 0u8;
@@ -982,10 +998,17 @@ fn flat_of(
                 );
                 // The block's layer of the nested definition is the nested insert's layer here.
                 let mut layers: Vec<(String, u8)> = Vec::with_capacity(2);
-                for (layer, mask) in piece.by_layer.iter().cloned().chain(
-                    (via != 0).then(|| (String::new(), via)),
-                ) {
-                    let layer = if layer.is_empty() { own_layer.clone() } else { layer };
+                for (layer, mask) in piece
+                    .by_layer
+                    .iter()
+                    .cloned()
+                    .chain((via != 0).then(|| (String::new(), via)))
+                {
+                    let layer = if layer.is_empty() {
+                        own_layer.clone()
+                    } else {
+                        layer
+                    };
                     match layers.iter_mut().find(|(l, _)| *l == layer) {
                         Some((_, m)) => *m |= mask,
                         None => layers.push((layer, mask)),
@@ -1209,7 +1232,9 @@ mod tests {
             id: DOOR.into(),
             base: Vec2::new(0.0, 0.0),
             entities: vec![
-                entity(r#"{"kind":"line","id":1,"layerId":"","attrs":{},"a":{"x":0,"y":0},"b":{"x":0,"y":0.9}}"#),
+                entity(
+                    r#"{"kind":"line","id":1,"layerId":"","attrs":{},"a":{"x":0,"y":0},"b":{"x":0,"y":0.9}}"#,
+                ),
                 entity(&format!(
                     r#"{{"kind":"arc","id":2,"layerId":"","attrs":{{}},"c":{{"x":0,"y":0}},"r":0.9,"a0":0,"a1":{}}}"#,
                     PI / 2.0
@@ -1231,7 +1256,9 @@ mod tests {
             }],
         }]);
         let mut attrs = Attrs::default();
-        attrs.0.push(("NO".to_owned(), Json::Str("K-12".to_owned())));
+        attrs
+            .0
+            .push(("NO".to_owned(), Json::Str("K-12".to_owned())));
         let door = |rotation: f64| Shape::Insert {
             params: None,
             block: DOOR.into(),
@@ -1247,7 +1274,13 @@ mod tests {
             pieces
                 .iter()
                 .filter_map(|q| match &q.shape {
-                    Shape::Text { p, rotation, align, text, .. } => {
+                    Shape::Text {
+                        p,
+                        rotation,
+                        align,
+                        text,
+                        ..
+                    } => {
                         let shown = q
                             .attribute
                             .as_ref()
@@ -1261,20 +1294,44 @@ mod tests {
         };
         let pieces = blocks.expand(&door(0.0));
         // The swing arc mirrored: from east clockwise to south, stored counter-clockwise from 270° to 360°.
-        let Some(Shape::Arc { a0, a1, .. }) = pieces.iter().map(|q| &q.shape).find(|s| matches!(s, Shape::Arc { .. }))
+        let Some(Shape::Arc { a0, a1, .. }) = pieces
+            .iter()
+            .map(|q| &q.shape)
+            .find(|s| matches!(s, Shape::Arc { .. }))
         else {
             panic!("an arc");
         };
-        assert!(((a0 - 3.0 * PI / 2.0).abs() < 1e-12) && a1.abs() < 1e-12, "{a0} {a1}");
-        assert_eq!(texts(&pieces), [(10.45, 19.7, 0.0, Some(TextAlign::TopLeft), "K-12".to_owned())]);
+        assert!(
+            ((a0 - 3.0 * PI / 2.0).abs() < 1e-12) && a1.abs() < 1e-12,
+            "{a0} {a1}"
+        );
+        assert_eq!(
+            texts(&pieces),
+            [(
+                10.45,
+                19.7,
+                0.0,
+                Some(TextAlign::TopLeft),
+                "K-12".to_owned()
+            )]
+        );
         let pieces = blocks.expand(&door(PI));
         let shown = texts(&pieces);
         let [(x, y, rotation, align, ref value)] = shown[..] else {
             panic!("one text");
         };
-        assert!((x - 9.55).abs() < 1e-12 && (y - 20.3).abs() < 1e-12, "{x} {y}");
-        assert!(rotation.abs() < 1e-9 || (rotation - 360.0).abs() < 1e-9, "{rotation}");
-        assert_eq!((align, value.as_str()), (Some(TextAlign::BaselineRight), "K-12"));
+        assert!(
+            (x - 9.55).abs() < 1e-12 && (y - 20.3).abs() < 1e-12,
+            "{x} {y}"
+        );
+        assert!(
+            rotation.abs() < 1e-9 || (rotation - 360.0).abs() < 1e-9,
+            "{rotation}"
+        );
+        assert_eq!(
+            (align, value.as_str()),
+            (Some(TextAlign::BaselineRight), "K-12")
+        );
     }
 
     /// Mirrored in the definition's x axis, then a half turn: (x, y) → (x, −y)
