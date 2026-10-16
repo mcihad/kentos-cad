@@ -19,8 +19,9 @@ The rules (ADR 0216 §2–§4):
    note).
 4. With Eşleşmeyenleri ekle, a first source row no target took becomes an object on the target layer: the key under
    the target key's name, the map's values, then the layer fields' defaults; a layer source gives its object's
-   geometry, a file its east and north columns' point (read by the decimal rule; unread: not added); a required field
-   left empty: not added, with its reason.
+   geometry, a file its east and north columns' point (read by the decimal rule; unread: not added), or, with neither
+   column chosen, a record without a geometry (docs/adr/0410 §6; one column alone is refused); a required field left
+   empty: not added, with its reason.
 5. The report: the targets in order (Güncellendi, Değişmedi, Eşleşmedi), then the source rows no target took in order
    (Eklendi, Eklenmedi, Kullanılmadı); a change is “name: before → after”, (boş) for none; notes joined by spaces.
 6. The target layer (ADR 0216 §3): an empty one is taken (a run may only add to it); a group or a locked layer is not
@@ -210,9 +211,10 @@ def run(values):
             return {"refused": f"Kaynakta “{m['source']}” alanı yok; alanları: {', '.join(h for h in header if h)}."}
     append = values.get("append", False)
     east, north = trim(values.get("east", "")), trim(values.get("north", ""))
-    if append and kind == "file":
+    records = append and kind == "file" and not east and not north
+    if append and kind == "file" and not records:
         if not east or not north:
-            return {"refused": "Dosyadan nesne eklemek için Doğu ve Kuzey sütunlarını seçin."}
+            return {"refused": "Doğu ve Kuzey sütunlarının ikisini de seçin; ikisi de boşsa satırlar geometrisiz kayıt olarak eklenir."}
         for c in (east, north):
             if c not in header:
                 return {"refused": f"Kaynakta “{c}” alanı yok; alanları: {', '.join(h for h in header if h)}."}
@@ -349,6 +351,8 @@ def run(values):
         geom = None
         if objs is not None:
             geom = geometry(objs[r])
+        elif records:
+            geom = {}
         else:
             ex, nx = parse_decimal(trim(cell(r, east))), parse_decimal(trim(cell(r, north)))
             if ex is None or nx is None:
@@ -360,7 +364,7 @@ def run(values):
             report.append([kt, "Eklenmedi", "", " ".join(notes)])
             not_added += 1
             continue
-        kind_of = objs[r]["kind"] if objs is not None else "point"
+        kind_of = objs[r]["kind"] if objs is not None else ("record" if records else "point")
         add.append({"kind": kind_of, "layerId": target_layer, "attrs": attrs, **geom})
         report.append([kt, "Eklendi", "; ".join(written), " ".join(notes)])
         added += 1
@@ -432,7 +436,8 @@ def build():
         case("survey-report-only", "Aynı aktarım, Yalnız raporla: tablo aynı, çizim değişmez", {**survey, "reportOnly": True}),
         case("points-append", "Nokta dosyasından: var olan noktanın kodu güncellenir, yenisi doğu ve kuzeyinden nokta olur, okunamayan koordinat eklenmez", points),
         case("missing-key", "Kaynak anahtar sütunu yok: reddedilir", {**deed, "sourceKey": "ADA_PARSEL"}),
-        case("missing-coordinates", "Dosyadan eklemek için doğu ve kuzey seçilmedi: reddedilir", {**points, "east": "", "north": ""}),
+        case("records-append", "Dosyadan doğu ve kuzey seçilmeden: yeni satırlar geometrisiz kayıt olarak eklenir", {**points, "east": "", "north": ""}),
+        case("half-coordinates", "Yalnız doğu sütunu seçildi: reddedilir", {**points, "north": ""}),
         case("empty-target", "Boş hedef katmana: yalnız eklenir (yinelenen anahtar kullanılmaz)", {**survey, "target": L("yeni"), "geometry": False}),
         case("locked-target", "Kilitli hedef katman: çalıştırma başlamaz", {**deed, "target": L("arsiv")}),
         case("group-target", "Hedef bir grup: çalıştırma başlamaz", {**deed, "target": L("paftalar")}),

@@ -52,12 +52,21 @@ MCP aracı katalogdan.
   Formla düzenle onunla açılır.
 - Formun ilişkili kayıtlar öğesinde **Yeni** (ADR 0409 §4): alt katman kayıt tutuyorsa (ve çizilen nesnesi yoksa) ya da üst
   kaydın yeri yoksa alt kayıt geometrisiz kayıttır; öbür durumda üst kaydın yerinde nokta.
+- Öznitelik tablosu katmanın formunun başka katmandan listelerini (ADR 0404) etiketleriyle gösterir: malikin “Binalar”ı
+  kimlikler değil “B-1; B-2”; arama ve sıralama da etiketle, yazılan değer kimlik kalır (`kentos_forms::labels_of`,
+  `feature_table::show_labels`). QGIS'in Value Relation gösterimi gibi.
 - Öznitelikler'de Tür “Kayıt”; Renk, Saydamlık, Sembol ve Geometri bölümü gösterilmez. Seçime yakınlaş yalnız kayıt seçiliyken
   bunu söyler. Tablonun hücreleri tek satırdır (uzun değer hücrenin kenarında kesilir).
 
 ### 5. Dışa aktarma
 
 GeoJSON kaydı `"geometry": null` ile yazar (RFC 7946 §3.2) ve raporda söyler; DXF, KML ve GPX kaydı yazmaz, raporda söyler.
+
+### 6. Dosyadan kayıt
+
+İşlemler'in Veri aktar'ı (ADR 0216) dosyadan Eşleşmeyenleri ekle'de Doğu ve Kuzey sütunlarının ikisi de boşsa yeni
+satırları geometrisiz kayıt olarak ekler: CSV, TXT, XLSX ya da ODS tablosu doğrudan bir kayıt katmanına aktarılır. Yalnız biri
+seçiliyse çalıştırma başlamaz. Ortak durumlar `records-append` ve `half-coordinates` (`transfer_cases.py`).
 
 ## Denetimler
 
@@ -74,4 +83,3 @@ GeoJSON kaydı `"geometry": null` ile yazar (RFC 7946 §3.2) ve raporda söyler;
 - Tablo satırı kendi türüyle gelir; ilişkinin alt katmanı geometrisiz olabilir, “elle çizilmeli” kalkar.
 - Bu dalın şema 60'ı ve `FORMATS_VERSION` 69'u ana daldaki 60–61 ve 70 ile çakışır; birleşmede formlar ve kayıt bir sonraki
   boş şemaya ve sürüme taşınır.
-- Açık: tabloda başka katmandan listenin (ADR 0404) etiketiyle gösterim; CSV ve tablo dosyasından kayıtlar (İşlemler).

@@ -841,8 +841,8 @@
    }
   },
   {
-   "id": "missing-coordinates",
-   "title": "Dosyadan eklemek için doğu ve kuzey seçilmedi: reddedilir",
+   "id": "records-append",
+   "title": "Dosyadan doğu ve kuzey seçilmeden: yeni satırlar geometrisiz kayıt olarak eklenir",
    "document": "transfer.kcad",
    "run": {
     "tool": "attributes.transfer"
@@ -871,8 +871,109 @@
     "reportOnly": false
    },
    "expect": {
+    "status": "ok",
+    "summary": "1 nesne güncellendi, 2 eklendi; 1 hedefin eşi yok, 0 kaynak satırı kullanılmadı.",
+    "undo": "Veri aktar",
+    "updated": [
+     {
+      "id": 21,
+      "attrs": {
+       "Ad": "N1",
+       "Kod": "sınır"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "record",
+      "layerId": "nokta",
+      "attrs": {
+       "Ad": "N3",
+       "Kod": "poligon"
+      }
+     },
+     {
+      "kind": "record",
+      "layerId": "nokta",
+      "attrs": {
+       "Ad": "N4",
+       "Kod": "bina"
+      }
+     }
+    ],
+    "outputs": {
+     "count": 1,
+     "added": 2,
+     "table": {
+      "columns": [
+       "Anahtar",
+       "Sonuç",
+       "Değişiklikler",
+       "Not"
+      ],
+      "rows": [
+       [
+        "N1",
+        "Güncellendi",
+        "Kod: eski → sınır",
+        ""
+       ],
+       [
+        "N2",
+        "Eşleşmedi",
+        "",
+        ""
+       ],
+       [
+        "N3",
+        "Eklendi",
+        "Ad: N3; Kod: poligon",
+        ""
+       ],
+       [
+        "N4",
+        "Eklendi",
+        "Ad: N4; Kod: bina",
+        ""
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "half-coordinates",
+   "title": "Yalnız doğu sütunu seçildi: reddedilir",
+   "document": "transfer.kcad",
+   "run": {
+    "tool": "attributes.transfer"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "nokta"
+    },
+    "targetKey": "Ad",
+    "sourceKind": "file",
+    "file": "noktalar.csv",
+    "sourceKey": "NOKTA",
+    "map": [
+     {
+      "target": "Kod",
+      "source": "KOD",
+      "default": ""
+     }
+    ],
+    "existing": "overwrite",
+    "geometry": false,
+    "append": true,
+    "east": "Y",
+    "north": "",
+    "reportOnly": false
+   },
+   "expect": {
     "status": "error",
-    "message": "Dosyadan nesne eklemek için Doğu ve Kuzey sütunlarını seçin."
+    "message": "Doğu ve Kuzey sütunlarının ikisini de seçin; ikisi de boşsa satırlar geometrisiz kayıt olarak eklenir."
    }
   },
   {

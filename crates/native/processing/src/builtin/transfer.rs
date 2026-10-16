@@ -47,7 +47,7 @@ pub fn tool() -> Tool {
             "Örnekler: tapu listesindeki malik, hisse ve yüzölçümünü parsel numarasıyla parsellere aktarmak; başka bir ekibin güncel ölçümünü mevcut katmana geometrisiyle işlemek, yeni parselleri eklemek; koordinat listesinden noktaları adlarıyla güncellemek ve yenilerini eklemek.",
             "Anahtarlar baştaki ve sondaki boşluklar atılarak karşılaştırılır; iki taraf da sayıysa sayı olarak (002 ile 2 aynı). Kaynakta yinelenen anahtarın ilk satırı alınır; hedefte aynı anahtarlı nesnelerin hepsi güncellenir.",
             "Alan eşleme her hedef alana bir kaynak sütun ya da varsayılan değer verir: hücre boşsa varsayılan yazılır. Eşleme boşsa anahtardan başka bütün sütunlar kendi adlarıyla aktarılır. Hedef katmanın alanı tipliyse değer alanın kuralıyla yazılır; uymayan değer yazılmaz ve raporda nedeni söylenir.",
-            "Eşleşmeyenleri ekle açıkken hiçbir nesnenin almadığı satırlar hedef katmana eklenir: katmandan geometrisiyle, dosyadan Doğu ve Kuzey sütunlarından nokta olarak. Yalnız raporla açıkken çizim değişmez; rapor ne olacağını gösterir.",
+            "Eşleşmeyenleri ekle açıkken hiçbir nesnenin almadığı satırlar hedef katmana eklenir: katmandan geometrisiyle, dosyadan Doğu ve Kuzey sütunlarından nokta olarak; iki sütun da boşsa geometrisiz kayıt (tablo satırı) olarak. Yalnız raporla açıkken çizim değişmez; rapor ne olacağını gösterir.",
         ]
         .join("\n\n")),
         keywords: [
@@ -158,7 +158,7 @@ pub fn tool() -> Tool {
                 .describe("Eşleşen nesne kaynağın geometrisini alır (türleri aynıysa)."),
             ParamDef::new("append", "Eşleşmeyenleri ekle", ParamKind::Boolean)
                 .default_value(json!(false))
-                .describe("Hiçbir nesnenin almadığı satırlar hedef katmana yeni nesne olarak eklenir."),
+                .describe("Hiçbir nesnenin almadığı satırlar hedef katmana yeni nesne olarak eklenir; dosyadan, Doğu ve Kuzey sütunları boşsa geometrisiz kayıt olarak."),
             coordinate("east", "Doğu sütunu", "Eklenen noktanın doğu koordinatı (CBS projesinde Y)."),
             coordinate("north", "Kuzey sütunu", "Eklenen noktanın kuzey koordinatı (CBS projesinde X)."),
             ParamDef::new("reportOnly", "Yalnız raporla", ParamKind::Boolean)
@@ -282,10 +282,12 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
     let east = js_trim(v.text("east"));
     let north = js_trim(v.text("north"));
     let mut corner = (0, 0);
-    if append && from_file {
+    // Neither column chosen: a file's new rows are records without a geometry (docs/adr/0410 §6).
+    let records = append && from_file && east.is_empty() && north.is_empty();
+    if append && from_file && !records {
         if east.is_empty() || north.is_empty() {
             return RunResult::refused(
-                "Dosyadan nesne eklemek için Doğu ve Kuzey sütunlarını seçin.".into(),
+                "Doğu ve Kuzey sütunlarının ikisini de seçin; ikisi de boşsa satırlar geometrisiz kayıt olarak eklenir.".into(),
             );
         }
         for (c, at) in [(east, &mut corner.0), (north, &mut corner.1)] {
@@ -517,6 +519,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
         };
         let made = match objects {
             Some(objects) => Some(shaped(objects[r], base)),
+            None if records => Some(Entity::Record(kentos_contracts::RecordEntity { base })),
             None => {
                 let (x, y) = (js_trim(cell(r, corner.0)), js_trim(cell(r, corner.1)));
                 let read = |text: &str, name: &str| {

@@ -317,13 +317,20 @@ impl App {
             .and_then(|l| model.layers().get(l))
             .map(|n| n.fields.clone())
             .unwrap_or_default();
-        let table = feature_table_of(
+        let mut table = feature_table_of(
             &fields,
             &entities,
             &|e| self.selection.contains(Slot(e.base().id)),
             &|e| in_view.contains(&Slot(e.base().id)),
             passes.as_deref(),
         );
+        // A form's lists from other layers: their codes shown by their labels (docs/adr/0410 §4).
+        if let Some(l) = layer.as_deref() {
+            let labels = self.lookup_labels(doc, l, &fields);
+            if !labels.is_empty() {
+                kentos_interaction::feature_table::show_labels(&mut table, &labels);
+            }
+        }
         let sorted = match panel.sort.as_deref() {
             None => None,
             Some(KIND_SORT) => Some(0),
@@ -361,6 +368,17 @@ impl App {
         };
         *panel.cache.borrow_mut() = Some((key, rows.clone()));
         rows
+    }
+
+    /// The fields of `layer` its form lists from other layers (docs/adr/0404), each with its codes'
+    /// labels.
+    fn lookup_labels(
+        &self,
+        doc: &Document,
+        layer: &str,
+        fields: &[kentos_contracts::LayerField],
+    ) -> Vec<(String, std::collections::BTreeMap<String, String>)> {
+        lookup_labels(&doc.model, layer, fields)
     }
 
     /// Öznitelik tablosu (`data.featureTable`): the bottom panel on its Tablo
@@ -818,4 +836,39 @@ fn filter_passes(
             )
         }
     }
+}
+
+/// The fields of `layer` its form lists from other layers (docs/adr/0404, 0410 §4), each with its
+/// codes' labels: by the layer's form (a released one first) at its latest release, else its draft.
+pub(crate) fn lookup_labels(
+    model: &kentos_domain::Document,
+    layer: &str,
+    fields: &[kentos_contracts::LayerField],
+) -> Vec<(String, std::collections::BTreeMap<String, String>)> {
+    let forms: Vec<&kentos_contracts::ProjectForm> = model
+        .settings()
+        .forms
+        .iter()
+        .filter(|f| f.layer == layer)
+        .collect();
+    let Some(form) = forms
+        .iter()
+        .find(|f| !f.releases.is_empty())
+        .or(forms.first())
+    else {
+        return Vec::new();
+    };
+    let body = form.releases.last().map_or(&form.draft, |r| &r.body);
+    let world = model.form_world(body);
+    body.walk()
+        .into_iter()
+        .filter_map(|(_, item)| match item {
+            kentos_contracts::FormItem::Field(f) => {
+                let lookup = f.lookup.as_ref()?;
+                let name = fields.iter().find(|x| x.key() == f.field)?.name.clone();
+                Some((name, kentos_forms::labels_of(lookup, &world)))
+            }
+            _ => None,
+        })
+        .collect()
 }

@@ -161,6 +161,36 @@ pub(crate) fn list_of(
     })
 }
 
+/// Each code of `lookup`'s layer with its label (docs/adr/0404 §2), for showing a stored value:
+/// every object, filter and chain aside, the first object's label for a code; none when the layer
+/// is not in the world.
+pub fn labels_of(lookup: &FormLookup, world: &World) -> BTreeMap<String, String> {
+    let Some(other) = world.get(&lookup.layer) else {
+        return BTreeMap::new();
+    };
+    let by_uid = lookup.key == LOOKUP_UID;
+    let key = name_of(&other.fields, &lookup.key);
+    let label = lookup
+        .label
+        .as_deref()
+        .map(|l| (l == LOOKUP_UID, name_of(&other.fields, l)));
+    let mut out = BTreeMap::new();
+    for (uid, attrs) in &other.rows {
+        let Some(code) = value(uid, attrs, key, by_uid) else {
+            continue;
+        };
+        if out.contains_key(code) {
+            continue;
+        }
+        let shown = match label {
+            Some((l_uid, l_name)) => value(uid, attrs, l_name, l_uid).unwrap_or(code),
+            None => code,
+        };
+        out.insert(code.to_owned(), shown.to_owned());
+    }
+    out
+}
+
 /// A related item's objects, made once: each object's persistent id and the id its field holds.
 #[derive(Clone, Debug)]
 pub(crate) struct Related {
@@ -195,4 +225,58 @@ pub(crate) fn related_of(layer: &str, field: &str, world: &World) -> Option<Rela
             })
             .collect(),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn world() -> World {
+        let row = |uid: &str, code: &str| {
+            (
+                uid.to_owned(),
+                [("Kod".to_owned(), code.to_owned())].into_iter().collect(),
+            )
+        };
+        let mut w = World::new();
+        w.insert(
+            "bina".into(),
+            OtherLayer {
+                name: "Bina".into(),
+                fields: vec![
+                    serde_json::from_value(serde_json::json!({ "name": "Kod", "kind": "text" }))
+                        .expect("a field"),
+                ],
+                rows: vec![
+                    row("u1", "B-1"),
+                    row("u2", " "),
+                    row("u3", "B-3"),
+                    row("u1", "B-9"),
+                ],
+            },
+        );
+        w
+    }
+
+    /// docs/adr/0410 §4: a stored code shown by its label, the first object's; an empty label shows
+    /// the code; a layer not in the world gives none.
+    #[test]
+    fn codes_are_labelled_by_the_first_object() {
+        let lookup = FormLookup {
+            layer: "bina".into(),
+            key: LOOKUP_UID.into(),
+            label: Some("Kod".into()),
+            matches: Vec::new(),
+            filter: None,
+        };
+        let labels = labels_of(&lookup, &world());
+        assert_eq!(labels.get("u1").map(String::as_str), Some("B-1"));
+        assert_eq!(labels.get("u2").map(String::as_str), Some("u2"));
+        assert_eq!(labels.get("u3").map(String::as_str), Some("B-3"));
+        let elsewhere = FormLookup {
+            layer: "yok".into(),
+            ..lookup
+        };
+        assert!(labels_of(&elsewhere, &world()).is_empty());
+    }
 }

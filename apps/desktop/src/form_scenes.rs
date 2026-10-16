@@ -1532,6 +1532,14 @@ mod tests {
         owner_table(&mut app);
         let (count, _, rows) = app.features_seen().expect("the tab is open");
         assert_eq!(count, "2 / 2", "{rows:?}");
+        // The buildings by their codes, not their ids: the owners' form lists them from the building layer.
+        assert_eq!(
+            rows,
+            [
+                "Kayıt | Ayşe Yılmaz | B-1; B-2",
+                "Kayıt | Mehmet Kaya | B-2"
+            ]
+        );
         let _ = app.update(Message::Features(crate::features::Event::AddRecord));
         let made = app
             .document

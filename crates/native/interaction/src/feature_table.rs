@@ -8,7 +8,7 @@
 //! the field's rules shows as written, with the reason, and sorts last. The
 //! panel is the desktop's `features`.
 
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use kentos_contracts::{
     CellKind, Entity, LayerField, LayerFieldKind, WorkbookColumn, WorkbookSheet, check_value,
@@ -50,6 +50,44 @@ pub fn order_of(f: &LayerField) -> &'static str {
         LayerFieldKind::Date => "date",
         LayerFieldKind::Boolean => "boolean",
         LayerFieldKind::Text => "text",
+    }
+}
+
+/// The table's cells of a field whose values are another layer's codes (a form's list from another
+/// layer, docs/adr/0404): shown and sorted by their labels, each code of a multiple field on its own
+/// (docs/adr/0408); a code with no label stays as it is. `labels`: the field's name and its codes'
+/// labels.
+pub fn show_labels(table: &mut FeatureTable, labels: &[(String, BTreeMap<String, String>)]) {
+    for (name, codes) in labels {
+        let Some(j) = table
+            .columns
+            .iter()
+            .position(|c| c.key.as_deref() == Some(name.as_str()))
+        else {
+            continue;
+        };
+        let many = table.columns[j].field.as_ref().is_some_and(|f| f.multiple);
+        for (i, row) in table.rows.iter_mut().enumerate() {
+            if table.problems.contains_key(&(i, j)) {
+                continue;
+            }
+            let cell = &mut row.cells[j];
+            if cell.shown.is_empty() {
+                continue;
+            }
+            let label = |code: &str| codes.get(code).cloned().unwrap_or_else(|| code.to_owned());
+            let shown = if many {
+                cell.shown
+                    .split(kentos_contracts::MULTIPLE_JOIN)
+                    .map(label)
+                    .collect::<Vec<_>>()
+                    .join(kentos_contracts::MULTIPLE_JOIN)
+            } else {
+                label(&cell.shown)
+            };
+            cell.key = Some(shown.clone());
+            cell.shown = shown;
+        }
     }
 }
 

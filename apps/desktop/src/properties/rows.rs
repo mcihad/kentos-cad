@@ -1526,7 +1526,8 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         .unwrap_or_default();
     if !fields.is_empty() {
         let mut rows = form_rows(doc.model.settings(), &base.layer_id);
-        rows.extend(field_rows(slot, base, &fields, locked));
+        let labels = crate::features::lookup_labels(&doc.model, &base.layer_id, &fields);
+        rows.extend(field_rows(slot, base, &fields, locked, &labels));
         sections.push(Section {
             id: "fields",
             title: "Alanlar".into(),
@@ -1612,20 +1613,34 @@ fn field_rows(
     base: &kentos_contracts::EntityBase,
     fields: &[kentos_contracts::LayerField],
     locked: bool,
+    labels: &[(String, std::collections::BTreeMap<String, String>)],
 ) -> Vec<Row> {
-    use kentos_contracts::{LayerFieldKind, check_value, display_value};
+    use kentos_contracts::{LayerFieldKind, MULTIPLE_JOIN, check_value, display_value};
     let mut rows = Vec::new();
     for f in fields {
         let raw = base.attrs.get(&f.name).cloned().unwrap_or_default();
         let checked = check_value(f, &raw);
-        let (value, shown) = match &checked {
-            Ok(v) => (v.clone(), display_value(f, v)),
-            Err(_) => (raw.clone(), raw.clone()),
+        // A form's list from another layer (docs/adr/0404): shown by its labels, written through the form.
+        let lookup = labels
+            .iter()
+            .find(|(name, _)| *name == f.name)
+            .map(|(_, l)| l);
+        let (value, shown) = match (&checked, lookup) {
+            (Ok(v), Some(codes)) => (
+                v.clone(),
+                v.split(MULTIPLE_JOIN)
+                    .filter(|c| !c.is_empty())
+                    .map(|c| codes.get(c).map_or(c, String::as_str))
+                    .collect::<Vec<_>>()
+                    .join(MULTIPLE_JOIN),
+            ),
+            (Ok(v), None) => (v.clone(), display_value(f, v)),
+            (Err(_), _) => (raw.clone(), raw.clone()),
         };
         let field = Field::Attribute(slot, f.name.clone());
         let listed =
             f.kind == LayerFieldKind::Boolean || f.values.as_ref().is_some_and(|v| !v.is_empty());
-        let editor = if locked {
+        let editor = if locked || lookup.is_some() {
             None
         } else if listed {
             let pairs: Vec<(String, String)> = match &f.values {

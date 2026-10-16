@@ -24,7 +24,7 @@ mod record;
 mod session;
 
 pub use generate::{generate, item_id_of, widget_of};
-pub use lookup::{OtherLayer, World};
+pub use lookup::{OtherLayer, World, labels_of};
 pub use object::{kind_label, object_of};
 pub use preflight::{preflight, preflight_in, widget_fits};
 pub use record::{Attached, Attrs, Object, schema_in, schema_of};
