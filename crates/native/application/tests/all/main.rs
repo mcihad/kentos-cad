@@ -16,6 +16,7 @@ mod delete;
 mod divide;
 mod edit;
 mod fixtures;
+mod forms_timing;
 mod info_templates;
 mod layers_find_cmd;
 mod lengthen;

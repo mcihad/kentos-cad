@@ -53,6 +53,14 @@ pub struct Prepared {
     groups: Vec<kentos_contracts::FieldGroup>,
 }
 
+/// An item's state for the record, without its id.
+#[derive(Clone, Copy, Debug, Default)]
+struct Flags {
+    shown: bool,
+    required: bool,
+    read_only: bool,
+}
+
 /// An item, flattened in the form's order with its parent.
 #[derive(Clone, Debug)]
 struct Node {
@@ -202,15 +210,6 @@ impl Prepared {
             .of(&self.fields, |n| attrs.get(n).cloned())
     }
 
-    /// The field at `index` as the record's subtype sees it.
-    fn seen(&self, index: usize, attrs: &Attrs) -> Option<LayerField> {
-        let t = self.subtype(attrs)?;
-        Some(kentos_contracts::LayerSubtypes::field_for(
-            &self.fields[index],
-            Some(t),
-        ))
-    }
-
     /// The layer fields' keys the form shows, in its order.
     pub fn keys(&self) -> Vec<&str> {
         self.bound()
@@ -244,21 +243,46 @@ impl Prepared {
 
     /// Every item's state for the record, in the form's order.
     pub fn states(&self, attrs: &Attrs, object: &Object) -> Vec<FormItemState> {
-        let mut shown: Vec<bool> = Vec::with_capacity(self.items.len());
-        let mut out = Vec::with_capacity(self.items.len());
+        self.items
+            .iter()
+            .zip(self.flags(attrs, object))
+            .map(|(node, f)| FormItemState {
+                id: node.id.clone(),
+                shown: f.shown,
+                required: f.required,
+                read_only: f.read_only,
+                choices: None,
+                text: None,
+                options: None,
+                related: None,
+                suggestions: None,
+                attachments: None,
+            })
+            .collect()
+    }
+
+    /// Each item's shown, required and read-only, in the form's order: what [`Prepared::states`]
+    /// says, without the items' ids (docs/adr/0424: a layer's audit asks every record, and the ids'
+    /// copies were most of its time).
+    fn flags(&self, attrs: &Attrs, object: &Object) -> Vec<Flags> {
+        let mut out: Vec<Flags> = Vec::with_capacity(self.items.len());
+        // The record's subtype, once (docs/adr/0422 §2).
+        let subtype = self.subtype(attrs);
         for node in &self.items {
-            let here = node.parent.is_none_or(|p| shown[p])
+            let here = node.parent.is_none_or(|p| out[p].shown)
                 && node
                     .visible
                     .as_ref()
                     .is_none_or(|e| holds(e, attrs, object));
-            shown.push(here);
             let (required, read_only) = node.field.as_ref().map_or((false, false), |b| {
                 // A field the layer requires is required on every form (the preflight shows it always).
                 let required = here
                     && (b.item.required
                         || self.fields[b.index].required
-                        || self.seen(b.index, attrs).is_some_and(|f| f.required)
+                        || subtype.is_some_and(|t| {
+                            let key = self.fields[b.index].key();
+                            t.fields.iter().any(|r| r.required && r.field == key)
+                        })
                         || b.required_when
                             .as_ref()
                             .is_some_and(|e| holds(e, attrs, object)));
@@ -269,17 +293,10 @@ impl Prepared {
                         .is_some_and(|e| holds(e, attrs, object));
                 (required, read_only)
             });
-            out.push(FormItemState {
-                id: node.id.clone(),
+            out.push(Flags {
                 shown: here,
                 required,
                 read_only,
-                choices: None,
-                text: None,
-                options: None,
-                related: None,
-                suggestions: None,
-                attachments: None,
             });
         }
         out
@@ -401,7 +418,7 @@ impl Prepared {
             let start = out.clone();
             let mut round_issues = Vec::new();
             let shown = if self.clear_hidden {
-                Some(self.states(&out, object))
+                Some(self.flags(&out, object))
             } else {
                 None
             };
@@ -414,7 +431,7 @@ impl Prepared {
                 self.calculate(b, &node.id, &mut out, object, &mut round_issues);
             }
             if self.clear_hidden {
-                let states = self.states(&out, object);
+                let states = self.flags(&out, object);
                 for (node, state) in self.items.iter().zip(&states) {
                     if let Some(b) = &node.field
                         && !state.shown
@@ -449,7 +466,7 @@ impl Prepared {
             let field = &self.fields[b.index];
             if let Some(default) = &b.item.default
                 && is_empty(out, &field.name)
-                && let Ok(v) = check_value(&loose(field), default)
+                && let Ok(v) = check_loose(field, default)
                 && !v.is_empty()
             {
                 out.insert(field.name.clone(), v);
@@ -485,7 +502,7 @@ impl Prepared {
             let Some(text) = field_text_of(e, out, object) else {
                 continue;
             };
-            match check_value(&loose(field), &text) {
+            match check_loose(field, &text) {
                 Ok(v) if !v.is_empty() => {
                     out.insert(field.name.clone(), v);
                 }
@@ -528,7 +545,7 @@ impl Prepared {
             out.remove(&field.name);
             return;
         };
-        match check_value(&loose(field), &text) {
+        match check_loose(field, &text) {
             Ok(v) if v.is_empty() => {
                 out.remove(&field.name);
             }
@@ -553,7 +570,7 @@ impl Prepared {
     /// What is wrong with the record, in the form's order: errors and the soft checks' warnings. The
     /// record is judged as it is; [`Prepared::complete`] it first.
     pub fn validate(&self, attrs: &Attrs, object: &Object) -> Vec<FormIssue> {
-        let states = self.states(attrs, object);
+        let states = self.flags(attrs, object);
         let mut issues = Vec::new();
         for (node, state) in self.items.iter().zip(&states) {
             if let (Some(bounds), Some(held), true) =
@@ -593,7 +610,7 @@ impl Prepared {
                 }
                 continue;
             }
-            let canonical = match check_value(&loose(field), value) {
+            let canonical = match check_loose(field, value) {
                 Ok(v) => v,
                 Err(r) => {
                     issues.push(at(
@@ -687,7 +704,7 @@ impl Prepared {
         object: &Object,
         others: impl Iterator<Item = &'a Attrs>,
     ) -> Vec<FormIssue> {
-        let states = self.states(attrs, object);
+        let states = self.flags(attrs, object);
         let wanted: Vec<(usize, &Bound, String)> = self
             .items
             .iter()
@@ -797,7 +814,7 @@ impl Prepared {
                 Some(list) => list.code_of(text).to_owned(),
                 None => text.clone(),
             };
-            match check_value(&loose(field), &coded) {
+            match check_loose(field, &coded) {
                 Ok(v) if v.is_empty() => {
                     written.remove(&field.name);
                 }
@@ -998,7 +1015,7 @@ impl Prepared {
     }
 
     fn locked(&self, changed: &[usize], after: &Attrs, object: &Object) -> Vec<FormIssue> {
-        let states = self.states(after, object);
+        let states = self.flags(after, object);
         let mut issues = Vec::new();
         for (node, state) in self.items.iter().zip(&states) {
             let Some(b) = &node.field else { continue };
@@ -1300,11 +1317,19 @@ fn is_empty(attrs: &Attrs, name: &str) -> bool {
     attrs.get(name).is_none_or(|v| js_trim(v).is_empty())
 }
 
-/// The field without its own `required`: the form asks for it only while it is shown.
-fn loose(field: &LayerField) -> LayerField {
+/// The field's value checked without its own `required`: the form asks for it only while it is shown.
+/// A field that is not required is checked as it is, without a copy (docs/adr/0424: a record's
+/// check ran once a field, and a copy of a long value list each time was most of a layer's audit).
+fn check_loose(
+    field: &LayerField,
+    text: &str,
+) -> Result<String, kentos_contracts::fields::Refusal> {
+    if !field.required {
+        return check_value(field, text);
+    }
     let mut f = field.clone();
     f.required = false;
-    f
+    check_value(&f, text)
 }
 
 fn refused(code: &str, item: Option<&str>, key: &str, message: String) -> FormIssue {

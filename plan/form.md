@@ -656,7 +656,7 @@ Bir masaüstü Python paketinin web/mobile'da çalıştığı yalnız manifest i
 - [ ] **FORM-QA-12:** Mobile/offline; revoked permission, expired task, changed schema/domain, deleted parent ve stale snapshot sync sonuçlarını doğrula.
 - [ ] **FORM-QA-13:** Account switch, logout, browser cache recovery/eviction ve mobile termination; özel draft/lookup/attachment izolasyonunu sınasın.
 - [ ] **FORM-QA-14:** Veri onayının exact submission revision'a bağlılığını, changed snapshot/reviewer grant ve approved record correction akışlarını doğrula.
-- [ ] **FORM-QA-15:** Büyük form, domain ve relation için açılış/rule recompute/paging/submission/memory ölç; gerçek referans cihaz ve veri korpusu üzerinden eşik belirle.
+- [x] **FORM-QA-15:** Büyük form, domain ve relation için açılış/rule recompute/paging/submission/memory ölç; gerçek referans cihaz ve veri korpusu üzerinden eşik belirle. — *Yapıldı (17 Ekim; ADR 0424: `forms_timing`, 100 000 kayıt, bütçeler; denetim 3 kat hızlandı). Gerçek saha cihazı ve web ölçümü açık.*
 - [ ] **FORM-QA-16:** Generator çıktısını tek doğruluk kanıtı sayma; bağımsız veri/policy beklentileri ve gerçek merkez/saha kullanım kabulü oluştur.
 - [ ] **FORM-QA-17:** AI eval; geçerli binding/rule/diff, permission projection, onay/yayın ayrımı ve untrusted help/source metnini ayrı ölçsün.
 - [ ] **FORM-QA-18:** Her profilin bağımsız teslim kapısı olsun; ilk core/central kabulü ileri mobile/plugin özelliklerine bağlanmasın. Temiz Python/uv bulunmayan ortamda ilk form senaryosu mutlaka çalışsın.

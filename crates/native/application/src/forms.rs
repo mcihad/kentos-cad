@@ -252,6 +252,15 @@ pub(crate) fn object(doc: &Document, slot: Slot, e: &Entity) -> Object {
     object
 }
 
+/// The latest release of the form `id` prepared as a record's editor would (the drawing's `@` values,
+/// its subtypes and value groups); the reason it cannot be, else.
+pub fn prepared_in(doc: &Document, id: &str) -> Result<Prepared, String> {
+    let variables = variables_given(doc, None, None).map_err(|s| s.into_error().message)?;
+    let form = self::form(doc.settings(), id, "form").map_err(|s| s.into_error().message)?;
+    let (body, _) = self::body(form, false, "draft").map_err(|s| s.into_error().message)?;
+    prepared(doc, form, body, &variables, "form").map_err(|s| s.into_error().message)
+}
+
 /// The suggesting field items' values in the layer (docs/adr/0407 §3): each item's id and its
 /// suggestions, the most used first.
 pub fn suggestions(doc: &Document, layer: &str, prepared: &Prepared) -> Vec<(String, Vec<String>)> {
