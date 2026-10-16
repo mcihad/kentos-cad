@@ -18,12 +18,14 @@ use crate::record::{Attrs, Object, holds, schema_of};
 use crate::{codes, has_errors, issue, preflight};
 
 /// A form compiled over its layer's fields.
+#[derive(Clone, Debug)]
 pub struct Prepared {
     fields: Vec<LayerField>,
     items: Vec<Node>,
 }
 
 /// An item, flattened in the form's order with its parent.
+#[derive(Clone, Debug)]
 struct Node {
     id: String,
     parent: Option<usize>,
@@ -32,6 +34,7 @@ struct Node {
 }
 
 /// A field item: its layer field and its rules.
+#[derive(Clone, Debug)]
 struct Bound {
     /// Its layer field's place in `fields`.
     index: usize,

@@ -1140,6 +1140,22 @@
         "cad.blocks.edit"
       ],
       "note": "import işlemi, name kentos-temel: KentOS'un blok kitaplığı (ADR 0318 §4)."
+    },
+    "data.forms": {
+      "level": "semantic",
+      "via": [
+        "cad.forms.edit",
+        "cad.forms.validate"
+      ],
+      "note": "Oluştur, Kaydet, Yeniden adlandır, Yayınla, Kuralları uygula ve Formu sil komuta verilir; ön denetim formun çekirdeğindendir, aynısını cad.forms.validate verir (ADR 0401)."
+    },
+    "data.formEdit": {
+      "level": "semantic",
+      "via": [
+        "cad.forms.submit",
+        "cad.forms.validate"
+      ],
+      "note": "Kayıt cad.forms.submit ile tek adımda yazılır; pencerenin canlı denetimi cad.forms.validate'in çekirdeğidir (ADR 0401)."
     }
   },
   "tools": {

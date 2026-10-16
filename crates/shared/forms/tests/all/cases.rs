@@ -111,8 +111,6 @@ fn the_defaults_and_the_generated_forms_are_as_the_cases_say() {
 #[test]
 fn a_form_with_an_error_is_not_prepared() {
     let c = &cases("preflight")[1];
-    let issues = Prepared::new(&body(c), &fields(c), &[])
-        .err()
-        .expect("refused");
+    let issues = Prepared::new(&body(c), &fields(c), &[]).expect_err("refused");
     assert!(kentos_forms::has_errors(&issues));
 }

@@ -2574,6 +2574,7 @@ dependencies = [
  "kentos-domain",
  "kentos-expression",
  "kentos-formats",
+ "kentos-forms",
  "kentos-geometry-core",
  "kentos-headless",
  "kentos-interaction",

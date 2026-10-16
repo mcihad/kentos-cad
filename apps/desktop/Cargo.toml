@@ -58,6 +58,8 @@ kentos-native-style = { path = "../../crates/native/style" }
 kentos-geometry-core = { path = "../../crates/shared/geometry-core" }
 # The expression language's editor services (İfade oluşturucu, docs/adr/0100 §5).
 kentos-expression = { path = "../../crates/shared/expression" }
+# The forms core (docs/adr/0401): Formlar's preflight and Formla düzenle's rules.
+kentos-forms = { path = "../../crates/shared/forms" }
 kentos-svg-core = { path = "../../crates/shared/svg-core" }
 roxmltree = { workspace = true }
 png = { workspace = true }

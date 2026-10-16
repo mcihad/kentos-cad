@@ -1,0 +1,375 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Formlar",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 2,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 500,
+  "workspace": "gis",
+  "drawingFont": "barlow",
+  "forms": [
+   {
+    "id": "bina-denetimi",
+    "name": "Bina denetimi",
+    "layer": "bina",
+    "draft": {
+     "revision": 1,
+     "items": [
+      {
+       "type": "tab",
+       "id": "genel",
+       "label": "Genel",
+       "items": [
+        {
+         "type": "field",
+         "id": "durum",
+         "field": "Durum",
+         "required": true
+        },
+        {
+         "type": "field",
+         "id": "kat",
+         "field": "kat-sayisi",
+         "label": "Kat sayısı",
+         "help": "Zemin kat dahil."
+        },
+        {
+         "type": "field",
+         "id": "aciklama",
+         "field": "Açıklama",
+         "widget": "textArea",
+         "visibleWhen": "Durum = 'inceleme'",
+         "requiredWhen": "Durum = 'inceleme'",
+         "checks": [
+          {
+           "rule": "uzunluk(Açıklama) >= 10",
+           "message": "Açıklama en az 10 karakter olmalı."
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "tab",
+       "id": "ayrinti",
+       "label": "Ayrıntı",
+       "items": [
+        {
+         "type": "group",
+         "id": "denetim",
+         "label": "Denetim",
+         "columns": 2,
+         "visibleWhen": "Kat >= 1",
+         "items": [
+          {
+           "type": "field",
+           "id": "tarih",
+           "field": "Tarih",
+           "default": "2026-10-16"
+          },
+          {
+           "type": "field",
+           "id": "onay",
+           "field": "Onaylı",
+           "widget": "switch",
+           "readOnlyWhen": "Durum = 'iyi'"
+          }
+         ]
+        },
+        {
+         "type": "note",
+         "id": "bilgi",
+         "text": "Denetimi yapan kişi kaydeder."
+        }
+       ]
+      }
+     ]
+    },
+    "releases": [
+     {
+      "version": 1,
+      "digest": "448d67ed5d5923779d7c142e0aef566f",
+      "body": {
+       "revision": 1,
+       "items": [
+        {
+         "type": "tab",
+         "id": "genel",
+         "label": "Genel",
+         "items": [
+          {
+           "type": "field",
+           "id": "durum",
+           "field": "Durum",
+           "required": true
+          },
+          {
+           "type": "field",
+           "id": "kat",
+           "field": "kat-sayisi",
+           "label": "Kat sayısı",
+           "help": "Zemin kat dahil."
+          },
+          {
+           "type": "field",
+           "id": "aciklama",
+           "field": "Açıklama",
+           "widget": "textArea",
+           "visibleWhen": "Durum = 'inceleme'",
+           "requiredWhen": "Durum = 'inceleme'",
+           "checks": [
+            {
+             "rule": "uzunluk(Açıklama) >= 10",
+             "message": "Açıklama en az 10 karakter olmalı."
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "tab",
+         "id": "ayrinti",
+         "label": "Ayrıntı",
+         "items": [
+          {
+           "type": "group",
+           "id": "denetim",
+           "label": "Denetim",
+           "columns": 2,
+           "visibleWhen": "Kat >= 1",
+           "items": [
+            {
+             "type": "field",
+             "id": "tarih",
+             "field": "Tarih",
+             "default": "2026-10-16"
+            },
+            {
+             "type": "field",
+             "id": "onay",
+             "field": "Onaylı",
+             "widget": "switch",
+             "readOnlyWhen": "Durum = 'iyi'"
+            }
+           ]
+          },
+          {
+           "type": "note",
+           "id": "bilgi",
+           "text": "Denetimi yapan kişi kaydeder."
+          }
+         ]
+        }
+       ]
+      },
+      "note": "İlk yayın"
+     }
+    ]
+   }
+  ]
+ },
+ "origin": {
+  "x": 487000,
+  "y": 4420000
+ },
+ "layers": [
+  {
+   "id": "bina",
+   "name": "Bina",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#3E63DD",
+    "lineType": "continuous",
+    "lineWeight": 0.35
+   },
+   "children": [],
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ]
+  },
+  {
+   "id": "yol",
+   "name": "Yol",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#ADB5BD",
+    "lineType": "continuous",
+    "lineWeight": 0.5
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "bina",
+ "entities": [
+  {
+   "kind": "polygon",
+   "id": 1,
+   "layerId": "bina",
+   "attrs": {
+    "Durum": "inceleme",
+    "Kat": "3",
+    "Kod": "B-12"
+   },
+   "pts": [
+    {
+     "x": 487000,
+     "y": 4420000
+    },
+    {
+     "x": 487018,
+     "y": 4420000
+    },
+    {
+     "x": 487018,
+     "y": 4420014
+    },
+    {
+     "x": 487000,
+     "y": 4420014
+    }
+   ],
+   "label": "B-1"
+  },
+  {
+   "kind": "polygon",
+   "id": 2,
+   "layerId": "bina",
+   "attrs": {
+    "Durum": "iyi",
+    "Kat": "2",
+    "Onaylı": "true"
+   },
+   "pts": [
+    {
+     "x": 487024,
+     "y": 4420000
+    },
+    {
+     "x": 487042,
+     "y": 4420000
+    },
+    {
+     "x": 487042,
+     "y": 4420014
+    },
+    {
+     "x": 487024,
+     "y": 4420014
+    }
+   ],
+   "label": "B-2"
+  },
+  {
+   "kind": "polygon",
+   "id": 3,
+   "layerId": "bina",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 487000,
+     "y": 4420020
+    },
+    {
+     "x": 487018,
+     "y": 4420020
+    },
+    {
+     "x": 487018,
+     "y": 4420034
+    },
+    {
+     "x": 487000,
+     "y": 4420034
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 4,
+   "layerId": "bina",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 487024,
+     "y": 4420020
+    },
+    {
+     "x": 487042,
+     "y": 4420020
+    },
+    {
+     "x": 487042,
+     "y": 4420034
+    },
+    {
+     "x": 487024,
+     "y": 4420034
+    }
+   ]
+  },
+  {
+   "kind": "line",
+   "id": 5,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Gül Sokak"
+   },
+   "a": {
+    "x": 486992,
+    "y": 4419994
+   },
+   "b": {
+    "x": 487050,
+    "y": 4419994
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

@@ -84,6 +84,8 @@ pub(crate) enum Target {
     LayerFilter,
     /// Etiketler's class condition or label text (labelling/, docs/adr/0212 §4).
     Labels(crate::labelling::Field),
+    /// A rule of Formlar's designer (forms/designer.rs, docs/adr/0401 §5).
+    Form(crate::forms::designer::Rule),
 }
 
 /// A field's values listed in the help.
@@ -789,6 +791,45 @@ impl App {
         self.open_builder_on_layer(Target::Labels(field), context, layer, value)
     }
 
+    /// Formlar's ε (forms/designer.rs, docs/adr/0401 §5): the builder on a rule of the form, the
+    /// layer's fields with their kinds (a yes/no field reads true or false), its objects to preview on.
+    pub(crate) fn open_builder_for_form(
+        &mut self,
+        rule: crate::forms::designer::Rule,
+        layer: &str,
+        value: &str,
+    ) -> Task<Message> {
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
+        let fields = doc
+            .model
+            .layers()
+            .get(layer)
+            .map(|n| n.fields.clone())
+            .unwrap_or_default();
+        let slots: Vec<Slot> = doc
+            .model
+            .by_layer(layer)
+            .take(5000)
+            .map(|e| Slot(e.base().id))
+            .collect();
+        let context = format!("{} · Kural", crate::forms::designer::TITLE);
+        let mut builder = Builder::new(
+            Target::Form(rule),
+            context,
+            value,
+            kentos_forms::schema_of(&fields, &[]),
+            Objects { slots },
+        );
+        builder.preview_on(Some(&doc.model), self.spatial.store());
+        if self.builder_flow {
+            builder.set_mode(ViewMode::Flow);
+        }
+        self.builder = Some(builder);
+        iced::widget::operation::focus(EDITOR)
+    }
+
     /// The builder on an expression over a layer: the layer's fields first, then its objects'
     /// other keys; its objects to preview on. A layer's filter and its labels are kept with
     /// the drawing: no `@` value but the layer's (docs/adr/0214 §1).
@@ -1114,6 +1155,7 @@ impl App {
             Target::Labels(field) => {
                 return self.labelling_event(crate::labelling::Event::Expression(field, text));
             }
+            Target::Form(rule) => return self.form_rule_written(rule, text),
         }
         Task::none()
     }

@@ -1,0 +1,35 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "form-entry",
+  "title": "Formla düzenle (ADR 0401 §9): seçili binanın kaydı katmanın formuyla açılır; inceleme gereken binada açıklama gösterilir ve istenir, boşken Kaydet pencereyi açık bırakır ve hiçbir şey yazmaz; açıklama yazılınca Kaydet kaydı tek adımda yazar ve pencereyi kapatır, geri alınır; Formlar penceresi formu ve öğesini gösterir, Vazgeç bir şey yazmadan kapatır",
+  "source": "Masaüstünün forms/ modülü, çekirdeğin kentos_forms'u, cad.forms.submit; çizim scripts/fixtures/forms_scene.py'nin, ADR 0401",
+  "covers": ["FORM-FIRST-09", "FORM-FIRST-11", "FORM-FIRST-12"],
+  "document": "forms.kcad",
+  "view": {"center": [487000, 4420000], "metresPerPixel": 0.1},
+  "clickTolerance": 0.3,
+  "steps": [
+    {"click": [0, 7], "note": "B-1'in batı kenarı", "expect": {"selected": [1]}},
+    {"run": "data.formEdit", "note": "Katmanın yayınlanmış formu", "expect": {"dialog": "Formla düzenle"}},
+    {"shot": "form-duzenle", "note": "Durum incelemede: açıklama gösterilir ve zorunludur"},
+    {
+      "dialog": "Formla düzenle",
+      "press": "Kaydet",
+      "note": "Açıklama boş: pencere açık kalır, hiçbir şey yazılmaz",
+      "expect": {"dialog": "Formla düzenle", "canUndo": false, "objects": [{"id": 1, "kind": "polygon", "attrs": {"Durum": "inceleme", "Kat": "3", "Kod": "B-12"}}]}
+    },
+    {
+      "dialog": "Formla düzenle",
+      "fill": {"Açıklama": "Çatı arası ayrıca bakılmalı.", "Kat": " 04 "},
+      "press": "Kaydet",
+      "note": "Değerler tek biçimle tek adımda yazılır; alan dışı öznitelik kalır; pencere kapanır",
+      "expect": {"dialog": null, "canUndo": true, "logged": ["Kayıt “Bina denetimi” formuyla yazıldı."],
+                 "objects": [{"id": 1, "kind": "polygon", "attrs": {"Durum": "inceleme", "Kat": "4", "Kod": "B-12", "Açıklama": "Çatı arası ayrıca bakılmalı."}}]}
+    },
+    {"run": "edit.undo", "note": "Kayıt tek adımda geri alınır", "expect": {"objects": [{"id": 1, "kind": "polygon", "attrs": {"Durum": "inceleme", "Kat": "3", "Kod": "B-12"}}]}},
+    {"run": "data.forms", "expect": {"dialog": "Formlar"}},
+    {"dialog": "Formlar", "press": "Açıklama", "note": "Öğe seçilir: kuralları denetçide"},
+    {"shot": "form-tasarim", "note": "Formlar: Açıklama öğesi, görünürlük ve zorunluluk kuralları"},
+    {"dialog": "Formlar", "press": "Vazgeç", "note": "Vazgeç hiçbir şey yazmaz: geri alınan kayıt yinelenebilir kalır", "expect": {"dialog": null, "canUndo": false, "canRedo": true}}
+  ]
+}

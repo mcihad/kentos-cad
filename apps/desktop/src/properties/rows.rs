@@ -1516,10 +1516,12 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         .map(|n| n.fields.clone())
         .unwrap_or_default();
     if !fields.is_empty() {
+        let mut rows = form_rows(doc.model.settings(), &base.layer_id);
+        rows.extend(field_rows(slot, base, &fields, locked));
         sections.push(Section {
             id: "fields",
             title: "Alanlar".into(),
-            rows: field_rows(slot, base, &fields, locked),
+            rows,
         });
     }
     let others: Vec<(&String, &String)> = base
@@ -1548,6 +1550,45 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         });
     }
     sections
+}
+
+/// The Form row of a layer that has a form (docs/adr/0401 §9): the form's name and whether it is
+/// published, with Formla düzenle and Formlar….
+fn form_rows(settings: &kentos_contracts::ProjectSettings, layer: &str) -> Vec<Row> {
+    let forms: Vec<&kentos_contracts::ProjectForm> =
+        settings.forms.iter().filter(|f| f.layer == layer).collect();
+    let Some(form) = forms
+        .iter()
+        .find(|f| !f.releases.is_empty())
+        .or(forms.first())
+    else {
+        return Vec::new();
+    };
+    let value = if form.releases.is_empty() {
+        format!("{} (taslak)", form.name)
+    } else {
+        form.name.clone()
+    };
+    let items = vec![
+        Choice::Command {
+            label: "Formla düzenle",
+            icon: Icon::Properties,
+            id: "data.formEdit",
+        },
+        Choice::Command {
+            label: "Formlar…",
+            icon: Icon::Layout,
+            id: "data.forms",
+        },
+    ];
+    vec![
+        Row::text("Form", value.clone()).editor(Some(Editor::Select {
+            text: value,
+            swatch: None,
+            icon: None,
+            items,
+        })),
+    ]
 }
 
 /// Öznitelikler's form of a layer's fields (docs/adr/0199 §5; the web's

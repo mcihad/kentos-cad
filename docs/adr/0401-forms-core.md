@@ -167,6 +167,32 @@ formla kaydetme hatası olan formu reddeder. Kaydetme reddetmez: sorunlu taslak 
   (her biri en az 20), bağımsız başvurudan.
 - Python `kentos.cad.forms` ve `Document.forms`; MCP'de üç araç, `edit` ve `submit` yıkıcı listede.
 
+### 10. Masaüstü
+
+- **Formlar** (`data.forms`, `forms/designer.rs`, görünümü `designer_view.rs`):
+  - solda projenin formları (katmanı, son yayını, uygulanıp uygulanmadığı), Yeni form (ad ve katman; gövde katmanın
+    alanlarından) ve formda olmayan katman alanları: birine basmak onu seçili öğenin yerine ekler;
+  - ortada öğe ağacı (sekme, grup, alan, not; kurallı öğede ƒ, hatalı öğede uyarı işareti), araç çubuğu (Sekme, Grup, Not,
+    Yukarı, Aşağı, Öğeyi sil) ve ön denetimin sorunları (sorun basılınca öğesi seçilir);
+  - sağda seçili öğenin denetçisi: etiket, öğe türü (alana uyanlar, uymayan “alana uymuyor” diye), Zorunlu, Salt okunur, yardım,
+    yer tutucu, varsayılan, üç kural ve denetimler; her kuralın yanında ε İfade oluşturucuyu açar (katmanın alanları türleriyle);
+  - altta ad, taslağın ve son yayının sürümü, Kuralları uygula; Formu sil, Vazgeç, Yayınla, Kaydet.
+- **Kaydet** taslağın kopyasını (`update`, ad değiştiyse `rename`) yazar ve **pencereyi kapatır**; Yayınla yazar ve yayınlar,
+  pencere açık kalır; Vazgeç kopyayı bırakır ve kapatır. Kaydedilmemiş kopya varken başka form seçilmez.
+- **Formla düzenle** (`data.formEdit`, `forms/entry.rs`): tek seçili nesnenin katmanının ilk yayınlanmış formu (yoksa taslağı):
+  - sekmeler (sorun sayısıyla), grup başlıklı kutuda, iki sütunlu grup yan yana; notlar düz yazı;
+  - öğe türüne göre denetimler: tek satır, çok satır (metin düzenleyici), sayı, tarih (takvimli), onay kutusu, anahtar, açılır
+    liste, seçenek düğmeleri, parçalı seçim; salt okunur alan değerini gösterir;
+  - her değişiklikte çekirdek (`assess`, `states`) kuralları yeniden sorar; sorun alanın altında, alana dokunulunca ya da
+    Kaydet'ten sonra; İlk soruna git sekmeyi değiştirir ve alana odaklanır;
+  - Kaydet yalnız değişen değerleri `cad.forms.submit` ile yazar (formun alanı olmayan kayıt yeni sayılır: varsayılanlar) ve
+    pencereyi kapatır; olmazsa pencere ilk sorunda kalır. Tab alanlar arasında döner (ADR 0400).
+- **Girişler:** CBS'de Veri › Tablo (Formlar…, Formla düzenle), CAD'de Yönet › Form; Öznitelikler'in Alanlar bölümünde Form satırı (Formla düzenle,
+  Formlar…); katmanın sağ tıkında Formlar… (katmanın formu, yoksa onun için yeni form). Komutların arayüz kaydı
+  `catalog/v1/additions.json`'da, manifest satırları `catalog/v1/operations.json`'da (düzey `semantic`).
+- **Kanıt:** iz `fixtures/interaction/v1/form-entry.json` (çizimi `scripts/fixtures/forms_scene.py`); resimler
+  `form_scenes.rs` (`KENTOS_SHOTS_ONLY=form-…`); akış testleri `form_scenes::tests`, `designer::tests`.
+
 ## Denetimler
 
 - `cargo test -p kentos-forms`: 48 ortak çekirdek durumu.
@@ -175,6 +201,8 @@ formla kaydetme hatası olan formu reddeder. Kaydetme reddetmez: sorunlu taslak 
 - `cargo test -p kentos-domain` (`field_ids`), `cargo test -p kentos-expression --test typed`.
 - `python3 scripts/fixtures/forms_cases.py --check`.
 - `pnpm py:test` (`test_forms.py`), `cargo test -p kentos-mcp` (`an_agent_makes_publishes_and_uses_a_form`).
+- `KENTOS_TRACES_ONLY=form-entry cargo test -p kentos-desktop every_trace_passes`; `cargo test -p kentos-desktop form_scenes`;
+  `python3 scripts/fixtures/forms_scene.py --check`.
 
 ## Sonuçlar
 

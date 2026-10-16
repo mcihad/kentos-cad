@@ -1135,6 +1135,40 @@
    "tests": 3
   },
   {
+   "id": "data.formEdit",
+   "kind": "command",
+   "title": "Formla düzenle",
+   "level": "semantic",
+   "via": [
+    "cad.forms.submit",
+    "cad.forms.validate"
+   ],
+   "operation": null,
+   "python": "kentos.cad.forms.submit, kentos.cad.forms.validate",
+   "mcp": "cad.forms.submit, cad.forms.validate",
+   "note": "Kayıt cad.forms.submit ile tek adımda yazılır; pencerenin canlı denetimi cad.forms.validate'in çekirdeğidir (ADR 0401).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "data.forms",
+   "kind": "command",
+   "title": "Formlar…",
+   "level": "semantic",
+   "via": [
+    "cad.forms.edit",
+    "cad.forms.validate"
+   ],
+   "operation": null,
+   "python": "kentos.cad.forms.edit, kentos.cad.forms.validate",
+   "mcp": "cad.forms.edit, cad.forms.validate",
+   "note": "Oluştur, Kaydet, Yeniden adlandır, Yayınla, Kuralları uygula ve Formu sil komuta verilir; ön denetim formun çekirdeğindendir, aynısını cad.forms.validate verir (ADR 0401).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "data.search",
    "kind": "command",
    "title": "Veride ara",

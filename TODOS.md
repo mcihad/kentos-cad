@@ -175,6 +175,13 @@ Liste:
   ve parçaların görünürlük kapısı (`Item::veiled`) web'in çiziminde ve seçiminde; 0'daki parçanın `byLayer`'ının yerleştirmenin
   katmanından alınması web'in stilli çiziminde; `cad.blocks.insert`'in ve `cad.blocks.edit` `units`'inin TS işleyicileri, Blok
   ekle'nin Y ölçeği, Öznitelikler'in X/Y ölçeği, Bloklar panelinin Birim ▸'i; web'in DXF yolu çekirdekten geldiği için hazır.
+- [ ] `FORM-A`…`FORM-D` formlar (ADR 0400, 0401, 16 Ekim): web'de gerekenler: `.kcad` şema 60'ın ayarlarının `forms`'u ve alanın
+  `id`'si (web'in kopyası 55'te); web'in `model/` belgesinde alanın kararlı kimliğinin taşınması (`set_layer_fields`'in kuralı,
+  `fixtures/document-ops/v1` değişmeden); `cad.forms.edit`, `.validate`, `.submit` ve `cad.entities.set`'in yazma profilinin TS
+  işleyicileri (`fixtures/commands/v1/cad.forms.*.json`, `cad.entities.set.forms.json`); form çekirdeği WASM'la
+  (`kentos-forms`); Formlar ve Formla düzenle pencereleri (ADR 0401 §10); web'in özel açılır kutularında ve onay kutularında Tab ile
+  gezinme ve tuşlar (ADR 0400). İfade motorunun tipli alan okuması (ADR 0401 §5) web'in WASM'ında da geçerli olur; web'in tipli
+  sütun veren yolları değişmez.
 - [ ] `CAD-BLOCK-13`, `14`, `15`, `16` dinamik bloklar ve KentOS blok kitaplığı (ADR 0318, 16 Ekim): web'de gerekenler: `.kcad`
   şema 59'un tanım `dynamic`'i ve yerleştirme `parameters`'ı (web'in kopyası 55'te), deponun ve stilli çizimin varyantları (çekirdeğin
   `block_dynamic`'i WASM'la; yerleştirmenin değerleri depoya), `cad.blocks.parameters`'ın ve `cad.blocks.edit` `dynamic`'inin TS
@@ -1367,6 +1374,32 @@ Sahibin izniyle (12 Ekim) iki iş paralel ajanlarda, kendi dallarında yapılır
   `export_dxf`, `export_pdf`, `sheets`, MCP `drawing.exportDxf`, `drawing.exportPdf`; Köşe yuvarla'nın iki çizgisi yönlerini korur. Açık:
   başsız PDF'te haritaların yazıları ve resim olarak yazılacak haritalar (`CAD-SHEET-06`'nın kalanı), pafta işlemlerinin kullanışlı
   sarmalayıcıları (`CAD-SHEET-07`), uygulama içi yapay zekâ panelinin yolu (`CADP-10`).
+
+### 16.6 Formlar: ortak CBS form standardı ([plan/form.md](plan/form.md))
+
+Sahibin kararı (16 Ekim 2026): formlar CBS için çok önemli; madde madde değil grup grup, kendi dalında (`forms-core`); form
+ADR'leri 0400'den başlar. Planın görevleri (`FORM-FIRST-…`, `FORM-RULE-…`, `FORM-API-…`) ve kabul korpusu `plan/form.md`'dedir;
+burada aşamaları izlenir.
+
+- [x] `FORM-A` Form elemanları ve klavye: Tab ve Shift+Tab pencerenin alanlarında döner, onay kutusu, anahtar, parçalı seçim,
+  radyo, açılır ve seçim kutusu klavyeyle. — **16 Ekim, [ADR 0400](docs/adr/0400-form-elements-and-keyboard.md).**
+- [x] `FORM-B` Form çekirdeği (FM1, plan `FORM-FIRST-02`–`07`, `10`): sözleşme `kentos.forms/1 core`, alanın kararlı kimliği,
+  `.kcad` şema 60, ön denetim (gizlenebilen zorunlu alan dahil), kaydın kuralları ve doğrulaması, katmandan form; tipli evet/hayır
+  ve sayı alanları ifadelerde türüyle. — **16 Ekim, [ADR 0401](docs/adr/0401-forms-core.md) §1–§7.**
+- [x] `FORM-C` Komutlar, Python ve MCP (plan `FORM-FIRST-12`, `18`, `FORM-API-01`–`04`, `FORM-RULE-02`, `14`): `cad.forms.edit`,
+  `cad.forms.validate`, `cad.forms.submit`, `cad.entities.set`'te yazma profili (`form_rules`); ortak durumlar bağımsız başvurudan.
+  — **16 Ekim, ADR 0401 §8–§9.**
+- [x] `FORM-D` Masaüstü (plan `FORM-FIRST-08`, `09`, `11`): Formlar penceresi (liste, katmandan yeni form, öğe ağacı, alan paleti,
+  denetçi, kurallar İfade oluşturucuyla, ön denetim, Kaydet kapatır, Yayınla, Kuralları uygula), Formla düzenle (sekmeler,
+  gruplar, iki sütun, kuralların canlı durumu, alanın altında sorun, İlk soruna git, Kaydet tek adımda yazar ve kapatır),
+  Öznitelikler'de Form satırı, katmanın sağ tıkında Formlar…, CBS Veri › Tablo ve CAD Yönet › Form. — **16 Ekim,
+  ADR 0401 §10.**
+- [ ] `FORM-E` Formların geri kalan yerel işleri: tasarımcının kendi geri alması ve öğeleri sürükleyerek taşıma, formun önizlemesi
+  bir örnek kayıtta, nesne oluştururken (çizim araçları) formun açılması ve oluşturma komutlarında yazma profili, `$uzunluk` ve
+  `$alan`'ın kurallarda değeri, oturumun anı (`@tarih`, `@şimdi`), hesaplanan alanlar ve seçeneklerin süzülmesi (`calculate`,
+  `choiceFilter`), ilişkiler ve ana–ayrıntı (`relations/1`).
+- [ ] `FORM-F` Merkezi yayın ve izinler (FM2, plan `FORM-FIRST-14`–`17`): bulutta form taslağı, yayın ve dağıtım kaynakları,
+  `forms.design`, `forms.publish`, `forms.use` izinleri, sunucunun yazma bekçisi bütün yollarda.
 
 ## 17. Arazi, yol ve altyapı projeleri — P2/P3
 

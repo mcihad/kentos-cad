@@ -1764,6 +1764,8 @@ impl App {
             Asking::Scenario => self.scenario_view(),
             Asking::LayerStates => self.layer_states_view(),
             Asking::Views => self.views_view(),
+            Asking::Forms => self.forms_view(),
+            Asking::FormEntry => self.form_entry_view(),
             Asking::AnnotationStyles => self.annotation_styles_view(),
             Asking::LayerPurge => self.layer_purge_view(),
             Asking::TakeFrom => self.take_from_view(),

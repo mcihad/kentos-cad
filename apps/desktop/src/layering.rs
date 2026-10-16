@@ -76,6 +76,8 @@ pub enum Event {
     MergeInto(String),
     /// Alanlar… (docs/adr/0199 §3): the layer's fields.
     Fields(String),
+    /// Formlar… (forms/designer.rs, docs/adr/0401): the layer's form, or a new one.
+    Forms(String),
     /// Etiketler… (labelling/, docs/adr/0212 §4): how its objects are labelled.
     Labels(String),
     /// Süzgeç…, Seçimden süzgeç and Süzgeci kaldır on this layer (layer_filters.rs, docs/adr/0211 §4).
@@ -185,6 +187,10 @@ impl App {
         }
         if let Event::MergeInto(id) = event {
             self.open_layer_merge(Some(id));
+            return Task::none();
+        }
+        if let Event::Forms(id) = event {
+            self.open_forms_for_layer(&id);
             return Task::none();
         }
         if let Event::Fields(id) = event {
@@ -316,6 +322,7 @@ impl App {
             Event::Duplicate(_)
             | Event::MergeInto(_)
             | Event::Fields(_)
+            | Event::Forms(_)
             | Event::Labels(_)
             | Event::Filter(_)
             | Event::FilterFromSelection(_)
@@ -663,6 +670,9 @@ impl App {
                     event(Event::Fields(id.clone())),
                 )
                 .icon(crate::icons::from_web(Some("layerFields")))
+                // Formlar (docs/adr/0401): the layer's data entry screen.
+                .item("Formlar…", event(Event::Forms(id.clone())))
+                .icon(crate::icons::from_web(Some("forms")))
                 // İstatistik and Grafik (docs/adr/0227 §8): its fields summed up, its chart.
                 .item(
                     "İstatistik",

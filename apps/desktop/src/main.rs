@@ -333,6 +333,9 @@ mod view_commands;
 mod view_scenes;
 mod viewport;
 mod views;
+mod forms;
+#[cfg(test)]
+mod form_scenes;
 #[cfg(test)]
 mod window_layers_tests;
 #[cfg(test)]

@@ -206,6 +206,10 @@ pub enum Dialog {
     LayerStates,
     /// Görünümler (views.rs, docs/adr/0285 §1); the window is `App::views_window`.
     Views,
+    /// Formlar (forms/designer.rs, docs/adr/0401); the window is `App::forms_window`.
+    Forms,
+    /// Formla düzenle (forms/entry.rs, docs/adr/0401); the window is `App::form_entry`.
+    FormEntry,
     /// Yazı stilleri and Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5); the window is
     /// `App::annotation_styles`.
     AnnotationStyles,
@@ -446,6 +450,10 @@ pub enum Message {
     LayerStates(crate::layer_states::Event),
     /// Görünümler's window (views.rs, docs/adr/0285 §1).
     Views(crate::views::Event),
+    /// Formlar's window (forms/designer.rs, docs/adr/0401).
+    Forms(crate::forms::designer::Event),
+    /// Formla düzenle (forms/entry.rs, docs/adr/0401).
+    FormEntry(crate::forms::entry::Event),
     AnnotationStyles(crate::annotation_styles::Event),
     LayerPurge(crate::layer_purge::Event),
     LayerList(crate::layer_list::Event),
@@ -866,6 +874,10 @@ pub struct App {
     pub(crate) layer_states_window: Option<crate::layer_states::Window>,
     /// Görünümler's window (views.rs, docs/adr/0285 §1).
     pub(crate) views_window: Option<crate::views::Window>,
+    /// Formlar's window (forms/designer.rs, docs/adr/0401).
+    pub(crate) forms_window: Option<crate::forms::designer::Window>,
+    /// Formla düzenle (forms/entry.rs, docs/adr/0401).
+    pub(crate) form_entry: Option<crate::forms::entry::Entry>,
     /// Yazı stilleri or Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5).
     pub(crate) annotation_styles: Option<crate::annotation_styles::Window>,
     /// Kullanılmayanları temizle's window (layer_purge.rs, docs/adr/0177 §5).
@@ -1158,6 +1170,8 @@ impl App {
             labelling: None,
             layer_states_window: None,
             views_window: None,
+            forms_window: None,
+            form_entry: None,
             annotation_styles: None,
             layer_purge: None,
             take_from: None,
@@ -1681,6 +1695,8 @@ impl App {
             Message::Labelling(event) => return self.labelling_event(event),
             Message::LayerStates(event) => return self.layer_states_event(event),
             Message::Views(event) => return self.views_event(event),
+            Message::Forms(event) => return self.forms_event(event),
+            Message::FormEntry(event) => return self.form_entry_event(event),
             Message::AnnotationStyles(event) => return self.annotation_styles_event(event),
             Message::LayerPurge(event) => return self.layer_purge_event(event),
             Message::DrawingExchange(event) => return self.drawing_exchange_event(event),
@@ -2175,6 +2191,10 @@ impl App {
         // Görünümler and the view's twist (views.rs, docs/adr/0285).
         if crate::views::COMMANDS.contains(&id) {
             return self.views_command(id);
+        }
+        // Formlar and Formla düzenle (forms/, docs/adr/0401).
+        if crate::forms::COMMANDS.contains(&id) {
+            return self.forms_command(id);
         }
         // Çizimler arası alışveriş (drawing_exchange.rs, docs/adr/0193).
         if crate::drawing_exchange::COMMANDS.contains(&id) {
