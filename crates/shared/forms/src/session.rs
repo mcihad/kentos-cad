@@ -1157,7 +1157,7 @@ fn walk(list: &[FormItem], parent: Option<usize>, out: &mut Vec<Node>, ctx: &Ctx
                 (compile(&f.visible_when), Some(bound), None)
             }
             FormItem::Note { text, .. } => (None, None, note_of(text, ctx.schema)),
-            FormItem::Tab { .. } => (None, None, None),
+            FormItem::Tab { visible_when, .. } => (compile(visible_when), None, None),
         };
         out.push(Node {
             id: item.id().to_owned(),

@@ -625,6 +625,17 @@ FORM_BODY = {"revision": 1, "items": [
     {"type": "field", "id": "kat", "field": "kat-sayisi"},
     {"type": "field", "id": "not", "field": "Not"},
 ]}
+# docs/adr/0426: a tab of its own for the industrial kind, written as the designer's Alt türlerde göster does.
+TABBED_BODY = {"revision": 1, "items": [
+    {"type": "tab", "id": "genel", "label": "Genel", "items": [
+        {"type": "field", "id": "tur", "field": "Tür"},
+        {"type": "field", "id": "malzeme", "field": "Malzeme"},
+    ]},
+    {"type": "tab", "id": "sanayi", "label": "Sanayi", "visibleWhen": "[Tür] içinde ('sanayi', 'depo')", "items": [
+        {"type": "field", "id": "kat", "field": "kat-sayisi"},
+        {"type": "field", "id": "not", "field": "Not"},
+    ]},
+]}
 FILTERED_BODY = {"revision": 1, "items": [
     {"type": "field", "id": "tur", "field": "Tür"},
     {"type": "field", "id": "malzeme", "field": "Malzeme", "choiceFilter": "@secenek <> 'celik'"},
@@ -639,8 +650,10 @@ def validate_file():
             "releases": [{"version": 1, "digest": fc.digest(FORM_BODY), "body": FORM_BODY}]}
     filtered = {"id": "suzgec", "name": "Süzgeçli", "layer": "bina", "draft": FILTERED_BODY,
                 "releases": [{"version": 1, "digest": fc.digest(FILTERED_BODY), "body": FILTERED_BODY}]}
+    tabbed = {"id": "sekmeli", "name": "Sekmeli", "layer": "bina", "draft": TABBED_BODY,
+              "releases": [{"version": 1, "digest": fc.digest(TABBED_BODY), "body": TABBED_BODY}]}
     S = setup(True, ENTITIES)
-    S["settings"] = {**SETTINGS, "forms": [form, filtered]}
+    S["settings"] = {**SETTINGS, "forms": [form, filtered, tabbed]}
     cases = []
 
     def run(name, inp, body=FORM_BODY, slot=None):
@@ -683,6 +696,10 @@ def validate_file():
     run("türü değişmeyen kayıtta başka alan: tuttuğu değer sorun değil", {"form": "bina", "values": {"kat-sayisi": "2"}},
         slot=4)
     run("boşluklu tür kodu", {"form": "bina", "values": {"Tür": " depo ", "Malzeme": "beton"}}, slot=1)
+    run("sekmenin kuralı: konutta sanayi sekmesi gizli", {"form": "sekmeli"}, body=TABBED_BODY, slot=1)
+    run("sekmenin kuralı: sanayide sanayi sekmesi ve zorunlu notu", {"form": "sekmeli"}, body=TABBED_BODY, slot=2)
+    run("sekmenin kuralı: konutu depo yapınca sekme görünür", {"form": "sekmeli", "values": {"Tür": "depo"}},
+        body=TABBED_BODY, slot=1)
     return {"format": "kentos.command-cases", "version": 1, "command": "cad.forms.validate", "commandVersion": 1,
             "title": "Formu denetle ve alt türler",
             "note": "ADR 0422 §2: alt türü olan katmanın formu: seçenekler, zorunluluk, varsayılan ve alt türün sunmadığı "

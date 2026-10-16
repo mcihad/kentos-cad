@@ -6,7 +6,11 @@ import type { RelatedView } from "./RelatedView";
 /**
  * An item of a form: a tab (only at the top), a group, a field or a note.
  */
-export type FormItem = { "type": "tab", id: string, label: string, items: Array<FormItem>, } | { "type": "group", id: string, label?: string, 
+export type FormItem = { "type": "tab", id: string, label: string, items: Array<FormItem>, 
+/**
+ * The tab is shown while it holds (docs/adr/0426): a record's kind may have tabs of its own.
+ */
+visibleWhen?: string, } | { "type": "group", id: string, label?: string, 
 /**
  * 1 or 2; none: 1.
  */

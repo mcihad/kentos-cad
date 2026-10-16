@@ -197,6 +197,10 @@ pub enum FormItem {
         id: String,
         label: String,
         items: Vec<FormItem>,
+        /// The tab is shown while it holds (docs/adr/0426): a record's kind may have tabs of its own.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        visible_when: Option<String>,
     },
     /// A group: a titled box of items, in one or two columns, that a rule may hide.
     Group {
@@ -780,7 +784,11 @@ pub fn body_problem(body: &FormBody) -> Option<String> {
             ));
         }
         match item {
-            FormItem::Tab { label, .. } => {
+            FormItem::Tab {
+                label,
+                visible_when,
+                ..
+            } => {
                 if *depth > 0 {
                     return Some(format!("“{label}” sekmesi yalnız formun üstünde olur."));
                 }
@@ -788,6 +796,9 @@ pub fn body_problem(body: &FormBody) -> Option<String> {
                     return Some(format!(
                         "“{id}” sekmesinin adı boş olamaz ve en çok {MOST_FORM_NAME} karakterdir."
                     ));
+                }
+                if visible_when.as_deref().is_some_and(|r| !rule_ok(r)) {
+                    return Some(rule_problem(id));
                 }
             }
             FormItem::Group {
@@ -1106,6 +1117,7 @@ mod tests {
             id: "genel".into(),
             label: "Genel".into(),
             items: vec![field("durum", "Durum"), field("kat", "Kat")],
+            visible_when: None,
         }]);
         assert_eq!(forms_problem(std::slice::from_ref(&ok)), None);
         // A tab beside a field at the top.
@@ -1115,6 +1127,7 @@ mod tests {
                 id: "t".into(),
                 label: "T".into(),
                 items: vec![],
+                visible_when: None,
             },
         ]);
         assert!(
@@ -1136,6 +1149,7 @@ mod tests {
                 id: "t".into(),
                 label: "T".into(),
                 items: vec![],
+                visible_when: None,
             }],
         }]);
         assert!(

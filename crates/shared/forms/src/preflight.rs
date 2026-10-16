@@ -157,7 +157,17 @@ impl Preflight<'_> {
     fn items(&mut self, items: &[FormItem], hideable: bool) {
         for item in items {
             match item {
-                FormItem::Tab { items, .. } => self.items(items, hideable),
+                FormItem::Tab {
+                    id,
+                    items,
+                    visible_when,
+                    ..
+                } => {
+                    if let Some(rule) = visible_when {
+                        self.rule(id, None, None, "visibleWhen", rule);
+                    }
+                    self.items(items, hideable || visible_when.is_some());
+                }
                 FormItem::Group {
                     id,
                     visible_when,

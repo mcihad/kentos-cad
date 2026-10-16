@@ -144,6 +144,97 @@
        }
       }
      ]
+    },
+    {
+     "id": "sekmeli",
+     "name": "Sekmeli",
+     "layer": "bina",
+     "draft": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "tab",
+        "id": "genel",
+        "label": "Genel",
+        "items": [
+         {
+          "type": "field",
+          "id": "tur",
+          "field": "Tür"
+         },
+         {
+          "type": "field",
+          "id": "malzeme",
+          "field": "Malzeme"
+         }
+        ]
+       },
+       {
+        "type": "tab",
+        "id": "sanayi",
+        "label": "Sanayi",
+        "visibleWhen": "[Tür] içinde ('sanayi', 'depo')",
+        "items": [
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "kat-sayisi"
+         },
+         {
+          "type": "field",
+          "id": "not",
+          "field": "Not"
+         }
+        ]
+       }
+      ]
+     },
+     "releases": [
+      {
+       "version": 1,
+       "digest": "7040ec418b153131fa0c6cd40f233d7e",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "tab",
+          "id": "genel",
+          "label": "Genel",
+          "items": [
+           {
+            "type": "field",
+            "id": "tur",
+            "field": "Tür"
+           },
+           {
+            "type": "field",
+            "id": "malzeme",
+            "field": "Malzeme"
+           }
+          ]
+         },
+         {
+          "type": "tab",
+          "id": "sanayi",
+          "label": "Sanayi",
+          "visibleWhen": "[Tür] içinde ('sanayi', 'depo')",
+          "items": [
+           {
+            "type": "field",
+            "id": "kat",
+            "field": "kat-sayisi"
+           },
+           {
+            "type": "field",
+            "id": "not",
+            "field": "Not"
+           }
+          ]
+         }
+        ]
+       }
+      }
+     ]
     }
    ]
   },
@@ -2032,6 +2123,221 @@
        "attrs": {
         "Tür": "depo",
         "Malzeme": "beton"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sekmenin kuralı: konutta sanayi sekmesi gizli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "sekmeli",
+      "uid": "$uidOf:1"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "genel",
+         "shown": true
+        },
+        {
+         "id": "tur",
+         "shown": true
+        },
+        {
+         "id": "malzeme",
+         "shown": true
+        },
+        {
+         "id": "sanayi",
+         "shown": false
+        },
+        {
+         "id": "kat",
+         "shown": false
+        },
+        {
+         "id": "not",
+         "shown": false
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Tür": "konut",
+        "Malzeme": "ahsap"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sekmenin kuralı: sanayide sanayi sekmesi ve zorunlu notu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "sekmeli",
+      "uid": "$uidOf:2"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "genel",
+         "shown": true
+        },
+        {
+         "id": "tur",
+         "shown": true
+        },
+        {
+         "id": "malzeme",
+         "shown": true,
+         "required": true,
+         "choices": [
+          "beton",
+          "celik"
+         ]
+        },
+        {
+         "id": "sanayi",
+         "shown": true
+        },
+        {
+         "id": "kat",
+         "shown": true
+        },
+        {
+         "id": "not",
+         "shown": true,
+         "required": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Tür": "sanayi",
+        "Malzeme": "beton",
+        "Not": "Fabrika"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sekmenin kuralı: konutu depo yapınca sekme görünür",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "sekmeli",
+      "values": {
+       "Tür": "depo"
+      },
+      "uid": "$uidOf:1"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [
+        {
+         "code": "form_value_not_in_subtype",
+         "severity": "error",
+         "item": "malzeme",
+         "field": "Malzeme",
+         "message": "$any"
+        }
+       ],
+       "valid": false,
+       "items": [
+        {
+         "id": "genel",
+         "shown": true
+        },
+        {
+         "id": "tur",
+         "shown": true
+        },
+        {
+         "id": "malzeme",
+         "shown": true,
+         "choices": [
+          "ahsap",
+          "beton",
+          "tas"
+         ]
+        },
+        {
+         "id": "sanayi",
+         "shown": true
+        },
+        {
+         "id": "kat",
+         "shown": true
+        },
+        {
+         "id": "not",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Tür": "depo",
+        "Malzeme": "ahsap"
        }
       },
       "warnings": []

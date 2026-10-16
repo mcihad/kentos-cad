@@ -511,7 +511,10 @@ def preflight(body, fields, variables=(), world=None):
     def items(xs, hideable):
         for x in xs:
             if x["type"] == "tab":
-                items(x["items"], hideable)
+                # docs/adr/0426: a tab's own visibility rule.
+                if "visibleWhen" in x:
+                    rule(x["id"], None, None, "visibleWhen", x["visibleWhen"])
+                items(x["items"], hideable or "visibleWhen" in x)
             elif x["type"] == "group":
                 if "visibleWhen" in x:
                     rule(x["id"], None, None, "visibleWhen", x["visibleWhen"])
@@ -664,7 +667,7 @@ class Form:
     def states(self, attrs, obj=None):
         shown, out = [], []
         for x, parent in self.nodes:
-            rule = x.get("visibleWhen") if x["type"] in ("group", "field", "related", "attachments") else None
+            rule = x.get("visibleWhen") if x["type"] in ("tab", "group", "field", "related", "attachments") else None
             here = (parent is None or shown[parent]) and (rule is None or holds(rule, self.fields, attrs, self.ctx(obj)))
             shown.append(here)
             state = {"id": x["id"], "shown": here}

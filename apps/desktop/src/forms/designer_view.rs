@@ -500,12 +500,23 @@ impl App {
         };
         let mut col = Column::new().spacing(10);
         match item {
-            FormItem::Tab { label: text, .. } => {
-                col = col.push(label::strong("Sekme")).push(words::field(
-                    "Ad",
-                    input("Sekmenin adı", text, Text::Label),
-                    None,
-                ));
+            FormItem::Tab {
+                label: text,
+                visible_when,
+                ..
+            } => {
+                col = col
+                    .push(label::strong("Sekme"))
+                    .push(words::field(
+                        "Ad",
+                        input("Sekmenin adı", text, Text::Label),
+                        None,
+                    ))
+                    .push(rule_row(
+                        "Görünürlük",
+                        Rule::Visible(id.clone()),
+                        visible_when.as_deref().unwrap_or(""),
+                    ));
             }
             FormItem::Group {
                 label: text,
@@ -865,6 +876,12 @@ impl App {
                 col = col.push(words::secondary("Denetim ekle", Some(msg(Event::AddCheck))));
             }
         }
+        // Alt türlerde göster (docs/adr/0426): the visibility rule by the layer's subtypes.
+        if !matches!(item, FormItem::Note { .. })
+            && let Some(row) = self.kinds_row(item)
+        {
+            col = col.push(row);
+        }
         scrollable(col.padding(iced::Padding {
             top: 0.0,
             right: 16.0,
@@ -873,6 +890,48 @@ impl App {
         }))
         .height(Fill)
         .into()
+    }
+
+    /// Alt türlerde göster (docs/adr/0426): a chip for each of the layer's subtypes; the chosen ones are
+    /// the item's visibility rule. A rule written otherwise leaves the chips off.
+    fn kinds_row<'a>(&self, item: &FormItem) -> Option<Element<'a, Message>> {
+        let (sorter, codes) = self.forms_sorter()?;
+        let form = self.chosen_form()?;
+        let node = self.document.as_ref()?.model.layers().get(&form.layer)?;
+        let subtypes = node.subtypes.as_ref()?;
+        let rule = match item {
+            FormItem::Tab { visible_when, .. }
+            | FormItem::Group { visible_when, .. }
+            | FormItem::Related { visible_when, .. }
+            | FormItem::Attachments { visible_when, .. } => visible_when.clone(),
+            FormItem::Field(f) => f.visible_when.clone(),
+            FormItem::Note { .. } => None,
+        };
+        let now = crate::forms::designer::kinds_of_rule(rule.as_deref(), &sorter);
+        let mut chips = Row::new().spacing(4);
+        for code in &codes {
+            let words = subtypes
+                .get(code)
+                .map_or(code.as_str(), |t| subtypes.label_of(&node.fields, t))
+                .to_owned();
+            let on = now.as_ref().is_some_and(|k| k.contains(code));
+            chips = chips.push(
+                button(label::caption(words))
+                    .on_press_maybe(now.is_some().then(|| msg(Event::ShowInKind(code.clone()))))
+                    .padding([2, 8])
+                    .style(style::button::chip(on)),
+            );
+        }
+        let note = if now.is_some() {
+            "Seçilmezse her türde görünür; seçilenler görünürlük kuralını yazar."
+        } else {
+            "Görünürlük kendi kuralıyla yazılmış; alt türleri seçmek için kuralı silin."
+        };
+        Some(words::field(
+            "Alt türlerde göster",
+            chips.wrap(),
+            Some(note.into()),
+        ))
     }
 
     /// Bağlar (docs/adr/0414 §4, plan FORM-DESIGN-09): the fields a field item's rules read, and the

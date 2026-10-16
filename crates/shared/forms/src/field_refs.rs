@@ -99,7 +99,25 @@ fn items(
     for (k, it) in list.iter_mut().enumerate() {
         let p = format!("{at}/{k}");
         match it {
-            FormItem::Tab { items: inner, .. } => {
+            FormItem::Tab {
+                id,
+                label,
+                items: inner,
+                visible_when,
+            } => {
+                if let Some(v) = visible_when.as_mut().filter(|v| !v.is_empty()) {
+                    let w = format!(
+                        "{words}{SEP}“{}” sekmesi",
+                        if label.is_empty() { id } else { label }
+                    );
+                    put(
+                        layer,
+                        FieldUseHow::Expression,
+                        format!("{p}/visibleWhen"),
+                        format!("{w}{SEP}Görünme koşulu"),
+                        v,
+                    );
+                }
                 items(
                     inner,
                     layer,

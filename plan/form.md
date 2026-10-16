@@ -442,7 +442,7 @@ QGIS'in tab/group/relation/widget yaklaşımı ve ArcGIS Field Maps'in visible/r
 - [x] **FORM-DESIGN-08:** Rule builder; görsel koşul düzenleyici ve expression editörü aynı AST/programı değiştirsin. — *Yapıldı (16 Ekim; ADR 0401 §10: İfade oluşturucunun Metin ve Akış'ı).*
 - [x] **FORM-DESIGN-09:** Required/visible/editable/calculate/default/choice filter bağları dependency graph'ta görülebilsin. — *Yapıldı (16 Ekim; ADR 0414 §5: tasarımcıda Bağlar; döngü ön denetimde `form_calc_cycle`).*
 - [ ] **FORM-DESIGN-10:** Rules/sections için reuse/template desteği olsun; nested component version ve binding parametreleri açık olsun.
-- [ ] **FORM-DESIGN-11:** Conditional section/tab, subtype bazlı view, record status bazlı read-only ve task mode tasarlanabilsin.
+- [x] **FORM-DESIGN-11:** Conditional section/tab, subtype bazlı view, record status bazlı read-only ve task mode tasarlanabilsin. — *Yapıldı (17 Ekim; ADR 0426: koşullu sekme ve alt türe göre görünüm; kayıt durumuna göre salt okunur ve görev kipi iş akışıyla açık).*
 - [ ] **FORM-DESIGN-12:** Layout pixel çizimi yerine responsive constraints/layout hints taşısın; desktop/web/mobile preview aynı kaynak tanımı kullansın.
 - [x] **FORM-DESIGN-13:** Tasarımcı mock/test record ve seçilmiş gerçek yetkili record ile preview sunsun; test verisi production kaydına yazılmasın. — *Yapıldı (16 Ekim; ADR 0403 §3: seçili gerçek kayıtta ya da yeni kayıtta önizleme, hiçbir şey yazılmaz).*
 - [ ] **FORM-DESIGN-14:** Role/task preview sunucunun effective grant modelini simüle etsin; designer rolü gerçek saha kullanıcısına impersonation yetkisi vermesin.

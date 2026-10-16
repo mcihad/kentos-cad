@@ -680,6 +680,34 @@ fn units_designer(app: &mut App) {
     designer(app, designer::Event::SelectItem("bolumler".into()));
 }
 
+/// Formlar on the building form in tabs, its Sanayi tab chosen and shown only for industrial and
+/// depot buildings by Alt türlerde göster (docs/adr/0426).
+fn kind_tabs(app: &mut App) {
+    typed_buildings(app);
+    let form = published(
+        "yapi",
+        "Yapı kaydı",
+        "bina",
+        json!([
+            { "type": "tab", "id": "genel", "label": "Genel", "items": [
+                { "type": "field", "id": "tur", "field": "Tür" },
+                { "type": "field", "id": "malzeme", "field": "Malzeme" },
+                { "type": "field", "id": "cati", "field": "Çatı" } ] },
+            { "type": "tab", "id": "sanayi", "label": "Sanayi", "items": [
+                { "type": "field", "id": "kat", "field": "Kat" },
+                { "type": "field", "id": "not", "field": "Not" } ] }
+        ]),
+    );
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut settings = doc.model.settings().clone();
+    settings.forms = vec![serde_json::from_value(form).expect("a form")];
+    doc.model.set_settings(settings);
+    run(app, "data.forms");
+    designer(app, designer::Event::SelectItem("sanayi".into()));
+    designer(app, designer::Event::ShowInKind("sanayi".into()));
+    designer(app, designer::Event::ShowInKind("depo".into()));
+}
+
 /// Değer bileşimleri's window on the buildings' group (docs/adr/0423 §5).
 fn contingents_window(app: &mut App) {
     typed_buildings(app);
@@ -1481,6 +1509,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-bilesim-sorunu", combination_refused),
         ("form-iliskili-tablo", units_table),
         ("form-iliskili-tasarim", units_designer),
+        ("form-alt-tur-sekme", kind_tabs),
         ("form-hesap-degistir", overridden_height),
         ("form-kalkmis-deger", retired_list),
         ("form-alan-politika", field_policies),
@@ -1686,6 +1715,30 @@ mod tests {
             rule.default, None,
             "steel is no longer offered, nor its default"
         );
+    }
+
+    #[test]
+    fn a_tab_is_shown_in_the_kinds_chosen() {
+        let mut app = crate::files_testing::app_with_drawing();
+        kind_tabs(&mut app);
+        let w = app.forms_window.as_ref().unwrap();
+        let body = w.body.as_ref().unwrap();
+        let rule = match &body.items[1] {
+            kentos_contracts::FormItem::Tab { visible_when, .. } => visible_when.clone(),
+            _ => None,
+        };
+        assert_eq!(rule.as_deref(), Some("[Tür] içinde ('sanayi', 'depo')"));
+        // Taking both away leaves no rule: the tab is shown for every kind.
+        designer(&mut app, designer::Event::ShowInKind("sanayi".into()));
+        designer(&mut app, designer::Event::ShowInKind("depo".into()));
+        let body = app.forms_window.as_ref().unwrap().body.as_ref().unwrap();
+        assert!(matches!(
+            &body.items[1],
+            kentos_contracts::FormItem::Tab {
+                visible_when: None,
+                ..
+            }
+        ));
     }
 
     #[test]

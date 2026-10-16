@@ -1605,6 +1605,8 @@ def body_problem(body):
         t = i["type"]
         if t == "tab" and (depth > 0 or not _form_name_ok(i["label"])):
             return f"“{iid}” sekmesi yalnız üstte ve adlı olur"
+        if t == "tab" and "visibleWhen" in i and not _rule_ok(i["visibleWhen"]):
+            return f"“{iid}” sekmesinin kuralı geçersiz"
         if t == "group":
             if "label" in i and not _form_name_ok(i["label"]):
                 return f"“{iid}” grubunun adı geçersiz"
@@ -3513,7 +3515,9 @@ class _Schema:
             if type(x) is not dict:
                 self.fail("wrong_type", "harita olmalı")
             shapes = {
-                "tab": {"id": (self.text, True), "label": (self.text, True), "items": (items, True)},
+                "tab": {"id": (self.text, True), "label": (self.text, True), "items": (items, True),
+                        # docs/adr/0426: a tab's visibility rule.
+                        "visibleWhen": (self.text, False)},
                 "group": {
                     "id": (self.text, True),
                     "label": (self.text, False),

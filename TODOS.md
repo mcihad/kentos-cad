@@ -194,6 +194,8 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-AI` alt türe göre görünüm (ADR 0426, 17 Ekim): web'de gerekenler: sekmenin `visibleWhen`'i (TS türleri üretildi), formun
+  gizli sekmesi, tasarımcıda Alt türlerde göster.
 - [ ] `FORM-AH` ilişkili kayıtların tablosu (ADR 0425, 17 Ekim): web'de gerekenler: ilişkili kayıtlar öğesinin `view` ve `columns`'ı
   (TS türleri üretildi), formda tablo ve ondalık toplamları, tasarımcıda Görünüm ve Sütunlar.
 - [ ] `FORM-AE` değer bileşimleri (ADR 0423, 17 Ekim): web'de gerekenler: katmanın `contingents`'ı (TS türleri üretildi),
@@ -1502,6 +1504,8 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-AI` Alt türe göre görünüm: sekmenin görünürlük kuralı; tasarımcıda öğelerin Alt türlerde göster çipleri kuralı yazar. —
+  **17 Ekim, [ADR 0426](docs/adr/0426-views-by-kind.md).**
 - [x] `FORM-AH` İlişkili kayıtların tablosu: öğenin Liste ya da Tablo görünümü, sütunları (alt katmanın alanları), ondalık
   sütunların toplamı; tasarımcıda Görünüm ve Sütunlar. — **17 Ekim, [ADR 0425](docs/adr/0425-related-table.md).**
 - [x] `FORM-AG` Formların geliştirici örnekleri: `python/examples/forms` (bina formu baştan sona; alt türler ve değer bileşimleri; malikler

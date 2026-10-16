@@ -3895,6 +3895,13 @@
                   "type": {
                     "const": "tab",
                     "type": "string"
+                  },
+                  "visibleWhen": {
+                    "description": "The tab is shown while it holds (docs/adr/0426): a record's kind may have tabs of its own.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   }
                 },
                 "required": [
@@ -14192,6 +14199,13 @@
                   "type": {
                     "const": "tab",
                     "type": "string"
+                  },
+                  "visibleWhen": {
+                    "description": "The tab is shown while it holds (docs/adr/0426): a record's kind may have tabs of its own.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   }
                 },
                 "required": [
@@ -22439,6 +22453,13 @@
                   "type": {
                     "const": "tab",
                     "type": "string"
+                  },
+                  "visibleWhen": {
+                    "description": "The tab is shown while it holds (docs/adr/0426): a record's kind may have tabs of its own.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   }
                 },
                 "required": [
@@ -342971,6 +342992,13 @@
                   "type": {
                     "const": "tab",
                     "type": "string"
+                  },
+                  "visibleWhen": {
+                    "description": "The tab is shown while it holds (docs/adr/0426): a record's kind may have tabs of its own.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   }
                 },
                 "required": [
@@ -343824,6 +343852,13 @@
                   "type": {
                     "const": "tab",
                     "type": "string"
+                  },
+                  "visibleWhen": {
+                    "description": "The tab is shown while it holds (docs/adr/0426): a record's kind may have tabs of its own.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   }
                 },
                 "required": [
@@ -344678,6 +344713,13 @@
                   "type": {
                     "const": "tab",
                     "type": "string"
+                  },
+                  "visibleWhen": {
+                    "description": "The tab is shown while it holds (docs/adr/0426): a record's kind may have tabs of its own.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   }
                 },
                 "required": [

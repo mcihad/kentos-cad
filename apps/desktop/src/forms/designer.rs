@@ -196,6 +196,8 @@ pub enum Event {
     /// A related item's layer and field.
     RelatedLayer(String),
     RelatedField(String),
+    /// The chosen item shown in a subtype, or no longer (docs/adr/0426): its visibility rule rewritten.
+    ShowInKind(String),
     /// A related item shown as a list or a table (docs/adr/0425).
     RelatedView(kentos_contracts::RelatedView),
     /// A field of the other layer taken into the table's columns, or out of them.
@@ -357,6 +359,7 @@ fn add_tab(body: &mut FormBody) -> String {
             id,
             label: "Genel".into(),
             items,
+            visible_when: None,
         });
     }
     let n = body.items.len() + 1;
@@ -366,6 +369,7 @@ fn add_tab(body: &mut FormBody) -> String {
         id: id.clone(),
         label,
         items: Vec::new(),
+        visible_when: None,
     });
     id
 }
@@ -510,6 +514,18 @@ impl App {
             w.redo.clear();
             w.typing = None;
         }
+    }
+
+    /// The chosen form's layer's subtype field (its name) and its subtypes' codes, in their order.
+    pub(crate) fn forms_sorter(&self) -> Option<(String, Vec<String>)> {
+        let form = self.chosen_form()?;
+        let node = self.document.as_ref()?.model.layers().get(&form.layer)?;
+        let subtypes = node.subtypes.as_ref()?;
+        let sorter = subtypes.sorter(&node.fields)?;
+        Some((
+            sorter.name.clone(),
+            subtypes.types.iter().map(|t| t.code.clone()).collect(),
+        ))
     }
 
     pub(crate) fn chosen_form(&self) -> Option<&ProjectForm> {
@@ -992,6 +1008,22 @@ impl App {
                     });
                 }
             }
+            Event::ShowInKind(code) => {
+                if let (Some(id), Some(sorter)) = (chosen_item.clone(), self.forms_sorter()) {
+                    let rule = Rule::Visible(id);
+                    let now = w.body.as_ref().and_then(|b| rule_text(b, &rule));
+                    if let Some(mut kinds) = kinds_of_rule(now.as_deref(), &sorter.0) {
+                        if let Some(i) = kinds.iter().position(|k| *k == code) {
+                            kinds.remove(i);
+                        } else {
+                            kinds.push(code);
+                            kinds.sort_by_key(|k| sorter.1.iter().position(|c| c == k));
+                        }
+                        let text = rule_of_kinds(&kinds, &sorter.0);
+                        edited(&mut w, &|b| set_rule(b, &rule, &text));
+                    }
+                }
+            }
             Event::RelatedView(view) => {
                 if let Some(id) = chosen_item.clone() {
                     edited(&mut w, &|b| {
@@ -1443,9 +1475,39 @@ fn set_text(body: &mut FormBody, id: &str, which: &Text, text: &str) {
     }
 }
 
+/// The subtypes a visibility rule shows the item in, when it is the one the designer writes for them
+/// (`[Tür] içinde ('a', 'b')`, docs/adr/0426); none for another rule; empty for no rule.
+pub(crate) fn kinds_of_rule(rule: Option<&str>, sorter: &str) -> Option<Vec<String>> {
+    let Some(rule) = rule.map(str::trim).filter(|r| !r.is_empty()) else {
+        return Some(Vec::new());
+    };
+    let inner = rule
+        .strip_prefix(&format!("[{sorter}] içinde ("))?
+        .strip_suffix(')')?;
+    inner
+        .split(", ")
+        .map(|c| {
+            c.strip_prefix('\'')
+                .and_then(|c| c.strip_suffix('\''))
+                .filter(|c| !c.contains('\''))
+                .map(str::to_owned)
+        })
+        .collect()
+}
+
+/// The visibility rule that shows an item in `kinds` (none: always).
+pub(crate) fn rule_of_kinds(kinds: &[String], sorter: &str) -> String {
+    if kinds.is_empty() {
+        return String::new();
+    }
+    let codes: Vec<String> = kinds.iter().map(|c| format!("'{c}'")).collect();
+    format!("[{sorter}] içinde ({})", codes.join(", "))
+}
+
 fn rule_text(body: &FormBody, rule: &Rule) -> Option<String> {
     match (find(&body.items, rule.item())?, rule) {
-        (FormItem::Group { visible_when, .. }, Rule::Visible(_)) => visible_when.clone(),
+        (FormItem::Group { visible_when, .. }, Rule::Visible(_))
+        | (FormItem::Tab { visible_when, .. }, Rule::Visible(_)) => visible_when.clone(),
         (FormItem::Related { visible_when, .. }, Rule::Visible(_))
         | (FormItem::Attachments { visible_when, .. }, Rule::Visible(_)) => visible_when.clone(),
         (FormItem::Field(f), Rule::LookupFilter(_)) => f.lookup.as_ref()?.filter.clone(),
@@ -1463,7 +1525,8 @@ fn rule_text(body: &FormBody, rule: &Rule) -> Option<String> {
 fn set_rule(body: &mut FormBody, rule: &Rule, text: &str) {
     let value = (!text.trim().is_empty()).then(|| text.to_owned());
     match (find_mut(&mut body.items, rule.item()), rule) {
-        (Some(FormItem::Group { visible_when, .. }), Rule::Visible(_)) => *visible_when = value,
+        (Some(FormItem::Group { visible_when, .. }), Rule::Visible(_))
+        | (Some(FormItem::Tab { visible_when, .. }), Rule::Visible(_)) => *visible_when = value,
         (Some(FormItem::Related { visible_when, .. }), Rule::Visible(_))
         | (Some(FormItem::Attachments { visible_when, .. }), Rule::Visible(_)) => {
             *visible_when = value

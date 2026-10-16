@@ -26955,17 +26955,22 @@ class DeleteFeatureChange(FeatureChange):
 class TabFormItem(FormItem):
     """A tab: its items show when it is chosen. Tabs stand at the top only, and then the top holds
     nothing but tabs.
+    Attributes:
+        visible_when: The tab is shown while it holds (docs/adr/0426): a record's kind may have tabs of its own.
     """
     TAG_VALUE: ClassVar[str] = "tab"
     id: str
     label: str
     items: list[FormItem]
+    visible_when: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"type": "tab"}
         out["id"] = self.id
         out["label"] = self.label
         out["items"] = [e0.to_json() for e0 in self.items]
+        if self.visible_when is not UNSET:
+            out["visibleWhen"] = self.visible_when
         return out
 
     @classmethod
@@ -26974,6 +26979,7 @@ class TabFormItem(FormItem):
             id=data["id"],
             label=data["label"],
             items=[FormItem.from_json(e0) for e0 in data["items"]],
+            visible_when=data.get("visibleWhen", UNSET),
         )
 
 
