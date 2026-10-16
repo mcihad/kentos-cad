@@ -157,6 +157,11 @@ impl Objects {
         self.push(layer, fields)
     }
 
+    /// A record without a geometry (docs/adr/0410).
+    pub(crate) fn record(&mut self, layer: &str) -> u32 {
+        self.push(layer, json!({ "kind": "record" }))
+    }
+
     /// A NURBS curve (docs/adr/0259): its degree, control points and knots; `more` its other fields.
     pub(crate) fn nurbs(
         &mut self,

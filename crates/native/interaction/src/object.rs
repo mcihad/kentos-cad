@@ -297,6 +297,7 @@ impl ObjectAction {
             Shape::Image { .. } => "resim",
             Shape::Raster { .. } => "raster",
             Shape::PointCloud { .. } => "nokta bulutu",
+            Shape::Record {} => "kayıt",
         }
     }
 

@@ -316,6 +316,60 @@ class FormsTests(unittest.TestCase):
         cad.entities.delete(doc, uids=[b2])
         self.assertEqual([r.uid for r in doc.entities(layer=owner_layer)], [])
 
+    def test_records_without_a_geometry(self) -> None:
+        """docs/adr/0410: owners as a table's rows: written by the fields' rule, saved and read back, linked to a
+        building and gone with it (cascade)."""
+        doc = cad.Document.new("Mahalle", srid=5256)
+        for name in ("Bina", "Malik"):
+            cad.layers.edit(doc, operation="add", name=name)
+        building_layer = next(n.id for n in doc.layers() if n.name == "Bina")
+        owner_layer = next(n.id for n in doc.layers() if n.name == "Malik")
+        cad.layers.edit(
+            doc, operation="fields", layer=owner_layer,
+            fields=[
+                cad.LayerField(name="Ad", kind="text", required=True),
+                cad.LayerField(name="Pay", kind="decimal", scale=2),
+                cad.LayerField(name="Bina", kind="text"),
+            ],
+        )
+        cad.relations.edit(
+            doc,
+            edit=cad.CreateRelationsOp(
+                relation=cad.ProjectRelation(
+                    id="bina-malik", name="Malikler", parent=building_layer, child=owner_layer, field="Bina",
+                    on_delete="cascade",
+                )
+            ),
+        )
+        building = cad.polygon.create(
+            doc, pts=[cad.Vec2(0.0, 0.0), cad.Vec2(10.0, 0.0), cad.Vec2(10.0, 8.0)], layer_id=building_layer
+        ).uid
+        made = cad.records.create(
+            doc,
+            layer_id=owner_layer,
+            rows=[
+                cad.RecordRow(attrs={"Ad": "Ayşe Demir", "Pay": "0,5", "Bina": building}, label="Ayşe Demir"),
+                cad.RecordRow(attrs={"Ad": "Mehmet Kaya", "Pay": "0.50", "Bina": building}),
+            ],
+        )
+        self.assertEqual(len(made.uids), 2)
+        first = doc.entity(made.uids[0]).entity
+        self.assertIsInstance(first, cad.RecordEntity)
+        self.assertEqual(first.attrs, {"Ad": "Ayşe Demir", "Bina": building, "Pay": "0.5"})
+        self.assertEqual(first.label, "Ayşe Demir")
+        with self.assertRaises(cad.CommandFailed) as refused:
+            cad.records.create(doc, layer_id=owner_layer, rows=[cad.RecordRow(attrs={"Ad": " "})])
+        self.assertEqual(refused.exception.code, "attribute_required")
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "malikler.kcad"
+            doc.save(path)
+            again = cad.Document.open(path)
+            self.assertEqual([r.uid for r in again.entities(layer=owner_layer)], made.uids)
+        cad.entities.delete(doc, uids=[building])
+        self.assertEqual([r.uid for r in doc.entities(layer=owner_layer)], [])
+        doc.undo()
+        self.assertEqual([r.uid for r in doc.entities(layer=owner_layer)], made.uids)
+
     def test_a_relation_keeps_its_children(self) -> None:
         """docs/adr/0405: a meter refers to its building; the building deleted, its meters go with it (cascade); a
         restricting relation keeps a building with meters."""

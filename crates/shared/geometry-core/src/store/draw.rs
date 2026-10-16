@@ -178,6 +178,8 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
             }
             None => out.push(NONE),
         },
+        // A record is not drawn (docs/adr/0410).
+        Shape::Record {} => out.push(NONE),
         // Its plan as a line, then as an area the points pass paints its picture on (docs/adr/0207 §6).
         Shape::PointCloud { .. } => match crate::geom::pointcloud::corners(s) {
             Some(c) => {

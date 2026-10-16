@@ -202,7 +202,7 @@ impl Reader<'_> {
     }
 
     fn shape(&mut self, kind: f64) -> Result<Shape, String> {
-        if !(kind >= 0.0 && kind <= 23.0 && kind.fract() == 0.0) {
+        if !(kind >= 0.0 && kind <= 24.0 && kind.fract() == 0.0) {
             return Err(format!(
                 "paketin {}. sayısı bilinmeyen bir nesne türü ({kind})",
                 self.at
@@ -670,6 +670,8 @@ impl Reader<'_> {
                     dataset,
                 }
             }
+            // docs/adr/0410: a record, nothing more.
+            24 => Shape::Record {},
             // docs/adr/0207 §3: the bounds, the points, the files (their JSON text), the
             // system, the look (its JSON text) and the opacity (NaN none).
             21 => {
@@ -1249,6 +1251,8 @@ impl Packer {
                     arrow_size.unwrap_or(f64::NAN),
                 ]);
             }
+            // docs/adr/0410, as the reader's kind 24 says.
+            Shape::Record {} => self.put(&[24.0]),
             // docs/adr/0207, as the reader's kind 21 says.
             Shape::PointCloud {
                 bounds,

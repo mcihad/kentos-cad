@@ -260,6 +260,7 @@ pub(crate) fn base_mut(e: &mut Entity) -> &mut EntityBase {
         Entity::Image(x) => &mut x.base,
         Entity::Raster(x) => &mut x.base,
         Entity::PointCloud(x) => &mut x.base,
+        Entity::Record(x) => &mut x.base,
     }
 }
 

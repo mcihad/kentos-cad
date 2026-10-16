@@ -81,6 +81,7 @@ fn kind_label(e: &Entity) -> &'static str {
         Entity::Image(_) => "Resim",
         Entity::Raster(_) => "Raster",
         Entity::PointCloud(_) => "Nokta bulutu",
+        Entity::Record(_) => "Kayıt",
     }
 }
 
@@ -187,7 +188,7 @@ fn finite(e: &Entity) -> bool {
         Entity::Insert(i) => ok(i.p) && nums_ok(&[i.scale, i.rotation]),
         Entity::Leader(l) => all_ok(&l.pts) && nums_ok(&[l.height, l.rotation]),
         // Never written (docs/adr/0192, 0204, Kapsam dışı): said in the report.
-        Entity::Image(_) | Entity::Raster(_) | Entity::PointCloud(_) => true,
+        Entity::Image(_) | Entity::Raster(_) | Entity::PointCloud(_) | Entity::Record(_) => true,
         Entity::Table(t) => {
             ok(t.p)
                 && nums_ok(&[t.height, t.rotation])
@@ -641,6 +642,15 @@ impl Writer<'_> {
             Entity::Insert(i) => self.insert(i),
             Entity::Leader(l) => self.leader(l),
             Entity::Table(t) => self.table(t),
+            // Nor a record without a geometry (docs/adr/0410 §4).
+            Entity::Record(_) => {
+                self.report.skip(
+                    "Kayıt",
+                    "DXF'e geometrisiz kayıt yazılmaz: DXF'in nesneleri geometrilidir",
+                    0,
+                );
+                false
+            }
             // Nor a point cloud (docs/adr/0207 §11).
             Entity::PointCloud(_) => {
                 self.report.skip(

@@ -257,10 +257,17 @@ fn write_with(
     let mut first = true;
     let mut unreached: Vec<(Unreached, u32)> = Vec::new();
     for e in &input.entities {
-        let Some(mut g) = geometry(e, &blocks, &mut rep, &GEOJSON) else {
-            continue;
+        // A record has no geometry: a feature with a null one (docs/adr/0410 §4).
+        let record = matches!(e, kentos_contracts::Entity::Record(_));
+        let mut g = if record {
+            None
+        } else {
+            match geometry(e, &blocks, &mut rep, &GEOJSON) {
+                Some(g) => Some(g),
+                None => continue,
+            }
         };
-        if let Some((from, choices)) = wgs84 {
+        if let (Some((from, choices)), Some(g)) = (wgs84, g.as_mut()) {
             let mut why = None;
             let moved = g.map(&mut |p| match to_wgs84(from, choices, p) {
                 Ok(q) => Some(q),
@@ -299,7 +306,10 @@ fn write_with(
             typed(own.iter().find(|f| f.name == *k), v, &mut out);
         }
         out.push_str("},\"geometry\":");
-        write_geometry(&g, &mut out);
+        match &g {
+            Some(g) => write_geometry(g, &mut out),
+            None => out.push_str("null"),
+        }
         let layer = names.get(b.layer_id.as_str());
         let label = b.label.as_deref().filter(|l| !l.is_empty());
         if layer.is_some() || label.is_some() {

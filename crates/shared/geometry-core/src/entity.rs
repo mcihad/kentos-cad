@@ -458,6 +458,9 @@ pub enum Shape {
         style: crate::api::json::Json,
         opacity: Option<f64>,
     },
+    /// A record without a geometry (docs/adr/0410): a table's row. It has no vertices, edges or
+    /// bounds; the store keeps it undrawn, unpicked and unsnapped.
+    Record {},
 }
 
 crate::json_tagged!(Shape, "kind",
@@ -484,6 +487,7 @@ crate::json_tagged!(Shape, "kind",
     Image => "image" { p, width, height, rotation, mirror, asset, file, clip, opacity },
     Raster => "raster" { affine, width, height, bands, sample, asset, file, url, srid, style, opacity, dataset },
     PointCloud => "pointcloud" { bounds, count, sources, srid, style, opacity },
+    Record => "record" {},
 );
 
 /// An entity: its geometry and every other field, untouched and in order.
@@ -710,6 +714,8 @@ pub fn entity_vertices(e: &Shape) -> Vec<Vec2> {
         Shape::PointCloud { .. } => crate::geom::pointcloud::corners(e)
             .map(|c| c.to_vec())
             .unwrap_or_default(),
+        // A record has none (docs/adr/0410).
+        Shape::Record {} => Vec::new(),
         // Its corners, its top left first (docs/adr/0184 §2).
         Shape::Table { .. } => crate::geom::table::table_geom(e)
             .map(|t| t.outline().to_vec())
@@ -1666,6 +1672,8 @@ pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
         Shape::Image { .. } => centroid(&crate::geom::image::shown(e)),
         // The middle of its frame (docs/adr/0204, 0207).
         Shape::Raster { .. } | Shape::PointCloud { .. } => centroid(&entity_vertices(e)),
+        // A record is nowhere (docs/adr/0410).
+        Shape::Record {} => return None,
     })
 }
 

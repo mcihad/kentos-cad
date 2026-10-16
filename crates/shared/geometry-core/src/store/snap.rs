@@ -1015,6 +1015,8 @@ fn shape_snaps(
         }
         // Its boundary is snapped through the outline object itself.
         Shape::Hatch { .. } => return,
+        // A record has nothing to snap to (docs/adr/0410).
+        Shape::Record {} => {}
         // The part shown's corners and its sides' middles (docs/adr/0192 §4); a raster's frame's
         // (docs/adr/0204 §7).
         Shape::Image { .. } | Shape::Raster { .. } | Shape::PointCloud { .. } => {

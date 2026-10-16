@@ -911,8 +911,12 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             },
         )
         .editor(edit(layer_editor(doc, &ids, Some(&base.layer_id)))),
-        Row::text("Renk", color_text(color)).editor(edit(color_editor(&ids, color))),
     ];
+    // A record is not drawn (docs/adr/0410 §4): no colour, transparency or symbol.
+    let drawn = e.has_geometry();
+    if drawn {
+        general.push(Row::text("Renk", color_text(color)).editor(edit(color_editor(&ids, color))));
+    }
     if e.draws_lines() {
         let weight = Some(base.line_weight);
         general.push(
@@ -930,12 +934,14 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         );
         general.push(line_type_scale_row(&ids, Some(base.look.line_type_scale)).editor_if(!locked));
     }
-    general.push(transparency_row(&ids, Some(base.look.transparency)).editor_if(!locked));
+    if drawn {
+        general.push(transparency_row(&ids, Some(base.look.transparency)).editor_if(!locked));
+    }
     // An area's mask (docs/adr/0310 §5).
     if matches!(e, Entity::Polygon(_)) {
         general.push(wipeout_row(&ids, Some(base.look.wipeout)).editor_if(!locked));
     }
-    if takes_symbol(e) {
+    if drawn && takes_symbol(e) {
         general.push(
             Row::text("Sembol", symbol_text(doc, symbol)).editor(edit(symbol_editor(doc, symbol))),
         );
@@ -1452,6 +1458,8 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         Entity::Raster(r) => geo.extend(raster::rows(doc, slot, r, locked, &f)),
         // Its files, points, bounds, density, system, index, look and opacity (docs/adr/0207 §9).
         Entity::PointCloud(c) => geo.extend(cloud::rows(doc, slot, c, locked, &f)),
+        // A record has no geometry (docs/adr/0410): its attributes are its rows.
+        Entity::Record(_) => {}
         // Its note, height, turn, arrowhead and mask, its corners and length (docs/adr/0146 §7).
         Entity::Leader(l) => {
             geo.extend(leader_rows(&[l], &ids, locked, &f));
@@ -1460,18 +1468,19 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         }
     }
 
-    let mut sections = vec![
-        Section {
-            id: "general",
-            title: "Genel".into(),
-            rows: general,
-        },
-        Section {
+    let mut sections = vec![Section {
+        id: "general",
+        title: "Genel".into(),
+        rows: general,
+    }];
+    // A record has no geometry (docs/adr/0410 §4): no section for it.
+    if drawn {
+        sections.push(Section {
             id: "geometry",
             title: "Geometri".into(),
             rows: geo,
-        },
-    ];
+        });
+    }
     // An insert's block attributes (docs/adr/0144 §7): the definition's tags in
     // its order, with what the insert shows (its value, else the default).
     let tags: Vec<(String, String)> = match e {

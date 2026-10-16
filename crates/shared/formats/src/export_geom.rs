@@ -32,6 +32,8 @@ pub(crate) struct Words {
     pub table: &'static str,
     pub image: &'static str,
     pub cloud: &'static str,
+    /// A record without a geometry (docs/adr/0410 §4).
+    pub record: &'static str,
     pub raster: &'static str,
     pub leader: &'static str,
     pub block_empty: &'static str,
@@ -55,6 +57,7 @@ pub(crate) const GEOJSON: Words = Words {
     table: "GeoJSON'da tablo nesnesi yok; yazılmadı",
     image: "GeoJSON'da resim nesnesi yok; yazılmadı",
     cloud: "GeoJSON'da nokta bulutu yok; yazılmadı",
+    record: "geometrisiz kayıt boş geometriyle yazıldı",
     raster: "GeoJSON'da raster yok; yazılmadı",
     leader: "kırık çizgisi çizgi (LineString) olarak yazıldı; ok başı ve not GeoJSON'da gösterilemez",
     block_empty: "bloğunda GeoJSON'a yazılabilecek nesne yok; yazılmadı",
@@ -432,6 +435,11 @@ pub(crate) fn geometry(
         // Nor a point cloud (docs/adr/0207 §11).
         Entity::PointCloud(_) => {
             rep.skip("Nokta bulutu", w.cloud, 0);
+            return None;
+        }
+        // A record has no geometry (docs/adr/0410 §4); GeoJSON writes it itself, with a null one.
+        Entity::Record(_) => {
+            rep.skip("Kayıt", w.record, 0);
             return None;
         }
         // No raster (docs/adr/0204 §10).

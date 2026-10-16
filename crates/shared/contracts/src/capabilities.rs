@@ -266,6 +266,12 @@ const ENTRIES: &[Entry] = &[
         targets: || vec![target(None, &["*"], &[], None, None)],
     },
     Entry {
+        id: "cad.records.create",
+        refusals: &[&["invalid_count"], LAYER, REVISION, ATTRS],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
         id: "cad.point.create",
         refusals: &[&["not_finite"], LAYER, REVISION, ATTRS],
         warnings: &["layer_hidden"],

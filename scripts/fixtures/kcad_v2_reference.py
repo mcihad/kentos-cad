@@ -1525,6 +1525,8 @@ KINDS = {
         "style": (cloud_style, True),
         "opacity": (f64, False),
     },
+    # Schema 60 (docs/adr/0410 §2): a record without a geometry, only in the drawing; no fields of its own.
+    "record": {},
     # Schema 8 (docs/adr/0146): two vertices or more, a note only when there is one, an arrowhead by name, `mask` only when true.
     # Schema 30 (docs/adr/0205 §7): AutoCAD's arrowheads, the arrowhead's size times the note's height.
     "leader": {
@@ -1666,6 +1668,8 @@ def entity(e, uid, index):
     if kind == "pointcloud":
         assert uid is not None, "blok tanımında nokta bulutu olamaz"
         cloud_shape(e)
+    if kind == "record":
+        assert uid is not None, "blok tanımında geometrisiz kayıt olamaz"
     if kind == "polyline":
         polyline_extras(e)
     if kind == "nurbs":
@@ -1966,7 +1970,10 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def keyed(nodes):
         return any(any("id" in f for f in n.get("fields", [])) or keyed(n.get("children", [])) for n in nodes)
 
-    if (settings or {}).get("forms") or (settings or {}).get("relations") or keyed(layers):
+    # A record without a geometry is schema 60's too (docs/adr/0410 §2).
+    if (settings or {}).get("forms") or (settings or {}).get("relations") or keyed(layers) or any(
+        e["kind"] == "record" for e in entities
+    ):
         return 60
     # Schema 59 (docs/adr/0318): a block's dynamic part or an insert's parameter values.
     valued = lambda es: any(e["kind"] == "insert" and "parameters" in e for e in es)  # noqa: E731
@@ -2816,6 +2823,9 @@ def broken(minimal_content, minimal_file):
         body = {**common, "sources": array(sources if sources is not None else [cloud_file()]), "bounds": cloud_bounds, "count": uint(71212), "srid": uint(5256), "style": look, **extra}
         return cmap({"pointcloud": cmap({k: v for k, v in body.items() if v is not None})})
 
+    # A record without a geometry (docs/adr/0410 §2): not in a block, no field of its own.
+    files["record-in-block.kcad"] = with_blocks([block(1, "Kayıt", [cmap({"record": cmap({"attrs": cmap({}), "layerId": text("0")})})])], version=60)
+    files["record-with-point.kcad"] = in_schema(60, cmap({"record": cmap({**common, "p": point(one["p"])})}))
     files["pointcloud-in-schema-30.kcad"] = in_schema(30, cloud_of())
     files["pointcloud-in-block.kcad"] = with_blocks([block(1, "Bulut", [cmap({"pointcloud": cmap({"attrs": cmap({}), "layerId": text("0"), "sources": array([cloud_file()]), "bounds": cloud_bounds, "count": uint(71212), "srid": uint(5256), "style": cmap({"render": text("rgb"), "size": f64(2.0)})})})])], version=31)
     files["pointcloud-no-files.kcad"] = in_schema(31, cloud_of(sources=[], count=uint(0)))
@@ -3644,6 +3654,12 @@ def build():
     out["broken/parameters-empty.kcad"] = dynamic_broken(lambda d: d["entities"][0].update(parameters={}))
     out["broken/parameters-not-dynamic.kcad"] = dynamic_broken(lambda d: d["blocks"][0].pop("dynamic"))
     out["forms.kcad"] = container(document(load("forms.json")))
+    # A record without a geometry (docs/adr/0410 §2): schema 60's; in schema 59 an unknown kind.
+    out["records.kcad"] = container(document(load("records.json")))
+    records_payload = document(load("records.json"))
+    assert records_payload.count(b"\x67version\x18\x3c") == 1, "a record alone is schema 60"
+    out["broken/record-in-schema-59.kcad"] = container(records_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
+
     # The forms and a field's id are schema 60's (docs/adr/0401): in schema 59 an unknown field; an empty list, a
     # release whose body was changed after its digest, enforcing without a release, an unknown key, a tab in a group,
     # two fields with one key refused.

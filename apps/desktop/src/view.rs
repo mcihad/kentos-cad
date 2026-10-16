@@ -2037,6 +2037,11 @@ pub(crate) fn kind_name(kind: &str) -> &'static str {
         "insert" => "blok",
         "leader" => "kılavuz",
         "table" => "tablo",
+        "image" => "resim",
+        "nurbs" => "NURBS eğrisi",
+        "raster" => "raster",
+        "pointcloud" => "nokta bulutu",
+        "record" => "kayıt",
         _ => "diğer",
     }
 }

@@ -262,7 +262,8 @@ fn published(id: &str, name: &str, layer: &str, items: Value) -> Value {
 }
 
 /// Three buildings and two owners (docs/adr/0409): an owner holds several buildings by their ids
-/// (a many-to-many field); a building's form lists its owners; the relation unlinks.
+/// (a many-to-many field); a building's form lists its owners; the relation unlinks. The owners are
+/// records without a geometry, a table's rows (docs/adr/0410).
 fn owners(app: &mut App) {
     let mut o = Objects::new();
     let mut ids = Vec::new();
@@ -275,9 +276,9 @@ fn owners(app: &mut App) {
         o.data(id, &[("Kod", code)], Some(code));
         ids.push(id);
     }
-    let first = o.point("malik", [9.0, 24.0], None);
+    let first = o.record("malik");
     o.data(first, &[("Ad", "Ayşe Yılmaz")], Some("Ayşe Yılmaz"));
-    let second = o.point("malik", [33.0, 24.0], None);
+    let second = o.record("malik");
     o.data(second, &[("Ad", "Mehmet Kaya")], Some("Mehmet Kaya"));
     let owner_form = published(
         "malik-formu",
@@ -356,6 +357,20 @@ fn building_owners(app: &mut App) {
     owners(app);
     app.selection.set([Slot(2)]);
     run(app, "data.formEdit");
+}
+
+/// The owners' table (docs/adr/0410 §4): records without a geometry in the Tablo tab.
+fn owner_table(app: &mut App) {
+    owners(app);
+    app.features.layer = Some("malik".into());
+    let _ = app.update(Message::Run("data.featureTable"));
+    app.selection.set([Slot(4)]);
+}
+
+/// Kayıt ekle in the owners' table: a new record, opened by the owners' form.
+fn owner_added(app: &mut App) {
+    owner_table(app);
+    let _ = app.update(Message::Features(crate::features::Event::AddRecord));
 }
 
 /// Alanlar's value list of the care field: several of its values may be chosen (docs/adr/0408 §1).
@@ -883,6 +898,8 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-alan-coklu", tree_fields),
         ("form-malik", owner_editing),
         ("form-bina-malikler", building_owners),
+        ("form-kayit-tablosu", owner_table),
+        ("form-kayit-ekle", owner_added),
     ]
 }
 
@@ -1489,12 +1506,66 @@ mod tests {
             entry::Event::Unlink("malikler".into(), o1.clone()),
         );
         assert_eq!(attrs(&app, 4).get("Binalar"), Some(&b2));
-        // Yeni: an owner at the building, linked to it, opened by the owner's form.
+        // Yeni: an owner linked to the building, a record as the owners are (docs/adr/0410 §4),
+        // opened by the owner's form.
         entry(&mut app, entry::Event::NewRelated("malikler".into()));
         assert_eq!(attrs(&app, 6).get("Binalar"), Some(&b1));
+        let kind = |app: &App, slot: u32| {
+            app.document
+                .as_ref()
+                .and_then(|d| d.model.get(Slot(slot)))
+                .map(|e| e.kind())
+        };
+        assert_eq!(kind(&app, 6), Some("record"));
         assert_eq!(
             app.form_entry.as_ref().map(|e| e.uid_text()),
             Some(uid(&app, 6))
+        );
+    }
+
+    /// docs/adr/0410 §4: the owners are records; the Tablo tab lists them, Kayıt ekle writes one through
+    /// `cad.records.create` in one undo step and opens it by the owners' form; nothing of them is drawn,
+    /// picked or zoomed to.
+    #[test]
+    fn a_record_is_added_in_the_table_and_opened_by_its_form() {
+        let mut app = crate::files_testing::app_with_drawing();
+        owner_table(&mut app);
+        let (count, _, rows) = app.features_seen().expect("the tab is open");
+        assert_eq!(count, "2 / 2", "{rows:?}");
+        let _ = app.update(Message::Features(crate::features::Event::AddRecord));
+        let made = app
+            .document
+            .as_ref()
+            .and_then(|d| d.model.get(Slot(6)))
+            .map(|e| (e.kind(), e.base().layer_id.clone()));
+        assert_eq!(made, Some(("record", "malik".to_owned())));
+        assert_eq!(
+            app.form_entry.as_ref().map(|e| e.uid_text()),
+            app.document
+                .as_ref()
+                .and_then(|d| d.model.uid(Slot(6)))
+                .map(|u| u.to_string())
+        );
+        // In no place: the store keeps it, no query by place finds it, the drawing's extent leaves it out.
+        if let Some(doc) = app.document.as_ref() {
+            app.spatial.sync(&doc.model);
+        }
+        let store = app.spatial.store();
+        assert!(store.get(6.0).is_some());
+        assert_eq!(store.extent(Some(&[4.0, 5.0, 6.0])), None);
+        let all = kentos_geometry_core::geometry::Bounds {
+            min_x: -1e12,
+            min_y: -1e12,
+            max_x: 1e12,
+            max_y: 1e12,
+        };
+        assert!(!store.in_rect(&all, true).iter().any(|id| *id >= 4.0));
+        let _ = app.update(Message::Run("edit.undo"));
+        assert!(
+            app.document
+                .as_ref()
+                .and_then(|d| d.model.get(Slot(6)))
+                .is_none()
         );
     }
 

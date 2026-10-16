@@ -56,10 +56,10 @@ use kentos_native_application::{
     styles_impact,
 };
 use kentos_domain::contracts::{
-    FormsAudit, FormsEdit, FormsFill, FormsSubmit, FormsValidate, RelationsEdit,
+    FormsAudit, FormsEdit, FormsFill, FormsSubmit, FormsValidate, RecordsCreate, RelationsEdit,
 };
 use kentos_native_application::{
-    forms_audit, forms_edit, forms_fill, forms_submit, forms_validate, relations_edit,
+    forms_audit, forms_edit, forms_fill, forms_submit, forms_validate, records, relations_edit,
 };
 use serde_json::{Value, json};
 
@@ -369,6 +369,12 @@ impl Input for FormsFill {
 }
 
 impl Input for FormsAudit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for RecordsCreate {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -2117,6 +2123,7 @@ fn run_op(
         kentos_domain::contracts::CAD_FORMS_SUBMIT => run!(forms_submit, FormsSubmit),
         kentos_domain::contracts::CAD_FORMS_FILL => run!(forms_fill, FormsFill),
         kentos_domain::contracts::CAD_FORMS_AUDIT => run!(forms_audit, FormsAudit),
+        kentos_domain::contracts::CAD_RECORDS_CREATE => run!(records, RecordsCreate),
         kentos_domain::contracts::CAD_RELATIONS_EDIT => run!(relations_edit, RelationsEdit),
         kentos_domain::contracts::CAD_UNITS_CHANGE => run!(units_change, UnitsChange),
         kentos_domain::contracts::FILE_IMPORT_DXF => run!(file_import, ImportDxf),
@@ -2162,6 +2169,39 @@ fn run_command(
         }
         if let Some(field) = want.pointer_mut("/output/uid") {
             *field = Value::String(text.to_owned());
+        }
+    }
+    // “$uid” in a list of ids (cad.records.create, docs/adr/0410): each the persistent id of the slot beside it.
+    let listed = want
+        .pointer("/output/uids")
+        .and_then(Value::as_array)
+        .is_some_and(|l| l.iter().any(|v| v == "$uid"));
+    if listed {
+        let n = want
+            .pointer("/output/uids")
+            .and_then(Value::as_array)
+            .map_or(0, Vec::len);
+        for i in 0..n {
+            if want.pointer(&format!("/output/uids/{i}")) != Some(&json!("$uid")) {
+                continue;
+            }
+            let text = got
+                .pointer(&format!("/output/uids/{i}"))
+                .and_then(Value::as_str)
+                .unwrap_or("");
+            let own = got
+                .pointer(&format!("/output/ids/{i}"))
+                .and_then(Value::as_u64)
+                .and_then(|s| u32::try_from(s).ok())
+                .and_then(|s| doc.uid(Slot(s)));
+            if own.map(|u| u.to_string()).as_deref() != Some(text) {
+                return Err(format!(
+                    "{at}: output.uids[{i}] {text}, yuvadaki nesnenin kimliği {own:?}"
+                ));
+            }
+            if let Some(field) = want.pointer_mut(&format!("/output/uids/{i}")) {
+                *field = Value::String(text.to_owned());
+            }
         }
     }
     // “$layer:K”: the layers the command added (execute) or would add (plan), ids the tree did not have, by their number

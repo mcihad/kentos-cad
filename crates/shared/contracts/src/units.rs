@@ -363,7 +363,7 @@ pub fn scale_entity(e: &mut Entity, s: Scale) {
             }
         }
         // A cloud's points are in its files, which no unit scales (docs/adr/0207 §11).
-        Entity::PointCloud(_) => {}
+        Entity::PointCloud(_) | Entity::Record(_) => {}
     }
 }
 

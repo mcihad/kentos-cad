@@ -356,7 +356,7 @@ QGIS ilişkili child form gösterimi ve reference widget desteğine sahiptir. Ar
 - [ ] **FORM-REL-05:** FK type/unique/orphan/cardinality kuralları server transaction ve uygun DB constraints ile uygulanmalı.
 - [ ] **FORM-REL-06:** Parent UUID unsaved create sırasında üretilebilir olsun; aynı submission'da child FK eşlemesi deterministik ve idempotent olsun.
 - [ ] **FORM-REL-07:** Local/offline UUID eşlemesi sync sırasında korunmalı; slot/FID veya label anahtar olmamalı.
-- [ ] **FORM-REL-08:** Geometrili parent/child ve geometri olmayan table record ilişkileri aynı record API'sinden erişilsin.
+- [x] **FORM-REL-08:** Geometrili parent/child ve geometri olmayan table record ilişkileri aynı record API'sinden erişilsin. — *Yapıldı (16 Ekim; ADR 0410: geometrisiz kayıt `record`, `cad.records.create`; düzenleme, silme, form ve ilişkiler geometrili nesnelerle aynı komutlardan).*
 - [ ] **FORM-REL-09:** Relation rename/type/cardinality/key change için kullanım grafı ve veri migration kontrolü olsun.
 
 ### 6.2 Master–detail runtime

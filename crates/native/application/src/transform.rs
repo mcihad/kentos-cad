@@ -861,6 +861,7 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
         Shape::PointCloud {
             bounds, opacity, ..
         } => bounds.iter().all(|v| v.is_finite()) && opacity.is_none_or(f64::is_finite),
+        Shape::Record {} => true,
         Shape::Line { a, b } => pt(a) && pt(b),
         Shape::Polyline {
             pts: p,

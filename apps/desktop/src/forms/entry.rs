@@ -822,10 +822,7 @@ impl App {
         else {
             return Task::none();
         };
-        let Some((east, north)) = e.screen.object.measured.anchor else {
-            self.say(Level::Warn, "Kaydın yeri yok: alt kayıt elle çizilmeli.");
-            return Task::none();
-        };
+        let anchor = e.screen.object.measured.anchor;
         let record = e.uid.clone();
         let Some(name) = self
             .layer_fields_of(&layer)
@@ -834,6 +831,23 @@ impl App {
             .map(|f| f.name.clone())
         else {
             return Task::none();
+        };
+        // A record without a geometry (docs/adr/0410 §4) when the child layer holds records, or the
+        // record itself has no place; else a point at the record's place.
+        let (east, north) = match anchor {
+            Some(at) if !self.layer_holds_records(&layer) => at,
+            _ => {
+                let attrs = [(name, record)].into_iter().collect();
+                let Some(slot) = self.add_record(&layer, attrs) else {
+                    return Task::none();
+                };
+                self.say(Level::Success, "Alt kayıt oluşturuldu ve kayda bağlandı.");
+                if let Some(form) = self.form_of_layer(&layer) {
+                    self.selection.set([slot]);
+                    return self.open_entry(slot, &form);
+                }
+                return self.refresh_entry();
+            }
         };
         let input = serde_json::json!({
             "p": { "x": east, "y": north },

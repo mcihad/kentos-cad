@@ -47,6 +47,8 @@ mod point_text;
 mod polygonize;
 mod proximity;
 mod reshape;
+// A record without a geometry (docs/adr/0410).
+mod records;
 mod selection;
 mod snap;
 mod spatial_query;

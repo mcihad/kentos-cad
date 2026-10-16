@@ -391,6 +391,7 @@ impl Canvas {
             Shape::Raster { .. } => self.area(&[crate::entity::entity_vertices(s)], c),
             // A cloud's plan, filled (docs/adr/0207 §6).
             Shape::PointCloud { .. } => self.area(&[crate::entity::entity_vertices(s)], c),
+            Shape::Record {} => {}
             // A table's outline (docs/adr/0184 §2).
             Shape::Table { .. } => {
                 if let Some(t) = crate::geom::table::table_geom(s) {

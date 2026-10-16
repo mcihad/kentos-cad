@@ -42,6 +42,7 @@ pub fn kind_label(e: &Entity) -> &'static str {
         Entity::Image(_) => "Resim",
         Entity::Raster(_) => "Raster",
         Entity::PointCloud(_) => "Nokta bulutu",
+        Entity::Record(_) => "Kayıt",
     }
 }
 

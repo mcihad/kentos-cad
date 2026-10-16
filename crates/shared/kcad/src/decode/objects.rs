@@ -26,10 +26,10 @@ use kentos_contracts::{
     MAX_RASTER_SIDE, MAX_WIDTH_FACTOR, MIN_LEADER_ARROW, MIN_LINE_SPACING, Paragraph, PathEntity,
     PatternLine, PointCloudEntity, PointCloudFields, PointCloudStyle, PointEntity, PointPart,
     PointShape, PointSizeUnit, RasterEntity, RasterFields, RasterRender, RasterResampling,
-    RasterSample, RasterStretch, RasterStyle, RingGeometry, SUBREF_INDEX_LIMIT, SplineEntity,
-    SubPlace, SubRef, TableAlign, TableEntity, TableGrid, TableSource, TextAlign, TextEntity,
-    TextFace, TextRun, TextScript, Vec2, is_hex_colour, label_scale_ok, leader_arrow_holds,
-    line_weight_holds, oblique_holds, width_factor_ok,
+    RasterSample, RasterStretch, RasterStyle, RecordEntity, RingGeometry, SUBREF_INDEX_LIMIT,
+    SplineEntity, SubPlace, SubRef, TableAlign, TableEntity, TableGrid, TableSource, TextAlign,
+    TextEntity, TextFace, TextRun, TextScript, Vec2, is_hex_colour, label_scale_ok,
+    leader_arrow_holds, line_weight_holds, oblique_holds, width_factor_ok,
 };
 
 use super::{PREALLOCATE, floats, id16, list, map, named, point, points, required, text, unknown};
@@ -74,6 +74,7 @@ enum Kind {
     Image,
     Raster,
     PointCloud,
+    Record,
 }
 
 /// The dimension's kinds in the contract's order: schema 9 added the last five.
@@ -100,6 +101,7 @@ const KINDS: &[(&str, Kind)] = &[
     ("image", Kind::Image),
     ("raster", Kind::Raster),
     ("pointcloud", Kind::PointCloud),
+    ("record", Kind::Record),
 ];
 
 /// What a payload's schema lets an object hold beyond schema 2's fields.
@@ -465,6 +467,8 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                 key,
                 "sources" | "bounds" | "count" | "srid" | "style" | "opacity"
             ),
+            // A record has no fields of its own (docs/adr/0410 §2).
+            Kind::Record => false,
         }
 }
 
@@ -751,6 +755,7 @@ pub(super) fn object(
             && (has.rasters || *kind != Kind::Raster)
             && (has.point_clouds || *kind != Kind::PointCloud)
             && (has.nurbs || *kind != Kind::Nurbs)
+            && (has.forms || *kind != Kind::Record)
     }) else {
         return Err(r.fail(
             Code::UnknownKind,
@@ -774,6 +779,10 @@ pub(super) fn object(
     // Nor a point cloud (docs/adr/0207 §3).
     if kind == Kind::PointCloud && !has.uids {
         return Err(r.fail(Code::BadValue, "blok tanımında nokta bulutu olamaz"));
+    }
+    // Nor a record without a geometry (docs/adr/0410 §2).
+    if kind == Kind::Record && !has.uids {
+        return Err(r.fail(Code::BadValue, "blok tanımında geometrisiz kayıt olamaz"));
     }
     let mut f = Fields::default();
     map(r, |r, key| {
@@ -1796,6 +1805,7 @@ fn build(
             }
             Entity::PointCloud(PointCloudEntity { base, cloud })
         }
+        Kind::Record => Entity::Record(RecordEntity { base }),
     })
 }
 

@@ -112,11 +112,16 @@ impl App {
             return;
         };
         self.spatial.sync(&doc.model);
-        if let Some(bounds) = self.spatial.store().extent(Some(ids)) {
-            self.viewport.change(ViewChange::Fit {
+        match self.spatial.store().extent(Some(ids)) {
+            Some(bounds) => self.viewport.change(ViewChange::Fit {
                 bounds,
                 padding: SELECTION_PADDING,
-            });
+            }),
+            // Records without a geometry are in no place (docs/adr/0410 §4).
+            None => self.say(
+                kentos_interaction::Level::Info,
+                "Seçilenlerin çizimde yeri yok: geometrisiz kayıtlar yalnız tabloda ve formda görünür.",
+            ),
         }
     }
 }
@@ -141,6 +146,10 @@ pub fn kind_title(kind: &str) -> &'static str {
         "leader" => "Kılavuz",
         "table" => "Tablo",
         "image" => "Resim",
+        "nurbs" => "NURBS eğrisi",
+        "raster" => "Raster",
+        "pointcloud" => "Nokta bulutu",
+        "record" => "Kayıt",
         _ => "Nesne",
     }
 }

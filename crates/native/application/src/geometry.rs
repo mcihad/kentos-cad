@@ -657,6 +657,7 @@ pub fn shape(entity: &Entity) -> Shape {
         Entity::Image(i) => core_image(&i.image),
         Entity::Raster(r) => core_raster(&r.raster),
         Entity::PointCloud(c) => core_cloud(&c.cloud),
+        Entity::Record(_) => Shape::Record {},
         Entity::Arc(a) => Shape::Arc {
             c: v(&a.c),
             r: a.r,
@@ -1735,6 +1736,8 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
         s @ Shape::Image { .. } => EntityGeometry::Image(contract_image(s)?),
         s @ Shape::Raster { .. } => EntityGeometry::Raster(contract_raster(s)?),
         s @ Shape::PointCloud { .. } => EntityGeometry::PointCloud(contract_cloud(s)?),
+        // A record has no geometry to edit (docs/adr/0410).
+        Shape::Record {} => return None,
     })
 }
 

@@ -4098,6 +4098,41 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Records without a geometry, a table's rows (docs/adr/0410 §3), held together by
+        // fixtures/commands/v1/cad.records.create.json. The web is paused (docs/adr/0228).
+        CommandDescriptor {
+            id: crate::CAD_RECORDS_CREATE.into(),
+            version: crate::CAD_RECORDS_CREATE_VERSION,
+            title: "Kayıt ekle".into(),
+            summary: "Verilen katmana geometrisiz kayıtlar (tablo satırları) ekler; tek geri alma adımıdır. Kayıt çizilmez, seçilmez, kenetlenmez; öznitelikleri, etiketi ve ekleri vardır, Öznitelik tablosunda, formlarda, ilişkilerde ve sorgularda yer alır. \
+                      Her satırın öznitelikleri katmanın alanlarıyla yazılır: değer tek biçimine çevrilir, kuralı bozan reddedilir, verilmeyen alana varsayılanı yazılır; katmana form uygulanmışsa form da aynı adımda tamamlar. \
+                      En çok 10000 satır. Kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RecordsCreate>(),
+            output: schema::<crate::RecordsCreated>(),
+            plan: Some(schema::<crate::RecordsPlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Binanın iki maliki".into(),
+                input: json!({
+                    "layerId": "malik",
+                    "rows": [
+                        { "attrs": { "Ad": "Ayşe Demir", "Pay": "1/2" }, "label": "Ayşe Demir" },
+                        { "attrs": { "Ad": "Mehmet Kaya", "Pay": "1/2" } }
+                    ]
+                }),
+                output: None,
+            }],
+        },
         // The project's relations (docs/adr/0405 §3), held together by
         // fixtures/commands/v1/cad.relations.edit.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -5205,6 +5240,9 @@ mod tests {
                     crate::CAD_FORMS_AUDIT => {
                         serde_json::from_value::<crate::FormsAudit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_RECORDS_CREATE => {
+                        serde_json::from_value::<crate::RecordsCreate>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SHEETS_EDIT => {
                         serde_json::from_value::<crate::SheetsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -5507,6 +5545,10 @@ mod tests {
                         }
                         crate::CAD_FORMS_AUDIT => {
                             serde_json::from_value::<crate::FormsAudited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_RECORDS_CREATE => {
+                            serde_json::from_value::<crate::RecordsCreated>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_SHEETS_EDIT => {

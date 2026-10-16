@@ -991,6 +991,15 @@ impl<'d> Encoder<'d> {
                     f.push(("dataset", Val::Dataset(d)));
                 }
             }
+            // A record has no fields of its own; only the drawing's (docs/adr/0410 §2).
+            Entity::Record(_) => {
+                if uid.is_none() {
+                    self.path.push(Seg::Name(kind));
+                    return Err(
+                        self.fail(Code::BadValue, "blok tanımında geometrisiz kayıt olamaz")
+                    );
+                }
+            }
             Entity::PointCloud(e) => {
                 let refuse = |this: &mut Self, field: &'static str, words: &str| {
                     this.path.push(Seg::Name(kind));

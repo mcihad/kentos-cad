@@ -40,6 +40,7 @@ pub(crate) const KML: Words = Words {
     table: "KML'de tablo nesnesi yok; yazılmadı",
     image: "KML'de resim nesnesi yok; yazılmadı",
     cloud: "KML'de nokta bulutu yok; yazılmadı",
+    record: "KML'e geometrisiz kayıt yazılmaz; yazılmadı",
     raster: "KML'de raster yok; yazılmadı",
     leader: "kırık çizgisi çizgi (LineString) olarak yazıldı; ok başı ve not KML'de gösterilemez",
     block_empty: "bloğunda KML'ye yazılabilecek nesne yok; yazılmadı",

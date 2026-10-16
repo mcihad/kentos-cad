@@ -471,6 +471,8 @@ fn defs(shape: &Shape) -> Defs {
             others.extend(aligns.iter().flatten().map(|a| Other::Text(a.clone())));
             others.extend([Other::Flag(*header == Some(true)), text(grid.as_deref())]);
         }
+        // A record's attributes are compared, it has no geometry (docs/adr/0410).
+        Shape::Record {} => {}
         // Its plan, its files and what it shows of them (docs/adr/0207).
         Shape::PointCloud {
             count,

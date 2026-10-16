@@ -4,6 +4,7 @@
 //! holds its editor (a list for a value list and yes or no, else Noktalar's
 //! field), a refused value its reason on hover.
 
+use iced::widget::text::Wrapping;
 use iced::widget::{button, container, mouse_area, row, space, text_input};
 use iced::{Center, Color, Element, Fill, Length, Theme};
 use kentos_contracts::{LayerField, LayerFieldKind, check_value};
@@ -175,6 +176,12 @@ impl App {
             ),
             export,
             bar_button(
+                "tableRowBelow",
+                texts::ADD_RECORD,
+                texts::ADD_RECORD_HINT,
+                rows.layer.is_some().then(|| msg(Event::AddRecord)),
+            ),
+            bar_button(
                 "layerFields",
                 texts::FIELDS,
                 texts::FIELDS_HINT,
@@ -301,22 +308,30 @@ impl App {
                     let shown: Element<'_, Message> = match (&problem, c.key.is_none()) {
                         // A value its field refuses (an empty required one too): the
                         // warning tint over the cell, as the web's `ftable__bad`.
-                        (Some(_), _) => container(label::body(value).style(style::text::warning))
-                            .width(Fill)
-                            .height(Fill)
-                            .align_y(Center)
-                            .padding([0, 4])
-                            .style(|t: &Theme| container::Style {
-                                background: Some(iced::Background::Color(Color {
-                                    a: 0.16,
-                                    ..Tokens::of(t).warning
-                                })),
-                                ..container::Style::default()
-                            })
-                            .into(),
-                        (None, true) => label::muted(value).into(),
-                        (None, false) if c.order == "number" => label::mono(value).into(),
-                        (None, false) => label::body(value).into(),
+                        (Some(_), _) => container(
+                            label::body(value)
+                                .style(style::text::warning)
+                                .wrapping(Wrapping::None),
+                        )
+                        .width(Fill)
+                        .height(Fill)
+                        .align_y(Center)
+                        .padding([0, 4])
+                        .style(|t: &Theme| container::Style {
+                            background: Some(iced::Background::Color(Color {
+                                a: 0.16,
+                                ..Tokens::of(t).warning
+                            })),
+                            ..container::Style::default()
+                        })
+                        .into(),
+                        // One line in a cell: a long value is cut at the cell's edge, not wrapped
+                        // under itself.
+                        (None, true) => label::muted(value).wrapping(Wrapping::None).into(),
+                        (None, false) if c.order == "number" => {
+                            label::mono(value).wrapping(Wrapping::None).into()
+                        }
+                        (None, false) => label::body(value).wrapping(Wrapping::None).into(),
                     };
                     let shown: Element<'_, Message> = match problem {
                         Some(p) => tip(

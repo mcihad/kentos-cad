@@ -183,6 +183,16 @@ class Case:
             slot = got["output"]["id"]
             assert self.slots()[slot].uid == uid, f"{at}: output.uid {uid} is not slot {slot}'s"
             want["output"]["uid"] = uid
+        # “$uid” in a list of ids (cad.records.create, docs/adr/0410): each the persistent id of the slot beside it.
+        wanted = want.get("output") if isinstance(want.get("output"), dict) else {}
+        if isinstance(wanted.get("uids"), list) and "$uid" in wanted["uids"]:
+            slots = self.slots()
+            for i, w in enumerate(wanted["uids"]):
+                if w != "$uid":
+                    continue
+                uid, slot = got["output"]["uids"][i], got["output"]["ids"][i]
+                assert slots[slot].uid == uid, f"{at}: output.uids[{i}] {uid} is not slot {slot}'s"
+                wanted["uids"][i] = uid
         same(got, self.fill(want, at), f"{at}: result", step.get("within"))
 
     def check(self, expect: dict[str, Any] | None, before: str, at: str) -> None:

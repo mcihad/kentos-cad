@@ -616,7 +616,7 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
             }
         }
         // A cloud's place is its files': the commands refuse to move it (docs/adr/0207 §3).
-        Shape::PointCloud { .. } => shape.clone(),
+        Shape::PointCloud { .. } | Shape::Record {} => shape.clone(),
         // Its affine composed: every pixel's corner goes where the drawing goes (docs/adr/0204 §7).
         Shape::Raster { affine, .. } => {
             let mut out = shape.clone();

@@ -637,9 +637,10 @@ impl Store {
     }
 
     /// Whether queries see the object: its layer is shown, it passes the
-    /// layer's filter and its time shows (docs/adr/0210 §6, 0211 §3).
+    /// layer's filter and its time shows (docs/adr/0210 §6, 0211 §3). A record
+    /// without a geometry is in no place (docs/adr/0410 §1): no query by place sees it.
     pub fn shown(&self, it: &Item) -> bool {
-        self.flags(it).visible && self.view_shown(it.id)
+        !matches!(it.shape, Shape::Record {}) && self.flags(it).visible && self.view_shown(it.id)
     }
 
     /// Replaces the layer table: every node of the layer tree with its flags

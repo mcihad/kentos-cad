@@ -47,6 +47,7 @@
 //! | table | n, m, r, then per cell row its length; q if merges, then row, col, rows, cols per range; a if aligns, then each its place in `TableAlign::ALL`; grid if any (its place in `TableGrid::ALL`); font if any; source if any: its kind (0 coordinates, 1 areas, 2 attributes, 3 file), then k objects, or a file's sheet flag (0 or 1) | p, rotation, height, rows (n), columns (m), oblique if any, frame if any | each cell (row by row), text style if any, the source's objects (UUID text) or the file's name and sheet |
 //! | image | n if clip | p, width, height, rotation, clip (2n) if clip, opacity if any | asset if any, file if any |
 //! | raster | width, height, bands, sample (its place in `RASTER_SAMPLES`), srid; the look's kind (`RASTER_RENDERS`), its band count and bands, its stretch (`RASTER_STRETCHES`), its flags (`LOOK_*`); a dataset's dimension count and flags, each dimension's index, value count and flags | affine (6), opacity if any; the look's min, max, azimuth, altitude, z factor and nodata, each if any; each dimension's values | the look's ramp if any, its edges if any, asset if any, file if any, url if any; a dataset's variable, vector, mesh, each dimension's name and units |
+//! | record | | | |
 //! | pointcloud | srid, n (files); the look's kind (its place in `CloudRender::ALL`), its flags (`CLOUD_*`), the hidden classes' count and classes; per file its format (its place in `CloudFormat::ALL`) and source (1 asset, 2 file, 4 url) | bounds (6), count, the look's size, opacity if any, the look's min and max if any; per file its count and bounds (6) | the look's ramp if any; per file its asset, file or url |
 //!
 //! A point is two floats, x then y. Flags: 1 colour, 2 label, 4 symbol, 8
@@ -171,7 +172,7 @@ const SOURCE_ASSET: u32 = 1;
 const SOURCE_FILE: u32 = 2;
 const SOURCE_URL: u32 = 4;
 
-pub const KINDS: [&str; 20] = [
+pub const KINDS: [&str; 21] = [
     "point",
     "line",
     "polyline",
@@ -192,6 +193,7 @@ pub const KINDS: [&str; 20] = [
     "raster",
     "pointcloud",
     "nurbs",
+    "record",
 ];
 
 const COLOR: u32 = 1;
@@ -399,6 +401,7 @@ fn kind_index(entity: &Entity) -> u8 {
         Entity::Raster(_) => 17,
         Entity::PointCloud(_) => 18,
         Entity::Nurbs(_) => 19,
+        Entity::Record(_) => 20,
     }
 }
 
@@ -1342,6 +1345,8 @@ impl Packer {
                     }
                 }
             }
+            // A record has no fields of its own (docs/adr/0410 §2).
+            Entity::Record(_) => {}
             Entity::PointCloud(kentos_contracts::PointCloudEntity {
                 base: _,
                 cloud:
@@ -2949,6 +2954,8 @@ fn geometry(
             }
             Entity::Nurbs(e)
         }
+        // A record: nothing more (docs/adr/0410 §2).
+        20 => Entity::Record(kentos_contracts::RecordEntity { base }),
         18 => {
             let srid = c.int()?;
             let n = c.usize()?;

@@ -367,6 +367,12 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
                 return Err(why);
             }
         }
+        // A record has no geometry (docs/adr/0410 §5); the drawing's only.
+        Record(_) => {
+            if in_block {
+                return Err("Blok tanımında geometrisiz kayıt olamaz".into());
+            }
+        }
     }
     Ok(())
 }
@@ -603,6 +609,8 @@ fn projection(e: &Entity, blocks: &Placing) -> Option<Geometry> {
             ring.extend(ring.first().copied());
             Geometry::Polygon(vec![ring])
         }
+        // A record has none (docs/adr/0410 §5): its row's geometry is null.
+        Entity::Record(_) => return None,
         // Its plan's rectangle (docs/adr/0207 §11): its points are its files'.
         Entity::PointCloud(x) => {
             let [x1, y1, x2, y2] = x.cloud.rect();

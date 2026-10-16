@@ -33,6 +33,7 @@ use crate::app::{App, Message};
 use crate::document::Document;
 use crate::points::{click_pick, focus_field};
 
+mod records;
 #[cfg(test)]
 mod tests;
 mod view;
@@ -51,6 +52,9 @@ pub mod texts {
     pub const ZOOM: &str = "Seçime yakınlaş";
     pub const ZOOM_HINT: &str = "Seçili nesnelere yakınlaştırır";
     pub const FIELDS: &str = "Alanlar…";
+    pub const ADD_RECORD: &str = "Kayıt ekle";
+    pub const ADD_RECORD_HINT: &str =
+        "Katmana geometrisiz bir kayıt (tablo satırı) ekler; katmanın formu varsa form açılır";
     pub const FIELDS_HINT: &str =
         "Katmanın alanları: adları, türleri, kuralları, varsayılanları ve değer listeleri";
     pub const EXPORT: &str = "Dışa aktar";
@@ -122,6 +126,8 @@ pub enum Event {
     ZoomSelection,
     /// Alanlar….
     Fields,
+    /// Kayıt ekle (docs/adr/0410 §4): a record without a geometry on the layer shown.
+    AddRecord,
     /// Dışa aktar ▾ (docs/adr/0223 §3): the rows shown written in a format.
     Export(kentos_contracts::WorkbookFormat),
     /// A value cell double-clicked: the row and the model's column.
@@ -440,6 +446,7 @@ impl App {
                 }
             }
             Event::ZoomSelection => self.navigating(Self::zoom_selection),
+            Event::AddRecord => return self.feature_add_record(),
             Event::Export(format) => {
                 let Some(doc) = &self.document else {
                     return Task::none();
@@ -672,6 +679,10 @@ impl App {
             Control::Press(texts::ZOOM) => {
                 (!self.selection.is_empty()).then(|| Message::Features(Event::ZoomSelection))
             }
+            Control::Press(texts::ADD_RECORD) => rows
+                .layer
+                .is_some()
+                .then(|| Message::Features(Event::AddRecord)),
             Control::Press(texts::FIELDS) => rows
                 .layer
                 .is_some()

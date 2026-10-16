@@ -1465,14 +1465,17 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
-    // Schema 60 (docs/adr/0401, 0408): a form of the project, or a layer field's stable id or
-    // its several values.
+    // Schema 60 (docs/adr/0401, 0408, 0410): a form of the project, a layer field's stable id or
+    // its several values, or a record without a geometry.
     fn keyed(nodes: &[LayerNode]) -> bool {
-        nodes.iter().any(|n| {
-            n.fields.iter().any(|f| f.id.is_some() || f.multiple) || keyed(&n.children)
-        })
+        nodes
+            .iter()
+            .any(|n| n.fields.iter().any(|f| f.id.is_some() || f.multiple) || keyed(&n.children))
     }
-    if !doc.settings.forms.is_empty() || keyed(&doc.layers) {
+    if !doc.settings.forms.is_empty()
+        || keyed(&doc.layers)
+        || doc.entities.iter().any(|e| matches!(e, Entity::Record(_)))
+    {
         return crate::SCHEMA_WITH_FORMS;
     }
     // Schema 59 (docs/adr/0318): a block's dynamic part or an insert's parameter values, of the drawing or of a block.

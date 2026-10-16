@@ -30,7 +30,7 @@ from .errors import *  # noqa: F403
 from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 
-from . import addresses, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, file, forms, labels, layers, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, rectangle, relations, scenarios, settings, sheets, snap, standards, styles, ucs, units, views  # noqa: E402  isort: skip
+from . import addresses, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, file, forms, labels, layers, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, records, rectangle, relations, scenarios, settings, sheets, snap, standards, styles, ucs, units, views  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -776,6 +776,11 @@ __all__ = [
     "RayEntity",
     "RayEntityGeometry",
     "Record",
+    "RecordEntity",
+    "RecordRow",
+    "RecordsCreate",
+    "RecordsCreated",
+    "RecordsPlan",
     "RectangleCorners",
     "RectangleCreate",
     "RectangleFrame",
@@ -1006,6 +1011,7 @@ __all__ = [
     "polygon",
     "polyline",
     "project",
+    "records",
     "rectangle",
     "relations",
     "scenarios",

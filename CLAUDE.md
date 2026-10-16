@@ -373,7 +373,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   ve Revizyon bulutu yöntemleri, Düzgün çokgen'in çember içinde, dışında, kenardan'ı; Dikdörtgen'in Alan'ı (A) ve Boyutlarla, Alanla
   yöntemleri, Yardımcı çizgi'nin Paralel'i (P, Noktadan), Revizyon bulutu'nun Nesne'si (N); hesap çekirdekte (`rect_side_for_area`,
   `xline_offset`, `cloud_around`), yazma araçların kendi komutlarıyla (ADR 0287);
-  formlar (ADR 0400–0409): Tab ile alanlar arasında gezinme ve klavyeyle form öğeleri; katmanın veri giriş ekranı projede
+  formlar (ADR 0400–0410; 0410 geometrisiz kayıt `record`, `cad.records.create`, Öznitelik tablosunda Kayıt ekle): Tab ile alanlar arasında gezinme ve klavyeyle form öğeleri; katmanın veri giriş ekranı projede
   (`.kcad` şema 60 `forms`, alanın kararlı `id`'si), çekirdek `kentos-forms` (ön denetim, kuralların durumu, kaydın doğrulaması,
   yazma profili), `cad.forms.edit`, `.validate`, `.submit` ve `cad.entities.set`'te `form_rules`; Formlar penceresi (tasarımcı) ve
   Formla düzenle; tipli evet/hayır ve sayı alanları ifadelerde türüyle okunur; Python `kentos.cad.forms`, MCP; ifadeli varsayılan,

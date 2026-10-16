@@ -3685,7 +3685,7 @@ class _Schema:
         if len(v) != 1:
             self.fail("bad_value", f"nesne haritasında tek anahtar (tür) olmalı, {len(v)} var")
         ((kind, body),) = v.items()
-        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds) or (kind == "nurbs" and not self.nurbs):
+        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds) or (kind == "nurbs" and not self.nurbs) or (kind == "record" and not self.forms):
             self.path.append(kind)
             self.fail("unknown_kind", f"“{kind}” nesne türü bilinmiyor")
         # A block definition holds no table (docs/adr/0184 §1).
@@ -3704,6 +3704,10 @@ class _Schema:
         if kind == "pointcloud" and self.inside is not None:
             self.path.append(kind)
             self.fail("bad_value", "blok tanımında nokta bulutu olamaz")
+        # Nor a record without a geometry (docs/adr/0410 §2).
+        if kind == "record" and self.inside is not None:
+            self.path.append(kind)
+            self.fail("bad_value", "blok tanımında geometrisiz kayıt olamaz")
         table = dict(self.common())
         table.update(ENTITY_KINDS[kind](self))
         self.path.append(kind)
@@ -5154,6 +5158,8 @@ ENTITY_KINDS = {
         "style": (s.cloud_style, True),
         "opacity": (s.float, False),
     },
+    # Schema 60 (docs/adr/0410 §2): a record without a geometry, no fields of its own.
+    "record": lambda s: {},
     # Schema 8 (docs/adr/0146): two vertices or more, a positive height, a note that is not empty, `mask` only when true.
     # Schema 30 (docs/adr/0205 §7): AutoCAD's arrowheads, the arrowhead's size times the note's height.
     "leader": lambda s: {

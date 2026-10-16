@@ -188,6 +188,9 @@ Liste:
   katmanın izlemesi (`form_follow.rs`'in kuralı, `cad.polygon.create.forms.json` ve `cad.entities.set.forms.json` durumları);
   Formla düzenle'de hesaplanan alanların kilidi, süzülen listeler, sarı uyarı, kapalı grup, son değer; tasarımcının yeni
   denetçi satırları; kapalı girişin soluk görünüşü ve `Form`'un uyarı satırı web'in form bileşenlerinde.
+- [ ] `FORM-N` geometrisiz kayıt (ADR 0410, 16 Ekim): web'de gerekenler: sözleşmenin `record` türü (TS türleri üretildi),
+  `io/columns.ts`'in tür 20'si, `cad.records.create`'in TS işleyicisi (`fixtures/commands/v1/cad.records.create.json`), çizim
+  ve seçimin kaydı atlaması, Öznitelik tablosunda Kayıt ekle, formun Yeni'si.
 - [ ] `FORM-O` çizim komutlarında alanların kuralı (ADR 0199'un 16 Ekim eki): web'de gerekenler: `product/`'un çizim
   komutlarının öznitelikleri alanların kuralından geçirmesi ve varsayılanları yazması (`fixtures/commands/v1/*.fields.json`).
 - [ ] `FORM-M` çoktan çoğa ilişki ve yeni alt kayıt (ADR 0409, 16 Ekim): web'de gerekenler: listesiz çok değerli alanın
@@ -1447,7 +1450,9 @@ burada aşamaları izlenir.
   kayıtları arasında gezinme. — **16 Ekim, [ADR 0408](docs/adr/0408-multiple-values-and-record-stepping.md).**
 - [x] `FORM-M` Çoktan çoğa ilişki (çok değerli başvuru alanı, bağlantı tablosu olmadan; silme politikası öbür bağları
   korur) ve formdan yeni alt kayıt. — **16 Ekim, [ADR 0409](docs/adr/0409-many-to-many-and-new-child.md).**
-- [ ] `FORM-N` Geometrisiz tablo katmanı (yeni nesne türü; `.kcad`, sunucu ve PostGIS'te geometrisiz satır).
+- [x] `FORM-N` Geometrisiz kayıt (tablo satırı): `record` türü, `cad.records.create`, `.kcad` şema 60, sunucuda boş geometri,
+  Öznitelik tablosunda Kayıt ekle, formun Yeni alt kaydı. — **16 Ekim, [ADR 0410](docs/adr/0410-records-without-geometry.md).**
+- [ ] `FORM-P` Tabloda başka katmandan listenin (ADR 0404) etiketiyle gösterim; CSV ve tablo dosyasından kayıtlar (İşlemler).
 - [x] `FORM-O` Çizim komutları (`cad.point.create`, `cad.polygon.create` …) öznitelikleri alanların kuralıyla yazar: tek biçim,
   ret, varsayılan. — **16 Ekim, [ADR 0199'un eki](docs/adr/0199-layer-fields-and-feature-table.md).**
 - [ ] `FORM-F` Merkezi yayın ve izinler (FM2, plan `FORM-FIRST-14`–`17`): bulutta form taslağı, yayın ve dağıtım kaynakları,

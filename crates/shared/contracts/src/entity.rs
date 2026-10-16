@@ -1445,9 +1445,29 @@ pub enum Entity {
     Raster(crate::RasterEntity),
     /// A point cloud: LAS, LAZ, COPC or text files (docs/adr/0207).
     PointCloud(crate::PointCloudEntity),
+    /// A record without a geometry (docs/adr/0410): a table's row, with the base's attributes,
+    /// attachments and label; not drawn, picked or snapped to.
+    Record(RecordEntity),
+}
+
+/// A record without a geometry (docs/adr/0410 §1).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RecordEntity {
+    #[serde(flatten)]
+    #[cfg_attr(feature = "ts", ts(flatten))]
+    pub base: EntityBase,
 }
 
 impl Entity {
+    /// Whether it has a geometry: every object but a record (docs/adr/0410).
+    pub fn has_geometry(&self) -> bool {
+        !matches!(self, Entity::Record(_))
+    }
+
     /// Whether the object is drawn with lines, so its own line weight shows
     /// and a new one takes the current weight: not a point, a text, a
     /// dimension or a hatch (docs/adr/0139; the web's `drawsLines`).
@@ -1462,6 +1482,7 @@ impl Entity {
                 | Entity::Image(_)
                 | Entity::Raster(_)
                 | Entity::PointCloud(_)
+                | Entity::Record(_)
         )
     }
 
@@ -1486,6 +1507,7 @@ impl Entity {
             Entity::Image(e) => &e.base,
             Entity::Raster(e) => &e.base,
             Entity::PointCloud(e) => &e.base,
+            Entity::Record(e) => &e.base,
         }
     }
 
@@ -1511,6 +1533,7 @@ impl Entity {
             Entity::Image(e) => &mut e.base,
             Entity::Raster(e) => &mut e.base,
             Entity::PointCloud(e) => &mut e.base,
+            Entity::Record(e) => &mut e.base,
         }
     }
 
@@ -1537,6 +1560,7 @@ impl Entity {
             Entity::Image(_) => "image",
             Entity::Raster(_) => "raster",
             Entity::PointCloud(_) => "pointcloud",
+            Entity::Record(_) => "record",
         }
     }
 }

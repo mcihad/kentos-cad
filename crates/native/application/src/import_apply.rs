@@ -812,6 +812,7 @@ fn finite(e: &Entity) -> bool {
                 fs(&e.raster.affine) && e.raster.opacity.is_none_or(f64::is_finite)
             }
             Entity::PointCloud(e) => crate::edit::cloud_finite(&e.cloud),
+            Entity::Record(_) => true,
             Entity::Leader(e) => ps(&e.pts) && fs(&[e.height, e.rotation]),
             Entity::Table(e) => {
                 p(&e.p)

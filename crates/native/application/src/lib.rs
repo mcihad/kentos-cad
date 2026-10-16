@@ -164,6 +164,7 @@ pub mod units_change;
 pub mod views_edit;
 pub mod forms;
 pub mod forms_audit;
+pub mod records;
 pub mod forms_edit;
 pub mod forms_fill;
 pub mod forms_submit;
@@ -235,6 +236,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_FORMS_AUDIT,
         kentos_contracts::CAD_FORMS_AUDIT_VERSION,
+    ),
+    // Records without a geometry ([`records`], docs/adr/0410).
+    (
+        kentos_contracts::CAD_RECORDS_CREATE,
+        kentos_contracts::CAD_RECORDS_CREATE_VERSION,
     ),
     (
         kentos_contracts::CAD_FORMS_SUBMIT,

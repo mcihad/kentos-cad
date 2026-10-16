@@ -39,6 +39,7 @@ pub(crate) const GPX: Words = Words {
     table: "GPX'te tablo nesnesi yok; yazılmadı",
     image: "GPX'te resim nesnesi yok; yazılmadı",
     cloud: "GPX'te nokta bulutu yok; yazılmadı",
+    record: "GPX'e geometrisiz kayıt yazılmaz; yazılmadı",
     raster: "GPX'te raster yok; yazılmadı",
     leader: "kırık çizgisi çizgi olarak yazıldı; ok başı ve not GPX'te gösterilemez",
     block_empty: "bloğunda GPX'e yazılabilecek nesne yok; yazılmadı",

@@ -660,6 +660,8 @@ pub(crate) fn shape(e: &Entity) -> Shape {
                 opacity: f.opacity,
             }
         }
+        // A record has no geometry (docs/adr/0410).
+        Entity::Record(_) => Shape::Record {},
         // A raster is no block's piece either (docs/adr/0204 §2); its frame for what it covers.
         Entity::Raster(r) => {
             let f = &r.raster;
@@ -959,7 +961,8 @@ fn entity(s: &Shape) -> Option<Entity> {
         | Shape::Table { .. }
         | Shape::Image { .. }
         | Shape::Raster { .. }
-        | Shape::PointCloud { .. } => {
+        | Shape::PointCloud { .. }
+        | Shape::Record {} => {
             return None;
         }
     })
