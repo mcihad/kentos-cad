@@ -4023,8 +4023,8 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_FORMS_VALIDATE.into(),
             version: crate::CAD_FORMS_VALIDATE_VERSION,
             title: "Formu denetle".into(),
-            summary: "Bir formun ve bir kaydın durumunu söyler, hiçbir şey yazmaz. Formun ön denetimi (olmayan alan, uymayan öğe, okunamayan kural, gizlenebilen zorunlu alan; uyarılar da); uid verilirse o nesnenin öğeleri (gösterilen, zorunlu, salt okunur) ve values (alan anahtarlarıyla) yazılmış gibi kaydın sorunları: zorunlu alan boş (form_required), değer alanın kuralına uymuyor (form_value_invalid), denetim tutmuyor (form_check_failed), gizli ya da salt okunur alan değişti (form_hidden, form_read_only). \
-                      draft: son yayın yerine taslak (tasarımcının önizlemesi); defaults: formun varsayılanları kaydın boş alanlarına önce yazılır (yeni kayıt). Ön denetimde hata olan form reddedilmez, kaydı sorulmaz."
+            summary: "Bir formun ve bir kaydın durumunu söyler, hiçbir şey yazmaz. Formun ön denetimi (olmayan alan, uymayan öğe, okunamayan kural, gizlenebilen zorunlu alan; uyarılar da); uid verilirse o nesnenin öğeleri (gösterilen, zorunlu, salt okunur) ve values (alan anahtarlarıyla) yazılmış gibi kaydın sorunları: zorunlu alan boş (form_required), değer alanın kuralına uymuyor (form_value_invalid), denetim tutmuyor (form_check_failed; uyarı denetimi form_check_warning), gizli ya da salt okunur alan değişti (form_hidden, form_read_only), süzgecin sunmadığı seçenek (form_choice_filtered), hesap alana uymuyor (form_calc_invalid), tekil alanın değeri başka nesnede (form_unique). Kayıt formun tamamladığı gibidir: varsayılanlar ve hesaplar yazılmış; öğelerde süzgeçli alanın sunduğu seçenekler (choices) ve notun yazılmış metni (text). \
+                      draft: son yayın yerine taslak (tasarımcının önizlemesi); defaults: verilen değerlerden sonra formun varsayılanları kaydın boş alanlarına yazılır (yeni kayıt); moment ve user kuralların @tarih, @simdi ve @kullanici'sidir. Ön denetimde hata olan form reddedilmez, kaydı sorulmaz."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Query,
@@ -4048,8 +4048,9 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_FORMS_SUBMIT.into(),
             version: crate::CAD_FORMS_SUBMIT_VERSION,
             title: "Formla kaydet".into(),
-            summary: "Bir nesnenin kaydını formla yazar: values alan anahtarlarıyla (boş değer özniteliği kaldırır); formun kuralları ve alanların kuralları geçerse bütün kayıt, geçmezse hiçbir şey (form_invalid: ilk sorun, path onu veren değer). Gizli alanın değeri silinmez; gösterilmeyen, gizli ya da salt okunur alana yazılmaz. \
-                      Varsayılan olarak son yayın kullanılır; draft: taslak (yayınlanmamış form). defaults: formun varsayılanları kaydın boş alanlarına önce yazılır (yeni kayıt). Tek geri alma adımı: “Form: <ad>”. \
+            summary: "Bir nesnenin kaydını formla yazar: values alan anahtarlarıyla (boş değer özniteliği kaldırır); formun kuralları ve alanların kuralları geçerse bütün kayıt, geçmezse hiçbir şey (form_invalid: ilk sorun, path onu veren değer). Gizli alanın değeri silinmez (formun clearHidden'ı açıksa silinir); gösterilmeyen, gizli, salt okunur ya da hesaplanan alana başka değer yazılmaz. \
+                      Kayıt yazılmadan tamamlanır: defaults (yeni kayıt) verilen değerlerden sonra boş kalan alanlara formun değer ve ifade varsayılanlarını yazar; hesaplanan alanlar formun ifadeleriyle yazılır. moment (2026-10-16T14:30:00) ve user verilirse kuralların @tarih, @simdi ve @kullanici'si onlardır; verilmezse onları okuyan varsayılan ve hesap yapılmaz. Tekil alanın değeri katmanın başka nesnesinde olamaz. Uyarı denetimi bozulursa kayıt yine yazılır, uyarı form_check_warning'dir. \
+                      Varsayılan olarak son yayın kullanılır; draft: taslak (yayınlanmamış form). Tek geri alma adımı: “Form: <ad>”. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
             aliases: vec![],

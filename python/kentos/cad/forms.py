@@ -161,11 +161,17 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
     """``cad.forms.submit`` v1. Formla kaydet: Bir nesnenin kaydını formla yazar: values
     alan anahtarlarıyla (boş değer özniteliği kaldırır); formun kuralları ve alanların
     kuralları geçerse bütün kayıt, geçmezse hiçbir şey (form_invalid: ilk sorun, path
-    onu veren değer). Gizli alanın değeri silinmez; gösterilmeyen, gizli ya da salt
-    okunur alana yazılmaz. Varsayılan olarak son yayın kullanılır; draft: taslak
-    (yayınlanmamış form). defaults: formun varsayılanları kaydın boş alanlarına önce
-    yazılır (yeni kayıt). Tek geri alma adımı: “Form: <ad>”. expectedRevision verilmişse
-    ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    onu veren değer). Gizli alanın değeri silinmez (formun clearHidden'ı açıksa
+    silinir); gösterilmeyen, gizli, salt okunur ya da hesaplanan alana başka değer
+    yazılmaz. Kayıt yazılmadan tamamlanır: defaults (yeni kayıt) verilen değerlerden
+    sonra boş kalan alanlara formun değer ve ifade varsayılanlarını yazar; hesaplanan
+    alanlar formun ifadeleriyle yazılır. moment (2026-10-16T14:30:00) ve user verilirse
+    kuralların @tarih, @simdi ve @kullanici'si onlardır; verilmezse onları okuyan
+    varsayılan ve hesap yapılmaz. Tekil alanın değeri katmanın başka nesnesinde olamaz.
+    Uyarı denetimi bozulursa kayıt yine yazılır, uyarı form_check_warning'dir.
+    Varsayılan olarak son yayın kullanılır; draft: taslak (yayınlanmamış form). Tek geri
+    alma adımı: “Form: <ad>”. expectedRevision verilmişse ve çizim o sürümde değilse
+    hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.forms.submit"
@@ -186,6 +192,8 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         defaults: bool | Unset = UNSET,
         draft: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        moment: str | None | Unset = UNSET,
+        user: str | None | Unset = UNSET,
         values: Mapping[str, str] | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -193,11 +201,17 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         """Formla kaydet: Bir nesnenin kaydını formla yazar: values alan anahtarlarıyla (boş
         değer özniteliği kaldırır); formun kuralları ve alanların kuralları geçerse bütün
         kayıt, geçmezse hiçbir şey (form_invalid: ilk sorun, path onu veren değer). Gizli
-        alanın değeri silinmez; gösterilmeyen, gizli ya da salt okunur alana yazılmaz.
-        Varsayılan olarak son yayın kullanılır; draft: taslak (yayınlanmamış form).
-        defaults: formun varsayılanları kaydın boş alanlarına önce yazılır (yeni kayıt). Tek
-        geri alma adımı: “Form: <ad>”. expectedRevision verilmişse ve çizim o sürümde
-        değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        alanın değeri silinmez (formun clearHidden'ı açıksa silinir); gösterilmeyen, gizli,
+        salt okunur ya da hesaplanan alana başka değer yazılmaz. Kayıt yazılmadan
+        tamamlanır: defaults (yeni kayıt) verilen değerlerden sonra boş kalan alanlara
+        formun değer ve ifade varsayılanlarını yazar; hesaplanan alanlar formun ifadeleriyle
+        yazılır. moment (2026-10-16T14:30:00) ve user verilirse kuralların @tarih, @simdi ve
+        @kullanici'si onlardır; verilmezse onları okuyan varsayılan ve hesap yapılmaz. Tekil
+        alanın değeri katmanın başka nesnesinde olamaz. Uyarı denetimi bozulursa kayıt yine
+        yazılır, uyarı form_check_warning'dir. Varsayılan olarak son yayın kullanılır;
+        draft: taslak (yayınlanmamış form). Tek geri alma adımı: “Form: <ad>”.
+        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+        conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -206,6 +220,10 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
             defaults: The form's defaults in the record's empty fields first (a new record).
             draft: Through its draft instead of its latest release (a form not yet published).
             expected_revision: The document revision the input was prepared against, as decimal text.
+            moment: The moment the rules' `@tarih` and `@simdi` read: a date, or a date and a local time
+                (`2026-10-16T14:30:00`); none: they read empty, and a calculation or default that reads them is
+                left out (docs/adr/0402 §5).
+            user: The person the rules' `@kullanici` reads (1–64 characters); none: it reads empty.
             values: Values by the layer fields' keys (empty: no value).
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -225,6 +243,8 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
             defaults=defaults,
             draft=draft,
             expected_revision=expected_revision,
+            moment=moment,
+            user=user,
             values=_opt(values, lambda x: dict(x)),
         ), request_id=request_id, expected=expected)
 
@@ -238,6 +258,8 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         defaults: bool | Unset = UNSET,
         draft: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        moment: str | None | Unset = UNSET,
+        user: str | None | Unset = UNSET,
         values: Mapping[str, str] | Unset = UNSET,
     ) -> FormsSubmitted:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -249,6 +271,8 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
             defaults=defaults,
             draft=draft,
             expected_revision=expected_revision,
+            moment=moment,
+            user=user,
             values=_opt(values, lambda x: dict(x)),
         ))
 
@@ -262,6 +286,8 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         defaults: bool | Unset = UNSET,
         draft: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        moment: str | None | Unset = UNSET,
+        user: str | None | Unset = UNSET,
         values: Mapping[str, str] | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -273,6 +299,8 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
             defaults=defaults,
             draft=draft,
             expected_revision=expected_revision,
+            moment=moment,
+            user=user,
             values=_opt(values, lambda x: dict(x)),
         ))
 
@@ -286,6 +314,8 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         defaults: bool | Unset = UNSET,
         draft: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        moment: str | None | Unset = UNSET,
+        user: str | None | Unset = UNSET,
         values: Mapping[str, str] | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -302,6 +332,8 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
             defaults=defaults,
             draft=draft,
             expected_revision=expected_revision,
+            moment=moment,
+            user=user,
             values=_opt(values, lambda x: dict(x)),
         ), op=op, request_id=request_id, expected=expected)
 
@@ -316,10 +348,16 @@ class _FormsValidate(LocalCommand[FormsValidate, FormsValidated, FormsValidated]
     gizlenebilen zorunlu alan; uyarılar da); uid verilirse o nesnenin öğeleri
     (gösterilen, zorunlu, salt okunur) ve values (alan anahtarlarıyla) yazılmış gibi
     kaydın sorunları: zorunlu alan boş (form_required), değer alanın kuralına uymuyor
-    (form_value_invalid), denetim tutmuyor (form_check_failed), gizli ya da salt okunur
-    alan değişti (form_hidden, form_read_only). draft: son yayın yerine taslak
-    (tasarımcının önizlemesi); defaults: formun varsayılanları kaydın boş alanlarına
-    önce yazılır (yeni kayıt). Ön denetimde hata olan form reddedilmez, kaydı sorulmaz.
+    (form_value_invalid), denetim tutmuyor (form_check_failed; uyarı denetimi
+    form_check_warning), gizli ya da salt okunur alan değişti (form_hidden,
+    form_read_only), süzgecin sunmadığı seçenek (form_choice_filtered), hesap alana
+    uymuyor (form_calc_invalid), tekil alanın değeri başka nesnede (form_unique). Kayıt
+    formun tamamladığı gibidir: varsayılanlar ve hesaplar yazılmış; öğelerde süzgeçli
+    alanın sunduğu seçenekler (choices) ve notun yazılmış metni (text). draft: son yayın
+    yerine taslak (tasarımcının önizlemesi); defaults: verilen değerlerden sonra formun
+    varsayılanları kaydın boş alanlarına yazılır (yeni kayıt); moment ve user kuralların
+    @tarih, @simdi ve @kullanici'sidir. Ön denetimde hata olan form reddedilmez, kaydı
+    sorulmaz.
     """
     __slots__ = ()
     id = "cad.forms.validate"
@@ -338,7 +376,9 @@ class _FormsValidate(LocalCommand[FormsValidate, FormsValidated, FormsValidated]
         form: str,
         defaults: bool | Unset = UNSET,
         draft: bool | Unset = UNSET,
+        moment: str | None | Unset = UNSET,
         uid: str | None | Unset = UNSET,
+        user: str | None | Unset = UNSET,
         values: Mapping[str, str] | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -348,17 +388,26 @@ class _FormsValidate(LocalCommand[FormsValidate, FormsValidated, FormsValidated]
         uyarılar da); uid verilirse o nesnenin öğeleri (gösterilen, zorunlu, salt okunur) ve
         values (alan anahtarlarıyla) yazılmış gibi kaydın sorunları: zorunlu alan boş
         (form_required), değer alanın kuralına uymuyor (form_value_invalid), denetim
-        tutmuyor (form_check_failed), gizli ya da salt okunur alan değişti (form_hidden,
-        form_read_only). draft: son yayın yerine taslak (tasarımcının önizlemesi); defaults:
-        formun varsayılanları kaydın boş alanlarına önce yazılır (yeni kayıt). Ön denetimde
-        hata olan form reddedilmez, kaydı sorulmaz.
+        tutmuyor (form_check_failed; uyarı denetimi form_check_warning), gizli ya da salt
+        okunur alan değişti (form_hidden, form_read_only), süzgecin sunmadığı seçenek
+        (form_choice_filtered), hesap alana uymuyor (form_calc_invalid), tekil alanın değeri
+        başka nesnede (form_unique). Kayıt formun tamamladığı gibidir: varsayılanlar ve
+        hesaplar yazılmış; öğelerde süzgeçli alanın sunduğu seçenekler (choices) ve notun
+        yazılmış metni (text). draft: son yayın yerine taslak (tasarımcının önizlemesi);
+        defaults: verilen değerlerden sonra formun varsayılanları kaydın boş alanlarına
+        yazılır (yeni kayıt); moment ve user kuralların @tarih, @simdi ve @kullanici'sidir.
+        Ön denetimde hata olan form reddedilmez, kaydı sorulmaz.
 
         Args:
             doc: The drawing it works on.
             form: The form's id.
             defaults: The form's defaults in the record's empty fields first (a new record).
             draft: Its draft instead of its latest release (the designer's preview).
+            moment: The moment the rules' `@tarih` and `@simdi` read: a date, or a date and a local time
+                (`2026-10-16T14:30:00`); none: they read empty, and a calculation or default that reads them is
+                left out (docs/adr/0402 §5).
             uid: An object of the form's layer (lowercase UUID text with hyphens); none: the form alone.
+            user: The person the rules' `@kullanici` reads (1–64 characters); none: it reads empty.
             values: Values by the layer fields' keys, as a submit would write them (empty: no value); asked of
                 the record afterwards.
             request_id: Names this write: sent again with the same call it is answered as
@@ -377,7 +426,9 @@ class _FormsValidate(LocalCommand[FormsValidate, FormsValidated, FormsValidated]
             form=form,
             defaults=defaults,
             draft=draft,
+            moment=moment,
             uid=uid,
+            user=user,
             values=_opt(values, lambda x: dict(x)),
         ), request_id=request_id, expected=expected)
 
@@ -389,7 +440,9 @@ class _FormsValidate(LocalCommand[FormsValidate, FormsValidated, FormsValidated]
         form: str,
         defaults: bool | Unset = UNSET,
         draft: bool | Unset = UNSET,
+        moment: str | None | Unset = UNSET,
         uid: str | None | Unset = UNSET,
+        user: str | None | Unset = UNSET,
         values: Mapping[str, str] | Unset = UNSET,
     ) -> FormsValidated:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -399,7 +452,9 @@ class _FormsValidate(LocalCommand[FormsValidate, FormsValidated, FormsValidated]
             form=form,
             defaults=defaults,
             draft=draft,
+            moment=moment,
             uid=uid,
+            user=user,
             values=_opt(values, lambda x: dict(x)),
         ))
 
@@ -411,7 +466,9 @@ class _FormsValidate(LocalCommand[FormsValidate, FormsValidated, FormsValidated]
         form: str,
         defaults: bool | Unset = UNSET,
         draft: bool | Unset = UNSET,
+        moment: str | None | Unset = UNSET,
         uid: str | None | Unset = UNSET,
+        user: str | None | Unset = UNSET,
         values: Mapping[str, str] | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -421,7 +478,9 @@ class _FormsValidate(LocalCommand[FormsValidate, FormsValidated, FormsValidated]
             form=form,
             defaults=defaults,
             draft=draft,
+            moment=moment,
             uid=uid,
+            user=user,
             values=_opt(values, lambda x: dict(x)),
         ))
 
@@ -433,7 +492,9 @@ class _FormsValidate(LocalCommand[FormsValidate, FormsValidated, FormsValidated]
         form: str,
         defaults: bool | Unset = UNSET,
         draft: bool | Unset = UNSET,
+        moment: str | None | Unset = UNSET,
         uid: str | None | Unset = UNSET,
+        user: str | None | Unset = UNSET,
         values: Mapping[str, str] | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -448,7 +509,9 @@ class _FormsValidate(LocalCommand[FormsValidate, FormsValidated, FormsValidated]
             form=form,
             defaults=defaults,
             draft=draft,
+            moment=moment,
             uid=uid,
+            user=user,
             values=_opt(values, lambda x: dict(x)),
         ), op=op, request_id=request_id, expected=expected)
 

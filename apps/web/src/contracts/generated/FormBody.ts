@@ -8,4 +8,9 @@ export type FormBody = {
 /**
  * Raised by one with every saved change to the draft: an update names the revision it was made on.
  */
-revision: number, items: Array<FormItem>, };
+revision: number, items: Array<FormItem>, 
+/**
+ * A write through the form empties the fields the record hides (docs/adr/0402 §3); written only
+ * as `true`. Without it a hidden field keeps its value.
+ */
+clearHidden?: boolean, };

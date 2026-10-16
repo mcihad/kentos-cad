@@ -604,8 +604,9 @@ impl Document {
     /// What keeps the linked texts with their objects (linked.rs,
     /// docs/adr/0175 §4), the associative hatches with theirs (hatch_ties.rs,
     /// docs/adr/0186 §6) and the dimensions with the places their points
-    /// name (dimension_ties.rs, docs/adr/0249 §3) after `ops`, applied and
-    /// joined to them.
+    /// name (dimension_ties.rs, docs/adr/0249 §3) and the records of a layer
+    /// whose form enforces its rules complete (form_follow.rs, docs/adr/0402
+    /// §4) after `ops`, applied and joined to them.
     pub(crate) fn follow_into(&mut self, ops: &mut Vec<Op>) {
         let follow = self.follow_links(ops);
         ops.extend(follow);
@@ -619,6 +620,10 @@ impl Document {
         let relocated = std::mem::take(&mut self.relocated);
         let dims = self.follow_dimensions(ops, &relocated);
         ops.extend(dims);
+        // Last: the records the step left on a layer whose form enforces its rules, their geometry
+        // settled (docs/adr/0402 §4).
+        let forms = self.follow_forms(ops);
+        ops.extend(forms);
     }
 
     /// A finished, followed step onto the undo history as a new edit; its

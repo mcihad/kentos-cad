@@ -57,6 +57,30 @@ readOnlyWhen?: string,
  */
 default?: string, 
 /**
+ * The value of a new record's empty field: an expression over the record (its plain defaults
+ * in), evaluated in the form's order. Not with `default`.
+ */
+defaultExpr?: string, 
+/**
+ * The field's value, worked out from the record at every write; the field is read-only. Not
+ * with `default`, `defaultExpr` or `readOnlyWhen`.
+ */
+calculate?: string, 
+/**
+ * Asked of each of the field's listed values: `@secenek` is its code, `@secenek_etiketi` its
+ * label; a value it is not true for is not offered.
+ */
+choiceFilter?: string, 
+/**
+ * No two objects of the layer have the same value (empty ones aside); written only as `true`.
+ */
+unique?: boolean, 
+/**
+ * A new record's field opens with the value last written through the form in the session (the
+ * form's interface keeps it); written only as `true`.
+ */
+reuseLast?: boolean, 
+/**
  * What the record must satisfy, in order.
  */
 checks?: Array<FormCheck>, };

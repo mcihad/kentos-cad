@@ -2608,6 +2608,8 @@ name = "kentos-domain"
 version = "0.1.0"
 dependencies = [
  "kentos-contracts",
+ "kentos-expression",
+ "kentos-forms",
  "kentos-geometry-core",
  "serde_json",
  "uuid",
@@ -2667,6 +2669,7 @@ version = "0.1.0"
 dependencies = [
  "kentos-contracts",
  "kentos-expression",
+ "kentos-geometry-core",
  "serde_json",
 ]
 

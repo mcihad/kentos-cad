@@ -17,14 +17,16 @@
 //! a rule decides only what the form shows and asks.
 
 mod generate;
+mod object;
 mod preflight;
 mod record;
 mod session;
 
 pub use generate::{generate, item_id_of, widget_of};
+pub use object::{kind_label, object_of};
 pub use preflight::{preflight, widget_fits};
-pub use record::{Attrs, Object, schema_of};
-pub use session::Prepared;
+pub use record::{Attrs, Object, schema_in, schema_of};
+pub use session::{CHOICE_CODE, CHOICE_LABEL, HOST_ONLY, MOMENT, Prepared};
 
 use kentos_contracts::{FormIssue, FormSeverity};
 
@@ -57,6 +59,16 @@ pub mod codes {
     pub const REQUIRED_READ_ONLY: &str = "form_required_read_only";
     /// A form with no field (a warning).
     pub const EMPTY: &str = "form_empty";
+    /// Two settings of a field that cannot go together (`default` and `defaultExpr`; `calculate` and a
+    /// default or `readOnlyWhen`).
+    pub const RULE_CONFLICT: &str = "form_rule_conflict";
+    /// Calculated fields that read each other in a circle.
+    pub const CALC_CYCLE: &str = "form_calc_cycle";
+    /// A choice filter on a field without a value list.
+    pub const CHOICE_UNLISTED: &str = "form_choice_unlisted";
+    /// A default or a calculation reads the moment or the user: only a command that gives them works
+    /// it out (a warning).
+    pub const MOMENT_ONLY: &str = "form_moment_only";
     // A record.
     /// A shown, required field is empty.
     pub const REQUIRED: &str = "form_required";
@@ -70,6 +82,16 @@ pub mod codes {
     pub const HIDDEN: &str = "form_hidden";
     /// A write to a layer field the form does not show.
     pub const NOT_ON_FORM: &str = "form_not_on_form";
+    /// A calculation whose value its field refuses.
+    pub const CALC_INVALID: &str = "form_calc_invalid";
+    /// A value the field's choice filter does not offer for the record.
+    pub const CHOICE_FILTERED: &str = "form_choice_filtered";
+    /// A soft check that is not true (a warning).
+    pub const CHECK_WARNING: &str = "form_check_warning";
+    /// A unique field's value another object of the layer has.
+    pub const UNIQUE: &str = "form_unique";
+    /// The calculations and the hidden fields keep changing each other.
+    pub const UNSTABLE: &str = "form_unstable";
 }
 
 /// An issue.

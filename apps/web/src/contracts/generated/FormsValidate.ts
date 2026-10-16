@@ -3,8 +3,8 @@
 /**
  * Input of `cad.forms.validate` v1: a form, and a record to ask it about.
  *
- * Refusals: `invalid_uid`; `unknown_form`, `form_unpublished`, `entity_not_found`,
- * `form_layer_mismatch`.
+ * Refusals: `invalid_uid`, `invalid_moment`, `invalid_user`; `unknown_form`, `form_unpublished`,
+ * `entity_not_found`, `form_layer_mismatch`.
  */
 export type FormsValidate = { 
 /**
@@ -27,4 +27,14 @@ values?: { [key in string]: string },
 /**
  * The form's defaults in the record's empty fields first (a new record).
  */
-defaults?: boolean, };
+defaults?: boolean, 
+/**
+ * The moment the rules' `@tarih` and `@simdi` read: a date, or a date and a local time
+ * (`2026-10-16T14:30:00`); none: they read empty, and a calculation or default that reads them is
+ * left out (docs/adr/0402 §5).
+ */
+moment?: string, 
+/**
+ * The person the rules' `@kullanici` reads (1–64 characters); none: it reads empty.
+ */
+user?: string, };

@@ -44,8 +44,57 @@ pub(crate) fn fields<'a>(doc: &'a Document, layer: &str) -> &'a [LayerField] {
 pub(crate) fn variables(doc: &Document) -> Vec<Variable> {
     let mut all =
         kentos_project::variables::expression_variables(doc.name(), doc.settings(), 0.0, "");
-    all.retain(|v| !matches!(v.name.as_str(), "tarih" | "simdi" | "kullanici"));
+    all.retain(|v| !kentos_forms::MOMENT.contains(&v.name.as_str()));
     all
+}
+
+/// [`variables`] with the moment's (`@tarih`, `@simdi`) and the user's (`@kullanici`) when the input
+/// gives them (docs/adr/0402 §5): `invalid_moment` at `moment`, `invalid_user` at `user`.
+pub(crate) fn variables_given(
+    doc: &Document,
+    moment: Option<&str>,
+    user: Option<&str>,
+) -> Result<Vec<Variable>, Stop> {
+    let now = match moment {
+        None => None,
+        Some(text) => match kentos_geometry_core::time::read(text) {
+            kentos_geometry_core::time::Read::Moment(t) => Some(t),
+            _ => {
+                return Err(fail(
+                    codes::INVALID_MOMENT,
+                    format!(
+                        "“{text}” bir an değil. Bir tarih (2026-10-16) ya da tarih ve yerel saat (2026-10-16T14:30:00) yazın."
+                    ),
+                    "moment",
+                ));
+            }
+        },
+    };
+    if let Some(name) = user
+        && (name.trim().is_empty()
+            || name.trim() != name
+            || name.chars().count() > 64
+            || name.chars().any(char::is_control))
+    {
+        return Err(fail(
+            codes::INVALID_USER,
+            "Kullanıcının adı boş olamaz, başında ve sonunda boşluk olmaz, en çok 64 karakterdir."
+                .into(),
+            "user",
+        ));
+    }
+    let mut all = kentos_project::variables::expression_variables(
+        doc.name(),
+        doc.settings(),
+        now.unwrap_or(0.0),
+        user.unwrap_or(""),
+    );
+    all.retain(|v| match v.name.as_str() {
+        "tarih" | "simdi" => now.is_some(),
+        "kullanici" => user.is_some(),
+        _ => true,
+    });
+    Ok(all)
 }
 
 /// The body `draft` asks: the draft, else the latest release (`form_unpublished` at `path`
@@ -73,14 +122,22 @@ pub(crate) fn body<'a>(
         })
 }
 
-/// The body prepared over the layer's fields, or `form_preflight` at `path` with its first error.
+/// The body prepared over the layer's fields with `variables`, its geometry values in the drawing's
+/// unit, or `form_preflight` at `path` with its first error.
 pub(crate) fn prepared(
     doc: &Document,
     form: &ProjectForm,
     body: &FormBody,
+    variables: &[Variable],
     path: &str,
 ) -> Result<Prepared, Stop> {
-    Prepared::new(body, fields(doc, &form.layer), &variables(doc)).map_err(|issues| {
+    Prepared::new_in(
+        body,
+        fields(doc, &form.layer),
+        variables,
+        crate::expression_unit::reading_unit(doc.settings()),
+    )
+    .map_err(|issues| {
         let first = first_error(&issues);
         fail(
             codes::FORM_PREFLIGHT,
@@ -149,18 +206,94 @@ pub(crate) fn uid_text(uid: &str, path: &str) -> Result<(), Stop> {
     ))
 }
 
-/// What a form's rules see of an object beside its attributes.
+/// What a form's rules see of an object beside its attributes (its measures from its shape).
 pub(crate) fn object(doc: &Document, slot: Slot, e: &Entity) -> Object {
-    Object {
-        kind: crate::layer_filter::kind_label(e).to_owned(),
-        layer: doc
-            .layers()
-            .get(&e.base().layer_id)
-            .map_or_else(String::new, |n| n.name.clone()),
-        id: f64::from(slot.0),
-        label: e.base().label.clone(),
-        measured: Default::default(),
+    let layer = doc
+        .layers()
+        .get(&e.base().layer_id)
+        .map_or("", |n| n.name.as_str());
+    kentos_forms::object_of(e, layer, f64::from(slot.0))
+}
+
+/// The attributes of the other objects of the layer: what a unique field is asked against.
+pub(crate) fn others<'a>(
+    doc: &'a Document,
+    layer: &'a str,
+    uid: Uuid,
+) -> impl Iterator<Item = &'a Attrs> {
+    doc.by_layer_with_uids(layer)
+        .filter(move |(u, _)| *u != uid)
+        .map(|(_, e)| &e.base().attrs)
+}
+
+/// A form ready for one record's screen (docs/adr/0402 §7): Formla düzenle asks it once with the
+/// rules `cad.forms.validate` and `cad.forms.submit` follow, then answers each keystroke with the
+/// forms core as they would.
+pub struct RecordScreen {
+    pub prepared: Prepared,
+    /// What the rules see of the object (its measures in metres).
+    pub object: Object,
+    /// The record's attributes now.
+    pub attrs: Attrs,
+    /// The release's version; none for the draft.
+    pub version: Option<u32>,
+    /// The form's layer.
+    pub layer: String,
+    pub uid: Uuid,
+}
+
+/// The screen of the object `uid` through the form `form` (its draft with `draft`), the moment and
+/// the user given as the commands take them; the commands' refusal when it cannot be.
+pub fn record_screen(
+    doc: &Document,
+    form: &str,
+    uid: &str,
+    draft: bool,
+    moment: Option<&str>,
+    user: Option<&str>,
+) -> Result<RecordScreen, Box<kentos_contracts::CommandError>> {
+    let made = (|| {
+        uid_text(uid, "uid")?;
+        let variables = variables_given(doc, moment, user)?;
+        let form = self::form(doc.settings(), form, "form")?;
+        let (body, version) = body(form, draft, "draft")?;
+        let (slot, e) = record(doc, form, uid, "uid")?;
+        let prepared = prepared(doc, form, body, &variables, "form")?;
+        Ok(RecordScreen {
+            prepared,
+            object: object(doc, slot, e),
+            attrs: e.base().attrs.clone(),
+            version,
+            layer: form.layer.clone(),
+            uid: doc.uid(slot).unwrap_or_default(),
+        })
+    })();
+    made.map_err(|stop: Stop| Box::new(stop.into_error()))
+}
+
+/// The issues of the screen's unique fields for `attrs` against the layer's other objects.
+pub fn unique_on_layer(doc: &Document, screen: &RecordScreen, attrs: &Attrs) -> Vec<FormIssue> {
+    if screen.prepared.unique_keys().is_empty() {
+        return Vec::new();
     }
+    screen.prepared.unique_issues(
+        attrs,
+        &screen.object,
+        others(doc, &screen.layer, screen.uid),
+    )
+}
+
+/// The warnings among `issues` as a command's warnings (the field's value their path).
+pub(crate) fn warnings_of(issues: &[FormIssue]) -> Vec<kentos_contracts::CommandWarning> {
+    issues
+        .iter()
+        .filter(|i| i.severity == FormSeverity::Warning)
+        .map(|i| kentos_contracts::CommandWarning {
+            code: i.code.clone(),
+            message: i.message.clone(),
+            path: i.field.as_ref().map(|k| format!("values.{k}")),
+        })
+        .collect()
 }
 
 /// The forms as the lists show them.
@@ -217,10 +350,17 @@ pub(crate) fn enforced(
                 path,
             )
         };
-        let prepared = Prepared::new(&release.body, fields(doc, layer), &variables(doc))
-            .map_err(|issues| refuse(first_error(&issues)))?;
-        let issues = prepared.enforce(before, after, &object(doc, slot, e));
-        if !issues.is_empty() {
+        let prepared = Prepared::new_in(
+            &release.body,
+            fields(doc, layer),
+            &variables(doc),
+            crate::expression_unit::reading_unit(doc.settings()),
+        )
+        .map_err(|issues| refuse(first_error(&issues)))?;
+        let mut probe = e.clone();
+        probe.base_mut().attrs = after.clone();
+        let issues = prepared.enforce(before, after, &object(doc, slot, &probe));
+        if kentos_forms::has_errors(&issues) {
             return Err(refuse(first_error(&issues)));
         }
     }

@@ -71,6 +71,11 @@ pub struct FormBody {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
     pub items: Vec<FormItem>,
+    /// A write through the form empties the fields the record hides (docs/adr/0402 §3); written only
+    /// as `true`. Without it a hidden field keeps its value.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub clear_hidden: bool,
 }
 
 /// A frozen copy of a form's body: what data entry and the write profile use.
@@ -102,6 +107,8 @@ pub struct FormRelease {
     rename_all_fields = "camelCase"
 )]
 #[cfg_attr(feature = "ts", ts(export))]
+// A form's items are data read once per form, never a hot path: a field's settings stay inline.
+#[allow(clippy::large_enum_variant)]
 pub enum FormItem {
     /// A tab: its items show when it is chosen. Tabs stand at the top only, and then the top holds
     /// nothing but tabs.
@@ -124,11 +131,16 @@ pub enum FormItem {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         visible_when: Option<String>,
+        /// It opens closed (its title opens it); written only as `true`.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        collapsed: bool,
         items: Vec<FormItem>,
     },
     /// A field of the layer.
     Field(FormField),
-    /// A line of text: a hint for whoever fills the form.
+    /// A line of text: a hint for whoever fills the form. A `{…}` in it is an expression put in with
+    /// the record's value (docs/adr/0225 §6's templates; docs/adr/0402 §1).
     Note { id: String, text: String },
 }
 
@@ -185,6 +197,30 @@ pub struct FormField {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub default: Option<String>,
+    /// The value of a new record's empty field: an expression over the record (its plain defaults
+    /// in), evaluated in the form's order. Not with `default`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub default_expr: Option<String>,
+    /// The field's value, worked out from the record at every write; the field is read-only. Not
+    /// with `default`, `defaultExpr` or `readOnlyWhen`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub calculate: Option<String>,
+    /// Asked of each of the field's listed values: `@secenek` is its code, `@secenek_etiketi` its
+    /// label; a value it is not true for is not offered.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub choice_filter: Option<String>,
+    /// No two objects of the layer have the same value (empty ones aside); written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub unique: bool,
+    /// A new record's field opens with the value last written through the form in the session (the
+    /// form's interface keeps it); written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub reuse_last: bool,
     /// What the record must satisfy, in order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FormCheck>>", optional))]
@@ -207,6 +243,11 @@ impl FormField {
             required_when: None,
             read_only_when: None,
             default: None,
+            default_expr: None,
+            calculate: None,
+            choice_filter: None,
+            unique: false,
+            reuse_last: false,
             checks: Vec::new(),
         }
     }
@@ -222,6 +263,10 @@ impl FormField {
 pub struct FormCheck {
     pub rule: String,
     pub message: String,
+    /// A soft check: when not true it warns and the record is still written; written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub warning: bool,
 }
 
 /// How a field is edited.
@@ -332,6 +377,14 @@ pub struct FormItemState {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub read_only: bool,
+    /// The listed values a field with a choice filter offers for the record, in the list's order.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub choices: Option<Vec<String>>,
+    /// A note's text with the record's values put in (a note whose text has `{…}`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub text: Option<String>,
 }
 
 impl FormItem {
@@ -531,9 +584,16 @@ pub fn body_problem(body: &FormBody) -> Option<String> {
                         ));
                     }
                 }
-                for r in [&f.visible_when, &f.required_when, &f.read_only_when]
-                    .into_iter()
-                    .flatten()
+                for r in [
+                    &f.visible_when,
+                    &f.required_when,
+                    &f.read_only_when,
+                    &f.default_expr,
+                    &f.calculate,
+                    &f.choice_filter,
+                ]
+                .into_iter()
+                .flatten()
                 {
                     if !rule_ok(r) {
                         return Some(rule_problem(id));
@@ -683,7 +743,11 @@ mod tests {
             id: "bina".into(),
             name: "Bina".into(),
             layer: "yapi".into(),
-            draft: FormBody { revision: 1, items },
+            draft: FormBody {
+                revision: 1,
+                items,
+                ..Default::default()
+            },
             releases: Vec::new(),
             enforce: false,
         }
@@ -720,6 +784,7 @@ mod tests {
             label: None,
             columns: None,
             visible_when: None,
+            collapsed: false,
             items: vec![FormItem::Tab {
                 id: "t".into(),
                 label: "T".into(),
@@ -762,6 +827,7 @@ mod tests {
             label: Some("Genel".into()),
             columns: Some(2),
             visible_when: None,
+            collapsed: false,
             items: vec![FormItem::Field(FormField {
                 required_when: Some("Durum = 'review'".into()),
                 ..FormField::new("not", "Not")

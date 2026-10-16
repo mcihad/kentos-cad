@@ -878,6 +878,8 @@ pub struct App {
     pub(crate) forms_window: Option<crate::forms::designer::Window>,
     /// Formla düzenle (forms/entry.rs, docs/adr/0401).
     pub(crate) form_entry: Option<crate::forms::entry::Entry>,
+    /// What the session remembers of the forms: the "reuse last" values (forms/entry.rs, docs/adr/0402 §7).
+    pub(crate) form_memory: crate::forms::entry::Memory,
     /// Yazı stilleri or Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5).
     pub(crate) annotation_styles: Option<crate::annotation_styles::Window>,
     /// Kullanılmayanları temizle's window (layer_purge.rs, docs/adr/0177 §5).
@@ -1172,6 +1174,7 @@ impl App {
             views_window: None,
             forms_window: None,
             form_entry: None,
+            form_memory: Default::default(),
             annotation_styles: None,
             layer_purge: None,
             take_from: None,

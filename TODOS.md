@@ -182,6 +182,12 @@ Liste:
   (`kentos-forms`); Formlar ve Formla düzenle pencereleri (ADR 0401 §10); web'in özel açılır kutularında ve onay kutularında Tab ile
   gezinme ve tuşlar (ADR 0400). İfade motorunun tipli alan okuması (ADR 0401 §5) web'in WASM'ında da geçerli olur; web'in tipli
   sütun veren yolları değişmez.
+- [ ] `FORM-E` formun kuralları, hesapları ve seçenekleri (ADR 0402, 16 Ekim): web'de gerekenler: sözleşmenin yeni anahtarları
+  (`clearHidden`, `collapsed`, `warning`, `defaultExpr`, `calculate`, `choiceFilter`, `unique`, `reuseLast`; durumun `choices` ve
+  `text`'i) ve `cad.forms.validate`, `.submit`'in `moment`, `user`'ı TS türlerinde üretildi; web belgesinde formu uygulanan
+  katmanın izlemesi (`form_follow.rs`'in kuralı, `cad.polygon.create.forms.json` ve `cad.entities.set.forms.json` durumları);
+  Formla düzenle'de hesaplanan alanların kilidi, süzülen listeler, sarı uyarı, kapalı grup, son değer; tasarımcının yeni
+  denetçi satırları; kapalı girişin soluk görünüşü ve `Form`'un uyarı satırı web'in form bileşenlerinde.
 - [ ] `CAD-BLOCK-13`, `14`, `15`, `16` dinamik bloklar ve KentOS blok kitaplığı (ADR 0318, 16 Ekim): web'de gerekenler: `.kcad`
   şema 59'un tanım `dynamic`'i ve yerleştirme `parameters`'ı (web'in kopyası 55'te), deponun ve stilli çizimin varyantları (çekirdeğin
   `block_dynamic`'i WASM'la; yerleştirmenin değerleri depoya), `cad.blocks.parameters`'ın ve `cad.blocks.edit` `dynamic`'inin TS
@@ -1394,10 +1400,16 @@ burada aşamaları izlenir.
   gruplar, iki sütun, kuralların canlı durumu, alanın altında sorun, İlk soruna git, Kaydet tek adımda yazar ve kapatır),
   Öznitelikler'de Form satırı, katmanın sağ tıkında Formlar…, CBS Veri › Tablo ve CAD Yönet › Form. — **16 Ekim,
   ADR 0401 §10.**
-- [ ] `FORM-E` Formların geri kalan yerel işleri: tasarımcının kendi geri alması ve öğeleri sürükleyerek taşıma, formun önizlemesi
-  bir örnek kayıtta, nesne oluştururken (çizim araçları) formun açılması ve oluşturma komutlarında yazma profili, `$uzunluk` ve
-  `$alan`'ın kurallarda değeri, oturumun anı (`@tarih`, `@şimdi`), hesaplanan alanlar ve seçeneklerin süzülmesi (`calculate`,
-  `choiceFilter`), ilişkiler ve ana–ayrıntı (`relations/1`).
+- [x] `FORM-E` Kurallar, hesaplar ve seçenekler (QGIS ve ArcGIS Field Maps'in form yönetimiyle karşılaştırılarak): ifadeli
+  varsayılan, hesaplanan alan (topolojik sıra, döngü denetimi), seçenek süzgeci (`@secenek`, açılışta da doğru), tekil alan,
+  son değeri kullan, yumuşak denetim (uyarı), kapalı grup, gizlenenleri silme, şablonlu not; kuralların `$uzunluk`, `$alan`,
+  `$köşe_sayısı`'sı nesnenin şeklinden çizim biriminde, `@tarih`, `@simdi`, `@kullanici` komutun `moment` ve `user`'ından; belge
+  kurallarını uygulayan formun katmanındaki her yazmayı aynı adımda tamamlar (çizim araçları, Python, MCP, içe aktarma);
+  Formla düzenle ve tasarımcının denetçisi. — **16 Ekim, [ADR 0402](docs/adr/0402-form-rules-calculations-and-choices.md).**
+- [ ] `FORM-G` Tasarımcı ve giriş ekleri: tasarımcının kendi geri alması ve öğeleri sürükleyerek taşıma, formun önizlemesi bir
+  örnek kayıtta, formu uygulanan katmanda çizilen nesnenin formunun açılması (kullanıcının tercihiyle), çoklu düzenleme.
+- [ ] `FORM-H` İlişkiler ve ana–ayrıntı (`relations/1`): başka katmandan seçenek listesi (QGIS'in Value Relation'ı), ilişki
+  başvurusu, ayrıntı tablosu formun içinde.
 - [ ] `FORM-F` Merkezi yayın ve izinler (FM2, plan `FORM-FIRST-14`–`17`): bulutta form taslağı, yayın ve dağıtım kaynakları,
   `forms.design`, `forms.publish`, `forms.use` izinleri, sunucunun yazma bekçisi bütün yollarda.
 

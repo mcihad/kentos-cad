@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import warnings
 from pathlib import Path
 
 import kentos.cad as cad
@@ -91,6 +92,80 @@ class FormsTests(unittest.TestCase):
         with self.assertRaises(cad.CommandFailed) as guarded:
             cad.entities.set(doc, uids=[poly.uid], operation="attributes", attrs={"Kat": "2"})
         self.assertEqual(guarded.exception.code, "form_rules")
+
+    def test_calculations_defaults_choices_and_a_drawn_object(self) -> None:
+        """docs/adr/0402: a calculated field, an expression default reading the moment and the user, a choice filter, a
+        soft check; a polygon drawn on the layer of an enforcing form takes its defaults and calculations in its step."""
+        doc, layer = drawing()
+        cad.layers.edit(
+            doc,
+            operation="fields",
+            layer=layer,
+            fields=[
+                cad.LayerField(
+                    name="Durum",
+                    kind="text",
+                    values=[cad.FieldChoice(code="iyi", label="İyi"), cad.FieldChoice(code="yikik", label="Yıkık")],
+                ),
+                cad.LayerField(name="Kat", kind="integer", min="1"),
+                cad.LayerField(name="Yükseklik", kind="decimal", scale=2),
+                cad.LayerField(name="Taban", kind="decimal", scale=2),
+                cad.LayerField(name="Kayıt", kind="text"),
+                cad.LayerField(name="Açıklama", kind="text"),
+            ],
+        )
+        body = cad.FormBody(
+            revision=1,
+            items=[
+                cad.FieldFormItem(id="durum", field="Durum", choice_filter="Kat > 3 veya @secenek <> 'yikik'"),
+                cad.FieldFormItem(id="kat", field="Kat"),
+                cad.FieldFormItem(id="yukseklik", field="Yükseklik", calculate="Kat * 3"),
+                cad.FieldFormItem(id="taban", field="Taban", calculate="$alan"),
+                cad.FieldFormItem(id="kayit", field="Kayıt", default_expr="@kullanici"),
+                cad.FieldFormItem(
+                    id="aciklama",
+                    field="Açıklama",
+                    checks=[cad.FormCheck(rule="uzunluk(Açıklama) >= 10", message="Kısa görünüyor.", warning=True)],
+                ),
+            ],
+        )
+        made = cad.forms.edit(doc, edit=cad.CreateFormsOp(name="Bina", layer=layer, id="bina", body=body))
+        self.assertEqual([i.code for i in made.issues], ["form_moment_only"])
+        cad.forms.edit(doc, edit=cad.PublishFormsOp(id="bina"))
+        cad.forms.edit(doc, edit=cad.EnforceFormsOp(id="bina", on=True))
+
+        # Drawn: the document completes the new object in the polygon's own step.
+        poly = cad.polygon.create(
+            doc, pts=[cad.Vec2(0.0, 0.0), cad.Vec2(20.0, 0.0), cad.Vec2(20.0, 10.0), cad.Vec2(0.0, 10.0)], layer_id=layer,
+            attrs={"Kat": "2"},
+        )
+        drawn = doc.entity(poly.uid).entity
+        self.assertEqual(drawn.attrs, {"Kat": "2", "Yükseklik": "6", "Taban": "200"})
+
+        asked = cad.forms.validate(doc, form="bina", uid=poly.uid)
+        offered = {s.id: s.choices for s in asked.items}
+        self.assertEqual(offered["durum"], ["iyi"])
+        self.assertTrue(next(s for s in asked.items if s.id == "yukseklik").read_only)
+
+        with warnings.catch_warnings(record=True) as seen:
+            warnings.simplefilter("always")
+            written = cad.forms.submit(
+                doc, form="bina", uid=poly.uid, defaults=True, values={"Kat": "5", "Durum": "Yıkık", "Açıklama": "Kısa"},
+                moment="2026-10-16T14:30:00", user="Ayşe Yılmaz",
+            )
+        self.assertEqual(
+            written.attrs,
+            {"Açıklama": "Kısa", "Durum": "yikik", "Kat": "5", "Kayıt": "Ayşe Yılmaz", "Taban": "200", "Yükseklik": "15"},
+        )
+        notes = [w.message for w in seen if isinstance(w.message, cad.CommandWarning)]
+        self.assertEqual([n.code for n in notes], ["form_check_warning"])
+
+        with self.assertRaises(cad.CommandFailed) as calculated:
+            cad.entities.set(doc, uids=[poly.uid], operation="attributes", attrs={"Yükseklik": "99"})
+        self.assertEqual(calculated.exception.code, "form_rules")
+        with self.assertRaises(cad.CommandFailed) as moment:
+            cad.forms.validate(doc, form="bina", moment="dün")
+        self.assertEqual(moment.exception.code, "invalid_moment")
 
 
 if __name__ == "__main__":

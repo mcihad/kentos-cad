@@ -32,6 +32,7 @@ fn bind(doc: &mut Document, key: &str) {
         draft: FormBody {
             revision: 1,
             items: vec![FormItem::Field(FormField::new("k", key))],
+            ..Default::default()
         },
         releases: Vec::new(),
         enforce: false,

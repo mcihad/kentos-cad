@@ -53,30 +53,7 @@ pub fn compile_filter(filter: &LayerFilter, unit: Unit) -> Result<CompiledFilter
 }
 
 /// The kind of object as the language names it (`$tür`; the web's `ENTITY_KIND_LABEL`).
-pub fn kind_label(e: &Entity) -> &'static str {
-    match e {
-        Entity::Point(_) => "Nokta",
-        Entity::Line(_) => "Çizgi",
-        Entity::Polyline(_) => "Çoklu çizgi",
-        Entity::Polygon(_) => "Kapalı alan",
-        Entity::Circle(_) => "Daire",
-        Entity::Arc(_) => "Yay",
-        Entity::Ellipse(_) => "Elips",
-        Entity::Spline(_) => "Eğri",
-        Entity::Nurbs(_) => "NURBS eğrisi",
-        Entity::Xline(_) => "Yardımcı çizgi",
-        Entity::Ray(_) => "Işın",
-        Entity::Text(_) => "Yazı",
-        Entity::Dimension(_) => "Ölçü",
-        Entity::Hatch(_) => "Tarama",
-        Entity::Insert(_) => "Blok",
-        Entity::Leader(_) => "Kılavuz",
-        Entity::Table(_) => "Tablo",
-        Entity::Image(_) => "Resim",
-        Entity::Raster(_) => "Raster",
-        Entity::PointCloud(_) => "Nokta bulutu",
-    }
-}
+pub use kentos_forms::kind_label;
 
 /// Corners of a path or area, holes and every part's included (`$köşe`).
 pub(crate) fn vertex_count(e: &Entity) -> Option<f64> {

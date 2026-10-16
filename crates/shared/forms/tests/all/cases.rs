@@ -1,9 +1,13 @@
 //! The forms core holds to the shared cases the independent reference writes
 //! (scripts/fixtures/forms_cases.py, fixtures/forms/v1/cases.json): a form's preflight, a record's
-//! items and issues, a write through the form, the write profile, the defaults and the form made
-//! of a layer's fields. The issues are compared by their code, weight, item, field and rule.
+//! items (what a choice filter offers, a note's text) and issues, a record completed (defaults,
+//! calculations, hidden fields emptied), a write through the form, the write profile, a unique field,
+//! the defaults and the form made of a layer's fields. A case's `variables` are the `@` values given,
+//! its `object` the object's measures in metres. The issues are compared by their code, weight, item,
+//! field and rule.
 
 use kentos_contracts::{FormBody, FormIssue, LayerField};
+use kentos_expression::{Measured, Value as ExprValue, Variable};
 use kentos_forms::{Attrs, Object, Prepared, generate, preflight};
 use serde_json::{Value, json};
 
@@ -28,6 +32,40 @@ fn attrs(v: &Value) -> Attrs {
     serde_json::from_value(v.clone()).expect("attributes")
 }
 
+/// The `@` values the case gives.
+fn variables(c: &Value) -> Vec<Variable> {
+    c["variables"]
+        .as_array()
+        .map(|vs| {
+            vs.iter()
+                .map(|v| Variable {
+                    name: v["name"].as_str().expect("a name").to_owned(),
+                    value: match &v["value"] {
+                        Value::Number(n) => ExprValue::Num(n.as_f64().expect("a number")),
+                        Value::String(s) => ExprValue::text(s.clone()),
+                        other => panic!("a variable's value: {other}"),
+                    },
+                    description: String::new(),
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+/// The object the case gives: its measures in metres.
+fn object(c: &Value) -> Object {
+    let o = &c["object"];
+    Object {
+        measured: Measured {
+            length: o["length"].as_f64(),
+            area: o["area"].as_f64(),
+            anchor: None,
+        },
+        vertices: o["vertices"].as_f64(),
+        ..Object::default()
+    }
+}
+
 /// The issues without their sentences, which are the core's own.
 fn bare(issues: &[FormIssue]) -> Value {
     let mut v = serde_json::to_value(issues).expect("json");
@@ -42,13 +80,14 @@ fn bare(issues: &[FormIssue]) -> Value {
 }
 
 fn prepared(c: &Value) -> Prepared {
-    Prepared::new(&body(c), &fields(c), &[]).unwrap_or_else(|i| panic!("{}: {i:?}", c["name"]))
+    Prepared::new(&body(c), &fields(c), &variables(c))
+        .unwrap_or_else(|i| panic!("{}: {i:?}", c["name"]))
 }
 
 #[test]
 fn the_preflight_is_as_the_cases_say() {
     for c in cases("preflight") {
-        let got = bare(&preflight(&body(&c), &fields(&c), &[]));
+        let got = bare(&preflight(&body(&c), &fields(&c), &variables(&c)));
         assert_eq!(got, c["issues"], "{}", c["name"]);
     }
 }
@@ -58,8 +97,13 @@ fn a_record_s_items_and_issues_are_as_the_cases_say() {
     for c in cases("records") {
         let form = prepared(&c);
         let a = attrs(&c["attrs"]);
-        let object = Object::default();
-        assert_eq!(json!(form.states(&a, &object)), c["items"], "{}", c["name"]);
+        let object = object(&c);
+        assert_eq!(
+            json!(form.described(&a, &object)),
+            c["items"],
+            "{}",
+            c["name"]
+        );
         assert_eq!(
             bare(&form.validate(&a, &object)),
             c["issues"],
@@ -70,17 +114,35 @@ fn a_record_s_items_and_issues_are_as_the_cases_say() {
 }
 
 #[test]
+fn a_record_is_completed_as_the_cases_say() {
+    for c in cases("complete") {
+        let form = prepared(&c);
+        let new = c["new"].as_bool().expect("new");
+        let (out, issues) = form.complete(&attrs(&c["attrs"]), &object(&c), new);
+        assert_eq!(json!(out), c["out"], "{}", c["name"]);
+        assert_eq!(bare(&issues), c["issues"], "{}", c["name"]);
+    }
+}
+
+#[test]
 fn a_write_through_the_form_is_as_the_cases_say() {
     for c in cases("assess") {
         let form = prepared(&c);
         let values: Vec<(String, String)> =
             serde_json::from_value(c["values"].clone()).expect("values");
-        let (after, issues) = form.assess(&attrs(&c["before"]), &values, &Object::default());
+        let new = c["new"].as_bool().unwrap_or(false);
+        let object = object(&c);
+        let (after, issues) = form.assess(&attrs(&c["before"]), &values, &object, new);
         assert_eq!(json!(after), c["after"], "{}", c["name"]);
         assert_eq!(bare(&issues), c["issues"], "{}", c["name"]);
-        // A write goes in exactly when nothing is wrong with it.
-        let applied = form.apply(&attrs(&c["before"]), &values, &Object::default());
-        assert_eq!(applied.is_ok(), issues.is_empty(), "{}", c["name"]);
+        // A write goes in exactly when nothing is an error.
+        let applied = form.apply(&attrs(&c["before"]), &values, &object, new);
+        assert_eq!(
+            applied.is_ok(),
+            !kentos_forms::has_errors(&issues),
+            "{}",
+            c["name"]
+        );
     }
 }
 
@@ -88,11 +150,22 @@ fn a_write_through_the_form_is_as_the_cases_say() {
 fn the_write_profile_is_as_the_cases_say() {
     for c in cases("enforce") {
         let form = prepared(&c);
-        let issues = form.enforce(
-            &attrs(&c["before"]),
-            &attrs(&c["after"]),
-            &Object::default(),
-        );
+        let issues = form.enforce(&attrs(&c["before"]), &attrs(&c["after"]), &object(&c));
+        assert_eq!(bare(&issues), c["issues"], "{}", c["name"]);
+    }
+}
+
+#[test]
+fn a_unique_field_is_as_the_cases_say() {
+    for c in cases("unique") {
+        let form = prepared(&c);
+        let others: Vec<Attrs> = c["others"]
+            .as_array()
+            .expect("others")
+            .iter()
+            .map(attrs)
+            .collect();
+        let issues = form.unique_issues(&attrs(&c["attrs"]), &object(&c), others.iter());
         assert_eq!(bare(&issues), c["issues"], "{}", c["name"]);
     }
 }
@@ -100,7 +173,7 @@ fn the_write_profile_is_as_the_cases_say() {
 #[test]
 fn the_defaults_and_the_generated_forms_are_as_the_cases_say() {
     for c in cases("defaults") {
-        let out = prepared(&c).with_defaults(&attrs(&c["attrs"]));
+        let out = prepared(&c).with_defaults(&attrs(&c["attrs"]), &Object::default());
         assert_eq!(json!(out), c["out"], "{}", c["name"]);
     }
     for c in cases("generate") {

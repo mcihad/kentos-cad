@@ -8,4 +8,8 @@ export type FormItem = { "type": "tab", id: string, label: string, items: Array<
 /**
  * 1 or 2; none: 1.
  */
-columns?: number, visibleWhen?: string, items: Array<FormItem>, } | { "type": "field" } & FormField | { "type": "note", id: string, text: string, };
+columns?: number, visibleWhen?: string, 
+/**
+ * It opens closed (its title opens it); written only as `true`.
+ */
+collapsed?: boolean, items: Array<FormItem>, } | { "type": "field" } & FormField | { "type": "note", id: string, text: string, };

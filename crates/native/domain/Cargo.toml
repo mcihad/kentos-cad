@@ -16,5 +16,8 @@ kentos-contracts = { path = "../../shared/contracts", default-features = false }
 # Linked texts follow their objects by the shared label rule (docs/adr/0175 §4);
 # the core reads an object from the contract's JSON.
 kentos-geometry-core = { path = "../../shared/geometry-core" }
+# The records of a layer whose form enforces its rules are completed as a step ends (docs/adr/0402 §4).
+kentos-expression = { path = "../../shared/expression" }
+kentos-forms = { path = "../../shared/forms" }
 serde_json = { workspace = true }
 uuid = { workspace = true }

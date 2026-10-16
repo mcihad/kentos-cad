@@ -137,8 +137,8 @@ pub struct FormsEdited {
 
 /// Input of `cad.forms.validate` v1: a form, and a record to ask it about.
 ///
-/// Refusals: `invalid_uid`; `unknown_form`, `form_unpublished`, `entity_not_found`,
-/// `form_layer_mismatch`.
+/// Refusals: `invalid_uid`, `invalid_moment`, `invalid_user`; `unknown_form`, `form_unpublished`,
+/// `entity_not_found`, `form_layer_mismatch`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -165,6 +165,16 @@ pub struct FormsValidate {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub defaults: bool,
+    /// The moment the rules' `@tarih` and `@simdi` read: a date, or a date and a local time
+    /// (`2026-10-16T14:30:00`); none: they read empty, and a calculation or default that reads them is
+    /// left out (docs/adr/0402 §5).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub moment: Option<String>,
+    /// The person the rules' `@kullanici` reads (1–64 characters); none: it reads empty.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub user: Option<String>,
 }
 
 /// Output of `cad.forms.validate` v1.
@@ -193,7 +203,8 @@ pub struct FormsValidated {
 
 /// Input of `cad.forms.submit` v1.
 ///
-/// Refusals: `invalid_uid`; `invalid_revision`, `revision_conflict` (status `conflict`);
+/// Refusals: `invalid_uid`, `invalid_moment`, `invalid_user`; `invalid_revision`, `revision_conflict`
+/// (status `conflict`);
 /// `unknown_form`, `form_unpublished`, `form_preflight`, `entity_not_found`, `form_layer_mismatch`,
 /// `layer_locked`, `form_invalid` (the first issue, `path` its field's value).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -219,6 +230,16 @@ pub struct FormsSubmit {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub defaults: bool,
+    /// The moment the rules' `@tarih` and `@simdi` read: a date, or a date and a local time
+    /// (`2026-10-16T14:30:00`); none: they read empty, and a calculation or default that reads them is
+    /// left out (docs/adr/0402 §5).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub moment: Option<String>,
+    /// The person the rules' `@kullanici` reads (1–64 characters); none: it reads empty.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub user: Option<String>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

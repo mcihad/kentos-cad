@@ -1584,7 +1584,7 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.forms.validate",
         refusals: &[
-            &["invalid_uid"],
+            &["invalid_uid", "invalid_moment", "invalid_user"],
             &[
                 "unknown_form",
                 "form_unpublished",
@@ -1598,7 +1598,7 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.forms.submit",
         refusals: &[
-            &["invalid_uid"],
+            &["invalid_uid", "invalid_moment", "invalid_user"],
             REVISION,
             &[
                 "unknown_form",
@@ -1610,7 +1610,7 @@ const ENTRIES: &[Entry] = &[
                 "form_invalid",
             ],
         ],
-        warnings: &[],
+        warnings: &["form_check_warning"],
         targets: none,
     },
     Entry {

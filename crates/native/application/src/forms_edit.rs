@@ -167,8 +167,9 @@ fn next(doc: &Document, input: &FormsEdit) -> Result<Next, Stop> {
                     Some("edit.body.revision".into()),
                 )));
             }
-            if body.items != form.draft.items {
+            if body.items != form.draft.items || body.clear_hidden != form.draft.clear_hidden {
                 form.draft.items = body.items.clone();
+                form.draft.clear_hidden = body.clear_hidden;
                 form.draft.revision += 1;
             }
             Some(form.clone())

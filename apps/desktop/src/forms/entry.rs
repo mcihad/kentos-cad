@@ -14,11 +14,15 @@
 //! ```
 //!
 //! The form's latest release is used (its draft while it is not published). As the user types,
-//! the forms core answers which items show, which are required and locked, and what is wrong; an
-//! issue shows under its field once the field was touched or Kaydet was pressed. Kaydet writes
-//! the values that changed through `cad.forms.submit` (one undo step) and closes the window; when
-//! the record does not go in, the window stays on the first issue. A record without any of the
-//! form's fields is a new one: the form's defaults fill it.
+//! the forms core answers which items show, which are required and locked, what a choice filter
+//! offers, what a note says and what is wrong, as `cad.forms.validate` would (docs/adr/0402 §7):
+//! the record is completed with the form's calculations, which show locked; a warning shows yellow
+//! and does not stop Kaydet. An issue shows under its field once the field was touched or Kaydet
+//! was pressed. Kaydet writes the values that changed through `cad.forms.submit` (one undo step)
+//! with this device's moment and the signed-in person, and closes the window; when the record does
+//! not go in, the window stays on the first error. A record without any of the form's fields is a
+//! new one: the form's defaults fill it and its "reuse last" fields start with the session's last
+//! value. A collapsed group opens and closes by its title.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
@@ -29,11 +33,13 @@ use kentos_contracts::{
     FormBody, FormIssue, FormItem, FormItemState, FormSeverity, FormWidget, FormsSubmit,
     LayerField, LayerFieldKind,
 };
-use kentos_domain::Slot;
-use kentos_forms::{Attrs, Object, Prepared};
+use kentos_domain::{Document, Slot};
+use kentos_forms::Attrs;
 use kentos_interaction::Level;
+use kentos_native_application::forms::{RecordScreen, record_screen, unique_on_layer};
 use kentos_native_application::{ExecutionContext, forms_submit};
 use kentos_ui::attribute::Date;
+use kentos_ui::icon::{Icon, icon};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::form::Form;
 use kentos_ui::widget::radio::RadioGroup;
@@ -52,21 +58,39 @@ pub const TITLE: &str = "Formla düzenle";
 const SAVE: &str = "Kaydet";
 const CANCEL: &str = "Vazgeç";
 const FIRST_ISSUE: &str = "İlk soruna git";
+/// The scrolled items' room: clear of the scrollbar on the right.
+const SCROLLED: iced::Padding = iced::Padding {
+    top: 4.0,
+    right: 16.0,
+    bottom: 4.0,
+    left: 8.0,
+};
+
+/// What the session remembers of the forms (docs/adr/0402 §7): the last values of the "reuse last"
+/// fields by form, and the moment a test fixes.
+#[derive(Debug, Default)]
+pub struct Memory {
+    /// A form's id to its fields' keys and their last saved values.
+    last: BTreeMap<String, BTreeMap<String, String>>,
+    /// The moment the rules read instead of the clock (a test's).
+    pub(crate) clock: Option<String>,
+    /// The person the rules read instead of the signed-in one (a test's).
+    pub(crate) person: Option<String>,
+}
 
 /// The window.
-#[derive(Debug)]
 pub struct Entry {
     form: String,
     name: String,
-    /// The form's layer.
-    layer: String,
     draft: bool,
     uid: String,
-    prepared: Prepared,
+    screen: RecordScreen,
     body: FormBody,
     fields: Vec<LayerField>,
-    object: Object,
     before: Attrs,
+    /// The moment and the person the rules read (`@tarih`, `@simdi`, `@kullanici`).
+    moment: Option<String>,
+    user: Option<String>,
     /// A record without any of the form's fields: the defaults fill it.
     new_record: bool,
     /// The values typed, by the fields' keys.
@@ -79,6 +103,21 @@ pub struct Entry {
     after: Attrs,
     items: Vec<FormItemState>,
     issues: Vec<FormIssue>,
+    /// The groups closed now (a collapsed group starts closed).
+    closed: BTreeSet<String>,
+    /// The unique fields' values last asked, and what the layer said.
+    unique_asked: Vec<Option<String>>,
+    unique: Vec<FormIssue>,
+}
+
+impl fmt::Debug for Entry {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Entry")
+            .field("form", &self.form)
+            .field("uid", &self.uid)
+            .field("after", &self.after)
+            .finish_non_exhaustive()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -86,6 +125,8 @@ pub enum Event {
     Value(String, String),
     Note(String, text_editor::Action),
     Tab(usize),
+    /// A collapsed group's title: open or close it.
+    Group(String),
     FirstIssue,
     Save,
     Cancel,
@@ -119,17 +160,63 @@ impl Entry {
             .collect()
     }
 
-    /// The record as the form sees it now.
-    fn recompute(&mut self) {
-        let start = if self.new_record {
-            self.prepared.with_defaults(&self.before)
-        } else {
-            self.before.clone()
-        };
-        let (after, issues) = self.prepared.assess(&start, &self.written(), &self.object);
-        self.items = self.prepared.states(&after, &self.object);
+    /// The record as the form sees it now: the values typed, a new record's defaults, the
+    /// calculations; the unique fields asked of the layer only when their values changed.
+    fn recompute(&mut self, doc: &Document) {
+        let prepared = &self.screen.prepared;
+        let (after, mut issues) = prepared.assess(
+            &self.before,
+            &self.written(),
+            &self.screen.object,
+            self.new_record,
+        );
+        self.items = prepared.described(&after, &self.screen.object);
+        let asked: Vec<Option<String>> = prepared
+            .unique_keys()
+            .iter()
+            .map(|k| self.name_of(k).and_then(|n| after.get(n).cloned()))
+            .collect();
+        if asked != self.unique_asked || self.unique_asked.is_empty() && !asked.is_empty() {
+            self.unique = unique_on_layer(doc, &self.screen, &after);
+            self.unique_asked = asked;
+        }
+        // A field already said is not said again.
+        for u in &self.unique {
+            if !issues.iter().any(|i| i.field == u.field) {
+                issues.push(u.clone());
+            }
+        }
         self.after = after;
         self.issues = issues;
+    }
+
+    /// A field's name by its key.
+    fn name_of(&self, key: &str) -> Option<&String> {
+        self.fields.iter().find(|f| f.key() == key).map(|f| &f.name)
+    }
+
+    fn errors(&self) -> impl Iterator<Item = &FormIssue> {
+        self.issues
+            .iter()
+            .filter(|i| i.severity == FormSeverity::Error)
+    }
+
+    /// A field's value in the record as the form completes it now (by the field's name).
+    #[cfg(test)]
+    pub(crate) fn value_of(&self, name: &str) -> Option<String> {
+        self.after.get(name).cloned()
+    }
+
+    /// What an item's choice filter offers now.
+    #[cfg(test)]
+    pub(crate) fn offered(&self, item: &str) -> Option<Vec<String>> {
+        self.state(item).and_then(|s| s.choices.clone())
+    }
+
+    /// Whether a group is closed now.
+    #[cfg(test)]
+    pub(crate) fn is_closed(&self, group: &str) -> bool {
+        self.closed.contains(group)
     }
 
     fn state(&self, id: &str) -> Option<&FormItemState> {
@@ -140,10 +227,13 @@ impl Entry {
         self.after != self.before
     }
 
-    /// The issue shown under a field: once touched, or after Kaydet.
+    /// The issue shown under a field: once touched, or after Kaydet; an error before a warning.
     fn issue_of(&self, key: &str) -> Option<&FormIssue> {
         (self.tried || self.touched.contains(key)).then_some(())?;
-        self.issues.iter().find(|i| i.field.as_deref() == Some(key))
+        let mine = |i: &&FormIssue| i.field.as_deref() == Some(key);
+        self.errors()
+            .find(mine)
+            .or_else(|| self.issues.iter().find(mine))
     }
 
     /// The tab holding the first issue's item.
@@ -168,9 +258,6 @@ impl App {
         let Some(f) = self.project_forms().iter().find(|f| f.id == form).cloned() else {
             return Task::none();
         };
-        let Some(e) = doc.model.get(slot).cloned() else {
-            return Task::none();
-        };
         let Some(uid) = doc.model.uid(slot).map(|u| u.to_string()) else {
             return Task::none();
         };
@@ -179,38 +266,38 @@ impl App {
             Some(r) => (r.body.clone(), false),
             None => (f.draft.clone(), true),
         };
-        let variables = self.form_variables();
-        let prepared = match Prepared::new(&body, &fields, &variables) {
-            Ok(p) => p,
-            Err(issues) => {
-                let first = issues
-                    .iter()
-                    .find(|i| i.severity == FormSeverity::Error)
-                    .map_or_else(String::new, |i| i.message.clone());
-                self.say(
-                    Level::Warn,
-                    format!(
-                        "“{}” formu kullanılamıyor: {first} Formu Formlar penceresinde düzeltin.",
-                        f.name
-                    ),
-                );
+        let (moment, user) = self.form_moment();
+        let screen = match record_screen(
+            &doc.model,
+            &f.id,
+            &uid,
+            draft,
+            moment.as_deref(),
+            user.as_deref(),
+        ) {
+            Ok(s) => s,
+            Err(error) => {
+                self.say(Level::Warn, error.message);
                 return Task::none();
             }
         };
-        let object = Object {
-            kind: kentos_native_application::layer_filter::kind_label(&e).to_owned(),
-            layer: self.form_layer_name(&f.layer),
-            id: f64::from(slot.0),
-            label: e.base().label.clone(),
-            measured: Default::default(),
-        };
-        let before = e.base().attrs.clone();
-        let new_record = !prepared.keys().iter().any(|k| {
+        let before = screen.attrs.clone();
+        let new_record = !screen.prepared.keys().iter().any(|k| {
             fields
                 .iter()
                 .find(|f| f.key() == *k)
                 .is_some_and(|f| before.contains_key(&f.name))
         });
+        // A new record's "reuse last" fields start with the session's last values, as if typed.
+        let mut values = BTreeMap::new();
+        if new_record && let Some(last) = self.form_memory.last.get(&f.id) {
+            for key in screen.prepared.reuse_keys() {
+                if let Some(v) = last.get(key) {
+                    values.insert(key.to_owned(), v.clone());
+                }
+            }
+        }
+        let closed = collapsed_groups(&body.items);
         let mut notes = BTreeMap::new();
         for (key, name) in fields.iter().map(|f| (f.key().to_owned(), f.name.clone())) {
             notes.insert(
@@ -221,16 +308,16 @@ impl App {
         let mut entry = Entry {
             form: f.id.clone(),
             name: f.name.clone(),
-            layer: f.layer.clone(),
             draft,
             uid,
-            prepared,
+            screen,
             body,
             fields,
-            object,
             before,
+            moment,
+            user,
             new_record,
-            values: BTreeMap::new(),
+            values,
             notes,
             tab: 0,
             tried: false,
@@ -238,8 +325,11 @@ impl App {
             after: Attrs::new(),
             items: Vec::new(),
             issues: Vec::new(),
+            closed,
+            unique_asked: Vec::new(),
+            unique: Vec::new(),
         };
-        entry.recompute();
+        entry.recompute(&doc.model);
         // The editors of the long texts start with the values the record shows.
         for (key, content) in entry.notes.iter_mut() {
             if let Some(f) = entry.fields.iter().find(|f| f.key() == key) {
@@ -253,30 +343,45 @@ impl App {
         Task::none()
     }
 
-    /// The `@` values a form's rules read in the open drawing (as the commands give them).
-    fn form_variables(&self) -> Vec<kentos_expression::Variable> {
-        let Some(doc) = &self.document else {
-            return Vec::new();
-        };
-        let mut all = kentos_project::variables::expression_variables(
-            doc.model.name(),
-            doc.model.settings(),
-            0.0,
-            "",
-        );
-        all.retain(|v| !matches!(v.name.as_str(), "tarih" | "simdi" | "kullanici"));
-        all
+    /// The moment and the person a form's rules read (docs/adr/0402 §5): this device's clock in its
+    /// zone to the second (a test's fixed moment instead) and the signed-in person, if any.
+    fn form_moment(&self) -> (Option<String>, Option<String>) {
+        let moment = self.form_memory.clock.clone().unwrap_or_else(|| {
+            let utc = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_or(0, |d| d.as_secs() as i64);
+            let offset = crate::cloud::local_time::Zone::system().offset_at(utc);
+            kentos_geometry_core::time::write(((utc + i64::from(offset)) * 1000) as f64, false)
+        });
+        let user = self
+            .form_memory
+            .person
+            .clone()
+            .or_else(|| {
+                self.cloud
+                    .me
+                    .as_ref()
+                    .map(|m| m.user.display_name.trim().to_owned())
+            })
+            .filter(|n| !n.is_empty());
+        (Some(moment), user)
     }
 
     pub(crate) fn form_entry_event(&mut self, event: Event) -> Task<Message> {
-        let Some(e) = self.form_entry.as_mut() else {
+        let (Some(e), Some(doc)) = (self.form_entry.as_mut(), self.document.as_ref()) else {
             return Task::none();
         };
         match event {
             Event::Value(key, text) => {
+                // A long text's editor shows a value given as a whole (a trace's, a pick's) too.
+                if let Some(content) = e.notes.get_mut(&key)
+                    && content.text().trim_end_matches('\n') != text
+                {
+                    *content = text_editor::Content::with_text(&text);
+                }
                 e.touched.insert(key.clone());
                 e.values.insert(key, text);
-                e.recompute();
+                e.recompute(&doc.model);
             }
             Event::Note(key, action) => {
                 let edit = action.is_edit();
@@ -287,11 +392,16 @@ impl App {
                         let text = text.strip_suffix('\n').unwrap_or(&text).to_owned();
                         e.touched.insert(key.clone());
                         e.values.insert(key, text);
-                        e.recompute();
+                        e.recompute(&doc.model);
                     }
                 }
             }
             Event::Tab(i) => e.tab = i,
+            Event::Group(id) => {
+                if !e.closed.remove(&id) {
+                    e.closed.insert(id);
+                }
+            }
             Event::FirstIssue => return self.go_to_first_issue(),
             Event::Cancel => {
                 self.form_entry = None;
@@ -307,9 +417,24 @@ impl App {
             return Task::none();
         };
         e.tried = true;
-        let Some(first) = e.issues.first().cloned() else {
+        let Some(first) = e.errors().next().or(e.issues.first()).cloned() else {
             return Task::none();
         };
+        // A closed group holding it opens.
+        if let Some(item) = first.item.as_deref() {
+            let holding: Vec<String> = e
+                .closed
+                .iter()
+                .filter(|g| {
+                    crate::forms::designer::find(&e.body.items, g)
+                        .is_some_and(|group| kentos_forms_find(group.items(), item))
+                })
+                .cloned()
+                .collect();
+            for g in holding {
+                e.closed.remove(&g);
+            }
+        }
         if let Some(t) = first.item.as_deref().and_then(|i| e.tab_of(i)) {
             e.tab = t;
         }
@@ -324,10 +449,11 @@ impl App {
         let Some(e) = self.form_entry.as_ref() else {
             return Task::none();
         };
-        if !e.issues.is_empty() {
+        let first = e.errors().next().map(|i| i.message.clone());
+        if let Some(first) = first {
             self.say(
                 Level::Warn,
-                format!("Kayıt formun kurallarına uymuyor: {}", e.issues[0].message),
+                format!("Kayıt formun kurallarına uymuyor: {first}"),
             );
             return self.go_to_first_issue();
         }
@@ -351,9 +477,23 @@ impl App {
             uid: e.uid.clone(),
             values,
             defaults: e.new_record,
+            moment: e.moment.clone(),
+            user: e.user.clone(),
             expected_revision: None,
         };
         let name = e.name.clone();
+        let form = e.form.clone();
+        // The "reuse last" fields' values, kept for the next new record when this one goes in.
+        let reused: Vec<(String, String)> = e
+            .screen
+            .prepared
+            .reuse_keys()
+            .iter()
+            .filter_map(|k| {
+                let v = e.after.get(e.name_of(k)?)?;
+                Some(((*k).to_owned(), v.clone()))
+            })
+            .collect();
         if let Some(locked) = self.forms_locked() {
             self.warn(locked);
             return Task::none();
@@ -366,6 +506,13 @@ impl App {
             Some(done) => {
                 self.form_entry = None;
                 self.dialog = None;
+                if !reused.is_empty() {
+                    self.form_memory
+                        .last
+                        .entry(form)
+                        .or_default()
+                        .extend(reused);
+                }
                 let said = if done.changed {
                     format!("Kayıt “{name}” formuyla yazıldı.")
                 } else {
@@ -386,9 +533,9 @@ impl App {
             || self
                 .document
                 .as_ref()
-                .is_some_and(|d| d.model.layers().is_locked(&e.object_layer_id()));
+                .is_some_and(|d| d.model.layers().is_locked(&e.screen.layer));
         let mut body = Column::new().spacing(12);
-        let mut head = format!("{} · {}", e.object.kind, e.object.layer);
+        let mut head = format!("{} · {}", e.screen.object.kind, e.screen.object.layer);
         if e.draft {
             head.push_str(" · form yayınlanmadı, taslağıyla");
         }
@@ -435,22 +582,31 @@ impl App {
                 .collect();
             if let Some(tab) = shown.get(e.tab.min(shown.len().saturating_sub(1))) {
                 body = body.push(
-                    scrollable(container(self.entry_block(e, tab.items(), locked)).padding([4, 8]))
-                        .height(typography::scaled(380.0)),
+                    scrollable(
+                        container(self.entry_block(e, tab.items(), locked)).padding(SCROLLED),
+                    )
+                    .height(typography::scaled(380.0)),
                 );
             }
         } else {
             body = body.push(
-                scrollable(container(self.entry_block(e, &e.body.items, locked)).padding([4, 8]))
+                scrollable(container(self.entry_block(e, &e.body.items, locked)).padding(SCROLLED))
                     .height(typography::scaled(380.0)),
             );
         }
-        let count = if e.tried { e.issues.len() } else { 0 };
+        let (errors, warnings) = if e.tried {
+            (e.errors().count(), e.issues.len() - e.errors().count())
+        } else {
+            (0, 0)
+        };
         let mut footer = Row::new().spacing(8).align_y(Center);
-        if count > 0 {
+        if errors > 0 {
             footer = footer
-                .push(words::text_line(Kind::Warn, format!("{count} sorun")))
+                .push(words::text_line(Kind::Error, format!("{errors} sorun")))
                 .push(words::ghost(FIRST_ISSUE, Some(msg(Event::FirstIssue))));
+        }
+        if warnings > 0 {
+            footer = footer.push(words::text_line(Kind::Warn, format!("{warnings} uyarı")));
         }
         footer = footer
             .push(space::horizontal().width(Fill))
@@ -492,12 +648,44 @@ impl App {
             }
             match item {
                 FormItem::Group {
+                    id,
                     label: title,
                     columns,
                     items: inner,
+                    collapsed,
                     ..
                 } => {
                     out = flush(&mut run, out);
+                    let closed = e.closed.contains(id);
+                    if *collapsed {
+                        // Its title opens and closes it.
+                        let words = title.clone().unwrap_or_else(|| "Grup".to_owned());
+                        let head = iced::widget::button(
+                            row![
+                                icon(if closed {
+                                    Icon::ChevronRight
+                                } else {
+                                    Icon::ChevronDown
+                                })
+                                .size(12.0),
+                                label::strong(words),
+                            ]
+                            .spacing(6)
+                            .align_y(Center),
+                        )
+                        .padding([2, 4])
+                        .style(style::button::ghost)
+                        .on_press(msg(Event::Group(id.clone())));
+                        if closed {
+                            out = out.push(
+                                container(head)
+                                    .padding(6)
+                                    .style(style::container::field_box)
+                                    .width(Fill),
+                            );
+                            continue;
+                        }
+                    }
                     let shown: Vec<&FormItem> = inner
                         .iter()
                         .filter(|i| e.state(i.id()).is_some_and(|s| s.shown))
@@ -516,7 +704,23 @@ impl App {
                         self.entry_form(e, &shown, locked)
                     };
                     let mut group = Column::new().spacing(8);
-                    if let Some(t) = title {
+                    if *collapsed {
+                        group = group.push(
+                            iced::widget::button(
+                                row![
+                                    icon(Icon::ChevronDown).size(12.0),
+                                    label::strong(
+                                        title.clone().unwrap_or_else(|| "Grup".to_owned())
+                                    ),
+                                ]
+                                .spacing(6)
+                                .align_y(Center),
+                            )
+                            .padding([2, 4])
+                            .style(style::button::ghost)
+                            .on_press(msg(Event::Group(id.clone()))),
+                        );
+                    } else if let Some(t) = title {
                         group = group.push(label::strong(t.clone()));
                     }
                     out = out.push(
@@ -526,11 +730,15 @@ impl App {
                             .width(Fill),
                     );
                 }
-                FormItem::Note { text, .. } => {
+                FormItem::Note { id, text } => {
                     out = flush(&mut run, out);
+                    let text = e
+                        .state(id)
+                        .and_then(|s| s.text.clone())
+                        .unwrap_or_else(|| text.clone());
                     out = out.push(
                         container(
-                            iced::widget::text(text.clone())
+                            iced::widget::text(text)
                                 .size(typography::caption())
                                 .style(muted)
                                 .width(Fill),
@@ -578,17 +786,25 @@ impl App {
                         form = form.required();
                     }
                     match e.issue_of(field.key()) {
-                        Some(issue) => form = form.error(Some(issue.message.clone())),
+                        Some(issue) if issue.severity == FormSeverity::Error => {
+                            form = form.error(Some(issue.message.clone()));
+                        }
+                        Some(issue) => form = form.warning(Some(issue.message.clone())),
                         None => {
                             if let Some(help) = &f.help {
                                 form = form.help(help.clone());
+                            } else if let Some(calc) = &f.calculate {
+                                form = form.help(format!("Hesaplanır: {calc}"));
                             }
                         }
                     }
                 }
-                FormItem::Note { text, .. } => {
-                    form =
-                        form.row(container(label::caption(text.clone()).style(muted)).width(Fill));
+                FormItem::Note { id, text } => {
+                    let text = e
+                        .state(id)
+                        .and_then(|s| s.text.clone())
+                        .unwrap_or_else(|| text.clone());
+                    form = form.row(container(label::caption(text).style(muted)).width(Fill));
                 }
                 FormItem::Group { .. } => {
                     form = form.row(self.entry_block(e, std::slice::from_ref(*item), locked));
@@ -625,10 +841,21 @@ impl App {
     }
 }
 
-impl Entry {
-    fn object_layer_id(&self) -> String {
-        self.layer.clone()
+/// The ids of the groups that start closed.
+fn collapsed_groups(items: &[FormItem]) -> BTreeSet<String> {
+    let mut out = BTreeSet::new();
+    for item in items {
+        if let FormItem::Group {
+            id,
+            collapsed: true,
+            ..
+        } = item
+        {
+            out.insert(id.clone());
+        }
+        out.extend(collapsed_groups(item.items()));
     }
+    out
 }
 
 /// A field's control by its widget; read-only shows the value without an edit.
@@ -650,9 +877,12 @@ fn entry_control<'a>(
         move |v: String| msg(Event::Value(key.clone(), v))
     };
     let placeholder = item.placeholder.clone().unwrap_or_default();
+    // What the item's choice filter offers for the record; every listed value without one.
+    let offered = e.state(&item.id).and_then(|s| s.choices.as_ref());
     let choices: Vec<(String, String)> = match &field.values {
         Some(list) if !list.is_empty() => list
             .iter()
+            .filter(|c| offered.is_none_or(|o| o.contains(&c.code)))
             .map(|c| (c.code.clone(), c.label.clone()))
             .collect(),
         _ if field.kind == LayerFieldKind::Boolean => vec![
@@ -730,6 +960,7 @@ fn entry_control<'a>(
                 .filter(|v| !v.is_empty())
                 .map(|v| {
                     v.iter()
+                        .filter(|c| offered.is_none_or(|o| o.contains(&c.code)))
                         .enumerate()
                         .map(|(i, c)| Opt(i, c.label.as_str()))
                         .collect()

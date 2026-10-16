@@ -10,9 +10,11 @@ use crate::theme::shape::{self, Level};
 use super::button::radius;
 
 /// Kenarlı metin girişi: üzerine gelince kenar belirginleşir, odakta
-/// vurgu çizgisini alır (web'in `.field`'ı).
+/// vurgu çizgisini alır (web'in `.field`'ı). Kapalı (salt okunur) giriş
+/// zeminsiz ve soluk yazılıdır: değeri okunur ama yazılamayacağı görünür.
 pub fn input(theme: &Theme, status: text_input::Status) -> text_input::Style {
     let t = Tokens::of(theme);
+    let disabled = matches!(status, text_input::Status::Disabled);
 
     let edge = match status {
         text_input::Status::Focused { .. } => t.accent_line(),
@@ -21,7 +23,7 @@ pub fn input(theme: &Theme, status: text_input::Status) -> text_input::Style {
     };
 
     text_input::Style {
-        background: Background::Color(t.field),
+        background: Background::Color(if disabled { t.surface_alt } else { t.field }),
         border: Border {
             color: edge,
             width: 1.0,
@@ -29,7 +31,7 @@ pub fn input(theme: &Theme, status: text_input::Status) -> text_input::Style {
         },
         icon: t.muted,
         placeholder: t.muted.scale_alpha(0.75),
-        value: t.text,
+        value: if disabled { t.muted } else { t.text },
         selection: t.accent.scale_alpha(0.35),
     }
 }
@@ -92,6 +94,7 @@ pub fn cell(invalid: bool) -> impl Fn(&Theme, text_input::Status) -> text_input:
 pub fn text_area(theme: &Theme, status: text_editor::Status) -> text_editor::Style {
     let t = Tokens::of(theme);
 
+    let disabled = matches!(status, text_editor::Status::Disabled);
     let edge = match status {
         text_editor::Status::Focused { .. } => t.accent_line(),
         text_editor::Status::Hovered => t.border_strong(),
@@ -99,14 +102,14 @@ pub fn text_area(theme: &Theme, status: text_editor::Status) -> text_editor::Sty
     };
 
     text_editor::Style {
-        background: Background::Color(t.field),
+        background: Background::Color(if disabled { t.surface_alt } else { t.field }),
         border: Border {
             color: edge,
             width: 1.0,
             radius: radius().into(),
         },
         placeholder: t.muted.scale_alpha(0.75),
-        value: t.text,
+        value: if disabled { t.muted } else { t.text },
         selection: t.accent.scale_alpha(0.35),
     }
 }

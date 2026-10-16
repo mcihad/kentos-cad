@@ -48,6 +48,8 @@ def load(name, path):
 # The language's independent evaluator and the project file's independent reader (the structural rules).
 el = load("expression_language", ROOT / "scripts/fixtures/expression_language.py")
 kc = load("kcad_reader", ROOT / "tools/kcad/kcad.py")
+# The templates' independent splitting (docs/adr/0225 §6): a note's text with `{…}`.
+tc = load("template_cases", ROOT / "scripts/fixtures/template_cases.py")
 
 # uzunluk(metin): the text's UTF-16 units, as JavaScript counts them.
 el.FUNCTIONS["UZUNLUK"] = (1, 1, lambda args: None if args[0] is None else float(el.units(el.text(args[0]))))
@@ -160,17 +162,62 @@ def check_value(f, text):
 
 # ── Rules ───────────────────────────────────────────────────────────────
 
+# The `@` values only a host gives (the moment, the user, the coordinate system's name), and of them the moment's and
+# the user's: a command gives them; the document's following does not (docs/adr/0402 §5).
+MOMENT = ("TARIH", "SIMDI", "KULLANICI")
+HOST_ONLY = MOMENT + ("KOORDINAT_SISTEMI",)
+CHOICE_CODE, CHOICE_LABEL = "secenek", "secenek_etiketi"
+
+
+def tokenize(src):
+    """The language's tokens with `$name` and `@name` read as names the scope holds (`$…`, `@KEY`)."""
+    toks, i = [], 0
+    while i < len(src):
+        c = src[i]
+        if c in "$@":
+            j = i + 1
+            if not (j < len(src) and (src[j].isalpha() or src[j] == "_")):
+                raise el.Invalid(f"lone {c}")
+            while j < len(src) and (src[j].isalnum() or src[j] == "_"):
+                j += 1
+            word = src[i + 1:j]
+            toks.append(("field", "$" + el.key(word) if c == "$" else "@" + el.key(word)))
+            i = j
+            continue
+        k, quote, bracket = i, None, False
+        while k < len(src):
+            ch = src[k]
+            if quote:
+                if ch == quote:
+                    if k + 1 < len(src) and src[k + 1] == quote:
+                        k += 1
+                    else:
+                        quote = None
+            elif bracket:
+                bracket = ch != "]"
+            elif ch in "'\"":
+                quote = ch
+            elif ch == "[":
+                bracket = True
+            elif ch in "$@":
+                break
+            k += 1
+        toks.extend(t for t in el.tokenize(src[i:k]) if t[0] != "end")
+        i = k
+    toks.append(("end", None))
+    return toks
+
 
 def parse(src):
     """The rule's tree, or None when it does not compile."""
     try:
-        return el.Parser(el.tokenize(src)).parse()
+        return el.Parser(tokenize(src)).parse()
     except el.Invalid:
         return None
 
 
 def names(tree):
-    """The names a tree reads, in order, each once."""
+    """The names a tree reads, in order, each once (`@KEY` a variable, `$KEY` a geometry value)."""
     out = []
 
     def walk(n):
@@ -189,8 +236,21 @@ def names(tree):
     return out
 
 
-def scope(fields, attrs):
-    """The record as a rule reads it: each layer field by its kind, other attributes as text."""
+def fields_read(tree):
+    return [n for n in names(tree) if n[:1] not in ("@", "$")]
+
+
+def variables_read(tree):
+    return [n[1:] for n in names(tree) if n[:1] == "@"]
+
+
+# An object as the cases give it: its measures in metres ($uzunluk, $alan, $köşe).
+GEOMETRY = {"UZUNLUK": "length", "CEVRE": "length", "ALAN": "area", "KOSE": "vertices"}
+
+
+def scope(fields, attrs, ctx=None):
+    """The record as a rule reads it: each layer field by its kind, other attributes as text; the `@` values and
+    the object's measures the context gives."""
     obj = dict(attrs)
     for f in fields:
         v = attrs.get(f["name"])
@@ -198,11 +258,31 @@ def scope(fields, attrs):
             obj[f["name"]] = True if v == "true" else False if v == "false" else None
         elif f["kind"] in ("integer", "decimal"):
             obj[f["name"]] = None if v is None else el.read_number(v)
+    ctx = ctx or {}
+    for name, value in ctx.get("variables", {}).items():
+        obj["@" + el.key(name)] = value
+    for word, what in GEOMETRY.items():
+        if what in ctx.get("object", {}):
+            obj["$" + word] = float(ctx["object"][what])
     return obj
 
 
-def holds(src, fields, attrs):
-    return el.truthy(el.value(parse(src), scope(fields, attrs)))
+def value_of(src, fields, attrs, ctx=None):
+    return el.value(parse(src), scope(fields, attrs, ctx))
+
+
+def holds(src, fields, attrs, ctx=None):
+    return el.truthy(value_of(src, fields, attrs, ctx))
+
+
+def text_for(v, f):
+    """A value written into a field: a yes/no as `true` or `false`, a number as the language writes it, empty as
+    None (docs/adr/0402 §3)."""
+    if el.is_empty(v):
+        return None
+    if isinstance(v, bool):
+        return "true" if v else "false"
+    return el.text(v)
 
 
 # ── The form ────────────────────────────────────────────────────────────
@@ -233,28 +313,64 @@ def issue(code, error, item=None, field=None, rule=None):
     return out
 
 
-def preflight(body, fields):
+def known(variables):
+    return {el.key(v["name"]) for v in variables}
+
+
+def template_exprs(text):
+    """A note's template: its expressions' sources, or None when it does not split."""
+    t = tc.parse(text)
+    if "error" in t:
+        return None
+    return [p["text"] for p in t["pieces"] if p["kind"] == "expr"]
+
+
+def template_plain(text):
+    t = tc.parse(text)
+    return all(p["kind"] == "text" for p in t["pieces"])
+
+
+def fill(text, values):
+    out, k = [], 0
+    for p in tc.parse(text)["pieces"]:
+        if p["kind"] == "text":
+            out.append(p["text"])
+        elif p["kind"] == "expr":
+            v = values[k] if k < len(values) else None
+            if v is not None:
+                out.append(v)
+            k += 1
+    return "".join(out)
+
+
+def preflight(body, fields, variables=()):
     problem = kc.body_problem(body)
     if problem:
         return [issue("form_body_invalid", True)]
-    issues, bound = [], []
+    issues, bound, calcs = [], [], []
+    have = known(variables)
 
-    def rule(item, key, itself, at, src):
+    def rule(item, key, itself, at, src, extra=()):
         tree = parse(src)
         if tree is None:
             issues.append(issue("form_rule_invalid", True, item, key, at))
-            return
-        for name in names(tree):
+            return None
+        for name in fields_read(tree):
             if not any(f["name"] == name for f in fields):
                 issues.append(issue("form_rule_unknown_name", False, item, key, at))
             elif name == itself:
                 issues.append(issue("form_rule_reads_itself", False, item, key, at))
+        for v in variables_read(tree):
+            if v not in have and v not in extra and v not in MOMENT:
+                issues.append(issue("form_rule_unknown_variable", False, item, key, at))
+        return tree
 
     def field(f, hideable):
         key = f["field"]
         if any(b[0] == key for b in bound):
             issues.append(issue("form_field_twice", True, f["id"], key))
-        always = not hideable and "visibleWhen" not in f and not f.get("readOnly") and "readOnlyWhen" not in f
+        always = not hideable and "visibleWhen" not in f and (
+            "calculate" in f or (not f.get("readOnly") and "readOnlyWhen" not in f))
         bound.append((key, f["id"], always))
         layer = next((x for x in fields if key_of(x) == key), None)
         if layer is None:
@@ -267,13 +383,37 @@ def preflight(body, fields):
             issues.append(issue("form_widget_needs_values", True, f["id"], key))
         if "default" in f and check_value(layer, f["default"])[1]:
             issues.append(issue("form_default_invalid", True, f["id"], key, "default"))
-        if f.get("readOnly") and f.get("required") and "default" not in f:
+        if "default" in f and "defaultExpr" in f:
+            issues.append(issue("form_rule_conflict", True, f["id"], key, "defaultExpr"))
+        if "calculate" in f and ("default" in f or "defaultExpr" in f or "readOnlyWhen" in f):
+            issues.append(issue("form_rule_conflict", True, f["id"], key, "calculate"))
+        if "choiceFilter" in f and not layer.get("values"):
+            issues.append(issue("form_choice_unlisted", True, f["id"], key, "choiceFilter"))
+        if f.get("readOnly") and f.get("required") and not any(k in f for k in ("default", "defaultExpr", "calculate")):
             issues.append(issue("form_required_read_only", True, f["id"], key))
         for at in ("visibleWhen", "requiredWhen", "readOnlyWhen"):
             if at in f:
                 rule(f["id"], key, None if at == "requiredWhen" else layer["name"], at, f[at])
         for i, c in enumerate(f.get("checks", [])):
             rule(f["id"], key, None, f"checks/{i}", c["rule"])
+        for at in ("defaultExpr", "calculate"):
+            if at not in f:
+                continue
+            tree = rule(f["id"], key, None, at, f[at])
+            if tree is not None and any(v in MOMENT for v in variables_read(tree)):
+                issues.append(issue("form_moment_only", False, f["id"], key, at))
+            if at == "calculate" and tree is not None:
+                calcs.append((f["id"], key, layer["name"], fields_read(tree)))
+        if "choiceFilter" in f:
+            rule(f["id"], key, None, "choiceFilter", f["choiceFilter"], extra=(el.key(CHOICE_CODE), el.key(CHOICE_LABEL)))
+
+    def note(x):
+        sources = template_exprs(x["text"])
+        if sources is None:
+            issues.append(issue("form_rule_invalid", True, x["id"], None, "text"))
+            return
+        for src in sources:
+            rule(x["id"], None, None, "text", src)
 
     def items(xs, hideable):
         for x in xs:
@@ -285,8 +425,21 @@ def preflight(body, fields):
                 items(x["items"], hideable or "visibleWhen" in x)
             elif x["type"] == "field":
                 field(x, hideable)
+            else:
+                note(x)
 
     items(body["items"], False)
+    # Calculated fields reading each other in a circle: the first of the circle in the form's order.
+    done = [False] * len(calcs)
+    while True:
+        nxt = next((k for k in range(len(calcs)) if not done[k]
+                    and all(done[d] for d in range(len(calcs)) if calcs[d][2] in calcs[k][3])), None)
+        if nxt is None:
+            break
+        done[nxt] = True
+    stuck = next((k for k in range(len(calcs)) if not done[k]), None)
+    if stuck is not None:
+        issues.append(issue("form_calc_cycle", True, calcs[stuck][0], calcs[stuck][1], "calculate"))
     if not bound:
         issues.append(issue("form_empty", False))
     for f in fields:
@@ -304,12 +457,20 @@ def errors(issues):
     return [i for i in issues if i["severity"] == "error"]
 
 
-class Form:
-    """A form prepared over its layer's fields."""
+def empty(attrs, name):
+    return not attrs.get(name, "").strip(JS_SPACE)
 
-    def __init__(self, body, fields):
-        assert not errors(preflight(body, fields)), "a form with errors is not prepared"
+
+class Form:
+    """A form prepared over its layer's fields, with the `@` values given."""
+
+    ROUNDS = 3
+
+    def __init__(self, body, fields, variables=()):
+        assert not errors(preflight(body, fields, variables)), "a form with errors is not prepared"
         self.fields = fields
+        self.variables = {v["name"]: v["value"] for v in variables}
+        self.clear_hidden = bool(body.get("clearHidden"))
         self.nodes = []
 
         def walk(xs, parent):
@@ -319,6 +480,25 @@ class Form:
                 walk(x.get("items", []), at)
 
         walk(body["items"], None)
+        # The calculated items in their order: each after the calculated fields it reads, else the form's.
+        calcs = [k for k, (x, _) in enumerate(self.nodes) if x["type"] == "field" and "calculate" in x]
+        reads = {k: fields_read(parse(self.nodes[k][0]["calculate"])) for k in calcs}
+        done, self.calc_order = set(), []
+        while len(self.calc_order) < len(calcs):
+            k = next(k for k in calcs if k not in done
+                     and all(d in done for d in calcs if self.layer(self.nodes[d][0])["name"] in reads[k]))
+            done.add(k)
+            self.calc_order.append(k)
+
+    def ctx(self, obj, extra=None):
+        v = dict(self.variables)
+        v.update(extra or {})
+        return {"variables": v, "object": obj or {}}
+
+    def waits(self, src):
+        """Whether an expression reads a value only a host gives, not given."""
+        have = known([{"name": n} for n in self.variables])
+        return any(v in HOST_ONLY and v not in have for v in variables_read(parse(src)))
 
     def layer(self, x):
         return next(f for f in self.fields if key_of(f) == x["field"])
@@ -326,26 +506,105 @@ class Form:
     def bound(self):
         return [(x, p) for x, p in self.nodes if x["type"] == "field"]
 
-    def states(self, attrs):
+    def calculated(self, key):
+        return any(x["field"] == key and "calculate" in x for x, _ in self.bound())
+
+    def states(self, attrs, obj=None):
         shown, out = [], []
         for x, parent in self.nodes:
             rule = x.get("visibleWhen") if x["type"] in ("group", "field") else None
-            here = (parent is None or shown[parent]) and (rule is None or holds(rule, self.fields, attrs))
+            here = (parent is None or shown[parent]) and (rule is None or holds(rule, self.fields, attrs, self.ctx(obj)))
             shown.append(here)
             state = {"id": x["id"], "shown": here}
             if x["type"] == "field":
                 f = self.layer(x)
                 if here and (x.get("required") or f.get("required")
-                             or ("requiredWhen" in x and holds(x["requiredWhen"], self.fields, attrs))):
+                             or ("requiredWhen" in x and holds(x["requiredWhen"], self.fields, attrs, self.ctx(obj)))):
                     state["required"] = True
-                if x.get("readOnly") or ("readOnlyWhen" in x and holds(x["readOnlyWhen"], self.fields, attrs)):
+                if x.get("readOnly") or "calculate" in x or (
+                        "readOnlyWhen" in x and holds(x["readOnlyWhen"], self.fields, attrs, self.ctx(obj))):
                     state["readOnly"] = True
             out.append(state)
         return out
 
-    def validate(self, attrs):
+    def choices(self, x, attrs, obj=None):
+        if "choiceFilter" not in x:
+            return None
+        f = self.layer(x)
+        return [c["code"] for c in f.get("values", [])
+                if holds(x["choiceFilter"], self.fields, attrs,
+                         self.ctx(obj, {CHOICE_CODE: c["code"], CHOICE_LABEL: c["label"]}))]
+
+    def described(self, attrs, obj=None):
+        states = self.states(attrs, obj)
+        for (x, _), state in zip(self.nodes, states):
+            if x["type"] == "field":
+                c = self.choices(x, attrs, obj)
+                if c is not None:
+                    state["choices"] = c
+            elif x["type"] == "note" and not template_plain(x["text"]):
+                values = [text_or_none(value_of(src, self.fields, attrs, self.ctx(obj)))
+                          for src in template_exprs(x["text"])]
+                state["text"] = fill(x["text"], values)
+        return states
+
+    def complete(self, attrs, obj=None, new=False):
+        out, issues = dict(attrs), []
+        if new:
+            for x, _ in self.bound():
+                f = self.layer(x)
+                if "default" in x and empty(out, f["name"]):
+                    v, why = check_value(f, x["default"])
+                    if not why and v:
+                        out[f["name"]] = v
+            for x, _ in self.bound():
+                if "defaultExpr" not in x:
+                    continue
+                f = self.layer(x)
+                if self.waits(x["defaultExpr"]) or not empty(out, f["name"]):
+                    continue
+                text = text_for(value_of(x["defaultExpr"], self.fields, out, self.ctx(obj)), f)
+                if text is None:
+                    continue
+                v, why = check_value(f, text)
+                if why:
+                    issues.append(issue("form_default_invalid", False, x["id"], key_of(f), "defaultExpr"))
+                elif v:
+                    out[f["name"]] = v
+        for rnd in range(self.ROUNDS):
+            start, round_issues = dict(out), []
+            shown = self.states(out, obj) if self.clear_hidden else None
+            for k in self.calc_order:
+                x = self.nodes[k][0]
+                if shown is not None and not shown[k]["shown"]:
+                    continue
+                if self.waits(x["calculate"]):
+                    continue
+                f = self.layer(x)
+                text = text_for(value_of(x["calculate"], self.fields, out, self.ctx(obj)), f)
+                if text is None:
+                    out.pop(f["name"], None)
+                    continue
+                v, why = check_value(f, text)
+                if why:
+                    round_issues.append(issue("form_calc_invalid", True, x["id"], key_of(f), "calculate"))
+                elif v:
+                    out[f["name"]] = v
+                else:
+                    out.pop(f["name"], None)
+            if self.clear_hidden:
+                for (x, _), state in zip(self.nodes, self.states(out, obj)):
+                    if x["type"] == "field" and not state["shown"]:
+                        out.pop(self.layer(x)["name"], None)
+            if out == start or not self.clear_hidden:
+                return out, issues + round_issues
+            if rnd + 1 == self.ROUNDS:
+                return out, issues + round_issues + [issue("form_unstable", True)]
+        return out, issues
+
+    def validate(self, attrs, obj=None):
         issues = []
-        for (x, _), state in zip(self.nodes, self.states(attrs)):
+        for (x, _), state in zip(self.nodes, self.states(attrs, obj)):
             if x["type"] != "field" or not state["shown"]:
                 continue
             f = self.layer(x)
@@ -354,37 +613,54 @@ class Form:
                 if state.get("required"):
                     issues.append(issue("form_required", True, x["id"], key_of(f)))
                 continue
-            if check_value(f, value)[1]:
+            canonical, why = check_value(f, value)
+            if why:
                 issues.append(issue("form_value_invalid", True, x["id"], key_of(f)))
                 continue
+            offered = self.choices(x, attrs, obj)
+            if offered is not None and canonical in [c["code"] for c in f.get("values", [])] and canonical not in offered:
+                issues.append(issue("form_choice_filtered", True, x["id"], key_of(f), "choiceFilter"))
+                continue
             for i, c in enumerate(x.get("checks", [])):
-                if not holds(c["rule"], self.fields, attrs):
-                    issues.append(issue("form_check_failed", True, x["id"], key_of(f), f"checks/{i}"))
+                if not holds(c["rule"], self.fields, attrs, self.ctx(obj)):
+                    code = "form_check_warning" if c.get("warning") else "form_check_failed"
+                    issues.append(issue(code, not c.get("warning"), x["id"], key_of(f), f"checks/{i}"))
         return issues
 
-    def with_defaults(self, attrs):
-        out = dict(attrs)
-        for x, _ in self.bound():
+    def with_defaults(self, attrs, obj=None):
+        return self.complete(attrs, obj, True)[0]
+
+    def unique_issues(self, attrs, obj, others):
+        out = []
+        for (x, _), state in zip(self.nodes, self.states(attrs, obj)):
+            if x["type"] != "field" or not x.get("unique") or not state["shown"]:
+                continue
             f = self.layer(x)
-            if "default" in x and not out.get(f["name"], "").strip(JS_SPACE):
-                v, why = check_value(f, x["default"])
-                if not why and v:
-                    out[f["name"]] = v
+            v = attrs.get(f["name"])
+            if v is None or not v.strip(JS_SPACE):
+                continue
+            if any(o.get(f["name"]) == v for o in others):
+                out.append(issue("form_unique", True, x["id"], key_of(f), "unique"))
         return out
 
-    def locked(self, changed, after):
+    def locked(self, changed, after, obj=None):
         issues = []
-        for (x, _), state in zip(self.nodes, self.states(after)):
+        for (x, _), state in zip(self.nodes, self.states(after, obj)):
             if x["type"] != "field" or key_of(self.layer(x)) not in changed:
                 continue
             if not state["shown"]:
+                if self.clear_hidden:
+                    continue
                 issues.append(issue("form_hidden", True, x["id"], x["field"]))
             elif state.get("readOnly"):
                 issues.append(issue("form_read_only", True, x["id"], x["field"]))
         return issues
 
-    def assess(self, before, values):
-        after, issues, changed = dict(before), [], []
+    def item_of(self, key):
+        return next(x["id"] for x, _ in self.bound() if x["field"] == key)
+
+    def assess(self, before, values, obj=None, new=False):
+        written, issues, changed, asked = dict(before), [], [], []
         on_form = [x["field"] for x, _ in self.bound()]
         for key, text in values:
             f = next((f for f in self.fields if key_of(f) == key), None)
@@ -396,31 +672,46 @@ class Form:
                 continue
             v, why = check_value(f, text)
             if why:
-                item = next(x["id"] for x, _ in self.bound() if x["field"] == key)
-                issues.append(issue("form_value_invalid", True, item, key))
+                issues.append(issue("form_value_invalid", True, self.item_of(key), key))
                 continue
             if v:
-                after[f["name"]] = v
+                written[f["name"]] = v
             else:
-                after.pop(f["name"], None)
-            if before.get(f["name"]) != after.get(f["name"]):
+                written.pop(f["name"], None)
+            if self.calculated(key):
+                asked.append((key, f["name"], written.get(f["name"])))
+            elif before.get(f["name"]) != written.get(f["name"]):
                 changed.append(key)
-        issues += self.locked(changed, after)
+        after, completed = self.complete(written, obj, new)
+        issues += self.locked(changed, after, obj)
+        for key, name, value in asked:
+            if after.get(name) != value:
+                issues.append(issue("form_read_only", True, self.item_of(key), key))
+        issues += completed
         said = [i.get("field") for i in issues]
-        issues += [i for i in self.validate(after) if i.get("field") not in said]
+        issues += [i for i in self.validate(after, obj) if i.get("field") not in said]
         return after, issues
 
-    def enforce(self, before, after):
+    def enforce(self, before, after, obj=None):
         issues, changed = [], []
         on_form = [x["field"] for x, _ in self.bound()]
+        completed, worked = self.complete(after, obj, False)
         for f in self.fields:
             if before.get(f["name"]) == after.get(f["name"]):
+                continue
+            if self.calculated(key_of(f)):
+                if after.get(f["name"]) != completed.get(f["name"]):
+                    issues.append(issue("form_read_only", True, self.item_of(key_of(f)), key_of(f)))
                 continue
             if key_of(f) in on_form:
                 changed.append(key_of(f))
             else:
                 issues.append(issue("form_not_on_form", True, None, key_of(f)))
-        return issues + self.locked(changed, after) + self.validate(after)
+        return issues + self.locked(changed, completed, obj) + worked + self.validate(completed, obj)
+
+
+def text_or_none(v):
+    return None if el.is_empty(v) else el.text(v)
 
 
 def item_id_of(name, taken):
@@ -564,7 +855,7 @@ def core():
     def record(name, attrs, body=BODY, fields=FIELDS):
         form = Form(body, fields)
         records.append({"name": name, "fields": fields, "body": body, "attrs": attrs,
-                        "items": form.states(attrs), "issues": form.validate(attrs)})
+                        "items": form.described(attrs), "issues": form.validate(attrs)})
 
     record("eksiksiz kayıt: inceleme, notuyla", {"Durum": "inceleme", "Kat": "3", "Açıklama": "Çatı arası ayrıca bakılmalı.", "Tarih": "2026-10-01", "Onaylı": "true"})
     record("boş kayıt: Durum zorunlu; grup Kat'ı okur, gizli", {})
@@ -619,6 +910,12 @@ def core():
                         ("boşluk boş sayılır", {"Tarih": "  "})):
         defaults.append({"name": name, "fields": FIELDS, "body": BODY, "attrs": attrs, "out": Form(BODY, FIELDS).with_defaults(attrs)})
 
+    calc_pre, complete, calc_records, calc_assess, calc_enforce, unique = calc_cases()
+    pre.extend(calc_pre)
+    records.extend(calc_records)
+    assess.extend(calc_assess)
+    enforce.extend(calc_enforce)
+
     gen = []
     for name, fields in (
         ("katmanın alanlarından: sırası, anahtarı, zorunluluğu", FIELDS),
@@ -631,16 +928,190 @@ def core():
     return {
         "format": "kentos.forms-cases",
         "version": 1,
-        "note": "ADR 0401'in form çekirdeği, KentOS kodu olmadan yazılmış başvurudan (scripts/fixtures/forms_cases.py): "
-                "ön denetim, kaydın öğeleri ve sorunları, formla yazma, yazma profili, varsayılanlar ve katmandan form. "
-                "Sorunlar kodu, ağırlığı, öğesi, alanı ve kuralıyla karşılaştırılır; cümleleri çekirdeğindir.",
+        "note": "ADR 0401 ve 0402'nin form çekirdeği, KentOS kodu olmadan yazılmış başvurudan "
+                "(scripts/fixtures/forms_cases.py): ön denetim, kaydın öğeleri (süzülen seçenekler, notların metni) ve "
+                "sorunları, kaydın tamamlanması (varsayılanlar, hesaplar, gizlenenin silinmesi), formla yazma, yazma "
+                "profili, tekil alan, varsayılanlar ve katmandan form. Durumun `variables`'ı verilen `@` değerleri, "
+                "`object`'i nesnenin ölçüleri (metrede). Sorunlar kodu, ağırlığı, öğesi, alanı ve kuralıyla "
+                "karşılaştırılır; cümleleri çekirdeğindir.",
         "preflight": pre,
         "records": records,
+        "complete": complete,
         "assess": assess,
         "enforce": enforce,
+        "unique": unique,
         "defaults": defaults,
         "generate": gen,
     }
+
+
+# ── Calculations, choices, soft checks (docs/adr/0402) ─────────────────
+
+CALC_FIELDS = [
+    {"name": "Durum", "kind": "text", "required": True,
+     "values": [{"code": "iyi", "label": "İyi"}, {"code": "inceleme", "label": "Ek inceleme gerekli"}]},
+    {"id": "kat-sayisi", "name": "Kat", "kind": "integer", "min": "1", "max": "40"},
+    {"name": "Yükseklik", "kind": "decimal", "scale": 2},
+    {"name": "Taban", "kind": "decimal", "scale": 2},
+    {"name": "Riskli", "kind": "boolean"},
+    {"name": "Kod", "kind": "text", "length": 20},
+    {"name": "Tür", "kind": "text", "values": [{"code": "konut", "label": "Konut"}, {"code": "sanayi", "label": "Sanayi"}]},
+    {"name": "Malzeme", "kind": "text", "values": [
+        {"code": "ahsap", "label": "Ahşap"}, {"code": "beton", "label": "Betonarme"},
+        {"code": "celik", "label": "Çelik"}, {"code": "tas", "label": "Taş"}]},
+    {"name": "Açıklama", "kind": "text", "length": 500},
+    {"name": "Tarih", "kind": "date"},
+    {"name": "Kayıt", "kind": "text", "length": 64},
+    {"name": "Puan", "kind": "integer", "min": "0", "max": "10"},
+]
+
+CALC_BODY = {"revision": 1, "items": [
+    {"type": "group", "id": "genel", "label": "Genel", "columns": 2, "items": [
+        {"type": "field", "id": "durum", "field": "Durum", "required": True},
+        {"type": "field", "id": "kat", "field": "kat-sayisi"},
+        {"type": "field", "id": "kod", "field": "Kod", "unique": True, "defaultExpr": "'B-' || Kat"},
+        {"type": "field", "id": "tur", "field": "Tür"},
+        {"type": "field", "id": "malzeme", "field": "Malzeme",
+         "choiceFilter": "Tür <> 'sanayi' veya @secenek = 'beton' veya @secenek = 'celik'"},
+    ]},
+    {"type": "group", "id": "hesap", "label": "Hesaplanan", "collapsed": True, "items": [
+        {"type": "field", "id": "yukseklik", "field": "Yükseklik", "calculate": "Kat * 3"},
+        {"type": "field", "id": "taban", "field": "Taban", "calculate": "$alan"},
+        {"type": "field", "id": "riskli", "field": "Riskli", "calculate": "Kat > 5"},
+        {"type": "field", "id": "puan", "field": "Puan", "calculate": "Kat - 1"},
+        {"type": "note", "id": "toplam", "text": "Toplam alan {Kat * Taban} m², {$köşe} köşe."},
+    ]},
+    {"type": "field", "id": "aciklama", "field": "Açıklama", "visibleWhen": "Durum = 'inceleme'",
+     "checks": [{"rule": "uzunluk(Açıklama) >= 5", "message": "Açıklama çok kısa."},
+                {"rule": "uzunluk(Açıklama) >= 20", "message": "Açıklama kısa görünüyor.", "warning": True}]},
+    {"type": "field", "id": "tarih", "field": "Tarih", "defaultExpr": "@tarih"},
+    {"type": "field", "id": "kayit", "field": "Kayıt", "defaultExpr": "@kullanici"},
+]}
+assert kc.body_problem(CALC_BODY) is None
+
+GIVEN = [{"name": "tarih", "value": "2026-10-16"}, {"name": "simdi", "value": "2026-10-16T14:30:00"},
+         {"name": "kullanici", "value": "Ayşe Yılmaz"}]
+SQUARE = {"length": 40, "area": 100, "vertices": 4}
+
+
+def calc_with(change):
+    b = copy.deepcopy(CALC_BODY)
+    change(b)
+    return b
+
+
+def calc_cases():
+    pre = []
+
+    def case(name, body=CALC_BODY, fields=CALC_FIELDS, variables=()):
+        pre.append({"name": name, "fields": fields, "body": body, "variables": list(variables),
+                    "issues": preflight(body, fields, variables)})
+
+    case("hesaplı form: anı ve kullanıcıyı okuyan varsayılanlar uyarıdır, hata yok")
+    case("anın değerleri verilince de uyarı kalır: izlemede hesaplanmazlar", variables=GIVEN)
+    case("değer ve ifade varsayılanı birlikte olmaz",
+         calc_with(lambda b: item(b, "kod").update(default="B-0")))
+    case("hesaplanan alanın varsayılanı ve kilit kuralı olmaz",
+         calc_with(lambda b: (item(b, "yukseklik").update(default="3"), item(b, "riskli").update(readOnlyWhen="Kat > 1"))))
+    case("hesaplar birbirini okursa döngüdür: ilki söylenir",
+         calc_with(lambda b: (item(b, "yukseklik").update(calculate="Puan + 1"), item(b, "puan").update(calculate="Yükseklik + 1"))))
+    case("kendini okuyan hesap da döngüdür", calc_with(lambda b: item(b, "riskli").update(calculate="Riskli")))
+    case("listesiz alanın seçenek süzgeci olmaz", calc_with(lambda b: item(b, "kod").update(choiceFilter="@secenek <> ''")))
+    case("süzgeç bilinmeyen @ değeri okursa uyarıdır; @secenek bilinir",
+         calc_with(lambda b: item(b, "malzeme").update(choiceFilter="@secenek <> @yasak")))
+    case("okunamayan hesap ve süzgeç", calc_with(lambda b: (item(b, "taban").update(calculate="$alan *"),
+                                                            item(b, "malzeme").update(choiceFilter="@secenek ="))))
+    case("notun şablonu açık kalırsa ya da ifadesi okunmazsa hata",
+         calc_with(lambda b: item(b, "hesap")["items"].extend([
+             {"type": "note", "id": "acik", "text": "Toplam {Kat"}, {"type": "note", "id": "bozuk", "text": "{Kat +}"}])))
+    case("zorunlu, salt okunur ve hesaplanan alan doldurulur: sorun değil",
+         calc_with(lambda b: item(b, "yukseklik").update(required=True, readOnly=True)))
+    case("katmanın zorunlu alanı hesaplanırsa hep yazılır sayılır",
+         calc_with(lambda b: item(b, "kod").update(calculate="'B-' || Kat", defaultExpr=None) or item(b, "kod").pop("defaultExpr")),
+         fields=[{**f, "required": True} if f["name"] == "Kod" else f for f in CALC_FIELDS])
+
+    complete = []
+
+    def done(name, attrs, new=False, body=CALC_BODY, variables=GIVEN, obj=SQUARE):
+        form = Form(body, CALC_FIELDS, variables)
+        out, issues = form.complete(attrs, obj, new)
+        complete.append({"name": name, "fields": CALC_FIELDS, "body": body, "variables": list(variables),
+                         "object": obj, "attrs": attrs, "new": new, "out": out, "issues": issues})
+
+    done("yeni kayıt: varsayılanlar diğer alanları okur, anın ve kullanıcının değerleri, hesaplar",
+         {"Durum": "iyi", "Kat": "3"}, new=True)
+    done("yeni kayıt, an ve kullanıcı verilmedi: onları okuyan varsayılanlar boş kalır",
+         {"Durum": "iyi", "Kat": "3"}, new=True, variables=())
+    done("dolu alana varsayılan yazılmaz", {"Durum": "iyi", "Kat": "3", "Kod": "A-1"}, new=True)
+    done("var olan kayıt: varsayılan yok, hesaplar yenilenir",
+         {"Durum": "iyi", "Kat": "7", "Yükseklik": "1", "Taban": "7", "Riskli": "false"})
+    done("evet/hayır hesabı true ya da false yazılır", {"Durum": "iyi", "Kat": "6"})
+    done("alanın kuralına uymayan hesap hatadır; değer değişmez", {"Durum": "iyi", "Kat": "15", "Puan": "3"})
+    done("ölçüsüz nesne: $alan boştur, alan boşalır", {"Durum": "iyi", "Kat": "2", "Taban": "5"}, obj={})
+    done("uymayan ifade varsayılanı uyarıdır, konmaz",
+         {"Durum": "iyi", "Kat": "2"}, new=True, body=calc_with(lambda b: item(b, "tarih").update(defaultExpr="'bugün'")))
+    done("gizlenenler silinir: Durum iyi olunca açıklama gider",
+         {"Durum": "iyi", "Kat": "2", "Açıklama": "Eski not, uzunca bir not."},
+         body=calc_with(lambda b: b.update(clearHidden=True)))
+    done("gizlenen grubun hesabı yapılmaz ve silinir",
+         {"Durum": "iyi", "Kat": "2", "Yükseklik": "6"},
+         body=calc_with(lambda b: (b.update(clearHidden=True), item(b, "hesap").update(visibleWhen="Durum = 'inceleme'"))))
+
+    records = []
+
+    def record(name, attrs, body=CALC_BODY, variables=GIVEN, obj=SQUARE):
+        form = Form(body, CALC_FIELDS, variables)
+        records.append({"name": name, "fields": CALC_FIELDS, "body": body, "variables": list(variables),
+                        "object": obj, "attrs": attrs, "items": form.described(attrs, obj),
+                        "issues": form.validate(attrs, obj)})
+
+    record("sanayi yapısında süzgeç beton ve çeliği sunar; not değerleriyle yazılır; hesaplananlar salt okunur",
+           {"Durum": "iyi", "Kat": "3", "Taban": "100", "Tür": "sanayi", "Malzeme": "beton"})
+    record("süzgecin sunmadığı değer hatadır", {"Durum": "iyi", "Kat": "3", "Tür": "sanayi", "Malzeme": "ahsap"})
+    record("konut her malzemeyi sunar", {"Durum": "iyi", "Kat": "3", "Tür": "konut", "Malzeme": "ahsap"})
+    record("uyarı denetimi kaydı durdurmaz; sert denetim durdurur",
+           {"Durum": "inceleme", "Kat": "3", "Açıklama": "Çatı"})
+    record("yalnız uyarı", {"Durum": "inceleme", "Kat": "3", "Açıklama": "Çatı arası bakılmalı."})
+
+    assess = []
+
+    def write(name, before, values, new=False, body=CALC_BODY, variables=GIVEN, obj=SQUARE):
+        after, issues = Form(body, CALC_FIELDS, variables).assess(before, values, obj, new)
+        assess.append({"name": name, "fields": CALC_FIELDS, "body": body, "variables": list(variables), "object": obj,
+                       "before": before, "values": values, "new": new, "after": after, "issues": issues})
+
+    base = {"Durum": "iyi", "Kat": "3", "Yükseklik": "9", "Taban": "100", "Riskli": "false", "Puan": "2"}
+    write("yeni kayıt: verilen değerler önce, sonra varsayılanlar ve hesaplar", {}, [["Durum", "İyi"], ["kat-sayisi", "5"]], new=True)
+    write("hesaplanan alana başka değer yazılamaz", base, [["Yükseklik", "12"]])
+    write("hesaplanan alana hesabın değeri yazılabilir", base, [["kat-sayisi", "4"], ["Yükseklik", "12"]])
+    write("kat değişince hesaplar yenilenir", base, [["kat-sayisi", "8"]])
+    write("kat değişince alana uymayan hesap yazmayı durdurur", base, [["kat-sayisi", "12"]])
+    write("gizlenenleri silen formda gizli alana yazmak reddedilmez; değer silinir",
+          {**base, "Durum": "inceleme", "Açıklama": "Eski not, uzunca bir not."},
+          [["Durum", "iyi"], ["Açıklama", "Yeni not, gene uzun bir not."]], body=calc_with(lambda b: b.update(clearHidden=True)))
+    write("uyarı yazmayı durdurmaz", {**base, "Durum": "inceleme"}, [["Açıklama", "Kısa not"]])
+
+    enforce = []
+
+    def guard(name, before, after, variables=GIVEN, obj=SQUARE):
+        enforce.append({"name": name, "fields": CALC_FIELDS, "body": CALC_BODY, "variables": list(variables), "object": obj,
+                        "before": before, "after": after,
+                        "issues": Form(CALC_BODY, CALC_FIELDS, variables).enforce(before, after, obj)})
+
+    guard("başka yoldan kat değişir: hesaplar kendiliğinden, sorun yok", base, {**base, "Kat": "4"})
+    guard("başka yoldan hesaplanan alan değişmez", base, {**base, "Yükseklik": "99"})
+    guard("başka yoldan süzgecin sunmadığı malzeme", {**base, "Tür": "sanayi"}, {**base, "Tür": "sanayi", "Malzeme": "tas"})
+
+    unique = []
+    others = [{"Kod": "B-1"}, {"Kod": "B-2", "Kat": "2"}, {}]
+    for name, attrs in (("başka nesnede olan kod", {"Durum": "iyi", "Kod": "B-2"}),
+                        ("tekil kod", {"Durum": "iyi", "Kod": "B-3"}),
+                        ("boş kod sorulmaz", {"Durum": "iyi"})):
+        form = Form(CALC_BODY, CALC_FIELDS, GIVEN)
+        unique.append({"name": name, "fields": CALC_FIELDS, "body": CALC_BODY, "variables": GIVEN, "object": SQUARE,
+                       "attrs": attrs, "others": others, "issues": form.unique_issues(attrs, SQUARE, others)})
+
+    return pre, complete, records, assess, enforce, unique
 
 
 def outputs():
@@ -692,12 +1163,20 @@ SETTINGS = {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m
 UNKNOWN_UID = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6dffff"
 
 
-def setup(forms=None):
+def setup(forms=None, fields=None, entities=None):
     settings = dict(SETTINGS)
     if forms:
         settings["forms"] = forms
+    layers = LAYERS
+    if fields is not None:
+        layers = copy.deepcopy(LAYERS)
+        layers[0]["fields"] = fields
     return {"format": "kentos.document", "version": 1, "name": "Formlar", "settings": settings, "origin": P(E0, N0),
-            "layers": LAYERS, "activeLayer": "bina", "entities": ENTITIES, "styles": {"items": [], "categories": []}}
+            "layers": layers, "activeLayer": "bina", "entities": entities or ENTITIES, "styles": {"items": [], "categories": []}}
+
+
+# The objects' measures as the rules see them (a square of 10 m): what `$alan`, `$uzunluk` and `$köşe` read.
+OBJECT_OF = {1: SQUARE, 2: SQUARE, 4: SQUARE, 3: {"length": 70, "vertices": 2}}
 
 
 def failed(code, message, path=None, status="failed"):
@@ -795,8 +1274,10 @@ class Project:
             self.forms.append(kept)
         elif k == "update":
             f = self.find(op["id"])
-            if op["body"]["items"] != f["draft"]["items"]:
+            if (op["body"]["items"], op["body"].get("clearHidden")) != (f["draft"]["items"], f["draft"].get("clearHidden")):
                 f["draft"] = {"revision": f["draft"]["revision"] + 1, "items": copy.deepcopy(op["body"]["items"])}
+                if op["body"].get("clearHidden"):
+                    f["draft"]["clearHidden"] = True
             kept = f
         elif k == "rename":
             f = self.find(op["id"])
@@ -853,6 +1334,21 @@ ENFORCED = {**copy.deepcopy(PUBLISHED), "enforce": True}
 BROKEN = body_with(lambda b: item(b, "kat").update(field="Yok"))
 LOCKED_FORM = {"id": "kilitli", "name": "Kilitli bina", "layer": "kilitli", "draft": copy.deepcopy(BODY),
                "releases": [release_of(BODY, 1)]}
+
+
+CALC_FORM = {"id": "hesap", "name": "Bina hesabı", "layer": "bina", "draft": copy.deepcopy(CALC_BODY),
+             "releases": [release_of(CALC_BODY, 1)]}
+CALC_ENFORCED = {**copy.deepcopy(CALC_FORM), "enforce": True}
+CALC_FIRST = {"Durum": "iyi", "Kat": "3", "Kod": "B-3", "Tür": "konut", "Yükseklik": "9", "Taban": "100",
+              "Riskli": "false", "Puan": "2"}
+CALC_ENTITIES = [{**e, "attrs": CALC_FIRST} if e["id"] == 1 else {**e, "attrs": {}} if e["id"] in (2, 4) else e
+                 for e in ENTITIES]
+# A command's `@` values: the moment's and the user's when given (the project's own come with every command).
+MOMENT_GIVEN = {"moment": "2026-10-16T14:30:00", "user": "Ayşe Yılmaz"}
+
+
+def calc_setup(form=CALC_FORM, entities=None):
+    return setup([form], CALC_FIELDS, entities or CALC_ENTITIES)
 
 
 def edit_cases():
@@ -999,17 +1495,18 @@ def validate_cases():
         return {"op": "execute", "input": inp, "result": result,
                 "expect": {"ids": IDS, "canUndo": False, "canRedo": False, "dirty": False, "revision": "same"}}
 
-    def answer(form, body, version, uid_attrs=None, values=(), defaults=False, fields=FIELDS):
-        issues = preflight(body, fields)
+    def answer(form, body, version, uid_attrs=None, values=(), defaults=False, fields=FIELDS, variables=(), slot=1,
+               others=()):
+        issues = preflight(body, fields, variables)
         out = {"issues": [], "valid": True, "items": []}
         if version is not None:
             out["version"] = version
         if uid_attrs is not None and not errors(issues):
-            f = Form(body, fields)
-            before = f.with_defaults(uid_attrs) if defaults else dict(uid_attrs)
-            after, found = f.assess(before, utf8_sorted(dict(values)))
-            out["items"] = f.states(after)
-            issues = issues + found
+            f = Form(body, fields, variables)
+            obj = OBJECT_OF.get(slot, {})
+            after, found = f.assess(dict(uid_attrs), utf8_sorted(dict(values)), obj, defaults)
+            out["items"] = f.described(after, obj)
+            issues = issues + found + f.unique_issues(after, obj, others)
             out["attrs"] = after
         out["issues"] = shown_issues(issues)
         out["valid"] = not errors(issues)
@@ -1069,24 +1566,44 @@ def validate_cases():
     ]):
         cases.append({"name": f"değerler: {name}", "setup": S, "steps": [
             run({"form": "denetim", "uid": "$uidOf:1", "values": values}, answer(PUBLISHED, BODY, 1, FIRST, values))]})
+    C = calc_setup()
+    calc = dict(fields=CALC_FIELDS)
+    cases.append({"name": "hesaplı form, yeni kayıt, an ve kullanıcı verilir: varsayılanlar, hesaplar, süzülen seçenekler, notun metni",
+                  "setup": C, "steps": [
+        run({"form": "hesap", "uid": "$uidOf:2", "defaults": True, "values": {"Durum": "iyi", "kat-sayisi": "4", "Tür": "sanayi"},
+             **MOMENT_GIVEN},
+            answer(CALC_FORM, CALC_BODY, 1, {}, {"Durum": "iyi", "kat-sayisi": "4", "Tür": "sanayi"}, True, variables=GIVEN,
+                   slot=2, others=[CALC_FIRST], **calc))]})
+    cases.append({"name": "an ve kullanıcı verilmezse onları okuyan varsayılanlar boş kalır; başka nesnenin kodu tekil değildir",
+                  "setup": C, "steps": [
+        run({"form": "hesap", "uid": "$uidOf:2", "defaults": True, "values": {"Durum": "iyi", "kat-sayisi": "3"}},
+            answer(CALC_FORM, CALC_BODY, 1, {}, {"Durum": "iyi", "kat-sayisi": "3"}, True, slot=2, others=[CALC_FIRST], **calc))]})
+    cases.append({"name": "geçersiz an ve kullanıcı adı formdan önce söylenir", "setup": C, "steps": [
+        run({"form": "hesap", "moment": "dün"},
+            failed("invalid_moment", "“dün” bir an değil. Bir tarih (2026-10-16) ya da tarih ve yerel saat (2026-10-16T14:30:00) yazın.", "moment")),
+        run({"form": "yok", "user": " Ayşe"},
+            failed("invalid_user", "Kullanıcının adı boş olamaz, başında ve sonunda boşluk olmaz, en çok 64 karakterdir.", "user"))]})
     return cases
 
 
 def submit_cases():
     cases = []
 
-    def write(inp, before, values=(), defaults=False, form=PUBLISHED, body=BODY, version=1, undo=0, slot=1):
-        f = Form(body, FIELDS)
-        start = f.with_defaults(before) if defaults else dict(before)
-        after, issues = f.assess(start, utf8_sorted(dict(values)))
-        assert not issues, issues
+    def write(inp, before, values=(), defaults=False, form=PUBLISHED, body=BODY, version=1, undo=0, slot=1, fields=FIELDS,
+              variables=()):
+        f = Form(body, fields, variables)
+        after, issues = f.assess(dict(before), utf8_sorted(dict(values)), OBJECT_OF.get(slot, {}), defaults)
+        assert not errors(issues), issues
+        warnings = [{"code": i["code"], "message": ANY, "path": f"values.{i['field']}"} for i in issues
+                    if i["severity"] == "warning"]
         changed = after != before
         out = {"uid": f"$uidOf:{slot}", "attrs": after, "changed": changed, "revision": "$current"}
         if version is not None:
             out["version"] = version
         expect = {"ids": IDS, "fields": {str(slot): {"attrs": after}}, "canUndo": undo + changed > 0, "canRedo": False}
         expect.update({"dirty": True, "revision": "changed"} if changed else {"revision": "same"})
-        return {"op": "execute", "input": inp, "result": {"status": "completed", "output": out, "warnings": []}, "expect": expect}, after
+        return {"op": "execute", "input": inp, "result": {"status": "completed", "output": out, "warnings": warnings},
+                "expect": expect}, after
 
     def refused(inp, result, before, slot=1, undo=0, dirty=False):
         expect = {"ids": IDS, "fields": {str(slot): {"attrs": before}}, "canUndo": undo > 0, "canRedo": False, "revision": "same"}
@@ -1094,8 +1611,10 @@ def submit_cases():
             expect["dirty"] = False
         return {"op": "execute", "input": inp, "result": result, "expect": expect}
 
-    def invalid(inp, before, values, slot=1, undo=0, dirty=False, body=BODY):
-        _, issues = Form(body, FIELDS).assess(dict(before), utf8_sorted(dict(values)))
+    def invalid(inp, before, values, slot=1, undo=0, dirty=False, body=BODY, fields=FIELDS, variables=(), others=()):
+        f = Form(body, fields, variables)
+        after, issues = f.assess(dict(before), utf8_sorted(dict(values)), OBJECT_OF.get(slot, {}), inp.get("defaults", False))
+        issues = errors(issues) or f.unique_issues(after, OBJECT_OF.get(slot, {}), others)
         first = issues[0]
         path = f"values.{first['field']}" if first.get("field") in values else "values"
         return refused(inp, failed("form_invalid", ANY, path), before, slot, undo, dirty)
@@ -1180,6 +1699,27 @@ def submit_cases():
     cases.append({"name": "birden çok sorunda ilki söylenir", "setup": S, "steps": [
         invalid({"form": "denetim", "uid": "$uidOf:2", "values": v}, {}, v, slot=2)]})
 
+    C = calc_setup()
+    calc = dict(form=CALC_FORM, body=CALC_BODY, fields=CALC_FIELDS)
+    v = {"Durum": "inceleme", "kat-sayisi": "6", "Açıklama": "Kısa ama yeter."}
+    one, _ = write({"form": "hesap", "uid": "$uidOf:2", "values": v, "defaults": True, **MOMENT_GIVEN}, {}, v, defaults=True,
+                   slot=2, variables=GIVEN, **calc)
+    cases.append({"name": "hesaplı form: yeni kayıt varsayılanları ve hesaplarıyla yazılır; uyarı denetimi yazmayı durdurmaz",
+                  "setup": C, "steps": [one]})
+    v = {"Yükseklik": "99"}
+    cases.append({"name": "hesaplanan alana başka değer yazılamaz", "setup": C, "steps": [
+        invalid({"form": "hesap", "uid": "$uidOf:1", "values": v}, CALC_FIRST, v, **{k: calc[k] for k in ("body", "fields")})]})
+    cases.append({"name": "geçersiz an ve kullanıcı adı: kimliğin biçiminden sonra, formdan önce", "setup": C, "steps": [
+        refused({"form": "yok", "uid": "$uidOf:1", "moment": "2026-13-01"},
+                failed("invalid_moment", "“2026-13-01” bir an değil. Bir tarih (2026-10-16) ya da tarih ve yerel saat (2026-10-16T14:30:00) yazın.", "moment"),
+                CALC_FIRST),
+        refused({"form": "hesap", "uid": "$uidOf:1", "user": ""},
+                failed("invalid_user", "Kullanıcının adı boş olamaz, başında ve sonunda boşluk olmaz, en çok 64 karakterdir.", "user"),
+                CALC_FIRST)]})
+    v = {"Durum": "iyi", "kat-sayisi": "5", "Kod": "B-3"}
+    cases.append({"name": "tekil alanın değeri katmanın başka nesnesinde var", "setup": C, "steps": [
+        invalid({"form": "hesap", "uid": "$uidOf:2", "values": v}, {}, v, slot=2, others=[CALC_FIRST],
+                **{k: calc[k] for k in ("body", "fields")})]})
     return cases
 
 
@@ -1269,6 +1809,95 @@ def set_cases():
     cases.append({"name": "alan değişmeyen yazma her zaman serbest", "setup": setup([stale]), "steps": [step]})
     step, _ = set_attrs(1, {"Kat": "4"}, FIRST, False)
     cases.append({"name": "katmanın alanlarına artık uymayan yayın yazmayı engeller: form yeniden yayınlanmalı", "setup": setup([stale]), "steps": [step]})
+
+    # docs/adr/0402 §4: the document completes what a write leaves on the layer.
+    calc = Form(CALC_BODY, CALC_FIELDS)
+
+    def calc_set(attrs, before=CALC_FIRST):
+        after = dict(before)
+        for k, v in attrs.items():
+            if v is None:
+                after.pop(k, None)
+            else:
+                after[k] = v
+        issues = calc.enforce(before, after, SQUARE)
+        inp = {"uids": ["$uidOf:1"], "attrs": attrs, "operation": "attributes"}
+        if errors(issues):
+            expect = {"ids": IDS, "fields": {"1": {"attrs": before}}, "canUndo": False, "canRedo": False, "revision": "same",
+                      "dirty": False}
+            return {"op": "execute", "input": inp, "result": failed("form_rules", ANY, "attrs"), "expect": expect}
+        done, _ = calc.complete(after, SQUARE, False)
+        changed = done != before
+        result = {"status": "completed", "output": {"changed": ["$uidOf:1"] if changed else [], "ids": [1] if changed else [],
+                                                     "revision": "$current"}, "warnings": []}
+        expect = {"ids": IDS, "fields": {"1": {"attrs": done}}, "canUndo": changed, "canRedo": False}
+        expect.update({"dirty": True, "revision": "changed"} if changed else {"revision": "same"})
+        return {"op": "execute", "input": inp, "result": result, "expect": expect}
+
+    C = calc_setup(CALC_ENFORCED)
+    cases.append({"name": "hesaplı form: kat değişince belge hesapları aynı adımda yeniler", "setup": C,
+                  "steps": [calc_set({"Kat": "5"})]})
+    cases.append({"name": "hesaplı form: hesaplanan alan başka yoldan yazılamaz", "setup": C,
+                  "steps": [calc_set({"Yükseklik": "99"})]})
+    cases.append({"name": "hesaplı form: süzgecin sunmadığı malzeme yazılamaz", "setup": C,
+                  "steps": [calc_set({"Tür": "sanayi", "Malzeme": "ahsap"})]})
+    return cases
+
+
+def create_cases():
+    """cad.polygon.create on a layer whose form enforces its rules (docs/adr/0402 §4): the document gives the new
+    object the form's defaults and calculations in the same step; its missing required values are not refused."""
+    cases = []
+
+    def rect(x, y, w, h):
+        return [P(E0 + x, N0 + y), P(E0 + x + w, N0 + y), P(E0 + x + w, N0 + y + h), P(E0 + x, N0 + y + h)]
+
+    def made(name, layer_id, w, h, attrs=None, form=CALC_ENFORCED, body=CALC_BODY):
+        inp = {"layerId": layer_id, "pts": rect(100, 0, w, h)}
+        if attrs:
+            inp["attrs"] = attrs
+        given = dict(attrs or {})
+        enforcing = form is not None and form.get("enforce") and layer_id == "bina"
+        if enforcing:
+            obj = {"length": 2 * (w + h), "area": w * h, "vertices": 4}
+            out, _ = Form(body, CALC_FIELDS).complete(given, obj, True)
+        else:
+            out = given
+        entity = {"kind": "polygon", "id": 5, "layerId": layer_id, "attrs": out, "pts": rect(100, 0, w, h)}
+        step = {"op": "execute", "input": inp,
+                "result": {"status": "completed", "output": {"uid": "$uid", "id": 5, "revision": "$current"}, "warnings": []},
+                "expect": {"ids": IDS + [5], "entities": {"5": entity}, "canUndo": True, "canRedo": False, "dirty": True,
+                           "revision": "changed"}}
+        forms = [form] if form else []
+        cases.append({"name": name, "setup": setup(forms, CALC_FIELDS, CALC_ENTITIES), "steps": [step]})
+
+    made("kuralları uygulanan formun katmanına çizilen alan varsayılanlarını ve hesaplarını alır; zorunlu Durum eksik kalır",
+         "bina", 10, 10)
+    made("alanın ölçüsü hesaba girer: 20 × 12,5", "bina", 20, 12.5)
+    made("verilen öznitelikler varsayılanlara ve hesaplara girer", "bina", 10, 10, {"Durum": "iyi", "Kat": "4"})
+    made("yüksek kat riskli sayılır", "bina", 10, 10, {"Durum": "iyi", "Kat": "8"})
+    made("alana uymayan hesap yazılmaz, öbürleri yazılır", "bina", 10, 10, {"Durum": "iyi", "Kat": "15"})
+    made("verilen yanlış yükseklik hesapla düzelir", "bina", 10, 10, {"Durum": "iyi", "Kat": "2", "Yükseklik": "50"})
+    made("verilen kod korunur: varsayılan dolu alana yazılmaz", "bina", 10, 10, {"Kat": "2", "Kod": "Özel-1"})
+    made("an ve kullanıcıyı okuyan varsayılanlar çizimde boş kalır", "bina", 10, 10, {"Kat": "1"})
+    made("ondalıklı alan iki basamağa sığar", "bina", 3, 2.5)
+    made("küçük alan", "bina", 1, 1)
+    made("büyük alan", "bina", 100, 40, {"Kat": "6"})
+    made("başka katmana çizilen alan formdan etkilenmez", "yol", 10, 10, {"Kat": "4"})
+    made("kuralları uygulanmayan form çizimi tamamlamaz", "bina", 10, 10, {"Kat": "4"}, form=CALC_FORM)
+    made("formsuz çizim olduğu gibi", "bina", 10, 10, {"Kat": "4"}, form=None)
+    hidden = calc_with(lambda b: b.update(clearHidden=True))
+    hidden_form = {**copy.deepcopy(CALC_ENFORCED), "draft": hidden, "releases": [release_of(hidden, 1)]}
+    made("gizlenenleri silen form: Durum iyiyken açıklama silinir", "bina", 10, 10,
+         {"Durum": "iyi", "Kat": "2", "Açıklama": "Not, uzunca bir not."}, form=hidden_form, body=hidden)
+    made("gizlenenleri silen form: incelemedeki açıklama kalır", "bina", 10, 10,
+         {"Durum": "inceleme", "Kat": "2", "Açıklama": "Not, uzunca bir not."}, form=hidden_form, body=hidden)
+    hidden_group = calc_with(lambda b: (b.update(clearHidden=True), item(b, "hesap").update(visibleWhen="Durum = 'inceleme'")))
+    group_form = {**copy.deepcopy(CALC_ENFORCED), "draft": hidden_group, "releases": [release_of(hidden_group, 1)]}
+    made("gizlenen grubun hesapları yapılmaz", "bina", 10, 10, {"Durum": "iyi", "Kat": "3"}, form=group_form, body=hidden_group)
+    made("görünen grubun hesapları yapılır", "bina", 10, 10, {"Durum": "inceleme", "Kat": "3"}, form=group_form, body=hidden_group)
+    made("tür ve malzeme olduğu gibi yazılır: süzgeç çizimi reddetmez", "bina", 10, 10, {"Tür": "sanayi", "Malzeme": "ahsap"})
+    made("kat sınırda", "bina", 10, 10, {"Kat": "40"})
     return cases
 
 
@@ -1304,7 +1933,12 @@ def commands():
             "kayıt ya da hiçbiri, tek geri alma adımı.", submit_cases()),
         d / "cad.entities.set.forms.json": command_file(
             "cad.entities.set", "Öznitelikler ve formun kuralları",
-            "ADR 0401 §8: katmanın kurallarını uyguladığı formun son yayını, öznitelik yazmasının profilidir.", set_cases()),
+            "ADR 0401 §8, ADR 0402 §4: katmanın kurallarını uyguladığı formun son yayını, öznitelik yazmasının profilidir; "
+            "belge yazılan kaydın hesaplarını aynı adımda yeniler.", set_cases()),
+        d / "cad.polygon.create.forms.json": {**command_file(
+            "cad.polygon.create", "Alan çiz ve formun kuralları",
+            "ADR 0402 §4: kurallarını uygulayan formun katmanına çizilen alan, aynı adımda formun varsayılanlarını ve "
+            "hesaplarını alır; zorunlu alanın eksiği reddedilmez.", create_cases()), "setup": setup([CALC_ENFORCED], CALC_FIELDS, CALC_ENTITIES)},
     }
 
 

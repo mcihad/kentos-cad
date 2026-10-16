@@ -3,7 +3,8 @@
 /**
  * Input of `cad.forms.submit` v1.
  *
- * Refusals: `invalid_uid`; `invalid_revision`, `revision_conflict` (status `conflict`);
+ * Refusals: `invalid_uid`, `invalid_moment`, `invalid_user`; `invalid_revision`, `revision_conflict`
+ * (status `conflict`);
  * `unknown_form`, `form_unpublished`, `form_preflight`, `entity_not_found`, `form_layer_mismatch`,
  * `layer_locked`, `form_invalid` (the first issue, `path` its field's value).
  */
@@ -28,6 +29,16 @@ values?: { [key in string]: string },
  * The form's defaults in the record's empty fields first (a new record).
  */
 defaults?: boolean, 
+/**
+ * The moment the rules' `@tarih` and `@simdi` read: a date, or a date and a local time
+ * (`2026-10-16T14:30:00`); none: they read empty, and a calculation or default that reads them is
+ * left out (docs/adr/0402 §5).
+ */
+moment?: string, 
+/**
+ * The person the rules' `@kullanici` reads (1–64 characters); none: it reads empty.
+ */
+user?: string, 
 /**
  * The document revision the input was prepared against, as decimal text.
  */

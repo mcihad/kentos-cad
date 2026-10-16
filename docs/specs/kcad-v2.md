@@ -622,11 +622,14 @@ tam sayı, anahtarlar kanonik sırada). Yazıcı varsayılan değerindeki alanı
 - **Form:** `id` (harf, rakam, `-`, `_`, `.`; 1–64; projede tekil), `name` (kırpılmış, 1–64, denetim karaktersiz), `layer` (katman
   düğümünün kimliği; ağaçta bulunması gerekmez), `draft` (gövde), `releases` (yayınlar, en çok 50), `enforce` (yalnız `true`:
   komutlar son yayının kurallarını uygular; yayın yoksa `bad_value`, `broken/forms-enforce-unreleased.kcad`). En çok 100 form.
-- **Gövde:** `revision` (u32; her kayıtla artar) ve `items` (öğeler). Öğenin türü `type`'tadır: `tab` (yalnız üstte; üstte
-  sekme varsa hepsi sekme; `broken/forms-tab-in-group.kcad`), `group` (`label`, `columns` 1 ya da 2, `visibleWhen`), `field`
+- **Gövde:** `revision` (u32; her kayıtla artar), `items` (öğeler) ve `clearHidden` (yalnız `true`: formla yazmada gizlenen
+  alanın değeri silinir, ADR 0402 §3). Öğenin türü `type`'tadır: `tab` (yalnız üstte; üstte sekme varsa hepsi sekme;
+  `broken/forms-tab-in-group.kcad`), `group` (`label`, `columns` 1 ya da 2, `visibleWhen`, `collapsed` yalnız `true`), `field`
   (`field` alanın anahtarı: kimliği ya da adı; `label`, `help`, `placeholder`, `widget`, `readOnly`, `required`, `visibleWhen`,
-  `requiredWhen`, `readOnlyWhen`, `default`, `checks`: `rule` ve `message`, en çok 20), `note` (`text`). Her öğenin `id`'si
-  form içinde tekildir; en çok 4 düzey, 500 öğe; kurallar İfadeyle seç'in dilindedir, en çok 2000 karakter.
+  `requiredWhen`, `readOnlyWhen`, `default`, `defaultExpr`, `calculate`, `choiceFilter`, `unique` ve `reuseLast` yalnız
+  `true`, `checks`: `rule`, `message` ve yalnız `true` olarak `warning`, en çok 20), `note` (`text`; `{…}` ifadeleriyle
+  şablon). Her öğenin `id`'si form içinde tekildir; en çok 4 düzey, 500 öğe; kurallar İfadeyle seç'in dilindedir, en çok 2000
+  karakter.
 - **Yayın:** `version` (1'den ya da ilk yayının numarasından sırayla), `digest` (gövdenin kanonik JSON'unun, ADR 0253 §2,
   SHA-256'sının ilk 32 onaltılık hanesi; içeriğe uymayan özet `bad_value`, `broken/forms-digest.kcad`), `body`, `note`.
 

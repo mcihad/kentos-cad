@@ -3682,6 +3682,10 @@
             "additionalProperties": false,
             "description": "A form's content: its items and the draft's revision (each kept change adds one).",
             "properties": {
+              "clearHidden": {
+                "description": "A write through the form empties the fields the record hides (docs/adr/0402 §3); written only\nas `true`. Without it a hidden field keeps its value.",
+                "type": "boolean"
+              },
               "items": {
                 "items": {
                   "$ref": "#/$defs/FormItem"
@@ -3711,6 +3715,10 @@
               },
               "rule": {
                 "type": "string"
+              },
+              "warning": {
+                "description": "A soft check: when not true it warns and the record is still written; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -3753,6 +3761,10 @@
               {
                 "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
                 "properties": {
+                  "collapsed": {
+                    "description": "It opens closed (its title opens it); written only as `true`.",
+                    "type": "boolean"
+                  },
                   "columns": {
                     "description": "1 or 2; none: 1.",
                     "format": "uint8",
@@ -3801,6 +3813,13 @@
                 "additionalProperties": false,
                 "description": "A field of the layer.",
                 "properties": {
+                  "calculate": {
+                    "description": "The field's value, worked out from the record at every write; the field is read-only. Not\nwith `default`, `defaultExpr` or `readOnlyWhen`.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "checks": {
                     "description": "What the record must satisfy, in order.",
                     "items": {
@@ -3808,8 +3827,22 @@
                     },
                     "type": "array"
                   },
+                  "choiceFilter": {
+                    "description": "Asked of each of the field's listed values: `@secenek` is its code, `@secenek_etiketi` its\nlabel; a value it is not true for is not offered.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "default": {
                     "description": "The value an empty field shows when the form opens, in the field's canonical text; written\nonly when the record is saved.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "defaultExpr": {
+                    "description": "The value of a new record's empty field: an expression over the record (its plain defaults\nin), evaluated in the form's order. Not with `default`.",
                     "type": [
                       "string",
                       "null"
@@ -3866,9 +3899,17 @@
                       "null"
                     ]
                   },
+                  "reuseLast": {
+                    "description": "A new record's field opens with the value last written through the form in the session (the\nform's interface keeps it); written only as `true`.",
+                    "type": "boolean"
+                  },
                   "type": {
                     "const": "field",
                     "type": "string"
+                  },
+                  "unique": {
+                    "description": "No two objects of the layer have the same value (empty ones aside); written only as `true`.",
+                    "type": "boolean"
                   },
                   "visibleWhen": {
                     "description": "Shown only when this expression is true (the record's fields by name).",
@@ -3897,7 +3938,7 @@
                 "type": "object"
               },
               {
-                "description": "A line of text: a hint for whoever fills the form.",
+                "description": "A line of text: a hint for whoever fills the form. A `{…}` in it is an expression put in with\nthe record's value (docs/adr/0225 §6's templates; docs/adr/0402 §1).",
                 "properties": {
                   "id": {
                     "type": "string"
@@ -13054,6 +13095,10 @@
             "additionalProperties": false,
             "description": "A form's content: its items and the draft's revision (each kept change adds one).",
             "properties": {
+              "clearHidden": {
+                "description": "A write through the form empties the fields the record hides (docs/adr/0402 §3); written only\nas `true`. Without it a hidden field keeps its value.",
+                "type": "boolean"
+              },
               "items": {
                 "items": {
                   "$ref": "#/$defs/FormItem"
@@ -13083,6 +13128,10 @@
               },
               "rule": {
                 "type": "string"
+              },
+              "warning": {
+                "description": "A soft check: when not true it warns and the record is still written; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -13125,6 +13174,10 @@
               {
                 "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
                 "properties": {
+                  "collapsed": {
+                    "description": "It opens closed (its title opens it); written only as `true`.",
+                    "type": "boolean"
+                  },
                   "columns": {
                     "description": "1 or 2; none: 1.",
                     "format": "uint8",
@@ -13173,6 +13226,13 @@
                 "additionalProperties": false,
                 "description": "A field of the layer.",
                 "properties": {
+                  "calculate": {
+                    "description": "The field's value, worked out from the record at every write; the field is read-only. Not\nwith `default`, `defaultExpr` or `readOnlyWhen`.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "checks": {
                     "description": "What the record must satisfy, in order.",
                     "items": {
@@ -13180,8 +13240,22 @@
                     },
                     "type": "array"
                   },
+                  "choiceFilter": {
+                    "description": "Asked of each of the field's listed values: `@secenek` is its code, `@secenek_etiketi` its\nlabel; a value it is not true for is not offered.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "default": {
                     "description": "The value an empty field shows when the form opens, in the field's canonical text; written\nonly when the record is saved.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "defaultExpr": {
+                    "description": "The value of a new record's empty field: an expression over the record (its plain defaults\nin), evaluated in the form's order. Not with `default`.",
                     "type": [
                       "string",
                       "null"
@@ -13238,9 +13312,17 @@
                       "null"
                     ]
                   },
+                  "reuseLast": {
+                    "description": "A new record's field opens with the value last written through the form in the session (the\nform's interface keeps it); written only as `true`.",
+                    "type": "boolean"
+                  },
                   "type": {
                     "const": "field",
                     "type": "string"
+                  },
+                  "unique": {
+                    "description": "No two objects of the layer have the same value (empty ones aside); written only as `true`.",
+                    "type": "boolean"
                   },
                   "visibleWhen": {
                     "description": "Shown only when this expression is true (the record's fields by name).",
@@ -13269,7 +13351,7 @@
                 "type": "object"
               },
               {
-                "description": "A line of text: a hint for whoever fills the form.",
+                "description": "A line of text: a hint for whoever fills the form. A `{…}` in it is an expression put in with\nthe record's value (docs/adr/0225 §6's templates; docs/adr/0402 §1).",
                 "properties": {
                   "id": {
                     "type": "string"
@@ -20526,6 +20608,10 @@
             "additionalProperties": false,
             "description": "A form's content: its items and the draft's revision (each kept change adds one).",
             "properties": {
+              "clearHidden": {
+                "description": "A write through the form empties the fields the record hides (docs/adr/0402 §3); written only\nas `true`. Without it a hidden field keeps its value.",
+                "type": "boolean"
+              },
               "items": {
                 "items": {
                   "$ref": "#/$defs/FormItem"
@@ -20555,6 +20641,10 @@
               },
               "rule": {
                 "type": "string"
+              },
+              "warning": {
+                "description": "A soft check: when not true it warns and the record is still written; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -20597,6 +20687,10 @@
               {
                 "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
                 "properties": {
+                  "collapsed": {
+                    "description": "It opens closed (its title opens it); written only as `true`.",
+                    "type": "boolean"
+                  },
                   "columns": {
                     "description": "1 or 2; none: 1.",
                     "format": "uint8",
@@ -20645,6 +20739,13 @@
                 "additionalProperties": false,
                 "description": "A field of the layer.",
                 "properties": {
+                  "calculate": {
+                    "description": "The field's value, worked out from the record at every write; the field is read-only. Not\nwith `default`, `defaultExpr` or `readOnlyWhen`.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "checks": {
                     "description": "What the record must satisfy, in order.",
                     "items": {
@@ -20652,8 +20753,22 @@
                     },
                     "type": "array"
                   },
+                  "choiceFilter": {
+                    "description": "Asked of each of the field's listed values: `@secenek` is its code, `@secenek_etiketi` its\nlabel; a value it is not true for is not offered.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "default": {
                     "description": "The value an empty field shows when the form opens, in the field's canonical text; written\nonly when the record is saved.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "defaultExpr": {
+                    "description": "The value of a new record's empty field: an expression over the record (its plain defaults\nin), evaluated in the form's order. Not with `default`.",
                     "type": [
                       "string",
                       "null"
@@ -20710,9 +20825,17 @@
                       "null"
                     ]
                   },
+                  "reuseLast": {
+                    "description": "A new record's field opens with the value last written through the form in the session (the\nform's interface keeps it); written only as `true`.",
+                    "type": "boolean"
+                  },
                   "type": {
                     "const": "field",
                     "type": "string"
+                  },
+                  "unique": {
+                    "description": "No two objects of the layer have the same value (empty ones aside); written only as `true`.",
+                    "type": "boolean"
                   },
                   "visibleWhen": {
                     "description": "Shown only when this expression is true (the record's fields by name).",
@@ -20741,7 +20864,7 @@
                 "type": "object"
               },
               {
-                "description": "A line of text: a hint for whoever fills the form.",
+                "description": "A line of text: a hint for whoever fills the form. A `{…}` in it is an expression put in with\nthe record's value (docs/adr/0225 §6's templates; docs/adr/0402 §1).",
                 "properties": {
                   "id": {
                     "type": "string"
@@ -322644,6 +322767,10 @@
             "additionalProperties": false,
             "description": "A form's content: its items and the draft's revision (each kept change adds one).",
             "properties": {
+              "clearHidden": {
+                "description": "A write through the form empties the fields the record hides (docs/adr/0402 §3); written only\nas `true`. Without it a hidden field keeps its value.",
+                "type": "boolean"
+              },
               "items": {
                 "items": {
                   "$ref": "#/$defs/FormItem"
@@ -322673,6 +322800,10 @@
               },
               "rule": {
                 "type": "string"
+              },
+              "warning": {
+                "description": "A soft check: when not true it warns and the record is still written; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -322715,6 +322846,10 @@
               {
                 "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
                 "properties": {
+                  "collapsed": {
+                    "description": "It opens closed (its title opens it); written only as `true`.",
+                    "type": "boolean"
+                  },
                   "columns": {
                     "description": "1 or 2; none: 1.",
                     "format": "uint8",
@@ -322763,6 +322898,13 @@
                 "additionalProperties": false,
                 "description": "A field of the layer.",
                 "properties": {
+                  "calculate": {
+                    "description": "The field's value, worked out from the record at every write; the field is read-only. Not\nwith `default`, `defaultExpr` or `readOnlyWhen`.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "checks": {
                     "description": "What the record must satisfy, in order.",
                     "items": {
@@ -322770,8 +322912,22 @@
                     },
                     "type": "array"
                   },
+                  "choiceFilter": {
+                    "description": "Asked of each of the field's listed values: `@secenek` is its code, `@secenek_etiketi` its\nlabel; a value it is not true for is not offered.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "default": {
                     "description": "The value an empty field shows when the form opens, in the field's canonical text; written\nonly when the record is saved.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "defaultExpr": {
+                    "description": "The value of a new record's empty field: an expression over the record (its plain defaults\nin), evaluated in the form's order. Not with `default`.",
                     "type": [
                       "string",
                       "null"
@@ -322828,9 +322984,17 @@
                       "null"
                     ]
                   },
+                  "reuseLast": {
+                    "description": "A new record's field opens with the value last written through the form in the session (the\nform's interface keeps it); written only as `true`.",
+                    "type": "boolean"
+                  },
                   "type": {
                     "const": "field",
                     "type": "string"
+                  },
+                  "unique": {
+                    "description": "No two objects of the layer have the same value (empty ones aside); written only as `true`.",
+                    "type": "boolean"
                   },
                   "visibleWhen": {
                     "description": "Shown only when this expression is true (the record's fields by name).",
@@ -322859,7 +323023,7 @@
                 "type": "object"
               },
               {
-                "description": "A line of text: a hint for whoever fills the form.",
+                "description": "A line of text: a hint for whoever fills the form. A `{…}` in it is an expression put in with\nthe record's value (docs/adr/0225 §6's templates; docs/adr/0402 §1).",
                 "properties": {
                   "id": {
                     "type": "string"
@@ -323106,6 +323270,10 @@
             "additionalProperties": false,
             "description": "A form's content: its items and the draft's revision (each kept change adds one).",
             "properties": {
+              "clearHidden": {
+                "description": "A write through the form empties the fields the record hides (docs/adr/0402 §3); written only\nas `true`. Without it a hidden field keeps its value.",
+                "type": "boolean"
+              },
               "items": {
                 "items": {
                   "$ref": "#/$defs/FormItem"
@@ -323135,6 +323303,10 @@
               },
               "rule": {
                 "type": "string"
+              },
+              "warning": {
+                "description": "A soft check: when not true it warns and the record is still written; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -323220,6 +323392,10 @@
               {
                 "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
                 "properties": {
+                  "collapsed": {
+                    "description": "It opens closed (its title opens it); written only as `true`.",
+                    "type": "boolean"
+                  },
                   "columns": {
                     "description": "1 or 2; none: 1.",
                     "format": "uint8",
@@ -323268,6 +323444,13 @@
                 "additionalProperties": false,
                 "description": "A field of the layer.",
                 "properties": {
+                  "calculate": {
+                    "description": "The field's value, worked out from the record at every write; the field is read-only. Not\nwith `default`, `defaultExpr` or `readOnlyWhen`.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "checks": {
                     "description": "What the record must satisfy, in order.",
                     "items": {
@@ -323275,8 +323458,22 @@
                     },
                     "type": "array"
                   },
+                  "choiceFilter": {
+                    "description": "Asked of each of the field's listed values: `@secenek` is its code, `@secenek_etiketi` its\nlabel; a value it is not true for is not offered.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "default": {
                     "description": "The value an empty field shows when the form opens, in the field's canonical text; written\nonly when the record is saved.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "defaultExpr": {
+                    "description": "The value of a new record's empty field: an expression over the record (its plain defaults\nin), evaluated in the form's order. Not with `default`.",
                     "type": [
                       "string",
                       "null"
@@ -323333,9 +323530,17 @@
                       "null"
                     ]
                   },
+                  "reuseLast": {
+                    "description": "A new record's field opens with the value last written through the form in the session (the\nform's interface keeps it); written only as `true`.",
+                    "type": "boolean"
+                  },
                   "type": {
                     "const": "field",
                     "type": "string"
+                  },
+                  "unique": {
+                    "description": "No two objects of the layer have the same value (empty ones aside); written only as `true`.",
+                    "type": "boolean"
                   },
                   "visibleWhen": {
                     "description": "Shown only when this expression is true (the record's fields by name).",
@@ -323364,7 +323569,7 @@
                 "type": "object"
               },
               {
-                "description": "A line of text: a hint for whoever fills the form.",
+                "description": "A line of text: a hint for whoever fills the form. A `{…}` in it is an expression put in with\nthe record's value (docs/adr/0225 §6's templates; docs/adr/0402 §1).",
                 "properties": {
                   "id": {
                     "type": "string"
@@ -323612,6 +323817,10 @@
             "additionalProperties": false,
             "description": "A form's content: its items and the draft's revision (each kept change adds one).",
             "properties": {
+              "clearHidden": {
+                "description": "A write through the form empties the fields the record hides (docs/adr/0402 §3); written only\nas `true`. Without it a hidden field keeps its value.",
+                "type": "boolean"
+              },
               "items": {
                 "items": {
                   "$ref": "#/$defs/FormItem"
@@ -323641,6 +323850,10 @@
               },
               "rule": {
                 "type": "string"
+              },
+              "warning": {
+                "description": "A soft check: when not true it warns and the record is still written; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -323726,6 +323939,10 @@
               {
                 "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
                 "properties": {
+                  "collapsed": {
+                    "description": "It opens closed (its title opens it); written only as `true`.",
+                    "type": "boolean"
+                  },
                   "columns": {
                     "description": "1 or 2; none: 1.",
                     "format": "uint8",
@@ -323774,6 +323991,13 @@
                 "additionalProperties": false,
                 "description": "A field of the layer.",
                 "properties": {
+                  "calculate": {
+                    "description": "The field's value, worked out from the record at every write; the field is read-only. Not\nwith `default`, `defaultExpr` or `readOnlyWhen`.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "checks": {
                     "description": "What the record must satisfy, in order.",
                     "items": {
@@ -323781,8 +324005,22 @@
                     },
                     "type": "array"
                   },
+                  "choiceFilter": {
+                    "description": "Asked of each of the field's listed values: `@secenek` is its code, `@secenek_etiketi` its\nlabel; a value it is not true for is not offered.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "default": {
                     "description": "The value an empty field shows when the form opens, in the field's canonical text; written\nonly when the record is saved.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "defaultExpr": {
+                    "description": "The value of a new record's empty field: an expression over the record (its plain defaults\nin), evaluated in the form's order. Not with `default`.",
                     "type": [
                       "string",
                       "null"
@@ -323839,9 +324077,17 @@
                       "null"
                     ]
                   },
+                  "reuseLast": {
+                    "description": "A new record's field opens with the value last written through the form in the session (the\nform's interface keeps it); written only as `true`.",
+                    "type": "boolean"
+                  },
                   "type": {
                     "const": "field",
                     "type": "string"
+                  },
+                  "unique": {
+                    "description": "No two objects of the layer have the same value (empty ones aside); written only as `true`.",
+                    "type": "boolean"
                   },
                   "visibleWhen": {
                     "description": "Shown only when this expression is true (the record's fields by name).",
@@ -323870,7 +324116,7 @@
                 "type": "object"
               },
               {
-                "description": "A line of text: a hint for whoever fills the form.",
+                "description": "A line of text: a hint for whoever fills the form. A `{…}` in it is an expression put in with\nthe record's value (docs/adr/0225 §6's templates; docs/adr/0402 §1).",
                 "properties": {
                   "id": {
                     "type": "string"
@@ -324169,7 +324415,7 @@
       "id": "cad.forms.validate",
       "version": 1,
       "title": "Formu denetle",
-      "summary": "Bir formun ve bir kaydın durumunu söyler, hiçbir şey yazmaz. Formun ön denetimi (olmayan alan, uymayan öğe, okunamayan kural, gizlenebilen zorunlu alan; uyarılar da); uid verilirse o nesnenin öğeleri (gösterilen, zorunlu, salt okunur) ve values (alan anahtarlarıyla) yazılmış gibi kaydın sorunları: zorunlu alan boş (form_required), değer alanın kuralına uymuyor (form_value_invalid), denetim tutmuyor (form_check_failed), gizli ya da salt okunur alan değişti (form_hidden, form_read_only). draft: son yayın yerine taslak (tasarımcının önizlemesi); defaults: formun varsayılanları kaydın boş alanlarına önce yazılır (yeni kayıt). Ön denetimde hata olan form reddedilmez, kaydı sorulmaz.",
+      "summary": "Bir formun ve bir kaydın durumunu söyler, hiçbir şey yazmaz. Formun ön denetimi (olmayan alan, uymayan öğe, okunamayan kural, gizlenebilen zorunlu alan; uyarılar da); uid verilirse o nesnenin öğeleri (gösterilen, zorunlu, salt okunur) ve values (alan anahtarlarıyla) yazılmış gibi kaydın sorunları: zorunlu alan boş (form_required), değer alanın kuralına uymuyor (form_value_invalid), denetim tutmuyor (form_check_failed; uyarı denetimi form_check_warning), gizli ya da salt okunur alan değişti (form_hidden, form_read_only), süzgecin sunmadığı seçenek (form_choice_filtered), hesap alana uymuyor (form_calc_invalid), tekil alanın değeri başka nesnede (form_unique). Kayıt formun tamamladığı gibidir: varsayılanlar ve hesaplar yazılmış; öğelerde süzgeçli alanın sunduğu seçenekler (choices) ve notun yazılmış metni (text). draft: son yayın yerine taslak (tasarımcının önizlemesi); defaults: verilen değerlerden sonra formun varsayılanları kaydın boş alanlarına yazılır (yeni kayıt); moment ve user kuralların @tarih, @simdi ve @kullanici'sidir. Ön denetimde hata olan form reddedilmez, kaydı sorulmaz.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -324185,7 +324431,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.forms.validate` v1: a form, and a record to ask it about.\n\nRefusals: `invalid_uid`; `unknown_form`, `form_unpublished`, `entity_not_found`,\n`form_layer_mismatch`.",
+        "description": "Input of `cad.forms.validate` v1: a form, and a record to ask it about.\n\nRefusals: `invalid_uid`, `invalid_moment`, `invalid_user`; `unknown_form`, `form_unpublished`,\n`entity_not_found`, `form_layer_mismatch`.",
         "properties": {
           "defaults": {
             "description": "The form's defaults in the record's empty fields first (a new record).",
@@ -324199,9 +324445,23 @@
             "description": "The form's id.",
             "type": "string"
           },
+          "moment": {
+            "description": "The moment the rules' `@tarih` and `@simdi` read: a date, or a date and a local time\n(`2026-10-16T14:30:00`); none: they read empty, and a calculation or default that reads them is\nleft out (docs/adr/0402 §5).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "uid": {
             "description": "An object of the form's layer (lowercase UUID text with hyphens); none: the form alone.",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "user": {
+            "description": "The person the rules' `@kullanici` reads (1–64 characters); none: it reads empty.",
             "type": [
               "string",
               "null"
@@ -324270,6 +324530,16 @@
             "additionalProperties": false,
             "description": "An item's state for a record: shown (its own rule and its group's), required, read-only.",
             "properties": {
+              "choices": {
+                "description": "The listed values a field with a choice filter offers for the record, in the list's order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "id": {
                 "type": "string"
               },
@@ -324281,6 +324551,13 @@
               },
               "shown": {
                 "type": "boolean"
+              },
+              "text": {
+                "description": "A note's text with the record's values put in (a note whose text has `{…}`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -324397,6 +324674,16 @@
             "additionalProperties": false,
             "description": "An item's state for a record: shown (its own rule and its group's), required, read-only.",
             "properties": {
+              "choices": {
+                "description": "The listed values a field with a choice filter offers for the record, in the list's order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "id": {
                 "type": "string"
               },
@@ -324408,6 +324695,13 @@
               },
               "shown": {
                 "type": "boolean"
+              },
+              "text": {
+                "description": "A note's text with the record's values put in (a note whose text has `{…}`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -324478,6 +324772,8 @@
       "capabilities": {
         "refusals": [
           "invalid_uid",
+          "invalid_moment",
+          "invalid_user",
           "unknown_form",
           "form_unpublished",
           "entity_not_found",
@@ -324501,7 +324797,7 @@
       "id": "cad.forms.submit",
       "version": 1,
       "title": "Formla kaydet",
-      "summary": "Bir nesnenin kaydını formla yazar: values alan anahtarlarıyla (boş değer özniteliği kaldırır); formun kuralları ve alanların kuralları geçerse bütün kayıt, geçmezse hiçbir şey (form_invalid: ilk sorun, path onu veren değer). Gizli alanın değeri silinmez; gösterilmeyen, gizli ya da salt okunur alana yazılmaz. Varsayılan olarak son yayın kullanılır; draft: taslak (yayınlanmamış form). defaults: formun varsayılanları kaydın boş alanlarına önce yazılır (yeni kayıt). Tek geri alma adımı: “Form: <ad>”. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Bir nesnenin kaydını formla yazar: values alan anahtarlarıyla (boş değer özniteliği kaldırır); formun kuralları ve alanların kuralları geçerse bütün kayıt, geçmezse hiçbir şey (form_invalid: ilk sorun, path onu veren değer). Gizli alanın değeri silinmez (formun clearHidden'ı açıksa silinir); gösterilmeyen, gizli, salt okunur ya da hesaplanan alana başka değer yazılmaz. Kayıt yazılmadan tamamlanır: defaults (yeni kayıt) verilen değerlerden sonra boş kalan alanlara formun değer ve ifade varsayılanlarını yazar; hesaplanan alanlar formun ifadeleriyle yazılır. moment (2026-10-16T14:30:00) ve user verilirse kuralların @tarih, @simdi ve @kullanici'si onlardır; verilmezse onları okuyan varsayılan ve hesap yapılmaz. Tekil alanın değeri katmanın başka nesnesinde olamaz. Uyarı denetimi bozulursa kayıt yine yazılır, uyarı form_check_warning'dir. Varsayılan olarak son yayın kullanılır; draft: taslak (yayınlanmamış form). Tek geri alma adımı: “Form: <ad>”. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -324517,7 +324813,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.forms.submit` v1.\n\nRefusals: `invalid_uid`; `invalid_revision`, `revision_conflict` (status `conflict`);\n`unknown_form`, `form_unpublished`, `form_preflight`, `entity_not_found`, `form_layer_mismatch`,\n`layer_locked`, `form_invalid` (the first issue, `path` its field's value).",
+        "description": "Input of `cad.forms.submit` v1.\n\nRefusals: `invalid_uid`, `invalid_moment`, `invalid_user`; `invalid_revision`, `revision_conflict`\n(status `conflict`);\n`unknown_form`, `form_unpublished`, `form_preflight`, `entity_not_found`, `form_layer_mismatch`,\n`layer_locked`, `form_invalid` (the first issue, `path` its field's value).",
         "properties": {
           "defaults": {
             "description": "The form's defaults in the record's empty fields first (a new record).",
@@ -324539,10 +324835,24 @@
             "description": "The form's id.",
             "type": "string"
           },
+          "moment": {
+            "description": "The moment the rules' `@tarih` and `@simdi` read: a date, or a date and a local time\n(`2026-10-16T14:30:00`); none: they read empty, and a calculation or default that reads them is\nleft out (docs/adr/0402 §5).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "uid": {
             "description": "The object (lowercase UUID text with hyphens).",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
+          },
+          "user": {
+            "description": "The person the rules' `@kullanici` reads (1–64 characters); none: it reads empty.",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "values": {
             "additionalProperties": {
@@ -324648,6 +324958,8 @@
       "capabilities": {
         "refusals": [
           "invalid_uid",
+          "invalid_moment",
+          "invalid_user",
           "invalid_revision",
           "revision_conflict",
           "unknown_form",
@@ -324657,6 +324969,9 @@
           "form_layer_mismatch",
           "layer_locked",
           "form_invalid"
+        ],
+        "warnings": [
+          "form_check_warning"
         ]
       },
       "examples": [
@@ -349115,6 +349430,24 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Form en çok 50 yayın tutar; en eskisi kaldırıldı."
+    },
+    {
+      "code": "invalid_moment",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "An bir tarih ya da tarih ve yerel saat değil (2026-10-16T14:30:00 gibi)."
+    },
+    {
+      "code": "invalid_user",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kullanıcının adı boş, 64 karakterden uzun ya da denetim karakterli."
+    },
+    {
+      "code": "form_check_warning",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Formun uyarı denetimlerinden biri doğru değil; kayıt yine yazıldı."
     },
     {
       "code": "empty_text",

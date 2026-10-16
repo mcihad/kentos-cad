@@ -6,8 +6,10 @@ use kentos_contracts::{
     FormBody, FormField, FormIssue, FormItem, FormSeverity, FormWidget, LayerField, LayerFieldKind,
     body_problem, check_value,
 };
-use kentos_expression::{Variable, compile_with};
+use kentos_expression::js::text::fold_turkish;
+use kentos_expression::{Expr, Variable, compile_with, template};
 
+use crate::session::{CHOICE_CODE, CHOICE_LABEL, MOMENT, reads_moment, still_schema};
 use crate::{codes, issue, record::schema_of, widget_of};
 
 /// What is wrong with `body` over the layer's `fields`, errors and warnings, in the form's order.
@@ -22,13 +24,17 @@ pub fn preflight(body: &FormBody, fields: &[LayerField], variables: &[Variable])
             problem,
         )];
     }
+    let schema = schema_of(fields, variables);
     let mut p = Preflight {
         fields,
-        schema: schema_of(fields, variables),
+        still: still_schema(&schema),
+        schema,
         issues: Vec::new(),
         bound: Vec::new(),
+        calcs: Vec::new(),
     };
     p.items(&body.items, false);
+    p.calc_cycle();
     if p.bound.is_empty() {
         p.issues.push(issue(
             codes::EMPTY,
@@ -103,8 +109,12 @@ struct Bound {
 struct Preflight<'a> {
     fields: &'a [LayerField],
     schema: kentos_expression::Schema,
+    /// The schema without the moment's and the user's values.
+    still: kentos_expression::Schema,
     issues: Vec<FormIssue>,
     bound: Vec<Bound>,
+    /// Each calculated field: its item, its key, its layer field's name and the names it reads.
+    calcs: Vec<(String, String, String, Vec<String>)>,
 }
 
 impl Preflight<'_> {
@@ -125,7 +135,7 @@ impl Preflight<'_> {
                     self.items(items, hideable || visible_when.is_some());
                 }
                 FormItem::Field(f) => self.field(f, hideable),
-                FormItem::Note { .. } => {}
+                FormItem::Note { id, text } => self.note(id, text),
             }
         }
     }
@@ -149,8 +159,10 @@ impl Preflight<'_> {
                 format!("“{}” alanı formda iki kez var.", f.field),
             ));
         }
-        let always =
-            !hideable && f.visible_when.is_none() && !f.read_only && f.read_only_when.is_none();
+        // A calculated field is written by its calculation: it is filled though read-only.
+        let always = !hideable
+            && f.visible_when.is_none()
+            && (f.calculate.is_some() || (!f.read_only && f.read_only_when.is_none()));
         self.bound.push(Bound {
             key: f.field.clone(),
             item: f.id.clone(),
@@ -190,7 +202,44 @@ impl Preflight<'_> {
                     .push(at(codes::DEFAULT_INVALID, Some("default"), r.message));
             }
         }
-        if f.read_only && f.required && f.default.is_none() {
+        if f.default.is_some() && f.default_expr.is_some() {
+            self.issues.push(at(
+                codes::RULE_CONFLICT,
+                Some("defaultExpr"),
+                format!(
+                    "“{}” alanının hem değer hem ifade varsayılanı var; birini bırakın.",
+                    layer.label()
+                ),
+            ));
+        }
+        if f.calculate.is_some()
+            && (f.default.is_some() || f.default_expr.is_some() || f.read_only_when.is_some())
+        {
+            self.issues.push(at(
+                codes::RULE_CONFLICT,
+                Some("calculate"),
+                format!(
+                    "“{}” hesaplanan bir alan; varsayılanı ve kilit kuralı olmaz.",
+                    layer.label()
+                ),
+            ));
+        }
+        if f.choice_filter.is_some() && layer.values.as_ref().is_none_or(|v| v.is_empty()) {
+            self.issues.push(at(
+                codes::CHOICE_UNLISTED,
+                Some("choiceFilter"),
+                format!(
+                    "“{}” alanının değer listesi yok; seçenek süzgeci onu süzemez.",
+                    layer.label()
+                ),
+            ));
+        }
+        if f.read_only
+            && f.required
+            && f.default.is_none()
+            && f.default_expr.is_none()
+            && f.calculate.is_none()
+        {
             self.issues.push(at(
                 codes::REQUIRED_READ_ONLY,
                 None,
@@ -214,10 +263,109 @@ impl Preflight<'_> {
         for (i, c) in f.checks.iter().enumerate() {
             self.rule(&f.id, Some(&f.field), None, &format!("checks/{i}"), &c.rule);
         }
+        for (rule, text) in [
+            ("defaultExpr", &f.default_expr),
+            ("calculate", &f.calculate),
+        ] {
+            let Some(text) = text else { continue };
+            let expr = self.rule(&f.id, Some(&f.field), None, rule, text);
+            if expr.is_some() && reads_moment(text, &self.still) {
+                self.issues.push(issue(
+                    codes::MOMENT_ONLY,
+                    FormSeverity::Warning,
+                    Some(&f.id),
+                    Some(&f.field),
+                    Some(rule),
+                    format!(
+                        "“{}” alanının {} anı ya da kullanıcıyı okuyor; yalnız formla yazmada hesaplanır, çizimde ve içe aktarmada boş kalır.",
+                        layer.label(),
+                        if rule == "calculate" { "hesabı" } else { "varsayılanı" }
+                    ),
+                ));
+            }
+            if rule == "calculate"
+                && let Some(e) = expr
+            {
+                self.calcs
+                    .push((f.id.clone(), f.field.clone(), layer.name.clone(), e.fields));
+            }
+        }
+        if let Some(text) = &f.choice_filter {
+            let mut schema = self.schema.clone();
+            for name in [CHOICE_CODE, CHOICE_LABEL] {
+                schema.variables.push(Variable {
+                    name: name.into(),
+                    value: kentos_expression::Value::text(String::new()),
+                    description: String::new(),
+                });
+            }
+            let kept = std::mem::replace(&mut self.schema, schema);
+            self.rule(&f.id, Some(&f.field), None, "choiceFilter", text);
+            self.schema = kept;
+        }
+    }
+
+    /// A note whose `{…}` put values in: its template splits and its expressions compile.
+    fn note(&mut self, id: &str, text: &str) {
+        match template::parse(text) {
+            Err(e) => self.issues.push(issue(
+                codes::RULE_INVALID,
+                FormSeverity::Error,
+                Some(id),
+                None,
+                Some("text"),
+                format!("Notun yazısı okunamadı: {}", e.text()),
+            )),
+            Ok(t) => {
+                let sources: Vec<String> = t.expressions().map(|(s, _)| s.to_owned()).collect();
+                for src in sources {
+                    self.rule(id, None, None, "text", &src);
+                }
+            }
+        }
+    }
+
+    /// Calculated fields that read each other in a circle: the first of the circle in the form's
+    /// order is said.
+    fn calc_cycle(&mut self) {
+        let n = self.calcs.len();
+        let deps: Vec<Vec<usize>> = self
+            .calcs
+            .iter()
+            .map(|(_, _, _, reads)| {
+                (0..n)
+                    .filter(|&k| reads.contains(&self.calcs[k].2))
+                    .collect()
+            })
+            .collect();
+        let mut done = vec![false; n];
+        while let Some(next) = (0..n).find(|&k| !done[k] && deps[k].iter().all(|&d| done[d])) {
+            done[next] = true;
+        }
+        if let Some(k) = (0..n).find(|&k| !done[k]) {
+            let (item, key, name, _) = &self.calcs[k];
+            self.issues.push(issue(
+                codes::CALC_CYCLE,
+                FormSeverity::Error,
+                Some(item),
+                Some(key),
+                Some("calculate"),
+                format!(
+                    "“{name}” alanının hesabı kendisini ya da onu okuyan bir hesabı okuyor; döngüyü kırın."
+                ),
+            ));
+        }
     }
 
     /// A rule compiles over the layer's fields; `itself`: the field it must not read.
-    fn rule(&mut self, item: &str, key: Option<&str>, itself: Option<&str>, at: &str, text: &str) {
+    fn rule(
+        &mut self,
+        item: &str,
+        key: Option<&str>,
+        itself: Option<&str>,
+        at: &str,
+        text: &str,
+    ) -> Option<Expr> {
         let expr = match compile_with(text, &self.schema) {
             Ok(e) => e,
             Err(e) => {
@@ -229,7 +377,7 @@ impl Preflight<'_> {
                     Some(at),
                     format!("Kural okunamadı: {}", e.text()),
                 ));
-                return;
+                return None;
             }
         };
         let warn = |code: &str, message: String| {
@@ -256,11 +404,17 @@ impl Preflight<'_> {
                 ));
             }
         }
-        for name in &expr.unknown_variables {
+        // The moment's and the user's values are a command's to give.
+        for name in expr
+            .unknown_variables
+            .iter()
+            .filter(|n| !MOMENT.contains(&fold_turkish(n).to_lowercase().as_str()))
+        {
             self.issues.push(warn(
                 codes::RULE_UNKNOWN_VARIABLE,
                 format!("Projede “@{name}” değeri yok; boş okunur."),
             ));
         }
+        Some(expr)
     }
 }

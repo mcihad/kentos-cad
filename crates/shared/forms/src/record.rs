@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 
 use kentos_contracts::{LayerField, LayerFieldKind};
 use kentos_expression::{
-    Expr, FieldDef, FieldSource, FieldType, Measured, Schema, Scope, Variable,
+    Expr, FieldDef, FieldSource, FieldType, Measured, Schema, Scope, Unit, Variable,
 };
 
 /// An object's attributes: a field's name to its canonical text; empty is no attribute.
@@ -21,12 +21,21 @@ pub struct Object {
     pub layer: String,
     pub id: f64,
     pub label: Option<String>,
+    /// Its length, area and anchor in metres (`$uzunluk`, `$alan`, `$merkez_x` …): the schema's unit
+    /// turns them into the drawing's (docs/adr/0402 §5).
     pub measured: Measured,
+    /// Its corners (`$köşe_sayısı`).
+    pub vertices: Option<f64>,
 }
 
 /// The expression schema of a layer's fields: each a user-defined field of its kind, so a rule reads
 /// a yes/no field as true or false and a number field as a number; the project's `@` values.
 pub fn schema_of(fields: &[LayerField], variables: &[Variable]) -> Schema {
+    schema_in(fields, variables, Unit::METRE)
+}
+
+/// [`schema_of`] whose geometry values speak `unit` (the project's drawing unit: docs/adr/0402 §5).
+pub fn schema_in(fields: &[LayerField], variables: &[Variable], unit: Unit) -> Schema {
     Schema {
         fields: fields
             .iter()
@@ -39,7 +48,7 @@ pub fn schema_of(fields: &[LayerField], variables: &[Variable]) -> Schema {
             .collect(),
         variables: variables.to_vec(),
         world: false,
-        ..Default::default()
+        unit,
     }
 }
 
@@ -69,7 +78,7 @@ impl Scope for RuleScope<'_> {
         self.object.measured
     }
     fn vertices(&self) -> Option<f64> {
-        None
+        self.object.vertices
     }
     fn kind(&self) -> &str {
         &self.object.kind
@@ -93,10 +102,38 @@ impl Scope for RuleScope<'_> {
 
 /// Whether `expr` is true for the record (an empty answer is not).
 pub(crate) fn holds(expr: &Expr, attrs: &Attrs, object: &Object) -> bool {
+    kentos_expression::value::truthy(&evaluate(expr, attrs, object))
+}
+
+/// `expr`'s value for the record.
+pub(crate) fn evaluate(
+    expr: &Expr,
+    attrs: &Attrs,
+    object: &Object,
+) -> kentos_expression::Value<'static> {
     let scope = RuleScope {
         expr,
         attrs,
         object,
     };
-    kentos_expression::value::truthy(&expr.evaluate(&scope))
+    expr.evaluate(&scope).into_owned()
+}
+
+/// `expr`'s value for the record as a field's text (docs/adr/0402 §3): a yes/no `true` or `false`, a
+/// number and a text as the language writes them (`None`: empty).
+pub(crate) fn field_text_of(expr: &Expr, attrs: &Attrs, object: &Object) -> Option<String> {
+    match evaluate(expr, attrs, object) {
+        kentos_expression::Value::Bool(b) => Some(if b { "true" } else { "false" }.to_owned()),
+        v if kentos_expression::value::is_empty(&v) => None,
+        v => Some(kentos_expression::value::to_text(&v).into_owned()),
+    }
+}
+
+/// `expr`'s value for the record as text, as the language writes a value (`None`: empty).
+pub(crate) fn text_of(expr: &Expr, attrs: &Attrs, object: &Object) -> Option<String> {
+    let v = evaluate(expr, attrs, object);
+    if kentos_expression::value::is_empty(&v) {
+        return None;
+    }
+    Some(kentos_expression::value::to_text(&v).into_owned())
 }

@@ -18,7 +18,11 @@ pub fn generate(fields: &[LayerField]) -> FormBody {
             FormItem::Field(item)
         })
         .collect();
-    FormBody { revision: 1, items }
+    FormBody {
+        revision: 1,
+        items,
+        ..Default::default()
+    }
 }
 
 /// A new item's id from `name`: its letters lowercased the Turkish way and its digits, the rest as

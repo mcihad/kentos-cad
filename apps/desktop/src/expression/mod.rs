@@ -814,12 +814,46 @@ impl App {
             .take(5000)
             .map(|e| Slot(e.base().id))
             .collect();
+        // The rules read the project's `@` values with the moment and the person; a choice filter
+        // also each listed value as `@secenek` and `@secenek_etiketi` (docs/adr/0402 §5).
+        let mut variables = self.expression_variables();
+        if let crate::forms::designer::Rule::ChoiceFilter(item) = &rule {
+            let listed = doc
+                .model
+                .settings()
+                .forms
+                .iter()
+                .find_map(|f| crate::forms::designer::find(&f.draft.items, item))
+                .and_then(|i| match i {
+                    kentos_contracts::FormItem::Field(f) => {
+                        fields.iter().find(|l| l.key() == f.field)
+                    }
+                    _ => None,
+                })
+                .and_then(|l| l.values.as_ref()?.first().cloned());
+            for (name, value) in [
+                (
+                    kentos_forms::CHOICE_CODE,
+                    listed.as_ref().map(|c| c.code.clone()),
+                ),
+                (
+                    kentos_forms::CHOICE_LABEL,
+                    listed.as_ref().map(|c| c.label.clone()),
+                ),
+            ] {
+                variables.push(Variable {
+                    name: name.to_owned(),
+                    value: kentos_expression::Value::text(value.unwrap_or_default()),
+                    description: "Listedeki değer (seçenek süzgeci)".to_owned(),
+                });
+            }
+        }
         let context = format!("{} · Kural", crate::forms::designer::TITLE);
         let mut builder = Builder::new(
             Target::Form(rule),
             context,
             value,
-            kentos_forms::schema_of(&fields, &[]),
+            kentos_forms::schema_in(&fields, &variables, reading_unit(doc.model.settings())),
             Objects { slots },
         );
         builder.preview_on(Some(&doc.model), self.spatial.store());

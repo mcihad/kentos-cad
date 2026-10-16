@@ -260,6 +260,12 @@ codes! {
     FORM_RULES = "form_rules", Failed, false, "Yazma, katmanın uyguladığı formun kurallarına uymuyor.";
     /// A release past the fiftieth: the oldest was dropped.
     FORM_RELEASE_DROPPED = "form_release_dropped", Warning, false, "Form en çok 50 yayın tutar; en eskisi kaldırıldı.";
+    /// A moment that is not a date or a date and a local time (`cad.forms.validate`, `.submit`).
+    INVALID_MOMENT = "invalid_moment", Failed, false, "An bir tarih ya da tarih ve yerel saat değil (2026-10-16T14:30:00 gibi).";
+    /// A user's name empty, longer than 64 characters or with control characters.
+    INVALID_USER = "invalid_user", Failed, false, "Kullanıcının adı boş, 64 karakterden uzun ya da denetim karakterli.";
+    /// A soft check of the form that is not true: the record is written all the same.
+    FORM_CHECK_WARNING = "form_check_warning", Warning, false, "Formun uyarı denetimlerinden biri doğru değil; kayıt yine yazıldı.";
 
     // ── Properties, texts, links ────────────────────────────────────────
     /// A text whose text is empty or only white space.

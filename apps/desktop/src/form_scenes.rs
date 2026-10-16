@@ -5,6 +5,14 @@
 //!
 //! ```text
 //! KENTOS_SHOTS_ONLY=form-tasarim,form-tasarim-sorun,form-yeni,form-duzenle,form-duzenle-sorun,form-duzenle-sekme,form-oznitelikler cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=form-hesap-tasarim,form-hesap-duzenle,form-hesap-sorun cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! ```
+//!
+//! docs/adr/0402's: the calculating form in the designer (the material's choice filter), Formla
+//! düzenle on a new building (defaults, calculations, filtered choices, the note's text, a closed group
+//! opened) and its issues (a unique code another building has, a soft check's warning).
+//!
+//! ```text
 //! ```
 //!
 //! Test code only.
@@ -57,6 +65,107 @@ fn form(published: bool) -> Value {
         f["releases"] = json!([{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body, "note": "İlk yayın" }]);
     }
     f
+}
+
+/// The calculating form's fields (as `scripts/fixtures/forms_cases.py`'s `CALC_FIELDS`).
+fn calc_fields() -> Value {
+    json!([
+        { "name": "Durum", "kind": "text", "required": true,
+          "values": [{ "code": "iyi", "label": "İyi" }, { "code": "inceleme", "label": "Ek inceleme gerekli" }] },
+        { "id": "kat-sayisi", "name": "Kat", "kind": "integer", "min": "1", "max": "40" },
+        { "name": "Yükseklik", "kind": "decimal", "scale": 2 },
+        { "name": "Taban", "kind": "decimal", "scale": 2 },
+        { "name": "Riskli", "kind": "boolean" },
+        { "name": "Kod", "kind": "text", "length": 20 },
+        { "name": "Tür", "kind": "text", "values": [{ "code": "konut", "label": "Konut" }, { "code": "sanayi", "label": "Sanayi" }] },
+        { "name": "Malzeme", "kind": "text", "values": [
+            { "code": "ahsap", "label": "Ahşap" }, { "code": "beton", "label": "Betonarme" },
+            { "code": "celik", "label": "Çelik" }, { "code": "tas", "label": "Taş" }] },
+        { "name": "Açıklama", "kind": "text", "length": 500 },
+        { "name": "Tarih", "kind": "date" },
+        { "name": "Kayıt", "kind": "text", "length": 64 },
+        { "name": "Puan", "kind": "integer", "min": "0", "max": "10" }
+    ])
+}
+
+/// The calculating form (docs/adr/0402; `CALC_BODY`): a code by default from the storeys and unique,
+/// the material offered by the kind, a closed group of calculations and a note that writes them, a
+/// soft check, the date and the person by default; storeys kept for the next building.
+fn calc_form() -> Value {
+    let body = json!({ "revision": 1, "items": [
+        { "type": "group", "id": "genel", "label": "Genel", "columns": 2, "items": [
+            { "type": "field", "id": "durum", "field": "Durum", "required": true },
+            { "type": "field", "id": "kat", "field": "kat-sayisi", "reuseLast": true },
+            { "type": "field", "id": "kod", "field": "Kod", "unique": true, "defaultExpr": "'B-' || Kat" },
+            { "type": "field", "id": "tur", "field": "Tür" },
+            { "type": "field", "id": "malzeme", "field": "Malzeme",
+              "choiceFilter": "Tür <> 'sanayi' veya @secenek = 'beton' veya @secenek = 'celik'" }
+        ]},
+        { "type": "group", "id": "hesap", "label": "Hesaplanan", "collapsed": true, "items": [
+            { "type": "field", "id": "yukseklik", "field": "Yükseklik", "calculate": "Kat * 3" },
+            { "type": "field", "id": "taban", "field": "Taban", "calculate": "$alan" },
+            { "type": "field", "id": "riskli", "field": "Riskli", "calculate": "Kat > 5" },
+            { "type": "field", "id": "puan", "field": "Puan", "calculate": "Kat - 1" },
+            { "type": "note", "id": "toplam", "text": "Toplam alan {Kat * Taban} m², {$köşe} köşe." }
+        ]},
+        { "type": "field", "id": "aciklama", "field": "Açıklama", "visibleWhen": "Durum = 'inceleme'",
+          "checks": [{ "rule": "uzunluk(Açıklama) >= 5", "message": "Açıklama çok kısa." },
+                     { "rule": "uzunluk(Açıklama) >= 20", "message": "Açıklama kısa görünüyor.", "warning": true }] },
+        { "type": "field", "id": "tarih", "field": "Tarih", "defaultExpr": "@tarih" },
+        { "type": "field", "id": "kayit", "field": "Kayıt", "defaultExpr": "@kullanici" }
+    ]});
+    let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).expect("a body");
+    json!({ "id": "bina-hesabi", "name": "Bina hesabı", "layer": "bina", "draft": body.clone(), "enforce": true,
+            "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }] })
+}
+
+/// The block of buildings under the calculating form: the first one's record already written (code
+/// B-3); the moment and the person fixed.
+fn calc_buildings(app: &mut App) {
+    let mut o = Objects::new();
+    let mut ids = Vec::new();
+    for [x, y] in [[0.0, 0.0], [24.0, 0.0], [0.0, 20.0], [24.0, 20.0]] {
+        ids.push(o.path(
+            "bina",
+            &[[x, y], [x + 18.0, y], [x + 18.0, y + 14.0], [x, y + 14.0]],
+            true,
+        ));
+    }
+    o.data(
+        ids[0],
+        &[
+            ("Durum", "iyi"),
+            ("Kat", "3"),
+            ("Kod", "B-3"),
+            ("Yükseklik", "9"),
+            ("Taban", "252"),
+            ("Riskli", "false"),
+            ("Puan", "2"),
+        ],
+        Some("B-3"),
+    );
+    let fields = calc_fields();
+    let form = calc_form();
+    open_edited(app, o, move |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut bina = crate::tools_scenes::layer("bina", "Bina", "#3E63DD", 0.35);
+        bina["fields"] = fields;
+        layers.push(bina);
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("bina");
+        d["settings"]["forms"] = json!([form]);
+    });
+    app.form_memory.clock = Some("2026-10-16T14:30:00".into());
+    app.form_memory.person = Some("Ayşe Yılmaz".into());
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 12.0,
+            min_y: N - 12.0,
+            max_x: E + 54.0,
+            max_y: N + 40.0,
+        },
+        24.0,
+    );
 }
 
 /// A street block of four buildings, two with records; the layer's form in the project.
@@ -162,6 +271,39 @@ fn editing_tab(app: &mut App) {
     entry(app, entry::Event::Tab(1));
 }
 
+/// Formlar: the calculating form, its height chosen: the calculation, the default expression, the
+/// choices' filter and the unique and reuse settings.
+fn calc_designing(app: &mut App) {
+    calc_buildings(app);
+    run(app, "data.forms");
+    designer(app, designer::Event::SelectItem("malzeme".into()));
+}
+
+/// Formla düzenle on a new building: storeys and kind typed; the code, the date and the person by
+/// default, the material offered for an industrial building, the calculations' group opened, its note.
+fn calc_editing(app: &mut App) {
+    calc_buildings(app);
+    app.selection.set([Slot(2)]);
+    run(app, "data.formEdit");
+    entry(app, entry::Event::Value("kat-sayisi".into(), "6".into()));
+    entry(app, entry::Event::Value("Tür".into(), "sanayi".into()));
+    entry(app, entry::Event::Group("hesap".into()));
+}
+
+/// Formla düzenle: the code another building has (an error), a short description (a warning, yellow).
+fn calc_issues(app: &mut App) {
+    calc_buildings(app);
+    app.selection.set([Slot(2)]);
+    run(app, "data.formEdit");
+    entry(app, entry::Event::Value("Durum".into(), "inceleme".into()));
+    entry(app, entry::Event::Value("kat-sayisi".into(), "3".into()));
+    entry(
+        app,
+        entry::Event::Value("Açıklama".into(), "Çatı akıyor".into()),
+    );
+    entry(app, entry::Event::Save);
+}
+
 /// Öznitelikler on the first building: the Form row with Formla düzenle, then the fields (the general
 /// and geometry sections closed so the fields show).
 fn properties(app: &mut App) {
@@ -180,6 +322,9 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-duzenle-sorun", editing_issue),
         ("form-duzenle-sekme", editing_tab),
         ("form-oznitelikler", properties),
+        ("form-hesap-tasarim", calc_designing),
+        ("form-hesap-duzenle", calc_editing),
+        ("form-hesap-sorun", calc_issues),
     ]
 }
 
@@ -229,6 +374,111 @@ mod tests {
         // One undo step brings the record back.
         run(&mut app, "edit.undo");
         assert_eq!(attrs(&app, 1), before);
+    }
+
+    /// docs/adr/0402 §7: a new record through the calculating form takes its defaults (the moment, the
+    /// person, the code) and calculations ($alan of 18 × 14) in one step; a short description only
+    /// warns; the storeys start the next new building; the calculated height stays locked.
+    #[test]
+    fn a_new_record_is_completed_and_its_storeys_are_kept_for_the_next() {
+        let mut app = crate::files_testing::app_with_drawing();
+        calc_buildings(&mut app);
+        app.selection.set([Slot(2)]);
+        run(&mut app, "data.formEdit");
+        entry(
+            &mut app,
+            entry::Event::Value("Durum".into(), "inceleme".into()),
+        );
+        entry(
+            &mut app,
+            entry::Event::Value("kat-sayisi".into(), "4".into()),
+        );
+        entry(
+            &mut app,
+            entry::Event::Value("Açıklama".into(), "Çatı akıyor".into()),
+        );
+        // The height is calculated: a value typed for it is not written.
+        entry(
+            &mut app,
+            entry::Event::Value("Yükseklik".into(), "99".into()),
+        );
+        entry(&mut app, entry::Event::Save);
+        assert!(
+            app.form_entry.is_some(),
+            "a calculated field typed: the window stays"
+        );
+        entry(
+            &mut app,
+            entry::Event::Value("Yükseklik".into(), "12".into()),
+        );
+        entry(&mut app, entry::Event::Save);
+        assert!(app.form_entry.is_none(), "a warning does not stop Kaydet");
+        let after = attrs(&app, 2);
+        let want: std::collections::BTreeMap<String, String> = [
+            ("Açıklama", "Çatı akıyor"),
+            ("Durum", "inceleme"),
+            ("Kat", "4"),
+            ("Kayıt", "Ayşe Yılmaz"),
+            ("Kod", "B-4"),
+            ("Puan", "3"),
+            ("Riskli", "false"),
+            ("Taban", "252"),
+            ("Tarih", "2026-10-16"),
+            ("Yükseklik", "12"),
+        ]
+        .into_iter()
+        .map(|(k, v)| (k.to_owned(), v.to_owned()))
+        .collect();
+        assert_eq!(after, want);
+
+        app.selection.set([Slot(3)]);
+        run(&mut app, "data.formEdit");
+        let e = app.form_entry.as_ref().expect("the window");
+        assert_eq!(e.value_of("Kat").as_deref(), Some("4"), "reuse last");
+        assert_eq!(e.value_of("Kod").as_deref(), Some("B-4"));
+        // The other building's code: not unique.
+        entry(&mut app, entry::Event::Value("Durum".into(), "iyi".into()));
+        entry(&mut app, entry::Event::Save);
+        assert!(app.form_entry.is_some(), "B-4 is the second building's");
+        entry(&mut app, entry::Event::Value("Kod".into(), "B-4a".into()));
+        entry(&mut app, entry::Event::Save);
+        assert!(app.form_entry.is_none());
+        assert_eq!(attrs(&app, 3).get("Kod").map(String::as_str), Some("B-4a"));
+    }
+
+    /// docs/adr/0402 §7: an industrial building is offered only concrete and steel; a closed group
+    /// opens by its title.
+    #[test]
+    fn the_choices_follow_the_filter_and_a_closed_group_opens() {
+        let mut app = crate::files_testing::app_with_drawing();
+        calc_buildings(&mut app);
+        app.selection.set([Slot(2)]);
+        run(&mut app, "data.formEdit");
+        assert_eq!(
+            app.form_entry.as_ref().and_then(|e| e.offered("malzeme")),
+            Some(vec![
+                "ahsap".to_owned(),
+                "beton".to_owned(),
+                "celik".to_owned(),
+                "tas".to_owned()
+            ])
+        );
+        entry(&mut app, entry::Event::Value("Tür".into(), "sanayi".into()));
+        assert_eq!(
+            app.form_entry.as_ref().and_then(|e| e.offered("malzeme")),
+            Some(vec!["beton".to_owned(), "celik".to_owned()])
+        );
+        assert!(
+            app.form_entry
+                .as_ref()
+                .is_some_and(|e| e.is_closed("hesap"))
+        );
+        entry(&mut app, entry::Event::Group("hesap".into()));
+        assert!(
+            app.form_entry
+                .as_ref()
+                .is_some_and(|e| !e.is_closed("hesap"))
+        );
     }
 
     /// docs/adr/0401 §9: a form made of the layer's fields, an item added, Kaydet writes the draft and

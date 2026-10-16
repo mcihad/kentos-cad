@@ -8,6 +8,10 @@
 
 Bu belge araştırma, ürün sözleşmesi ve yapılacak iş listesidir; uygulama kodu değildir. API adları, JSON örneği, izin aileleri ve profiller öneridir. Kaynak incelemesi ile hedef kabul testleri ayrıdır; burada hedeflenen form özelliklerinin bugün çalıştığı veya test edildiği iddia edilmez.
 
+**İlerleme (16 Ekim 2026):** işaretli maddeler masaüstünde, çekirdekte, komutlarda, Python'da ve MCP'de yapıldı
+(ADR 0400, 0401, 0402; TODOS.md §16.6). Web ertelendiği için (ADR 0228) web'in tarafı TODOS.md §0.2'dedir; web isteyen
+maddeler web gelene dek işaretsiz kalır.
+
 ## 1. Ürün hedefi ve kesin şartlar
 
 - Merkezde yetkili kişi form tasarlar, inceler ve yayınlar; saha personeli atanmış kayıt/alan/görev kapsamında veri girer.
@@ -70,24 +74,24 @@ Yerel masaüstü/web dilimi erken denenebilir. **Merkezi saha kullanımı için 
 
 ### 3.2 İlk dilimin işleri
 
-- [ ] **FORM-FIRST-01:** Mevcut fields/attribute edit/persistence/ACL yollarını tek bir dikey form senaryosunda eşle; yeni modelin genişleteceği kaynakları ve ortak validator'ı belirle.
-- [ ] **FORM-FIRST-02:** `core/1` profili için FormDefinition, field binding, layout, session, validation ve command/result sözleşmelerinin asgari alanlarını kesinleştir.
-- [ ] **FORM-FIRST-03:** Mevcut layer/object UUID ve field şemasından kararlı schema/field ID mapping üret; ID/name ayrımını metadata'da sakla. Eski alanlara ID backfill deterministik/idempotent olsun; rename/drop explicit mapping değişikliği gerektirsin.
-- [ ] **FORM-FIRST-04:** Beş mevcut tür için lossless draft↔canonical attrs adapter'ı kur; boş/absent/null davranışını açık belgele. Depolama null'u ayıramıyorsa unsupported durumu göster; sahte null desteği ilan etme.
-- [ ] **FORM-FIRST-05:** Bütün attribute depolamasını yeni tip sistemine taşımadan adapter ile ilk formu çalıştır; eski/bilinmeyen attribute'ları patch dışında koru.
-- [ ] **FORM-FIRST-06:** Form draft ve local published snapshot için `.kcad`/proje snapshot persist yolu ekle; save/reopen, eski dosya uyumu, owner/scope ve version/digest metadata'sını doğrula.
-- [ ] **FORM-FIRST-07:** Mevcut katman alanlarından varsayılan form üret; kullanıcı otomatik düzen yerine kendi taslağını seçebilsin.
-- [ ] **FORM-FIRST-08:** İlk tasarımcıda field paleti, sekme/grup ekleme, taşıma/sıralama, label/help/widget ve required/read-only özellik düzenleyicisini çıkar.
-- [ ] **FORM-FIRST-09:** Text/textarea, integer, decimal, date, boolean ve basit kodlu seçim renderer'larını mevcut KentOS UI/web bileşenleriyle bağla.
-- [ ] **FORM-FIRST-10:** Saf visible/required/default/validate kurallarını mevcut expression çekirdeğinde sınırlandırılmış profille çalıştır; dependency cycle ve gizli-zorunlu çelişkisini preflight'ta yakala.
+- [x] **FORM-FIRST-01:** Mevcut fields/attribute edit/persistence/ACL yollarını tek bir dikey form senaryosunda eşle; yeni modelin genişleteceği kaynakları ve ortak validator'ı belirle. — *Yapıldı (16 Ekim; ADR 0401 bağlam bölümü).*
+- [x] **FORM-FIRST-02:** `core/1` profili için FormDefinition, field binding, layout, session, validation ve command/result sözleşmelerinin asgari alanlarını kesinleştir. — *Yapıldı (16 Ekim; ADR 0401 §1–§4, `kentos.forms/1 core`).*
+- [x] **FORM-FIRST-03:** Mevcut layer/object UUID ve field şemasından kararlı schema/field ID mapping üret; ID/name ayrımını metadata'da sakla. Eski alanlara ID backfill deterministik/idempotent olsun; rename/drop explicit mapping değişikliği gerektirsin. — *Yapıldı (16 Ekim; ADR 0401 §2, alanın kararlı `id`'si).*
+- [x] **FORM-FIRST-04:** Beş mevcut tür için lossless draft↔canonical attrs adapter'ı kur; boş/absent/null davranışını açık belgele. Depolama null'u ayıramıyorsa unsupported durumu göster; sahte null desteği ilan etme. — *Yapıldı (16 Ekim; ADR 0401 §5: boş değer özniteliğin yokluğudur, null ayrı tutulmaz).*
+- [x] **FORM-FIRST-05:** Bütün attribute depolamasını yeni tip sistemine taşımadan adapter ile ilk formu çalıştır; eski/bilinmeyen attribute'ları patch dışında koru. — *Yapıldı (16 Ekim; ADR 0401 §5).*
+- [x] **FORM-FIRST-06:** Form draft ve local published snapshot için `.kcad`/proje snapshot persist yolu ekle; save/reopen, eski dosya uyumu, owner/scope ve version/digest metadata'sını doğrula. — *Yapıldı (16 Ekim; ADR 0401 §3, `.kcad` şema 60; bulut kaynakları FORM-F'de).*
+- [x] **FORM-FIRST-07:** Mevcut katman alanlarından varsayılan form üret; kullanıcı otomatik düzen yerine kendi taslağını seçebilsin. — *Yapıldı (16 Ekim; ADR 0401 §7).*
+- [x] **FORM-FIRST-08:** İlk tasarımcıda field paleti, sekme/grup ekleme, taşıma/sıralama, label/help/widget ve required/read-only özellik düzenleyicisini çıkar. — *Yapıldı (16 Ekim; ADR 0401 §10, masaüstü).*
+- [x] **FORM-FIRST-09:** Text/textarea, integer, decimal, date, boolean ve basit kodlu seçim renderer'larını mevcut KentOS UI/web bileşenleriyle bağla. — *Yapıldı (16 Ekim; ADR 0400, 0401 §10, masaüstü; web TODOS.md §0.2).*
+- [x] **FORM-FIRST-10:** Saf visible/required/default/validate kurallarını mevcut expression çekirdeğinde sınırlandırılmış profille çalıştır; dependency cycle ve gizli-zorunlu çelişkisini preflight'ta yakala. — *Yapıldı (16 Ekim; ADR 0401 §4, ADR 0402).*
 - [ ] **FORM-FIRST-11:** Record edit session; base revision, projection, tek draft owner, dirty state, kaydet/vazgeç, hata alanına gitme ve uygun kullanıcı undo davranışı taşısın.
-- [ ] **FORM-FIRST-12:** Kaydetme tek semantic command/changeset kullansın; schema/constraint/policy bütünlüğü final commit'te doğrulansın. Validation ve revision conflict'te belge kısmen değişmesin.
+- [x] **FORM-FIRST-12:** Kaydetme tek semantic command/changeset kullansın; schema/constraint/policy bütünlüğü final commit'te doğrulansın. Validation ve revision conflict'te belge kısmen değişmesin. — *Yapıldı (16 Ekim; ADR 0401 §8–§9).*
 - [ ] **FORM-FIRST-13:** Aynı core tanımını desktop/web'de aç; aynı input/validation sonucu, focus/draft preservation ve responsive sekme/grup davranışı için ortak fixture kullan.
 - [ ] **FORM-FIRST-14:** Bulutta form metadata için draft/release/deployment kaynakları oluştur; published snapshot immutable ve dataset binding server-owned olsun.
 - [ ] **FORM-FIRST-15:** İlk merkezi kapsamda `forms.design`, `forms.publish`, `forms.use` ve dataset/row/field read/write izinlerini ayrı denetle; saha editörü form JSON/schema/domain değiştiremesin.
 - [ ] **FORM-FIRST-16:** Okuma projection'ı ve mutation guard'ı ortak sunucu access resolver'a bağla; ham feature/attribute komutu, tablo, import, Python ve AI aynı denetimden geçsin. Geçiş varsayılanları mevcut verinin yetkisini sessiz genişletmesin.
 - [ ] **FORM-FIRST-17:** Bir tasarımcı v1 yayınlasın; yalnız atanmış veri giriş kullanıcısı izinli alanları düzenlesin, viewer yalnız görsün. Her mutation revision/idempotency ve actor audit taşısın.
-- [ ] **FORM-FIRST-18:** Tasarım/preview/session/validate/save/publish komutlarını aynı katalogdan Python wrapper ve AI/MCP yüzeyine çıkar; tüm UI seçenekleri argüman/default/result/hata düzeyinde eşdeğer olsun. Bunun için uv/plugin manager bekleme.
+- [x] **FORM-FIRST-18:** Tasarım/preview/session/validate/save/publish komutlarını aynı katalogdan Python wrapper ve AI/MCP yüzeyine çıkar; tüm UI seçenekleri argüman/default/result/hata düzeyinde eşdeğer olsun. Bunun için uv/plugin manager bekleme. — *Yapıldı (16 Ekim; ADR 0401 §9, ADR 0402 §6).*
 - [ ] **FORM-FIRST-19:** İlk teslimde local/cloud capability ve desteklenen core profile açık listelensin; mobile/offline/relations/extension action henüz yoksa kullanıcıya gerçek durum gösterilsin.
 - [ ] **FORM-FIRST-20:** Bölüm 15'teki I01–I08 ilk teslim kabulünü geçir; ardından ileri FORM-* işleri seçilerek açılır. İlk ürün kabulünü bütün sonraki fazların tamamlanmasına bağlama.
 
@@ -290,10 +294,10 @@ Yeni kaydın identity UUID'si host tarafından oluşturulur; kullanıcı input'u
 
 - [ ] **FORM-STD-01:** FormBundle/FormDefinition ve ilgili bütün resource şemaları için sürümlü sözleşme ve JSON Schema oluştur.
 - [ ] **FORM-STD-02:** Format/version/digest, unknown-property/version, compatibility ve migration kurallarını yaz.
-- [ ] **FORM-STD-03:** JSON'u önce validate/compile et; bozuk field/domain/relation/action binding'leri UI açılmadan raporla.
+- [x] **FORM-STD-03:** JSON'u önce validate/compile et; bozuk field/domain/relation/action binding'leri UI açılmadan raporla. — *Yapıldı (16 Ekim; ADR 0401 §4, ön denetim).*
 - [ ] **FORM-STD-04:** Shared compiled form model ve expression profile; native/WASM/server ortak fixture'larla aynı sonuç versin.
-- [ ] **FORM-STD-05:** Stable node/field/rule IDs, deterministic ordering ve dependency graph korunmalı; rename/move binding'i bozmasın.
-- [ ] **FORM-STD-06:** Field değer codec'ini existing canonical attrs ile kontrollü adapter/migration üzerinden eşle.
+- [x] **FORM-STD-05:** Stable node/field/rule IDs, deterministic ordering ve dependency graph korunmalı; rename/move binding'i bozmasın. — *Yapıldı (16 Ekim; ADR 0401 §2, ADR 0402 §2 (hesapların bağımlılık grafı)).*
+- [x] **FORM-STD-06:** Field değer codec'ini existing canonical attrs ile kontrollü adapter/migration üzerinden eşle. — *Yapıldı (16 Ekim; ADR 0401 §5).*
 - [ ] **FORM-STD-07:** Form template ve deployed form ayrı olsun; template'deki mantıksal kaynaklar deployment'ta gerçek dataset/source IDs'ye bağlansın.
 - [ ] **FORM-STD-08:** Template dağıtımı kaynak veri, secret veya tenant grant taşımasın; source remapping ve permission yeniden değerlendirilsin.
 - [ ] **FORM-STD-09:** Renderer semantic conformance suite kur; aynı bundle ve draft için values/validation/available actions eşdeğer olsun.
@@ -310,7 +314,7 @@ ArcGIS'in domain yaklaşımı; kodlu değer veya aralık, yeniden kullanım ve s
 ### 5.1 Dataset ve alan şeması
 
 - [ ] **FORM-DATA-01:** Geometrili layer ile bağımsız tablonun ortak DatasetSchema/record API'sini tasarla; ilişki için sahte geometri nesnesi üretme.
-- [ ] **FORM-DATA-02:** Dataset/field immutable IDs ve current storage names ayrışsın; alias/rename ref migration gerektirmeden çalışsın.
+- [x] **FORM-DATA-02:** Dataset/field immutable IDs ve current storage names ayrışsın; alias/rename ref migration gerektirmeden çalışsın. — *Yapıldı (16 Ekim; ADR 0401 §2).*
 - [ ] **FORM-DATA-03:** Primary/global UUID, unique keys, nullable, required, type, default, precision/length/range ve indexing alanlarını tanımla.
 - [ ] **FORM-DATA-04:** Date/time/datetime/timezone, reference/UUID, enum/collection, attachment ve geometry desteklerini aşamalı şema genişletmesiyle ekle.
 - [ ] **FORM-DATA-05:** Mevcut canonical string attributes için lossless migration; null/blank/absent, unknown attr ve geçmiş kaydı koru.
@@ -331,7 +335,7 @@ ArcGIS'in domain yaklaşımı; kodlu değer veya aralık, yeniden kullanım ve s
 - [ ] **FORM-DATA-17:** Subtype; discriminator field/code, subtype label ve alanlara özel domain/default/required/style bağlantısı taşısın.
 - [ ] **FORM-DATA-18:** Subtype değişiminde eski değerler için preserve/clear/revalidate önerisini kullanıcıya göster; geçerli değerleri gereksiz silme.
 - [ ] **FORM-DATA-19:** Contingent field groups; izinli combinations, wildcard/null, subtype ve restrictive/advisory policy ile sürümlensin.
-- [ ] **FORM-DATA-20:** Üst seçim değişince alt seçenekler aynı rule engine ile filtrelensin; önceki değer artık geçersizse açık validation ver.
+- [x] **FORM-DATA-20:** Üst seçim değişince alt seçenekler aynı rule engine ile filtrelensin; önceki değer artık geçersizse açık validation ver. — *Yapıldı (16 Ekim; ADR 0402 §1 (`choiceFilter`, `form_choice_filtered`)).*
 - [ ] **FORM-DATA-21:** Split/merge default/duplicate/sum/proportional gibi attribute politikaları domain/field modelinde açık olsun; geometri işlemlerine bağlantısı korunsun.
 - [ ] **FORM-DATA-22:** Domain/subtype/contingent create/edit/publish/import/export işlemleri UI/Python/AI'da aynı komut olsun.
 - [ ] **FORM-DATA-23:** Final commit bütün API'lerde authoritative dataset/domain/contingent validation yapsın; form widget listesi tek denetim olmasın.
@@ -403,19 +407,19 @@ QGIS ilişkili child form gösterimi ve reference widget desteğine sahiptir. Ar
 ## 8. FORM-RULE — Hesap, validation ve veri yazma standardı — P0/P1
 
 - [ ] **FORM-RULE-01:** Rule profili form/widget validation ile authoritative dataset/workflow constraint'i ayırsın; aynı kural kaynağına reference kullanılabilsin.
-- [ ] **FORM-RULE-02:** Veri bütünlüğü için zorunlu koşullar bütün yazma girişlerinde uygulanmalı: form, table, command, import, Python, plugin ve AI.
-- [ ] **FORM-RULE-03:** Yalnız form davranışı olan görünürlük/presentation kuralı dataset verisini otomatik silmesin veya güvenlik izni üretmesin.
-- [ ] **FORM-RULE-04:** Conditional required ile görünmez alan çelişkisini compiler/preflight yakalasın; kullanıcı dolduramadığı mandatory alanla kilitlenmesin.
+- [x] **FORM-RULE-02:** Veri bütünlüğü için zorunlu koşullar bütün yazma girişlerinde uygulanmalı: form, table, command, import, Python, plugin ve AI. — *Yapıldı (16 Ekim; ADR 0401 §8, ADR 0402 §4 (belgenin izlemesi)).*
+- [x] **FORM-RULE-03:** Yalnız form davranışı olan görünürlük/presentation kuralı dataset verisini otomatik silmesin veya güvenlik izni üretmesin. — *Yapıldı (16 Ekim; ADR 0401 §6; silme yalnız formun `clearHidden`'ıyla, ADR 0402 §1).*
+- [x] **FORM-RULE-04:** Conditional required ile görünmez alan çelişkisini compiler/preflight yakalasın; kullanıcı dolduramadığı mandatory alanla kilitlenmesin. — *Yapıldı (16 Ekim; ADR 0401 §4).*
 - [ ] **FORM-RULE-05:** Field-level, cross-field, cross-record, relation/cardinality, geometry/topology ve workflow validation farklı scope'larla tanımlansın.
-- [ ] **FORM-RULE-06:** Error/warning/info; stable code, field/widget/record path, source ve mesaj parametreleri taşısın.
+- [x] **FORM-RULE-06:** Error/warning/info; stable code, field/widget/record path, source ve mesaj parametreleri taşısın. — *Yapıldı (16 Ekim; ADR 0401 §4, ADR 0402 (uyarı denetimi)).*
 - [ ] **FORM-RULE-07:** Validate-on-change/blur/save/submit politikaları olsun; hesap sonucu authoritative commit validation'ı azaltmasın.
 - [ ] **FORM-RULE-08:** Computed field; pure computed/read-only, persisted computed veya user-overridable modunu açık taşısın.
 - [ ] **FORM-RULE-09:** Recompute trigger; source değişimi, related count/aggregate, geometry, subtype/domain ve lookup revision üzerinden dependency graph'ta izlesin.
 - [ ] **FORM-RULE-10:** Kurallar belirsiz async lookup sonucu beklerken “geçerli” sayılmasın; pending/blocked durumları ve timeout politikası olsun.
 - [ ] **FORM-RULE-11:** Calculated ve user-entered değerin çakışması merge/reset politikasıyla görünür olsun; geç ağ cevabı kullanıcının yeni değerini ezmesin.
 - [ ] **FORM-RULE-12:** Rule engine offline/native/web/server'da null, boolean, decimal, date/timezone ve comparison bakımından aynı çalışsın.
-- [ ] **FORM-RULE-13:** Sunucu authoritative rule/data profile'ı seçsin; client başka form/version ID vererek mandatory kuralı atlayamasın.
-- [ ] **FORM-RULE-14:** JSON patch hedefleri field IDs ve record refs ile whitelist'li olsun; UI hidden/read-only alanlarına forged write reddedilsin.
+- [x] **FORM-RULE-13:** Sunucu authoritative rule/data profile'ı seçsin; client başka form/version ID vererek mandatory kuralı atlayamasın. — *Yapıldı (16 Ekim; ADR 0401 §8).*
+- [x] **FORM-RULE-14:** JSON patch hedefleri field IDs ve record refs ile whitelist'li olsun; UI hidden/read-only alanlarına forged write reddedilsin. — *Yapıldı (16 Ekim; ADR 0401 §6, §8).*
 - [ ] **FORM-RULE-15:** Form submission expected versions, accepted schema/domain/form releases ve idempotency ile doğrulansın.
 - [ ] **FORM-RULE-16:** Tüm doğrulama ve related writes DB transaction'da veya güvenilir staged commit'te birlikte uygulansın; network/attachment upload beklenirken DB transaction açık kalmasın.
 - [ ] **FORM-RULE-17:** Validation için gerekli kaynağa erişim yoksa veya snapshot değişmişse stale/needs_input/conflict sonucu dönsün; eski computed değer final gerçek gibi kaydedilmesin.
@@ -434,7 +438,7 @@ QGIS'in tab/group/relation/widget yaklaşımı ve ArcGIS Field Maps'in visible/r
 - [ ] **FORM-DESIGN-05:** Master–detail, relation reference, embedded child form, lookup panel ve record grid eklenebilsin.
 - [ ] **FORM-DESIGN-06:** Hesaplı summary, related aggregate, chart, image/attachment, map location ve inline validation bileşenleri olsun.
 - [ ] **FORM-DESIGN-07:** Choice widget; dropdown/radio/chips/autocomplete/tree seçeneği domain kodunu değiştirmeden sunulabilsin.
-- [ ] **FORM-DESIGN-08:** Rule builder; görsel koşul düzenleyici ve expression editörü aynı AST/programı değiştirsin.
+- [x] **FORM-DESIGN-08:** Rule builder; görsel koşul düzenleyici ve expression editörü aynı AST/programı değiştirsin. — *Yapıldı (16 Ekim; ADR 0401 §10: İfade oluşturucunun Metin ve Akış'ı).*
 - [ ] **FORM-DESIGN-09:** Required/visible/editable/calculate/default/choice filter bağları dependency graph'ta görülebilsin.
 - [ ] **FORM-DESIGN-10:** Rules/sections için reuse/template desteği olsun; nested component version ve binding parametreleri açık olsun.
 - [ ] **FORM-DESIGN-11:** Conditional section/tab, subtype bazlı view, record status bazlı read-only ve task mode tasarlanabilsin.
@@ -614,18 +618,18 @@ Bir masaüstü Python paketinin web/mobile'da çalıştığı yalnız manifest i
 | `records.workflow.*` / `attachments.*` | Review transition, immutable submission snapshot, staged upload/finalize |
 | `ui.sessions.*` / `jobs.*` | Renderer session/capability, action/job progress/cancel/result |
 
-- [ ] **FORM-API-01:** Kaynak sözleşmeleri mevcut Rust contracts/authoritative katmanda tut; JSON Schema, TS ve Python tiplerini aynı kaynaktan üret.
-- [ ] **FORM-API-02:** Her UI özelliği için semantic command/query ve argüman/default/validation/result/error/permission/undo ya da audit eşlemesi çıkar; coverage manifest olsun.
-- [ ] **FORM-API-03:** UI, CLI/headless, Python ve MCP aynı handler/state machine/validator/access resolver'ı kullansın; alternate business rule oluşturma.
-- [ ] **FORM-API-04:** `describe/compile/preview/validate/plan` production no-write olsun; mock preview, production save ve publication ayrı komut olsun.
+- [x] **FORM-API-01:** Kaynak sözleşmeleri mevcut Rust contracts/authoritative katmanda tut; JSON Schema, TS ve Python tiplerini aynı kaynaktan üret. — *Yapıldı (16 Ekim; ADR 0401 §9).*
+- [x] **FORM-API-02:** Her UI özelliği için semantic command/query ve argüman/default/validation/result/error/permission/undo ya da audit eşlemesi çıkar; coverage manifest olsun. — *Yapıldı (16 Ekim; ADR 0244'ün `catalog/v1/operations.json`'ı).*
+- [x] **FORM-API-03:** UI, CLI/headless, Python ve MCP aynı handler/state machine/validator/access resolver'ı kullansın; alternate business rule oluşturma. — *Yapıldı (16 Ekim; ADR 0401 §9).*
+- [x] **FORM-API-04:** `describe/compile/preview/validate/plan` production no-write olsun; mock preview, production save ve publication ayrı komut olsun. — *Yapıldı (16 Ekim; ADR 0401 §9 (`cad.forms.validate`)).*
 - [ ] **FORM-API-05:** Mutation; actor context, immutable form/source revisions, expected record revision, idempotency ve typed patch taşısın.
 - [ ] **FORM-API-06:** Sonuç; session/submission/job/resource IDs, validation paths, warnings, conflict, actual changeset/artifacts ve audit/undo sınırını bildirsin.
-- [ ] **FORM-API-07:** Python wrapper/stub/help/examples ve CLI/MCP schema drift CI'da hata olsun; üretilen dosyaları elle düzeltme.
+- [x] **FORM-API-07:** Python wrapper/stub/help/examples ve CLI/MCP schema drift CI'da hata olsun; üretilen dosyaları elle düzeltme. — *Yapıldı (16 Ekim; `scripts/python/sdk.py --check`, katalog testleri).*
 - [ ] **FORM-API-08:** Form/schema/domain/relation keşfi pagination/projection/permission filtreli olsun; tüm özel şema ve veriyi her AI context'ine doldurma.
 - [ ] **FORM-API-09:** AI form tasarımı draft/diff ve preview üretir; tasarım/yayın/data review/ACL değişimini doğru actor/grant ile ayrı çağırır.
 - [ ] **FORM-API-10:** Form yardım metni, lookup label, schema açıklaması ve source verisi AI açısından veri olsun; içeriği endpoint/actor/grant/approval kapsamını değiştirmesin.
 - [ ] **FORM-API-11:** Python/AI query, result, report, aggregate ve export effective field/row/task politikasına uysun; data masking renderer'a bırakılmasın.
-- [ ] **FORM-API-12:** Generic command veya doğrudan table/attribute API üzerinden gönderilen patch aynı authoritative kuralları uygulasın; form/version ID seçmek mandatory constraint'i kaldıramasın.
+- [x] **FORM-API-12:** Generic command veya doğrudan table/attribute API üzerinden gönderilen patch aynı authoritative kuralları uygulasın; form/version ID seçmek mandatory constraint'i kaldıramasın. — *Yapıldı (16 Ekim; ADR 0401 §8, ADR 0402 §4).*
 - [ ] **FORM-API-13:** İsteğe bağlı plugin/form action için descriptor/release/executor/permission digest pinle; missing/offline executor sonucu açık pending/unavailable olsun.
 - [ ] **FORM-API-14:** Semantic recorder izinli tasarım/veri girişi adımlarından yeniden çalıştırılabilir Python/command örneği üretebilsin; secrets ve yasak field değerlerini kaydetmesin.
 - [ ] **FORM-API-15:** Geliştirici örnekleri: core bina formu, domain/subtype, 1:N master–detail, authorized lookup ve offline queue; her örneğin capability kapsamı belli olsun.
@@ -638,10 +642,10 @@ Bir masaüstü Python paketinin web/mobile'da çalıştığı yalnız manifest i
 ### 15.1 Doğrulama işleri
 
 - [ ] **FORM-QA-01:** JSON Schema/codegen/version/profile, duplicate ID, broken source ref ve unsupported required capability testleri kur.
-- [ ] **FORM-QA-02:** Mevcut beş field türünün adapter testleri; legacy/unknown attrs, rename/drop, absent/empty/null ve exact integer/decimal kaybını bağımsız beklentilerle doğrula.
+- [x] **FORM-QA-02:** Mevcut beş field türünün adapter testleri; legacy/unknown attrs, rename/drop, absent/empty/null ve exact integer/decimal kaybını bağımsız beklentilerle doğrula. — *Yapıldı (16 Ekim; `fixtures/forms/v1`, `fixtures/document-ops/v1`).*
 - [ ] **FORM-QA-03:** İlk core tanımı desktop/web/server'da aynı values/rules/validation fixtures ile çalışsın; mobile adapter hazır olduğunda aynı fixture korpusuna katılsın.
 - [ ] **FORM-QA-04:** Gerçek input testleri tab/focus/dirty draft preservation, save/cancel, validation navigation, responsive ve a11y akışlarını kapsasın.
-- [ ] **FORM-QA-05:** Local persist/save/reopen, eski `.kcad`, undo/redo ve cloud revision conflict testleri yap; form taslağı veri mutation'ına karışmasın.
+- [x] **FORM-QA-05:** Local persist/save/reopen, eski `.kcad`, undo/redo ve cloud revision conflict testleri yap; form taslağı veri mutation'ına karışmasın. — *Yapıldı (16 Ekim; ADR 0401 §3, `.kcad` örnekleri ve masaüstü testleri).*
 - [ ] **FORM-QA-06:** Form design/publish/data edit/schema manage ayrımını role/grant matrix ile doğrula; UI gizlemek tek test kanıtı olmasın.
 - [ ] **FORM-QA-07:** ACL testleri ham HTTP/generic command/Python/plugin/AI/table/import/lookup/export/event yollarını, cross-tenant ve forbidden row/field negatiflerini kapsasın.
 - [ ] **FORM-QA-08:** Form/domain/schema release ve deployment digests için tampering, eski source binding, unpublished visibility ve accepted-version negatifleri çalışsın.
@@ -748,9 +752,9 @@ Python/AI/komut eşdeğerliği her fazın tamamlanma koşuludur; sonunda açıla
 
 ## 17. FORM-DEC — Kararlar ve geliştiren ajana uygulama sınırları
 
-- [ ] **FORM-DEC-01:** FormDefinition/core profile/version/capability negotiation ve ilgili sözleşmeler için ADR yaz; v1'i tek platformun UI stack'ine bağlama.
-- [ ] **FORM-DEC-02:** İlk field ID backfill/storage mapping ve rename/drop politikası seçilsin; mevcut ID semantiği kaynakta doğrulansın.
-- [ ] **FORM-DEC-03:** Canonical string attrs adapter'ının null/absent/empty/exact numeric sınırı ile sonraki typed storage migration kararı ayrı kaydedilsin.
+- [x] **FORM-DEC-01:** FormDefinition/core profile/version/capability negotiation ve ilgili sözleşmeler için ADR yaz; v1'i tek platformun UI stack'ine bağlama. — *Yapıldı (16 Ekim; ADR 0401).*
+- [x] **FORM-DEC-02:** İlk field ID backfill/storage mapping ve rename/drop politikası seçilsin; mevcut ID semantiği kaynakta doğrulansın. — *Yapıldı (16 Ekim; ADR 0401 §2).*
+- [x] **FORM-DEC-03:** Canonical string attrs adapter'ının null/absent/empty/exact numeric sınırı ile sonraki typed storage migration kararı ayrı kaydedilsin. — *Yapıldı (16 Ekim; ADR 0401 §5).*
 - [ ] **FORM-DEC-04:** Form draft/release/deployment/session sahipliği, `.kcad` transport, cloud authority ve local replica persist formatı seçilsin.
 - [ ] **FORM-DEC-05:** Form design undo ile veri edit undo ve merkezi publication/audit/revert sınırları açık seçilsin; offline/cloud onayı local undo gibi gösterilmesin.
 - [ ] **FORM-DEC-06:** Shared widget subset, responsive layout, custom widget profili ve renderer compatibility/fallback politikası yazılsın.

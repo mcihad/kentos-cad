@@ -12,8 +12,8 @@
 //! ```
 //!
 //! Etiketler aynı genişlikte bir sütunda, alanın ilk satırına hizalı durur.
-//! Zorunlu alanın adının yanında yıldız, alanın altında yardım ya da hata
-//! yazar; hata yardımın yerini alır.
+//! Zorunlu alanın adının yanında yıldız, alanın altında yardım, uyarı ya da
+//! hata yazar; hata uyarının, uyarı yardımın yerini alır.
 //!
 //! ```ignore
 //! Form::new()
@@ -50,6 +50,7 @@ enum Line<'a, Message> {
         control: Element<'a, Message>,
         required: bool,
         help: Option<Fragment<'a>>,
+        warning: Option<Fragment<'a>>,
         error: Option<Fragment<'a>>,
     },
     Full(Element<'a, Message>),
@@ -92,6 +93,7 @@ impl<'a, Message: 'a> Form<'a, Message> {
             control: control.into(),
             required: false,
             help: None,
+            warning: None,
             error: None,
         });
         self
@@ -115,6 +117,15 @@ impl<'a, Message: 'a> Form<'a, Message> {
     pub fn help(mut self, text: impl IntoFragment<'a>) -> Self {
         if let Some(Line::Field { help, .. }) = self.rows.last_mut() {
             *help = Some(text.into_fragment());
+        }
+        self
+    }
+
+    /// Son alanın uyarısı: kaydı durdurmayan bir dikkat; varsa yardımın yerinde
+    /// sarı yazar, hata onun yerini alır.
+    pub fn warning(mut self, text: Option<impl IntoFragment<'a>>) -> Self {
+        if let Some(Line::Field { warning, .. }) = self.rows.last_mut() {
+            *warning = text.map(IntoFragment::into_fragment);
         }
         self
     }
@@ -153,6 +164,7 @@ impl<'a, Message: 'a> From<Form<'a, Message>> for Element<'a, Message> {
                     control,
                     required,
                     help,
+                    warning,
                     error,
                 } => {
                     let mut name_row = row![label::body(name)].spacing(3);
@@ -163,8 +175,8 @@ impl<'a, Message: 'a> From<Form<'a, Message>> for Element<'a, Message> {
 
                     let mut body = column![control].spacing(4);
 
-                    body = match (error, help) {
-                        (Some(error), _) => body.push(
+                    body = match (error, warning, help) {
+                        (Some(error), _, _) => body.push(
                             row![
                                 icon(Icon::Warning).size(12.0).tone(Tone::Danger),
                                 label::caption(error).style(style::text::danger),
@@ -172,8 +184,16 @@ impl<'a, Message: 'a> From<Form<'a, Message>> for Element<'a, Message> {
                             .spacing(5)
                             .align_y(Alignment::Center),
                         ),
-                        (None, Some(help)) => body.push(label::caption(help)),
-                        (None, None) => body,
+                        (None, Some(warning), _) => body.push(
+                            row![
+                                icon(Icon::Warning).size(12.0).tone(Tone::Warning),
+                                label::caption(warning).style(style::text::warning),
+                            ]
+                            .spacing(5)
+                            .align_y(Alignment::Center),
+                        ),
+                        (None, None, Some(help)) => body.push(label::caption(help)),
+                        (None, None, None) => body,
                     };
 
                     // Ad, alanın ilk satırıyla aynı yükseklikte başlar.

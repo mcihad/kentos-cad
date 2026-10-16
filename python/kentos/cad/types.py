@@ -10477,14 +10477,19 @@ class FormBody(_Model):
     """A form's content: its items and the draft's revision (each kept change adds one).
     Attributes:
         revision: Raised by one with every saved change to the draft: an update names the revision it was made on. Unit: version.
+        clear_hidden: A write through the form empties the fields the record hides (docs/adr/0402 §3); written only
+            as `true`. Without it a hidden field keeps its value.
     """
     revision: int
     items: list[FormItem]
+    clear_hidden: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["revision"] = self.revision
         out["items"] = [e0.to_json() for e0 in self.items]
+        if self.clear_hidden is not UNSET:
+            out["clearHidden"] = self.clear_hidden
         return out
 
     @classmethod
@@ -10492,6 +10497,7 @@ class FormBody(_Model):
         return cls(
             revision=data["revision"],
             items=[FormItem.from_json(e0) for e0 in data["items"]],
+            clear_hidden=data.get("clearHidden", UNSET),
         )
 
 
@@ -10499,14 +10505,19 @@ class FormBody(_Model):
 class FormCheck(_Model):
     """A check of a field: an expression that must be true when the field is shown and filled, and what
     the form says when it is not.
+    Attributes:
+        warning: A soft check: when not true it warns and the record is still written; written only as `true`.
     """
     rule: str
     message: str
+    warning: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["rule"] = self.rule
         out["message"] = self.message
+        if self.warning is not UNSET:
+            out["warning"] = self.warning
         return out
 
     @classmethod
@@ -10514,6 +10525,7 @@ class FormCheck(_Model):
         return cls(
             rule=data["rule"],
             message=data["message"],
+            warning=data.get("warning", UNSET),
         )
 
 
@@ -10561,20 +10573,30 @@ class FormIssue(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class FormItemState(_Model):
-    """An item's state for a record: shown (its own rule and its group's), required, read-only."""
+    """An item's state for a record: shown (its own rule and its group's), required, read-only.
+    Attributes:
+        choices: The listed values a field with a choice filter offers for the record, in the list's order.
+        text: A note's text with the record's values put in (a note whose text has `{…}`).
+    """
     id: str
     shown: bool
+    choices: list[str] | None | Unset = UNSET
     read_only: bool | Unset = UNSET
     required: bool | Unset = UNSET
+    text: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["id"] = self.id
         out["shown"] = self.shown
+        if self.choices is not UNSET:
+            out["choices"] = None if self.choices is None else list(self.choices)
         if self.read_only is not UNSET:
             out["readOnly"] = self.read_only
         if self.required is not UNSET:
             out["required"] = self.required
+        if self.text is not UNSET:
+            out["text"] = self.text
         return out
 
     @classmethod
@@ -10582,8 +10604,10 @@ class FormItemState(_Model):
         return cls(
             id=data["id"],
             shown=data["shown"],
+            choices=UNSET if "choices" not in data else None if data["choices"] is None else list(data["choices"]),
             read_only=data.get("readOnly", UNSET),
             required=data.get("required", UNSET),
+            text=data.get("text", UNSET),
         )
 
 
@@ -10727,7 +10751,8 @@ class FormsEdited(_Model):
 class FormsSubmit(_Model):
     """Input of `cad.forms.submit` v1.
 
-    Refusals: `invalid_uid`; `invalid_revision`, `revision_conflict` (status `conflict`);
+    Refusals: `invalid_uid`, `invalid_moment`, `invalid_user`; `invalid_revision`, `revision_conflict`
+    (status `conflict`);
     `unknown_form`, `form_unpublished`, `form_preflight`, `entity_not_found`, `form_layer_mismatch`,
     `layer_locked`, `form_invalid` (the first issue, `path` its field's value).
     Attributes:
@@ -10736,6 +10761,10 @@ class FormsSubmit(_Model):
         defaults: The form's defaults in the record's empty fields first (a new record).
         draft: Through its draft instead of its latest release (a form not yet published).
         expected_revision: The document revision the input was prepared against, as decimal text.
+        moment: The moment the rules' `@tarih` and `@simdi` read: a date, or a date and a local time
+            (`2026-10-16T14:30:00`); none: they read empty, and a calculation or default that reads them is
+            left out (docs/adr/0402 §5).
+        user: The person the rules' `@kullanici` reads (1–64 characters); none: it reads empty.
         values: Values by the layer fields' keys (empty: no value).
     """
     form: str
@@ -10743,6 +10772,8 @@ class FormsSubmit(_Model):
     defaults: bool | Unset = UNSET
     draft: bool | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    moment: str | None | Unset = UNSET
+    user: str | None | Unset = UNSET
     values: dict[str, str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -10755,6 +10786,10 @@ class FormsSubmit(_Model):
             out["draft"] = self.draft
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.moment is not UNSET:
+            out["moment"] = self.moment
+        if self.user is not UNSET:
+            out["user"] = self.user
         if self.values is not UNSET:
             out["values"] = dict(self.values)
         return out
@@ -10767,6 +10802,8 @@ class FormsSubmit(_Model):
             defaults=data.get("defaults", UNSET),
             draft=data.get("draft", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
+            moment=data.get("moment", UNSET),
+            user=data.get("user", UNSET),
             values=dict(data["values"]) if "values" in data else UNSET,
         )
 
@@ -10811,20 +10848,26 @@ class FormsSubmitted(_Model):
 class FormsValidate(_Model):
     """Input of `cad.forms.validate` v1: a form, and a record to ask it about.
 
-    Refusals: `invalid_uid`; `unknown_form`, `form_unpublished`, `entity_not_found`,
-    `form_layer_mismatch`.
+    Refusals: `invalid_uid`, `invalid_moment`, `invalid_user`; `unknown_form`, `form_unpublished`,
+    `entity_not_found`, `form_layer_mismatch`.
     Attributes:
         form: The form's id.
         defaults: The form's defaults in the record's empty fields first (a new record).
         draft: Its draft instead of its latest release (the designer's preview).
+        moment: The moment the rules' `@tarih` and `@simdi` read: a date, or a date and a local time
+            (`2026-10-16T14:30:00`); none: they read empty, and a calculation or default that reads them is
+            left out (docs/adr/0402 §5).
         uid: An object of the form's layer (lowercase UUID text with hyphens); none: the form alone.
+        user: The person the rules' `@kullanici` reads (1–64 characters); none: it reads empty.
         values: Values by the layer fields' keys, as a submit would write them (empty: no value); asked of
             the record afterwards.
     """
     form: str
     defaults: bool | Unset = UNSET
     draft: bool | Unset = UNSET
+    moment: str | None | Unset = UNSET
     uid: str | None | Unset = UNSET
+    user: str | None | Unset = UNSET
     values: dict[str, str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -10834,8 +10877,12 @@ class FormsValidate(_Model):
             out["defaults"] = self.defaults
         if self.draft is not UNSET:
             out["draft"] = self.draft
+        if self.moment is not UNSET:
+            out["moment"] = self.moment
         if self.uid is not UNSET:
             out["uid"] = self.uid
+        if self.user is not UNSET:
+            out["user"] = self.user
         if self.values is not UNSET:
             out["values"] = dict(self.values)
         return out
@@ -10846,7 +10893,9 @@ class FormsValidate(_Model):
             form=data["form"],
             defaults=data.get("defaults", UNSET),
             draft=data.get("draft", UNSET),
+            moment=data.get("moment", UNSET),
             uid=data.get("uid", UNSET),
+            user=data.get("user", UNSET),
             values=dict(data["values"]) if "values" in data else UNSET,
         )
 
@@ -25339,11 +25388,13 @@ class TabFormItem(FormItem):
 class GroupFormItem(FormItem):
     """A group: a titled box of items, in one or two columns, that a rule may hide.
     Attributes:
+        collapsed: It opens closed (its title opens it); written only as `true`.
         columns: 1 or 2; none: 1. Unit: count.
     """
     TAG_VALUE: ClassVar[str] = "group"
     id: str
     items: list[FormItem]
+    collapsed: bool | Unset = UNSET
     columns: int | None | Unset = UNSET
     label: str | None | Unset = UNSET
     visible_when: str | None | Unset = UNSET
@@ -25352,6 +25403,8 @@ class GroupFormItem(FormItem):
         out: dict[str, Any] = {"type": "group"}
         out["id"] = self.id
         out["items"] = [e0.to_json() for e0 in self.items]
+        if self.collapsed is not UNSET:
+            out["collapsed"] = self.collapsed
         if self.columns is not UNSET:
             out["columns"] = self.columns
         if self.label is not UNSET:
@@ -25365,6 +25418,7 @@ class GroupFormItem(FormItem):
         return cls(
             id=data["id"],
             items=[FormItem.from_json(e0) for e0 in data["items"]],
+            collapsed=data.get("collapsed", UNSET),
             columns=data.get("columns", UNSET),
             label=data.get("label", UNSET),
             visible_when=data.get("visibleWhen", UNSET),
@@ -25377,9 +25431,15 @@ class FieldFormItem(FormItem):
     Attributes:
         id: The item's id, unique in the form.
         field: The layer field's key ([`LayerField::key`](crate::LayerField::key)): its stable id or its name.
+        calculate: The field's value, worked out from the record at every write; the field is read-only. Not
+            with `default`, `defaultExpr` or `readOnlyWhen`.
         checks: What the record must satisfy, in order.
+        choice_filter: Asked of each of the field's listed values: `@secenek` is its code, `@secenek_etiketi` its
+            label; a value it is not true for is not offered.
         default: The value an empty field shows when the form opens, in the field's canonical text; written
             only when the record is saved.
+        default_expr: The value of a new record's empty field: an expression over the record (its plain defaults
+            in), evaluated in the form's order. Not with `default`.
         help: A line under the field.
         label: The label; none: the field's alias or name.
         placeholder: The empty box's hint.
@@ -25388,14 +25448,20 @@ class FieldFormItem(FormItem):
         required: May not be left empty while shown; written only as `true`. The layer field's own `required`
             holds as well.
         required_when: Required when this expression is true (and the field is shown).
+        reuse_last: A new record's field opens with the value last written through the form in the session (the
+            form's interface keeps it); written only as `true`.
+        unique: No two objects of the layer have the same value (empty ones aside); written only as `true`.
         visible_when: Shown only when this expression is true (the record's fields by name).
         widget: How it is edited; none: the field kind's own.
     """
     TAG_VALUE: ClassVar[str] = "field"
     id: str
     field: str
+    calculate: str | None | Unset = UNSET
     checks: list[FormCheck] | Unset = UNSET
+    choice_filter: str | None | Unset = UNSET
     default: str | None | Unset = UNSET
+    default_expr: str | None | Unset = UNSET
     help: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     placeholder: str | None | Unset = UNSET
@@ -25403,6 +25469,8 @@ class FieldFormItem(FormItem):
     read_only_when: str | None | Unset = UNSET
     required: bool | Unset = UNSET
     required_when: str | None | Unset = UNSET
+    reuse_last: bool | Unset = UNSET
+    unique: bool | Unset = UNSET
     visible_when: str | None | Unset = UNSET
     widget: FormWidget | FormWidgetName | None | Unset = UNSET
 
@@ -25410,10 +25478,16 @@ class FieldFormItem(FormItem):
         out: dict[str, Any] = {"type": "field"}
         out["id"] = self.id
         out["field"] = self.field
+        if self.calculate is not UNSET:
+            out["calculate"] = self.calculate
         if self.checks is not UNSET:
             out["checks"] = [e0.to_json() for e0 in self.checks]
+        if self.choice_filter is not UNSET:
+            out["choiceFilter"] = self.choice_filter
         if self.default is not UNSET:
             out["default"] = self.default
+        if self.default_expr is not UNSET:
+            out["defaultExpr"] = self.default_expr
         if self.help is not UNSET:
             out["help"] = self.help
         if self.label is not UNSET:
@@ -25428,6 +25502,10 @@ class FieldFormItem(FormItem):
             out["required"] = self.required
         if self.required_when is not UNSET:
             out["requiredWhen"] = self.required_when
+        if self.reuse_last is not UNSET:
+            out["reuseLast"] = self.reuse_last
+        if self.unique is not UNSET:
+            out["unique"] = self.unique
         if self.visible_when is not UNSET:
             out["visibleWhen"] = self.visible_when
         if self.widget is not UNSET:
@@ -25439,8 +25517,11 @@ class FieldFormItem(FormItem):
         return cls(
             id=data["id"],
             field=data["field"],
+            calculate=data.get("calculate", UNSET),
             checks=[FormCheck.from_json(e0) for e0 in data["checks"]] if "checks" in data else UNSET,
+            choice_filter=data.get("choiceFilter", UNSET),
             default=data.get("default", UNSET),
+            default_expr=data.get("defaultExpr", UNSET),
             help=data.get("help", UNSET),
             label=data.get("label", UNSET),
             placeholder=data.get("placeholder", UNSET),
@@ -25448,6 +25529,8 @@ class FieldFormItem(FormItem):
             read_only_when=data.get("readOnlyWhen", UNSET),
             required=data.get("required", UNSET),
             required_when=data.get("requiredWhen", UNSET),
+            reuse_last=data.get("reuseLast", UNSET),
+            unique=data.get("unique", UNSET),
             visible_when=data.get("visibleWhen", UNSET),
             widget=UNSET if "widget" not in data else None if data["widget"] is None else _enum_in(FormWidget, data["widget"]),
         )
@@ -25455,7 +25538,9 @@ class FieldFormItem(FormItem):
 
 @dataclass(kw_only=True, slots=True)
 class NoteFormItem(FormItem):
-    """A line of text: a hint for whoever fills the form."""
+    """A line of text: a hint for whoever fills the form. A `{…}` in it is an expression put in with
+    the record's value (docs/adr/0225 §6's templates; docs/adr/0402 §1).
+    """
     TAG_VALUE: ClassVar[str] = "note"
     id: str
     text: str

@@ -28,14 +28,17 @@
                   "id": "durum",
                   "field": "Durum",
                   "widget": "list",
-                  "required": true
+                  "required": true,
+                  "choiceFilter": "@secenek <> 'yok'"
                 },
                 {
                   "type": "field",
                   "id": "kat",
                   "field": "kat-sayisi",
                   "label": "Kat sayısı",
-                  "help": "Zemin ve çatı katı dahil."
+                  "help": "Zemin ve çatı katı dahil.",
+                  "unique": true,
+                  "reuseLast": true
                 },
                 {
                   "type": "field",
@@ -48,6 +51,11 @@
                     {
                       "rule": "uzunluk(Not) >= 10",
                       "message": "Not en az 10 karakter olmalı."
+                    },
+                    {
+                      "rule": "uzunluk(Not) >= 30",
+                      "message": "Not kısa görünüyor.",
+                      "warning": true
                     }
                   ]
                 }
@@ -68,25 +76,27 @@
                       "type": "field",
                       "id": "tarih",
                       "field": "Tarih",
-                      "default": "2026-10-16"
+                      "defaultExpr": "@tarih"
                     },
                     {
                       "type": "field",
                       "id": "onay",
                       "field": "Onaylı",
                       "widget": "switch",
-                      "readOnlyWhen": "Durum = 'iyi'"
+                      "calculate": "Durum = 'iyi'"
                     }
-                  ]
+                  ],
+                  "collapsed": true
                 },
                 {
                   "type": "note",
                   "id": "bilgi",
-                  "text": "Denetimi yapan kişi kaydeder."
+                  "text": "Denetimi yapan kişi kaydeder; kat {Kat}."
                 }
               ]
             }
-          ]
+          ],
+          "clearHidden": true
         },
         "releases": [
           {

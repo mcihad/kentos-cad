@@ -3,4 +3,12 @@
 /**
  * An item's state for a record: shown (its own rule and its group's), required, read-only.
  */
-export type FormItemState = { id: string, shown: boolean, required?: boolean, readOnly?: boolean, };
+export type FormItemState = { id: string, shown: boolean, required?: boolean, readOnly?: boolean, 
+/**
+ * The listed values a field with a choice filter offers for the record, in the list's order.
+ */
+choices?: Array<string>, 
+/**
+ * A note's text with the record's values put in (a note whose text has `{…}`).
+ */
+text?: string, };

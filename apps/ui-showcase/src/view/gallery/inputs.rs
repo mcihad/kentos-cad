@@ -280,6 +280,10 @@ impl Showcase {
             )
             .required()
             .help("Antet kutusunda ve sekmede görünür.")
+            .warning(
+                (gallery.sheet_name.chars().count() > 40)
+                    .then_some("Uzun ad antet kutusunda kısaltılır."),
+            )
             .error(name_error)
             .field(
                 "Kâğıt",

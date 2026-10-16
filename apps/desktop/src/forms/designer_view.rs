@@ -397,9 +397,13 @@ impl App {
                     .style(style::field::input),
             )
         };
-        let rule_row = |words: &'static str, rule: Rule, value: &str| -> Element<'_, Message> {
+        let rule_in = |words: &'static str,
+                       rule: Rule,
+                       value: &str,
+                       placeholder: &'static str|
+         -> Element<'_, Message> {
             let r = rule.clone();
-            let field = text_input("Kural yok: her zaman", value)
+            let field = text_input(placeholder, value)
                 .size(typography::body())
                 .on_input(move |t| msg(Event::RuleText(r.clone(), t)))
                 .padding([5, 8])
@@ -415,6 +419,9 @@ impl App {
                 error_of(&rule.path()),
             )
         };
+        let rule_row = |words: &'static str, rule: Rule, value: &str| {
+            rule_in(words, rule, value, "Kural yok: her zaman")
+        };
         let mut col = Column::new().spacing(10);
         match item {
             FormItem::Tab { label: text, .. } => {
@@ -428,6 +435,7 @@ impl App {
                 label: text,
                 columns,
                 visible_when,
+                collapsed,
                 ..
             } => {
                 let cols = columns.unwrap_or(1);
@@ -447,14 +455,25 @@ impl App {
                         "Görünürlük",
                         Rule::Visible(id.clone()),
                         visible_when.as_deref().unwrap_or(""),
+                    ))
+                    .push(words::check(
+                        *collapsed,
+                        "Kapalı açılır",
+                        Some(msg(Event::Collapsed(!*collapsed))),
                     ));
             }
             FormItem::Note { text, .. } => {
-                col = col.push(label::strong("Not")).push(words::field(
-                    "Metin",
-                    input("Notun metni", text, Text::Note),
-                    None,
-                ));
+                col = col
+                    .push(label::strong("Not"))
+                    .push(words::field(
+                        "Metin",
+                        input("Notun metni", text, Text::Note),
+                        error_of("text"),
+                    ))
+                    .push(
+                        label::caption("{Kat} ya da {Kat * 3} kaydın değeriyle yazılır.")
+                            .style(muted),
+                    );
             }
             FormItem::Field(f) => {
                 let layer = fields.iter().find(|l| l.key() == f.field);
@@ -516,6 +535,18 @@ impl App {
                         ]
                         .spacing(16),
                     )
+                    .push(
+                        row![
+                            words::check(f.unique, "Tekil", Some(msg(Event::Unique(!f.unique)))),
+                            words::check(
+                                f.reuse_last,
+                                "Son değeri kullan",
+                                (f.calculate.is_none() || f.reuse_last)
+                                    .then(|| msg(Event::ReuseLast(!f.reuse_last))),
+                            ),
+                        ]
+                        .spacing(16),
+                    )
                     .push(words::field(
                         "Yardım",
                         input(
@@ -543,6 +574,18 @@ impl App {
                         ),
                         error_of("default"),
                     ))
+                    .push(rule_in(
+                        "Varsayılan ifade",
+                        Rule::Default(id.clone()),
+                        f.default_expr.as_deref().unwrap_or(""),
+                        "Yok: @kullanici, @tarih, $alan …",
+                    ))
+                    .push(rule_in(
+                        "Hesap",
+                        Rule::Calculate(id.clone()),
+                        f.calculate.as_deref().unwrap_or(""),
+                        "Yok: değeri elle yazılır",
+                    ))
                     .push(rule_row(
                         "Görünürlük",
                         Rule::Visible(id.clone()),
@@ -557,8 +600,16 @@ impl App {
                         "Salt okunurluk",
                         Rule::ReadOnly(id.clone()),
                         f.read_only_when.as_deref().unwrap_or(""),
-                    ))
-                    .push(label::strong("Denetimler"));
+                    ));
+                if layer.is_some_and(|l| l.values.as_ref().is_some_and(|v| !v.is_empty())) {
+                    col = col.push(rule_in(
+                        "Seçenek süzgeci",
+                        Rule::ChoiceFilter(id.clone()),
+                        f.choice_filter.as_deref().unwrap_or(""),
+                        "Yok: bütün değerler (@secenek her biri)",
+                    ));
+                }
+                col = col.push(label::strong("Denetimler"));
                 for (i, c) in f.checks.iter().enumerate() {
                     col = col
                         .push(rule_row("Kural", Rule::Check(id.clone(), i), &c.rule))
@@ -570,6 +621,11 @@ impl App {
                                     Text::CheckMessage(i)
                                 ))
                                 .width(Fill),
+                                words::check(
+                                    c.warning,
+                                    "Uyarı",
+                                    Some(msg(Event::CheckWarning(i, !c.warning)))
+                                ),
                                 button(icon(Icon::Close).size(12.0))
                                     .on_press(msg(Event::RemoveCheck(i)))
                                     .padding([5, 6])
@@ -627,11 +683,18 @@ impl App {
             (editable && (!form.releases.is_empty() || form.enforce))
                 .then(|| msg(Event::Enforce(!form.enforce))),
         );
+        let clear = w.body.as_ref().is_some_and(|b| b.clear_hidden);
+        let clear_hidden = words::check(
+            clear,
+            "Gizlenenleri sil",
+            editable.then(|| msg(Event::ClearHidden(!clear))),
+        );
         let top = row![
             label::body(NAME),
             focus_ring(name),
             label::caption(status).style(muted),
             space::horizontal().width(Fill),
+            clear_hidden,
             enforce,
         ]
         .spacing(10)

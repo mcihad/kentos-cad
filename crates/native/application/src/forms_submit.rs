@@ -1,6 +1,8 @@
 //! `cad.forms.submit` v1 (docs/adr/0401 §9): a record written through a form, one undo step
 //! (“Form: <ad>”). The values go by the layer fields' keys; the form's rules and its fields' decide
-//! whether they go in, the whole record or nothing. The shared cases are
+//! whether they go in, the whole record or nothing. A new record (`defaults`) takes the form's defaults
+//! after the values given; the calculations follow; a soft check's warning does not stop the write
+//! (docs/adr/0402 §3, §6). The shared cases are
 //! `fixtures/commands/v1/cad.forms.submit.json`.
 
 use kentos_contracts::{CommandResult, Entity, FormsSubmit, FormsSubmitted};
@@ -11,20 +13,23 @@ use crate::checks::{self, Stop};
 use crate::codes;
 use crate::forms::{self, fail};
 
-/// The object, its slot, the record afterwards, the release used and the undo step's name.
+/// The object, its slot, the record afterwards, the release used, the undo step's name and the
+/// form's warnings.
 struct Checked {
     slot: Slot,
     entity: Entity,
     version: Option<u32>,
     label: String,
+    warnings: Vec<kentos_contracts::CommandWarning>,
 }
 
 fn check(doc: &Document, input: &FormsSubmit) -> Result<Checked, Stop> {
     forms::uid_text(&input.uid, "uid")?;
+    let variables = forms::variables_given(doc, input.moment.as_deref(), input.user.as_deref())?;
     checks::revision(doc, input.expected_revision.as_deref())?;
     let form = forms::form(doc.settings(), &input.form, "form")?;
     let (body, version) = forms::body(form, input.draft, "draft")?;
-    let prepared = forms::prepared(doc, form, body, "form")?;
+    let prepared = forms::prepared(doc, form, body, &variables, "form")?;
     let (slot, e) = forms::record(doc, form, &input.uid, "uid")?;
     if doc.layers().is_locked(&form.layer) {
         return Err(fail(
@@ -39,19 +44,28 @@ fn check(doc: &Document, input: &FormsSubmit) -> Result<Checked, Stop> {
         ));
     }
     let object = forms::object(doc, slot, e);
-    let before = if input.defaults {
-        prepared.with_defaults(&e.base().attrs)
-    } else {
-        e.base().attrs.clone()
-    };
     let values: Vec<(String, String)> = input
         .values
         .iter()
         .map(|(k, v)| (k.clone(), v.clone()))
         .collect();
-    let after = prepared
-        .apply(&before, &values, &object)
+    let uid = doc.uid(slot).unwrap_or_default();
+    let (after, warnings) = prepared
+        .apply(&e.base().attrs, &values, &object, input.defaults)
+        .and_then(|(after, warnings)| {
+            let taken =
+                prepared.unique_issues(&after, &object, forms::others(doc, &form.layer, uid));
+            if taken.is_empty() {
+                Ok((after, warnings))
+            } else {
+                Err(taken)
+            }
+        })
         .map_err(|issues| {
+            let issues: Vec<_> = issues
+                .into_iter()
+                .filter(|i| i.severity == kentos_contracts::FormSeverity::Error)
+                .collect();
             let first = &issues[0];
             let path = first
                 .field
@@ -75,6 +89,7 @@ fn check(doc: &Document, input: &FormsSubmit) -> Result<Checked, Stop> {
         entity,
         version,
         label: format!("Form: {}", form.name),
+        warnings: forms::warnings_of(&warnings),
     })
 }
 
@@ -106,7 +121,7 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &FormsSubmit) -> CommandResult<For
             let changed = cx.doc.get(c.slot) != Some(&c.entity);
             CommandResult::Completed {
                 output: answer(cx.doc, &c, changed, &input.uid),
-                warnings: Vec::new(),
+                warnings: c.warnings.clone(),
             }
         }
         Err(stop) => stop.into(),
@@ -137,8 +152,9 @@ fn write_execute(
         cx.doc
             .update_many(vec![(c.slot, c.entity.clone())], &c.label);
     }
+    let warnings = c.warnings.clone();
     CommandResult::Completed {
         output: answer(cx.doc, &c, changed, &input.uid),
-        warnings: Vec::new(),
+        warnings,
     }
 }

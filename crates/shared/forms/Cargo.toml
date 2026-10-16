@@ -6,10 +6,10 @@ edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
-# Pure dependencies only (CLAUDE.md §14): the contracts' shapes and the expression language.
+# Pure dependencies only (CLAUDE.md §14): the contracts' shapes, the expression language and the
+# geometry core (an object's measures for `$uzunluk`, `$alan`: docs/adr/0402 §5).
 [dependencies]
 kentos-contracts = { path = "../contracts" }
 kentos-expression = { path = "../expression" }
-
-[dev-dependencies]
+kentos-geometry-core = { path = "../geometry-core" }
 serde_json = { workspace = true }

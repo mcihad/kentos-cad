@@ -4,4 +4,8 @@
  * A check of a field: an expression that must be true when the field is shown and filled, and what
  * the form says when it is not.
  */
-export type FormCheck = { rule: string, message: string, };
+export type FormCheck = { rule: string, message: string, 
+/**
+ * A soft check: when not true it warns and the record is still written; written only as `true`.
+ */
+warning?: boolean, };

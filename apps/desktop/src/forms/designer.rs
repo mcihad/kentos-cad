@@ -56,12 +56,24 @@ pub enum Rule {
     Required(String),
     ReadOnly(String),
     Check(String, usize),
+    /// A field's default as an expression (docs/adr/0402 §1).
+    Default(String),
+    /// A field's calculation.
+    Calculate(String),
+    /// What a listed field offers (`@secenek` is each listed value).
+    ChoiceFilter(String),
 }
 
 impl Rule {
-    fn item(&self) -> &str {
+    pub(crate) fn item(&self) -> &str {
         match self {
-            Rule::Visible(i) | Rule::Required(i) | Rule::ReadOnly(i) | Rule::Check(i, _) => i,
+            Rule::Visible(i)
+            | Rule::Required(i)
+            | Rule::ReadOnly(i)
+            | Rule::Check(i, _)
+            | Rule::Default(i)
+            | Rule::Calculate(i)
+            | Rule::ChoiceFilter(i) => i,
         }
     }
 
@@ -72,6 +84,9 @@ impl Rule {
             Rule::Required(_) => "requiredWhen".into(),
             Rule::ReadOnly(_) => "readOnlyWhen".into(),
             Rule::Check(_, i) => format!("checks/{i}"),
+            Rule::Default(_) => "defaultExpr".into(),
+            Rule::Calculate(_) => "calculate".into(),
+            Rule::ChoiceFilter(_) => "choiceFilter".into(),
         }
     }
 }
@@ -127,6 +142,16 @@ pub enum Event {
     Widget(Option<FormWidget>),
     Required(bool),
     ReadOnly(bool),
+    /// A field's value is not repeated on the layer.
+    Unique(bool),
+    /// A new record starts with the session's last value.
+    ReuseLast(bool),
+    /// A check's failure is a warning, not an error.
+    CheckWarning(usize, bool),
+    /// A group starts closed.
+    Collapsed(bool),
+    /// The fields a record hides are emptied (the form's setting).
+    ClearHidden(bool),
     Columns(u8),
     RuleText(Rule, String),
     Builder(Rule),
@@ -371,7 +396,7 @@ impl App {
                     id: id.clone(),
                     body: FormBody {
                         revision: form.draft.revision,
-                        items: body.items,
+                        ..body
                     },
                 })
                 .is_none()
@@ -489,6 +514,7 @@ impl App {
                     label: Some("Grup".into()),
                     columns: None,
                     visible_when: None,
+                    collapsed: false,
                     items: Vec::new(),
                 };
                 edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
@@ -560,6 +586,48 @@ impl App {
                     });
                 }
             }
+            Event::Unique(on) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Field(f)) = find_mut(&mut b.items, &id) {
+                            f.unique = on;
+                        }
+                    });
+                }
+            }
+            Event::ReuseLast(on) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Field(f)) = find_mut(&mut b.items, &id) {
+                            f.reuse_last = on;
+                        }
+                    });
+                }
+            }
+            Event::CheckWarning(i, on) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Field(f)) = find_mut(&mut b.items, &id)
+                            && let Some(c) = f.checks.get_mut(i)
+                        {
+                            c.warning = on;
+                        }
+                    });
+                }
+            }
+            Event::Collapsed(on) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Group { collapsed, .. }) = find_mut(&mut b.items, &id)
+                        {
+                            *collapsed = on;
+                        }
+                    });
+                }
+            }
+            Event::ClearHidden(on) => {
+                edited(&mut w, &|b| b.clear_hidden = on);
+            }
             Event::Columns(n) => {
                 if let Some(id) = chosen_item.clone() {
                     edited(&mut w, &|b| {
@@ -592,6 +660,7 @@ impl App {
                             f.checks.push(FormCheck {
                                 rule: String::new(),
                                 message: String::new(),
+                                warning: false,
                             });
                         }
                     });
@@ -767,6 +836,9 @@ fn rule_text(body: &FormBody, rule: &Rule) -> Option<String> {
         (FormItem::Field(f), Rule::Required(_)) => f.required_when.clone(),
         (FormItem::Field(f), Rule::ReadOnly(_)) => f.read_only_when.clone(),
         (FormItem::Field(f), Rule::Check(_, i)) => f.checks.get(*i).map(|c| c.rule.clone()),
+        (FormItem::Field(f), Rule::Default(_)) => f.default_expr.clone(),
+        (FormItem::Field(f), Rule::Calculate(_)) => f.calculate.clone(),
+        (FormItem::Field(f), Rule::ChoiceFilter(_)) => f.choice_filter.clone(),
         _ => None,
     }
 }
@@ -778,6 +850,9 @@ fn set_rule(body: &mut FormBody, rule: &Rule, text: &str) {
         (Some(FormItem::Field(f)), Rule::Visible(_)) => f.visible_when = value,
         (Some(FormItem::Field(f)), Rule::Required(_)) => f.required_when = value,
         (Some(FormItem::Field(f)), Rule::ReadOnly(_)) => f.read_only_when = value,
+        (Some(FormItem::Field(f)), Rule::Default(_)) => f.default_expr = value,
+        (Some(FormItem::Field(f)), Rule::Calculate(_)) => f.calculate = value,
+        (Some(FormItem::Field(f)), Rule::ChoiceFilter(_)) => f.choice_filter = value,
         (Some(FormItem::Field(f)), Rule::Check(_, i)) => {
             if let Some(c) = f.checks.get_mut(*i) {
                 c.rule = text.to_owned();

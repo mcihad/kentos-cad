@@ -1522,7 +1522,8 @@ def body_problem(body):
                 return f"“{iid}” alanının etiketi geçersiz"
             if any(k in i and not _form_text_ok(i[k], MOST_FORM_TEXT) for k in ("help", "placeholder", "default")):
                 return f"“{iid}” alanının bir metni çok uzun"
-            if any(k in i and not _rule_ok(i[k]) for k in ("visibleWhen", "requiredWhen", "readOnlyWhen")):
+            if any(k in i and not _rule_ok(i[k]) for k in ("visibleWhen", "requiredWhen", "readOnlyWhen", "defaultExpr",
+                                                         "calculate", "choiceFilter")):
                 return f"“{iid}” öğesinin kuralı geçersiz"
             checks = i.get("checks", [])
             if len(checks) > MOST_FORM_CHECKS or any(not _rule_ok(c["rule"]) or not c["message"].strip() or not _form_text_ok(c["message"], MOST_FORM_TEXT) for c in checks):
@@ -3219,7 +3220,7 @@ class _Schema:
             return check
 
         widgets = ("text", "textArea", "number", "date", "check", "switch", "list", "radio", "segmented")
-        check = self.fields({"rule": (self.text, True), "message": (self.text, True)})
+        check = self.fields({"rule": (self.text, True), "message": (self.text, True), "warning": (true_, False)})
 
         def item(x):
             if type(x) is not dict:
@@ -3231,6 +3232,7 @@ class _Schema:
                     "label": (self.text, False),
                     "columns": (self.uint(8), False),
                     "visibleWhen": (self.text, False),
+                    "collapsed": (true_, False),
                     "items": (items, True),
                 },
                 "field": {
@@ -3246,6 +3248,11 @@ class _Schema:
                     "requiredWhen": (self.text, False),
                     "readOnlyWhen": (self.text, False),
                     "default": (self.text, False),
+                    "defaultExpr": (self.text, False),
+                    "calculate": (self.text, False),
+                    "choiceFilter": (self.text, False),
+                    "unique": (true_, False),
+                    "reuseLast": (true_, False),
                     "checks": (nonempty(self.array(check)), False),
                 },
                 "note": {"id": (self.text, True), "text": (self.text, True)},
@@ -3259,7 +3266,7 @@ class _Schema:
         def items(x):
             return self.array(item)(x)
 
-        body = self.fields({"revision": (self.uint(32), True), "items": (items, True)})
+        body = self.fields({"revision": (self.uint(32), True), "items": (items, True), "clearHidden": (true_, False)})
         release = self.fields(
             {"version": (self.uint(32), True), "digest": (self.text, True), "body": (body, True), "note": (self.text, False)}
         )
