@@ -374,7 +374,7 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
 /// The file's rules for a dimension's style (docs/adr/0147 §3): what a style
 /// needs, and what only a slope has.
 fn dimension_rules(x: &kentos_contracts::DimensionEntity) -> Result<(), String> {
-    use kentos_contracts::DimensionStyle::{ArcLength, Jogged, Ordinate, Slope};
+    use kentos_contracts::DimensionStyle::{ArcLength, Elevation, Jogged, Ordinate, Slope};
     match x.style {
         Some(ArcLength | Jogged) if x.c.is_none() => {
             return Err("Yay uzunluğu ve kırıklı yarıçap ölçüsünün merkezi (c) olmalı".into());
@@ -385,10 +385,14 @@ fn dimension_rules(x: &kentos_contracts::DimensionEntity) -> Result<(), String> 
         Some(Ordinate) if x.angle.is_some_and(|a| a != 0.0 && a != 90.0) => {
             return Err("Koordinat ölçüsünün ekseni 0 (Y) ya da 90 (X) olmalı".into());
         }
+        // A level's one elevation (docs/adr/0322).
+        Some(Elevation) if x.za.is_none() || x.zb.is_some() => {
+            return Err("Kot ölçüsünün bir kotu (za) olmalı, zb olmamalı".into());
+        }
         _ => {}
     }
-    if x.style != Some(Slope) && (x.za.is_some() || x.zb.is_some()) {
-        return Err("Kot (za, zb) yalnız eğim ölçüsünde yazılır".into());
+    if !matches!(x.style, Some(Slope | Elevation)) && (x.za.is_some() || x.zb.is_some()) {
+        return Err("Kot (za, zb) yalnız eğim ve kot ölçüsünde yazılır".into());
     }
     Ok(())
 }

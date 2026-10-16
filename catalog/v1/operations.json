@@ -1167,6 +1167,27 @@
       "via": [
         "cad.dimensions.edit"
       ]
+    },
+    "tool.centerMark": {
+      "level": "semantic",
+      "via": [
+        "cad.dimensions.create"
+      ],
+      "note": "Tıklanan eğrinin kimliği ve tıklanan yer komutun centerMark ölçüsüne verilir; işaret eğriyi izler (ADR 0322)."
+    },
+    "tool.dimCenterLine": {
+      "level": "semantic",
+      "via": [
+        "cad.dimensions.create"
+      ],
+      "note": "İki düz kenarın kimlikleri ve tıklanan yerler komutun centerLine ölçüsüne verilir; ekseni komut hesaplar ve kenarları izler (ADR 0322)."
+    },
+    "tool.dimElevation": {
+      "level": "semantic",
+      "via": [
+        "cad.dimensions.create"
+      ],
+      "note": "Noktanın yeri (kenetle oturduğu köşe), yazılan kot ve değerin yeri komutun elevation ölçüsüne verilir; köşeyi ve kotunu izler (ADR 0322)."
     }
   },
   "tools": {

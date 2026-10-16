@@ -77,7 +77,7 @@ enum Kind {
 }
 
 /// The dimension's kinds in the contract's order: schema 9 added the last five.
-const DIMENSION_STYLES: [DimensionStyle; 10] = DimensionStyle::ALL;
+const DIMENSION_STYLES: [DimensionStyle; 13] = DimensionStyle::ALL;
 
 const KINDS: &[(&str, Kind)] = &[
     ("point", Kind::Point),
@@ -218,6 +218,10 @@ pub(super) struct Features {
     dimension_rules: bool,
     /// Schema 61: a dimension's `options`, `textShift` and `breaks` (docs/adr/0321).
     pub(super) dimension_options: bool,
+    /// Schema 62: a dimension's kinds `centerMark`, `centerLine`, `elevation` and the rule `pair` (docs/adr/0322).
+    dimension_marks: bool,
+    /// Schema 63: a text's and a dimension's `overrides` (docs/adr/0322 §5).
+    overrides: bool,
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
     pub(super) look: bool,
@@ -294,6 +298,8 @@ impl Features {
             dynamic_blocks: schema >= crate::SCHEMA_WITH_DYNAMIC_BLOCKS,
             dimension_rules: schema >= crate::SCHEMA_WITH_DIMENSION_RULES,
             dimension_options: schema >= crate::SCHEMA_WITH_DIMENSION_OPTIONS,
+            dimension_marks: schema >= crate::SCHEMA_WITH_DIMENSION_MARKS,
+            overrides: schema >= crate::SCHEMA_WITH_OVERRIDES,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,
@@ -365,6 +371,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                     || (has.styles
                         && matches!(key, "textStyle" | "font" | "bold" | "italic" | "oblique"))
                     || (has.text_paths && key == "path")
+                    || (has.overrides && key == "overrides")
             }
             Kind::Dimension => {
                 matches!(
@@ -401,6 +408,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                     // What its points follow names objects: only the drawing's dimensions (docs/adr/0249 §4).
                     || (has.dimension_refs && has.uids && key == "refs")
                     || (has.dimension_options && matches!(key, "options" | "textShift" | "breaks"))
+                    || (has.overrides && key == "overrides")
             }
             // A hatch's tie names objects: only the drawing's hatches (docs/adr/0186 §6).
             Kind::Hatch => {
@@ -685,12 +693,8 @@ pub(super) fn objects(
         }
         // A moved attribute only of a movable tag (docs/adr/0317 §1).
         if let Entity::Insert(insert) = &entity
-            && let Err(fault) = kentos_contracts::blocks::places(
-                blocks,
-                std::slice::from_ref(&entity),
-                None,
-                index,
-            )
+            && let Err(fault) =
+                kentos_contracts::blocks::places(blocks, std::slice::from_ref(&entity), None, index)
         {
             let tag = match &fault {
                 kentos_contracts::blocks::BlockFault::BadPlace { tag, .. } => tag.clone(),
@@ -1076,8 +1080,11 @@ pub(super) fn object(
             "style" => {
                 // Schema 9's kinds after the first five (docs/adr/0147).
                 let styles = DIMENSION_STYLES.map(|s| (s.name(), s));
-                let known = if has.dimensions {
+                // Schema 62's three after them (docs/adr/0322).
+                let known = if has.dimension_marks {
                     &styles[..]
+                } else if has.dimensions {
+                    &styles[..10]
                 } else {
                     &styles[..5]
                 };
@@ -1085,24 +1092,64 @@ pub(super) fn object(
             }
             "pattern" => f.pattern = Some(pattern(r, has)?),
             "assoc" => f.assoc = Some(hatch_assoc(r)?),
-            "refs" => f.refs = Some(dimension_refs(r, has.subref_extras, has.dimension_rules)?),
+            "refs" => {
+                f.refs = Some(dimension_refs(
+                    r,
+                    has.subref_extras,
+                    has.dimension_rules,
+                    has.dimension_marks,
+                )?)
+            }
+            // Schema 63 (docs/adr/0322 §5): the fields set apart from the style, by name, as their JSON.
+            "overrides" => {
+                let (o, at): (Vec<String>, usize) = json_part(r, "geçersiz kılınanlar")?;
+                if o.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boş geçersiz kılma listesi yazılmaz",
+                    ));
+                }
+                let problem = if kind == Kind::Text {
+                    TextFace {
+                        overrides: o.clone(),
+                        font: Some(kentos_contracts::DrawingFont::Barlow),
+                        ..TextFace::default()
+                    }
+                    .problem()
+                } else {
+                    DimensionLook {
+                        overrides: o.clone(),
+                        ..DimensionLook::default()
+                    }
+                    .problem()
+                };
+                if let Some((_, words)) = problem {
+                    return Err(r.fail_at(Code::BadValue, at, &words));
+                }
+                f.face.overrides.clone_from(&o);
+                f.look.overrides = o;
+            }
             // Schema 61 (docs/adr/0321): as their JSON, as the writer writes them.
             "options" => {
-                let (o, at): (kentos_contracts::DimensionOptions, usize) = json_part(r, "seçenekler")?;
+                let (o, at): (kentos_contracts::DimensionOptions, usize) =
+                    json_part(r, "seçenekler")?;
                 if let Some(words) = o.problem() {
                     return Err(r.fail_at(Code::BadValue, at, &words));
                 }
                 f.look.options = Some(Box::new(o));
             }
             "textShift" => {
-                let (s, at): (kentos_contracts::TextShift, usize) = json_part(r, "değerin kayması")?;
+                let (s, at): (kentos_contracts::TextShift, usize) =
+                    json_part(r, "değerin kayması")?;
                 if let Some(words) = s.problem() {
                     return Err(r.fail_at(Code::BadValue, at, &words));
                 }
                 f.text_shift = Some(s);
             }
             "breaks" => {
-                let (b, at): (Vec<kentos_contracts::DimensionBreak>, usize) = json_part(r, "kırmalar")?;
+                let (b, at): (Vec<kentos_contracts::DimensionBreak>, usize) =
+                    json_part(r, "kırmalar")?;
                 if b.is_empty() {
                     return Err(r.fail_at(Code::BadValue, at, "boş kırma listesi yazılmaz"));
                 }
@@ -1662,6 +1709,17 @@ fn build(
                     Some(required(r, f.za, "za")?),
                     Some(required(r, f.zb, "zb")?),
                 )
+            } else if style == Some(DimensionStyle::Elevation) {
+                // A level's one elevation (docs/adr/0322).
+                if f.zb.is_some() {
+                    return Err(field_fail(
+                        r,
+                        "zb",
+                        f.zb_at,
+                        "kot ölçüsünün yalnız bir kotu (za) olur",
+                    ));
+                }
+                (Some(required(r, f.za, "za")?), None)
             } else if f.za.is_some() || f.zb.is_some() {
                 let (key, at) = if f.za.is_some() {
                     ("za", f.za_at)
@@ -1672,7 +1730,7 @@ fn build(
                     r,
                     key,
                     at,
-                    "kot (za, zb) yalnız eğim ölçüsünde yazılır",
+                    "kot (za, zb) yalnız eğim ve kot ölçüsünde yazılır",
                 ));
             } else {
                 (None, None)
@@ -1721,23 +1779,19 @@ fn build(
             if let Some((y, at)) = f.y_scale
                 && y == scale
             {
-                return Err(r.fail_at(
-                    Code::BadValue,
-                    at,
-                    "y ölçeği x ölçeğine eşitse yazılmaz",
-                ));
+                return Err(r.fail_at(Code::BadValue, at, "y ölçeği x ölçeğine eşitse yazılmaz"));
             }
             Entity::Insert(InsertEntity {
-            parameters: f.parameters.take().unwrap_or_default(),
-            attribute_places: f.attribute_places.take().unwrap_or_default(),
-            base,
-            block: required(r, f.block, "block")?,
-            p: required(r, f.p, "p")?,
-            scale,
-            y_scale: f.y_scale.map(|(y, _)| y),
-            rotation: required(r, f.rotation, "rotation")?,
-            mirror: f.mirror.unwrap_or(false),
-        })
+                parameters: f.parameters.take().unwrap_or_default(),
+                attribute_places: f.attribute_places.take().unwrap_or_default(),
+                base,
+                block: required(r, f.block, "block")?,
+                p: required(r, f.p, "p")?,
+                scale,
+                y_scale: f.y_scale.map(|(y, _)| y),
+                rotation: required(r, f.rotation, "rotation")?,
+                mirror: f.mirror.unwrap_or(false),
+            })
         }
         Kind::Leader => Entity::Leader(LeaderEntity {
             base,
@@ -2571,6 +2625,7 @@ fn dimension_refs(
     r: &mut Reader<'_>,
     extras: bool,
     rules: bool,
+    pairs: bool,
 ) -> Result<DimensionRefs, KcadError> {
     let at = r.position();
     let mut refs = DimensionRefs::default();
@@ -2585,6 +2640,8 @@ fn dimension_refs(
                 refs.rule = Some(match r.text()? {
                     "curve" => kentos_contracts::DimensionRule::Curve,
                     "edges" => kentos_contracts::DimensionRule::Edges,
+                    // Schema 62 (docs/adr/0322).
+                    "pair" if pairs => kentos_contracts::DimensionRule::Pair,
                     other => {
                         let words = format!("ölçünün başvuru kuralı “{other}” bilinmiyor");
                         return Err(r.fail_at(Code::BadValue, here, &words));

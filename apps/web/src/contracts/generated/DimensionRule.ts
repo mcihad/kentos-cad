@@ -3,4 +3,4 @@
 /**
  * How an associative dimension's points that no place names follow (docs/adr/0320 §1).
  */
-export type DimensionRule = "curve" | "edges";
+export type DimensionRule = "curve" | "edges" | "pair";

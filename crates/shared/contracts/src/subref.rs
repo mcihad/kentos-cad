@@ -110,6 +110,9 @@ pub enum DimensionRule {
     /// An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where
     /// their lines cross, each arm keeping its length and side.
     Edges,
+    /// An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle
+    /// of their starts to the middle of their ends, the second edge turned to run the first's way.
+    Pair,
 }
 
 impl DimensionRule {
@@ -118,6 +121,7 @@ impl DimensionRule {
         match self {
             DimensionRule::Curve => "curve",
             DimensionRule::Edges => "edges",
+            DimensionRule::Pair => "pair",
         }
     }
 }
@@ -267,14 +271,18 @@ impl DimensionRefs {
     pub fn rule_problem(&self, style: Option<crate::DimensionStyle>) -> Option<String> {
         use crate::DimensionStyle as S;
         let rule = self.rule?;
-        let radial = matches!(style, Some(S::Radius | S::Diameter | S::Jogged));
+        let radial = matches!(
+            style,
+            Some(S::Radius | S::Diameter | S::Jogged | S::CenterMark)
+        );
         let fits = match rule {
             DimensionRule::Curve => radial || matches!(style, Some(S::ArcLength | S::Angular)),
             DimensionRule::Edges => style == Some(S::Angular),
+            DimensionRule::Pair => style == Some(S::CenterLine),
         };
         if !fits {
             return Some(format!(
-                "“{}” kuralı bu ölçü türüne uymaz: eğri kuralı yarıçap, çap, kırıklı yarıçap, yay uzunluğu ve açıda, kenar kuralı açıda olur.",
+                "“{}” kuralı bu ölçü türüne uymaz: eğri kuralı yarıçap, çap, kırıklı yarıçap, yay uzunluğu, açı ve merkez işaretinde, kenar kuralı açıda, çift kuralı eksen çizgisinde olur.",
                 rule.name()
             ));
         }

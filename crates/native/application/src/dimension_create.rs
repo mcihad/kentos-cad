@@ -14,10 +14,9 @@
 //! their places there again (docs/adr/0249, 0250 §5).
 
 use kentos_contracts::{
-    CommandResult, DimensionEntity, DimensionLook, DimensionMeasure, DimensionRefs,
-    DimensionRule, DimensionStyle, DimensionsCreate, EdgeNear, EntitiesCreatePlan,
-    EntitiesCreated, Entity, EntityGeometry, EntityId, MeasuredPoint, STANDARD_STYLE, SubPlace,
-    SubRef, Vec2 as Point,
+    CommandResult, DimensionEntity, DimensionLook, DimensionMeasure, DimensionRefs, DimensionRule,
+    DimensionStyle, DimensionsCreate, EdgeNear, EntitiesCreatePlan, EntitiesCreated, Entity,
+    EntityGeometry, EntityId, MeasuredPoint, STANDARD_STYLE, SubRef, Vec2 as Point,
 };
 use kentos_domain::{Document, Uuid};
 use kentos_geometry_core::geom::dimension::{
@@ -116,6 +115,10 @@ enum Kind {
     /// Zincir ölçü and Baz ölçü (docs/adr/0320 §3): linear dimensions from a base.
     Continue,
     Baseline,
+    /// Merkez işareti, Eksen çizgisi and Kot (docs/adr/0322).
+    CenterMark,
+    CenterLine,
+    Elevation,
 }
 
 /// A baseline level is this many times the base's value height (AutoCAD's DIMDLI, docs/adr/0140).
@@ -138,6 +141,9 @@ impl Kind {
             DimensionMeasure::Jogged { .. } => Kind::Jogged,
             DimensionMeasure::Continue { .. } => Kind::Continue,
             DimensionMeasure::Baseline { .. } => Kind::Baseline,
+            DimensionMeasure::CenterMark { .. } => Kind::CenterMark,
+            DimensionMeasure::CenterLine { .. } => Kind::CenterLine,
+            DimensionMeasure::Elevation { .. } => Kind::Elevation,
         }
     }
 
@@ -154,6 +160,9 @@ impl Kind {
             Kind::Jogged => Some("jogged"),
             Kind::Azimuth => Some("azimuth"),
             Kind::Slope => Some("slope"),
+            Kind::CenterMark => Some("centerMark"),
+            Kind::CenterLine => Some("centerLine"),
+            Kind::Elevation => Some("elevation"),
         }
     }
 
@@ -170,16 +179,29 @@ impl Kind {
             Kind::Jogged => Some(DimensionStyle::Jogged),
             Kind::Azimuth => Some(DimensionStyle::Azimuth),
             Kind::Slope => Some(DimensionStyle::Slope),
+            Kind::CenterMark => Some(DimensionStyle::CenterMark),
+            Kind::CenterLine => Some(DimensionStyle::CenterLine),
+            Kind::Elevation => Some(DimensionStyle::Elevation),
         }
     }
 
-    /// Whether a typed distance places it (Yarıçap, Çap and Koordinat are placed by `at` alone; Zincir and Baz by
-    /// their base).
+    /// Whether a typed distance places it (Yarıçap, Çap, Koordinat and Kot are placed by `at` alone; Zincir and Baz
+    /// by their base). A centre mark's and an axis's is how far they reach past their objects.
     fn takes_offset(self) -> bool {
         !matches!(
             self,
-            Kind::Radius | Kind::Diameter | Kind::Ordinate | Kind::Continue | Kind::Baseline
+            Kind::Radius
+                | Kind::Diameter
+                | Kind::Ordinate
+                | Kind::Continue
+                | Kind::Baseline
+                | Kind::Elevation
         )
+    }
+
+    /// Whether it writes no value but reaches past its objects (docs/adr/0322).
+    fn is_mark(self) -> bool {
+        matches!(self, Kind::CenterMark | Kind::CenterLine)
     }
 }
 
@@ -200,6 +222,10 @@ pub fn no_dimension_words(m: &DimensionMeasure) -> &'static str {
         }
         Kind::Continue | Kind::Baseline => {
             "Bu yerde ölçü oluşmuyor; nokta ölçülen noktayla çakışıyor."
+        }
+        Kind::CenterMark => "Merkez işareti oluşmuyor: eğrinin yarıçapı sıfır.",
+        Kind::CenterLine => {
+            "Eksen çizgisi oluşmuyor: iki kenar aynı ya da eksenin uzunluğu sıfır. İki ayrı düz kenar gösterin."
         }
         _ => "Bu yerde ölçü oluşmuyor; ölçülen noktalar çakışıyor ya da yay yarıçapı sıfır.",
     }
@@ -275,6 +301,11 @@ fn items(m: &DimensionMeasure) -> Vec<Item<'_>> {
         DimensionMeasure::Continue { base, to } | DimensionMeasure::Baseline { base, to } => {
             vec![Item::Base(base), point(to, "to")]
         }
+        DimensionMeasure::CenterMark { of } => vec![edge(of, "of")],
+        DimensionMeasure::CenterLine { first, second } => {
+            vec![edge(first, "first"), edge(second, "second")]
+        }
+        DimensionMeasure::Elevation { a, z: level } => vec![point(a, "a"), z(level, "z")],
         DimensionMeasure::Jogged {
             of,
             shown_centre,
@@ -357,13 +388,22 @@ fn check_input(input: &DimensionsCreate) -> Result<(), Stop> {
             ));
         }
     }
-    if input.offset.is_some() && !Kind::of(&input.measure).takes_offset() {
-        let words = if matches!(Kind::of(&input.measure), Kind::Continue | Kind::Baseline) {
+    let kind = Kind::of(&input.measure);
+    if input.offset.is_some() && !kind.takes_offset() {
+        let words = if matches!(kind, Kind::Continue | Kind::Baseline) {
             "Zincir ve baz ölçü uzaklık almaz; yerini temel ölçü verir. offset'i kaldırın."
         } else {
-            "Yarıçap, çap ve koordinat ölçüsü uzaklık almaz; yerini at verir. offset'i kaldırın."
+            "Yarıçap, çap, koordinat ve kot ölçüsü uzaklık almaz; yerini at verir. offset'i kaldırın."
         };
         return Err(refuse(codes::INVALID_OFFSET, words.into(), "offset"));
+    }
+    if kind.is_mark() && input.offset.is_some_and(|o| o < 0.0) {
+        return Err(refuse(
+            codes::INVALID_OFFSET,
+            "Merkez işaretinin ve eksen çizgisinin uzantısı eksi olamaz; 0 ya da daha büyük bir uzaklık verin (metre)."
+                .into(),
+            "offset",
+        ));
     }
     Ok(())
 }
@@ -416,38 +456,7 @@ pub(crate) fn point_of(doc: &Document, p: &MeasuredPoint, path: &str) -> Result<
     }
 }
 
-/// The elevation a place keeps (docs/adr/0142): a point's, a line's end's, a path's vertex's.
-fn elevation_at(e: &Entity, place: SubPlace) -> Option<f64> {
-    let nth = |zs: &Option<Vec<Option<f64>>>, i: u32| {
-        zs.as_ref()
-            .and_then(|z| z.get(i as usize).copied())
-            .flatten()
-    };
-    match (e, place) {
-        (Entity::Point(p), SubPlace::Node { part: 0 }) => p.z,
-        (Entity::Point(p), SubPlace::Node { part }) => {
-            p.parts.as_ref()?.get(part as usize - 1).and_then(|q| q.z)
-        }
-        (Entity::Line(l), SubPlace::Start) => l.za,
-        (Entity::Line(l), SubPlace::End) => l.zb,
-        (Entity::Polyline(p) | Entity::Polygon(p), SubPlace::Vertex { part, ring, index }) => {
-            let (zs, holes) = if part == 0 {
-                (&p.zs, &p.holes)
-            } else {
-                let q = p.parts.as_ref()?.get(part as usize - 1)?;
-                (&q.zs, &q.holes)
-            };
-            if ring == 0 {
-                nth(zs, index)
-            } else {
-                nth(&holes.as_ref()?.get(ring as usize - 1)?.zs, index)
-            }
-        }
-        _ => None,
-    }
-}
-
-/// A slope's elevation: given, else its place's.
+/// A slope's or a level's elevation: given, else its place's.
 fn elevation_of(
     doc: &Document,
     given: Option<f64>,
@@ -464,14 +473,17 @@ fn elevation_of(
             path: pieces,
         } if pieces.is_empty() => object(doc, uid, path)
             .ok()
-            .and_then(|e| elevation_at(e, *place)),
+            .and_then(|e| kentos_domain::dimension_ties::place_elevation(e, *place)),
         MeasuredPoint::Place { .. } => None,
         MeasuredPoint::At { .. } => None,
     };
     kept.ok_or_else(|| {
         refuse(
             codes::MISSING_ELEVATION,
-            "Eğim için noktanın kotu yok: kotu metre olarak verin ya da noktayı kotlu bir köşeye bağlayın.".into(),
+            format!(
+                "{} için noktanın kotu yok: kotu metre olarak verin ya da noktayı kotlu bir köşeye bağlayın.",
+                if path == "measure.z" { "Kot" } else { "Eğim" }
+            ),
             path,
         )
     })
@@ -491,6 +503,9 @@ fn edge_of<T>(
 
 const NO_STRAIGHT: &str = "Nesnenin düz kenarı yok: açı iki düz kenar arasında ölçülür; yaydan ölçmek için angleArc, köşe noktasından angleVertex verin.";
 const NO_ARC: &str = "Nesnenin uçları olan yayı yok: yaydan ya da çoklu çizginin ya da alanın yaylı kenarından ölçülür; tam daire için Yarıçap ya da Çap'ı kullanın.";
+const NO_AXIS_EDGE: &str = "Nesnenin düz kenarı yok: eksen çizgisi iki düz kenar (çizgi ya da çoklu çizginin, alanın düz kenarı) arasında çizilir.";
+const NO_CIRCLE_MARK: &str =
+    "Nesne daire değil: merkez işareti daireye, yaya ya da çoklu çizginin yay parçasına konur.";
 const NO_CIRCLE: &str =
     "Nesne daire değil: daireden, yaydan ya da çoklu çizginin yay parçasından ölçülür.";
 
@@ -561,6 +576,9 @@ fn check(doc: &Document, input: &DimensionsCreate) -> Result<Measured, Stop> {
             Some(elevation_of(doc, *za, a, "measure.za")?),
             Some(elevation_of(doc, *zb, b, "measure.zb")?),
         ),
+        DimensionMeasure::Elevation { a, z } => {
+            (Some(elevation_of(doc, *z, a, "measure.z")?), None)
+        }
         _ => (None, None),
     };
     // Zincir and Baz take their base's style, look and height unless a style is named (AutoCAD's DIMCONTINUEMODE 1).
@@ -568,10 +586,14 @@ fn check(doc: &Document, input: &DimensionsCreate) -> Result<Measured, Stop> {
         Edges::Base(b) => Some(&b.0),
         _ => None,
     };
-    let (look, style_height) = match (base, input.dimension_style.as_deref()) {
+    let (mut look, style_height) = match (base, input.dimension_style.as_deref()) {
         (Some(d), None) => (d.look.clone(), d.height),
         (_, name) => style_of(doc, name)?,
     };
+    // A centre mark's axis lines and an axis are centre lines (docs/adr/0322).
+    if kind.is_mark() && look.ext_line_type.is_none() {
+        look.ext_line_type = Some(kentos_contracts::LineType::Dashdot);
+    }
     let height = input.height.unwrap_or(style_height);
     let geom = |a, b, offset, angle, c| DimensionGeom {
         a,
@@ -692,6 +714,19 @@ fn check(doc: &Document, input: &DimensionsCreate) -> Result<Measured, Stop> {
                 ..g
             }
         }
+        (DimensionMeasure::CenterMark { .. }, Edges::Circle(c, r)) => {
+            // Its point on the curve east of the centre: the cross upright.
+            let b = Vec2::new(c.x + r, c.y);
+            geom(*c, b, typed.unwrap_or(height), None, None)
+        }
+        (DimensionMeasure::CenterLine { first, second }, Edges::Two(s, t)) => {
+            if first.uid == second.uid && (s == t || (s.0 == t.1 && s.1 == t.0)) {
+                return Err(none());
+            }
+            let [a, b] = kentos_domain::dimension_ties::pair_axis(*s, *t);
+            geom(a, b, typed.unwrap_or(height), None, None)
+        }
+        (DimensionMeasure::Elevation { a, .. }, _) => geom(pt(a, "a")?, at, 0.0, None, None),
         _ => return Err(none()),
     };
     if layout_dimension(&g).is_none() {
@@ -746,6 +781,20 @@ impl Edges {
                 edge_of(doc, first, "measure.first", straight_edge_at, NO_STRAIGHT)?,
                 edge_of(doc, second, "measure.second", straight_edge_at, NO_STRAIGHT)?,
             ),
+            DimensionMeasure::CenterLine { first, second } => Edges::Two(
+                edge_of(doc, first, "measure.first", straight_edge_at, NO_AXIS_EDGE)?,
+                edge_of(
+                    doc,
+                    second,
+                    "measure.second",
+                    straight_edge_at,
+                    NO_AXIS_EDGE,
+                )?,
+            ),
+            DimensionMeasure::CenterMark { of } => {
+                let (c, r) = edge_of(doc, of, "measure.of", circle_at, NO_CIRCLE_MARK)?;
+                Edges::Circle(c, r)
+            }
             DimensionMeasure::AngleArc { of } | DimensionMeasure::ArcLength { of, .. } => {
                 Edges::Arc(edge_of(doc, of, "measure.of", arc_edge_at, NO_ARC)?)
             }
@@ -896,12 +945,31 @@ fn bind(
                 ..Default::default()
             }
         }
+        DimensionMeasure::CenterMark { of } => DimensionRefs {
+            b: on_edge(doc, of, EdgeKind::Round, g.b),
+            rule: Some(DimensionRule::Curve),
+            ..Default::default()
+        },
+        DimensionMeasure::CenterLine { first, second } => DimensionRefs {
+            a: on_edge(doc, first, EdgeKind::Straight, v(first.near)),
+            b: on_edge(doc, second, EdgeKind::Straight, v(second.near)),
+            c: None,
+            rule: Some(DimensionRule::Pair),
+        },
+        DimensionMeasure::Elevation { a, .. } => DimensionRefs {
+            a: r(a),
+            ..Default::default()
+        },
     };
     if refs.a.is_none() && refs.b.is_none() && refs.c.is_none() {
         return None;
     }
     // A rule wants all of its places: an angle both edges, an arc its two ends.
-    if refs.rule.is_some() && !matches!(kind, Kind::Radius | Kind::Diameter | Kind::Jogged)
+    if refs.rule.is_some()
+        && !matches!(
+            kind,
+            Kind::Radius | Kind::Diameter | Kind::Jogged | Kind::CenterMark
+        )
         && (refs.a.is_none() || refs.b.is_none())
     {
         return None;
@@ -935,7 +1003,9 @@ fn objects(input: &DimensionsCreate, m: &Measured) -> kentos_contracts::Entities
     };
     // Zincir ölçü and Baz ölçü keep their tools' step names (docs/adr/0140).
     let operation = match input.measure {
-        DimensionMeasure::Continue { .. } => Some(kentos_contracts::CreateOperation::DimensionChain),
+        DimensionMeasure::Continue { .. } => {
+            Some(kentos_contracts::CreateOperation::DimensionChain)
+        }
         DimensionMeasure::Baseline { .. } => {
             Some(kentos_contracts::CreateOperation::DimensionBaseline)
         }

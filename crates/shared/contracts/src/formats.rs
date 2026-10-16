@@ -170,7 +170,12 @@ use crate::layer::LineType;
 /// 70 (docs/adr/0321): a dimension's and a dimension style's `options` and a dimension's `textShift` and `breaks`:
 ///    `.kcad` document schema 61; in the typed columns the dimension's bit 29 and their JSON text. The web's copy
 ///    stays 53.
-pub const FORMATS_VERSION: u32 = 70;
+/// 71 (docs/adr/0322): a dimension's kinds `centerMark`, `centerLine` and `elevation` and its references' rule `pair`:
+///    `.kcad` document schema 62; in the typed columns the kinds 10–12 and both of the mask's rule bits. The web's copy
+///    stays 53.
+/// 72 (docs/adr/0322 §5): a text's and a dimension's `overrides`: `.kcad` document schema 63; in the typed columns
+///    the text's option 14 and its JSON text, the dimension's in its more JSON (bit 29). The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 72;
 
 // ── Every import ────────────────────────────────────────────────────────
 

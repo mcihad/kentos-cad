@@ -22,6 +22,9 @@ dimension's look and the project's units, and the value as it is written. The ru
    per cent with the look's decimals (else 2); neither takes the increment, the alternate unit nor the tolerance.
 6. The text written over the value (`text`): `<>` in it is the value as above; a text without `<>` is shown as it is
    and the value is not (an override).
+7. A level's elevation (`level`, docs/adr/0322): metres rounded to the increment, with the look's decimals (else 2) by
+   the display rule, signed: `+` over zero, `-` under, `±` when the digits shown are all zero; the look's prefix and
+   suffix around it. A centre mark's and an axis's (`none`) write nothing.
 """
 import json
 import math
@@ -124,6 +127,14 @@ def value(measured, look, project, text=None):
         grad = v * 200.0 / math.pi
         body = shown(grad, 4) + " g" if project.get("angleUnit") == "grad" else shown(grad / (200.0 / 180.0), 4) + "°"
         core = look.get("prefix", "") + measured["prefix"] + body + look.get("suffix", "")
+    elif kind == "none":
+        core = ""
+    elif kind == "level":
+        r = o.get("round")
+        rounded = half_away(v / r) * r if r else v
+        digits = shown(abs(rounded), look.get("decimals", 2))
+        sign = "±" if set(digits) <= {"0", "."} else "-" if rounded < 0 else "+"
+        core = look.get("prefix", "") + sign + digits + look.get("suffix", "")
     elif kind == "percent":
         core = look.get("prefix", "") + measured["prefix"] + shown(v, look.get("decimals", 2)) + look.get("suffix", "")
     else:
@@ -199,6 +210,15 @@ def cases():
     add("mm projesi, basamaksız", L(1.23456), {}, MM)
     add("Açı derecede; artış ve tolerans almaz", {"value": math.pi / 3, "unit": "angle", "prefix": ""}, {"round": 0.5}, METRIC)
     add("Eğim yüzde, kendi basamağıyla", {"value": 12.3456, "unit": "percent", "prefix": "%"}, {"decimals": 1}, METRIC)
+    level = lambda v: {"value": v, "unit": "level", "prefix": ""}  # noqa: E731
+    add("Kot: artı işaretli, iki basamak", level(3.2), {}, METRIC)
+    add("Kot: eksi", level(-1.5), {}, METRIC)
+    add("Kot: sıfır ±", level(0.0), {}, METRIC)
+    add("Kot: gösterilen basamaklarda sıfıra yuvarlanan eksi ± olur", level(-0.004), {}, METRIC)
+    add("Kot: üç basamak, ön ek ve son ek", level(105.2468), {"decimals": 3, "prefix": "K ", "suffix": " m"}, METRIC)
+    add("Kot: 5 cm artışla yuvarlanır", level(12.37), {"round": 0.05}, METRIC)
+    add("Kot: mm projesinde de metre", level(3.2), {}, MM)
+    add("Merkez işareti ve eksen çizgisi değer yazmaz", {"value": 5.0, "unit": "none", "prefix": ""}, {}, METRIC)
     add("Elle yazılan değer <> ile: ölçülen değer içinde", L(2.5), {}, METRIC, text="<> (tipik)")
     add("Elle yazılan değer <> olmadan: ölçülen gösterilmez", L(2.5), {}, METRIC, text="2.600")
     add("Elle yazılanda iki <>", L(1.25), {"zeros": "trailing"}, METRIC, text="<> + <>")
@@ -210,7 +230,7 @@ def main():
         "format": "kentos.dimension-value-cases",
         "version": 1,
         "title": "Ölçünün yazılan değeri: yuvarlama, sıfırlar, ayak ve inç, tolerans, alternatif birim, elle yazılan",
-        "note": "ADR 0321. scripts/fixtures/dimension_value_cases.py kurallardan yazar; Format::dimension_value bunu geçer.",
+        "note": "ADR 0321, 0322. scripts/fixtures/dimension_value_cases.py kurallardan yazar; Format::dimension_value bunu geçer.",
         "cases": cases(),
     }
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"

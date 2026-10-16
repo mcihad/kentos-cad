@@ -447,11 +447,17 @@ pub const SCHEMA_WITH_DIMENSION_RULES: u32 = 60;
 /// alternate unit, tolerance, break size) and a dimension's `textShift` and `breaks`, written only when one has them;
 /// older readers refuse the file instead of writing the value without its tolerance or drawing a broken line whole.
 pub const SCHEMA_WITH_DIMENSION_OPTIONS: u32 = 61;
+/// Schema 62 (docs/adr/0322): a dimension's kinds `centerMark`, `centerLine` and `elevation` and its references' rule
+/// `pair`, written only when a dimension has one; older readers refuse the file instead of losing the marks.
+pub const SCHEMA_WITH_DIMENSION_MARKS: u32 = 62;
+/// Schema 63 (docs/adr/0322 §5): a text's and a dimension's `overrides`, the fields set apart from their style by
+/// hand, written only when one has them; older readers refuse the file instead of letting a style change take them.
+pub const SCHEMA_WITH_OVERRIDES: u32 = 63;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 60] = [
+pub const SCHEMAS: [u32; 62] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -512,6 +518,8 @@ pub const SCHEMAS: [u32; 60] = [
     SCHEMA_WITH_DYNAMIC_BLOCKS,
     SCHEMA_WITH_DIMENSION_RULES,
     SCHEMA_WITH_DIMENSION_OPTIONS,
+    SCHEMA_WITH_DIMENSION_MARKS,
+    SCHEMA_WITH_OVERRIDES,
 ];
 
 /// The file a drawing is saved as.

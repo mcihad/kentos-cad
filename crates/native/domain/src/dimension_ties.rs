@@ -272,7 +272,9 @@ impl Document {
                     let a = after.as_ref().and_then(|a| core(a));
                     let (followed, path) = if after.is_some() && a.is_none() {
                         (
-                            Followed::Broken(kentos_geometry_core::ops::subref::Reason::KindChanged),
+                            Followed::Broken(
+                                kentos_geometry_core::ops::subref::Reason::KindChanged,
+                            ),
                             r.path.clone(),
                         )
                     } else {
@@ -302,10 +304,15 @@ impl Document {
                     continue;
                 }
                 // Kır's pieces, Birleştir's joined object, Yönü çevir's object (docs/adr/0296): the point
-                // keeps its coordinates and is looked for on them.
+                // keeps its coordinates and is looked for on them. Its place's point before the step, which a rule's
+                // point is not (an axis's end, an angle's arm, docs/adr/0322).
                 if changed.contains_key(&of)
                     && let Some(onto) = relocated.get(&of)
-                    && let Some(p) = point_of(d, name)
+                    && let Some(p) = changed
+                        .get(&of)
+                        .and_then(|(before, _)| point(&core(before)?, core_place(r.place)))
+                        .map(wire)
+                        .or_else(|| point_of(d, name))
                 {
                     let found = onto.iter().find_map(|u| {
                         let slot = self.slot_of(*u)?;
@@ -316,7 +323,10 @@ impl Document {
                     // Buda (docs/adr/0320 §2): an end the cut moved is followed to where it is now.
                     let kept_end = (found.is_none()
                         && ends.contains(&of)
-                        && matches!(r.place, SubPlace::Start | SubPlace::End | SubPlace::Vertex { .. }))
+                        && matches!(
+                            r.place,
+                            SubPlace::Start | SubPlace::End | SubPlace::Vertex { .. }
+                        ))
                     .then(|| {
                         let (before, after) = changed.get(&of)?;
                         at_of(follow(
@@ -393,7 +403,7 @@ impl Document {
                 // An angle's arms are not its edges' places, nor need a radius's point be its curve's place (it may lie
                 // past an arc's end): the rule alone moves them.
                 match rule {
-                    DimensionRule::Edges => {
+                    DimensionRule::Edges | DimensionRule::Pair => {
                         next.a = d.a;
                         next.b = d.b;
                     }
@@ -404,6 +414,7 @@ impl Document {
                                 DimensionStyle::Radius
                                     | DimensionStyle::Diameter
                                     | DimensionStyle::Jogged
+                                    | DimensionStyle::CenterMark
                             )
                         ) =>
                     {
@@ -413,6 +424,19 @@ impl Document {
                 }
                 let prior = was.as_ref().unwrap_or(d);
                 self.apply_rule(rule, prior, &mut next, &next_refs, &changed);
+            }
+            // A level's elevation is its point's vertex's while it has one (docs/adr/0322).
+            if d.style == Some(DimensionStyle::Elevation)
+                && let Some(r) = next_refs
+                    .a
+                    .as_ref()
+                    .filter(|r| r.live() && r.path.is_empty())
+                && let Some(z) = self
+                    .slot_of(Uuid::from_bytes(r.uid.0))
+                    .and_then(|slot| self.store.get(slot))
+                    .and_then(|s| place_elevation(&s.entity, r.place))
+            {
+                next.za = Some(z);
             }
             next.refs = (!next_refs.is_empty()).then_some(next_refs);
             if next != *d {
@@ -449,7 +473,12 @@ impl Document {
     /// The object a reference names as the geometry core reads it now: the object, or the piece its block path
     /// names inside the insert.
     fn object_now(&self, r: &SubRef) -> Option<CoreEntity> {
-        let e = core(&self.store.get(self.slot_of(Uuid::from_bytes(r.uid.0))?)?.entity)?;
+        let e = core(
+            &self
+                .store
+                .get(self.slot_of(Uuid::from_bytes(r.uid.0))?)?
+                .entity,
+        )?;
         if r.path.is_empty() {
             return Some(e);
         }
@@ -481,7 +510,12 @@ impl Document {
             DimensionRule::Curve => {
                 let radial = matches!(
                     was.style,
-                    Some(DimensionStyle::Radius | DimensionStyle::Diameter | DimensionStyle::Jogged)
+                    Some(
+                        DimensionStyle::Radius
+                            | DimensionStyle::Diameter
+                            | DimensionStyle::Jogged
+                            | DimensionStyle::CenterMark
+                    )
                 );
                 let on = if radial {
                     live(&refs.b)
@@ -505,9 +539,8 @@ impl Document {
                     else {
                         return;
                     };
-                    let q_was = reference_of(was, "b").and_then(|w| {
-                        point(&self.object_before(w, changed)?, core_place(w.place))
-                    });
+                    let q_was = reference_of(was, "b")
+                        .and_then(|w| point(&self.object_before(w, changed)?, core_place(w.place)));
                     next.b = match q_was {
                         Some(qw) if (qw.x, qw.y) != (was.b.x, was.b.y) => {
                             let turn = |p: Vec2, o: Vec2| atan2(p.y - o.y, p.x - o.x);
@@ -536,7 +569,8 @@ impl Document {
                 }
             }
             DimensionRule::Edges => {
-                let (Some(ra), Some(rb), Some(c_was)) = (live(&refs.a), live(&refs.b), was.c) else {
+                let (Some(ra), Some(rb), Some(c_was)) = (live(&refs.a), live(&refs.b), was.c)
+                else {
                     return;
                 };
                 let line = |r: &SubRef| {
@@ -556,18 +590,19 @@ impl Document {
                     let e = self.object_before(r, changed)?;
                     edge_line(&e, core_place(r.place))
                 };
-                let arm = |name: &str, now: (kentos_geometry_core::Vec2, kentos_geometry_core::Vec2)| {
-                    let p = point_of(was, name)?;
-                    let (vx, vy) = (p.x - c_was.x, p.y - c_was.y);
-                    let length = js_hypot(vx, vy);
-                    let (ox, oy) = before(name).and_then(|(a, b)| unit(a, b))?;
-                    let (ux, uy) = unit(now.0, now.1)?;
-                    let side = if vx * ox + vy * oy < 0.0 { -1.0 } else { 1.0 };
-                    Some(Vec2 {
-                        x: c.x + side * length * ux,
-                        y: c.y + side * length * uy,
-                    })
-                };
+                let arm =
+                    |name: &str, now: (kentos_geometry_core::Vec2, kentos_geometry_core::Vec2)| {
+                        let p = point_of(was, name)?;
+                        let (vx, vy) = (p.x - c_was.x, p.y - c_was.y);
+                        let length = js_hypot(vx, vy);
+                        let (ox, oy) = before(name).and_then(|(a, b)| unit(a, b))?;
+                        let (ux, uy) = unit(now.0, now.1)?;
+                        let side = if vx * ox + vy * oy < 0.0 { -1.0 } else { 1.0 };
+                        Some(Vec2 {
+                            x: c.x + side * length * ux,
+                            y: c.y + side * length * uy,
+                        })
+                    };
                 let (Some(a), Some(b)) = (arm("a", la), arm("b", lb)) else {
                     return;
                 };
@@ -575,7 +610,70 @@ impl Document {
                 next.b = b;
                 next.c = Some(wire(c));
             }
+            DimensionRule::Pair => {
+                let (Some(ra), Some(rb)) = (live(&refs.a), live(&refs.b)) else {
+                    return;
+                };
+                let line = |r: &SubRef| {
+                    self.object_now(r)
+                        .and_then(|e| edge_line(&e, core_place(r.place)))
+                };
+                let (Some(la), Some(lb)) = (line(&ra), line(&rb)) else {
+                    return;
+                };
+                let [s, e] = pair_axis(la, lb);
+                next.a = wire(s);
+                next.b = wire(e);
+            }
         }
+    }
+}
+
+/// An axis between two straight edges (docs/adr/0322): from the middle of their starts to the middle of their ends,
+/// the second turned to run the first's way (when its direction is against the first's).
+pub fn pair_axis(
+    first: (kentos_geometry_core::Vec2, kentos_geometry_core::Vec2),
+    second: (kentos_geometry_core::Vec2, kentos_geometry_core::Vec2),
+) -> [kentos_geometry_core::Vec2; 2] {
+    let (p0, p1) = first;
+    let (mut q0, mut q1) = second;
+    if (p1.x - p0.x) * (q1.x - q0.x) + (p1.y - p0.y) * (q1.y - q0.y) < 0.0 {
+        std::mem::swap(&mut q0, &mut q1);
+    }
+    let mid = |a: kentos_geometry_core::Vec2, b: kentos_geometry_core::Vec2| {
+        kentos_geometry_core::Vec2::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0)
+    };
+    [mid(p0, q0), mid(p1, q1)]
+}
+
+/// The elevation a place keeps (docs/adr/0142): a point's, a line's end's, a path's vertex's.
+pub fn place_elevation(e: &Entity, place: SubPlace) -> Option<f64> {
+    let nth = |zs: &Option<Vec<Option<f64>>>, i: u32| {
+        zs.as_ref()
+            .and_then(|z| z.get(i as usize).copied())
+            .flatten()
+    };
+    match (e, place) {
+        (Entity::Point(p), SubPlace::Node { part: 0 }) => p.z,
+        (Entity::Point(p), SubPlace::Node { part }) => {
+            p.parts.as_ref()?.get(part as usize - 1).and_then(|q| q.z)
+        }
+        (Entity::Line(l), SubPlace::Start) => l.za,
+        (Entity::Line(l), SubPlace::End) => l.zb,
+        (Entity::Polyline(p) | Entity::Polygon(p), SubPlace::Vertex { part, ring, index }) => {
+            let (zs, holes) = if part == 0 {
+                (&p.zs, &p.holes)
+            } else {
+                let q = p.parts.as_ref()?.get(part as usize - 1)?;
+                (&q.zs, &q.holes)
+            };
+            if ring == 0 {
+                nth(zs, index)
+            } else {
+                nth(&holes.as_ref()?.get(ring as usize - 1)?.zs, index)
+            }
+        }
+        _ => None,
     }
 }
 

@@ -13,10 +13,12 @@ use crate::vec2::Vec2;
 
 mod kinds;
 pub mod look;
+mod marks;
 mod quick;
 
 pub use kinds::DimensionFault;
 pub use look::{Arrow, Look, LookLines};
+pub use marks::LEVEL_DECIMALS;
 pub use quick::{QuickDimensions, quick_dimensions};
 
 const SQRT1_2: f64 = std::f64::consts::FRAC_1_SQRT_2;
@@ -167,7 +169,9 @@ fn value_width(d: &DimensionGeom, value: f64) -> f64 {
         _ => 1.0,
     };
     let decimals = d.look.decimals.unwrap_or(3) as usize;
-    let digits = crate::display::fixed(value * per_metre, decimals).chars().count();
+    let digits = crate::display::fixed(value * per_metre, decimals)
+        .chars()
+        .count();
     let affixes = d.look.prefix.as_deref().map_or(0, |p| p.chars().count())
         + d.look.suffix.as_deref().map_or(0, |p| p.chars().count());
     0.6 * d.height * (digits + affixes) as f64
@@ -226,7 +230,10 @@ fn finish(d: &DimensionGeom, l: &mut DimensionLayout) {
             1 => (d.a, l.d1),
             _ => (d.b, l.d2),
         };
-        cuts.push(Vec2::new(from.x + (to.x - from.x) * t, from.y + (to.y - from.y) * t));
+        cuts.push(Vec2::new(
+            from.x + (to.x - from.x) * t,
+            from.y + (to.y - from.y) * t,
+        ));
     }
     let mut lines = Vec::with_capacity(l.lines.len() + cuts.len());
     let mut ext = Vec::new();
@@ -289,6 +296,9 @@ fn kind_layout(d: &DimensionGeom) -> Option<DimensionLayout> {
         "jogged" => kinds::jogged(d),
         "azimuth" => kinds::arrowed(d, false),
         "slope" => kinds::arrowed(d, true),
+        "centerMark" => marks::center_mark(d),
+        "centerLine" => marks::center_line(d),
+        "elevation" => marks::elevation(d),
         _ => aligned(d),
     }
 }
@@ -306,7 +316,16 @@ pub fn dimension_fault(d: &DimensionGeom) -> Option<DimensionFault> {
 pub fn is_new_kind(style: Option<&str>) -> bool {
     matches!(
         style,
-        Some("ordinate" | "arcLength" | "jogged" | "azimuth" | "slope")
+        Some(
+            "ordinate"
+                | "arcLength"
+                | "jogged"
+                | "azimuth"
+                | "slope"
+                | "centerMark"
+                | "centerLine"
+                | "elevation"
+        )
     )
 }
 
@@ -322,6 +341,8 @@ pub fn dimension_measure(style: Option<&str>, angle: Option<f64>) -> (&'static s
         Some("ordinate") => ("coordinate", "X="),
         Some("azimuth") => ("angle", "t="),
         Some("slope") => ("percent", "%"),
+        Some("centerMark" | "centerLine") => ("none", ""),
+        Some("elevation") => ("level", ""),
         _ => ("length", ""),
     }
 }
@@ -552,6 +573,19 @@ pub fn dimension_offset_at(d: &DimensionGeom, p: Vec2) -> f64 {
             None => d.offset,
         },
         "jogged" => kinds::jog_at(d, p).unwrap_or(d.offset),
+        // docs/adr/0322: a centre mark's axis lines past the curve, an axis past its end; a level has none.
+        "centerMark" => js_max(
+            0.0,
+            js_hypot(p.x - d.a.x, p.y - d.a.y) - js_hypot(d.b.x - d.a.x, d.b.y - d.a.y),
+        ),
+        "centerLine" => {
+            let l = or(js_hypot(d.b.x - d.a.x, d.b.y - d.a.y), 1.0);
+            js_max(
+                0.0,
+                ((p.x - d.b.x) * (d.b.x - d.a.x) + (p.y - d.b.y) * (d.b.y - d.a.y)) / l,
+            )
+        }
+        "elevation" => d.offset,
         _ => signed_offset(d.a, d.b, p),
     }
 }

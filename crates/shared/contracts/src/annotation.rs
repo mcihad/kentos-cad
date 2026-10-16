@@ -115,6 +115,151 @@ pub struct TextFace {
     #[cfg_attr(feature = "schema", schemars(range(min = -85.0, max = 85.0)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub oblique: Option<f64>,
+    /// The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub overrides: Vec<String>,
+}
+
+/// A dimension's fields a style sets, by their names on the wire (docs/adr/0322 §5): its look's and its height.
+pub const DIMENSION_OVERRIDES: [&str; 20] = [
+    "arrow",
+    "arrowSize",
+    "extOffset",
+    "extBeyond",
+    "textGap",
+    "textPlace",
+    "decimals",
+    "unit",
+    "prefix",
+    "suffix",
+    "font",
+    "dimLineColor",
+    "dimLineWeight",
+    "dimLineType",
+    "extColor",
+    "extWeight",
+    "extLineType",
+    "textColor",
+    "options",
+    "height",
+];
+
+/// A text's fields a style sets, by their names on the wire (docs/adr/0322 §5).
+pub const TEXT_OVERRIDES: [&str; 6] =
+    ["font", "bold", "italic", "oblique", "widthFactor", "height"];
+
+/// What is wrong with an override list: a name not among `known`, or one named twice.
+fn overrides_problem(list: &[String], known: &[&str]) -> Option<String> {
+    for (i, name) in list.iter().enumerate() {
+        if !known.contains(&name.as_str()) {
+            return Some(format!(
+                "“{name}” stilin bir alanı değil; geçersiz kılınan alanlar: {}.",
+                known.join(", ")
+            ));
+        }
+        if list[..i].contains(name) {
+            return Some(format!("“{name}” geçersiz kılınanlarda iki kez var."));
+        }
+    }
+    None
+}
+
+/// The fields of `after` set apart from its style `style` (docs/adr/0322 §5), from each field's value, the style's
+/// and the object's before the step, and the overrides the step left it with (`own`: a copied object's as they were,
+/// none when the step took them away): a field the step changed is the object's own when it differs from the
+/// style's value, and follows again when it equals it; one the step did not change is as `own` says.
+fn overrides_after(
+    names: &[&'static str],
+    was: &serde_json::Map<String, serde_json::Value>,
+    own: &[String],
+    after: &serde_json::Map<String, serde_json::Value>,
+    style: &serde_json::Map<String, serde_json::Value>,
+) -> Vec<String> {
+    names
+        .iter()
+        .filter(|name| {
+            if was.get(**name) != after.get(**name) {
+                after.get(**name) != style.get(**name)
+            } else {
+                own.iter().any(|o| o == **name)
+            }
+        })
+        .map(|name| (*name).to_owned())
+        .collect()
+}
+
+fn as_map(v: serde_json::Value) -> serde_json::Map<String, serde_json::Value> {
+    match v {
+        serde_json::Value::Object(m) => m,
+        _ => serde_json::Map::new(),
+    }
+}
+
+/// A dimension's style fields as values: its look's (none absent) and its height.
+fn dimension_fields(
+    look: &DimensionLook,
+    height: f64,
+) -> serde_json::Map<String, serde_json::Value> {
+    let mut m = as_map(serde_json::to_value(look).unwrap_or_default());
+    m.insert("height".into(), serde_json::json!(height));
+    m
+}
+
+/// A text's style fields as values; its width factor 1 when it has none.
+fn text_fields(look: &TextLook) -> serde_json::Map<String, serde_json::Value> {
+    let f = &look.face;
+    as_map(serde_json::json!({
+        "font": f.font,
+        "bold": f.bold,
+        "italic": f.italic,
+        "oblique": f.oblique,
+        "widthFactor": look.width_factor.unwrap_or(1.0),
+        "height": look.height,
+    }))
+}
+
+/// A dimension of the style `style`'s overrides after a step that changed it (docs/adr/0322 §5): `before` its look and
+/// height before the step, of the same style.
+pub fn dimension_overrides(
+    before: (&DimensionLook, f64),
+    after: (&DimensionLook, f64),
+    style: &DimensionStyleDef,
+    plot_scale: f64,
+) -> Vec<String> {
+    overrides_after(
+        &DIMENSION_OVERRIDES,
+        &dimension_fields(before.0, before.1),
+        &after.0.overrides,
+        &dimension_fields(after.0, after.1),
+        &dimension_fields(&style.look(), style.height_at(plot_scale)),
+    )
+}
+
+/// A text of the style `style`'s overrides after a step, as `dimension_overrides`. A style that fixes no height
+/// leaves the text's height its own business: never an override.
+pub fn text_overrides(
+    before: &TextLook,
+    after: &TextLook,
+    style: &TextStyleDef,
+    plot_scale: f64,
+) -> Vec<String> {
+    let styled = TextLook {
+        face: style.face(),
+        width_factor: style.width_factor,
+        height: style.height_at(plot_scale).unwrap_or(after.height),
+    };
+    let mut own = overrides_after(
+        &TEXT_OVERRIDES,
+        &text_fields(before),
+        &after.face.overrides,
+        &text_fields(after),
+        &text_fields(&styled),
+    );
+    if style.height.is_none() {
+        own.retain(|n| n != "height");
+    }
+    own
 }
 
 /// Whether `o` may be a text's slant: finite, not 0, less than `MAX_OBLIQUE` either way.
@@ -165,6 +310,9 @@ impl TextFace {
                     "Yazının eğikliği −{MAX_OBLIQUE} ile {MAX_OBLIQUE} derece arasında ve sıfırdan farklı olmalı; {o} verildi. Eğikliği bu aralıkta verin ya da alanı kaldırın (dik)."
                 ),
             ));
+        }
+        if let Some(words) = overrides_problem(&self.overrides, &TEXT_OVERRIDES) {
+            return Some(("overrides", words));
         }
         None
     }
@@ -325,6 +473,11 @@ pub struct DimensionLook {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub options: Option<Box<crate::DimensionOptions>>,
+    /// The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep
+    /// their value when the style changes. Empty: each field follows while it holds the style's old value.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub overrides: Vec<String>,
 }
 
 /// Whether a dimension line's weight may be written: finite, 0 (the thinnest
@@ -414,8 +567,15 @@ impl DimensionLook {
     /// prefix or a suffix empty, too long or with a line break. None when it
     /// may be written.
     pub fn problem(&self) -> Option<(&'static str, String)> {
-        if let Some(words) = self.options.as_deref().and_then(crate::DimensionOptions::problem) {
+        if let Some(words) = self
+            .options
+            .as_deref()
+            .and_then(crate::DimensionOptions::problem)
+        {
             return Some(("options", words));
+        }
+        if let Some(words) = overrides_problem(&self.overrides, &DIMENSION_OVERRIDES) {
+            return Some(("overrides", words));
         }
         if self.dim_style.as_deref().is_some_and(str::is_empty) {
             return Some((
@@ -735,6 +895,7 @@ impl TextStyleDef {
     /// The face a text in this style has.
     pub fn face(&self) -> TextFace {
         TextFace {
+            overrides: Vec::new(),
             text_style: Some(self.id.clone()),
             font: Some(self.font),
             bold: self.bold,
@@ -759,7 +920,11 @@ impl DimensionStyleDef {
     /// What is wrong with its values (its name aside); none when they hold.
     pub fn problem(&self) -> Option<String> {
         let name = &self.name;
-        if let Some(words) = self.options.as_deref().and_then(crate::DimensionOptions::problem) {
+        if let Some(words) = self
+            .options
+            .as_deref()
+            .and_then(crate::DimensionOptions::problem)
+        {
             return Some(format!("“{name}” ölçü stili: {words}"));
         }
         if !mm_holds(self.height, true) {
@@ -834,6 +999,7 @@ impl DimensionStyleDef {
     pub fn look(&self) -> DimensionLook {
         let tick = self.arrow.is_none();
         DimensionLook {
+            overrides: Vec::new(),
             dim_style: Some(self.id.clone()),
             arrow: self.arrow,
             arrow_size: ratio(
@@ -955,32 +1121,41 @@ pub fn follow_text_style(
     plot_scale: f64,
 ) -> TextLook {
     let f = &look.face;
+    // An override keeps its value (docs/adr/0322 §5).
+    let free = |name: &str| !f.overrides.iter().any(|o| o == name);
     let face = TextFace {
         text_style: f.text_style.clone(),
-        font: if f.font == Some(old.font) {
+        font: if free("font") && f.font == Some(old.font) {
             Some(new.font)
         } else {
             f.font
         },
-        bold: if f.bold == old.bold { new.bold } else { f.bold },
-        italic: if f.italic == old.italic {
+        bold: if free("bold") && f.bold == old.bold {
+            new.bold
+        } else {
+            f.bold
+        },
+        italic: if free("italic") && f.italic == old.italic {
             new.italic
         } else {
             f.italic
         },
-        oblique: if f.oblique == old.oblique {
+        oblique: if free("oblique") && f.oblique == old.oblique {
             new.oblique
         } else {
             f.oblique
         },
+        overrides: f.overrides.clone(),
     };
-    let width_factor = if look.width_factor.unwrap_or(1.0) == old.width_factor.unwrap_or(1.0) {
+    let width_factor = if free("widthFactor")
+        && look.width_factor.unwrap_or(1.0) == old.width_factor.unwrap_or(1.0)
+    {
         new.width_factor
     } else {
         look.width_factor
     };
     let height = match (old.height_at(plot_scale), new.height_at(plot_scale)) {
-        (Some(was), Some(now)) if look.height == was => now,
+        (Some(was), Some(now)) if free("height") && look.height == was => now,
         _ => look.height,
     };
     TextLook {
@@ -1016,44 +1191,105 @@ pub fn follow_dimension_style(
     plot_scale: f64,
 ) -> (DimensionLook, f64) {
     let (was, now) = (old.look(), new.look());
-    fn pick<T: PartialEq + Clone>(mine: &T, was: &T, now: &T) -> T {
-        if mine == was {
+    // An override keeps its value (docs/adr/0322 §5).
+    let own = &look.overrides;
+    fn pick<T: PartialEq + Clone>(free: bool, mine: &T, was: &T, now: &T) -> T {
+        if free && mine == was {
             now.clone()
         } else {
             mine.clone()
         }
     }
+    let free = |name: &str| !own.iter().any(|o| o == name);
     let out = DimensionLook {
         dim_style: look.dim_style.clone(),
-        arrow: pick(&look.arrow, &was.arrow, &now.arrow),
-        arrow_size: pick(&look.arrow_size, &was.arrow_size, &now.arrow_size),
-        ext_offset: pick(&look.ext_offset, &was.ext_offset, &now.ext_offset),
-        ext_beyond: pick(&look.ext_beyond, &was.ext_beyond, &now.ext_beyond),
-        text_gap: pick(&look.text_gap, &was.text_gap, &now.text_gap),
-        text_place: pick(&look.text_place, &was.text_place, &now.text_place),
-        decimals: pick(&look.decimals, &was.decimals, &now.decimals),
-        unit: pick(&look.unit, &was.unit, &now.unit),
-        prefix: pick(&look.prefix, &was.prefix, &now.prefix),
-        suffix: pick(&look.suffix, &was.suffix, &now.suffix),
-        font: pick(&look.font, &was.font, &now.font),
+        arrow: pick(free("arrow"), &look.arrow, &was.arrow, &now.arrow),
+        arrow_size: pick(
+            free("arrowSize"),
+            &look.arrow_size,
+            &was.arrow_size,
+            &now.arrow_size,
+        ),
+        ext_offset: pick(
+            free("extOffset"),
+            &look.ext_offset,
+            &was.ext_offset,
+            &now.ext_offset,
+        ),
+        ext_beyond: pick(
+            free("extBeyond"),
+            &look.ext_beyond,
+            &was.ext_beyond,
+            &now.ext_beyond,
+        ),
+        text_gap: pick(
+            free("textGap"),
+            &look.text_gap,
+            &was.text_gap,
+            &now.text_gap,
+        ),
+        text_place: pick(
+            free("textPlace"),
+            &look.text_place,
+            &was.text_place,
+            &now.text_place,
+        ),
+        decimals: pick(
+            free("decimals"),
+            &look.decimals,
+            &was.decimals,
+            &now.decimals,
+        ),
+        unit: pick(free("unit"), &look.unit, &was.unit, &now.unit),
+        prefix: pick(free("prefix"), &look.prefix, &was.prefix, &now.prefix),
+        suffix: pick(free("suffix"), &look.suffix, &was.suffix, &now.suffix),
+        font: pick(free("font"), &look.font, &was.font, &now.font),
         dim_line_color: pick(
+            free("dimLineColor"),
             &look.dim_line_color,
             &was.dim_line_color,
             &now.dim_line_color,
         ),
         dim_line_weight: pick(
+            free("dimLineWeight"),
             &look.dim_line_weight,
             &was.dim_line_weight,
             &now.dim_line_weight,
         ),
-        dim_line_type: pick(&look.dim_line_type, &was.dim_line_type, &now.dim_line_type),
-        ext_color: pick(&look.ext_color, &was.ext_color, &now.ext_color),
-        ext_weight: pick(&look.ext_weight, &was.ext_weight, &now.ext_weight),
-        ext_line_type: pick(&look.ext_line_type, &was.ext_line_type, &now.ext_line_type),
-        text_color: pick(&look.text_color, &was.text_color, &now.text_color),
-        options: pick(&look.options, &was.options, &now.options),
+        dim_line_type: pick(
+            free("dimLineType"),
+            &look.dim_line_type,
+            &was.dim_line_type,
+            &now.dim_line_type,
+        ),
+        ext_color: pick(
+            free("extColor"),
+            &look.ext_color,
+            &was.ext_color,
+            &now.ext_color,
+        ),
+        ext_weight: pick(
+            free("extWeight"),
+            &look.ext_weight,
+            &was.ext_weight,
+            &now.ext_weight,
+        ),
+        ext_line_type: pick(
+            free("extLineType"),
+            &look.ext_line_type,
+            &was.ext_line_type,
+            &now.ext_line_type,
+        ),
+        text_color: pick(
+            free("textColor"),
+            &look.text_color,
+            &was.text_color,
+            &now.text_color,
+        ),
+        options: pick(free("options"), &look.options, &was.options, &now.options),
+        overrides: look.overrides.clone(),
     };
-    let height = if height == old.height_at(plot_scale) {
+    let height = if free("height") && height == old.height_at(plot_scale) {
         new.height_at(plot_scale)
     } else {
         height

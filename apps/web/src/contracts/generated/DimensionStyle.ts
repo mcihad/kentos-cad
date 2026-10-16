@@ -5,4 +5,4 @@
  * (docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`
  * mean for each is the ADR's table.
  */
-export type DimensionStyle = "aligned" | "linear" | "angular" | "radius" | "diameter" | "ordinate" | "arcLength" | "jogged" | "azimuth" | "slope";
+export type DimensionStyle = "aligned" | "linear" | "angular" | "radius" | "diameter" | "ordinate" | "arcLength" | "jogged" | "azimuth" | "slope" | "centerMark" | "centerLine" | "elevation";

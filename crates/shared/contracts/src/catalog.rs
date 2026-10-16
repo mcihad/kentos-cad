@@ -3952,7 +3952,8 @@ pub fn catalog() -> CommandCatalog {
             title: "Yazı ve ölçü stilleri".into(),
             summary: "Projenin adlı yazı (kind text) ya da ölçü (kind dimension) stillerinden birini değiştirir (operation): create yeni stili tablonun sonuna ekler (kimliği boşsa yeni bir UUIDv7 verilir), \
                       update stilin değerlerini değiştirir: o stildeki yazılar (ölçüler) eski değeri hâlâ taşıyan alanlarında yenisini alır, elle değiştirilenler kalır; rename stilin adını değiştirir, nesneler değişmez; \
-                      remove stili siler, nesneleri görünüşlerini korur ve bağlarını yitirir. Adlar büyük küçük harf ayırmadan bir kez kullanılır, Standart başka stile verilmez. \
+                      remove stili siler, nesneleri görünüşlerini korur ve bağlarını yitirir; export türün stillerini (styles verilmişse onları) kentos.annotation-styles dosyasının metni olarak library'de verir, yazmaz; \
+                      import library'deki dosyanın stillerini adlarıyla alır: yeni ad eklenir, tablodaki ad olduğu gibi kalır (skipped) ya da replace ile yerinde güncellenir ve nesneleri izler. Adlar büyük küçük harf ayırmadan bir kez kullanılır, Standart başka stile verilmez. \
                       Tablo proje ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı değildir; izleyen nesneler tek geri alma adımında (“Yazı stili”, “Ölçü stili”) yazılır, kilitli katmandakiler değişmez ve locked'da sayılır. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
@@ -3976,6 +3977,11 @@ pub fn catalog() -> CommandCatalog {
                         "operation": "create",
                         "text": { "id": "", "name": "Ada no", "font": "arimo", "bold": true, "height": 3.5 }
                     }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Yazı stillerini dosyaya ver".into(),
+                    input: json!({ "kind": "text", "operation": "export" }),
                     output: None,
                 },
                 CommandExample {
@@ -5011,7 +5017,8 @@ mod tests {
                         serde_json::from_value::<crate::DimensionsEdit>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_DIMENSIONS_QUERY => {
-                        serde_json::from_value::<crate::DimensionsQuery>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::DimensionsQuery>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_ENTITIES_TRIM | crate::CAD_ENTITIES_EXTEND => {
                         serde_json::from_value::<crate::EntitiesTrim>(e.input.clone()).map(|_| ())

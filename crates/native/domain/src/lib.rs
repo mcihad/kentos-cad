@@ -36,8 +36,8 @@ mod edit;
 pub mod etag;
 pub mod exchange;
 mod external;
-mod followers;
 pub mod fields;
+mod followers;
 mod hash;
 mod hatch_ties;
 mod history;
@@ -51,6 +51,7 @@ mod patch;
 mod snapshot;
 mod step;
 mod store;
+mod style_overrides;
 mod units;
 
 pub use calls::{REFUSED_CALLS, RefusedAs, RefusedCall};

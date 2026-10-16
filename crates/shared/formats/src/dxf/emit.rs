@@ -617,6 +617,7 @@ impl<'l> Emitter<'l> {
             None => oblique,
         };
         kentos_contracts::TextFace {
+            overrides: Vec::new(),
             text_style: id,
             font: Some(font),
             bold,
@@ -885,7 +886,6 @@ impl<'l> Emitter<'l> {
             Weight::Mm(w) => Some(w),
         }
     }
-
 
     /// What an insert hands its BYBLOCK children: its own weight, or its layer's.
     fn insert_weight(&self, e: &Parsed, ctx: &Ctx, layer: &str) -> Option<f64> {
@@ -2685,7 +2685,8 @@ impl<'l> Emitter<'l> {
             p: v(placed.p[0], placed.p[1]),
             scale: sx.abs(),
             // Unequal factors stay one insert (docs/adr/0315 §3); equal ones within a billionth are one.
-            y_scale: (sx != 0.0 && (sx.abs() - sy.abs()).abs() > sx.abs() * 1e-9).then_some(sy.abs()),
+            y_scale: (sx != 0.0 && (sx.abs() - sy.abs()).abs() > sx.abs() * 1e-9)
+                .then_some(sy.abs()),
             rotation: exact.unwrap_or_else(|| turn_of(degrees)),
             mirror,
         }));

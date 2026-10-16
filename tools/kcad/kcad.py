@@ -202,6 +202,15 @@ SCHEMA_WITH_DIMENSION_RULES = 60
 # Schema 61: schema 60, a dimension's and a dimension style's `options` and a dimension's `textShift` and `breaks`
 # (docs/adr/0321).
 SCHEMA_WITH_DIMENSION_OPTIONS = 61
+# Schema 62: schema 61, a dimension's kinds `centerMark`, `centerLine`, `elevation` and its references' rule `pair`
+# (docs/adr/0322).
+SCHEMA_WITH_DIMENSION_MARKS = 62
+# Schema 63: schema 62, a text's and a dimension's `overrides`: the fields set apart from their style (docs/adr/0322 §5).
+SCHEMA_WITH_OVERRIDES = 63
+TEXT_OVERRIDES = ("font", "bold", "italic", "oblique", "widthFactor", "height")
+DIMENSION_OVERRIDES = ("arrow", "arrowSize", "extOffset", "extBeyond", "textGap", "textPlace", "decimals", "unit", "prefix", "suffix",
+                       "font", "dimLineColor", "dimLineWeight", "dimLineType", "extColor", "extWeight", "extLineType", "textColor",
+                       "options", "height")
 # A definition opens into at most a million pieces (kentos_contracts::blocks::MAX_BLOCK_PIECES, docs/adr/0316 §4).
 MAX_BLOCK_PIECES = 1_000_000
 # A pattern has at most 12 elements (AutoCAD's LIN, kentos_contracts::MAX_PATTERN_ELEMENTS).
@@ -363,7 +372,8 @@ REGISTRY_DATUMS = ("TUREF", "ED50", "WGS84")
 # The kinds a layer may keep to; `endpoint` brings the quadrants with it, so `quadrant` is none of them.
 LAYER_SNAP_KINDS = ("endpoint", "midpoint", "center", "node", "intersection", "perpendicular", "tangent", "nearest", "centroid", "extension", "parallel", "grid")
 # A dimension's kinds; schema 9 added the last five.
-DIMENSION_STYLES = ("aligned", "linear", "angular", "radius", "diameter", "ordinate", "arcLength", "jogged", "azimuth", "slope")
+DIMENSION_STYLES = ("aligned", "linear", "angular", "radius", "diameter", "ordinate", "arcLength", "jogged", "azimuth", "slope",
+                    "centerMark", "centerLine", "elevation")
 # A leader's arrowheads (spec §6.6); the filled arrow is the field's absence, no value. Schema 30 added AutoCAD's others
 # (docs/adr/0205 §7).
 LEADER_ARROWS = ("open", "dot", "none")
@@ -383,7 +393,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1890,6 +1900,8 @@ class _Schema:
         self.dynamic_blocks = version >= SCHEMA_WITH_DYNAMIC_BLOCKS
         self.dim_rules = version >= SCHEMA_WITH_DIMENSION_RULES
         self.dim_options = version >= SCHEMA_WITH_DIMENSION_OPTIONS
+        self.dim_marks = version >= SCHEMA_WITH_DIMENSION_MARKS
+        self.overrides = version >= SCHEMA_WITH_OVERRIDES
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -3698,6 +3710,20 @@ class _Schema:
             self.fail("bad_value", "zemin false yazılmaz; zeminsiz ölçüde alan yoktur")
         return True
 
+    def overrides_of(self, names):
+        """A text's or a dimension's overrides (docs/adr/0322 §5): not empty, each one of the kind's names, once."""
+        def read(v):
+            o = self.array(self.text)(v)
+            if not o:
+                self.fail("bad_value", "boş geçersiz kılma listesi yazılmaz")
+            for i, n in enumerate(o):
+                if n not in names:
+                    self.fail("bad_value", f"“{n}” stilin bir alanı değil")
+                if n in o[:i]:
+                    self.fail("bad_value", f"“{n}” geçersiz kılınanlarda iki kez var")
+            return o
+        return read
+
     def dimension_options(self, v):
         """A dimension's options (docs/adr/0321 §1, §2): none empty; an increment over 0, a break size over 0 and at most
         100, a tolerance's values 0 or more (a symmetric one has no lower), at most 8 decimals; lengths at most 10⁶ m."""
@@ -3750,16 +3776,20 @@ class _Schema:
     def dimension_rules(self, d):
         """What a dimension's style needs, and what only a slope has (docs/adr/0147)."""
         style = d.get("style")
-        needs = ["c"] if style in ("arcLength", "jogged") else ["za", "zb"] if style == "slope" else []
+        needs = ["c"] if style in ("arcLength", "jogged") else ["za", "zb"] if style == "slope" else ["za"] if style == "elevation" else []
         for key in needs:
             if key not in d:
                 self.path.append(key)
                 self.fail("missing_field", "zorunlu alan yok")
-        if style != "slope":
+        # A level's one elevation (docs/adr/0322).
+        if style == "elevation" and "zb" in d:
+            self.path.append("zb")
+            self.fail("bad_value", "kot ölçüsünün yalnız bir kotu (za) olur")
+        if style not in ("slope", "elevation"):
             for key in ("za", "zb"):
                 if key in d:
                     self.path.append(key)
-                    self.fail("bad_value", "kot (za, zb) yalnız eğim ölçüsünde yazılır")
+                    self.fail("bad_value", "kot (za, zb) yalnız eğim ve kot ölçüsünde yazılır")
         if style == "ordinate" and "angle" in d and d["angle"] not in (0.0, 90.0):
             self.path.append("angle")
             self.fail("bad_value", f"koordinat ölçüsünün ekseni {d['angle']}; 0 (Y) ya da 90 (X) olmalı")
@@ -4282,7 +4312,8 @@ class _Schema:
         table = {"a": (self.subref, False), "b": (self.subref, False), "c": (self.subref, False)}
         if self.dim_rules:
             # Schema 60 (docs/adr/0320 §1): how the points no place names follow.
-            table["rule"] = (self.enum(("curve", "edges")), False)
+            # Schema 62 (docs/adr/0322): the axis's pair.
+            table["rule"] = (self.enum(("curve", "edges", "pair") if self.dim_marks else ("curve", "edges")), False)
         refs = self.fields(table)(v)
         if not any(k in refs for k in "abc"):
             self.fail("bad_value", "Ölçünün başvuruları boş: hiç başvuru yoksa alan yazılmaz.")
@@ -4732,6 +4763,8 @@ ENTITY_KINDS = {
         ),
         # Schema 25 (docs/adr/0196 §1): the curve its letters stand on.
         **({"path": (s.text_path, False)} if s.text_paths else {}),
+        # Schema 63 (docs/adr/0322 §5): the fields set apart from its style.
+        **({"overrides": (s.overrides_of(TEXT_OVERRIDES), False)} if s.overrides else {}),
     },
     # Schema 9 (docs/adr/0147): five more kinds, `mask` only when true, a slope's two elevations.
     "dimension": lambda s: {
@@ -4740,7 +4773,7 @@ ENTITY_KINDS = {
         "c": (s.point, False),
         "text": (s.text, False),
         "angle": (s.float, False),
-        "style": (s.enum(DIMENSION_STYLES if s.dimensions else DIMENSION_STYLES[:5]), False),
+        "style": (s.enum(DIMENSION_STYLES if s.dim_marks else DIMENSION_STYLES[:10] if s.dimensions else DIMENSION_STYLES[:5]), False),
         "height": (s.float, True),
         "offset": (s.float, True),
         **({"mask": (s.dimension_mask, False), "za": (s.float, False), "zb": (s.float, False)} if s.dimensions else {}),
@@ -4783,6 +4816,8 @@ ENTITY_KINDS = {
         # Schema 61 (docs/adr/0321): its options, its moved value and its breaks.
         **({"options": (s.dimension_options, False), "textShift": (s.text_shift, False), "breaks": (s.dimension_breaks, False)}
            if s.dim_options else {}),
+        # Schema 63 (docs/adr/0322 §5): the fields set apart from its style.
+        **({"overrides": (s.overrides_of(DIMENSION_OVERRIDES), False)} if s.overrides else {}),
     },
     # Schema 23 (docs/adr/0186): a pattern's name, scale and families, a gradient; the objects it follows, only in the
     # drawing (a block definition's objects have no persistent ids to name).

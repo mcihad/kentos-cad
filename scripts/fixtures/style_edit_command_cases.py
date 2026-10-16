@@ -98,8 +98,26 @@ def step(op, input_=None, result=None, expect=None, **extra):
     return s
 
 
-def done(style, changed=True, followed=0, locked=0):
-    return {"status": "completed", "output": {"style": style, "changed": changed, "followed": followed, "locked": locked, "revision": "$current"}, "warnings": []}
+def done(style, changed=True, followed=0, locked=0, **lists):
+    out = {"style": style, "changed": changed, "followed": followed, "locked": locked}
+    for key in ("added", "replaced", "skipped", "library"):
+        if lists.get(key):
+            out[key] = lists[key]
+    out["revision"] = "$current"
+    return {"status": "completed", "output": out, "warnings": []}
+
+
+FORMAT = "kentos.annotation-styles"
+
+
+def library(kind, styles, fmt=FORMAT, version=1):
+    """A styles file's text as export writes it (docs/adr/0322 §4): canonical JSON, the keys sorted, no white space."""
+    return json.dumps({"format": fmt, "version": version, "kind": kind, "styles": styles}, ensure_ascii=False, sort_keys=True,
+                      separators=(",", ":"))
+
+
+def bad_library(why):
+    return f"Stil dosyası okunamadı: {why}. KentOS'un stilleri dışa aktarmasının yazdığı bir {FORMAT} dosyası verin."
 
 
 def failed(code, message, path):
@@ -230,6 +248,174 @@ def cases():
                           step("execute", {"kind": "text", "operation": "remove", "style": YOL["id"], "expectedRevision": "$once"},
                                {"status": "conflict", "error": {"code": "revision_conflict", "message": CONFLICT, "path": "expectedRevision", "revision": "$current"}},
                                {"revision": "same", "settings": {"textStyles": [ADA, YOL, NOT]}})]})
+    out.extend(transfer_cases())
+    out.extend(override_cases())
+    return out
+
+
+TEXT_OVERRIDES = ("font", "bold", "italic", "oblique", "widthFactor", "height")
+DIMENSION_OVERRIDES = ("arrow", "arrowSize", "extOffset", "extBeyond", "textGap", "textPlace", "decimals", "unit", "prefix", "suffix",
+                       "font", "dimLineColor", "dimLineWeight", "dimLineType", "extColor", "extWeight", "extLineType", "textColor",
+                       "options", "height")
+
+
+def text_fields(t):
+    return {"font": t.get("font"), "bold": bool(t.get("bold")), "italic": bool(t.get("italic")), "oblique": t.get("oblique"),
+            "widthFactor": t.get("widthFactor", 1), "height": t["height"]}
+
+
+def styled_text_fields(style, t):
+    face = A.face_of(style)
+    return {"font": face.get("font"), "bold": bool(face.get("bold")), "italic": bool(face.get("italic")), "oblique": face.get("oblique"),
+            "widthFactor": style.get("widthFactor", 1),
+            "height": A.height_at(style["height"], SCALE) if style.get("height") is not None else t["height"]}
+
+
+def dimension_fields(d):
+    return {**{k: d.get(k) for k in DIMENSION_OVERRIDES if k != "height"}, "height": d["height"]}
+
+
+def styled_dimension_fields(style):
+    look = A.look_of(style)
+    return {**{k: look.get(k) for k in DIMENSION_OVERRIDES if k != "height"}, "height": A.height_at(style["height"], SCALE)}
+
+
+def overrides_after(names, before, after, style, own):
+    """docs/adr/0322 §5: a field the step changed is the object's own when it differs from its style's value; one it
+    did not change is as the overrides the step left it with say (`own`)."""
+    return [n for n in names if (after[n] != style[n] if before[n] != after[n] else n in own)]
+
+
+def with_overrides(entity, own):
+    out = {k: v for k, v in entity.items() if k != "overrides"}
+    if own:
+        out["overrides"] = own
+    return out
+
+
+def hand(entity, style, **changes):
+    """The object after a hand edit of `changes`, with its overrides as the document writes them."""
+    after = {**entity, **changes}
+    after = {k: v for k, v in after.items() if v is not None}
+    # The edit writes the object as it was but for `changes`: its overrides too.
+    if entity["kind"] == "text":
+        own = overrides_after(TEXT_OVERRIDES, text_fields(entity), text_fields(after), styled_text_fields(style, after), after.get("overrides", []))
+    else:
+        own = overrides_after(DIMENSION_OVERRIDES, dimension_fields(entity), dimension_fields(after), styled_dimension_fields(style),
+                              after.get("overrides", []))
+    if style.get("height") is None and entity["kind"] == "text":
+        own = [n for n in own if n != "height"]
+    return with_overrides(after, own)
+
+
+def edit_input(after):
+    """cad.entities.edit's `properties` update writing `after`'s geometry (its face or look with it)."""
+    geometry = {k: v for k, v in after.items() if k not in ("id", "layerId", "attrs", "color")}
+    return {"operation": "properties", "changes": [{"kind": "update", "uid": f"$uidOf:{after['id']}", "geometry": geometry}]}
+
+
+def edited(entity_after):
+    return step("execute", edit_input(entity_after), command="cad.entities.edit", result="$any",
+                expect={"entities": {str(entity_after["id"]): entity_after}})
+
+
+def update_style(kind, style, expect):
+    return step("execute", {"kind": kind, "operation": "update", kind: style}, "$any", {"entities": expect})
+
+
+def override_cases():
+    """Overrides (docs/adr/0322 §5): what a hand edit sets apart from the style stays when the style changes, though it
+    may once hold the style's value; a field set back to the style's value follows again; an object no edit touched
+    follows by the older rule. Each with the commands Öznitelikler and the Yazı and Ölçü stilleri windows use."""
+    out = []
+    t1, d5 = E["1"], E["5"]
+    t1_font = hand(t1, ADA, font="overpass")
+    out.append({"name": "Geçersiz kılma: yazı tipi elle değişince geçersiz kılınanlara yazılır", "steps": [edited(t1_font)]})
+    via, then = dict(ADA, font="overpass"), dict(ADA, font="barlow")
+    out.append({"name": "Geçersiz kılma: stil önce o yazı tipine sonra başkasına geçse de elle verilen kalır",
+                "steps": [edited(t1_font), update_style("text", via, {"1": t1_font}),
+                          update_style("text", then, {"1": A.follow_text(via, then, t1_font, SCALE)})]})
+    out.append({"name": "Geçersiz kılma yokken (eski dosyalar) aynı adımlarda yazı stile uyar",
+                "steps": [update_style("text", via, {"1": A.follow_text(ADA, via, t1, SCALE)}),
+                          update_style("text", then, {"1": A.follow_text(via, then, A.follow_text(ADA, via, t1, SCALE), SCALE)})]})
+    back = hand(t1_font, ADA, font="arimo")
+    out.append({"name": "Geçersiz kılma: stilin değerine elle döndürülen alan yeniden stile uyar",
+                "steps": [edited(t1_font), edited(back)]})
+    t1_high = hand(t1, ADA, height=5.0)
+    taller = dict(ADA, height=5.0)
+    tallest = dict(ADA, height=6.0)
+    out.append({"name": "Geçersiz kılma: elle verilen yükseklik stilin yüksekliği değişince kalır",
+                "steps": [edited(t1_high), update_style("text", taller, {"1": A.follow_text(ADA, taller, t1_high, SCALE)}),
+                          update_style("text", tallest, {"1": A.follow_text(taller, tallest, A.follow_text(ADA, taller, t1_high, SCALE), SCALE)})]})
+    d5_own = hand(d5, OLCU, decimals=4)
+    olcu2 = dict(OLCU, decimals=4)
+    olcu3 = dict(OLCU, decimals=2)
+    out.append({"name": "Geçersiz kılma: ölçünün basamağı elle; stil o basamağa sonra başkasına geçse de kalır",
+                "steps": [edited(d5_own), update_style("dimension", olcu2, {"5": A.follow_dimension(OLCU, olcu2, d5_own, SCALE)}),
+                          update_style("dimension", olcu3, {"5": A.follow_dimension(olcu2, olcu3, A.follow_dimension(OLCU, olcu2, d5_own, SCALE), SCALE)})]})
+    removed = {k: v for k, v in t1_font.items() if k not in ("textStyle", "overrides")}
+    out.append({"name": "Geçersiz kılma: stil silinince stilin bağıyla geçersiz kılınanlar da gider",
+                "steps": [edited(t1_font), step("execute", {"kind": "text", "operation": "remove", "style": ADA["id"]}, "$any",
+                                                {"entities": {"1": removed}})]})
+    out.append({"name": "Geçersiz kılma: geri alma geçersiz kılmayı da geri alır",
+                "steps": [edited(t1_font), step("undo", returns="Değiştir", expect={"entities": {"1": t1}})]})
+    yol_text = A.apply_text(YOL, {k: v for k, v in t1_font.items() if k != "overrides"}, SCALE)
+    out.append({"name": "Geçersiz kılma: başka stile geçen yazı baştan başlar",
+                "steps": [edited(t1_font), edited(dict(yol_text, textStyle=YOL["id"]))]})
+    wrong = {**t1, "overrides": ["renk"]}
+    geometry = {k: v for k, v in wrong.items() if k not in ("id", "layerId", "attrs", "color")}
+    out.append({"name": "Geçersiz kılma: stilin alanı olmayan ad reddedilir",
+                "steps": [step("execute", {"operation": "properties", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": geometry}]},
+                               failed("invalid_style", "“renk” stilin bir alanı değil; geçersiz kılınan alanlar: font, bold, italic, oblique, widthFactor, height.",
+                                      "changes[0].geometry.overrides"),
+                               {"entities": {"1": t1}}, command="cad.entities.edit")]})
+    return out
+
+
+def transfer_cases():
+    """Export and import (docs/adr/0322 §4): the kind's styles given out as a file's text, writing nothing; a file's
+    styles taken in by name, trimmed and case folded: a new one added (its id kept when free), one the table has
+    skipped, or with `replace` updated in its place, its objects following as an update makes them."""
+    out = []
+    out.append({"name": "Dışa aktar: bütün yazı stilleri tablonun sırasıyla; yazmaz",
+                "steps": [step("execute", {"kind": "text", "operation": "export"},
+                               done(ADA["id"], False, library=library("text", [ADA, YOL])), {**UNCHANGED, "settings": TABLES})]})
+    out.append({"name": "Dışa aktar: seçilen ölçü stili",
+                "steps": [step("execute", {"kind": "dimension", "operation": "export", "styles": [OLCU["id"]]},
+                               done(OLCU["id"], False, library=library("dimension", [OLCU])), {**UNCHANGED, "settings": TABLES})]})
+    out.append({"name": "Dışa aktar: seçimin sırası değil, tablonunki",
+                "steps": [step("execute", {"kind": "text", "operation": "export", "styles": [YOL["id"], ADA["id"]]},
+                               done(ADA["id"], False, library=library("text", [ADA, YOL])), {**UNCHANGED, "settings": TABLES})]})
+    out.append(refused("Dışa aktar: projede olmayan stil", {"kind": "text", "operation": "export", "styles": [ADA["id"], NOT["id"]]},
+                       "style_not_found", f"“{NOT['id']}” kimlikli yazı stili projede yok.", "styles[1]"))
+    file = library("text", [NOT, dict(ADA, name="ADA NO", font="overpass")])
+    flags = {"ids": IDS, "dirty": True, "revision": "changed", "canUndo": False}
+    out.append({"name": "Al: yeni ad eklenir (kimliği korunur), tablodaki ad (büyük küçük harf ayırmadan) olduğu gibi kalır; adım yok",
+                "steps": [step("execute", {"kind": "text", "operation": "import", "library": file},
+                               done(NOT["id"], True, added=[NOT["id"]], skipped=["ADA NO"]),
+                               {**flags, "settings": {"textStyles": [ADA, YOL, NOT]}})]})
+    new_ada = {**ADA, "font": "overpass", "height": 5.0}
+    texts, locked = follow_texts(ADA, new_ada)
+    out.append({"name": "Al, değiştirerek: aynı adlı stil yerinde, kimliği ve adıyla güncellenir, yazıları izler; tek adım “Yazı stili”",
+                "steps": [step("execute", {"kind": "text", "operation": "import", "replace": True,
+                                           "library": library("text", [dict(new_ada, id=NOT["id"], name=" ada no ")])},
+                               done(ADA["id"], True, len(texts), locked, replaced=[ADA["id"]]),
+                               {"ids": IDS, "entities": texts, "settings": {"textStyles": [new_ada, YOL]}, "canUndo": True,
+                                "dirty": True})]})
+    out.append({"name": "Al: plan yazmaz",
+                "steps": [step("plan", {"kind": "text", "operation": "import", "library": file},
+                               done(NOT["id"], True, added=[NOT["id"]], skipped=["ADA NO"]), {**UNCHANGED, "settings": TABLES})]})
+    out.append(refused("Al: dosyasız", {"kind": "text", "operation": "import"}, "no_library",
+                       "Alınacak stil dosyasının metnini (library) verin.", "library"))
+    out.append(refused("Al: başka biçim", {"kind": "text", "operation": "import", "library": library("text", [], fmt="kentos.blocks")},
+                       "invalid_library", bad_library(f"biçimi {FORMAT} değil"), "library"))
+    out.append(refused("Al: başka sürüm", {"kind": "text", "operation": "import", "library": library("text", [], version=2)},
+                       "invalid_library", bad_library("sürümü 2; bu KentOS 1. sürümü okur"), "library"))
+    out.append(refused("Al: ölçü stilleri yazı stili olarak alınmaz", {"kind": "text", "operation": "import", "library": library("dimension", [CENTIK])},
+                       "invalid_library", bad_library("dosyanın stilleri “dimension”; istenen “text”"), "library"))
+    standart = dict(NOT, name="Standart")
+    out.append(refused("Al: Standart adı ayrılmıştır", {"kind": "text", "operation": "import", "library": library("text", [standart])},
+                       "invalid_style", text_problem([ADA, YOL, standart]), "library"))
     return out
 
 

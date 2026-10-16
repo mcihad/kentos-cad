@@ -1564,8 +1564,14 @@ impl Writer<'_> {
         self.out.int(70, def.kind | dim::OWN_BLOCK | east);
         self.out.int(71, 5);
         self.out.real(42, l.value);
-        self.out
-            .str(1, &own.as_deref().map(dim::mtext_value).unwrap_or_default());
+        // A mark writes no value: a space is AutoCAD's “no text” (docs/adr/0322).
+        let none = d.style.is_some_and(DimensionStyle::is_mark);
+        self.out.str(
+            1,
+            &own.as_deref()
+                .map(dim::mtext_value)
+                .unwrap_or_else(|| if none { " ".into() } else { String::new() }),
+        );
         self.out
             .str(3, self.styles.dimension(d.look.dim_style.as_ref()));
         self.dimension_kind(&def);
@@ -1600,8 +1606,16 @@ impl Writer<'_> {
                 0,
             );
         }
+        if d.style.is_some_and(DimensionStyle::is_schema_62) {
+            self.report.note(
+                "Ölçü",
+                "merkez işareti, eksen çizgisi ve kot DXF'te hizalı ölçü olarak, kendi çizgileriyle yazıldı; başka programlar çizgilerini gösterir, KentOS geri okur ama bağlarını okumaz",
+                0,
+            );
+        }
         let mut m = Self::base_meta(&d.base);
         let slope = d.style == Some(DimensionStyle::Slope);
+        let level = d.style == Some(DimensionStyle::Elevation);
         m.dimension = Some(DimMeta {
             style: dim::style_name(d.style).unwrap_or("").to_string(),
             offset: d.offset,
@@ -1610,7 +1624,7 @@ impl Writer<'_> {
             text: own.filter(|t| dim::mtext_value(t) != *t),
             center: (def.entity == "DIMENSION" && def.kind == dim::DIAMETER)
                 .then_some((d.a.x, d.a.y)),
-            za: d.za.filter(|_| slope),
+            za: d.za.filter(|_| slope || level),
             zb: d.zb.filter(|_| slope),
         });
         // The value over the drawing's background (also DIMTFILL in its overrides).

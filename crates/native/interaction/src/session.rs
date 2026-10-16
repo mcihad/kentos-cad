@@ -186,6 +186,10 @@ pub const TOOLS: &[&str] = &[
     cloud_query::ID,
     dimension_chain::CONTINUE_ID,
     dimension_chain::BASELINE_ID,
+    // docs/adr/0322: Merkez işareti, Eksen çizgisi and Kot.
+    crate::dimension_marks::CENTER_MARK_ID,
+    crate::dimension_marks::CENTER_LINE_ID,
+    crate::dimension_marks::ELEVATION_ID,
     // docs/adr/0147 §7: Hızlı ölçü.
     quick_dimension::ID,
     // Phase 3: the array along a path (Çit, İki yana and Kaynağı sil are options of existing tools).
@@ -534,6 +538,15 @@ impl Session {
             }
             dimension_chain::BASELINE_ID => {
                 Box::new(crate::dimension_chain::DimensionChain::baseline())
+            }
+            crate::dimension_marks::CENTER_MARK_ID => {
+                Box::new(crate::dimension_marks::DimensionMarks::center_mark())
+            }
+            crate::dimension_marks::CENTER_LINE_ID => {
+                Box::new(crate::dimension_marks::DimensionMarks::center_line())
+            }
+            crate::dimension_marks::ELEVATION_ID => {
+                Box::new(crate::dimension_marks::DimensionMarks::elevation())
             }
             quick_dimension::ID => Box::new(crate::quick_dimension::QuickDimension::tool()),
             array_path::ID => Box::new(crate::array_path::ArrayPath::tool()),

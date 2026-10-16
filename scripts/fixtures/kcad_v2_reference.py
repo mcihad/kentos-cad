@@ -48,8 +48,11 @@ MAGIC = b"\x89KCAD\r\n\x1a\n"
 # A text's alignments (spec §6.6, docs/adr/0145); the left of the baseline is the field's absence.
 TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", "bottomRight", "middleLeft", "middleCenter", "middleRight", "topLeft", "topCenter", "topRight")
 # A dimension's kinds (spec §6.6); schema 9 added the last five (docs/adr/0147).
-DIMENSION_STYLES = ("aligned", "linear", "angular", "radius", "diameter", "ordinate", "arcLength", "jogged", "azimuth", "slope")
-SCHEMA_9_STYLES = DIMENSION_STYLES[5:]
+DIMENSION_STYLES = ("aligned", "linear", "angular", "radius", "diameter", "ordinate", "arcLength", "jogged", "azimuth", "slope",
+                    "centerMark", "centerLine", "elevation")
+SCHEMA_9_STYLES = DIMENSION_STYLES[5:10]
+# Schema 62 (docs/adr/0322): the centre mark, the axis and the level.
+SCHEMA_62_STYLES = DIMENSION_STYLES[10:]
 # A leader's arrowheads (spec §6.6, docs/adr/0146); the filled arrow is the field's absence. Schema 30 added AutoCAD's
 # others (docs/adr/0205 §7).
 LEADER_ARROWS = ("open", "dot", "none")
@@ -1409,6 +1412,8 @@ KINDS = {
         "oblique": (f64, False),
         # Schema 25 (docs/adr/0196 §1): the curve its letters stand on, in its frame; bulges only when an edge bends.
         "path": (lambda c: cmap(fields(c, {"pts": (points, True), "bulges": (lambda b: array([f64(x) for x in b]), False)}, "eğri")), False),
+        # Schema 63 (docs/adr/0322 §5): the fields set apart from its style, by name.
+        "overrides": (lambda o: opaque(o) if o else None, False),
     },
     # Schema 9 (docs/adr/0147): five more kinds by name, `mask` only when true, a slope's two elevations.
     "dimension": {
@@ -1445,6 +1450,8 @@ KINDS = {
         "options": (opaque, False),
         "textShift": (opaque, False),
         "breaks": (lambda b: opaque(b) if b else None, False),
+        # Schema 63 (docs/adr/0322 §5): the fields set apart from its style, by name.
+        "overrides": (lambda o: opaque(o) if o else None, False),
     },
     # Schema 23 (docs/adr/0186): a pattern's name, scale and families, a gradient; the objects it follows, only in the drawing.
     "hatch": {
@@ -1597,9 +1604,9 @@ def subref(r):
 
 def dimension_refs(refs):
     """What a dimension's points follow (schema 43, docs/adr/0249 §4): `a`, `b`, `c`; none, no field. Their `rule`
-    (schema 60, docs/adr/0320 §1): `curve` or `edges`."""
+    (schema 60, docs/adr/0320 §1): `curve` or `edges`; `pair` (schema 62, docs/adr/0322)."""
     assert any(k in refs for k in "abc"), "boş başvurular yazılmaz"
-    assert refs.get("rule", "curve") in ("curve", "edges"), refs
+    assert refs.get("rule", "curve") in ("curve", "edges", "pair"), refs
     return cmap(fields(refs, {"a": (subref, False), "b": (subref, False), "c": (subref, False), "rule": (text, False)}, "refs"))
 
 
@@ -1962,6 +1969,14 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def line_patterned(nodes):
         return any("linePattern" in n.get("style", {}) or line_patterned(n.get("children", [])) for n in nodes)
 
+    # Schema 63 (docs/adr/0322 §5): a text's or a dimension's overrides.
+    overridden = lambda es: any(e["kind"] in ("text", "dimension") and e.get("overrides") for e in es)  # noqa: E731
+    if overridden(entities) or any(overridden(b["entities"]) for b in blocks or []):
+        return 63
+    # Schema 62 (docs/adr/0322): a centre mark, an axis or a level, or the pair rule.
+    marked = lambda es: any(e["kind"] == "dimension" and (e.get("style") in SCHEMA_62_STYLES or e.get("refs", {}).get("rule") == "pair") for e in es)  # noqa: E731
+    if marked(entities) or any(marked(b["entities"]) for b in blocks or []):
+        return 62
     # Schema 61 (docs/adr/0321): a dimension's options, moved value or breaks, or a dimension style's options.
     optioned = lambda es: any(e["kind"] == "dimension" and any(k in e for k in ("options", "textShift", "breaks")) for e in es)  # noqa: E731
     if (optioned(entities) or any(optioned(b["entities"]) for b in blocks or [])
@@ -2322,7 +2337,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-62.kcad"] = container(root(cmap(parts), version=uint(62)))
+    files["schema-version-64.kcad"] = container(root(cmap(parts), version=uint(64)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2651,6 +2666,17 @@ def broken(minimal_content, minimal_file):
     files["dimension-options-symmetric-lower.kcad"] = in_schema(61, plain(options=cmap({"tolerance": cmap({"kind": text("symmetric"), "upper": f64(0.01), "lower": f64(0.01)})})))
     files["dimension-options-unknown-field.kcad"] = in_schema(61, plain(options=cmap({"fit": text("auto"), "color": text("#FF0000")})))
     files["dimension-breaks-t-above-one.kcad"] = in_schema(61, plain(breaks=array([cmap({"line": text("first"), "t": f64(1.5)})])))
+    # The marks and the pair rule are schema 62's (docs/adr/0322): in schema 61 an unknown kind and rule; a level has
+    # its one elevation.
+    files["dimension-center-mark-in-schema-61.kcad"] = in_schema(61, plain(style=text("centerMark")))
+    files["dimension-rule-pair-in-schema-61.kcad"] = in_schema(61, dimension_of(cmap({"a": corner(0), "b": corner(1), "rule": text("pair")})))
+    files["dimension-elevation-without-z.kcad"] = in_schema(62, plain(style=text("elevation")))
+    files["dimension-elevation-with-zb.kcad"] = in_schema(62, plain(style=text("elevation"), za=f64(1.0), zb=f64(2.0)))
+    # Overrides are schema 63's (docs/adr/0322 §5): in schema 62 an unknown field; not empty, the kind's names, each once.
+    files["dimension-overrides-in-schema-62.kcad"] = in_schema(62, plain(overrides=array([text("decimals")])))
+    files["dimension-overrides-empty.kcad"] = in_schema(63, plain(overrides=array([])))
+    files["dimension-overrides-unknown.kcad"] = in_schema(63, plain(overrides=array([text("bold")])))
+    files["dimension-overrides-twice.kcad"] = in_schema(63, plain(overrides=array([text("arrow"), text("arrow")])))
     files["dimension-text-shift-in-schema-60.kcad"] = in_schema(60, plain(textShift=cmap({"along": f64(1.0), "across": f64(0.0)})))
     files["dimension-refs-in-block.kcad"] = with_blocks([block(1, "Ölçü", [cmap({"dimension": cmap({"attrs": cmap({}), "layerId": text("0"), **dim_body, "refs": cmap({"a": corner(0)})})})])], version=43)
     # A closed and a wide polyline are schema 46's (docs/adr/0258): in schema 45 unknown fields; an area has neither;
@@ -3610,6 +3636,8 @@ def build():
     out["dimension-refs.kcad"] = container(document(load("dimension-refs.json")))
     out["dimension-rules.kcad"] = container(document(load("dimension-rules.json")))
     out["dimension-options.kcad"] = container(document(load("dimension-options.json")))
+    out["dimension-marks.kcad"] = container(document(load("dimension-marks.json")))
+    out["overrides.kcad"] = container(document(load("overrides.json")))
     out["sheets.kcad"] = container(document(load("sheets.json")))
     out["requests.kcad"] = container(document(load("requests.json")))
     out["polyline-extras.kcad"] = container(document(load("polyline-extras.json")))

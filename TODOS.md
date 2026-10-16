@@ -180,6 +180,11 @@ Liste:
   `block_dynamic`'i WASM'la; yerleştirmenin değerleri depoya), `cad.blocks.parameters`'ın ve `cad.blocks.edit` `dynamic`'inin TS
   işleyicileri, Blok ekle'nin değerleri, KentOS blok kitaplığı komutu. Masaüstünde de açık: parametre noktalarının taşıma ve
   döndürme eylemleriyle zincirlenmesi (tutamaçlar yalnız çevirmelerin aynasını izler, ADR 0319).
+- [ ] `CAD-ANNO-11`, `16`, `17` merkez işareti, eksen, kot, stil dosyaları ve stilden ayrılan alanlar (ADR 0322, 16 Ekim): web'de
+  gerekenler: `.kcad` şema 62 ve 63 (`centerMark`, `centerLine`, `elevation`, `pair`, yazının ve ölçünün `overrides`'ı), çekirdeğin üç
+  yerleşimi WASM'la ve `level`, `none` birimleri, belgenin `pair` kuralı, kotun izlemesi ve `mark_overrides`'ı, `cad.dimensions.create`'in üç
+  ölçüsünün ve `cad.styles.edit`'in `export` ve `import`'unun TS işleyicileri, üç araç, stil pencerelerinin Dışa aktar…/Al…'ı, Öznitelikler'in
+  Stilden ayrılan satırı. Masaüstünde de açık: iki yay arası eksen; kotun omzunda yazı tipinin ölçülen genişliği.
 - [ ] `CAD-ANNO-08`, `09`, `10` ölçü aralığı, kırma, değerin yazımı ve elle yazılan değer (ADR 0321, 16 Ekim): web'de gerekenler:
   `.kcad` şema 61'in `options`, `textShift` ve `breaks`'i, çizimin yerleşiminde sığdırma, taşınan değer ve kırmalar (çekirdek WASM'la),
   değerin yazımı (`Format::dimension_value`'nun TS karşılığı, `dimension-values.json`), `cad.dimensions.edit` ve `cad.dimensions.query`'nin

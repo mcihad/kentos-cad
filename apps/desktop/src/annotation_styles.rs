@@ -129,7 +129,15 @@ pub enum Event {
     LineType(Part, Option<kentos_contracts::LineType>),
     Save,
     Cancel,
+    /// Dışa aktar… and Al… (docs/adr/0322 §4): the saved table to a file, a file's styles taken in.
+    Export,
+    Exported(Option<std::path::PathBuf>),
+    Import,
+    Imported(Option<std::path::PathBuf>),
 }
+
+const EXPORT: &str = "Dışa aktar…";
+const IMPORT: &str = "Al…";
 
 fn msg(event: Event) -> Message {
     Message::AnnotationStyles(event)
@@ -330,6 +338,149 @@ impl App {
         })
     }
 
+    /// The file to give the styles to, or to take them from.
+    fn styles_file_dialog(&self, open: bool) -> Task<Message> {
+        let kind = self
+            .annotation_styles
+            .as_ref()
+            .map_or(Kind::Text, |w| w.kind);
+        let (title, file) = match (kind, open) {
+            (Kind::Text, false) => ("Yazı stillerini dışa aktar", "yazi-stilleri.json"),
+            (Kind::Dimension, false) => ("Ölçü stillerini dışa aktar", "olcu-stilleri.json"),
+            (Kind::Text, true) => ("Yazı stillerini al", ""),
+            (Kind::Dimension, true) => ("Ölçü stillerini al", ""),
+        };
+        Task::perform(
+            async move {
+                let dialog = rfd::AsyncFileDialog::new()
+                    .set_title(title)
+                    .add_filter("KentOS stilleri (.json)", &["json"]);
+                let file = if open {
+                    dialog.pick_file().await?
+                } else {
+                    dialog.set_file_name(file).save_file().await?
+                };
+                Some(file.path().to_path_buf())
+            },
+            move |path| {
+                msg(if open {
+                    Event::Imported(path)
+                } else {
+                    Event::Exported(path)
+                })
+            },
+        )
+    }
+
+    fn styles_kind(&self) -> kentos_contracts::AnnotationStyleKind {
+        match self
+            .annotation_styles
+            .as_ref()
+            .map_or(Kind::Text, |w| w.kind)
+        {
+            Kind::Text => kentos_contracts::AnnotationStyleKind::Text,
+            Kind::Dimension => kentos_contracts::AnnotationStyleKind::Dimension,
+        }
+    }
+
+    /// `cad.styles.edit` over the drawing; its answer, or none with the refusal said.
+    fn styles_command(
+        &mut self,
+        input: kentos_contracts::StylesEdit,
+    ) -> Option<kentos_contracts::StylesEdited> {
+        let doc = self.document.as_mut()?;
+        let result = kentos_native_application::styles_edit::execute(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            input,
+        );
+        match result {
+            kentos_contracts::CommandResult::Completed { output, .. } => Some(output),
+            kentos_contracts::CommandResult::Failed { error, .. }
+            | kentos_contracts::CommandResult::Conflict { error, .. } => {
+                self.warn(error.message);
+                None
+            }
+            _ => None,
+        }
+    }
+
+    fn styles_input(
+        &self,
+        operation: kentos_contracts::StyleEditOperation,
+    ) -> kentos_contracts::StylesEdit {
+        kentos_contracts::StylesEdit {
+            kind: self.styles_kind(),
+            operation,
+            style: None,
+            name: None,
+            text: None,
+            dimension: None,
+            styles: None,
+            library: None,
+            replace: None,
+            expected_revision: None,
+        }
+    }
+
+    /// Dışa aktar…: the saved table as a `kentos.annotation-styles` file, through `cad.styles.edit`'s export.
+    fn export_annotation_styles(&mut self, path: &std::path::Path) {
+        let input = self.styles_input(kentos_contracts::StyleEditOperation::Export);
+        let Some(text) = self.styles_command(input).and_then(|done| done.library) else {
+            return;
+        };
+        match std::fs::write(path, text + "\n") {
+            Ok(()) => self.say(
+                Level::Success,
+                format!(
+                    "Stiller dışa aktarıldı: {}.",
+                    path.file_name()
+                        .map_or_else(String::new, |f| f.to_string_lossy().into_owned())
+                ),
+            ),
+            Err(e) => self.warn(format!(
+                "Stiller kaydedilemedi ({e}); başka bir klasör seçip yeniden deneyin."
+            )),
+        }
+    }
+
+    /// Al…: a file's styles taken in by name through `cad.styles.edit`'s import; the names the table has are kept and
+    /// said. The window opens again on the table as it is.
+    fn import_annotation_styles(&mut self, path: &std::path::Path) {
+        let text = match std::fs::read_to_string(path) {
+            Ok(text) => text,
+            Err(e) => {
+                self.warn(format!("Dosya okunamadı ({e})."));
+                return;
+            }
+        };
+        let mut input = self.styles_input(kentos_contracts::StyleEditOperation::Import);
+        input.library = Some(text);
+        let kind = self
+            .annotation_styles
+            .as_ref()
+            .map_or(Kind::Text, |w| w.kind);
+        let Some(done) = self.styles_command(input) else {
+            return;
+        };
+        let skipped = if done.skipped.is_empty() {
+            String::new()
+        } else {
+            format!(
+                " Projede aynı adlı olanlar kaldı: {}.",
+                done.skipped.join(", ")
+            )
+        };
+        self.say(
+            if done.added.is_empty() {
+                Level::Info
+            } else {
+                Level::Success
+            },
+            format!("{} stil alındı.{skipped}", done.added.len()),
+        );
+        self.open_annotation_styles(kind);
+    }
+
     /// Kaydet: the table, then the objects that follow it, in one undo step.
     fn save_annotation_styles(&mut self) {
         let Some(w) = self.annotation_styles.clone() else {
@@ -387,6 +538,21 @@ impl App {
             Event::Cancel => {
                 self.annotation_styles = None;
                 self.dialog = None;
+                return Task::none();
+            }
+            Event::Export | Event::Import => {
+                return self.styles_file_dialog(matches!(event, Event::Import));
+            }
+            Event::Exported(path) => {
+                if let Some(path) = path {
+                    self.export_annotation_styles(&path);
+                }
+                return Task::none();
+            }
+            Event::Imported(path) => {
+                if let Some(path) = path {
+                    self.import_annotation_styles(&path);
+                }
                 return Task::none();
             }
             _ => {}
@@ -564,7 +730,12 @@ impl App {
                     }
                 }
             }
-            Event::Save | Event::Cancel => {}
+            Event::Save
+            | Event::Cancel
+            | Event::Export
+            | Event::Exported(_)
+            | Event::Import
+            | Event::Imported(_) => {}
         }
         Task::none()
     }
@@ -702,6 +873,12 @@ impl App {
         let window = overlay::modal(
             Frame_::new(title)
                 .push(body)
+                // A file's styles are taken into the saved table: not over a draft not saved yet.
+                .action(words::secondary(EXPORT, Some(msg(Event::Export))))
+                .action(words::secondary(
+                    IMPORT,
+                    (!self.styles_changed()).then(|| msg(Event::Import)),
+                ))
                 .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
                 .action(words::primary(SAVE, can_save.then(|| msg(Event::Save))))
                 .width(760.0),

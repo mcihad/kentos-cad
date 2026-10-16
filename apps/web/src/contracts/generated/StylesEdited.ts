@@ -5,7 +5,7 @@
  */
 export type StylesEdited = { 
 /**
- * The style's id.
+ * The style's id; export's and import's first (empty when none).
  */
 style: string, 
 /**
@@ -20,6 +20,22 @@ followed: number,
  * The objects a locked layer kept as they were.
  */
 locked: number, 
+/**
+ * Import: the styles added, by id, in the file's order.
+ */
+added?: Array<string>, 
+/**
+ * Import with `replace`: the styles updated, by id, in the file's order.
+ */
+replaced?: Array<string>, 
+/**
+ * Import: the file's names the table has, kept as they are.
+ */
+skipped?: Array<string>, 
+/**
+ * Export: the file's text.
+ */
+library?: string, 
 /**
  * The document's revision afterwards (plan: the one it was made
  * against), as decimal text.

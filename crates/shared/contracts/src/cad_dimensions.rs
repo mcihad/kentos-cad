@@ -166,6 +166,23 @@ pub enum DimensionMeasure {
         base: String,
         to: MeasuredPoint,
     },
+    /// Merkez işareti (docs/adr/0322) of a circle, an arc or a path's arc segment: the cross at its centre, `height`
+    /// across (absent: the value height), upright; its axis lines reach `offset` (absent: `height`) past the curve.
+    /// It follows the curve; `at` is not read.
+    CenterMark { of: EdgeNear },
+    /// Eksen çizgisi (docs/adr/0322) between two straight edges: from the middle of their starts to the middle of their
+    /// ends (the second turned to run the first's way), `offset` (absent: `height`) past each end. It follows the
+    /// edges; `at` is not read.
+    CenterLine { first: EdgeNear, second: EdgeNear },
+    /// Kot (docs/adr/0322): the elevation of `a`, `z` metres (absent: its place's vertex's, docs/adr/0142), its mark on
+    /// `a` and its value on the shoulder at `at`. A bound point's elevation follows its vertex's.
+    Elevation {
+        a: MeasuredPoint,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+        z: Option<f64>,
+    },
 }
 
 /// Input of `cad.dimensions.create` v1: the dimension `measure` names,
@@ -182,13 +199,14 @@ pub enum DimensionMeasure {
 /// (`at`, `offset`, then the measure's numbers in their order),
 /// `invalid_height`, `invalid_uid` (each place's and edge's object, in
 /// order; a base's first), `invalid_offset` (an `offset` for Yarıçap, Çap,
-/// Koordinat, Zincir or Baz, which take none), `invalid_revision`,
+/// Koordinat, Zincir, Baz or Kot, which take none; a negative one for Merkez
+/// işareti or Eksen çizgisi), `invalid_revision`,
 /// `revision_conflict` (status `conflict`), `entity_not_found`,
 /// `no_such_place`, `not_measurable` (the object has no edge of the kind the
 /// measure takes), `not_straight` (a base not an aligned or a linear dimension), `missing_elevation`
-/// (Eğim's point with no elevation given or kept), `unknown_style`,
+/// (Eğim's or Kot's point with no elevation given or kept), `unknown_style`,
 /// `no_dimension` (no dimension forms there: the points meet, the edges are
-/// parallel, the arc spans nothing), then the layer's and the look's as
+/// parallel, the arc spans nothing; an axis's two edges are one), then the layer's and the look's as
 /// `cad.entities.create` checks them (`layer_not_found`, `not_a_layer`,
 /// `layer_locked`, `invalid_line_weight`); a hidden layer gives a
 /// `layer_hidden` warning; on the desktop also `slots_exhausted`.

@@ -210,6 +210,7 @@ pub(crate) fn core_face(f: &kentos_contracts::TextFace) -> Face {
 /// The core's face as the contract writes it.
 pub(crate) fn contract_face(f: &Face) -> kentos_contracts::TextFace {
     kentos_contracts::TextFace {
+        overrides: Vec::new(),
         text_style: f.style.clone(),
         font: f
             .font
@@ -327,6 +328,7 @@ pub(crate) fn contract_look(l: &Look) -> kentos_contracts::DimensionLook {
     use kentos_contracts::DrawingUnit;
     let lines = l.lines.as_deref().cloned().unwrap_or_default();
     kentos_contracts::DimensionLook {
+        overrides: Vec::new(),
         options: None,
         dim_style: l.style.clone(),
         arrow: l

@@ -61,8 +61,9 @@ pub const LABEL_CELL: f64 = 13.0;
 pub const LABEL_STRIDE: usize = 9;
 
 /// A dimension's unit as its label record says it (c): length, angle,
-/// percent, coordinate (docs/adr/0147).
-pub const DIMENSION_UNITS: [&str; 4] = ["length", "angle", "percent", "coordinate"];
+/// percent, coordinate (docs/adr/0147), a level's elevation (docs/adr/0322).
+/// A centre mark and an axis (unit "none") write no value and have no record.
+pub const DIMENSION_UNITS: [&str; 5] = ["length", "angle", "percent", "coordinate", "level"];
 /// A dimension's prefix as its label record says it (d).
 pub const DIMENSION_PREFIXES: [&str; 7] = ["", "R ", "Ø ", "Y=", "X=", "t=", "%"];
 
@@ -229,7 +230,9 @@ impl Store {
                         }
                         Shape::Dimension { height, .. } => {
                             let px = height * scale;
-                            let Some(l) = dimension_geom(s).and_then(|g| layout_dimension(&g))
+                            let Some(l) = dimension_geom(s)
+                                .and_then(|g| layout_dimension(&g))
+                                .filter(|l| l.unit != "none")
                             else {
                                 continue;
                             };
@@ -255,7 +258,9 @@ impl Store {
             match &it.shape {
                 Shape::Dimension { height, .. } => {
                     let px = height * scale;
-                    let Some(l) = dimension_geom(&it.shape).and_then(|g| layout_dimension(&g))
+                    let Some(l) = dimension_geom(&it.shape)
+                        .and_then(|g| layout_dimension(&g))
+                        .filter(|l| l.unit != "none")
                     else {
                         continue;
                     };

@@ -1622,6 +1622,8 @@ const ENTRIES: &[Entry] = &[
                 "duplicate_style",
                 "empty_name",
                 "invalid_style",
+                "no_library",
+                "invalid_library",
             ],
             REVISION,
         ],

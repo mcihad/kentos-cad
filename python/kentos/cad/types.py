@@ -641,12 +641,14 @@ class DimensionRule(_StrEnum):
 
     - ``curve``: A radius's, a diameter's, a jogged radius's, an arc length's or an arc's angle: the bound points are on one
     - ``edges``: An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where
+    - ``pair``: An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle
     """
     CURVE = "curve"
     EDGES = "edges"
+    PAIR = "pair"
 
 
-DimensionRuleName = Literal["curve", "edges"]
+DimensionRuleName = Literal["curve", "edges", "pair"]
 """The names of :class:`DimensionRule`, for a plain string."""
 
 
@@ -665,6 +667,9 @@ class DimensionStyle(_StrEnum):
     - ``jogged``: Kırıklı yarıçap: the radius about `a` through `b`, drawn from `c`.
     - ``azimuth``: Semt: the direction from `a` to `b`, from north clockwise.
     - ``slope``: Eğim: the slope between `a` at `za` and `b` at `zb`.
+    - ``centerMark``: Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`
+    - ``centerLine``: Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their
+    - ``elevation``: Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.
     """
     ALIGNED = "aligned"
     LINEAR = "linear"
@@ -676,9 +681,12 @@ class DimensionStyle(_StrEnum):
     JOGGED = "jogged"
     AZIMUTH = "azimuth"
     SLOPE = "slope"
+    CENTER_MARK = "centerMark"
+    CENTER_LINE = "centerLine"
+    ELEVATION = "elevation"
 
 
-DimensionStyleName = Literal["aligned", "linear", "angular", "radius", "diameter", "ordinate", "arcLength", "jogged", "azimuth", "slope"]
+DimensionStyleName = Literal["aligned", "linear", "angular", "radius", "diameter", "ordinate", "arcLength", "jogged", "azimuth", "slope", "centerMark", "centerLine", "elevation"]
 """The names of :class:`DimensionStyle`, for a plain string."""
 
 
@@ -2048,14 +2056,24 @@ StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "l
 
 
 class StyleEditOperation(_StrEnum):
-    """What `cad.styles.edit` does."""
+    """What `cad.styles.edit` does.
+
+    - ``create``
+    - ``update``
+    - ``rename``
+    - ``remove``
+    - ``export``: The kind's styles as a `kentos.annotation-styles` file's text (docs/adr/0322 §4).
+    - ``import``: A `kentos.annotation-styles` file's styles taken in by name (docs/adr/0322 §4).
+    """
     CREATE = "create"
     UPDATE = "update"
     RENAME = "rename"
     REMOVE = "remove"
+    EXPORT = "export"
+    IMPORT = "import"
 
 
-StyleEditOperationName = Literal["create", "update", "rename", "remove"]
+StyleEditOperationName = Literal["create", "update", "rename", "remove", "export", "import"]
 """The names of :class:`StyleEditOperation`, for a plain string."""
 
 
@@ -2637,6 +2655,9 @@ class DimensionMeasure(_Union):
     - :class:`JoggedDimensionMeasure` (``kind: jogged``)
     - :class:`ContinueDimensionMeasure` (``kind: continue``)
     - :class:`BaselineDimensionMeasure` (``kind: baseline``)
+    - :class:`CenterMarkDimensionMeasure` (``kind: centerMark``)
+    - :class:`CenterLineDimensionMeasure` (``kind: centerLine``)
+    - :class:`ElevationDimensionMeasure` (``kind: elevation``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -6567,6 +6588,8 @@ class DimensionEntity(Entity):
         options: Where the value goes when it does not fit and how it is written (docs/adr/0321 §1, §2).
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        overrides: The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep
+            their value when the style changes. Empty: each field follows while it holds the style's old value.
         prefix: Written before the value (and its kind's own prefix).
         refs: The objects its points follow (docs/adr/0249): an associative dimension; none, free points.
         suffix: Written after the value.
@@ -6618,6 +6641,7 @@ class DimensionEntity(Entity):
     mask: bool | Unset = UNSET
     options: DimensionOptions | None | Unset = UNSET
     order: int | None | Unset = UNSET
+    overrides: list[str] | Unset = UNSET
     prefix: str | None | Unset = UNSET
     refs: DimensionRefs | None | Unset = UNSET
     style: DimensionStyle | DimensionStyleName | None | Unset = UNSET
@@ -6699,6 +6723,8 @@ class DimensionEntity(Entity):
             out["options"] = None if self.options is None else self.options.to_json()
         if self.order is not UNSET:
             out["order"] = self.order
+        if self.overrides is not UNSET:
+            out["overrides"] = list(self.overrides)
         if self.prefix is not UNSET:
             out["prefix"] = self.prefix
         if self.refs is not UNSET:
@@ -6769,6 +6795,7 @@ class DimensionEntity(Entity):
             mask=data.get("mask", UNSET),
             options=UNSET if "options" not in data else None if data["options"] is None else DimensionOptions.from_json(data["options"]),
             order=data.get("order", UNSET),
+            overrides=list(data["overrides"]) if "overrides" in data else UNSET,
             prefix=data.get("prefix", UNSET),
             refs=UNSET if "refs" not in data else None if data["refs"] is None else DimensionRefs.from_json(data["refs"]),
             style=UNSET if "style" not in data else None if data["style"] is None else _enum_in(DimensionStyle, data["style"]),
@@ -7072,13 +7099,14 @@ class DimensionsCreate(_Model):
     (`at`, `offset`, then the measure's numbers in their order),
     `invalid_height`, `invalid_uid` (each place's and edge's object, in
     order; a base's first), `invalid_offset` (an `offset` for Yarıçap, Çap,
-    Koordinat, Zincir or Baz, which take none), `invalid_revision`,
+    Koordinat, Zincir, Baz or Kot, which take none; a negative one for Merkez
+    işareti or Eksen çizgisi), `invalid_revision`,
     `revision_conflict` (status `conflict`), `entity_not_found`,
     `no_such_place`, `not_measurable` (the object has no edge of the kind the
     measure takes), `not_straight` (a base not an aligned or a linear dimension), `missing_elevation`
-    (Eğim's point with no elevation given or kept), `unknown_style`,
+    (Eğim's or Kot's point with no elevation given or kept), `unknown_style`,
     `no_dimension` (no dimension forms there: the points meet, the edges are
-    parallel, the arc spans nothing), then the layer's and the look's as
+    parallel, the arc spans nothing; an axis's two edges are one), then the layer's and the look's as
     `cad.entities.create` checks them (`layer_not_found`, `not_a_layer`,
     `layer_locked`, `invalid_line_weight`); a hidden layer gives a
     `layer_hidden` warning; on the desktop also `slots_exhausted`.
@@ -20636,7 +20664,16 @@ class StylesEdit(_Model):
     - `rename`: `style`, `name`; the objects name the style by its id and
       do not change;
     - `remove`: `style`; its objects keep their look and lose the link, in
-      one undo step.
+      one undo step;
+    - `export`: `styles` (absent: every style of the kind), in the table's
+      order, as a `kentos.annotation-styles` file's text in `library`;
+      nothing is written;
+    - `import`: `library`, a `kentos.annotation-styles` file's text of the
+      same kind; each of its styles by name (Turkish case folded, trimmed):
+      a new name is added (its id kept when the table has none such, else a
+      new one), a name the table has is kept as it is (`skipped`), or with
+      `replace` updated in its place (its id and name kept, its objects following as
+      `update` makes them).
 
     The table is the project's setting: changing it makes the drawing dirty
     and is no undo step (docs/adr/0183 §5, kept by docs/adr/0248 §4). Objects
@@ -20645,24 +20682,32 @@ class StylesEdit(_Model):
     Refusals (`CommandError.code`), checked in this order: `no_definition`
     (create, update without the kind's definition), `no_style` (rename,
     remove without `style`), `empty_name` (rename with a name empty or only
-    white space); then `invalid_revision`, `revision_conflict` (status
-    `conflict`); `style_not_found` (update's id, rename's and remove's
-    `style`), `duplicate_style` (create's given id the table has);
+    white space), `no_library` (import without `library`); then
+    `invalid_revision`, `revision_conflict` (status `conflict`);
+    `style_not_found` (update's id, rename's and remove's `style`, each of
+    export's `styles`), `duplicate_style` (create's given id the table has),
+    `invalid_library` (import's text not such a file, or of the other kind);
     `invalid_style` (the table it would leave, by `text_styles_problem` or
     `dimension_styles_problem`: the names, then each style's values).
     Attributes:
         dimension: Create's and update's dimension style.
         expected_revision: The document revision the input was prepared against, as decimal text.
+        library: Import's `kentos.annotation-styles` file's text.
         name: Rename's new name, trimmed.
+        replace: Import: true, a style whose name the table has is updated from the file.
         style: Rename's and remove's style, by its id.
+        styles: Export's styles, by id; absent: every style of the kind.
         text: Create's and update's text style.
     """
     kind: AnnotationStyleKind | AnnotationStyleKindName
     operation: StyleEditOperation | StyleEditOperationName
     dimension: DimensionStyleDef | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    library: str | None | Unset = UNSET
     name: str | None | Unset = UNSET
+    replace: bool | None | Unset = UNSET
     style: str | None | Unset = UNSET
+    styles: list[str] | None | Unset = UNSET
     text: TextStyleDef | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -20673,10 +20718,16 @@ class StylesEdit(_Model):
             out["dimension"] = None if self.dimension is None else self.dimension.to_json()
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.library is not UNSET:
+            out["library"] = self.library
         if self.name is not UNSET:
             out["name"] = self.name
+        if self.replace is not UNSET:
+            out["replace"] = self.replace
         if self.style is not UNSET:
             out["style"] = self.style
+        if self.styles is not UNSET:
+            out["styles"] = None if self.styles is None else list(self.styles)
         if self.text is not UNSET:
             out["text"] = None if self.text is None else self.text.to_json()
         return out
@@ -20688,8 +20739,11 @@ class StylesEdit(_Model):
             operation=_enum_in(StyleEditOperation, data["operation"]),
             dimension=UNSET if "dimension" not in data else None if data["dimension"] is None else DimensionStyleDef.from_json(data["dimension"]),
             expected_revision=data.get("expectedRevision", UNSET),
+            library=data.get("library", UNSET),
             name=data.get("name", UNSET),
+            replace=data.get("replace", UNSET),
             style=data.get("style", UNSET),
+            styles=UNSET if "styles" not in data else None if data["styles"] is None else list(data["styles"]),
             text=UNSET if "text" not in data else None if data["text"] is None else TextStyleDef.from_json(data["text"]),
         )
 
@@ -20698,18 +20752,26 @@ class StylesEdit(_Model):
 class StylesEdited(_Model):
     """Output of `cad.styles.edit` v1, and what plan says it would do.
     Attributes:
-        style: The style's id.
+        style: The style's id; export's and import's first (empty when none).
         changed: Whether the table changed.
         followed: The objects written in the undo step. Unit: count.
         locked: The objects a locked layer kept as they were. Unit: count.
         revision: The document's revision afterwards (plan: the one it was made
             against), as decimal text.
+        added: Import: the styles added, by id, in the file's order.
+        library: Export: the file's text.
+        replaced: Import with `replace`: the styles updated, by id, in the file's order.
+        skipped: Import: the file's names the table has, kept as they are.
     """
     style: str
     changed: bool
     followed: int
     locked: int
     revision: str
+    added: list[str] | Unset = UNSET
+    library: str | None | Unset = UNSET
+    replaced: list[str] | Unset = UNSET
+    skipped: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -20718,6 +20780,14 @@ class StylesEdited(_Model):
         out["followed"] = self.followed
         out["locked"] = self.locked
         out["revision"] = self.revision
+        if self.added is not UNSET:
+            out["added"] = list(self.added)
+        if self.library is not UNSET:
+            out["library"] = self.library
+        if self.replaced is not UNSET:
+            out["replaced"] = list(self.replaced)
+        if self.skipped is not UNSET:
+            out["skipped"] = list(self.skipped)
         return out
 
     @classmethod
@@ -20728,6 +20798,10 @@ class StylesEdited(_Model):
             followed=data["followed"],
             locked=data["locked"],
             revision=data["revision"],
+            added=list(data["added"]) if "added" in data else UNSET,
+            library=data.get("library", UNSET),
+            replaced=list(data["replaced"]) if "replaced" in data else UNSET,
+            skipped=list(data["skipped"]) if "skipped" in data else UNSET,
         )
 
 
@@ -20934,6 +21008,7 @@ class TableEntity(Entity):
             right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence). Unit: deg.
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        overrides: The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.
         source: Where its rows came from (Tabloyu güncelle); absent: written by hand.
         symbol: Library symbol overriding the layer's style.
         text_style: The project's text style it follows, by its id; absent: Standart.
@@ -20970,6 +21045,7 @@ class TableEntity(Entity):
     merges: list[CellRange] | Unset = UNSET
     oblique: float | None | Unset = UNSET
     order: int | None | Unset = UNSET
+    overrides: list[str] | Unset = UNSET
     source: TableSource | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     text_style: str | None | Unset = UNSET
@@ -21025,6 +21101,8 @@ class TableEntity(Entity):
             out["oblique"] = None if self.oblique is None else float(self.oblique)
         if self.order is not UNSET:
             out["order"] = self.order
+        if self.overrides is not UNSET:
+            out["overrides"] = list(self.overrides)
         if self.source is not UNSET:
             out["source"] = None if self.source is None else self.source.to_json()
         if self.symbol is not UNSET:
@@ -21068,6 +21146,7 @@ class TableEntity(Entity):
             merges=[CellRange.from_json(e0) for e0 in data["merges"]] if "merges" in data else UNSET,
             oblique=UNSET if "oblique" not in data else None if data["oblique"] is None else float(data["oblique"]),
             order=data.get("order", UNSET),
+            overrides=list(data["overrides"]) if "overrides" in data else UNSET,
             source=UNSET if "source" not in data else None if data["source"] is None else TableSource.from_json(data["source"]),
             symbol=data.get("symbol", UNSET),
             text_style=data.get("textStyle", UNSET),
@@ -21121,6 +21200,7 @@ class TextEntity(Entity):
             right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence). Unit: deg.
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        overrides: The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.
         path: The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1),
             in its own frame; absent: a straight text.
         runs: The letters' formats: ranges of the text's Unicode scalar values (not
@@ -21163,6 +21243,7 @@ class TextEntity(Entity):
     mask: bool | Unset = UNSET
     oblique: float | None | Unset = UNSET
     order: int | None | Unset = UNSET
+    overrides: list[str] | Unset = UNSET
     path: TextPath | None | Unset = UNSET
     runs: list[TextRun] | Unset = UNSET
     symbol: str | None | Unset = UNSET
@@ -21220,6 +21301,8 @@ class TextEntity(Entity):
             out["oblique"] = None if self.oblique is None else float(self.oblique)
         if self.order is not UNSET:
             out["order"] = self.order
+        if self.overrides is not UNSET:
+            out["overrides"] = list(self.overrides)
         if self.path is not UNSET:
             out["path"] = None if self.path is None else self.path.to_json()
         if self.runs is not UNSET:
@@ -21266,6 +21349,7 @@ class TextEntity(Entity):
             mask=data.get("mask", UNSET),
             oblique=UNSET if "oblique" not in data else None if data["oblique"] is None else float(data["oblique"]),
             order=data.get("order", UNSET),
+            overrides=list(data["overrides"]) if "overrides" in data else UNSET,
             path=UNSET if "path" not in data else None if data["path"] is None else TextPath.from_json(data["path"]),
             runs=[TextRun.from_json(e0) for e0 in data["runs"]] if "runs" in data else UNSET,
             symbol=data.get("symbol", UNSET),
@@ -24287,6 +24371,77 @@ class BaselineDimensionMeasure(DimensionMeasure):
 
 
 @dataclass(kw_only=True, slots=True)
+class CenterMarkDimensionMeasure(DimensionMeasure):
+    """Merkez işareti (docs/adr/0322) of a circle, an arc or a path's arc segment: the cross at its centre, `height`
+    across (absent: the value height), upright; its axis lines reach `offset` (absent: `height`) past the curve.
+    It follows the curve; `at` is not read.
+    """
+    TAG_VALUE: ClassVar[str] = "centerMark"
+    of: EdgeNear
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "centerMark"}
+        out["of"] = self.of.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CenterMarkDimensionMeasure:
+        return cls(
+            of=EdgeNear.from_json(data["of"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CenterLineDimensionMeasure(DimensionMeasure):
+    """Eksen çizgisi (docs/adr/0322) between two straight edges: from the middle of their starts to the middle of their
+    ends (the second turned to run the first's way), `offset` (absent: `height`) past each end. It follows the
+    edges; `at` is not read.
+    """
+    TAG_VALUE: ClassVar[str] = "centerLine"
+    first: EdgeNear
+    second: EdgeNear
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "centerLine"}
+        out["first"] = self.first.to_json()
+        out["second"] = self.second.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CenterLineDimensionMeasure:
+        return cls(
+            first=EdgeNear.from_json(data["first"]),
+            second=EdgeNear.from_json(data["second"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ElevationDimensionMeasure(DimensionMeasure):
+    """Kot (docs/adr/0322): the elevation of `a`, `z` metres (absent: its place's vertex's, docs/adr/0142), its mark on
+    `a` and its value on the shoulder at `at`. A bound point's elevation follows its vertex's.
+    Attributes:
+        z: Unit: elevation.
+    """
+    TAG_VALUE: ClassVar[str] = "elevation"
+    a: MeasuredPoint
+    z: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "elevation"}
+        out["a"] = self.a.to_json()
+        if self.z is not UNSET:
+            out["z"] = None if self.z is None else float(self.z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ElevationDimensionMeasure:
+        return cls(
+            a=MeasuredPoint.from_json(data["a"]),
+            z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PartsDivision(Division):
     """Into `count` equal parts (2 to 10 000): a point between each two, and
     on a closed object one at its start too.
@@ -24926,6 +25081,7 @@ class TextEntityGeometry(EntityGeometry):
         mask: Its box filled with the drawing area's colour before it is drawn.
         oblique: How far its letters lean, degrees, positive with their tops to the
             right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence). Unit: deg.
+        overrides: The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.
         path: The curve its letters stand on, in its own frame (docs/adr/0196 §1); absent: straight.
         runs: Its letters' formats (`TextRun`), in order, not overlapping; absent: none.
         text_style: The project's text style it follows, by its id; absent: Standart.
@@ -24944,6 +25100,7 @@ class TextEntityGeometry(EntityGeometry):
     line_spacing: float | None | Unset = UNSET
     mask: bool | Unset = UNSET
     oblique: float | None | Unset = UNSET
+    overrides: list[str] | Unset = UNSET
     path: TextPath | None | Unset = UNSET
     runs: list[TextRun] | Unset = UNSET
     text_style: str | None | Unset = UNSET
@@ -24971,6 +25128,8 @@ class TextEntityGeometry(EntityGeometry):
             out["mask"] = self.mask
         if self.oblique is not UNSET:
             out["oblique"] = None if self.oblique is None else float(self.oblique)
+        if self.overrides is not UNSET:
+            out["overrides"] = list(self.overrides)
         if self.path is not UNSET:
             out["path"] = None if self.path is None else self.path.to_json()
         if self.runs is not UNSET:
@@ -24996,6 +25155,7 @@ class TextEntityGeometry(EntityGeometry):
             line_spacing=UNSET if "lineSpacing" not in data else None if data["lineSpacing"] is None else float(data["lineSpacing"]),
             mask=data.get("mask", UNSET),
             oblique=UNSET if "oblique" not in data else None if data["oblique"] is None else float(data["oblique"]),
+            overrides=list(data["overrides"]) if "overrides" in data else UNSET,
             path=UNSET if "path" not in data else None if data["path"] is None else TextPath.from_json(data["path"]),
             runs=[TextRun.from_json(e0) for e0 in data["runs"]] if "runs" in data else UNSET,
             text_style=data.get("textStyle", UNSET),
@@ -25038,6 +25198,8 @@ class DimensionEntityGeometry(EntityGeometry):
         font: The value's typeface; absent: the project's.
         mask: The value over the drawing's background (docs/adr/0147).
         options: Where the value goes when it does not fit and how it is written (docs/adr/0321 §1, §2).
+        overrides: The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep
+            their value when the style changes. Empty: each field follows while it holds the style's old value.
         prefix: Written before the value (and its kind's own prefix).
         refs: The objects its points follow (docs/adr/0249): an associative dimension; none, free points.
         suffix: Written after the value.
@@ -25072,6 +25234,7 @@ class DimensionEntityGeometry(EntityGeometry):
     font: DrawingFont | DrawingFontName | None | Unset = UNSET
     mask: bool | Unset = UNSET
     options: DimensionOptions | None | Unset = UNSET
+    overrides: list[str] | Unset = UNSET
     prefix: str | None | Unset = UNSET
     refs: DimensionRefs | None | Unset = UNSET
     style: DimensionStyle | DimensionStyleName | None | Unset = UNSET
@@ -25127,6 +25290,8 @@ class DimensionEntityGeometry(EntityGeometry):
             out["mask"] = self.mask
         if self.options is not UNSET:
             out["options"] = None if self.options is None else self.options.to_json()
+        if self.overrides is not UNSET:
+            out["overrides"] = list(self.overrides)
         if self.prefix is not UNSET:
             out["prefix"] = self.prefix
         if self.refs is not UNSET:
@@ -25178,6 +25343,7 @@ class DimensionEntityGeometry(EntityGeometry):
             font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
             mask=data.get("mask", UNSET),
             options=UNSET if "options" not in data else None if data["options"] is None else DimensionOptions.from_json(data["options"]),
+            overrides=list(data["overrides"]) if "overrides" in data else UNSET,
             prefix=data.get("prefix", UNSET),
             refs=UNSET if "refs" not in data else None if data["refs"] is None else DimensionRefs.from_json(data["refs"]),
             style=UNSET if "style" not in data else None if data["style"] is None else _enum_in(DimensionStyle, data["style"]),
@@ -25347,6 +25513,7 @@ class TableEntityGeometry(EntityGeometry):
         merges: Merged ranges, their words in their top left cells.
         oblique: How far its letters lean, degrees, positive with their tops to the
             right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence). Unit: deg.
+        overrides: The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.
         source: Where its rows came from; absent: written by hand.
         text_style: The project's text style it follows, by its id; absent: Standart.
     """
@@ -25366,6 +25533,7 @@ class TableEntityGeometry(EntityGeometry):
     italic: bool | Unset = UNSET
     merges: list[CellRange] | Unset = UNSET
     oblique: float | None | Unset = UNSET
+    overrides: list[str] | Unset = UNSET
     source: TableSource | None | Unset = UNSET
     text_style: str | None | Unset = UNSET
 
@@ -25395,6 +25563,8 @@ class TableEntityGeometry(EntityGeometry):
             out["merges"] = [e0.to_json() for e0 in self.merges]
         if self.oblique is not UNSET:
             out["oblique"] = None if self.oblique is None else float(self.oblique)
+        if self.overrides is not UNSET:
+            out["overrides"] = list(self.overrides)
         if self.source is not UNSET:
             out["source"] = None if self.source is None else self.source.to_json()
         if self.text_style is not UNSET:
@@ -25419,6 +25589,7 @@ class TableEntityGeometry(EntityGeometry):
             italic=data.get("italic", UNSET),
             merges=[CellRange.from_json(e0) for e0 in data["merges"]] if "merges" in data else UNSET,
             oblique=UNSET if "oblique" not in data else None if data["oblique"] is None else float(data["oblique"]),
+            overrides=list(data["overrides"]) if "overrides" in data else UNSET,
             source=UNSET if "source" not in data else None if data["source"] is None else TableSource.from_json(data["source"]),
             text_style=data.get("textStyle", UNSET),
         )
@@ -27557,7 +27728,7 @@ _CURVE_EDIT: dict[str, type[CurveEdit]] = {"close": CloseCurveEdit, "open": Open
 _DIMENSION_EDIT: dict[str, type[DimensionEdit]] = {"space": SpaceDimensionEdit, "break": BreakDimensionEdit, "unbreak": UnbreakDimensionEdit, "moveText": MoveTextDimensionEdit, "text": TextDimensionEdit, "options": OptionsDimensionEdit}
 
 
-_DIMENSION_MEASURE: dict[str, type[DimensionMeasure]] = {"aligned": AlignedDimensionMeasure, "linear": LinearDimensionMeasure, "ordinate": OrdinateDimensionMeasure, "azimuth": AzimuthDimensionMeasure, "slope": SlopeDimensionMeasure, "angle": AngleDimensionMeasure, "angleVertex": AngleVertexDimensionMeasure, "angleArc": AngleArcDimensionMeasure, "radius": RadiusDimensionMeasure, "diameter": DiameterDimensionMeasure, "arcLength": ArcLengthDimensionMeasure, "jogged": JoggedDimensionMeasure, "continue": ContinueDimensionMeasure, "baseline": BaselineDimensionMeasure}
+_DIMENSION_MEASURE: dict[str, type[DimensionMeasure]] = {"aligned": AlignedDimensionMeasure, "linear": LinearDimensionMeasure, "ordinate": OrdinateDimensionMeasure, "azimuth": AzimuthDimensionMeasure, "slope": SlopeDimensionMeasure, "angle": AngleDimensionMeasure, "angleVertex": AngleVertexDimensionMeasure, "angleArc": AngleArcDimensionMeasure, "radius": RadiusDimensionMeasure, "diameter": DiameterDimensionMeasure, "arcLength": ArcLengthDimensionMeasure, "jogged": JoggedDimensionMeasure, "continue": ContinueDimensionMeasure, "baseline": BaselineDimensionMeasure, "centerMark": CenterMarkDimensionMeasure, "centerLine": CenterLineDimensionMeasure, "elevation": ElevationDimensionMeasure}
 
 
 _DIVISION: dict[str, type[Division]] = {"parts": PartsDivision, "step": StepDivision}
@@ -27757,6 +27928,8 @@ __all__ = [
     "CalloutKind",
     "CalloutKindName",
     "CellRange",
+    "CenterLineDimensionMeasure",
+    "CenterMarkDimensionMeasure",
     "CenterSubPlace",
     "ChamferRectangleCorners",
     "ChangesetApplied",
@@ -27889,6 +28062,7 @@ __all__ = [
     "EdgeRegularFrame",
     "EditOperation",
     "EditOperationName",
+    "ElevationDimensionMeasure",
     "EllipseAxisCurveConstruction",
     "EllipseCentreCurveConstruction",
     "EllipseConstructedCurve",

@@ -4,7 +4,7 @@
   "command": "cad.dimensions.create",
   "commandVersion": 1,
   "title": "İlişkili ölçünün izlemesi",
-  "note": "Written by scripts/fixtures/dimension_follow_cases.py from the rules of docs/adr/0249 and 0320; do not edit by hand.",
+  "note": "Written by scripts/fixtures/dimension_follow_cases.py from the rules of docs/adr/0249, 0320 and 0322; do not edit by hand.",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -2106,6 +2106,711 @@
                     }
                   }
                 }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Merkez işareti: daire taşınınca merkez ve işaretin noktası onunla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "centerMark",
+              "of": {
+                "uid": "$uidOf:10",
+                "near": {
+                  "x": 487015,
+                  "y": 4420010
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "transform": {
+              "kind": "move",
+              "dx": 2,
+              "dy": 1
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "entities": {
+              "20": {
+                "kind": "dimension",
+                "id": 20,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487012,
+                  "y": 4420011
+                },
+                "b": {
+                  "x": 487017,
+                  "y": 4420011
+                },
+                "offset": 1.25,
+                "height": 1.25,
+                "style": "centerMark",
+                "refs": {
+                  "b": {
+                    "uid": "$uidOf:10",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0
+                    }
+                  },
+                  "rule": "curve"
+                },
+                "extLineType": "dashdot"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Merkez işareti: daire iki kat büyüyünce eksen çizgileri yeni çemberden taşar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "centerMark",
+              "of": {
+                "uid": "$uidOf:10",
+                "near": {
+                  "x": 487015,
+                  "y": 4420010
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "transform": {
+              "kind": "scale",
+              "center": {
+                "x": 487010,
+                "y": 4420010
+              },
+              "factor": 2
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "entities": {
+              "20": {
+                "kind": "dimension",
+                "id": 20,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                "b": {
+                  "x": 487020,
+                  "y": 4420010
+                },
+                "offset": 1.25,
+                "height": 1.25,
+                "style": "centerMark",
+                "refs": {
+                  "b": {
+                    "uid": "$uidOf:10",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0
+                    }
+                  },
+                  "rule": "curve"
+                },
+                "extLineType": "dashdot"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Merkez işareti: yay merkezinde 90° dönünce işaret de döner",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "centerMark",
+              "of": {
+                "uid": "$uidOf:11",
+                "near": {
+                  "x": 487034,
+                  "y": 4420013
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "$uidOf:11"
+            ],
+            "transform": {
+              "kind": "rotate",
+              "center": {
+                "x": 487030,
+                "y": 4420010
+              },
+              "angle": 1.5707963267948966
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "entities": {
+              "20": {
+                "kind": "dimension",
+                "id": 20,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487030,
+                  "y": 4420010
+                },
+                "b": {
+                  "x": 487030,
+                  "y": 4420015
+                },
+                "offset": 1.25,
+                "height": 1.25,
+                "style": "centerMark",
+                "refs": {
+                  "b": {
+                    "uid": "$uidOf:11",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0
+                    }
+                  },
+                  "rule": "curve"
+                },
+                "extLineType": "dashdot"
+              }
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Eksen çizgisi: ikinci kenar 4 m yukarı kayınca eksen 2 m kayar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "centerLine",
+              "first": {
+                "uid": "$uidOf:12",
+                "near": {
+                  "x": 487010,
+                  "y": 4420030
+                }
+              },
+              "second": {
+                "uid": "$uidOf:15",
+                "near": {
+                  "x": 487044,
+                  "y": 4420000
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "$uidOf:15"
+            ],
+            "transform": {
+              "kind": "move",
+              "dx": 0,
+              "dy": 4
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "entities": {
+              "20": {
+                "kind": "dimension",
+                "id": 20,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487020,
+                  "y": 4420017
+                },
+                "b": {
+                  "x": 487040,
+                  "y": 4420017
+                },
+                "offset": 1.25,
+                "height": 1.25,
+                "style": "centerLine",
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:12",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:15",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.2
+                    }
+                  },
+                  "rule": "pair"
+                },
+                "extLineType": "dashdot"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eksen çizgisi: kenar ters çevrilince eksen yine uçların ortalarından",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "centerLine",
+              "first": {
+                "uid": "$uidOf:12",
+                "near": {
+                  "x": 487010,
+                  "y": 4420030
+                }
+              },
+              "second": {
+                "uid": "$uidOf:15",
+                "near": {
+                  "x": 487044,
+                  "y": 4420000
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.reverse",
+          "input": {
+            "uids": [
+              "$uidOf:15"
+            ]
+          },
+          "result": "$any",
+          "expect": {
+            "entities": {
+              "20": {
+                "kind": "dimension",
+                "id": 20,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487020,
+                  "y": 4420015
+                },
+                "b": {
+                  "x": 487040,
+                  "y": 4420015
+                },
+                "offset": 1.25,
+                "height": 1.25,
+                "style": "centerLine",
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:12",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:15",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.8
+                    }
+                  },
+                  "rule": "pair"
+                },
+                "extLineType": "dashdot"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eksen çizgisi: kenarın biri silinince bağı kopar, eksen yerinde kalır",
+      "steps": [
+        {
+          "op": "captureUid",
+          "as": "kenar",
+          "id": 15
+        },
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "centerLine",
+              "first": {
+                "uid": "$uidOf:12",
+                "near": {
+                  "x": 487010,
+                  "y": 4420030
+                }
+              },
+              "second": {
+                "uid": "$uidOf:15",
+                "near": {
+                  "x": 487044,
+                  "y": 4420000
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "$uidOf:15"
+            ]
+          },
+          "result": "$any",
+          "expect": {
+            "entities": {
+              "20": {
+                "kind": "dimension",
+                "id": 20,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487020,
+                  "y": 4420015
+                },
+                "b": {
+                  "x": 487040,
+                  "y": 4420015
+                },
+                "offset": 1.25,
+                "height": 1.25,
+                "style": "centerLine",
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:12",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uid:kenar",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.2
+                    },
+                    "broken": "object_gone"
+                  },
+                  "rule": "pair"
+                },
+                "extLineType": "dashdot"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kot: köşeye kot verilince işaret köşenin kotunu alır; çizgi taşınınca onunla gider",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "place",
+                "uid": "$uidOf:12",
+                "place": {
+                  "kind": "start"
+                }
+              },
+              "z": 5
+            },
+            "at": {
+              "x": 486998,
+              "y": 4420033
+            },
+            "layerId": "olcu"
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.edit",
+          "input": {
+            "operation": "elevation",
+            "changes": [
+              {
+                "kind": "update",
+                "uid": "$uidOf:12",
+                "geometry": {
+                  "kind": "line",
+                  "a": {
+                    "x": 487000,
+                    "y": 4420030
+                  },
+                  "b": {
+                    "x": 487020,
+                    "y": 4420030
+                  },
+                  "zs": [
+                    7.5,
+                    null
+                  ]
+                }
+              }
+            ]
+          },
+          "result": "$any",
+          "expect": {
+            "entities": {
+              "20": {
+                "kind": "dimension",
+                "id": 20,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420030
+                },
+                "b": {
+                  "x": 486998,
+                  "y": 4420033
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 7.5,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:12",
+                    "place": {
+                      "kind": "start"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "transform": {
+              "kind": "move",
+              "dx": 1,
+              "dy": 2
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "entities": {
+              "20": {
+                "kind": "dimension",
+                "id": 20,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487001,
+                  "y": 4420032
+                },
+                "b": {
+                  "x": 486998,
+                  "y": 4420033
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 7.5,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:12",
+                    "place": {
+                      "kind": "start"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kot: koordinat noktası; çizgiler taşınınca kımıldamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487100,
+                  "y": 4420050
+                }
+              },
+              "z": 3.2
+            },
+            "at": {
+              "x": 487103,
+              "y": 4420052
+            },
+            "layerId": "olcu"
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "transform": {
+              "kind": "move",
+              "dx": 1,
+              "dy": 2
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "entities": {
+              "20": {
+                "kind": "dimension",
+                "id": 20,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487100,
+                  "y": 4420050
+                },
+                "b": {
+                  "x": 487103,
+                  "y": 4420052
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 3.2
               }
             }
           }

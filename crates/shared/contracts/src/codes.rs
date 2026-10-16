@@ -591,7 +591,7 @@ codes! {
     /// An object without an edge of the kind a dimension measures.
     NOT_MEASURABLE = "not_measurable", Failed, false, "Nesnede ölçünün aradığı türde kenar yok (düz kenar, uçları olan yay ya da daire).";
     /// Eğim's point with no elevation given or kept.
-    MISSING_ELEVATION = "missing_elevation", Failed, false, "Eğim için noktanın kotu verilmedi ve yerinde kot yok.";
+    MISSING_ELEVATION = "missing_elevation", Failed, false, "Eğim ya da kot için noktanın kotu verilmedi ve yerinde kot yok.";
     /// A distance given to a dimension that takes none (Yarıçap, Çap, Koordinat).
     INVALID_OFFSET = "invalid_offset", Failed, false, "Bu ölçü türü uzaklık almaz; yerini at verir.";
     /// No dimension forms where it is placed.
@@ -707,9 +707,9 @@ codes! {
     /// Line types loaded without a LIN file's text.
     NO_LIN = "no_lin", Failed, false, "Yüklenecek LIN dosyası verilmedi.";
     /// Block definitions taken in without a file's text (docs/adr/0314 §3).
-    NO_LIBRARY = "no_library", Failed, false, "Alınacak blok dosyası verilmedi.";
+    NO_LIBRARY = "no_library", Failed, false, "Alınacak blok ya da stil dosyası verilmedi.";
     /// A block library file that does not read.
-    INVALID_LIBRARY = "invalid_library", Failed, false, "Blok dosyası okunamadı.";
+    INVALID_LIBRARY = "invalid_library", Failed, false, "Blok ya da stil dosyası okunamadı.";
     /// A library item created without the item.
     NO_ITEM = "no_item", Failed, false, "Eklenecek kitaplık öğesi verilmedi.";
     /// A library import without a .kstil file's text.

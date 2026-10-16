@@ -33,6 +33,12 @@ definitions (docs/adr/0061, 0147 §7, 0183, 0205, 0249), without KentOS code:
   through `a + n·offset` (n the direction's left normal); Zincir from the base's `b` to the point, its line on the
   base's; Baz from the base's `a`, one level (three times the base's height) further out on the side the base lies.
   Their first point follows what the base's follows; their look and height the base's.
+- Merkez işareti, Eksen çizgisi and Kot (docs/adr/0322): a centre mark is the curve's centre and the point of it east
+  of the centre, its extension (`offset`) the value height unless typed, its extension lines dash-dot; it binds `b` on
+  the curve with the rule `curve`. An axis runs from the middle of the two edges' starts to the middle of their ends
+  (the second edge turned to run the first's way when their directions are against each other), the same extension,
+  each edge bound where it was clicked with the rule `pair`. A level is its point and `at`, its elevation given or its
+  place's.
 - Height: the style's at the project's scale (mm / 1000 × N), Standart's the project's Ölçü height (2.5 mm).
 
 The drawing's coordinates are doubles exactly and the distances whole (3-4-5 triangles), so the arithmetic is
@@ -608,6 +614,7 @@ def chain_refusals():
     return out
 
 
+NO_OFFSET = "Yarıçap, çap, koordinat ve kot ölçüsü uzaklık almaz; yerini at verir. offset'i kaldırın."
 NO_STRAIGHT = "Nesnenin düz kenarı yok: açı iki düz kenar arasında ölçülür; yaydan ölçmek için angleArc, köşe noktasından angleVertex verin."
 NO_ARC = "Nesnenin uçları olan yayı yok: yaydan ya da çoklu çizginin ya da alanın yaylı kenarından ölçülür; tam daire için Yarıçap ya da Çap'ı kullanın."
 NO_CIRCLE = "Nesne daire değil: daireden, yaydan ya da çoklu çizginin yay parçasından ölçülür."
@@ -638,7 +645,7 @@ def refused_cases():
         refused("Kenarın nesne kimliği geçersiz", inp({"kind": "radius", "of": {"uid": BAD, "near": P(X, Y)}}, (X, Y)),
                 "invalid_uid", bad_uid(BAD), "measure.of.uid"),
         refused("Yarıçap uzaklık almaz", {**radius, "offset": 2}, "invalid_offset",
-                "Yarıçap, çap ve koordinat ölçüsü uzaklık almaz; yerini at verir. offset'i kaldırın.", "offset"),
+                NO_OFFSET, "offset"),
         refused("Beklenen sürüm sayı değil", {**one, "expectedRevision": "on iki"}, "invalid_revision", INVALID_REVISION, "expectedRevision"),
         refused("Kenarın nesnesi çizimde yok", inp({"kind": "radius", "of": {"uid": MISSING, "near": P(X, Y)}}, (X, Y)),
                 "entity_not_found", not_found(MISSING), "measure.of.uid"),
@@ -691,11 +698,113 @@ def refused_cases():
     return out
 
 
+# ── Merkez işareti, Eksen çizgisi and Kot (docs/adr/0322) ───────────────────────────────────────────────────────────
+
+MARK_LOOK = {"extLineType": "dashdot"}
+NO_CIRCLE_MARK = "Nesne daire değil: merkez işareti daireye, yaya ya da çoklu çizginin yay parçasına konur."
+NO_AXIS_EDGE = "Nesnenin düz kenarı yok: eksen çizgisi iki düz kenar (çizgi ya da çoklu çizginin, alanın düz kenarı) arasında çizilir."
+NO_AXIS = "Eksen çizgisi oluşmuyor: iki kenar aynı ya da eksenin uzunluğu sıfır. İki ayrı düz kenar gösterin."
+NEGATIVE_EXTENSION = "Merkez işaretinin ve eksen çizgisinin uzantısı eksi olamaz; 0 ya da daha büyük bir uzaklık verin (metre)."
+NO_LEVEL = "Kot için noktanın kotu yok: kotu metre olarak verin ya da noktayı kotlu bir köşeye bağlayın."
+
+
+def on_edge(eid, index, t):
+    """An `along` place on a path's edge `index`."""
+    return {"uid": UID(eid), "place": {"kind": "along", "part": 0, "ring": 0, "index": index, "t": plain(t)}}
+
+
+def axis(first, second):
+    """The axis between two edges: the middles of their starts and of their ends, the second turned to run the
+    first's way when its direction is against the first's."""
+    (p0, p1), (q0, q1) = first, second
+    if (p1[0] - p0[0]) * (q1[0] - q0[0]) + (p1[1] - p0[1]) * (q1[1] - q0[1]) < 0:
+        q0, q1 = q1, q0
+    mid = lambda a, b: ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)  # noqa: E731
+    return mid(p0, q0), mid(p1, q1)
+
+
+def mark_cases():
+    out = []
+    # Merkez işareti: the centre, its point on the curve east of it (the cross upright), the value height's extension.
+    east = (CIRCLE_C[0] + R, CIRCLE_C[1])
+    out.append(case("Merkez işareti: dairenin merkezinde; eğrinin üstündeki noktası doğuda, uzantı değer yüksekliği; eğriye bağlı (curve)",
+                    inp({"kind": "centerMark", "of": edge(14, (X + 55, Y + 30))}, (X + 70, Y + 70)),
+                    lambda i: dimension(i, CIRCLE_C, east, STANDARD_HEIGHT, kind="centerMark", look=MARK_LOOK,
+                                        refs={"b": along(14, t_on_arc(CIRCLE_C, 0.0, 2 * math.pi, east)), "rule": "curve"})))
+    arc_east = (ARC_C[0] + R, ARC_C[1])
+    out.append(case("Merkez işareti: yayın merkezinde, uzantı yazılmış; yayın başına bağlı", 
+                    inp({"kind": "centerMark", "of": edge(13, (X + 34, Y + 33))}, (X, Y), offset=2),
+                    lambda i: dimension(i, ARC_C, arc_east, 2, kind="centerMark", look=MARK_LOOK,
+                                        refs={"b": along(13, t_on_arc(ARC_C, 0.0, ARC_SWEEP, arc_east)), "rule": "curve"})))
+    out.append(case("Merkez işareti: ölçü stiliyle; uzantı stilin değer yüksekliği, uzatma çizgileri yine kesik noktalı",
+                    inp({"kind": "centerMark", "of": edge(14, (X + 50, Y + 25))}, (X, Y), dimensionStyle="Mimari"),
+                    lambda i: dimension(i, CIRCLE_C, east, MIMARI_HEIGHT, kind="centerMark", height=MIMARI_HEIGHT,
+                                        look={"dimStyle": MIMARI, **MARK_LOOK},
+                                        refs={"b": along(14, t_on_arc(CIRCLE_C, 0.0, 2 * math.pi, east)), "rule": "curve"})))
+    out.append(case("Merkez işareti: plan; hiçbir şey yazılmaz", inp({"kind": "centerMark", "of": edge(14, (X + 55, Y + 30))}, (X, Y)),
+                    lambda i: dimension(i, CIRCLE_C, east, STANDARD_HEIGHT, kind="centerMark", look=MARK_LOOK,
+                                        refs={"b": along(14, 0), "rule": "curve"}), plan=True))
+    # Eksen çizgisi between two lines running the same way, and between the opposite edges of a rectangle (the second
+    # running the other way); each edge bound where it was clicked (pair).
+    a, b = axis(((X, Y + 40), (X + 10, Y + 40)), ((X, Y + 50), (X + 10, Y + 50)))
+    out.append(case("Eksen çizgisi: iki paralel çizginin ortasında; kenarlarına bağlı (pair)",
+                    inp({"kind": "centerLine", "first": edge(15, (X + 9, Y + 40)), "second": edge(17, (X + 3, Y + 50))}, (X, Y)),
+                    lambda i: dimension(i, a, b, STANDARD_HEIGHT, kind="centerLine", look=MARK_LOOK,
+                                        refs={"a": along(15, 0.9), "b": along(17, 0.3), "rule": "pair"})))
+    a2, b2 = axis(((X + 20, Y), (X + 28, Y)), ((X + 28, Y + 6), (X + 20, Y + 6)))
+    out.append(case("Eksen çizgisi: alanın karşı kenarları, ikincisi ters yönde; uzantı yazılmış", 
+                    inp({"kind": "centerLine", "first": edge(12, (X + 24, Y)), "second": edge(12, (X + 24, Y + 6))}, (X, Y), offset=0),
+                    lambda i: dimension(i, a2, b2, 0, kind="centerLine", look=MARK_LOOK,
+                                        refs={"a": on_edge(12, 0, 0.5), "b": on_edge(12, 2, 0.5), "rule": "pair"})))
+    a3, b3 = axis(((X, Y + 40), (X + 10, Y + 40)), ((X + 5, Y + 36), (X + 5, Y + 48)))
+    out.append(case("Eksen çizgisi: dik kenarlar arasında da uçların ortalarından", 
+                    inp({"kind": "centerLine", "first": edge(15, (X + 5, Y + 40)), "second": edge(16, (X + 5, Y + 42))}, (X, Y)),
+                    lambda i: dimension(i, a3, b3, STANDARD_HEIGHT, kind="centerLine", look=MARK_LOOK,
+                                        refs={"a": along(15, 0.5), "b": along(16, 0.5), "rule": "pair"}), undo=True))
+    # Kot: the elevation of a point object, of a line's end, given; a given one wins over the place's.
+    out.append(case("Kot: nokta nesnesinin kotu; değer imleçte, noktaya bağlı", 
+                    inp({"kind": "elevation", "a": place(10, "node", part=0)}, (X + 4, Y + 22)),
+                    lambda i: dimension(i, (X + 2, Y + 20), (X + 4, Y + 22), 0, kind="elevation", za=50,
+                                        refs={"a": {"uid": UID(10), "place": {"kind": "node", "part": 0}}})))
+    out.append(case("Kot: çizginin başının kotu", inp({"kind": "elevation", "a": place(11, "start")}, (X - 2, Y + 3)),
+                    lambda i: dimension(i, LINE_11[0], (X - 2, Y + 3), 0, kind="elevation", za=100,
+                                        refs={"a": ref_of(place(11, "start"))})))
+    out.append(case("Kot: yazılan kot yerin kotunun yerine", inp({"kind": "elevation", "a": place(11, "end"), "z": 7.5}, (X + 14, Y + 3)),
+                    lambda i: dimension(i, LINE_11[1], (X + 14, Y + 3), 0, kind="elevation", za=7.5,
+                                        refs={"a": ref_of(place(11, "end"))})))
+    out.append(case("Kot: koordinatla ve yazılan kotla; bağsız", inp({"kind": "elevation", "a": at_(X + 40, Y + 60), "z": -1.25}, (X + 43, Y + 62)),
+                    lambda i: dimension(i, (X + 40, Y + 60), (X + 43, Y + 62), 0, kind="elevation", za=-1.25)))
+    return out
+
+
+def mark_refusals():
+    mark = lambda of, **extra: inp({"kind": "centerMark", "of": of}, (X, Y), **extra)  # noqa: E731
+    line = lambda first, second, **extra: inp({"kind": "centerLine", "first": first, "second": second}, (X, Y), **extra)  # noqa: E731
+    level = lambda a, **extra: inp({"kind": "elevation", "a": a, **extra}, (X + 1, Y + 1))  # noqa: E731
+    return [
+        refused("Merkez işareti: çizginin merkezi yok", mark(edge(11, (X + 6, Y))), "not_measurable", NO_CIRCLE_MARK, "measure.of"),
+        refused("Merkez işareti: yaysız alanın merkezi yok", mark(edge(12, (X + 24, Y))), "not_measurable", NO_CIRCLE_MARK, "measure.of"),
+        refused("Merkez işaretinin uzantısı eksi olamaz", mark(edge(14, (X + 55, Y + 30)), offset=-1), "invalid_offset",
+                NEGATIVE_EXTENSION, "offset"),
+        refused("Eksen çizgisi: dairenin düz kenarı yok",
+                line(edge(14, (X + 55, Y + 30)), edge(15, (X + 5, Y + 40))), "not_measurable", NO_AXIS_EDGE, "measure.first"),
+        refused("Eksen çizgisi: aynı kenar iki kez", line(edge(15, (X + 2, Y + 40)), edge(15, (X + 8, Y + 40))), "no_dimension", NO_AXIS, "at"),
+        refused("Eksen çizgisinin uzantısı eksi olamaz", line(edge(15, (X + 2, Y + 40)), edge(17, (X + 8, Y + 50)), offset=-0.5),
+                "invalid_offset", NEGATIVE_EXTENSION, "offset"),
+        refused("Kot: koordinatın kotu yok", level(at_(X + 40, Y + 60)), "missing_elevation", NO_LEVEL, "measure.z"),
+        refused("Kot: alanın köşesinin kotu yok", level(vertex(12, 1)), "missing_elevation", NO_LEVEL, "measure.z"),
+        refused("Kot sonlu değil", level(at_(X + 40, Y + 60), z=1), "not_finite",
+                "Kot sonlu bir sayı değil (NaN ya da sonsuz). Kotu metre olarak sonlu bir sayıyla verin.", "measure.z",
+                non_finite={"measure.z": "NaN"}),
+        refused("Kot uzaklık almaz", level(at_(X + 40, Y + 60), z=1) | {"offset": 1}, "invalid_offset", NO_OFFSET, "offset"),
+    ]
+
+
 def build():
     return {
         "format": "kentos.command-cases", "version": 1, "command": "cad.dimensions.create", "commandVersion": 1, "title": "Ölçü ekle",
-        "note": "Written by scripts/fixtures/dimension_create_cases.py from Ölçülendirme's definitions (docs/adr/0061, 0147, 0183, 0205, 0249, 0255, 0320); do not edit by hand.",
-        "setup": SETUP, "cases": written_cases() + chain_cases() + refused_cases() + chain_refusals(),
+        "note": "Written by scripts/fixtures/dimension_create_cases.py from Ölçülendirme's definitions (docs/adr/0061, 0147, 0183, 0205, 0249, 0255, 0320, 0322); do not edit by hand.",
+        "setup": SETUP, "cases": written_cases() + chain_cases() + mark_cases() + refused_cases() + chain_refusals() + mark_refusals(),
     }
 
 

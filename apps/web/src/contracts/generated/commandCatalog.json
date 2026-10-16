@@ -2585,6 +2585,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -2883,6 +2890,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -2922,6 +2934,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -10201,6 +10228,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -10595,6 +10629,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -19260,6 +19301,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -19558,6 +19606,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -19597,6 +19650,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -26879,6 +26947,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -27289,6 +27364,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -34780,6 +34862,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -35078,6 +35167,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -35117,6 +35211,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -38940,6 +39049,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -39334,6 +39450,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -40985,6 +41108,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -41283,6 +41413,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -41322,6 +41457,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -45145,6 +45295,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -45539,6 +45696,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -47169,6 +47333,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -47467,6 +47638,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -47506,6 +47682,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -51329,6 +51520,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -51723,6 +51921,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -53512,6 +53717,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -53810,6 +54022,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -53849,6 +54066,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -57672,6 +57904,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -58066,6 +58305,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -59659,6 +59905,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -59957,6 +60210,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -59996,6 +60254,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -63819,6 +64092,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -64213,6 +64493,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -65820,6 +66107,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -66118,6 +66412,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -66157,6 +66456,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -69980,6 +70294,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -70374,6 +70695,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -72279,6 +72607,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -72577,6 +72912,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -72616,6 +72956,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -76439,6 +76794,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -76833,6 +77195,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -77763,6 +78132,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -77802,6 +78176,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -78943,6 +79332,13 @@
                     ],
                     "x-unit": "deg"
                   },
+                  "overrides": {
+                    "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
                   "p": {
                     "$ref": "#/$defs/Vec2",
                     "x-unit": "length"
@@ -79187,6 +79583,13 @@
                       }
                     ],
                     "description": "Where the value goes when it does not fit and how it is written (docs/adr/0321 §1, §2)."
+                  },
+                  "overrides": {
+                    "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
                   },
                   "prefix": {
                     "description": "Written before the value (and its kind's own prefix).",
@@ -79561,6 +79964,13 @@
                       "null"
                     ],
                     "x-unit": "deg"
+                  },
+                  "overrides": {
+                    "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
                   },
                   "p": {
                     "$ref": "#/$defs/Vec2",
@@ -82233,6 +82643,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -82531,6 +82948,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -82570,6 +82992,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -86393,6 +86830,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -86787,6 +87231,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -88590,6 +89041,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -88888,6 +89346,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -88927,6 +89390,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -92750,6 +93228,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -93144,6 +93629,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -95039,6 +95531,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -95337,6 +95836,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -95376,6 +95880,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -99199,6 +99718,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -99593,6 +100119,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -101210,6 +101743,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -101508,6 +102048,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -101547,6 +102092,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -105370,6 +105930,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -105764,6 +106331,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -107638,6 +108212,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -107936,6 +108517,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -107975,6 +108561,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -111798,6 +112399,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -112192,6 +112800,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -113823,6 +114438,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -114121,6 +114743,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -114160,6 +114787,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -117983,6 +118625,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -118377,6 +119026,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -120089,6 +120745,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -120387,6 +121050,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -120426,6 +121094,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -124249,6 +124932,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -124643,6 +125333,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -126841,6 +127538,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -127139,6 +127843,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -127178,6 +127887,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -132989,6 +133713,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -133383,6 +134114,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -135670,6 +136408,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -135968,6 +136713,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -136007,6 +136757,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -141818,6 +142583,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -142212,6 +142984,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -144622,6 +145401,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -144920,6 +145706,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -144959,6 +145750,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -150770,6 +151576,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -151164,6 +151977,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -152806,6 +153626,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -153104,6 +153931,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -153143,6 +153975,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -157013,6 +157860,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -157407,6 +158261,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -159390,6 +160251,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -159688,6 +160556,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -159727,6 +160600,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -163550,6 +164438,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -163944,6 +164839,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -165578,6 +166480,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -165876,6 +166785,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -165915,6 +166829,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -169738,6 +170667,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -170132,6 +171068,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -171824,6 +172767,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -172122,6 +173072,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -172161,6 +173116,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -175984,6 +176954,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -176378,6 +177355,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -178196,6 +179180,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -178494,6 +179485,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -178533,6 +179529,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -182356,6 +183367,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -182750,6 +183768,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -183468,6 +184493,69 @@
                   "to"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "Merkez işareti (docs/adr/0322) of a circle, an arc or a path's arc segment: the cross at its centre, `height`\nacross (absent: the value height), upright; its axis lines reach `offset` (absent: `height`) past the curve.\nIt follows the curve; `at` is not read.",
+                "properties": {
+                  "kind": {
+                    "const": "centerMark",
+                    "type": "string"
+                  },
+                  "of": {
+                    "$ref": "#/$defs/EdgeNear"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "of"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Eksen çizgisi (docs/adr/0322) between two straight edges: from the middle of their starts to the middle of their\nends (the second turned to run the first's way), `offset` (absent: `height`) past each end. It follows the\nedges; `at` is not read.",
+                "properties": {
+                  "first": {
+                    "$ref": "#/$defs/EdgeNear"
+                  },
+                  "kind": {
+                    "const": "centerLine",
+                    "type": "string"
+                  },
+                  "second": {
+                    "$ref": "#/$defs/EdgeNear"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "first",
+                  "second"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Kot (docs/adr/0322): the elevation of `a`, `z` metres (absent: its place's vertex's, docs/adr/0142), its mark on\n`a` and its value on the shoulder at `at`. A bound point's elevation follows its vertex's.",
+                "properties": {
+                  "a": {
+                    "$ref": "#/$defs/MeasuredPoint"
+                  },
+                  "kind": {
+                    "const": "elevation",
+                    "type": "string"
+                  },
+                  "z": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "elevation"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "a"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -183739,7 +184827,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.dimensions.create` v1: the dimension `measure` names,\nplaced at `at` (the dimension line, its arc or its leader through it),\nwritten on `layerId` by `cad.entities.create`'s rules as one undo step\n“Ekle”. The dimension is the one Ölçülendirme draws for the same picks:\nthe tool writes it with this command. The points given as places are\nbound: they follow their objects (docs/adr/0249); an angle by edges, a\nradius, a diameter, a jogged radius, an arc length and an arc's angle\nfollow their edges or their curve too (docs/adr/0320 §1). Zincir ölçü and\nBaz ölçü take the base's style, look and height unless a style is named.\n\nRefusals (`CommandError.code`), checked in this order: `not_finite`\n(`at`, `offset`, then the measure's numbers in their order),\n`invalid_height`, `invalid_uid` (each place's and edge's object, in\norder; a base's first), `invalid_offset` (an `offset` for Yarıçap, Çap,\nKoordinat, Zincir or Baz, which take none), `invalid_revision`,\n`revision_conflict` (status `conflict`), `entity_not_found`,\n`no_such_place`, `not_measurable` (the object has no edge of the kind the\nmeasure takes), `not_straight` (a base not an aligned or a linear dimension), `missing_elevation`\n(Eğim's point with no elevation given or kept), `unknown_style`,\n`no_dimension` (no dimension forms there: the points meet, the edges are\nparallel, the arc spans nothing), then the layer's and the look's as\n`cad.entities.create` checks them (`layer_not_found`, `not_a_layer`,\n`layer_locked`, `invalid_line_weight`); a hidden layer gives a\n`layer_hidden` warning; on the desktop also `slots_exhausted`.",
+        "description": "Input of `cad.dimensions.create` v1: the dimension `measure` names,\nplaced at `at` (the dimension line, its arc or its leader through it),\nwritten on `layerId` by `cad.entities.create`'s rules as one undo step\n“Ekle”. The dimension is the one Ölçülendirme draws for the same picks:\nthe tool writes it with this command. The points given as places are\nbound: they follow their objects (docs/adr/0249); an angle by edges, a\nradius, a diameter, a jogged radius, an arc length and an arc's angle\nfollow their edges or their curve too (docs/adr/0320 §1). Zincir ölçü and\nBaz ölçü take the base's style, look and height unless a style is named.\n\nRefusals (`CommandError.code`), checked in this order: `not_finite`\n(`at`, `offset`, then the measure's numbers in their order),\n`invalid_height`, `invalid_uid` (each place's and edge's object, in\norder; a base's first), `invalid_offset` (an `offset` for Yarıçap, Çap,\nKoordinat, Zincir, Baz or Kot, which take none; a negative one for Merkez\nişareti or Eksen çizgisi), `invalid_revision`,\n`revision_conflict` (status `conflict`), `entity_not_found`,\n`no_such_place`, `not_measurable` (the object has no edge of the kind the\nmeasure takes), `not_straight` (a base not an aligned or a linear dimension), `missing_elevation`\n(Eğim's or Kot's point with no elevation given or kept), `unknown_style`,\n`no_dimension` (no dimension forms there: the points meet, the edges are\nparallel, the arc spans nothing; an axis's two edges are one), then the layer's and the look's as\n`cad.entities.create` checks them (`layer_not_found`, `not_a_layer`,\n`layer_locked`, `invalid_line_weight`); a hidden layer gives a\n`layer_hidden` warning; on the desktop also `slots_exhausted`.",
         "properties": {
           "at": {
             "$ref": "#/$defs/Vec2",
@@ -184987,6 +186075,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -185285,6 +186380,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -185324,6 +186424,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -189147,6 +190262,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -189541,6 +190663,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -191521,6 +192650,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -191819,6 +192955,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -191858,6 +192999,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -195681,6 +196837,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -196075,6 +197238,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -198056,6 +199226,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -198354,6 +199531,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -198393,6 +199575,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -202216,6 +203413,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -202610,6 +203814,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -204389,6 +205600,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -204687,6 +205905,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -204726,6 +205949,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -208549,6 +209787,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -208943,6 +210188,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -210627,6 +211879,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -210925,6 +212184,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -210964,6 +212228,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -214787,6 +216066,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -215181,6 +216467,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -216891,6 +218184,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -217189,6 +218489,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -217228,6 +218533,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -221051,6 +222371,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -221445,6 +222772,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -223078,6 +224412,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -223376,6 +224717,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -223415,6 +224761,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -227238,6 +228599,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -227632,6 +229000,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -229227,6 +230602,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -229525,6 +230907,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -229564,6 +230951,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -233387,6 +234789,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -233781,6 +235190,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -235433,6 +236849,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -235731,6 +237154,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -235770,6 +237198,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -239593,6 +241036,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -239987,6 +241437,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -241546,6 +243003,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -241844,6 +243308,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -241883,6 +243352,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -245706,6 +247190,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -246100,6 +247591,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -247773,6 +249271,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -248071,6 +249576,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -248110,6 +249620,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -251933,6 +253458,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -252327,6 +253859,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -254042,6 +255581,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -254340,6 +255886,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -254379,6 +255930,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -258202,6 +259768,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -258596,6 +260169,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -260302,6 +261882,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -260600,6 +262187,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -260639,6 +262231,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -264462,6 +266069,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -264856,6 +266470,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -266674,6 +268295,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -266972,6 +268600,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -267011,6 +268644,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -270834,6 +272482,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -271228,6 +272883,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -272256,6 +273918,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -272295,6 +273962,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -272991,6 +274673,13 @@
                     ],
                     "x-unit": "deg"
                   },
+                  "overrides": {
+                    "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
                   "p": {
                     "$ref": "#/$defs/Vec2",
                     "x-unit": "length"
@@ -273235,6 +274924,13 @@
                       }
                     ],
                     "description": "Where the value goes when it does not fit and how it is written (docs/adr/0321 §1, §2)."
+                  },
+                  "overrides": {
+                    "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
                   },
                   "prefix": {
                     "description": "Written before the value (and its kind's own prefix).",
@@ -273609,6 +275305,13 @@
                       "null"
                     ],
                     "x-unit": "deg"
+                  },
+                  "overrides": {
+                    "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
                   },
                   "p": {
                     "$ref": "#/$defs/Vec2",
@@ -276370,6 +278073,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -276668,6 +278378,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -276707,6 +278422,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -280530,6 +282260,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -280924,6 +282661,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -282814,6 +284558,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -283112,6 +284863,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -283151,6 +284907,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -286974,6 +288745,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -287368,6 +289146,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -289623,6 +291408,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -289921,6 +291713,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -289960,6 +291757,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -293871,6 +295683,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -294265,6 +296084,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -296372,6 +298198,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -296670,6 +298503,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -296709,6 +298547,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -300620,6 +302473,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -301014,6 +302874,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -303389,6 +305256,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -303687,6 +305561,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -303726,6 +305605,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -307637,6 +309531,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -308031,6 +309932,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -310446,6 +312354,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -310744,6 +312659,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -310783,6 +312703,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -314643,6 +316578,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -315037,6 +316979,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -316414,6 +318363,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -316712,6 +318668,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -316751,6 +318712,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -320611,6 +322587,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -321005,6 +322988,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -323296,6 +325286,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -323594,6 +325591,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -323633,6 +325635,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -327456,6 +329473,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -327850,6 +329874,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -353912,7 +355943,7 @@
       "id": "cad.styles.edit",
       "version": 1,
       "title": "Yazı ve ölçü stilleri",
-      "summary": "Projenin adlı yazı (kind text) ya da ölçü (kind dimension) stillerinden birini değiştirir (operation): create yeni stili tablonun sonuna ekler (kimliği boşsa yeni bir UUIDv7 verilir), update stilin değerlerini değiştirir: o stildeki yazılar (ölçüler) eski değeri hâlâ taşıyan alanlarında yenisini alır, elle değiştirilenler kalır; rename stilin adını değiştirir, nesneler değişmez; remove stili siler, nesneleri görünüşlerini korur ve bağlarını yitirir. Adlar büyük küçük harf ayırmadan bir kez kullanılır, Standart başka stile verilmez. Tablo proje ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı değildir; izleyen nesneler tek geri alma adımında (“Yazı stili”, “Ölçü stili”) yazılır, kilitli katmandakiler değişmez ve locked'da sayılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Projenin adlı yazı (kind text) ya da ölçü (kind dimension) stillerinden birini değiştirir (operation): create yeni stili tablonun sonuna ekler (kimliği boşsa yeni bir UUIDv7 verilir), update stilin değerlerini değiştirir: o stildeki yazılar (ölçüler) eski değeri hâlâ taşıyan alanlarında yenisini alır, elle değiştirilenler kalır; rename stilin adını değiştirir, nesneler değişmez; remove stili siler, nesneleri görünüşlerini korur ve bağlarını yitirir; export türün stillerini (styles verilmişse onları) kentos.annotation-styles dosyasının metni olarak library'de verir, yazmaz; import library'deki dosyanın stillerini adlarıyla alır: yeni ad eklenir, tablodaki ad olduğu gibi kalır (skipped) ya da replace ile yerinde güncellenir ve nesneleri izler. Adlar büyük küçük harf ayırmadan bir kez kullanılır, Standart başka stile verilmez. Tablo proje ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı değildir; izleyen nesneler tek geri alma adımında (“Yazı stili”, “Ölçü stili”) yazılır, kilitli katmandakiler değişmez ve locked'da sayılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -354402,13 +356433,27 @@
           },
           "StyleEditOperation": {
             "description": "What `cad.styles.edit` does.",
-            "enum": [
-              "create",
-              "update",
-              "rename",
-              "remove"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "create",
+                  "update",
+                  "rename",
+                  "remove"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "export",
+                "description": "The kind's styles as a `kentos.annotation-styles` file's text (docs/adr/0322 §4).",
+                "type": "string"
+              },
+              {
+                "const": "import",
+                "description": "A `kentos.annotation-styles` file's styles taken in by name (docs/adr/0322 §4).",
+                "type": "string"
+              }
+            ]
           },
           "TextStyleDef": {
             "description": "A named text style (docs/adr/0183 §2).",
@@ -354494,7 +356539,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.styles.edit` v1.\n\n- `create`: the kind's definition (`text` or `dimension`); an empty id\n  gives it a new one (a UUIDv7), a given id must be new. It goes last in\n  the table; nothing follows it yet;\n- `update`: the kind's definition, whose id names the style it replaces\n  (its place kept). The texts (or dimensions) of the style take its new\n  values where they still held the old ones (`follow_text_style`,\n  `follow_dimension_style`), in one undo step;\n- `rename`: `style`, `name`; the objects name the style by its id and\n  do not change;\n- `remove`: `style`; its objects keep their look and lose the link, in\n  one undo step.\n\nThe table is the project's setting: changing it makes the drawing dirty\nand is no undo step (docs/adr/0183 §5, kept by docs/adr/0248 §4). Objects\non locked layers are left as they are and counted in `locked`.\n\nRefusals (`CommandError.code`), checked in this order: `no_definition`\n(create, update without the kind's definition), `no_style` (rename,\nremove without `style`), `empty_name` (rename with a name empty or only\nwhite space); then `invalid_revision`, `revision_conflict` (status\n`conflict`); `style_not_found` (update's id, rename's and remove's\n`style`), `duplicate_style` (create's given id the table has);\n`invalid_style` (the table it would leave, by `text_styles_problem` or\n`dimension_styles_problem`: the names, then each style's values).",
+        "description": "Input of `cad.styles.edit` v1.\n\n- `create`: the kind's definition (`text` or `dimension`); an empty id\n  gives it a new one (a UUIDv7), a given id must be new. It goes last in\n  the table; nothing follows it yet;\n- `update`: the kind's definition, whose id names the style it replaces\n  (its place kept). The texts (or dimensions) of the style take its new\n  values where they still held the old ones (`follow_text_style`,\n  `follow_dimension_style`), in one undo step;\n- `rename`: `style`, `name`; the objects name the style by its id and\n  do not change;\n- `remove`: `style`; its objects keep their look and lose the link, in\n  one undo step;\n- `export`: `styles` (absent: every style of the kind), in the table's\n  order, as a `kentos.annotation-styles` file's text in `library`;\n  nothing is written;\n- `import`: `library`, a `kentos.annotation-styles` file's text of the\n  same kind; each of its styles by name (Turkish case folded, trimmed):\n  a new name is added (its id kept when the table has none such, else a\n  new one), a name the table has is kept as it is (`skipped`), or with\n  `replace` updated in its place (its id and name kept, its objects following as\n  `update` makes them).\n\nThe table is the project's setting: changing it makes the drawing dirty\nand is no undo step (docs/adr/0183 §5, kept by docs/adr/0248 §4). Objects\non locked layers are left as they are and counted in `locked`.\n\nRefusals (`CommandError.code`), checked in this order: `no_definition`\n(create, update without the kind's definition), `no_style` (rename,\nremove without `style`), `empty_name` (rename with a name empty or only\nwhite space), `no_library` (import without `library`); then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`style_not_found` (update's id, rename's and remove's `style`, each of\nexport's `styles`), `duplicate_style` (create's given id the table has),\n`invalid_library` (import's text not such a file, or of the other kind);\n`invalid_style` (the table it would leave, by `text_styles_problem` or\n`dimension_styles_problem`: the names, then each style's values).",
         "properties": {
           "dimension": {
             "anyOf": [
@@ -354518,6 +356563,13 @@
           "kind": {
             "$ref": "#/$defs/AnnotationStyleKind"
           },
+          "library": {
+            "description": "Import's `kentos.annotation-styles` file's text.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "name": {
             "description": "Rename's new name, trimmed.",
             "type": [
@@ -354528,10 +356580,27 @@
           "operation": {
             "$ref": "#/$defs/StyleEditOperation"
           },
+          "replace": {
+            "description": "Import: true, a style whose name the table has is updated from the file.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
           "style": {
             "description": "Rename's and remove's style, by its id.",
             "type": [
               "string",
+              "null"
+            ]
+          },
+          "styles": {
+            "description": "Export's styles, by id; absent: every style of the kind.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
               "null"
             ]
           },
@@ -354558,6 +356627,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.styles.edit` v1, and what plan says it would do.",
         "properties": {
+          "added": {
+            "description": "Import: the styles added, by id, in the file's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "changed": {
             "description": "Whether the table changed.",
             "type": "boolean"
@@ -354569,6 +356645,13 @@
             "type": "integer",
             "x-unit": "count"
           },
+          "library": {
+            "description": "Export: the file's text.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "locked": {
             "description": "The objects a locked layer kept as they were.",
             "format": "uint32",
@@ -354576,13 +356659,27 @@
             "type": "integer",
             "x-unit": "count"
           },
+          "replaced": {
+            "description": "Import with `replace`: the styles updated, by id, in the file's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "revision": {
             "description": "The document's revision afterwards (plan: the one it was made\nagainst), as decimal text.",
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
           },
+          "skipped": {
+            "description": "Import: the file's names the table has, kept as they are.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "style": {
-            "description": "The style's id.",
+            "description": "The style's id; export's and import's first (empty when none).",
             "type": "string"
           }
         },
@@ -354600,6 +356697,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.styles.edit` v1, and what plan says it would do.",
         "properties": {
+          "added": {
+            "description": "Import: the styles added, by id, in the file's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "changed": {
             "description": "Whether the table changed.",
             "type": "boolean"
@@ -354611,6 +356715,13 @@
             "type": "integer",
             "x-unit": "count"
           },
+          "library": {
+            "description": "Export: the file's text.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "locked": {
             "description": "The objects a locked layer kept as they were.",
             "format": "uint32",
@@ -354618,13 +356729,27 @@
             "type": "integer",
             "x-unit": "count"
           },
+          "replaced": {
+            "description": "Import with `replace`: the styles updated, by id, in the file's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "revision": {
             "description": "The document's revision afterwards (plan: the one it was made\nagainst), as decimal text.",
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
           },
+          "skipped": {
+            "description": "Import: the file's names the table has, kept as they are.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "style": {
-            "description": "The style's id.",
+            "description": "The style's id; export's and import's first (empty when none).",
             "type": "string"
           }
         },
@@ -354646,6 +356771,8 @@
           "duplicate_style",
           "empty_name",
           "invalid_style",
+          "no_library",
+          "invalid_library",
           "invalid_revision",
           "revision_conflict"
         ]
@@ -354663,6 +356790,13 @@
               "id": "",
               "name": "Ada no"
             }
+          }
+        },
+        {
+          "title": "Yazı stillerini dosyaya ver",
+          "input": {
+            "kind": "text",
+            "operation": "export"
           }
         },
         {
@@ -359143,6 +361277,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -359441,6 +361582,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -359480,6 +361626,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -363303,6 +365464,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -363697,6 +365865,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -365353,6 +367528,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -365651,6 +367833,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -365690,6 +367877,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -369513,6 +371715,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -369907,6 +372116,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -371689,6 +373905,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep\ntheir value when the style changes. Empty: each field follows while it holds the style's old value.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "prefix": {
                 "description": "Written before the value (and its kind's own prefix).",
                 "type": [
@@ -371987,6 +374210,11 @@
                 "const": "edges",
                 "description": "An angle between two straight edges: `a` and `b` name the edges its arms lie on; its vertex `c` is where\ntheir lines cross, each arm keeping its length and side.",
                 "type": "string"
+              },
+              {
+                "const": "pair",
+                "description": "An axis between two straight edges (docs/adr/0322): `a` and `b` name the edges; the axis runs from the middle\nof their starts to the middle of their ends, the second edge turned to run the first's way.",
+                "type": "string"
               }
             ]
           },
@@ -372026,6 +374254,21 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              },
+              {
+                "const": "centerMark",
+                "description": "Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`\nacross, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.",
+                "type": "string"
+              },
+              {
+                "const": "centerLine",
+                "description": "Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their\nmatched ends), `offset` past each end.",
+                "type": "string"
+              },
+              {
+                "const": "elevation",
+                "description": "Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.",
                 "type": "string"
               }
             ]
@@ -375849,6 +378092,13 @@
                 ],
                 "x-unit": "count"
               },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "p": {
                 "$ref": "#/$defs/Vec2",
                 "description": "Its top left corner.",
@@ -376243,6 +378493,13 @@
                   "null"
                 ],
                 "x-unit": "count"
+              },
+              "overrides": {
+                "description": "The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "p": {
                 "$ref": "#/$defs/Vec2",
@@ -382282,7 +384539,7 @@
       "code": "missing_elevation",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Eğim için noktanın kotu verilmedi ve yerinde kot yok."
+      "meaning": "Eğim ya da kot için noktanın kotu verilmedi ve yerinde kot yok."
     },
     {
       "code": "invalid_offset",
@@ -382594,13 +384851,13 @@
       "code": "no_library",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Alınacak blok dosyası verilmedi."
+      "meaning": "Alınacak blok ya da stil dosyası verilmedi."
     },
     {
       "code": "invalid_library",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Blok dosyası okunamadı."
+      "meaning": "Blok ya da stil dosyası okunamadı."
     },
     {
       "code": "no_item",

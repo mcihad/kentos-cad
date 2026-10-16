@@ -496,6 +496,86 @@ pub fn apply_dimension_style(doc: &mut Document, slots: &[Slot], id: Option<&str
     set_geometries(doc, &changes)
 }
 
+/// Stile döndür (docs/adr/0322 §5): the texts and dimensions in `slots` that set fields of their style apart take its
+/// values again, their overrides cleared, in one step “Değiştir”; those without overrides left out.
+pub fn restore_styles(doc: &mut Document, slots: &[Slot]) -> Vec<String> {
+    let settings = doc.settings();
+    let scale = settings.plot_scale;
+    let changes: Vec<(Slot, Entity)> = slots
+        .iter()
+        .filter_map(|&slot| match doc.get(slot)? {
+            Entity::Text(t) if !t.face.overrides.is_empty() => {
+                let style = t
+                    .face
+                    .text_style
+                    .as_ref()
+                    .and_then(|id| settings.text_styles.iter().find(|s| &s.id == id))?;
+                let look = kentos_contracts::apply_text_style(
+                    Some(style),
+                    &kentos_contracts::TextLook {
+                        face: t.face.clone(),
+                        width_factor: t.width_factor,
+                        height: t.height,
+                    },
+                    scale,
+                );
+                let mut t = t.clone();
+                t.face = look.face;
+                t.width_factor = look.width_factor;
+                t.height = look.height;
+                Some((slot, Entity::Text(t)))
+            }
+            Entity::Dimension(d) if !d.look.overrides.is_empty() => {
+                let style = d
+                    .look
+                    .dim_style
+                    .as_ref()
+                    .and_then(|id| settings.dimension_styles.iter().find(|s| &s.id == id))?;
+                let mut d = d.clone();
+                d.look = style.look();
+                d.height = style.height_at(scale);
+                Some((slot, Entity::Dimension(d)))
+            }
+            _ => None,
+        })
+        .collect();
+    set_geometries(doc, &changes)
+}
+
+/// The Turkish names of a text's or a dimension's overrides (docs/adr/0322 §5), in their order.
+pub fn override_names(overrides: &[String]) -> Vec<&'static str> {
+    overrides
+        .iter()
+        .map(|n| match n.as_str() {
+            "font" => "Yazı tipi",
+            "bold" => "Kalın",
+            "italic" => "İtalik",
+            "oblique" => "Eğiklik",
+            "widthFactor" => "Genişlik",
+            "height" => "Yükseklik",
+            "arrow" => "Uçlar",
+            "arrowSize" => "Uç boyu",
+            "extOffset" => "Uzatma boşluğu",
+            "extBeyond" => "Uzatma aşması",
+            "textGap" => "Değerin yüksekliği",
+            "textPlace" => "Değerin yeri",
+            "decimals" => "Basamak",
+            "unit" => "Birim",
+            "prefix" => "Önek",
+            "suffix" => "Sonek",
+            "dimLineColor" => "Çizgi rengi",
+            "dimLineWeight" => "Çizgi kalınlığı",
+            "dimLineType" => "Çizgi tipi",
+            "extColor" => "Uzatma rengi",
+            "extWeight" => "Uzatma kalınlığı",
+            "extLineType" => "Uzatma tipi",
+            "textColor" => "Değer rengi",
+            "options" => "Seçenekler",
+            _ => "?",
+        })
+        .collect()
+}
+
 fn said<T>(result: CommandResult<T>) -> Vec<String> {
     match result {
         CommandResult::Completed { warnings, .. } => {
@@ -573,5 +653,8 @@ pub fn edit_dimensions(
         edit: make(uids),
         expected_revision: None,
     };
-    said(dimensions_edit::execute(&mut ExecutionContext::new(doc), input))
+    said(dimensions_edit::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
 }

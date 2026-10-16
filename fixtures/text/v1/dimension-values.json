@@ -2,7 +2,7 @@
  "format": "kentos.dimension-value-cases",
  "version": 1,
  "title": "Ölçünün yazılan değeri: yuvarlama, sıfırlar, ayak ve inç, tolerans, alternatif birim, elle yazılan",
- "note": "ADR 0321. scripts/fixtures/dimension_value_cases.py kurallardan yazar; Format::dimension_value bunu geçer.",
+ "note": "ADR 0321, 0322. scripts/fixtures/dimension_value_cases.py kurallardan yazar; Format::dimension_value bunu geçer.",
  "cases": [
   {
    "name": "Uzunluk projenin birimi ve basamağıyla",
@@ -467,6 +467,134 @@
     "angleUnit": "deg"
    },
    "expect": "%12.3"
+  },
+  {
+   "name": "Kot: artı işaretli, iki basamak",
+   "measured": {
+    "value": 3.2,
+    "unit": "level",
+    "prefix": ""
+   },
+   "look": {},
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "+3.20"
+  },
+  {
+   "name": "Kot: eksi",
+   "measured": {
+    "value": -1.5,
+    "unit": "level",
+    "prefix": ""
+   },
+   "look": {},
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "-1.50"
+  },
+  {
+   "name": "Kot: sıfır ±",
+   "measured": {
+    "value": 0.0,
+    "unit": "level",
+    "prefix": ""
+   },
+   "look": {},
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "±0.00"
+  },
+  {
+   "name": "Kot: gösterilen basamaklarda sıfıra yuvarlanan eksi ± olur",
+   "measured": {
+    "value": -0.004,
+    "unit": "level",
+    "prefix": ""
+   },
+   "look": {},
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "±0.00"
+  },
+  {
+   "name": "Kot: üç basamak, ön ek ve son ek",
+   "measured": {
+    "value": 105.2468,
+    "unit": "level",
+    "prefix": ""
+   },
+   "look": {
+    "decimals": 3,
+    "prefix": "K ",
+    "suffix": " m"
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "K +105.247 m"
+  },
+  {
+   "name": "Kot: 5 cm artışla yuvarlanır",
+   "measured": {
+    "value": 12.37,
+    "unit": "level",
+    "prefix": ""
+   },
+   "look": {
+    "options": {
+     "round": 0.05
+    }
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "+12.35"
+  },
+  {
+   "name": "Kot: mm projesinde de metre",
+   "measured": {
+    "value": 3.2,
+    "unit": "level",
+    "prefix": ""
+   },
+   "look": {},
+   "project": {
+    "unit": "mm",
+    "lengthDecimals": 0,
+    "angleUnit": "deg"
+   },
+   "expect": "+3.20"
+  },
+  {
+   "name": "Merkez işareti ve eksen çizgisi değer yazmaz",
+   "measured": {
+    "value": 5.0,
+    "unit": "none",
+    "prefix": ""
+   },
+   "look": {},
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": ""
   },
   {
    "name": "Elle yazılan değer <> ile: ölçülen değer içinde",

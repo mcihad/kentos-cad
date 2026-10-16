@@ -20,6 +20,10 @@ and says where the dimension is then. Worked out here from the ADR's rules, with
   rebound there; one in the part cut away that was the object's end follows that end to where the cut left it; any
   other in the part cut away breaks (`vertex_gone`). Uzat moves a line's end: the end follows.
 - A deleted object breaks its references (`object_gone`); the points stay.
+- Merkez işareti (docs/adr/0322) follows by the rule `curve` as a radius: its centre the curve's, its point on the
+  curve its place's. Eksen çizgisi by the rule `pair`: from the middle of the two edges' starts to the middle of their
+  ends, the second edge turned to run the first's way. Kot's point follows its place; its elevation is the place's
+  vertex's while the vertex has one, else it stays.
 
 The coordinates are doubles exactly and the moves whole; where a transcendental value comes in (a place along a
 circle, a turned point), the step says `within`.
@@ -283,12 +287,74 @@ def trim_cases():
     return out
 
 
+MARK_LOOK = {"extLineType": "dashdot"}
+
+
+def mark_cases():
+    out = []
+    # A centre mark of the circle: its point east of the centre, at the place t = 0.
+    east = lambda c, r=R: (c[0] + r, c[1])  # noqa: E731
+    bond = {"b": along(10, 0), "rule": "curve"}
+    moved_c = (CIRCLE_C[0] + 2, CIRCLE_C[1] + 1)
+    out.append({"name": "Merkez işareti: daire taşınınca merkez ve işaretin noktası onunla", "steps": [
+        make({"kind": "centerMark", "of": edge(10, (X + 15, Y + 10))}, (X, Y)),
+        run("cad.entities.transform", move([10], 2, 1),
+            {str(NEXT): dimension(NEXT, moved_c, east(moved_c), HEIGHT, kind="centerMark", look=MARK_LOOK, refs=bond)})]})
+    out.append({"name": "Merkez işareti: daire iki kat büyüyünce eksen çizgileri yeni çemberden taşar", "steps": [
+        make({"kind": "centerMark", "of": edge(10, (X + 15, Y + 10))}, (X, Y)),
+        run("cad.entities.transform", {"uids": [UID(10)], "transform": {"kind": "scale", "center": P(*CIRCLE_C), "factor": 2}},
+            {str(NEXT): dimension(NEXT, CIRCLE_C, east(CIRCLE_C, 2 * R), HEIGHT, kind="centerMark", look=MARK_LOOK, refs=bond)})]})
+    # A centre mark of the arc, its point at the arc's start: the arc turned 90° about its centre turns it.
+    out.append({"name": "Merkez işareti: yay merkezinde 90° dönünce işaret de döner", "steps": [
+        make({"kind": "centerMark", "of": edge(11, (X + 34, Y + 13))}, (X, Y)),
+        run("cad.entities.transform", {"uids": [UID(11)], "transform": {"kind": "rotate", "center": P(*ARC_C), "angle": math.pi / 2}},
+            {str(NEXT): dimension(NEXT, ARC_C, (ARC_C[0] + R * math.cos(math.pi / 2), ARC_C[1] + R * math.sin(math.pi / 2)), HEIGHT,
+                                  kind="centerMark", look=MARK_LOOK, refs={"b": along(11, 0), "rule": "curve"})}, within=True)]})
+    # An axis between the lines 12 and 15 (parallel, the same way).
+    first, second = ((X, Y + 30), (X + 20, Y + 30)), ((X + 40, Y), (X + 60, Y))
+    pair = {"a": along(12, t_on_segment(*first, (X + 10, Y + 30))), "b": along(15, t_on_segment(*second, (X + 44, Y))), "rule": "pair"}
+    mid = lambda p, q: ((p[0] + q[0]) / 2, (p[1] + q[1]) / 2)  # noqa: E731
+    out.append({"name": "Eksen çizgisi: ikinci kenar 4 m yukarı kayınca eksen 2 m kayar", "steps": [
+        make({"kind": "centerLine", "first": edge(12, (X + 10, Y + 30)), "second": edge(15, (X + 44, Y))}, (X, Y)),
+        run("cad.entities.transform", move([15], 0, 4),
+            {str(NEXT): dimension(NEXT, mid(first[0], (X + 40, Y + 4)), mid(first[1], (X + 60, Y + 4)), HEIGHT, kind="centerLine",
+                                  look=MARK_LOOK, refs=pair)})]})
+    out.append({"name": "Eksen çizgisi: kenar ters çevrilince eksen yine uçların ortalarından", "steps": [
+        make({"kind": "centerLine", "first": edge(12, (X + 10, Y + 30)), "second": edge(15, (X + 44, Y))}, (X, Y)),
+        run("cad.entities.reverse", {"uids": [UID(15)]},
+            {str(NEXT): dimension(NEXT, mid(first[0], second[0]), mid(first[1], second[1]), HEIGHT, kind="centerLine",
+                                  look=MARK_LOOK, refs={**pair, "b": along(15, 1 - pair["b"]["place"]["t"])})})]})
+    out.append({"name": "Eksen çizgisi: kenarın biri silinince bağı kopar, eksen yerinde kalır", "steps": [
+        {"op": "captureUid", "as": "kenar", "id": 15},
+        make({"kind": "centerLine", "first": edge(12, (X + 10, Y + 30)), "second": edge(15, (X + 44, Y))}, (X, Y)),
+        run("cad.entities.delete", {"uids": [UID(15)]},
+            {str(NEXT): dimension(NEXT, mid(first[0], second[0]), mid(first[1], second[1]), HEIGHT, kind="centerLine",
+                                  look=MARK_LOOK, refs={**pair, "b": {**pair["b"], "uid": "$uid:kenar", "broken": "object_gone"}})})]})
+    # A level at the line 12's start, its elevation given: the vertex given one, the level takes it; the line moved, it
+    # goes with it and keeps it.
+    start = {"uid": UID(12), "place": {"kind": "start"}}
+    z_line = lambda zs: {"operation": "elevation", "changes": [{"kind": "update", "uid": UID(12), "geometry": {  # noqa: E731
+        "kind": "line", "a": P(*first[0]), "b": P(*first[1]), "zs": zs}}]}
+    out.append({"name": "Kot: köşeye kot verilince işaret köşenin kotunu alır; çizgi taşınınca onunla gider", "steps": [
+        make({"kind": "elevation", "a": place(12, "start"), "z": 5}, (X - 2, Y + 33)),
+        run("cad.entities.edit", z_line([7.5, None]),
+            {str(NEXT): dimension(NEXT, first[0], (X - 2, Y + 33), 0, kind="elevation", za=7.5, refs={"a": start})}),
+        run("cad.entities.transform", move([12], 1, 2),
+            {str(NEXT): dimension(NEXT, (first[0][0] + 1, first[0][1] + 2), (X - 2, Y + 33), 0, kind="elevation", za=7.5,
+                                  refs={"a": start})})]})
+    out.append({"name": "Kot: koordinat noktası; çizgiler taşınınca kımıldamaz", "steps": [
+        make({"kind": "elevation", "a": {"kind": "at", "at": P(X + 100, Y + 50)}, "z": 3.2}, (X + 103, Y + 52)),
+        run("cad.entities.transform", move([12], 1, 2),
+            {str(NEXT): dimension(NEXT, (X + 100, Y + 50), (X + 103, Y + 52), 0, kind="elevation", za=3.2)})]})
+    return out
+
+
 def build():
     return {
         "format": "kentos.command-cases", "version": 1, "command": "cad.dimensions.create", "commandVersion": 1,
         "title": "İlişkili ölçünün izlemesi",
-        "note": "Written by scripts/fixtures/dimension_follow_cases.py from the rules of docs/adr/0249 and 0320; do not edit by hand.",
-        "setup": SETUP, "cases": radius_cases() + arc_cases() + edges_cases() + chain_cases() + trim_cases(),
+        "note": "Written by scripts/fixtures/dimension_follow_cases.py from the rules of docs/adr/0249, 0320 and 0322; do not edit by hand.",
+        "setup": SETUP, "cases": radius_cases() + arc_cases() + edges_cases() + chain_cases() + trim_cases() + mark_cases(),
     }
 
 

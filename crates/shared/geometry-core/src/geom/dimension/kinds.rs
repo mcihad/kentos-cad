@@ -45,6 +45,10 @@ pub enum DimensionFault {
     EdgeTooShort,
     /// A slope without one of its two elevations.
     SlopeNoElevations,
+    /// A centre mark whose point on the curve is its centre (docs/adr/0322).
+    MarkNoRadius,
+    /// A level without its elevation (docs/adr/0322).
+    LevelNoElevation,
 }
 
 impl DimensionFault {
@@ -61,6 +65,8 @@ impl DimensionFault {
             DimensionFault::JoggedCentre => "joggedCentre",
             DimensionFault::EdgeTooShort => "edgeTooShort",
             DimensionFault::SlopeNoElevations => "slopeNoElevations",
+            DimensionFault::MarkNoRadius => "markNoRadius",
+            DimensionFault::LevelNoElevation => "levelNoElevation",
         }
     }
 }
@@ -111,6 +117,9 @@ pub(super) fn fault(d: &DimensionGeom) -> Option<DimensionFault> {
             (d.style.as_deref() == Some("slope") && (d.za.is_none() || d.zb.is_none()))
                 .then_some(SlopeNoElevations)
         }
+        Some("centerMark") => (js_hypot(b.x - a.x, b.y - a.y) < 1e-9).then_some(MarkNoRadius),
+        Some("centerLine") => (js_hypot(b.x - a.x, b.y - a.y) < 1e-9).then_some(EdgeTooShort),
+        Some("elevation") => d.za.is_none().then_some(LevelNoElevation),
         _ => None,
     }
 }

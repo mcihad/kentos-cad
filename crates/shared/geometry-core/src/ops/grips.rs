@@ -136,6 +136,9 @@ fn dimension_grips(e: &Shape) -> Vec<(Vec2, DimensionGrip)> {
     };
     match style.as_deref() {
         Some("ordinate") => vec![(*b, B)],
+        // docs/adr/0322: a centre mark's and an axis's points follow their objects; their grip is how far they reach.
+        Some("centerMark" | "centerLine") => vec![(l.handle, Line)],
+        Some("elevation") => vec![(*a, A), (*b, B)],
         Some("arcLength") => vec![(*a, A), (*b, B), (l.handle, Line)],
         Some("jogged") => {
             let mut out = vec![(*b, B), (l.handle, Line)];

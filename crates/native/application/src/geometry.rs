@@ -190,6 +190,7 @@ pub fn core_face(f: &kentos_contracts::TextFace) -> Face {
 /// The core's face as the contract writes it.
 pub fn contract_face(f: Face) -> kentos_contracts::TextFace {
     kentos_contracts::TextFace {
+        overrides: Vec::new(),
         text_style: f.style,
         font: f.font.and_then(|c| DrawingFont::from_id(c.id())),
         bold: f.bold,
@@ -265,7 +266,12 @@ pub fn with_place(
 }
 
 /// The moved value and the breaks a core look carries (docs/adr/0321 §1).
-pub fn place_of(look: &Look) -> (Option<kentos_contracts::TextShift>, Vec<kentos_contracts::DimensionBreak>) {
+pub fn place_of(
+    look: &Look,
+) -> (
+    Option<kentos_contracts::TextShift>,
+    Vec<kentos_contracts::DimensionBreak>,
+) {
     let Some(m) = look.more.as_deref() else {
         return (None, Vec::new());
     };
@@ -298,6 +304,7 @@ pub fn contract_look(l: Look) -> kentos_contracts::DimensionLook {
         .and_then(|o| serde_json::from_str(&kentos_geometry_core::api::json::to_string(o)).ok())
         .map(Box::new);
     kentos_contracts::DimensionLook {
+        overrides: Vec::new(),
         dim_style: l.style,
         arrow: l
             .arrow
@@ -822,7 +829,10 @@ pub fn shape(entity: &Entity) -> Shape {
             // And where it moved them (docs/adr/0317 §1).
             places: (!i.attribute_places.is_empty()).then(|| {
                 kentos_geometry_core::entity::Places(
-                    i.attribute_places.iter().map(|(k, p)| (k.clone(), v(p))).collect(),
+                    i.attribute_places
+                        .iter()
+                        .map(|(k, p)| (k.clone(), v(p)))
+                        .collect(),
                 )
             }),
         },
@@ -1695,26 +1705,26 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
         } => {
             let (text_shift, breaks) = place_of(&look);
             EntityGeometry::Dimension {
-            text_shift,
-            breaks,
-            a: p(a),
-            b: p(b),
-            offset,
-            height,
-            text,
-            style: match style {
-                Some(name) => Some(style_of(&name)?),
-                None => None,
-            },
-            angle,
-            c: c.map(p),
-            mask: mask == Some(true),
-            za,
-            zb,
-            // A tool's computed dimension follows nothing until the tool says what (docs/adr/0249 §3).
-            refs: None,
-            look: contract_look(look),
-        }
+                text_shift,
+                breaks,
+                a: p(a),
+                b: p(b),
+                offset,
+                height,
+                text,
+                style: match style {
+                    Some(name) => Some(style_of(&name)?),
+                    None => None,
+                },
+                angle,
+                c: c.map(p),
+                mask: mask == Some(true),
+                za,
+                zb,
+                // A tool's computed dimension follows nothing until the tool says what (docs/adr/0249 §3).
+                refs: None,
+                look: contract_look(look),
+            }
         }
         Shape::Hatch {
             ring,

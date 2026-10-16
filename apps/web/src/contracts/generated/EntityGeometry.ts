@@ -138,7 +138,11 @@ font?: DrawingFont, bold?: boolean, italic?: boolean,
  * How far its letters lean, degrees, positive with their tops to the
  * right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).
  */
-oblique?: number, } | { "kind": "dimension", a: Vec2, b: Vec2, offset: number, height: number, text?: string, style?: DimensionStyle, angle?: number, c?: Vec2, 
+oblique?: number, 
+/**
+ * The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.
+ */
+overrides?: Array<string>, } | { "kind": "dimension", a: Vec2, b: Vec2, offset: number, height: number, text?: string, style?: DimensionStyle, angle?: number, c?: Vec2, 
 /**
  * The value over the drawing's background (docs/adr/0147).
  */
@@ -241,7 +245,12 @@ textColor?: string,
 /**
  * Where the value goes when it does not fit and how it is written (docs/adr/0321 §1, §2).
  */
-options?: DimensionOptions, } | { "kind": "hatch", ring: Array<Vec2>, holes?: Array<Array<Vec2>>, pattern: HatchPattern, 
+options?: DimensionOptions, 
+/**
+ * The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep
+ * their value when the style changes. Empty: each field follows while it holds the style's old value.
+ */
+overrides?: Array<string>, } | { "kind": "hatch", ring: Array<Vec2>, holes?: Array<Array<Vec2>>, pattern: HatchPattern, 
 /**
  * The objects its region follows (docs/adr/0186 §6).
  */
@@ -303,4 +312,8 @@ font?: DrawingFont, bold?: boolean, italic?: boolean,
  * How far its letters lean, degrees, positive with their tops to the
  * right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).
  */
-oblique?: number, } | { "kind": "image" } & ImageFields | { "kind": "raster" } & RasterFields | { "kind": "pointcloud" } & PointCloudFields;
+oblique?: number, 
+/**
+ * The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.
+ */
+overrides?: Array<string>, } | { "kind": "image" } & ImageFields | { "kind": "raster" } & RasterFields | { "kind": "pointcloud" } & PointCloudFields;

@@ -111,6 +111,8 @@ pub enum Event {
     DimensionFree(Vec<Slot>),
     /// A dimension edit through `cad.dimensions.edit` (docs/adr/0321 §4): its options, its value home, its breaks off.
     DimensionEdit(Vec<Slot>, DimensionOp),
+    /// Stile döndür (docs/adr/0322 §5): the objects take their style's values again.
+    RestoreStyle(Vec<Slot>),
     /// A dimension's line's colour (`#RRGGBB`; none: the object's), weight
     /// on paper (mm; none: a hairline) and type (none: continuous): the
     /// dimension line's and its arrowheads', the extension lines', the
@@ -633,12 +635,9 @@ impl App {
             },
             Event::EmbedImage(slot) => crate::pictures::embed(model, slot, folder.as_deref()),
             Event::EmbedRaster(slot) => crate::rasters::embed(model, slot, folder.as_deref()),
-            Event::Parameter(slot, name, value) => properties::set_parameters(
-                model,
-                slot,
-                Some(BTreeMap::from([(name, value)])),
-                None,
-            ),
+            Event::Parameter(slot, name, value) => {
+                properties::set_parameters(model, slot, Some(BTreeMap::from([(name, value)])), None)
+            }
             Event::ParametersReset(slot) => properties::set_parameters(model, slot, None, None),
             Event::InsertMirror(slot, mirror) => match model.get(slot) {
                 Some(Entity::Insert(i)) => {
@@ -654,6 +653,7 @@ impl App {
             Event::TextStyle(slots, id) => {
                 properties::apply_text_style(model, &slots, id.as_deref())
             }
+            Event::RestoreStyle(slots) => properties::restore_styles(model, &slots),
             Event::DimensionStyle(slots, id) => {
                 properties::apply_dimension_style(model, &slots, id.as_deref())
             }

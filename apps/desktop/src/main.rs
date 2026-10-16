@@ -73,6 +73,8 @@ mod data_compare;
 #[cfg(test)]
 mod dimension_follow_scenes;
 #[cfg(test)]
+mod dimension_mark_scenes;
+#[cfg(test)]
 mod dimension_option_scenes;
 #[cfg(test)]
 mod dimension_scenes;
@@ -242,6 +244,8 @@ mod standard_scenes;
 #[cfg(test)]
 mod stretch_scenes;
 mod style_impact;
+#[cfg(test)]
+mod style_override_scenes;
 mod sub_object;
 #[cfg(test)]
 mod subref_scenes;

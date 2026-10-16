@@ -620,6 +620,9 @@ impl Document {
         let ends = std::mem::take(&mut self.relocated_ends);
         let dims = self.follow_dimensions(ops, &relocated, &ends);
         ops.extend(dims);
+        // Last: the style fields the step set apart by hand (docs/adr/0322 §5).
+        let marks = self.mark_overrides(ops);
+        ops.extend(marks);
     }
 
     /// A finished, followed step onto the undo history as a new edit; its

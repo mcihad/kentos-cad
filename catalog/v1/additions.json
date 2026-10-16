@@ -787,6 +787,47 @@
       "shortcuts": [],
       "category": "Blok",
       "status": "implemented"
+    },
+    {
+      "id": "tool.centerMark",
+      "title": "Merkez işareti",
+      "short": "Merkez",
+      "icon": "centerMark",
+      "description": "Daireye, yaya ya da çoklu çizginin yay parçasına tıklanınca merkezine artı ve eksen çizgilerini koyar (AutoCAD'in CENTERMARK'ı). İşaret eğriyi izler: eğri taşınınca, döndürülünce, yarıçapı değişince gelir. Uzantı Öznitelikler'den (cad.dimensions.create, centerMark).",
+      "aliases": [
+        "CENTERMARK",
+        "MERKEZISARETI"
+      ],
+      "shortcuts": [],
+      "category": "Açıklama",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.dimCenterLine",
+      "title": "Eksen çizgisi",
+      "short": "Eksen",
+      "icon": "centerLine",
+      "description": "İki düz kenara tıklanınca aralarına eksen çizgisi koyar: uçlarının ortalarından geçer, uzantısı kadar taşar (AutoCAD'in CENTERLINE'ı). Çizgi kenarları izler (cad.dimensions.create, centerLine).",
+      "aliases": [
+        "EKSENCIZGISI"
+      ],
+      "shortcuts": [],
+      "category": "Açıklama",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.dimElevation",
+      "title": "Kot",
+      "short": "Kot",
+      "icon": "dimElevation",
+      "description": "Noktanın kotunu kot işaretiyle yazar: noktaya, sonra değerin yerine tıklanır; kotu olmayan nokta için kot yazılır. Köşeye bağlanan işaret köşeyi ve kotunu izler (cad.dimensions.create, elevation).",
+      "aliases": [
+        "KOTISARETI",
+        "LEVELMARK"
+      ],
+      "shortcuts": [],
+      "category": "Açıklama",
+      "status": "implemented"
     }
   ],
   "icons": {
@@ -875,7 +916,10 @@
     "blockList": "<rect x=\"2.5\" y=\"3\" width=\"4\" height=\"4\" rx=\".6\"/><rect x=\"2.5\" y=\"8\" width=\"4\" height=\"4\" rx=\".6\"/><rect x=\"2.5\" y=\"13\" width=\"4\" height=\"4\" rx=\".6\"/><path d=\"M9 5h8.5M9 10h8.5M9 15h8.5\"/>",
     "blockCategory": "<path d=\"M2.5 5.5v10a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1V7.5a1 1 0 0 0-1-1H9.5L8 4.5H3.5a1 1 0 0 0-1 1z\"/><rect x=\"7.5\" y=\"9\" width=\"5\" height=\"5\" rx=\".6\"/><path d=\"M7.5 11.5h5M10 9v5\"/>",
     "blockLibrary": "<rect x=\"2.5\" y=\"3\" width=\"4\" height=\"14\" rx=\"0.8\"/><rect x=\"7.5\" y=\"3\" width=\"4\" height=\"14\" rx=\"0.8\"/><path d=\"m13.2 4.2 3.6-1 3 13.6-3.6 1z\"/><path d=\"M2.5 6h4M7.5 6h4M2.5 14h4M7.5 14h4\"/>",
-    "blockFreeze": "<rect x=\"2.5\" y=\"4.5\" width=\"9\" height=\"11\" rx=\"0.8\"/><path d=\"M5 4.5v11M5 8.5h3.6\"/><rect x=\"11.8\" y=\"11\" width=\"6\" height=\"5.5\" rx=\"0.9\"/><path d=\"M13.3 11V9.4a1.5 1.5 0 0 1 3 0V11\"/>"
+    "blockFreeze": "<rect x=\"2.5\" y=\"4.5\" width=\"9\" height=\"11\" rx=\"0.8\"/><path d=\"M5 4.5v11M5 8.5h3.6\"/><rect x=\"11.8\" y=\"11\" width=\"6\" height=\"5.5\" rx=\"0.9\"/><path d=\"M13.3 11V9.4a1.5 1.5 0 0 1 3 0V11\"/>",
+    "centerMark": "<circle cx=\"10\" cy=\"10\" r=\"5.5\"/><path d=\"M10 8v4M8 10h4\"/><path d=\"M10 1.5v3M10 15.5v3M1.5 10h3M15.5 10h3\"/>",
+    "centerLine": "<path d=\"M3 4.5h14M3 15.5h14\"/><path d=\"M1.5 10h4M7.5 10h1.5M11 10h1.5M14.5 10h4\"/>",
+    "dimElevation": "<path d=\"M6 16.5 2.8 11h6.4z\"/><path d=\"M2.8 11h14.7\"/><path d=\"M13.5 3.5v5M11 6h5\"/>"
   },
   "ribbon": [
     {
@@ -960,6 +1004,18 @@
       "tab": "annotate",
       "into": "Ölçü",
       "items": [
+        {
+          "command": "tool.centerMark",
+          "size": "small"
+        },
+        {
+          "command": "tool.dimCenterLine",
+          "size": "small"
+        },
+        {
+          "command": "tool.dimElevation",
+          "size": "small"
+        },
         {
           "command": "tool.dimensionReassociate",
           "size": "small"

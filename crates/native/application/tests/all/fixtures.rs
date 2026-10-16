@@ -36,13 +36,13 @@ use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, blocks_define, blocks_edit,
-    circle, curves_construct, delete, dimensions_edit, dimensions_query, dimensions_reassociate, edit, entities_chamfer,
-    entities_extend, entities_fillet, entities_order, entities_pick, entities_select,
-    entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit, layers_filter,
-    layers_find, layers_info, layers_labels, layers_renderer, layers_service, layers_set,
-    layers_states, layers_time, layers_translate, line, network_define, nurbs, offset, point,
-    points_construct, polygon, polygon_regular, polyline, rectangle_create, scenarios_edit, set,
-    settings_set, sheets_edit, snap_find, styles_edit, transform, ucs_set, units_change,
+    circle, curves_construct, delete, dimensions_edit, dimensions_query, dimensions_reassociate,
+    edit, entities_chamfer, entities_extend, entities_fillet, entities_order, entities_pick,
+    entities_select, entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit,
+    layers_filter, layers_find, layers_info, layers_labels, layers_renderer, layers_service,
+    layers_set, layers_states, layers_time, layers_translate, line, network_define, nurbs, offset,
+    point, points_construct, polygon, polygon_regular, polyline, rectangle_create, scenarios_edit,
+    set, settings_set, sheets_edit, snap_find, styles_edit, transform, ucs_set, units_change,
     views_edit,
 };
 use kentos_native_application::{
@@ -1060,6 +1060,10 @@ impl Input for DimensionsCreate {
             ) => angle.as_mut(),
             (DimensionMeasure::Slope { za, .. }, "za") => za.as_mut(),
             (DimensionMeasure::Slope { zb, .. }, "zb") => zb.as_mut(),
+            (DimensionMeasure::Elevation { z, .. }, "z") => z.as_mut(),
+            (DimensionMeasure::Elevation { a, .. }, "a") => {
+                xy(point(a)?, rest.strip_prefix("at.")?)
+            }
             (DimensionMeasure::Angle { first, .. }, "first") => {
                 xy(&mut first.near, rest.strip_prefix("near.")?)
             }
@@ -1150,7 +1154,12 @@ impl Input for kentos_domain::contracts::DimensionsEdit {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         use kentos_domain::contracts::DimensionEdit as E;
         match (&mut self.edit, path) {
-            (E::Space { spacing: Some(s), .. }, "edit.spacing") => Some(s),
+            (
+                E::Space {
+                    spacing: Some(s), ..
+                },
+                "edit.spacing",
+            ) => Some(s),
             (E::MoveText { along, .. }, "edit.along") => Some(along),
             (E::MoveText { across, .. }, "edit.across") => Some(across),
             _ => None,

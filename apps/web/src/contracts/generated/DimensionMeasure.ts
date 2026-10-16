@@ -14,4 +14,4 @@ base: string, to: MeasuredPoint, } | { "kind": "baseline",
 /**
  * The base dimension's persistent id (lowercase UUID text with hyphens).
  */
-base: string, to: MeasuredPoint, };
+base: string, to: MeasuredPoint, } | { "kind": "centerMark", of: EdgeNear, } | { "kind": "centerLine", first: EdgeNear, second: EdgeNear, } | { "kind": "elevation", a: MeasuredPoint, z?: number, };

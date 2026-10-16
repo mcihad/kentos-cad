@@ -326,7 +326,7 @@ pub(super) fn rows(
 fn bindable(d: &DimensionEntity) -> usize {
     match d.style {
         None | Some(DimensionStyle::Linear | DimensionStyle::Azimuth | DimensionStyle::Slope) => 2,
-        Some(DimensionStyle::Ordinate) => 1,
+        Some(DimensionStyle::Ordinate | DimensionStyle::Elevation) => 1,
         _ => 0,
     }
 }
@@ -367,7 +367,9 @@ fn common_relation(dims: &[&DimensionEntity]) -> Option<String> {
 /// dimension), Sığdırma, Yuvarlama, Sıfırlar, Alternatif birim, Tolerans with its values, Değerin yeri, Kırmalar; each
 /// change one `cad.dimensions.edit`.
 fn option_rows(dims: &[&DimensionEntity], slots: &[Slot], locked: bool, f: &Format) -> Vec<Row> {
-    use kentos_contracts::{AltUnits, DimensionFit, DimensionOptions, DimensionTolerance, DimensionZeros, ToleranceKind};
+    use kentos_contracts::{
+        AltUnits, DimensionFit, DimensionOptions, DimensionTolerance, DimensionZeros, ToleranceKind,
+    };
     let edit = |editor: Editor| (!locked).then_some(editor);
     let mut rows = Vec::new();
     // What the geometry measures, apart from a written value (docs/adr/0321 §3).
@@ -375,14 +377,23 @@ fn option_rows(dims: &[&DimensionEntity], slots: &[Slot], locked: bool, f: &Form
         && let Some(l) = dimension_layout(&Entity::Dimension((*d).clone()))
     {
         let measured = f.dimension_value(l.prefix, l.unit, l.value, &d.look, None);
-        let label = if d.text.as_deref().is_some_and(|t| !t.is_empty() && !t.contains("<>")) {
+        if l.unit == "none" {
+            return rows;
+        }
+        let label = if d
+            .text
+            .as_deref()
+            .is_some_and(|t| !t.is_empty() && !t.contains("<>"))
+        {
             "Ölçülen değer (elle yazılmış)"
         } else {
             "Ölçülen değer"
         };
         rows.push(Row::text(label, measured));
     }
-    let options = common(dims, |d| d.look.options.as_deref().cloned().unwrap_or_default());
+    let options = common(dims, |d| {
+        d.look.options.as_deref().cloned().unwrap_or_default()
+    });
     let Some(o) = options else {
         rows.push(Row::text("Ölçü seçenekleri", MIXED));
         return rows;
@@ -424,10 +435,12 @@ fn option_rows(dims: &[&DimensionEntity], slots: &[Slot], locked: bool, f: &Form
         Some(DimensionZeros::Leading),
         Some(DimensionZeros::Both),
     ];
-    rows.push(Row::text("Sıfırlar", zeros_name(o.zeros)).editor(edit(select(
-        zeros_name(o.zeros),
-        zeros.map(|z| (zeros_name(z), o.zeros == z, with(&|n| n.zeros = z))),
-    ))));
+    rows.push(
+        Row::text("Sıfırlar", zeros_name(o.zeros)).editor(edit(select(
+            zeros_name(o.zeros),
+            zeros.map(|z| (zeros_name(z), o.zeros == z, with(&|n| n.zeros = z))),
+        ))),
+    );
     let alt_name = |a: Option<AltUnits>| a.map_or("Yok", |a| a.unit.mark());
     let alts = [
         None,
@@ -437,20 +450,22 @@ fn option_rows(dims: &[&DimensionEntity], slots: &[Slot], locked: bool, f: &Form
         Some(kentos_contracts::DrawingUnit::In),
         Some(kentos_contracts::DrawingUnit::Ft),
     ];
-    rows.push(Row::text("Alternatif birim", alt_name(o.alt)).editor(edit(select(
-        alt_name(o.alt),
-        alts.map(|u| {
-            let a = u.map(|unit| AltUnits {
-                unit,
-                decimals: o.alt.and_then(|a| a.decimals),
-            });
-            (
-                u.map_or("Yok", |u| u.mark()),
-                o.alt.map(|a| a.unit) == u,
-                with(&|n| n.alt = a),
-            )
-        }),
-    ))));
+    rows.push(
+        Row::text("Alternatif birim", alt_name(o.alt)).editor(edit(select(
+            alt_name(o.alt),
+            alts.map(|u| {
+                let a = u.map(|unit| AltUnits {
+                    unit,
+                    decimals: o.alt.and_then(|a| a.decimals),
+                });
+                (
+                    u.map_or("Yok", |u| u.mark()),
+                    o.alt.map(|a| a.unit) == u,
+                    with(&|n| n.alt = a),
+                )
+            }),
+        ))),
+    );
     let kind_name = |k: Option<ToleranceKind>| match k {
         None => "Yok",
         Some(ToleranceKind::Symmetric) => "Simetrik (±)",
@@ -481,13 +496,19 @@ fn option_rows(dims: &[&DimensionEntity], slots: &[Slot], locked: bool, f: &Form
         rows.push(
             Row::figure("Üst sapma", f.length_bare(t.upper))
                 .unit(f.length_unit_label())
-                .editor(edit(Editor::Number(Field::DimensionTolerance(slots.to_vec(), true)))),
+                .editor(edit(Editor::Number(Field::DimensionTolerance(
+                    slots.to_vec(),
+                    true,
+                )))),
         );
         if t.kind != ToleranceKind::Symmetric {
             rows.push(
                 Row::figure("Alt sapma", f.length_bare(t.lower.unwrap_or(0.0)))
                     .unit(f.length_unit_label())
-                    .editor(edit(Editor::Number(Field::DimensionTolerance(slots.to_vec(), false)))),
+                    .editor(edit(Editor::Number(Field::DimensionTolerance(
+                        slots.to_vec(),
+                        false,
+                    )))),
             );
         }
     }
@@ -497,7 +518,11 @@ fn option_rows(dims: &[&DimensionEntity], slots: &[Slot], locked: bool, f: &Form
     rows.push(if moved && slots.len() == 1 {
         row.editor(edit(select(
             place,
-            [("Yerine döndür", false, Event::DimensionEdit(slots.to_vec(), DimensionOp::Home))],
+            [(
+                "Yerine döndür",
+                false,
+                Event::DimensionEdit(slots.to_vec(), DimensionOp::Home),
+            )],
         )))
     } else {
         row
@@ -512,7 +537,11 @@ fn option_rows(dims: &[&DimensionEntity], slots: &[Slot], locked: bool, f: &Form
     rows.push(if breaks > 0 {
         row.editor(edit(select(
             &text,
-            [("Kırmayı kaldır", false, Event::DimensionEdit(slots.to_vec(), DimensionOp::Unbreak))],
+            [(
+                "Kırmayı kaldır",
+                false,
+                Event::DimensionEdit(slots.to_vec(), DimensionOp::Unbreak),
+            )],
         )))
     } else {
         row

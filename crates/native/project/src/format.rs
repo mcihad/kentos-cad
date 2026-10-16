@@ -501,6 +501,8 @@ impl Format {
             return self.dimension_value(prefix, unit, value, look, None);
         }
         let number = match unit {
+            "none" => return String::new(),
+            "level" => level(value, look),
             "angle" => self.angle(value),
             "percent" => fixed(value, look.decimals.map_or(2, |d| d as usize)),
             _ => {
@@ -540,14 +542,20 @@ impl Format {
         }
     }
 
-    fn length_value(&self, prefix: &str, value: f64, look: &kentos_contracts::DimensionLook) -> String {
+    fn length_value(
+        &self,
+        prefix: &str,
+        value: f64,
+        look: &kentos_contracts::DimensionLook,
+    ) -> String {
         use kentos_contracts::ToleranceKind;
         let options = look.options.as_deref().cloned().unwrap_or_default();
         let rounded = match options.round {
             Some(r) => (value / r).round() * r,
             None => value,
         };
-        let number = |v: f64, decimals: Option<u32>| self.dimension_number(v, look, &options, decimals);
+        let number =
+            |v: f64, decimals: Option<u32>| self.dimension_number(v, look, &options, decimals);
         let (body, tolerance) = match options.tolerance {
             Some(t) if t.kind == ToleranceKind::Limits => (
                 format!(
@@ -557,9 +565,10 @@ impl Format {
                 ),
                 String::new(),
             ),
-            Some(t) if t.kind == ToleranceKind::Symmetric => {
-                (number(rounded, None), format!(" ±{}", number(t.upper, t.decimals)))
-            }
+            Some(t) if t.kind == ToleranceKind::Symmetric => (
+                number(rounded, None),
+                format!(" ±{}", number(t.upper, t.decimals)),
+            ),
             Some(t) => (
                 number(rounded, None),
                 format!(
@@ -577,7 +586,10 @@ impl Format {
         );
         if let Some(alt) = options.alt {
             let decimals = alt.decimals.map_or(self.length_decimals, |d| d as usize);
-            out.push_str(&format!(" [{}]", fixed(value * alt.unit.per_metre(), decimals)));
+            out.push_str(&format!(
+                " [{}]",
+                fixed(value * alt.unit.per_metre(), decimals)
+            ));
         }
         out
     }
@@ -599,13 +611,17 @@ impl Format {
             (Some(LengthStyle::Decimal), _) | (None, Some(_)) => Style::Decimal,
             (None, None) => self.style,
         };
-        let d = decimals.or(look.decimals).map_or(self.length_decimals, |d| d as usize);
+        let d = decimals
+            .or(look.decimals)
+            .map_or(self.length_decimals, |d| d as usize);
         if matches!(unit, DrawingUnit::In | DrawingUnit::Ft) && style != Style::Decimal {
             return format_inches(Self::inches(metres), style, d as u32);
         }
         let mut text = fixed(metres * unit.per_metre(), d);
         let zeros = options.zeros;
-        if matches!(zeros, Some(DimensionZeros::Trailing | DimensionZeros::Both)) && text.contains('.') {
+        if matches!(zeros, Some(DimensionZeros::Trailing | DimensionZeros::Both))
+            && text.contains('.')
+        {
             text = text.trim_end_matches('0').trim_end_matches('.').to_owned();
         }
         if matches!(zeros, Some(DimensionZeros::Leading | DimensionZeros::Both)) {
@@ -629,6 +645,27 @@ impl Format {
             self.coord(p.y)
         )
     }
+}
+
+/// A level's elevation (docs/adr/0322): metres rounded to its look's increment, its decimals (absent: 2), signed:
+/// `+3.20`, `-1.50`, `±0.00` when the digits shown are all zero.
+fn level(metres: f64, look: &kentos_contracts::DimensionLook) -> String {
+    let rounded = match look.options.as_deref().and_then(|o| o.round) {
+        Some(r) => (metres / r).round() * r,
+        None => metres,
+    };
+    let decimals =
+        look.decimals
+            .unwrap_or(kentos_geometry_core::geom::dimension::LEVEL_DECIMALS) as usize;
+    let digits = fixed(rounded.abs(), decimals);
+    let sign = if digits.chars().all(|c| c == '0' || c == '.') {
+        "±"
+    } else if rounded < 0.0 {
+        "-"
+    } else {
+        "+"
+    };
+    format!("{sign}{digits}")
 }
 
 /// `v` with `d` decimals by the display rule (docs/adr/0149): seven

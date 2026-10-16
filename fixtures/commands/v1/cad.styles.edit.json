@@ -2188,6 +2188,1934 @@
           }
         }
       ]
+    },
+    {
+      "name": "Dışa aktar: bütün yazı stilleri tablonun sırasıyla; yazmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "export"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "changed": false,
+              "followed": 0,
+              "locked": 0,
+              "library": "{\"format\":\"kentos.annotation-styles\",\"kind\":\"text\",\"styles\":[{\"bold\":true,\"font\":\"arimo\",\"height\":3.5,\"id\":\"0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101\",\"name\":\"Ada no\"},{\"font\":\"overpass\",\"id\":\"0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102\",\"italic\":true,\"name\":\"Yol adı\",\"oblique\":15.0,\"widthFactor\":0.8}],\"version\":1}",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dışa aktar: seçilen ölçü stili",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "dimension",
+            "operation": "export",
+            "styles": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+              "changed": false,
+              "followed": 0,
+              "locked": 0,
+              "library": "{\"format\":\"kentos.annotation-styles\",\"kind\":\"dimension\",\"styles\":[{\"arrow\":\"closed\",\"arrowSize\":3.5,\"decimals\":1,\"extBeyond\":1.75,\"extOffset\":1.0,\"font\":\"arimo\",\"height\":3.5,\"id\":\"0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201\",\"name\":\"Mimari\",\"prefix\":\"~\",\"suffix\":\" cm\",\"textGap\":0.875,\"unit\":\"cm\"}],\"version\":1}",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dışa aktar: seçimin sırası değil, tablonunki",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "export",
+            "styles": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "changed": false,
+              "followed": 0,
+              "locked": 0,
+              "library": "{\"format\":\"kentos.annotation-styles\",\"kind\":\"text\",\"styles\":[{\"bold\":true,\"font\":\"arimo\",\"height\":3.5,\"id\":\"0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101\",\"name\":\"Ada no\"},{\"font\":\"overpass\",\"id\":\"0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102\",\"italic\":true,\"name\":\"Yol adı\",\"oblique\":15.0,\"widthFactor\":0.8}],\"version\":1}",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dışa aktar: projede olmayan stil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "export",
+            "styles": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "style_not_found",
+              "message": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103” kimlikli yazı stili projede yok.",
+              "path": "styles[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Al: yeni ad eklenir (kimliği korunur), tablodaki ad (büyük küçük harf ayırmadan) olduğu gibi kalır; adım yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "import",
+            "library": "{\"format\":\"kentos.annotation-styles\",\"kind\":\"text\",\"styles\":[{\"font\":\"barlow\",\"id\":\"0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103\",\"name\":\"Not\"},{\"bold\":true,\"font\":\"overpass\",\"height\":3.5,\"id\":\"0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101\",\"name\":\"ADA NO\"}],\"version\":1}"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+              "changed": true,
+              "followed": 0,
+              "locked": 0,
+              "added": [
+                "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103"
+              ],
+              "skipped": [
+                "ADA NO"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+                  "name": "Not",
+                  "font": "barlow"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Al, değiştirerek: aynı adlı stil yerinde, kimliği ve adıyla güncellenir, yazıları izler; tek adım “Yazı stili”",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "import",
+            "replace": true,
+            "library": "{\"format\":\"kentos.annotation-styles\",\"kind\":\"text\",\"styles\":[{\"bold\":true,\"font\":\"overpass\",\"height\":5.0,\"id\":\"0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103\",\"name\":\" ada no \"}],\"version\":1}"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "changed": true,
+              "followed": 2,
+              "locked": 1,
+              "replaced": [
+                "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 5.0,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "overpass",
+                "bold": true
+              },
+              "2": {
+                "kind": "text",
+                "id": 2,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500020,
+                  "y": 4400000
+                },
+                "text": "102",
+                "height": 5.0,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "barlow",
+                "bold": true
+              }
+            },
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "overpass",
+                  "bold": true,
+                  "height": 5.0
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ]
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Al: plan yazmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "kind": "text",
+            "operation": "import",
+            "library": "{\"format\":\"kentos.annotation-styles\",\"kind\":\"text\",\"styles\":[{\"font\":\"barlow\",\"id\":\"0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103\",\"name\":\"Not\"},{\"bold\":true,\"font\":\"overpass\",\"height\":3.5,\"id\":\"0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101\",\"name\":\"ADA NO\"}],\"version\":1}"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+              "changed": true,
+              "followed": 0,
+              "locked": 0,
+              "added": [
+                "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103"
+              ],
+              "skipped": [
+                "ADA NO"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Al: dosyasız",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "import"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_library",
+              "message": "Alınacak stil dosyasının metnini (library) verin.",
+              "path": "library"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Al: başka biçim",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "import",
+            "library": "{\"format\":\"kentos.blocks\",\"kind\":\"text\",\"styles\":[],\"version\":1}"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_library",
+              "message": "Stil dosyası okunamadı: biçimi kentos.annotation-styles değil. KentOS'un stilleri dışa aktarmasının yazdığı bir kentos.annotation-styles dosyası verin.",
+              "path": "library"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Al: başka sürüm",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "import",
+            "library": "{\"format\":\"kentos.annotation-styles\",\"kind\":\"text\",\"styles\":[],\"version\":2}"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_library",
+              "message": "Stil dosyası okunamadı: sürümü 2; bu KentOS 1. sürümü okur. KentOS'un stilleri dışa aktarmasının yazdığı bir kentos.annotation-styles dosyası verin.",
+              "path": "library"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Al: ölçü stilleri yazı stili olarak alınmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "import",
+            "library": "{\"format\":\"kentos.annotation-styles\",\"kind\":\"dimension\",\"styles\":[{\"arrowSize\":1.5,\"height\":2.5,\"id\":\"0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0202\",\"name\":\"Harita\",\"textPlace\":\"centre\"}],\"version\":1}"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_library",
+              "message": "Stil dosyası okunamadı: dosyanın stilleri “dimension”; istenen “text”. KentOS'un stilleri dışa aktarmasının yazdığı bir kentos.annotation-styles dosyası verin.",
+              "path": "library"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Al: Standart adı ayrılmıştır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "import",
+            "library": "{\"format\":\"kentos.annotation-styles\",\"kind\":\"text\",\"styles\":[{\"font\":\"barlow\",\"id\":\"0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103\",\"name\":\"Standart\"}],\"version\":1}"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_style",
+              "message": "Yazı stilleri: “Standart” adı Standart'ındır; yazı stili başka bir ad almalı.",
+              "path": "library"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geçersiz kılma: yazı tipi elle değişince geçersiz kılınanlara yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "properties",
+            "changes": [
+              {
+                "kind": "update",
+                "uid": "$uidOf:1",
+                "geometry": {
+                  "kind": "text",
+                  "p": {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  "text": "101",
+                  "height": 3.5,
+                  "rotation": 0,
+                  "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "font": "overpass",
+                  "bold": true,
+                  "overrides": [
+                    "font"
+                  ]
+                }
+              }
+            ]
+          },
+          "result": "$any",
+          "command": "cad.entities.edit",
+          "expect": {
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 3.5,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "overpass",
+                "bold": true,
+                "overrides": [
+                  "font"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geçersiz kılma: stil önce o yazı tipine sonra başkasına geçse de elle verilen kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "properties",
+            "changes": [
+              {
+                "kind": "update",
+                "uid": "$uidOf:1",
+                "geometry": {
+                  "kind": "text",
+                  "p": {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  "text": "101",
+                  "height": 3.5,
+                  "rotation": 0,
+                  "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "font": "overpass",
+                  "bold": true,
+                  "overrides": [
+                    "font"
+                  ]
+                }
+              }
+            ]
+          },
+          "result": "$any",
+          "command": "cad.entities.edit",
+          "expect": {
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 3.5,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "overpass",
+                "bold": true,
+                "overrides": [
+                  "font"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "update",
+            "text": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "name": "Ada no",
+              "font": "overpass",
+              "bold": true,
+              "height": 3.5
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 3.5,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "overpass",
+                "bold": true,
+                "overrides": [
+                  "font"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "update",
+            "text": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "name": "Ada no",
+              "font": "barlow",
+              "bold": true,
+              "height": 3.5
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 3.5,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "overpass",
+                "overrides": [
+                  "font"
+                ],
+                "bold": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geçersiz kılma yokken (eski dosyalar) aynı adımlarda yazı stile uyar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "update",
+            "text": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "name": "Ada no",
+              "font": "overpass",
+              "bold": true,
+              "height": 3.5
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 3.5,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "overpass",
+                "bold": true
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "update",
+            "text": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "name": "Ada no",
+              "font": "barlow",
+              "bold": true,
+              "height": 3.5
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 3.5,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "barlow",
+                "bold": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geçersiz kılma: stilin değerine elle döndürülen alan yeniden stile uyar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "properties",
+            "changes": [
+              {
+                "kind": "update",
+                "uid": "$uidOf:1",
+                "geometry": {
+                  "kind": "text",
+                  "p": {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  "text": "101",
+                  "height": 3.5,
+                  "rotation": 0,
+                  "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "font": "overpass",
+                  "bold": true,
+                  "overrides": [
+                    "font"
+                  ]
+                }
+              }
+            ]
+          },
+          "result": "$any",
+          "command": "cad.entities.edit",
+          "expect": {
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 3.5,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "overpass",
+                "bold": true,
+                "overrides": [
+                  "font"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "properties",
+            "changes": [
+              {
+                "kind": "update",
+                "uid": "$uidOf:1",
+                "geometry": {
+                  "kind": "text",
+                  "p": {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  "text": "101",
+                  "height": 3.5,
+                  "rotation": 0,
+                  "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "font": "arimo",
+                  "bold": true
+                }
+              }
+            ]
+          },
+          "result": "$any",
+          "command": "cad.entities.edit",
+          "expect": {
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 3.5,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "arimo",
+                "bold": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geçersiz kılma: elle verilen yükseklik stilin yüksekliği değişince kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "properties",
+            "changes": [
+              {
+                "kind": "update",
+                "uid": "$uidOf:1",
+                "geometry": {
+                  "kind": "text",
+                  "p": {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  "text": "101",
+                  "height": 5.0,
+                  "rotation": 0,
+                  "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "font": "arimo",
+                  "bold": true,
+                  "overrides": [
+                    "height"
+                  ]
+                }
+              }
+            ]
+          },
+          "result": "$any",
+          "command": "cad.entities.edit",
+          "expect": {
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 5.0,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "arimo",
+                "bold": true,
+                "overrides": [
+                  "height"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "update",
+            "text": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "name": "Ada no",
+              "font": "arimo",
+              "bold": true,
+              "height": 5.0
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 5.0,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "overrides": [
+                  "height"
+                ],
+                "font": "arimo",
+                "bold": true
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "update",
+            "text": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "name": "Ada no",
+              "font": "arimo",
+              "bold": true,
+              "height": 6.0
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 5.0,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "overrides": [
+                  "height"
+                ],
+                "font": "arimo",
+                "bold": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geçersiz kılma: ölçünün basamağı elle; stil o basamağa sonra başkasına geçse de kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "properties",
+            "changes": [
+              {
+                "kind": "update",
+                "uid": "$uidOf:5",
+                "geometry": {
+                  "kind": "dimension",
+                  "a": {
+                    "x": 500000,
+                    "y": 4400050
+                  },
+                  "b": {
+                    "x": 500024.5,
+                    "y": 4400050
+                  },
+                  "offset": -2,
+                  "height": 3.5,
+                  "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "arrow": "closed",
+                  "extOffset": 0.2857142857142857,
+                  "textGap": 0.25,
+                  "decimals": 4,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo",
+                  "overrides": [
+                    "decimals"
+                  ]
+                }
+              }
+            ]
+          },
+          "result": "$any",
+          "command": "cad.entities.edit",
+          "expect": {
+            "entities": {
+              "5": {
+                "kind": "dimension",
+                "id": 5,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 500000,
+                  "y": 4400050
+                },
+                "b": {
+                  "x": 500024.5,
+                  "y": 4400050
+                },
+                "offset": -2,
+                "height": 3.5,
+                "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                "arrow": "closed",
+                "extOffset": 0.2857142857142857,
+                "textGap": 0.25,
+                "decimals": 4,
+                "unit": "cm",
+                "prefix": "~",
+                "suffix": " cm",
+                "font": "arimo",
+                "overrides": [
+                  "decimals"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "dimension",
+            "operation": "update",
+            "dimension": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+              "name": "Mimari",
+              "height": 3.5,
+              "arrow": "closed",
+              "arrowSize": 3.5,
+              "extOffset": 1.0,
+              "extBeyond": 1.75,
+              "textGap": 0.875,
+              "decimals": 4,
+              "unit": "cm",
+              "prefix": "~",
+              "suffix": " cm",
+              "font": "arimo"
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "entities": {
+              "5": {
+                "kind": "dimension",
+                "id": 5,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 500000,
+                  "y": 4400050
+                },
+                "b": {
+                  "x": 500024.5,
+                  "y": 4400050
+                },
+                "offset": -2,
+                "height": 3.5,
+                "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                "decimals": 4,
+                "overrides": [
+                  "decimals"
+                ],
+                "arrow": "closed",
+                "extOffset": 0.2857142857142857,
+                "textGap": 0.25,
+                "unit": "cm",
+                "prefix": "~",
+                "suffix": " cm",
+                "font": "arimo"
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "dimension",
+            "operation": "update",
+            "dimension": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+              "name": "Mimari",
+              "height": 3.5,
+              "arrow": "closed",
+              "arrowSize": 3.5,
+              "extOffset": 1.0,
+              "extBeyond": 1.75,
+              "textGap": 0.875,
+              "decimals": 2,
+              "unit": "cm",
+              "prefix": "~",
+              "suffix": " cm",
+              "font": "arimo"
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "entities": {
+              "5": {
+                "kind": "dimension",
+                "id": 5,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 500000,
+                  "y": 4400050
+                },
+                "b": {
+                  "x": 500024.5,
+                  "y": 4400050
+                },
+                "offset": -2,
+                "height": 3.5,
+                "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                "decimals": 4,
+                "overrides": [
+                  "decimals"
+                ],
+                "arrow": "closed",
+                "extOffset": 0.2857142857142857,
+                "textGap": 0.25,
+                "unit": "cm",
+                "prefix": "~",
+                "suffix": " cm",
+                "font": "arimo"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geçersiz kılma: stil silinince stilin bağıyla geçersiz kılınanlar da gider",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "properties",
+            "changes": [
+              {
+                "kind": "update",
+                "uid": "$uidOf:1",
+                "geometry": {
+                  "kind": "text",
+                  "p": {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  "text": "101",
+                  "height": 3.5,
+                  "rotation": 0,
+                  "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "font": "overpass",
+                  "bold": true,
+                  "overrides": [
+                    "font"
+                  ]
+                }
+              }
+            ]
+          },
+          "result": "$any",
+          "command": "cad.entities.edit",
+          "expect": {
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 3.5,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "overpass",
+                "bold": true,
+                "overrides": [
+                  "font"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "remove",
+            "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101"
+          },
+          "result": "$any",
+          "expect": {
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 3.5,
+                "rotation": 0,
+                "font": "overpass",
+                "bold": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geçersiz kılma: geri alma geçersiz kılmayı da geri alır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "properties",
+            "changes": [
+              {
+                "kind": "update",
+                "uid": "$uidOf:1",
+                "geometry": {
+                  "kind": "text",
+                  "p": {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  "text": "101",
+                  "height": 3.5,
+                  "rotation": 0,
+                  "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "font": "overpass",
+                  "bold": true,
+                  "overrides": [
+                    "font"
+                  ]
+                }
+              }
+            ]
+          },
+          "result": "$any",
+          "command": "cad.entities.edit",
+          "expect": {
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 3.5,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "overpass",
+                "bold": true,
+                "overrides": [
+                  "font"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Değiştir",
+          "expect": {
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 3.5,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "arimo",
+                "bold": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geçersiz kılma: başka stile geçen yazı baştan başlar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "properties",
+            "changes": [
+              {
+                "kind": "update",
+                "uid": "$uidOf:1",
+                "geometry": {
+                  "kind": "text",
+                  "p": {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  "text": "101",
+                  "height": 3.5,
+                  "rotation": 0,
+                  "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "font": "overpass",
+                  "bold": true,
+                  "overrides": [
+                    "font"
+                  ]
+                }
+              }
+            ]
+          },
+          "result": "$any",
+          "command": "cad.entities.edit",
+          "expect": {
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 3.5,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "overpass",
+                "bold": true,
+                "overrides": [
+                  "font"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "properties",
+            "changes": [
+              {
+                "kind": "update",
+                "uid": "$uidOf:1",
+                "geometry": {
+                  "kind": "text",
+                  "p": {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  "text": "101",
+                  "height": 3.5,
+                  "rotation": 0,
+                  "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              }
+            ]
+          },
+          "result": "$any",
+          "command": "cad.entities.edit",
+          "expect": {
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 3.5,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                "font": "overpass",
+                "italic": true,
+                "oblique": 15.0,
+                "widthFactor": 0.8
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geçersiz kılma: stilin alanı olmayan ad reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "properties",
+            "changes": [
+              {
+                "kind": "update",
+                "uid": "$uidOf:1",
+                "geometry": {
+                  "kind": "text",
+                  "p": {
+                    "x": 500000,
+                    "y": 4400000
+                  },
+                  "text": "101",
+                  "height": 3.5,
+                  "rotation": 0,
+                  "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "font": "arimo",
+                  "bold": true,
+                  "overrides": [
+                    "renk"
+                  ]
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_style",
+              "message": "“renk” stilin bir alanı değil; geçersiz kılınan alanlar: font, bold, italic, oblique, widthFactor, height.",
+              "path": "changes[0].geometry.overrides"
+            }
+          },
+          "command": "cad.entities.edit",
+          "expect": {
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 3.5,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "arimo",
+                "bold": true
+              }
+            }
+          }
+        }
+      ]
     }
   ]
 }

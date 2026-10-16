@@ -565,6 +565,10 @@ impl<'d> Encoder<'d> {
                 if let Some(o) = face.oblique {
                     f.push(("oblique", Val::Float(o)));
                 }
+                // Its overrides (docs/adr/0322 §5), as their JSON.
+                if !face.overrides.is_empty() {
+                    f.push(("overrides", Val::Json(serde_json::json!(face.overrides))));
+                }
                 // The curve its letters stand on (docs/adr/0196 §1): a text of one line, not linked.
                 // A number that is not finite meets the float's own refusal (`non_finite`).
                 if let Some(path) = &e.path {
@@ -605,9 +609,18 @@ impl<'d> Encoder<'d> {
                     let words = format!("zorunlu alan yok ({field})");
                     return refuse(self, Code::MissingField, field, &words);
                 }
-                if !slope && (e.za.is_some() || e.zb.is_some()) {
+                // A level's one elevation (docs/adr/0322).
+                let level = e.style == Some(DimensionStyle::Elevation);
+                if level && e.za.is_none() {
+                    return refuse(self, Code::MissingField, "za", "zorunlu alan yok (za)");
+                }
+                if level && e.zb.is_some() {
+                    let words = "kot ölçüsünün yalnız bir kotu (za) olur";
+                    return refuse(self, Code::BadValue, "zb", words);
+                }
+                if !slope && !level && (e.za.is_some() || e.zb.is_some()) {
                     let field = if e.za.is_some() { "za" } else { "zb" };
-                    let words = "kot (za, zb) yalnız eğim ölçüsünde yazılır";
+                    let words = "kot (za, zb) yalnız eğim ve kot ölçüsünde yazılır";
                     return refuse(self, Code::BadValue, field, words);
                 }
                 if e.style == Some(DimensionStyle::Ordinate)
@@ -679,6 +692,9 @@ impl<'d> Encoder<'d> {
                 let json = |v: serde_json::Result<serde_json::Value>| v.unwrap_or_default();
                 if let Some(o) = &look.options {
                     f.push(("options", Val::Json(json(serde_json::to_value(o)))));
+                }
+                if !look.overrides.is_empty() {
+                    f.push(("overrides", Val::Json(serde_json::json!(look.overrides))));
                 }
                 if let Some(s) = &e.text_shift {
                     if let Some(words) = s.problem() {

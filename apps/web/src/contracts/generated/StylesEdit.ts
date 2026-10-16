@@ -17,7 +17,16 @@ import type { TextStyleDef } from "./TextStyleDef";
  * - `rename`: `style`, `name`; the objects name the style by its id and
  *   do not change;
  * - `remove`: `style`; its objects keep their look and lose the link, in
- *   one undo step.
+ *   one undo step;
+ * - `export`: `styles` (absent: every style of the kind), in the table's
+ *   order, as a `kentos.annotation-styles` file's text in `library`;
+ *   nothing is written;
+ * - `import`: `library`, a `kentos.annotation-styles` file's text of the
+ *   same kind; each of its styles by name (Turkish case folded, trimmed):
+ *   a new name is added (its id kept when the table has none such, else a
+ *   new one), a name the table has is kept as it is (`skipped`), or with
+ *   `replace` updated in its place (its id and name kept, its objects following as
+ *   `update` makes them).
  *
  * The table is the project's setting: changing it makes the drawing dirty
  * and is no undo step (docs/adr/0183 §5, kept by docs/adr/0248 §4). Objects
@@ -26,9 +35,11 @@ import type { TextStyleDef } from "./TextStyleDef";
  * Refusals (`CommandError.code`), checked in this order: `no_definition`
  * (create, update without the kind's definition), `no_style` (rename,
  * remove without `style`), `empty_name` (rename with a name empty or only
- * white space); then `invalid_revision`, `revision_conflict` (status
- * `conflict`); `style_not_found` (update's id, rename's and remove's
- * `style`), `duplicate_style` (create's given id the table has);
+ * white space), `no_library` (import without `library`); then
+ * `invalid_revision`, `revision_conflict` (status `conflict`);
+ * `style_not_found` (update's id, rename's and remove's `style`, each of
+ * export's `styles`), `duplicate_style` (create's given id the table has),
+ * `invalid_library` (import's text not such a file, or of the other kind);
  * `invalid_style` (the table it would leave, by `text_styles_problem` or
  * `dimension_styles_problem`: the names, then each style's values).
  */
@@ -49,6 +60,18 @@ text?: TextStyleDef,
  * Create's and update's dimension style.
  */
 dimension?: DimensionStyleDef, 
+/**
+ * Export's styles, by id; absent: every style of the kind.
+ */
+styles?: Array<string>, 
+/**
+ * Import's `kentos.annotation-styles` file's text.
+ */
+library?: string, 
+/**
+ * Import: true, a style whose name the table has is updated from the file.
+ */
+replace?: boolean, 
 /**
  * The document revision the input was prepared against, as decimal text.
  */

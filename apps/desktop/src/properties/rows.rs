@@ -1197,6 +1197,9 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                     DimensionStyle::Jogged => "Kırıklı yarıçap",
                     DimensionStyle::Azimuth => "Semt",
                     DimensionStyle::Slope => "Eğim",
+                    DimensionStyle::CenterMark => "Merkez işareti",
+                    DimensionStyle::CenterLine => "Eksen çizgisi",
+                    DimensionStyle::Elevation => "Kot",
                 },
             ));
             // What it measured, by its unit (docs/adr/0147 §2).
@@ -1214,6 +1217,18 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 ),
                 Some(l) if l.unit == "percent" => {
                     geo.push(Row::figure("Ölçülen eğim", f.percent(l.value)).unit("%"))
+                }
+                // docs/adr/0322: a mark's curve or axis, a level's elevation.
+                Some(l) if l.unit == "none" => geo.push(metres(
+                    if style == DimensionStyle::CenterMark {
+                        "Eğrinin yarıçapı"
+                    } else {
+                        "Eksenin uzunluğu"
+                    },
+                    l.value,
+                )),
+                Some(l) if l.unit == "level" => {
+                    geo.push(metres("Kot", l.value).editor(number(Field::DimensionZa(vec![slot]))))
                 }
                 Some(l) if l.unit == "coordinate" => geo.push(metres(
                     if l.prefix == "Y=" {
@@ -1236,14 +1251,15 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             if style == DimensionStyle::Aligned {
                 geo.push(bearing(v(d.a), v(d.b)));
             }
-            // An ordinate has no offset; a jogged radius's is where its jog is.
-            if style != DimensionStyle::Ordinate {
+            // An ordinate and a level have no offset; a jogged radius's is where its jog is.
+            if !matches!(style, DimensionStyle::Ordinate | DimensionStyle::Elevation) {
                 geo.push(
                     metres(
                         match style {
                             DimensionStyle::Angular => "Yay yarıçapı",
                             DimensionStyle::Radius | DimensionStyle::Diameter => "Dışa uzantı",
                             DimensionStyle::Jogged => "Kırık uzaklığı",
+                            DimensionStyle::CenterMark | DimensionStyle::CenterLine => "Uzantı",
                             _ => "Ötelenme",
                         },
                         d.offset,
@@ -1259,6 +1275,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 &ids,
                 locked,
             ));
+            geo.extend(override_rows(&[&d.look.overrides], &ids, locked));
             geo.extend([
                 metres("Yazı yüksekliği", d.height).editor(number(Field::DimensionHeight(slot))),
                 Row::text("Yazı", d.text.clone().unwrap_or_default())
@@ -1291,6 +1308,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 &ids,
                 locked,
             ));
+            geo.extend(override_rows(&[&t.face.overrides], &ids, locked));
             geo.extend([
                 // A multi-line text's lines and formats are its editor's (a double click,
                 // docs/adr/0182 §4): here they only show, ⏎ its breaks.
@@ -1657,6 +1675,34 @@ fn field_rows(
 /// project no longer has shows Standart), or “Çeşitli”; choosing one applies
 /// it to them in one step “Değiştir”. On a locked layer it only shows. The
 /// web's `ui/properties/styleRows.ts`.
+/// Stilden ayrılan (docs/adr/0322 §5): the style fields the objects set apart by hand, common or “Çeşitli”, and
+/// Stile döndür; none when no object sets one apart.
+fn override_rows(lists: &[&[String]], slots: &[Slot], locked: bool) -> Vec<Row> {
+    if lists.iter().all(|l| l.is_empty()) {
+        return Vec::new();
+    }
+    let text = if lists.iter().all(|l| *l == lists[0]) {
+        kentos_interaction::properties::override_names(lists[0]).join(", ")
+    } else {
+        "Çeşitli".to_owned()
+    };
+    let editor = Editor::Select {
+        text: text.clone(),
+        swatch: None,
+        icon: None,
+        items: vec![Choice::Pick {
+            label: "Stile döndür".to_owned(),
+            swatch: None,
+            icon: None,
+            wide: false,
+            chosen: false,
+            enabled: true,
+            message: Message::Properties(Event::RestoreStyle(slots.to_vec())),
+        }],
+    };
+    vec![Row::text("Stilden ayrılan", text).editor((!locked).then_some(editor))]
+}
+
 fn style_rows(
     settings: &kentos_contracts::ProjectSettings,
     text: bool,
@@ -2285,6 +2331,14 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
                     &slots,
                     any_locked,
                 ),
+                override_rows(
+                    &texts
+                        .iter()
+                        .map(|t| t.face.overrides.as_slice())
+                        .collect::<Vec<_>>(),
+                    &slots,
+                    any_locked,
+                ),
                 text_rows(&texts, &slots, any_locked),
                 link_rows(&doc.model, &texts, &slots, any_locked),
             ]
@@ -2343,6 +2397,14 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
                     &dims
                         .iter()
                         .map(|d| d.look.dim_style.as_ref())
+                        .collect::<Vec<_>>(),
+                    &slots,
+                    any_locked,
+                ),
+                override_rows(
+                    &dims
+                        .iter()
+                        .map(|d| d.look.overrides.as_slice())
                         .collect::<Vec<_>>(),
                     &slots,
                     any_locked,

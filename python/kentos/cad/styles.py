@@ -36,12 +36,15 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
     değerlerini değiştirir: o stildeki yazılar (ölçüler) eski değeri hâlâ taşıyan
     alanlarında yenisini alır, elle değiştirilenler kalır; rename stilin adını
     değiştirir, nesneler değişmez; remove stili siler, nesneleri görünüşlerini korur ve
-    bağlarını yitirir. Adlar büyük küçük harf ayırmadan bir kez kullanılır, Standart
-    başka stile verilmez. Tablo proje ayarıdır: değiştirmek çizimi kirli yapar, geri
-    alma adımı değildir; izleyen nesneler tek geri alma adımında (“Yazı stili”, “Ölçü
-    stili”) yazılır, kilitli katmandakiler değişmez ve locked'da sayılır.
-    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-    conflict olur.
+    bağlarını yitirir; export türün stillerini (styles verilmişse onları)
+    kentos.annotation-styles dosyasının metni olarak library'de verir, yazmaz; import
+    library'deki dosyanın stillerini adlarıyla alır: yeni ad eklenir, tablodaki ad
+    olduğu gibi kalır (skipped) ya da replace ile yerinde güncellenir ve nesneleri
+    izler. Adlar büyük küçük harf ayırmadan bir kez kullanılır, Standart başka stile
+    verilmez. Tablo proje ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı
+    değildir; izleyen nesneler tek geri alma adımında (“Yazı stili”, “Ölçü stili”)
+    yazılır, kilitli katmandakiler değişmez ve locked'da sayılır. expectedRevision
+    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.styles.edit"
@@ -61,8 +64,11 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
         operation: StyleEditOperation | StyleEditOperationName,
         dimension: DimensionStyleDef | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        library: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
+        replace: bool | None | Unset = UNSET,
         style: str | None | Unset = UNSET,
+        styles: Sequence[str] | None | Unset = UNSET,
         text: TextStyleDef | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -72,12 +78,16 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
         (kimliği boşsa yeni bir UUIDv7 verilir), update stilin değerlerini değiştirir: o
         stildeki yazılar (ölçüler) eski değeri hâlâ taşıyan alanlarında yenisini alır, elle
         değiştirilenler kalır; rename stilin adını değiştirir, nesneler değişmez; remove
-        stili siler, nesneleri görünüşlerini korur ve bağlarını yitirir. Adlar büyük küçük
-        harf ayırmadan bir kez kullanılır, Standart başka stile verilmez. Tablo proje
-        ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı değildir; izleyen nesneler
-        tek geri alma adımında (“Yazı stili”, “Ölçü stili”) yazılır, kilitli katmandakiler
-        değişmez ve locked'da sayılır. expectedRevision verilmişse ve çizim o sürümde
-        değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        stili siler, nesneleri görünüşlerini korur ve bağlarını yitirir; export türün
+        stillerini (styles verilmişse onları) kentos.annotation-styles dosyasının metni
+        olarak library'de verir, yazmaz; import library'deki dosyanın stillerini adlarıyla
+        alır: yeni ad eklenir, tablodaki ad olduğu gibi kalır (skipped) ya da replace ile
+        yerinde güncellenir ve nesneleri izler. Adlar büyük küçük harf ayırmadan bir kez
+        kullanılır, Standart başka stile verilmez. Tablo proje ayarıdır: değiştirmek çizimi
+        kirli yapar, geri alma adımı değildir; izleyen nesneler tek geri alma adımında
+        (“Yazı stili”, “Ölçü stili”) yazılır, kilitli katmandakiler değişmez ve locked'da
+        sayılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz,
+        sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -85,8 +95,11 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             operation:
             dimension: Create's and update's dimension style.
             expected_revision: The document revision the input was prepared against, as decimal text.
+            library: Import's `kentos.annotation-styles` file's text.
             name: Rename's new name, trimmed.
+            replace: Import: true, a style whose name the table has is updated from the file.
             style: Rename's and remove's style, by its id.
+            styles: Export's styles, by id; absent: every style of the kind.
             text: Create's and update's text style.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -105,8 +118,11 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             operation=operation,
             dimension=dimension,
             expected_revision=expected_revision,
+            library=library,
             name=name,
+            replace=replace,
             style=style,
+            styles=_opt(styles, lambda x: list(x)),
             text=text,
         ), request_id=request_id, expected=expected)
 
@@ -119,8 +135,11 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
         operation: StyleEditOperation | StyleEditOperationName,
         dimension: DimensionStyleDef | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        library: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
+        replace: bool | None | Unset = UNSET,
         style: str | None | Unset = UNSET,
+        styles: Sequence[str] | None | Unset = UNSET,
         text: TextStyleDef | None | Unset = UNSET,
     ) -> StylesEdited:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -131,8 +150,11 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             operation=operation,
             dimension=dimension,
             expected_revision=expected_revision,
+            library=library,
             name=name,
+            replace=replace,
             style=style,
+            styles=_opt(styles, lambda x: list(x)),
             text=text,
         ))
 
@@ -145,8 +167,11 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
         operation: StyleEditOperation | StyleEditOperationName,
         dimension: DimensionStyleDef | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        library: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
+        replace: bool | None | Unset = UNSET,
         style: str | None | Unset = UNSET,
+        styles: Sequence[str] | None | Unset = UNSET,
         text: TextStyleDef | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -157,8 +182,11 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             operation=operation,
             dimension=dimension,
             expected_revision=expected_revision,
+            library=library,
             name=name,
+            replace=replace,
             style=style,
+            styles=_opt(styles, lambda x: list(x)),
             text=text,
         ))
 
@@ -171,8 +199,11 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
         operation: StyleEditOperation | StyleEditOperationName,
         dimension: DimensionStyleDef | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        library: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
+        replace: bool | None | Unset = UNSET,
         style: str | None | Unset = UNSET,
+        styles: Sequence[str] | None | Unset = UNSET,
         text: TextStyleDef | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -188,8 +219,11 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             operation=operation,
             dimension=dimension,
             expected_revision=expected_revision,
+            library=library,
             name=name,
+            replace=replace,
             style=style,
+            styles=_opt(styles, lambda x: list(x)),
             text=text,
         ), op=op, request_id=request_id, expected=expected)
 

@@ -95,4 +95,9 @@ textColor?: string,
 /**
  * Where the value goes when it does not fit and how it is written (docs/adr/0321 §1, §2).
  */
-options?: DimensionOptions, };
+options?: DimensionOptions, 
+/**
+ * The fields set apart from its style by hand (docs/adr/0322 §5), by name (`DIMENSION_OVERRIDES`): they keep
+ * their value when the style changes. Empty: each field follows while it holds the style's old value.
+ */
+overrides?: Array<string>, };

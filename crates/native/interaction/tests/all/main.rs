@@ -18,6 +18,7 @@ mod curve_methods;
 mod data_search;
 mod dimension;
 mod dimension_chains;
+mod dimension_marks;
 mod dimension_values;
 mod drawing;
 mod drawing_unit;

@@ -5,8 +5,8 @@
 //! (docs/adr/0228): the desktop's handler alone, passing `fixtures/commands/v1/cad.dimensions.query.json`.
 
 use kentos_contracts::{
-    CommandResult, DimensionBond, DimensionEntity, DimensionRead, DimensionStyle, DimensionsQuery, DimensionsRead,
-    Entity,
+    CommandResult, DimensionBond, DimensionEntity, DimensionRead, DimensionStyle, DimensionsQuery,
+    DimensionsRead, Entity,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::dimension_geom;
@@ -35,6 +35,9 @@ fn kind_name(s: Option<DimensionStyle>) -> &'static str {
         Some(DimensionStyle::Jogged) => "jogged",
         Some(DimensionStyle::Azimuth) => "azimuth",
         Some(DimensionStyle::Slope) => "slope",
+        Some(DimensionStyle::CenterMark) => "centerMark",
+        Some(DimensionStyle::CenterLine) => "centerLine",
+        Some(DimensionStyle::Elevation) => "elevation",
     }
 }
 
@@ -105,7 +108,9 @@ fn check(doc: &Document, input: &DimensionsQuery) -> Result<Vec<(Uuid, Dimension
     }
     let mut out = Vec::with_capacity(uids.len());
     for (i, u) in uids.iter().enumerate() {
-        let found = Uuid::parse_str(u).ok().and_then(|id| Some((id, doc.slot_of(id)?)));
+        let found = Uuid::parse_str(u)
+            .ok()
+            .and_then(|id| Some((id, doc.slot_of(id)?)));
         let Some((id, slot)) = found else {
             return Err(fail(
                 codes::ENTITY_NOT_FOUND,
@@ -160,7 +165,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &DimensionsQuery) -> CommandResult
     answer(cx.doc, input)
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: DimensionsQuery) -> CommandResult<DimensionsRead> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: DimensionsQuery,
+) -> CommandResult<DimensionsRead> {
     crate::call::recorded(
         cx,
         kentos_contracts::CAD_DIMENSIONS_QUERY,

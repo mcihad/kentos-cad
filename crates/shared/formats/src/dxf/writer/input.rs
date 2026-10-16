@@ -355,6 +355,7 @@ impl Fields {
                     runs: self.runs.unwrap_or_default(),
                 },
                 face: TextFace {
+                    overrides: Vec::new(),
                     text_style: self.text_style,
                     font: self.font,
                     bold: self.bold.unwrap_or(false),
@@ -380,6 +381,7 @@ impl Fields {
                 zb: self.zb,
                 refs: None,
                 look: DimensionLook {
+                    overrides: Vec::new(),
                     options: None,
                     dim_style: self.dim_style,
                     arrow: match self.arrow.as_deref() {
@@ -458,6 +460,7 @@ impl Fields {
                 grid: self.grid,
                 frame: self.frame,
                 face: TextFace {
+                    overrides: Vec::new(),
                     text_style: self.text_style,
                     font: self.font,
                     bold: self.bold.unwrap_or(false),

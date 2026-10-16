@@ -1392,6 +1392,28 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 63 (docs/adr/0322 §5): a text's or a dimension's overrides (of the drawing or of a block).
+    let overridden = |list: &[Entity]| {
+        list.iter().any(|e| match e {
+            Entity::Text(t) => !t.face.overrides.is_empty(),
+            Entity::Dimension(d) => !d.look.overrides.is_empty(),
+            _ => false,
+        })
+    };
+    if overridden(&doc.entities) || doc.blocks.iter().any(|b| overridden(&b.entities)) {
+        return crate::SCHEMA_WITH_OVERRIDES;
+    }
+    // Schema 62 (docs/adr/0322): a centre mark, an axis or a level (of the drawing or of a block), or a pair rule.
+    let marked = |list: &[Entity]| {
+        list.iter().any(|e| {
+            matches!(e, Entity::Dimension(d)
+                if d.style.is_some_and(DimensionStyle::is_schema_62)
+                    || d.refs.as_ref().is_some_and(|r| r.rule == Some(kentos_contracts::DimensionRule::Pair)))
+        })
+    };
+    if marked(&doc.entities) || doc.blocks.iter().any(|b| marked(&b.entities)) {
+        return crate::SCHEMA_WITH_DIMENSION_MARKS;
+    }
     // Schema 61 (docs/adr/0321): a dimension's options, moved value or breaks (of the drawing or of a block), or a
     // dimension style's options.
     let optioned = |list: &[Entity]| {
@@ -1402,14 +1424,18 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     };
     if optioned(&doc.entities)
         || doc.blocks.iter().any(|b| optioned(&b.entities))
-        || doc.settings.dimension_styles.iter().any(|s| s.options.is_some())
+        || doc
+            .settings
+            .dimension_styles
+            .iter()
+            .any(|s| s.options.is_some())
     {
         return crate::SCHEMA_WITH_DIMENSION_OPTIONS;
     }
     // Schema 60 (docs/adr/0320 §1): a dimension's references' rule (in the drawing only: a block's dimensions keep none).
-    if doc.entities.iter().any(|e| {
-        matches!(e, Entity::Dimension(d) if d.refs.as_ref().is_some_and(|r| r.rule.is_some()))
-    }) {
+    if doc.entities.iter().any(
+        |e| matches!(e, Entity::Dimension(d) if d.refs.as_ref().is_some_and(|r| r.rule.is_some())),
+    ) {
         return crate::SCHEMA_WITH_DIMENSION_RULES;
     }
     // Schema 59 (docs/adr/0318): a block's dynamic part or an insert's parameter values, of the drawing or of a block.
@@ -1417,15 +1443,20 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         list.iter()
             .any(|e| matches!(e, kentos_contracts::Entity::Insert(i) if !i.parameters.is_empty()))
     };
-    if valued(&doc.entities) || doc.blocks.iter().any(|b| b.dynamic.is_some() || valued(&b.entities)) {
+    if valued(&doc.entities)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| b.dynamic.is_some() || valued(&b.entities))
+    {
         return crate::SCHEMA_WITH_DYNAMIC_BLOCKS;
     }
     // Schema 58 (docs/adr/0317 §1, §4): an attribute definition's option, an insert's moved attribute (of the drawing
     // or of a block definition) or a block's card.
     let placed = |list: &[Entity]| {
-        list.iter().any(|e| {
-            matches!(e, kentos_contracts::Entity::Insert(i) if !i.attribute_places.is_empty())
-        })
+        list.iter().any(
+            |e| matches!(e, kentos_contracts::Entity::Insert(i) if !i.attribute_places.is_empty()),
+        )
     };
     if placed(&doc.entities)
         || doc.blocks.iter().any(|b| {

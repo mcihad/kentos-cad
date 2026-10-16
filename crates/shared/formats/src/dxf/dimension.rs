@@ -116,7 +116,9 @@ pub fn layout(d: &DimensionEntity) -> Option<DimensionLayout> {
 }
 
 /// A dimension's options, moved value and breaks as the core lays them out (docs/adr/0321 §1).
-pub fn more_of(d: &DimensionEntity) -> Option<Box<kentos_geometry_core::geom::dimension::look::LookMore>> {
+pub fn more_of(
+    d: &DimensionEntity,
+) -> Option<Box<kentos_geometry_core::geom::dimension::look::LookMore>> {
     use kentos_contracts::BreakLine;
     kentos_geometry_core::geom::dimension::look::LookMore {
         options: d.look.options.as_deref().and_then(|o| {
@@ -250,8 +252,15 @@ pub fn definition(d: &DimensionEntity, l: &DimensionLayout) -> Definition {
             p15: Some(d.b),
             ..plain
         },
-        // No DXF kind: an aligned one that its block draws, KentOS's data giving it back.
-        Some(DimensionStyle::Azimuth | DimensionStyle::Slope) => plain,
+        // No DXF kind: an aligned one that its block draws, KentOS's data giving it back (the marks of
+        // docs/adr/0322 too).
+        Some(
+            DimensionStyle::Azimuth
+            | DimensionStyle::Slope
+            | DimensionStyle::CenterMark
+            | DimensionStyle::CenterLine
+            | DimensionStyle::Elevation,
+        ) => plain,
     }
 }
 
@@ -314,7 +323,13 @@ pub fn read_back(g: &Groups, k: &DimMeta, base: EntityBase, mask: bool) -> Optio
         }
         Some(DimensionStyle::ArcLength) => (g.p13?, g.p14?, Some(g.p15?), None),
         Some(DimensionStyle::Jogged) => (g.p10?, g.p15?, Some(g.p13?), None),
-        Some(DimensionStyle::Azimuth | DimensionStyle::Slope) => (g.p13?, g.p14?, None, None),
+        Some(
+            DimensionStyle::Azimuth
+            | DimensionStyle::Slope
+            | DimensionStyle::CenterMark
+            | DimensionStyle::CenterLine
+            | DimensionStyle::Elevation,
+        ) => (g.p13?, g.p14?, None, None),
     };
     // The text as KentOS had it, while group 1 still says it; else what group 1 says now.
     let text = match &k.text {
@@ -323,6 +338,7 @@ pub fn read_back(g: &Groups, k: &DimMeta, base: EntityBase, mask: bool) -> Optio
         _ => Some(mtext_lines(&caret_decode(&g.text)).join("\n")),
     };
     let slope = style == Some(DimensionStyle::Slope);
+    let level = style == Some(DimensionStyle::Elevation);
     let d = DimensionEntity {
         text_shift: None,
         breaks: Vec::new(),
@@ -336,7 +352,7 @@ pub fn read_back(g: &Groups, k: &DimMeta, base: EntityBase, mask: bool) -> Optio
         angle,
         c,
         mask,
-        za: k.za.filter(|_| slope),
+        za: k.za.filter(|_| slope || level),
         zb: k.zb.filter(|_| slope),
         refs: None,
         look: Default::default(),

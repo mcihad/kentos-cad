@@ -877,14 +877,31 @@ pub struct InsertEntity {
     /// Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the
     /// definition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where
     /// the definition puts it.
-    #[serde(default, rename = "attributePlaces", skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, Vec2>>", optional, rename = "attributePlaces"))]
+    #[serde(
+        default,
+        rename = "attributePlaces",
+        skip_serializing_if = "BTreeMap::is_empty"
+    )]
+    #[cfg_attr(
+        feature = "ts",
+        ts(
+            as = "Option<BTreeMap<String, Vec2>>",
+            optional,
+            rename = "attributePlaces"
+        )
+    )]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub attribute_places: BTreeMap<String, Vec2>,
     /// Its dynamic block's parameter values that differ from their defaults (docs/adr/0318 §3), by parameter name;
     /// a lookup's is not kept (its row's values are).
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, crate::block_dynamic::ParamValue>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(
+            as = "Option<BTreeMap<String, crate::block_dynamic::ParamValue>>",
+            optional
+        )
+    )]
     pub parameters: BTreeMap<String, crate::block_dynamic::ParamValue>,
 }
 
@@ -1116,11 +1133,19 @@ pub enum DimensionStyle {
     Azimuth,
     /// Eğim: the slope between `a` at `za` and `b` at `zb`.
     Slope,
+    /// Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`
+    /// across, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.
+    CenterMark,
+    /// Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their
+    /// matched ends), `offset` past each end.
+    CenterLine,
+    /// Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.
+    Elevation,
 }
 
 impl DimensionStyle {
     /// Every style, in the contract's order (the typed columns number them so).
-    pub const ALL: [DimensionStyle; 10] = [
+    pub const ALL: [DimensionStyle; 13] = [
         DimensionStyle::Aligned,
         DimensionStyle::Linear,
         DimensionStyle::Angular,
@@ -1131,6 +1156,9 @@ impl DimensionStyle {
         DimensionStyle::Jogged,
         DimensionStyle::Azimuth,
         DimensionStyle::Slope,
+        DimensionStyle::CenterMark,
+        DimensionStyle::CenterLine,
+        DimensionStyle::Elevation,
     ];
 
     /// Its name in the contract and the file (`arcLength`).
@@ -1146,6 +1174,9 @@ impl DimensionStyle {
             DimensionStyle::Jogged => "jogged",
             DimensionStyle::Azimuth => "azimuth",
             DimensionStyle::Slope => "slope",
+            DimensionStyle::CenterMark => "centerMark",
+            DimensionStyle::CenterLine => "centerLine",
+            DimensionStyle::Elevation => "elevation",
         }
     }
 
@@ -1163,6 +1194,22 @@ impl DimensionStyle {
                 | DimensionStyle::Jogged
                 | DimensionStyle::Azimuth
                 | DimensionStyle::Slope
+        )
+    }
+
+    /// Whether it came with KCAD schema 62 (docs/adr/0322).
+    pub fn is_schema_62(self) -> bool {
+        matches!(
+            self,
+            DimensionStyle::CenterMark | DimensionStyle::CenterLine | DimensionStyle::Elevation
+        )
+    }
+
+    /// Whether it writes no value (docs/adr/0322): the centre mark and the axis.
+    pub fn is_mark(self) -> bool {
+        matches!(
+            self,
+            DimensionStyle::CenterMark | DimensionStyle::CenterLine
         )
     }
 }
@@ -1224,7 +1271,10 @@ pub struct DimensionEntity {
     pub text_shift: Option<crate::TextShift>,
     /// The gaps in its lines where other objects cross them (docs/adr/0321 §1).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::DimensionBreak>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::DimensionBreak>>", optional)
+    )]
     pub breaks: Vec<crate::DimensionBreak>,
     /// The style it follows, its arrowheads, sizes and value's writing (docs/adr/0183 §3).
     #[serde(flatten)]

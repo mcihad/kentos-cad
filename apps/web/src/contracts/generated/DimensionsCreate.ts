@@ -17,13 +17,14 @@ import type { Vec2 } from "./Vec2";
  * (`at`, `offset`, then the measure's numbers in their order),
  * `invalid_height`, `invalid_uid` (each place's and edge's object, in
  * order; a base's first), `invalid_offset` (an `offset` for Yarıçap, Çap,
- * Koordinat, Zincir or Baz, which take none), `invalid_revision`,
+ * Koordinat, Zincir, Baz or Kot, which take none; a negative one for Merkez
+ * işareti or Eksen çizgisi), `invalid_revision`,
  * `revision_conflict` (status `conflict`), `entity_not_found`,
  * `no_such_place`, `not_measurable` (the object has no edge of the kind the
  * measure takes), `not_straight` (a base not an aligned or a linear dimension), `missing_elevation`
- * (Eğim's point with no elevation given or kept), `unknown_style`,
+ * (Eğim's or Kot's point with no elevation given or kept), `unknown_style`,
  * `no_dimension` (no dimension forms there: the points meet, the edges are
- * parallel, the arc spans nothing), then the layer's and the look's as
+ * parallel, the arc spans nothing; an axis's two edges are one), then the layer's and the look's as
  * `cad.entities.create` checks them (`layer_not_found`, `not_a_layer`,
  * `layer_locked`, `invalid_line_weight`); a hidden layer gives a
  * `layer_hidden` warning; on the desktop also `slots_exhausted`.
