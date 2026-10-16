@@ -70,6 +70,8 @@ pub struct FieldRow {
     pub min: String,
     pub max: String,
     pub values: Option<Vec<FieldChoice>>,
+    /// A listed text field holds several codes (docs/adr/0408 §1).
+    pub multiple: bool,
 }
 
 /// A field as the window shows it (the web's `rowOf`).
@@ -90,6 +92,7 @@ pub fn row_of(f: &LayerField) -> FieldRow {
         min: f.min.clone().unwrap_or_default(),
         max: f.max.clone().unwrap_or_default(),
         values: f.values.clone(),
+        multiple: f.multiple,
     }
 }
 
@@ -133,6 +136,7 @@ pub fn field_of(r: &FieldRow) -> LayerField {
         f.values = r.values.clone();
     }
     f.required = r.required;
+    f.multiple = r.multiple && r.kind == LayerFieldKind::Text && f.values.is_some();
     if !r.default.trim().is_empty() {
         f.default = Some(r.default.clone());
     }
@@ -173,6 +177,8 @@ pub fn problem_of(rows: &[FieldRow]) -> Option<String> {
 pub struct Choices {
     row: usize,
     list: Vec<(String, String)>,
+    /// Several of the values may be chosen (a text field's).
+    multiple: bool,
 }
 
 /// The window: the layer, its rows, the fields as saved, the chosen row and
@@ -220,6 +226,8 @@ pub enum Event {
     ListLabel(usize, String),
     ListAdd,
     ListRemove(usize),
+    /// Birden çok değer seçilebilir (docs/adr/0408 §1).
+    ListMultiple(bool),
     ListOk,
     ListCancel,
 }
@@ -317,6 +325,7 @@ impl App {
                     min: String::new(),
                     max: String::new(),
                     values: None,
+                    multiple: false,
                 });
                 w.chosen = Some(w.rows.len() - 1);
             }
@@ -377,8 +386,13 @@ impl App {
                     .into_iter()
                     .map(|c| (c.code, c.label))
                     .collect();
+                let multiple = w.rows.get(i).is_some_and(|r| r.multiple);
                 w.chosen = Some(i);
-                w.choices = Some(Choices { row: i, list });
+                w.choices = Some(Choices {
+                    row: i,
+                    list,
+                    multiple,
+                });
             }
             Event::ListCode(i, t) => {
                 if let Some(c) = w.choices.as_mut().and_then(|c| c.list.get_mut(i)) {
@@ -400,6 +414,11 @@ impl App {
                     c.list.remove(i);
                 }
             }
+            Event::ListMultiple(on) => {
+                if let Some(c) = w.choices.as_mut() {
+                    c.multiple = on;
+                }
+            }
             Event::ListOk => {
                 if let Some(c) = w.choices.take()
                     && let Some(r) = w.rows.get_mut(c.row)
@@ -410,6 +429,7 @@ impl App {
                             .map(|(code, label)| FieldChoice { code, label })
                             .collect()
                     });
+                    r.multiple = c.multiple && r.values.is_some();
                 }
             }
             Event::ListCancel => w.choices = None,
@@ -685,17 +705,27 @@ impl App {
                 .align_y(Center),
             );
         }
+        let mut body = Column::new()
+            .spacing(10)
+            .push(label::caption(
+                "Nesneye kod yazılır, tabloda ve formda etiketi gösterilir; etiket yazılırsa kodu yazılır.",
+            ))
+            .push(list)
+            .push(tool("plus", "Değer ekle", Some(msg(Event::ListAdd))));
+        // A text field may hold several of its values (docs/adr/0408 §1).
+        if w.rows
+            .get(c.row)
+            .is_some_and(|r| r.kind == LayerFieldKind::Text)
+        {
+            body = body.push(words::check(
+                c.multiple,
+                "Birden çok değer seçilebilir",
+                Some(msg(Event::ListMultiple(!c.multiple))),
+            ));
+        }
         let sub = overlay::modal(
             Frame::new(format!("Değer listesi · {name}"))
-                .push(
-                    Column::new()
-                        .spacing(10)
-                        .push(label::caption(
-                            "Nesneye kod yazılır, tabloda ve formda etiketi gösterilir; etiket yazılırsa kodu yazılır.",
-                        ))
-                        .push(list)
-                        .push(tool("plus", "Değer ekle", Some(msg(Event::ListAdd)))),
-                )
+                .push(body)
                 .action(words::secondary(CANCEL, Some(msg(Event::ListCancel))))
                 .action(words::primary("Tamam", Some(msg(Event::ListOk))))
                 .width(460.0),

@@ -1217,6 +1217,7 @@ fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
     let mut id = None;
     let (mut name, mut kind, mut alias, mut length, mut scale) = (None, None, None, None, None);
     let (mut min, mut max, mut values, mut default, mut must) = (None, None, None, None, None);
+    let mut many = None;
     let count = |r: &mut Reader<'_>| r.uint(u64::from(u32::MAX)).map(|n| n as u32);
     map(r, |r, key| {
         match key {
@@ -1231,14 +1232,15 @@ fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
             "values" => values = Some(list(r, |r, _| field_choice(r))?),
             "default" => default = Some(text(r)?),
             "required" => must = Some(r.bool()?),
+            "multiple" if ids => many = Some(r.bool()?),
             _ => return Err(unknown(r)),
         }
         Ok(())
     })?;
-    if must == Some(false) {
+    if must == Some(false) || many == Some(false) {
         return Err(r.fail(
             Code::BadValue,
-            "required yalnız true yazılır; alan zorunlu değilse yazılmaz",
+            "required ve multiple yalnız true yazılır; değilse yazılmaz",
         ));
     }
     Ok(LayerField {
@@ -1253,6 +1255,7 @@ fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
         values,
         required: must == Some(true),
         default,
+        multiple: many == Some(true),
     })
 }
 

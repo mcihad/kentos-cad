@@ -3,4 +3,4 @@
 /**
  * How a field is edited.
  */
-export type FormWidget = "text" | "textArea" | "number" | "date" | "check" | "switch" | "list" | "radio" | "segmented" | "slider" | "color";
+export type FormWidget = "text" | "textArea" | "number" | "date" | "check" | "switch" | "list" | "radio" | "segmented" | "slider" | "color" | "checkList";

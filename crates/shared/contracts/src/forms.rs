@@ -416,10 +416,12 @@ pub enum FormWidget {
     Slider,
     /// A colour, `#RRGGBB` or `#RRGGBBAA` (docs/adr/0407 §2): text fields.
     Color,
+    /// A check box for each listed value (docs/adr/0408 §2): multiple fields, and only they.
+    CheckList,
 }
 
 impl FormWidget {
-    pub const ALL: [FormWidget; 11] = [
+    pub const ALL: [FormWidget; 12] = [
         FormWidget::Text,
         FormWidget::TextArea,
         FormWidget::Number,
@@ -431,6 +433,7 @@ impl FormWidget {
         FormWidget::Segmented,
         FormWidget::Slider,
         FormWidget::Color,
+        FormWidget::CheckList,
     ];
 
     /// Its name in the interface.
@@ -447,6 +450,7 @@ impl FormWidget {
             FormWidget::Segmented => "Parçalı seçim",
             FormWidget::Slider => "Kaydırıcı",
             FormWidget::Color => "Renk",
+            FormWidget::CheckList => "Çoklu seçim",
         }
     }
 }

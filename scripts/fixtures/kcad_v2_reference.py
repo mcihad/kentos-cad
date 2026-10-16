@@ -806,6 +806,8 @@ def layer_field(f):
         "values": (lambda vs: array([choice(c) for c in vs]), False),
         "required": (boolean, False),
         "default": (text, False),
+        # Schema 60 (docs/adr/0408 §1): several codes of the list.
+        "multiple": (boolean, False),
     }
     return cmap(fields(f, table, f"alan {f.get('name')}"))
 
@@ -3670,6 +3672,8 @@ def build():
     out["broken/forms-tab-in-group.kcad"] = forms_broken(
         lambda d: form(d)["draft"]["items"][1]["items"][0]["items"].append({"type": "tab", "id": "ic", "label": "İç", "items": []}))
     out["broken/field-id-twice.kcad"] = forms_broken(lambda d: d["layers"][0]["fields"][2].update(id="kat-sayisi"))
+    # docs/adr/0408 §1: several values only on a listed text field.
+    out["broken/field-multiple-unlisted.kcad"] = forms_broken(lambda d: d["layers"][0]["fields"][2].update(multiple=True))
     out["block-cards.kcad"] = container(document(load("block-cards.json")))
     payload = document(load("block-cards.json"))
     assert payload.count(b"\x67version\x18\x3a") == 1

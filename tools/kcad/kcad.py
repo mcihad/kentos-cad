@@ -1397,6 +1397,10 @@ def fields_problem(fields):
                 return f"“{name}” alanının değer listesinde geçersiz kod var"
             if any(not lb for lb in labels) or len(set(codes)) != len(codes) or len(set(labels)) != len(labels):
                 return f"“{name}” alanının değer listesinde boş ya da iki kez yazılmış değer var"
+            if f.get("multiple") and any(";" in c["code"] or ";" in c["label"] for c in vs):
+                return f"“{name}” çok değerli; değer listesinde “;” olamaz"
+        if f.get("multiple") and (kind != "text" or "values" not in f):
+            return f"“{name}” alanı çok değerli olamaz"
         if "default" in f and not _default_fits(f, f["default"]):
             return f"“{name}” alanının varsayılanı alanın kurallarına uymuyor"
         key = _fold(name)
@@ -1617,7 +1621,13 @@ def _default_fits(f, d):
         return False
     if kind == "text":
         ok = "length" not in f or len(d) <= f["length"]
-        return ok and ("values" not in f or d in [c["code"] for c in f["values"]])
+        codes = [c["code"] for c in f.get("values", [])]
+        if f.get("multiple"):
+            # docs/adr/0408 §1: the codes in the list's order, once each, joined with "; ".
+            parts = [p for p in d.split("; ")]
+            return ok and bool(parts) and all(p in codes for p in parts) and \
+                [c for c in codes if c in parts] == parts
+        return ok and ("values" not in f or d in codes)
     if kind == "date":
         m = re.fullmatch(r"([0-9]{4})-([0-9]{2})-([0-9]{2})", d)
         if not m:
@@ -3231,12 +3241,14 @@ class _Schema:
                 "length": (self.uint(32), False),
                 "values": (self.array(self.fields({"code": (self.text, True), "label": (self.text, True)})), False),
                 "default": (self.text, False),
+                # Schema 60 (docs/adr/0408 §1): a listed text field holding several codes.
+                **({"multiple": (self.bool, False)} if self.forms else {}),
                 "required": (self.bool, False),
             }
         )
         all_ = self.array(field)(v)
-        if any(f.get("required") is False for f in all_):
-            self.fail("bad_value", "required yalnız true yazılır")
+        if any(f.get("required") is False or f.get("multiple") is False for f in all_):
+            self.fail("bad_value", "required ve multiple yalnız true yazılır")
         problem = fields_problem(all_)
         if problem:
             self.fail("bad_value", problem)
@@ -3262,7 +3274,7 @@ class _Schema:
             return check
 
         widgets = ("text", "textArea", "number", "date", "check", "switch", "list", "radio", "segmented", "slider",
-                   "color")
+                   "color", "checkList")
         check = self.fields({"rule": (self.text, True), "message": (self.text, True), "warning": (true_, False)})
         # docs/adr/0404 §1: a field's list from another layer, its chain's matches.
         match = self.fields({"field": (self.text, True), "record": (self.text, True)})

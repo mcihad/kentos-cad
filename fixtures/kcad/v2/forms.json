@@ -271,6 +271,26 @@
         {
           "name": "Onaylı",
           "kind": "boolean"
+        },
+        {
+          "name": "Kullanım",
+          "kind": "text",
+          "values": [
+            {
+              "code": "konut",
+              "label": "Konut"
+            },
+            {
+              "code": "dukkan",
+              "label": "Dükkân"
+            },
+            {
+              "code": "buro",
+              "label": "Büro"
+            }
+          ],
+          "default": "konut; dukkan",
+          "multiple": true
         }
       ]
     }

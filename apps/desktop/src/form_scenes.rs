@@ -133,6 +133,7 @@ fn tree_form() -> Value {
         { "type": "field", "id": "renk", "field": "Renk", "widget": "color", "default": "#2E7D32" },
         { "type": "field", "id": "cins", "field": "Cins" },
         { "type": "field", "id": "boy", "field": "Boy" },
+        { "type": "field", "id": "bakim", "field": "Bakım" },
         { "type": "attachments", "id": "fotograflar", "label": "Fotoğraflar", "accept": "photo", "min": 1, "max": 3 },
         { "type": "attachments", "id": "belgeler", "label": "Belgeler", "accept": "document", "visibleWhen": "Boy > 10" }
     ]});
@@ -168,6 +169,7 @@ fn trees(app: &mut App) {
             ("Renk", "#2E7D32"),
             ("Cins", "agac"),
             ("Boy", "14"),
+            ("Bakım", "budama; sulama"),
         ],
         Some("Çınar"),
     );
@@ -192,7 +194,10 @@ fn trees(app: &mut App) {
         { "name": "Renk", "kind": "text" },
         { "name": "Cins", "kind": "text",
           "values": [{ "code": "agac", "label": "Ağaç" }, { "code": "cali", "label": "Çalı" }] },
-        { "name": "Boy", "kind": "decimal", "scale": 1, "min": "0", "max": "40" }
+        { "name": "Boy", "kind": "decimal", "scale": 1, "min": "0", "max": "40" },
+        { "name": "Bakım", "kind": "text", "multiple": true,
+          "values": [{ "code": "budama", "label": "Budama" }, { "code": "ilaclama", "label": "İlaçlama" },
+                     { "code": "sulama", "label": "Sulama" }] }
     ]);
     let form = tree_form();
     open_edited(app, o, move |d| {
@@ -246,6 +251,15 @@ fn name_focused(s: &mut kentos_ui::snapshot::Snapshot, app: &mut App) {
 /// The pictures that need the window: the suggestions open under a focused field.
 pub(crate) fn pointed() -> Vec<crate::tools_screens::Pointed> {
     vec![("form-agac-oneri", tree_missing, name_focused)]
+}
+
+/// Alanlar's value list of the care field: several of its values may be chosen (docs/adr/0408 §1).
+fn tree_fields(app: &mut App) {
+    trees(app);
+    let _ = app.open_layer_fields("agac");
+    let _ = app.update(Message::LayerFields(crate::layer_fields::Event::OpenList(
+        4,
+    )));
 }
 
 /// Formlar on the tree form: the photos item chosen.
@@ -761,6 +775,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-agac", tree_editing),
         ("form-agac-eksik", tree_missing),
         ("form-agac-tasarim", tree_designing),
+        ("form-alan-coklu", tree_fields),
     ]
 }
 
@@ -1288,6 +1303,41 @@ mod tests {
             attrs(&app, 2).get("Renk").map(String::as_str),
             Some("#2e7d32cc")
         );
+    }
+
+    /// docs/adr/0408: the care field takes several values in the list's order; the form steps to the
+    /// next tree, not while a change is unsaved.
+    #[test]
+    fn several_values_and_stepping_through_the_records() {
+        let mut app = crate::files_testing::app_with_drawing();
+        trees(&mut app);
+        let uid = |app: &App, slot: u32| {
+            app.document
+                .as_ref()
+                .and_then(|d| d.model.uid(Slot(slot)))
+                .map(|u| u.to_string())
+        };
+        app.selection.set([Slot(1)]);
+        run(&mut app, "data.formEdit");
+        entry(
+            &mut app,
+            entry::Event::Value("Bakım".into(), "sulama; İlaçlama; budama".into()),
+        );
+        entry(&mut app, entry::Event::Step(1));
+        assert_eq!(
+            app.form_entry.as_ref().map(|e| e.uid_text()),
+            uid(&app, 1),
+            "an unsaved change keeps the record"
+        );
+        entry(&mut app, entry::Event::Save);
+        assert_eq!(
+            attrs(&app, 1).get("Bakım").map(String::as_str),
+            Some("budama; ilaclama; sulama")
+        );
+        app.selection.set([Slot(1)]);
+        run(&mut app, "data.formEdit");
+        entry(&mut app, entry::Event::Step(1));
+        assert_eq!(app.form_entry.as_ref().map(|e| e.uid_text()), uid(&app, 2));
     }
 
     /// docs/adr/0401 §9: a form made of the layer's fields, an item added, Kaydet writes the draft and

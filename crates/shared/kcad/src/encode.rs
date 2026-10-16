@@ -1108,7 +1108,7 @@ impl<'d> Encoder<'d> {
     }
 
     /// A field: max, min (3), kind, name (4), alias, scale (5), length,
-    /// values (6), default (7), required (8); only what it has.
+    /// values (6), default (7), multiple, required (8); only what it has.
     fn layer_field(&mut self, f: &'d LayerField) -> Result<(), KcadError> {
         let n = 2
             + usize::from(f.id.is_some())
@@ -1119,6 +1119,7 @@ impl<'d> Encoder<'d> {
             + usize::from(f.length.is_some())
             + usize::from(f.values.is_some())
             + usize::from(f.default.is_some())
+            + usize::from(f.multiple)
             + usize::from(f.required);
         self.open(n, true)?;
         if let Some(id) = &f.id {
@@ -1171,6 +1172,10 @@ impl<'d> Encoder<'d> {
         if let Some(default) = &f.default {
             self.key("default");
             self.at(Seg::Name("default"), |e| e.text(default))?;
+        }
+        if f.multiple {
+            self.key("multiple");
+            self.w.bool(true);
         }
         if f.required {
             self.key("required");
@@ -1460,11 +1465,12 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
-    // Schema 60 (docs/adr/0401): a form of the project, or a layer field's stable id.
+    // Schema 60 (docs/adr/0401, 0408): a form of the project, or a layer field's stable id or
+    // its several values.
     fn keyed(nodes: &[LayerNode]) -> bool {
-        nodes
-            .iter()
-            .any(|n| n.fields.iter().any(|f| f.id.is_some()) || keyed(&n.children))
+        nodes.iter().any(|n| {
+            n.fields.iter().any(|f| f.id.is_some() || f.multiple) || keyed(&n.children)
+        })
     }
     if !doc.settings.forms.is_empty() || keyed(&doc.layers) {
         return crate::SCHEMA_WITH_FORMS;
@@ -1982,7 +1988,7 @@ mod tests {
             // A layer's field and its value list's entry (docs/adr/0199 §1).
             &[
                 "id", "max", "min", "kind", "name", "alias", "scale", "length", "values", "default",
-                "required",
+                "multiple", "required",
             ],
             &["code", "label"],
             &[

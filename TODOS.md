@@ -188,6 +188,8 @@ Liste:
   katmanın izlemesi (`form_follow.rs`'in kuralı, `cad.polygon.create.forms.json` ve `cad.entities.set.forms.json` durumları);
   Formla düzenle'de hesaplanan alanların kilidi, süzülen listeler, sarı uyarı, kapalı grup, son değer; tasarımcının yeni
   denetçi satırları; kapalı girişin soluk görünüşü ve `Form`'un uyarı satırı web'in form bileşenlerinde.
+- [ ] `FORM-L` çok değerli alan ve gezinme (ADR 0408, 16 Ekim): web'de gerekenler: alanın `multiple`'ı ve `check_value`'nun
+  çok değerli yolu (`fixtures/layer-fields/v1`), `checkList` öğesi, Alanlar penceresinde seçenek, Formla düzenle'de ◀ ▶.
 - [ ] `FORM-K` ekler, renk ve öneri (ADR 0407, 16 Ekim): web'de gerekenler: sözleşmenin `attachments` öğesi
   (`AttachmentAccept`), `color` öğe türü, alanın `suggest`'i ve durumun `suggestions`, `attachments`'ı; ön denetimin ve
   kaydın yeni kodları (`cad.forms.validate`, `.audit` durumları); web formunda renk seçici, öneri listesi ve ekler kutusu.
@@ -1436,7 +1438,9 @@ burada aşamaları izlenir.
 - [x] `FORM-K` Formda ekler öğesi (kaydın fotoğrafları ve belgeleri: Ekle, Aç, Kaldır; en az ve en çok sayı), renk öğe türü
   ve katmanın var olan değerlerinden öneri (QGIS'in Harici kaynak, Renk ve Benzersiz değerler düzenleyicileri). — **16 Ekim,
   [ADR 0407](docs/adr/0407-form-attachments-colour-suggestions.md).**
-- [ ] `FORM-L` N:M bağlantı tablosu, geometrisiz tablo katmanı, formun içinden yeni alt kayıt.
+- [x] `FORM-L` Çok değerli alan (değer listesinden birden çok kod, çoklu seçim öğesi) ve Formla düzenle'de katmanın
+  kayıtları arasında gezinme. — **16 Ekim, [ADR 0408](docs/adr/0408-multiple-values-and-record-stepping.md).**
+- [ ] `FORM-M` N:M bağlantı tablosu, geometrisiz tablo katmanı, formun içinden yeni alt kayıt.
 - [ ] `FORM-F` Merkezi yayın ve izinler (FM2, plan `FORM-FIRST-14`–`17`): bulutta form taslağı, yayın ve dağıtım kaynakları,
   `forms.design`, `forms.publish`, `forms.use` izinleri, sunucunun yazma bekçisi bütün yollarda.
 

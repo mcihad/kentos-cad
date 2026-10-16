@@ -214,6 +214,21 @@ def check(f, text):
         if length is not None and n > length:
             return err("length", f"“{L}” alanı en çok {length} karakter alır; {n} karakter verildi.")
     values = f.get("values")
+    if values and f.get("multiple") and f["kind"] == "text":
+        # docs/adr/0408 §1: each part a label or a code, written in the list's order once each, joined with "; ".
+        picked = set()
+        for part in [trim(p) for p in s.split(";")]:
+            if not part:
+                continue
+            at = next((i for i, v in enumerate(values) if folded(trim(v["label"])) == folded(part)), None)
+            if at is None:
+                at = next((i for i, v in enumerate(values) if v["code"] == part), None)
+            if at is None:
+                return err("choice", f"“{L}” alanı listedeki değerleri ister; “{part}” listede yok.")
+            picked.add(at)
+        if not picked and f.get("required"):
+            return err("required", f"“{L}” alanı zorunlu; boş bırakılamaz.")
+        return {"value": "; ".join(v["code"] for i, v in enumerate(values) if i in picked)}
     if values:
         for v in values:
             if folded(trim(v["label"])) == folded(s):
@@ -302,8 +317,12 @@ def field_problem(f):
                 return f"“{name}” alanının değer listesinde “{code}” kodu iki kez var."
             if folded(trim(label)) in labels:
                 return f"“{name}” alanının değer listesinde “{label}” etiketi iki kez var."
+            if f.get("multiple") and (";" in code or ";" in label):
+                return f"“{name}” çok değerli; değer listesinin kodlarında ve etiketlerinde “;” olamaz."
             codes.add(code)
             labels.add(folded(trim(label)))
+    if f.get("multiple") and (k != "text" or "values" not in f):
+        return f"“{name}” alanı çok değerli olamaz: bu yalnız değer listesi olan metin alanında olur."
     if "default" in f:
         d = f["default"]
         r = check({**f, "required": False}, d)
@@ -356,6 +375,9 @@ def infer(rows):
 
 
 def display(f, v):
+    if f.get("multiple") and f["kind"] == "text" and f.get("values"):
+        labels = {c["code"]: c["label"] for c in f["values"]}
+        return "; ".join(labels.get(c, c) for c in (trim(p) for p in v.split(";")) if c)
     if f.get("values"):
         for c in f["values"]:
             if c["code"] == v:
@@ -379,6 +401,9 @@ TEXT5 = {"name": "Kod", "kind": "text", "length": 5}
 REQ = {"name": "Ada", "kind": "text", "required": True}
 LIST_T = {"name": "Kullanım", "kind": "text", "values": [{"code": "K", "label": "Konut"}, {"code": "T", "label": "Ticaret"}, {"code": "İ", "label": "İşyeri"}]}
 LIST_N = {"name": "Tür", "kind": "integer", "values": [{"code": "1", "label": "Mesken"}, {"code": "2", "label": "İşyeri"}]}
+# docs/adr/0408 §1: several codes of the list.
+MANY = {**LIST_T, "multiple": True}
+MANY_REQ = {**MANY, "required": True}
 
 CHECKS = [
     (INT, "12"), (INT, "+012"), (INT, "-0"), (INT, " 42 "), (INT, "1.5"), (INT, "1,000"), (INT, "9007199254740991"),
@@ -392,6 +417,8 @@ CHECKS = [
     (REQ, ""), (REQ, "   "), (REQ, "101"),
     (LIST_T, "K"), (LIST_T, "konut"), (LIST_T, "TİCARET"), (LIST_T, "işyeri"), (LIST_T, "k"), (LIST_T, "Sanayi"), (LIST_T, "İ"),
     (LIST_N, "1"), (LIST_N, "01"), (LIST_N, "işyeri"), (LIST_N, "3"), (LIST_N, "x"),
+    (MANY, "K"), (MANY, "T; K"), (MANY, "ticaret;konut; TİCARET"), (MANY, " İ ; ; K "), (MANY, "K; Sanayi"),
+    (MANY, ";"), (MANY_REQ, " ; "), (MANY, "işyeri;İ"), (MANY, "K, T"),
 ]
 
 PROBLEMS = [
@@ -424,6 +451,11 @@ PROBLEMS = [
     ("varsayılan-boş", [{"name": "Ada", "kind": "text", "default": ""}]),
     ("varsayılan-liste", [{"name": "Kullanım", "kind": "text", "values": [{"code": "K", "label": "Konut"}], "default": "Konut"}]),
     ("ilk-sorun", [{"name": "Kat", "kind": "integer", "length": 3}, {"name": "", "kind": "text"}]),
+    ("çok-değerli", [MANY, {**MANY, "name": "Kullanım 2", "default": "K; İ"}]),
+    ("çok-değerli-listesiz", [{"name": "Not", "kind": "text", "multiple": True}]),
+    ("çok-değerli-sayı", [{**LIST_N, "multiple": True}]),
+    ("çok-değerli-noktalı-virgül", [{"name": "Kod", "kind": "text", "multiple": True, "values": [{"code": "a;b", "label": "AB"}]}]),
+    ("çok-değerli-varsayılan-sırası", [{**MANY, "default": "T; K"}]),
 ]
 
 INFER = [
@@ -437,7 +469,8 @@ INFER = [
     ("çok-basamak", [{"V": "0.1234567890123456"}]),
 ]
 
-DISPLAY = [(BOOL, "true"), (BOOL, "false"), (BOOL, "evet"), (DATE, "2026-10-07"), (DATE, "07.10.2026"), (LIST_T, "T"), (LIST_T, "X"), (LIST_N, "2"), (DEC, "12.50")]
+DISPLAY = [(BOOL, "true"), (BOOL, "false"), (BOOL, "evet"), (DATE, "2026-10-07"), (DATE, "07.10.2026"), (LIST_T, "T"), (LIST_T, "X"), (LIST_N, "2"), (DEC, "12.50"),
+           (MANY, "K; T"), (MANY, "K; X"), (MANY, "")]
 
 
 def build():

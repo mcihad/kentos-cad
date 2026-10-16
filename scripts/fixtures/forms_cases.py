@@ -143,6 +143,19 @@ def check_value(f, text):
     if f["kind"] == "text" and "length" in f and len(text) > f["length"]:
         return None, "length"
     choices = f.get("values") or None
+    if choices and f.get("multiple") and f["kind"] == "text":
+        # docs/adr/0408 §1: labels or codes, in the list's order once each, joined with "; ".
+        picked = set()
+        for part in (p.strip(JS_SPACE) for p in s.split(";")):
+            if not part:
+                continue
+            at = next((i for i, c in enumerate(choices) if fold(c["label"].strip(JS_SPACE)) == fold(part)), None)
+            if at is None:
+                at = next((i for i, c in enumerate(choices) if c["code"] == part), None)
+            if at is None:
+                return None, "choice"
+            picked.add(at)
+        return "; ".join(c["code"] for i, c in enumerate(choices) if i in picked), None
     if choices:
         wanted = fold(s)
         for c in choices:
@@ -289,7 +302,7 @@ def text_for(v, f):
 # ── The form ────────────────────────────────────────────────────────────
 
 FITS = {
-    "text": {"text", "textArea", "list", "radio", "segmented", "color"},
+    "text": {"text", "textArea", "list", "radio", "segmented", "color", "checkList"},
     "integer": {"number", "list", "radio", "segmented", "slider"},
     "decimal": {"number", "list", "radio", "segmented", "slider"},
     "date": {"date"},
@@ -300,6 +313,8 @@ FITS = {
 def widget_of(item, f):
     if "widget" in item:
         return item["widget"]
+    if f.get("multiple"):
+        return "checkList"
     if f.get("values"):
         return "list"
     return {"integer": "number", "decimal": "number", "date": "date", "boolean": "check"}.get(
@@ -397,11 +412,11 @@ def preflight(body, fields, variables=(), world=None):
             issues.append(issue("form_field_unknown", True, f["id"], key))
             return
         w = widget_of(f, layer)
-        if w not in FITS[layer["kind"]]:
+        if w not in FITS[layer["kind"]] or bool(layer.get("multiple")) != (w == "checkList"):
             issues.append(issue("form_widget_unfit", True, f["id"], key))
         elif w == "slider" and ("min" not in layer or "max" not in layer):
             issues.append(issue("form_widget_needs_range", True, f["id"], key))
-        elif w in ("list", "radio", "segmented") and not layer.get("values") and layer["kind"] != "boolean" \
+        elif w in ("list", "radio", "segmented", "checkList") and not layer.get("values") and layer["kind"] != "boolean" \
                 and "lookup" not in f:
             issues.append(issue("form_widget_needs_values", True, f["id"], key))
         if "default" in f and check_value(layer, f["default"])[1]:
@@ -758,7 +773,9 @@ class Form:
                 issues.append(issue("form_lookup_missing", True, x["id"], key_of(f), "lookup"))
                 continue
             offered = None if "lookup" in x else self.choices(x, attrs, obj)
-            if offered is not None and canonical in [c["code"] for c in f.get("values", [])] and canonical not in offered:
+            codes = [p.strip(JS_SPACE) for p in canonical.split(";") if p.strip(JS_SPACE)] if f.get("multiple") else [canonical]
+            listed = [c["code"] for c in f.get("values", [])]
+            if offered is not None and any(c in listed and c not in offered for c in codes):
                 issues.append(issue("form_choice_filtered", True, x["id"], key_of(f), "choiceFilter"))
                 continue
             for i, c in enumerate(x.get("checks", [])):
@@ -1067,6 +1084,10 @@ def core():
     extra_pre, extra_records = extras_core()
     pre.extend(extra_pre)
     records.extend(extra_records)
+    multi_pre, multi_records, multi_assess = multi_core()
+    pre.extend(multi_pre)
+    records.extend(multi_records)
+    assess.extend(multi_assess)
     pre.extend(look_pre)
     records.extend(look_records)
     assess.extend(look_assess)
@@ -2569,6 +2590,63 @@ def audit_cases():
     cases.append({"name": "başka katmandan liste: boş kayıtlar sorunsuz", "setup": look_setup(), "steps": [
         {"op": "plan", "input": {"form": "adres", "warnings": True}, "result": {"status": "completed", "output": out2, "warnings": []}}]})
     return cases
+
+
+# ── Several values of a list (docs/adr/0408) ────────────────────────────
+
+MULTI_FIELDS = [
+    {"name": "Ad", "kind": "text"},
+    {"name": "Bakım", "kind": "text", "multiple": True,
+     "values": [{"code": "budama", "label": "Budama"}, {"code": "ilaclama", "label": "İlaçlama"},
+                {"code": "sulama", "label": "Sulama"}, {"code": "kesim", "label": "Kesim"}]},
+    {"name": "Durum", "kind": "text", "values": [{"code": "saglikli", "label": "Sağlıklı"}, {"code": "kuru", "label": "Kuru"}]},
+]
+MULTI_BODY = {"revision": 1, "items": [
+    {"type": "field", "id": "ad", "field": "Ad"},
+    {"type": "field", "id": "durum", "field": "Durum"},
+    {"type": "field", "id": "bakim", "field": "Bakım", "choiceFilter": "Durum = 'kuru' veya @secenek <> 'kesim'"},
+]}
+
+
+def multi_with(change):
+    b = copy.deepcopy(MULTI_BODY)
+    change(b)
+    return b
+
+
+def multi_core():
+    pre, records, assess = [], [], []
+
+    def case(name, body=MULTI_BODY, fields=MULTI_FIELDS):
+        pre.append({"name": name, "fields": fields, "body": body, "issues": preflight(body, fields)})
+
+    case("çok değerli alan: çoklu seçimle, süzgeç her koda; hata yok")
+    case("çok değerli alanı tek seçimli liste düzenleyemez",
+         multi_with(lambda b: item(b, "bakim").update(widget="list")))
+    case("çoklu seçim yalnız çok değerli alanda",
+         multi_with(lambda b: (item(b, "durum").update(widget="checkList"), item(b, "ad").update(widget="checkList"))))
+    case("çok değerli varsayılan listenin sırasıyla", multi_with(lambda b: item(b, "bakim").update(default="Sulama; budama")))
+
+    def record(name, attrs, body=MULTI_BODY):
+        form = Form(body, MULTI_FIELDS)
+        records.append({"name": name, "fields": MULTI_FIELDS, "body": body, "attrs": attrs,
+                        "items": form.described(attrs), "issues": form.validate(attrs)})
+
+    record("sağlıklı ağaçta kesim sunulmaz; budama ve sulama geçerli", {"Ad": "Çınar", "Durum": "saglikli", "Bakım": "budama; sulama"})
+    record("sağlıklı ağaçta seçilmiş kesim süzgece takılır", {"Ad": "Çınar", "Durum": "saglikli", "Bakım": "budama; kesim"})
+    record("kuru ağaçta kesim de sunulur", {"Ad": "Çınar", "Durum": "kuru", "Bakım": "kesim"})
+    record("listede olmayan kod geçersiz", {"Ad": "Çınar", "Bakım": "budama; gübre"})
+    record("eski sırasız değer geçerli sayılır", {"Ad": "Çınar", "Bakım": "sulama;budama"})
+
+    def write(name, before, values, body=MULTI_BODY):
+        after, issues = Form(body, MULTI_FIELDS).assess(before, values)
+        assess.append({"name": name, "fields": MULTI_FIELDS, "body": body, "before": before,
+                       "values": values, "after": after, "issues": issues})
+
+    write("etiketlerle yazılır, listenin sırasıyla tek biçime çevrilir", {"Ad": "Çınar"}, [["Bakım", "Sulama; İLAÇLAMA; budama; sulama"]])
+    write("boş parçalar düşer; hepsi boşsa öznitelik kalkar", {"Ad": "Çınar", "Bakım": "budama"}, [["Bakım", " ; ; "]])
+    write("kesim sağlıklı ağaca yazılmaz", {"Ad": "Çınar", "Durum": "saglikli"}, [["Bakım", "kesim; budama"]])
+    return pre, records, assess
 
 
 # ── Attachments, colours and suggestions (docs/adr/0407) ────────────────

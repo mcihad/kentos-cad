@@ -908,6 +908,7 @@ class FormWidget(_StrEnum):
     - ``segmented``: A segmented choice: fields with a short value list.
     - ``slider``: A slider between the field's least and most (docs/adr/0406 §2): number fields with both.
     - ``color``: A colour, `#RRGGBB` or `#RRGGBBAA` (docs/adr/0407 §2): text fields.
+    - ``checkList``: A check box for each listed value (docs/adr/0408 §2): multiple fields, and only they.
     """
     TEXT = "text"
     TEXT_AREA = "textArea"
@@ -920,9 +921,10 @@ class FormWidget(_StrEnum):
     SEGMENTED = "segmented"
     SLIDER = "slider"
     COLOR = "color"
+    CHECK_LIST = "checkList"
 
 
-FormWidgetName = Literal["text", "textArea", "number", "date", "check", "switch", "list", "radio", "segmented", "slider", "color"]
+FormWidgetName = Literal["text", "textArea", "number", "date", "check", "switch", "list", "radio", "segmented", "slider", "color", "checkList"]
 """The names of :class:`FormWidget`, for a plain string."""
 
 
@@ -12985,6 +12987,8 @@ class LayerField(_Model):
         length: A text's most characters (1–10 000). Unit: count.
         max: A number's greatest value, in its canonical text; included.
         min: A number's least value, in its canonical text; included.
+        multiple: A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,
+            joined with `; `; written only as `true`.
         required: An object may not leave it empty; written only as `true`.
         scale: A decimal's most fraction digits (0–15). Unit: count.
         values: The values a text or a number takes, when only some.
@@ -12997,6 +13001,7 @@ class LayerField(_Model):
     length: int | None | Unset = UNSET
     max: str | None | Unset = UNSET
     min: str | None | Unset = UNSET
+    multiple: bool | Unset = UNSET
     required: bool | Unset = UNSET
     scale: int | None | Unset = UNSET
     values: list[FieldChoice] | None | Unset = UNSET
@@ -13017,6 +13022,8 @@ class LayerField(_Model):
             out["max"] = self.max
         if self.min is not UNSET:
             out["min"] = self.min
+        if self.multiple is not UNSET:
+            out["multiple"] = self.multiple
         if self.required is not UNSET:
             out["required"] = self.required
         if self.scale is not UNSET:
@@ -13036,6 +13043,7 @@ class LayerField(_Model):
             length=data.get("length", UNSET),
             max=data.get("max", UNSET),
             min=data.get("min", UNSET),
+            multiple=data.get("multiple", UNSET),
             required=data.get("required", UNSET),
             scale=data.get("scale", UNSET),
             values=UNSET if "values" not in data else None if data["values"] is None else [FieldChoice.from_json(e0) for e0 in data["values"]],

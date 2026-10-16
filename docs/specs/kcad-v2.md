@@ -628,7 +628,7 @@ tam sayı, anahtarlar kanonik sırada). Yazıcı varsayılan değerindeki alanı
   (`field` alanın anahtarı: kimliği ya da adı; `label`, `help`, `placeholder`, `widget`, `readOnly`, `required`, `visibleWhen`,
   `requiredWhen`, `readOnlyWhen`, `default`, `defaultExpr`, `calculate`, `choiceFilter`, `unique`, `reuseLast` ve `suggest`
   (ADR 0407 §3) yalnız `true`, `widget`'ın değerleri `text`, `textArea`, `number`, `date`, `check`, `switch`, `list`, `radio`,
-  `segmented`, `slider` (ADR 0406) ve `color` (ADR 0407), `lookup`: başka katmandan değer listesi, `layer`, `key` (alanın anahtarı ya da nesnenin kimliği için `$uid`), `label`,
+  `segmented`, `slider` (ADR 0406), `color` (ADR 0407) ve `checkList` (ADR 0408), `lookup`: başka katmandan değer listesi, `layer`, `key` (alanın anahtarı ya da nesnenin kimliği için `$uid`), `label`,
   en çok 20 `matches` (`field`, `record`) ve `filter`, ADR 0404 §1; `checks`: `rule`, `message` ve yalnız `true` olarak
   `warning`, en çok 20), `note` (`text`; `{…}` ifadeleriyle şablon), `related` (`label`, `layer`, `field`, `visibleWhen`:
   başka katmanın bu kayda başvuran nesneleri, ADR 0404 §4), `attachments` (`label`, `accept`: `photo` ya da `document`, `any`
@@ -742,6 +742,7 @@ Açık düğme yazılmaz (`broken/card-switch-on.kcad`); boş alan listesi (`bro
 | `length` | u32 | | metnin en çok karakteri (1–10 000) |
 | `values` | dizi: harita | | değer listesi: her biri `code` ve `label` metni (ikisi de zorunlu) |
 | `default` | metin | | yeni nesnenin değeri, alanın kurallarına uyan tek biçimde |
+| `multiple` | bool | | şema 60'ta, yalnız `true`: değer listesi olan metin alanı birden çok kod alır; değer kodların listedeki sırayla `; ` ile birleşmiş metnidir, kodlarda ve etiketlerde `;` olmaz (ADR 0408 §1; `broken/field-multiple-unlisted.kcad`) |
 | `required` | bool | | yalnız `true`: nesne alanı boş bırakamaz |
 
 Anahtarlar kodlanmış sırasıyladır. Tek biçimler ve alan listesinin kuralları ADR 0199 §1'dedir (`kentos_contracts::fields`): ad boş değil, başında ya da sonunda boşluk yok, en çok 64 karakter, denetim karakteri yok, Türkçe katlanarak bir kez; takma ad boş değil, en çok 64 karakter; uzunluk yalnız metinde, ondalık basamak yalnız ondalıkta, aralık yalnız sayılarda (uçları tek biçimde, en az en çoktan büyük değil), değer listesi yalnız metin ve sayılarda (boş değil, kodlar boş değil ve sayılarda tek biçimde, kodlar ve katlanmış etiketler bir kez); varsayılan alanın kurallarına uyan tek biçim; kimlik boş değil, başında ya da sonunda boşluk yok, en çok 64 karakter, denetim karakteri yok ve alanların anahtarları (kimlik, yoksa ad) bir kez (`broken/field-id-twice.kcad`). Kuralı kıran liste, boş liste, `required: false`, bilinmeyen tür ve negatif sayı `bad_value`'dur; bilinmeyen anahtar `unknown_field`, türü ya da etiketi olmayan `missing_field`'dır (`fixtures/kcad/v2/broken/layer-fields-*.kcad`).

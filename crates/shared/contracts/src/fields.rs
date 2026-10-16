@@ -141,7 +141,15 @@ pub struct LayerField {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub default: Option<String>,
+    /// A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,
+    /// joined with `; `; written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub multiple: bool,
 }
+
+/// What joins a multiple field's codes (docs/adr/0408 §1).
+pub const MULTIPLE_JOIN: &str = "; ";
 
 impl LayerField {
     /// A field of `kind` named `name`, with no other rule.
@@ -158,7 +166,22 @@ impl LayerField {
             values: None,
             required: false,
             default: None,
+            multiple: false,
         }
+    }
+
+    /// Whether it holds several codes: a multiple listed text field.
+    pub fn holds_many(&self) -> bool {
+        self.multiple && self.kind == LayerFieldKind::Text && self.choices().is_some()
+    }
+
+    /// A multiple field's codes in `value`, in its order (empty parts left out).
+    pub fn codes_of<'a>(&self, value: &'a str) -> Vec<&'a str> {
+        value
+            .split(';')
+            .map(js_trim)
+            .filter(|c| !c.is_empty())
+            .collect()
     }
 
     /// The field's key: its stable id, else its name (what a form binds to, docs/adr/0401 §2).
@@ -485,6 +508,41 @@ pub fn check_value(field: &LayerField, text: &str) -> Result<String, Refusal> {
         }
     }
     let choices = field.choices();
+    // A multiple field: each part a code or a label, written in the list's order once each.
+    if field.holds_many()
+        && let Some(choices) = choices
+    {
+        let mut picked = vec![false; choices.len()];
+        for part in field.codes_of(s) {
+            let wanted = fold(part);
+            let at = choices
+                .iter()
+                .position(|c| fold(js_trim(&c.label)) == wanted)
+                .or_else(|| choices.iter().position(|c| c.code == part));
+            match at {
+                Some(i) => picked[i] = true,
+                None => {
+                    return Err(refusal(
+                        "choice",
+                        format!("“{label}” alanı listedeki değerleri ister; “{part}” listede yok."),
+                    ));
+                }
+            }
+        }
+        let codes: Vec<&str> = choices
+            .iter()
+            .zip(&picked)
+            .filter(|(_, p)| **p)
+            .map(|(c, _)| c.code.as_str())
+            .collect();
+        if codes.is_empty() && field.required {
+            return Err(refusal(
+                "required",
+                format!("“{label}” alanı zorunlu; boş bırakılamaz."),
+            ));
+        }
+        return Ok(codes.join(MULTIPLE_JOIN));
+    }
     if let Some(choices) = choices {
         let wanted = fold(s);
         if let Some(c) = choices.iter().find(|c| fold(js_trim(&c.label)) == wanted) {
@@ -673,7 +731,17 @@ pub fn field_problem(field: &LayerField) -> Option<String> {
                     "“{name}” alanının değer listesinde “{label}” etiketi iki kez var."
                 ));
             }
+            if field.multiple && (code.contains(';') || label.contains(';')) {
+                return Some(format!(
+                    "“{name}” çok değerli; değer listesinin kodlarında ve etiketlerinde “;” olamaz."
+                ));
+            }
         }
+    }
+    if field.multiple && (kind != LayerFieldKind::Text || field.values.is_none()) {
+        return Some(format!(
+            "“{name}” alanı çok değerli olamaz: bu yalnız değer listesi olan metin alanında olur."
+        ));
     }
     if let Some(d) = &field.default {
         let optional = LayerField {
@@ -794,6 +862,20 @@ pub fn infer_fields<'a>(
 /// How a value of `field` is shown (docs/adr/0199 §1): a code its label, a
 /// yes or no Evet or Hayır, a date GG.AA.YYYY, anything else as it is.
 pub fn display_value(field: &LayerField, value: &str) -> String {
+    if field.holds_many() {
+        let labels: Vec<String> = field
+            .codes_of(value)
+            .into_iter()
+            .map(|code| {
+                field
+                    .values
+                    .as_deref()
+                    .and_then(|v| v.iter().find(|c| c.code == code))
+                    .map_or_else(|| code.to_owned(), |c| c.label.clone())
+            })
+            .collect();
+        return labels.join(MULTIPLE_JOIN);
+    }
     if let Some(c) = field
         .values
         .as_deref()

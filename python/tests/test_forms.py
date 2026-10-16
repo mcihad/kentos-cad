@@ -265,6 +265,27 @@ class FormsTests(unittest.TestCase):
         written = cad.forms.submit(doc, form="agac", uid=tree, values={"Renk": "#2E7D32"})
         self.assertEqual(written.attrs, {"Ad": "Çınar", "Renk": "#2E7D32"})
 
+    def test_several_values_of_a_list(self) -> None:
+        """docs/adr/0408: a multiple field takes labels or codes, written in the list's order once each."""
+        doc = cad.Document.new("Park", srid=5256)
+        cad.layers.edit(doc, operation="add", name="Ağaç", activate=True)
+        layer = next(n.id for n in doc.layers() if n.name == "Ağaç")
+        care = [cad.FieldChoice(code="budama", label="Budama"), cad.FieldChoice(code="sulama", label="Sulama")]
+        cad.layers.edit(
+            doc, operation="fields", layer=layer,
+            fields=[cad.LayerField(name="Bakım", kind="text", values=care, multiple=True)],
+        )
+        cad.forms.edit(doc, edit=cad.CreateFormsOp(name="Ağaç", layer=layer, id="agac"))
+        cad.forms.edit(doc, edit=cad.PublishFormsOp(id="agac"))
+        tree = cad.polygon.create(
+            doc, pts=[cad.Vec2(0.0, 0.0), cad.Vec2(5.0, 0.0), cad.Vec2(5.0, 5.0)], layer_id=layer
+        ).uid
+        written = cad.forms.submit(doc, form="agac", uid=tree, values={"Bakım": "Sulama; budama; SULAMA"})
+        self.assertEqual(written.attrs, {"Bakım": "budama; sulama"})
+        with self.assertRaises(cad.CommandFailed) as refused:
+            cad.entities.set(doc, uids=[tree], operation="attributes", attrs={"Bakım": "budama; gübre"})
+        self.assertEqual(refused.exception.code, "invalid_attribute")
+
     def test_a_relation_keeps_its_children(self) -> None:
         """docs/adr/0405: a meter refers to its building; the building deleted, its meters go with it (cascade); a
         restricting relation keeps a building with meters."""

@@ -122,6 +122,9 @@ pub struct Entry {
     mixed: BTreeSet<String>,
     /// A suggesting field item's values in the layer, the most used first (docs/adr/0407 §3).
     suggestions: BTreeMap<String, Vec<String>>,
+    /// The record's place among the layer's records and their count (docs/adr/0408 §3); none in
+    /// the preview and with many records.
+    place: Option<(usize, usize)>,
 }
 
 /// A record of the many-record mode.
@@ -183,6 +186,8 @@ pub enum Event {
     /// An attachment of the record opened or removed, by its place in the object's list.
     AttachOpen(usize),
     AttachRemove(usize),
+    /// The layer's previous (-1) or next (+1) record, by the form (docs/adr/0408 §3).
+    Step(i32),
     FirstIssue,
     Save,
     Cancel,
@@ -193,6 +198,12 @@ fn msg(event: Event) -> Message {
 }
 
 impl Entry {
+    /// The record's persistent id, as text (for the flow tests).
+    #[cfg(test)]
+    pub(crate) fn uid_text(&self) -> String {
+        self.uid.clone()
+    }
+
     /// An event of this window: the preview's go to the designer's preview.
     fn msg(&self, event: Event) -> Message {
         if self.preview {
@@ -579,7 +590,19 @@ impl App {
             members: Vec::new(),
             mixed: BTreeSet::new(),
             suggestions: BTreeMap::new(),
+            place: None,
         };
+        if let (Some(doc), false) = (&self.document, preview) {
+            let mut at = None;
+            let mut n = 0;
+            for (u, _) in doc.model.by_layer_with_uids(&f.layer) {
+                if u.to_string() == entry.uid {
+                    at = Some(n);
+                }
+                n += 1;
+            }
+            entry.place = at.map(|i| (i, n));
+        }
         if let Some(doc) = &self.document {
             entry.suggestions = kentos_native_application::forms::suggestions(
                 &doc.model,
@@ -870,7 +893,37 @@ impl App {
             Event::OpenRelated(uid) => return self.open_related(&uid),
             Event::Link(item, uid) => return self.link_related(&item, &uid, true),
             Event::Unlink(item, uid) => return self.link_related(&item, &uid, false),
-            Event::AttachAdd(_) | Event::AttachOpen(_) | Event::AttachRemove(_) if preview => {}
+            Event::AttachAdd(_)
+            | Event::AttachOpen(_)
+            | Event::AttachRemove(_)
+            | Event::Step(_)
+                if preview => {}
+            Event::Step(step) => {
+                if e.dirty() {
+                    self.say(
+                        Level::Warn,
+                        "Kaydedilmemiş değişiklik var: önce Kaydet’e basın ya da Vazgeç’le bırakın.",
+                    );
+                    return Task::none();
+                }
+                let Some((at, _)) = e.place else {
+                    return Task::none();
+                };
+                let form = e.form.clone();
+                let layer = e.screen.layer.clone();
+                let Some(to) = at.checked_add_signed(step as isize) else {
+                    return Task::none();
+                };
+                let slot = doc
+                    .model
+                    .by_layer_with_uids(&layer)
+                    .nth(to)
+                    .and_then(|(u, _)| doc.model.slot_of(u));
+                if let Some(slot) = slot {
+                    self.selection.set([slot]);
+                    return self.open_entry(slot, &form);
+                }
+            }
             Event::AttachAdd(photos) => {
                 if let Some(slot) = record_slot(&doc.model, &e.uid) {
                     let add = if photos {
@@ -1095,7 +1148,24 @@ impl App {
         if e.draft {
             head.push_str(" · form yayınlanmadı, taslağıyla");
         }
-        body = body.push(label::caption(head).style(muted));
+        // ◀ 3 / 12 ▶: the layer's records one after another (docs/adr/0408 §3).
+        let step = |glyph: Icon, to: i32, can: bool| {
+            iced::widget::button(icon(glyph).size(12.0))
+                .padding([3, 6])
+                .style(style::button::tool(false))
+                .on_press_maybe(can.then(|| e.msg(Event::Step(to))))
+        };
+        let mut top = Row::new()
+            .spacing(6)
+            .align_y(Center)
+            .push(container(label::caption(head).style(muted)).width(Fill));
+        if let Some((at, n)) = e.place.filter(|(_, n)| *n > 1) {
+            top = top
+                .push(step(Icon::ChevronLeft, -1, at > 0))
+                .push(label::caption(format!("{} / {n}", at + 1)).style(muted))
+                .push(step(Icon::ChevronRight, 1, at + 1 < n));
+        }
+        body = body.push(top);
         if locked {
             body = body.push(words::summary(vec![words::text_line(
                 Kind::Warn,
@@ -1795,6 +1865,64 @@ fn entry_control<'a>(
             "—"
         })
         .into(),
+        // A check box for each listed value the record may hold (docs/adr/0408 §2).
+        FormWidget::CheckList => {
+            let held: Vec<String> = field
+                .codes_of(&code)
+                .into_iter()
+                .map(str::to_owned)
+                .collect();
+            let mut col = Column::new().spacing(4);
+            for (c, words) in &choices {
+                let on = held.contains(c);
+                let next: Vec<&str> = choices
+                    .iter()
+                    .map(|(x, _)| x.as_str())
+                    .filter(|x| {
+                        if x == c {
+                            !on
+                        } else {
+                            held.iter().any(|h| h == x)
+                        }
+                    })
+                    .collect();
+                let toggle = set(next.join(kentos_contracts::MULTIPLE_JOIN));
+                col = col.push(
+                    row![
+                        check_box(
+                            if on { Check::Checked } else { Check::Unchecked },
+                            (!read_only).then_some(toggle),
+                        ),
+                        label::body(words.clone()),
+                    ]
+                    .spacing(8)
+                    .align_y(Center),
+                );
+            }
+            // A held code no longer offered still shows, so it can be taken off.
+            for h in held
+                .iter()
+                .filter(|h| !choices.iter().any(|(c, _)| c == *h))
+            {
+                let next: Vec<&str> = held
+                    .iter()
+                    .filter(|x| *x != h)
+                    .map(String::as_str)
+                    .collect();
+                col = col.push(
+                    row![
+                        check_box(
+                            Check::Checked,
+                            (!read_only).then(|| set(next.join(kentos_contracts::MULTIPLE_JOIN))),
+                        ),
+                        label::body(kentos_contracts::display_value(field, h)).style(muted),
+                    ]
+                    .spacing(8)
+                    .align_y(Center),
+                );
+            }
+            col.into()
+        }
         FormWidget::Check => {
             let on = code == "true";
             let set = set.clone();

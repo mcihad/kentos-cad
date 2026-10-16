@@ -504,9 +504,19 @@ impl Prepared {
                 ));
                 continue;
             }
+            // A multiple field's codes are asked one by one (docs/adr/0408 §2).
+            let codes: Vec<&str> = if field.multiple {
+                field.codes_of(&canonical)
+            } else {
+                vec![canonical.as_str()]
+            };
             if let Some(choices) = &b.choices
-                && let Some((_, e)) = choices.iter().find(|(code, _)| *code == canonical)
-                && !holds(e, attrs, object)
+                && codes.iter().any(|code| {
+                    choices
+                        .iter()
+                        .find(|(c, _)| c == code)
+                        .is_some_and(|(_, e)| !holds(e, attrs, object))
+                })
             {
                 issues.push(at(
                     codes::CHOICE_FILTERED,

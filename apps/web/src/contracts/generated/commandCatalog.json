@@ -4217,6 +4217,11 @@
                 "const": "color",
                 "description": "A colour, `#RRGGBB` or `#RRGGBBAA` (docs/adr/0407 §2): text fields.",
                 "type": "string"
+              },
+              {
+                "const": "checkList",
+                "description": "A check box for each listed value (docs/adr/0408 §2): multiple fields, and only they.",
+                "type": "string"
               }
             ]
           },
@@ -5955,6 +5960,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "multiple": {
+                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "type": "boolean"
               },
               "name": {
                 "type": "string"
@@ -13895,6 +13904,11 @@
                 "const": "color",
                 "description": "A colour, `#RRGGBB` or `#RRGGBBAA` (docs/adr/0407 §2): text fields.",
                 "type": "string"
+              },
+              {
+                "const": "checkList",
+                "description": "A check box for each listed value (docs/adr/0408 §2): multiple fields, and only they.",
+                "type": "string"
               }
             ]
           },
@@ -14866,6 +14880,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "multiple": {
+                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "type": "boolean"
               },
               "name": {
                 "type": "string"
@@ -21673,6 +21691,11 @@
                 "const": "color",
                 "description": "A colour, `#RRGGBB` or `#RRGGBBAA` (docs/adr/0407 §2): text fields.",
                 "type": "string"
+              },
+              {
+                "const": "checkList",
+                "description": "A check box for each listed value (docs/adr/0408 §2): multiple fields, and only they.",
+                "type": "string"
               }
             ]
           },
@@ -23411,6 +23434,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "multiple": {
+                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "type": "boolean"
               },
               "name": {
                 "type": "string"
@@ -125565,6 +125592,10 @@
                   "null"
                 ]
               },
+              "multiple": {
+                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "type": "boolean"
+              },
               "name": {
                 "type": "string"
               },
@@ -134055,6 +134086,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "multiple": {
+                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "type": "boolean"
               },
               "name": {
                 "type": "string"
@@ -142669,6 +142704,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "multiple": {
+                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "type": "boolean"
               },
               "name": {
                 "type": "string"
@@ -296192,6 +296231,10 @@
                   "null"
                 ]
               },
+              "multiple": {
+                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "type": "boolean"
+              },
               "name": {
                 "type": "string"
               },
@@ -297791,6 +297834,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "multiple": {
+                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "type": "boolean"
               },
               "name": {
                 "type": "string"
@@ -301756,6 +301803,10 @@
                   "null"
                 ]
               },
+              "multiple": {
+                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "type": "boolean"
+              },
               "name": {
                 "type": "string"
               },
@@ -304102,6 +304153,10 @@
                   "null"
                 ]
               },
+              "multiple": {
+                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "type": "boolean"
+              },
               "name": {
                 "type": "string"
               },
@@ -306209,6 +306264,10 @@
                   "null"
                 ]
               },
+              "multiple": {
+                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "type": "boolean"
+              },
               "name": {
                 "type": "string"
               },
@@ -308290,6 +308349,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "multiple": {
+                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "type": "boolean"
               },
               "name": {
                 "type": "string"
@@ -311149,6 +311212,10 @@
                   "null"
                 ]
               },
+              "multiple": {
+                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "type": "boolean"
+              },
               "name": {
                 "type": "string"
               },
@@ -313544,6 +313611,10 @@
                   "null"
                 ]
               },
+              "multiple": {
+                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "type": "boolean"
+              },
               "name": {
                 "type": "string"
               },
@@ -314658,6 +314729,10 @@
                   "string",
                   "null"
                 ]
+              },
+              "multiple": {
+                "description": "A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,\njoined with `; `; written only as `true`.",
+                "type": "boolean"
               },
               "name": {
                 "type": "string"
@@ -324065,6 +324140,11 @@
                 "const": "color",
                 "description": "A colour, `#RRGGBB` or `#RRGGBBAA` (docs/adr/0407 §2): text fields.",
                 "type": "string"
+              },
+              {
+                "const": "checkList",
+                "description": "A check box for each listed value (docs/adr/0408 §2): multiple fields, and only they.",
+                "type": "string"
               }
             ]
           },
@@ -324889,6 +324969,11 @@
                 "const": "color",
                 "description": "A colour, `#RRGGBB` or `#RRGGBBAA` (docs/adr/0407 §2): text fields.",
                 "type": "string"
+              },
+              {
+                "const": "checkList",
+                "description": "A check box for each listed value (docs/adr/0408 §2): multiple fields, and only they.",
+                "type": "string"
               }
             ]
           },
@@ -325631,6 +325716,11 @@
               {
                 "const": "color",
                 "description": "A colour, `#RRGGBB` or `#RRGGBBAA` (docs/adr/0407 §2): text fields.",
+                "type": "string"
+              },
+              {
+                "const": "checkList",
+                "description": "A check box for each listed value (docs/adr/0408 §2): multiple fields, and only they.",
                 "type": "string"
               }
             ]

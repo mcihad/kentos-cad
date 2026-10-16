@@ -42,4 +42,9 @@ required?: boolean,
 /**
  * The value a new object takes, in its canonical text.
  */
-default?: string, };
+default?: string, 
+/**
+ * A listed text field holds several of its codes (docs/adr/0408 §1): in the list's order,
+ * joined with `; `; written only as `true`.
+ */
+multiple?: boolean, };

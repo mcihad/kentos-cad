@@ -288,6 +288,7 @@
     { "file": "broken/forms-unknown-field.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/forms-tab-in-group.kcad", "sniff": "kcad", "error": "bad_value" },
     { "file": "broken/field-id-twice.kcad", "sniff": "kcad", "error": "bad_value" },
+    { "file": "broken/field-multiple-unlisted.kcad", "sniff": "kcad", "error": "bad_value" },
     { "file": "dynamic-blocks.kcad", "sniff": "kcad", "content": "dynamic-blocks.json" },
     { "file": "broken/dynamic-blocks-in-schema-58.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/dynamic-action-unfit.kcad", "sniff": "kcad", "error": "bad_value" },

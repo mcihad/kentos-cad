@@ -96,7 +96,7 @@ pub fn widget_fits(widget: FormWidget, field: &LayerField) -> Result<(), &'stati
     let kind_fits = match field.kind {
         LayerFieldKind::Text => matches!(
             widget,
-            W::Text | W::TextArea | W::List | W::Radio | W::Segmented | W::Color
+            W::Text | W::TextArea | W::List | W::Radio | W::Segmented | W::Color | W::CheckList
         ),
         LayerFieldKind::Integer | LayerFieldKind::Decimal => {
             matches!(
@@ -107,14 +107,16 @@ pub fn widget_fits(widget: FormWidget, field: &LayerField) -> Result<(), &'stati
         LayerFieldKind::Date => widget == W::Date,
         LayerFieldKind::Boolean => matches!(widget, W::Check | W::Switch | W::Radio | W::Segmented),
     };
-    if !kind_fits {
+    // A multiple field is edited by its check list, and the check list edits only it
+    // (docs/adr/0408 §2).
+    if !kind_fits || field.multiple != (widget == W::CheckList) {
         return Err(codes::WIDGET_UNFIT);
     }
     // A slider runs between the field's least and most (docs/adr/0406 §2).
     if widget == W::Slider && (field.min.is_none() || field.max.is_none()) {
         return Err(codes::WIDGET_NEEDS_RANGE);
     }
-    let needs_list = matches!(widget, W::List | W::Radio | W::Segmented);
+    let needs_list = matches!(widget, W::List | W::Radio | W::Segmented | W::CheckList);
     if needs_list && !listed && field.kind != LayerFieldKind::Boolean {
         return Err(codes::WIDGET_NEEDS_VALUES);
     }

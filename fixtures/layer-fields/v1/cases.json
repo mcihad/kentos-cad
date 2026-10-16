@@ -823,6 +823,235 @@
         "error": "type",
         "message": "“Tür” alanı tam sayı ister; “x” verildi. Rakamlarla, ondalıksız yazın."
       }
+    },
+    {
+      "field": {
+        "name": "Kullanım",
+        "kind": "text",
+        "values": [
+          {
+            "code": "K",
+            "label": "Konut"
+          },
+          {
+            "code": "T",
+            "label": "Ticaret"
+          },
+          {
+            "code": "İ",
+            "label": "İşyeri"
+          }
+        ],
+        "multiple": true
+      },
+      "text": "K",
+      "want": {
+        "value": "K"
+      }
+    },
+    {
+      "field": {
+        "name": "Kullanım",
+        "kind": "text",
+        "values": [
+          {
+            "code": "K",
+            "label": "Konut"
+          },
+          {
+            "code": "T",
+            "label": "Ticaret"
+          },
+          {
+            "code": "İ",
+            "label": "İşyeri"
+          }
+        ],
+        "multiple": true
+      },
+      "text": "T; K",
+      "want": {
+        "value": "K; T"
+      }
+    },
+    {
+      "field": {
+        "name": "Kullanım",
+        "kind": "text",
+        "values": [
+          {
+            "code": "K",
+            "label": "Konut"
+          },
+          {
+            "code": "T",
+            "label": "Ticaret"
+          },
+          {
+            "code": "İ",
+            "label": "İşyeri"
+          }
+        ],
+        "multiple": true
+      },
+      "text": "ticaret;konut; TİCARET",
+      "want": {
+        "value": "K; T"
+      }
+    },
+    {
+      "field": {
+        "name": "Kullanım",
+        "kind": "text",
+        "values": [
+          {
+            "code": "K",
+            "label": "Konut"
+          },
+          {
+            "code": "T",
+            "label": "Ticaret"
+          },
+          {
+            "code": "İ",
+            "label": "İşyeri"
+          }
+        ],
+        "multiple": true
+      },
+      "text": " İ ; ; K ",
+      "want": {
+        "value": "K; İ"
+      }
+    },
+    {
+      "field": {
+        "name": "Kullanım",
+        "kind": "text",
+        "values": [
+          {
+            "code": "K",
+            "label": "Konut"
+          },
+          {
+            "code": "T",
+            "label": "Ticaret"
+          },
+          {
+            "code": "İ",
+            "label": "İşyeri"
+          }
+        ],
+        "multiple": true
+      },
+      "text": "K; Sanayi",
+      "want": {
+        "error": "choice",
+        "message": "“Kullanım” alanı listedeki değerleri ister; “Sanayi” listede yok."
+      }
+    },
+    {
+      "field": {
+        "name": "Kullanım",
+        "kind": "text",
+        "values": [
+          {
+            "code": "K",
+            "label": "Konut"
+          },
+          {
+            "code": "T",
+            "label": "Ticaret"
+          },
+          {
+            "code": "İ",
+            "label": "İşyeri"
+          }
+        ],
+        "multiple": true
+      },
+      "text": ";",
+      "want": {
+        "value": ""
+      }
+    },
+    {
+      "field": {
+        "name": "Kullanım",
+        "kind": "text",
+        "values": [
+          {
+            "code": "K",
+            "label": "Konut"
+          },
+          {
+            "code": "T",
+            "label": "Ticaret"
+          },
+          {
+            "code": "İ",
+            "label": "İşyeri"
+          }
+        ],
+        "multiple": true,
+        "required": true
+      },
+      "text": " ; ",
+      "want": {
+        "error": "required",
+        "message": "“Kullanım” alanı zorunlu; boş bırakılamaz."
+      }
+    },
+    {
+      "field": {
+        "name": "Kullanım",
+        "kind": "text",
+        "values": [
+          {
+            "code": "K",
+            "label": "Konut"
+          },
+          {
+            "code": "T",
+            "label": "Ticaret"
+          },
+          {
+            "code": "İ",
+            "label": "İşyeri"
+          }
+        ],
+        "multiple": true
+      },
+      "text": "işyeri;İ",
+      "want": {
+        "value": "İ"
+      }
+    },
+    {
+      "field": {
+        "name": "Kullanım",
+        "kind": "text",
+        "values": [
+          {
+            "code": "K",
+            "label": "Konut"
+          },
+          {
+            "code": "T",
+            "label": "Ticaret"
+          },
+          {
+            "code": "İ",
+            "label": "İşyeri"
+          }
+        ],
+        "multiple": true
+      },
+      "text": "K, T",
+      "want": {
+        "error": "choice",
+        "message": "“Kullanım” alanı listedeki değerleri ister; “K, T” listede yok."
+      }
     }
   ],
   "problems": [
@@ -1261,6 +1490,126 @@
         }
       ],
       "want": "“Kat” alanında uzunluk yalnız metin alanında olur."
+    },
+    {
+      "name": "çok-değerli",
+      "fields": [
+        {
+          "name": "Kullanım",
+          "kind": "text",
+          "values": [
+            {
+              "code": "K",
+              "label": "Konut"
+            },
+            {
+              "code": "T",
+              "label": "Ticaret"
+            },
+            {
+              "code": "İ",
+              "label": "İşyeri"
+            }
+          ],
+          "multiple": true
+        },
+        {
+          "name": "Kullanım 2",
+          "kind": "text",
+          "values": [
+            {
+              "code": "K",
+              "label": "Konut"
+            },
+            {
+              "code": "T",
+              "label": "Ticaret"
+            },
+            {
+              "code": "İ",
+              "label": "İşyeri"
+            }
+          ],
+          "multiple": true,
+          "default": "K; İ"
+        }
+      ],
+      "want": null
+    },
+    {
+      "name": "çok-değerli-listesiz",
+      "fields": [
+        {
+          "name": "Not",
+          "kind": "text",
+          "multiple": true
+        }
+      ],
+      "want": "“Not” alanı çok değerli olamaz: bu yalnız değer listesi olan metin alanında olur."
+    },
+    {
+      "name": "çok-değerli-sayı",
+      "fields": [
+        {
+          "name": "Tür",
+          "kind": "integer",
+          "values": [
+            {
+              "code": "1",
+              "label": "Mesken"
+            },
+            {
+              "code": "2",
+              "label": "İşyeri"
+            }
+          ],
+          "multiple": true
+        }
+      ],
+      "want": "“Tür” alanı çok değerli olamaz: bu yalnız değer listesi olan metin alanında olur."
+    },
+    {
+      "name": "çok-değerli-noktalı-virgül",
+      "fields": [
+        {
+          "name": "Kod",
+          "kind": "text",
+          "multiple": true,
+          "values": [
+            {
+              "code": "a;b",
+              "label": "AB"
+            }
+          ]
+        }
+      ],
+      "want": "“Kod” çok değerli; değer listesinin kodlarında ve etiketlerinde “;” olamaz."
+    },
+    {
+      "name": "çok-değerli-varsayılan-sırası",
+      "fields": [
+        {
+          "name": "Kullanım",
+          "kind": "text",
+          "values": [
+            {
+              "code": "K",
+              "label": "Konut"
+            },
+            {
+              "code": "T",
+              "label": "Ticaret"
+            },
+            {
+              "code": "İ",
+              "label": "İşyeri"
+            }
+          ],
+          "multiple": true,
+          "default": "T; K"
+        }
+      ],
+      "want": "“Kullanım” alanının varsayılanı “T; K” alanın kurallarına uymuyor."
     }
   ],
   "infer": [
@@ -1520,6 +1869,75 @@
       },
       "value": "12.50",
       "want": "12.50"
+    },
+    {
+      "field": {
+        "name": "Kullanım",
+        "kind": "text",
+        "values": [
+          {
+            "code": "K",
+            "label": "Konut"
+          },
+          {
+            "code": "T",
+            "label": "Ticaret"
+          },
+          {
+            "code": "İ",
+            "label": "İşyeri"
+          }
+        ],
+        "multiple": true
+      },
+      "value": "K; T",
+      "want": "Konut; Ticaret"
+    },
+    {
+      "field": {
+        "name": "Kullanım",
+        "kind": "text",
+        "values": [
+          {
+            "code": "K",
+            "label": "Konut"
+          },
+          {
+            "code": "T",
+            "label": "Ticaret"
+          },
+          {
+            "code": "İ",
+            "label": "İşyeri"
+          }
+        ],
+        "multiple": true
+      },
+      "value": "K; X",
+      "want": "Konut; X"
+    },
+    {
+      "field": {
+        "name": "Kullanım",
+        "kind": "text",
+        "values": [
+          {
+            "code": "K",
+            "label": "Konut"
+          },
+          {
+            "code": "T",
+            "label": "Ticaret"
+          },
+          {
+            "code": "İ",
+            "label": "İşyeri"
+          }
+        ],
+        "multiple": true
+      },
+      "value": "",
+      "want": ""
     }
   ]
 }
