@@ -408,6 +408,8 @@ __all__ = [
     "FormsFill",
     "FormsFilled",
     "FormsOp",
+    "FormsRecompute",
+    "FormsRecomputed",
     "FormsSubmit",
     "FormsSubmitted",
     "FormsTest",

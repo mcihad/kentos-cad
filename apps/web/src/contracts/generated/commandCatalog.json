@@ -338617,6 +338617,185 @@
       ]
     },
     {
+      "id": "cad.forms.recompute",
+      "version": 1,
+      "title": "Hesapları yenile",
+      "summary": "Formun katmanındaki her kaydı formun bugünkü kurallarıyla tamamlar: hesaplar yeniden yapılır, form gizlenenleri siliyorsa gizlenen alanlar boşalır; varsayılanlar dolmaz. Değişen kayıtlar tek geri alma adımında yazılır. Hesabı alanına sığmayan kayıt olduğu gibi kalır (failed, form_calc_failed). draft taslakla, yoksa son yayınla.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.forms.recompute` v1 (Hesapları yenile, docs/adr/0421): every record of the form's\nlayer completed by its rules (calculations, hidden fields emptied when the form says so), the ones\nthat change written as one undo step.\n\nRefusals, in this order: `invalid_moment`, `invalid_user`, `invalid_revision`, `revision_conflict`\n(status `conflict`), `unknown_form`, `form_unpublished`, `form_preflight`, `layer_locked`.",
+        "properties": {
+          "draft": {
+            "description": "Through its draft instead of its latest release.",
+            "type": "boolean"
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "form": {
+            "description": "The form's id.",
+            "type": "string"
+          },
+          "moment": {
+            "description": "The moment the rules' `@tarih` and `@simdi` read (as `cad.forms.submit`'s).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "user": {
+            "description": "The person the rules' `@kullanici` reads (as `cad.forms.submit`'s).",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "form"
+        ],
+        "title": "FormsRecompute",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.forms.recompute` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "description": "The records that changed, in the layer's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "checked": {
+            "description": "How many records the layer holds.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "failed": {
+            "description": "The records left as they were because a calculation's value does not fit its field (or the\nform does not settle on them), in the layer's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "version": {
+            "description": "The release used; none: the draft.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "version"
+          }
+        },
+        "required": [
+          "checked",
+          "changed",
+          "revision"
+        ],
+        "title": "FormsRecomputed",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.forms.recompute` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "description": "The records that changed, in the layer's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "checked": {
+            "description": "How many records the layer holds.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "failed": {
+            "description": "The records left as they were because a calculation's value does not fit its field (or the\nform does not settle on them), in the layer's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "version": {
+            "description": "The release used; none: the draft.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "version"
+          }
+        },
+        "required": [
+          "checked",
+          "changed",
+          "revision"
+        ],
+        "title": "FormsRecomputed",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_moment",
+          "invalid_user",
+          "invalid_revision",
+          "revision_conflict",
+          "unknown_form",
+          "form_unpublished",
+          "form_preflight",
+          "layer_locked"
+        ],
+        "warnings": [
+          "form_calc_failed"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bina formunun hesaplarını bütün kayıtlarda yenile",
+          "input": {
+            "form": "bina-denetimi"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.forms.test",
       "version": 1,
       "title": "Form senaryolarını çalıştır",
@@ -371448,6 +371627,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Formun tekil tuttuğu alan kopyada boş bırakıldı."
+    },
+    {
+      "code": "form_calc_failed",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Formun hesabı bazı kayıtlarda alanına sığmadı; onlar olduğu gibi kaldı."
     },
     {
       "code": "invalid_table_styles",

@@ -58,6 +58,7 @@ COMMANDS: dict[str, Any] = {
     "cad.forms.audit": forms.audit,
     "cad.forms.edit": forms.edit,
     "cad.forms.fill": forms.fill,
+    "cad.forms.recompute": forms.recompute,
     "cad.forms.submit": forms.submit,
     "cad.forms.test": forms.test,
     "cad.forms.validate": forms.validate,

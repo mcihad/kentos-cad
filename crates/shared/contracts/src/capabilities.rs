@@ -1680,6 +1680,21 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.forms.recompute",
+        refusals: &[&[
+            "invalid_moment",
+            "invalid_user",
+            "invalid_revision",
+            "revision_conflict",
+            "unknown_form",
+            "form_unpublished",
+            "form_preflight",
+            "layer_locked",
+        ]],
+        warnings: &["form_calc_failed"],
+        targets: none,
+    },
+    Entry {
         id: "cad.forms.test",
         refusals: &[&[
             "unknown_form",

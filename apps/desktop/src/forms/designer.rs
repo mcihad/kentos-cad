@@ -56,6 +56,7 @@ pub(super) const REMOVE_ITEM: &str = "Öğeyi sil";
 pub(super) const ADD_RELATED: &str = "İlişkili";
 pub(super) const ADD_ATTACHMENTS: &str = "Ekler";
 pub(super) const AUDIT: &str = "Kayıtları denetle";
+pub(super) const RECOMPUTE: &str = "Hesapları yenile";
 pub(super) const UNDO: &str = "Geri al";
 pub(super) const PREVIEW: &str = "Önizleme";
 pub(super) const PROPERTIES: &str = "Özellikler";
@@ -204,6 +205,8 @@ pub enum Event {
     Redo,
     /// The third column: the properties (`false`) or the preview.
     Preview(bool),
+    /// Hesapları yenile on the chosen form (docs/adr/0421).
+    Recompute,
     /// Kayıtları denetle on the chosen form (docs/adr/0406 §1).
     Audit,
     RemoveItem,
@@ -508,6 +511,51 @@ impl App {
     pub(crate) fn chosen_form(&self) -> Option<&ProjectForm> {
         let id = self.forms_window.as_ref()?.chosen.as_deref()?;
         self.project_forms().iter().find(|f| f.id == id)
+    }
+
+    /// Hesapları yenile (docs/adr/0421): `cad.forms.recompute` through the form's latest release, its
+    /// draft when it has none; one undo step.
+    fn recompute_form(&mut self, form: &ProjectForm) {
+        if let Some(locked) = self.forms_locked() {
+            self.warn(locked);
+            return;
+        }
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let input = kentos_contracts::FormsRecompute {
+            form: form.id.clone(),
+            draft: form.releases.is_empty(),
+            moment: None,
+            user: None,
+            expected_revision: None,
+        };
+        let result = kentos_native_application::forms_recompute::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            input,
+        );
+        if let Some(done) = self.answered(result) {
+            let said = match (done.changed.len(), done.failed.len()) {
+                (0, 0) => format!(
+                    "“{}” formunun hesapları güncel: {} kayıt değişmedi.",
+                    form.name, done.checked
+                ),
+                (n, 0) => format!(
+                    "“{}” formuyla {n} / {} kaydın hesabı yenilendi.",
+                    form.name, done.checked
+                ),
+                (n, f) => format!(
+                    "“{}” formuyla {n} / {} kaydın hesabı yenilendi; {f} kayıt hesabı sığmadığı için olduğu gibi kaldı.",
+                    form.name, done.checked
+                ),
+            };
+            let level = if done.failed.is_empty() {
+                Level::Success
+            } else {
+                Level::Warn
+            };
+            self.say(level, said);
+        }
     }
 
     /// `cad.forms.edit` on the open drawing.
@@ -984,6 +1032,18 @@ impl App {
                 self.form_preview = None;
                 self.dialog = None;
                 return self.open_form_audit(form);
+            }
+            Event::Recompute => {
+                if w.dirty {
+                    self.say(
+                        Level::Warn,
+                        "Hesaplar formun kaydedilmiş hâliyle yenilenir: önce Kaydet’e basın.",
+                    );
+                } else if let Some(form) = self.chosen_form().cloned() {
+                    self.forms_window = Some(w);
+                    self.recompute_form(&form);
+                    return Task::none();
+                }
             }
             Event::Preview(on) => {
                 w.previewing = on;

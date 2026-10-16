@@ -38,6 +38,9 @@ pub const CAD_RELATIONS_EDIT_VERSION: u32 = 1;
 /// Writes the same values to many records through a form.
 pub const CAD_FORMS_FILL: &str = "cad.forms.fill";
 pub const CAD_FORMS_FILL_VERSION: u32 = 1;
+/// Completes every record of a form's layer by the form's rules today (docs/adr/0421).
+pub const CAD_FORMS_RECOMPUTE: &str = "cad.forms.recompute";
+pub const CAD_FORMS_RECOMPUTE_VERSION: u32 = 1;
 /// Runs a form's scenarios (docs/adr/0420).
 pub const CAD_FORMS_TEST: &str = "cad.forms.test";
 pub const CAD_FORMS_TEST_VERSION: u32 = 1;
@@ -522,4 +525,63 @@ pub struct FormsTested {
     pub passed: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub total: u32,
+}
+
+/// Input of `cad.forms.recompute` v1 (Hesapları yenile, docs/adr/0421): every record of the form's
+/// layer completed by its rules (calculations, hidden fields emptied when the form says so), the ones
+/// that change written as one undo step.
+///
+/// Refusals, in this order: `invalid_moment`, `invalid_user`, `invalid_revision`, `revision_conflict`
+/// (status `conflict`), `unknown_form`, `form_unpublished`, `form_preflight`, `layer_locked`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormsRecompute {
+    /// The form's id.
+    pub form: String,
+    /// Through its draft instead of its latest release.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub draft: bool,
+    /// The moment the rules' `@tarih` and `@simdi` read (as `cad.forms.submit`'s).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub moment: Option<String>,
+    /// The person the rules' `@kullanici` reads (as `cad.forms.submit`'s).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub user: Option<String>,
+    /// The document revision the input was prepared against, as decimal text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `cad.forms.recompute` v1, and what plan says it would do.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormsRecomputed {
+    /// How many records the layer holds.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub checked: u32,
+    /// The records that changed, in the layer's order.
+    pub changed: Vec<String>,
+    /// The records left as they were because a calculation's value does not fit its field (or the
+    /// form does not settle on them), in the layer's order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub failed: Vec<String>,
+    /// The release used; none: the draft.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub version: Option<u32>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
 }

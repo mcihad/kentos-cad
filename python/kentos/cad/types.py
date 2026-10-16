@@ -11340,6 +11340,89 @@ class FormsFilled(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FormsRecompute(_Model):
+    """Input of `cad.forms.recompute` v1 (Hesapları yenile, docs/adr/0421): every record of the form's
+    layer completed by its rules (calculations, hidden fields emptied when the form says so), the ones
+    that change written as one undo step.
+
+    Refusals, in this order: `invalid_moment`, `invalid_user`, `invalid_revision`, `revision_conflict`
+    (status `conflict`), `unknown_form`, `form_unpublished`, `form_preflight`, `layer_locked`.
+    Attributes:
+        form: The form's id.
+        draft: Through its draft instead of its latest release.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        moment: The moment the rules' `@tarih` and `@simdi` read (as `cad.forms.submit`'s).
+        user: The person the rules' `@kullanici` reads (as `cad.forms.submit`'s).
+    """
+    form: str
+    draft: bool | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    moment: str | None | Unset = UNSET
+    user: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["form"] = self.form
+        if self.draft is not UNSET:
+            out["draft"] = self.draft
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.moment is not UNSET:
+            out["moment"] = self.moment
+        if self.user is not UNSET:
+            out["user"] = self.user
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsRecompute:
+        return cls(
+            form=data["form"],
+            draft=data.get("draft", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            moment=data.get("moment", UNSET),
+            user=data.get("user", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormsRecomputed(_Model):
+    """Output of `cad.forms.recompute` v1, and what plan says it would do.
+    Attributes:
+        checked: How many records the layer holds. Unit: count.
+        changed: The records that changed, in the layer's order.
+        failed: The records left as they were because a calculation's value does not fit its field (or the
+            form does not settle on them), in the layer's order.
+        version: The release used; none: the draft. Unit: version.
+    """
+    checked: int
+    changed: list[str]
+    revision: str
+    failed: list[str] | Unset = UNSET
+    version: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["checked"] = self.checked
+        out["changed"] = list(self.changed)
+        out["revision"] = self.revision
+        if self.failed is not UNSET:
+            out["failed"] = list(self.failed)
+        if self.version is not UNSET:
+            out["version"] = self.version
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsRecomputed:
+        return cls(
+            checked=data["checked"],
+            changed=list(data["changed"]),
+            revision=data["revision"],
+            failed=list(data["failed"]) if "failed" in data else UNSET,
+            version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FormsSubmit(_Model):
     """Input of `cad.forms.submit` v1.
 
@@ -29465,6 +29548,8 @@ __all__ = [
     "FormsFill",
     "FormsFilled",
     "FormsOp",
+    "FormsRecompute",
+    "FormsRecomputed",
     "FormsSubmit",
     "FormsSubmitted",
     "FormsTest",

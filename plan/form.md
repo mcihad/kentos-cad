@@ -412,6 +412,7 @@ QGIS ilişkili child form gösterimi ve reference widget desteğine sahiptir. Ar
 - [x] **FORM-RULE-04:** Conditional required ile görünmez alan çelişkisini compiler/preflight yakalasın; kullanıcı dolduramadığı mandatory alanla kilitlenmesin. — *Yapıldı (16 Ekim; ADR 0401 §4).*
 - [ ] **FORM-RULE-05:** Field-level, cross-field, cross-record, relation/cardinality, geometry/topology ve workflow validation farklı scope'larla tanımlansın.
 - [x] **FORM-RULE-06:** Error/warning/info; stable code, field/widget/record path, source ve mesaj parametreleri taşısın. — *Yapıldı (16 Ekim; ADR 0401 §4, ADR 0402 (uyarı denetimi)).*
+- [x] **FORM-RULE-ek:** Form değişince eski kayıtların hesapları tek komutla, geri alınabilir biçimde yenilensin. — *Yapıldı (17 Ekim; ADR 0421: `cad.forms.recompute`, Formlar penceresinde Hesapları yenile).*
 - [ ] **FORM-RULE-07:** Validate-on-change/blur/save/submit politikaları olsun; hesap sonucu authoritative commit validation'ı azaltmasın.
 - [x] **FORM-RULE-08:** Computed field; pure computed/read-only, persisted computed veya user-overridable modunu açık taşısın. — *Yapıldı (16 Ekim; ADR 0417: kilitli hesap ve değiştirilebilir hesap (`overridable`); saf hesap olmayan kalıcı alan).*
 - [ ] **FORM-RULE-09:** Recompute trigger; source değişimi, related count/aggregate, geometry, subtype/domain ve lookup revision üzerinden dependency graph'ta izlesin.

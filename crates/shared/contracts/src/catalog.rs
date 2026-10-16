@@ -4157,6 +4157,34 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // A form's calculations again over its layer (docs/adr/0421), held together by
+        // fixtures/commands/v1/cad.forms.recompute.json.
+        CommandDescriptor {
+            id: crate::CAD_FORMS_RECOMPUTE.into(),
+            version: crate::CAD_FORMS_RECOMPUTE_VERSION,
+            title: "Hesapları yenile".into(),
+            summary: "Formun katmanındaki her kaydı formun bugünkü kurallarıyla tamamlar: hesaplar yeniden yapılır, form gizlenenleri siliyorsa \
+                      gizlenen alanlar boşalır; varsayılanlar dolmaz. Değişen kayıtlar tek geri alma adımında yazılır. Hesabı alanına sığmayan \
+                      kayıt olduğu gibi kalır (failed, form_calc_failed). draft taslakla, yoksa son yayınla."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::FormsRecompute>(),
+            output: schema::<crate::FormsRecomputed>(),
+            plan: Some(schema::<crate::FormsRecomputed>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bina formunun hesaplarını bütün kayıtlarda yenile".into(),
+                input: json!({ "form": "bina-denetimi" }),
+                output: None,
+            }],
+        },
         // A form's scenarios (docs/adr/0420), held together by fixtures/commands/v1/cad.forms.test.json.
         CommandDescriptor {
             id: crate::CAD_FORMS_TEST.into(),
@@ -5364,6 +5392,9 @@ mod tests {
                     crate::CAD_FORMS_TEST => {
                         serde_json::from_value::<crate::FormsTest>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_FORMS_RECOMPUTE => {
+                        serde_json::from_value::<crate::FormsRecompute>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_RECORDS_CREATE => {
                         serde_json::from_value::<crate::RecordsCreate>(e.input.clone()).map(|_| ())
                     }
@@ -5684,6 +5715,10 @@ mod tests {
                         }
                         crate::CAD_FORMS_TEST => {
                             serde_json::from_value::<crate::FormsTested>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_FORMS_RECOMPUTE => {
+                            serde_json::from_value::<crate::FormsRecomputed>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_RECORDS_CREATE => {

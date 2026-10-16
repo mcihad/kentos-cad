@@ -1148,9 +1148,10 @@
       "via": [
         "cad.forms.edit",
         "cad.forms.validate",
-        "cad.forms.test"
+        "cad.forms.test",
+        "cad.forms.recompute"
       ],
-      "note": "Oluştur, Kaydet, Yeniden adlandır, Yayınla, Kuralları uygula ve Formu sil komuta verilir; ön denetim formun çekirdeğindendir, aynısını cad.forms.validate verir (ADR 0401); senaryolar cad.forms.test ile çalışır (ADR 0420)."
+      "note": "Oluştur, Kaydet, Yeniden adlandır, Yayınla, Kuralları uygula ve Formu sil komuta verilir; ön denetim formun çekirdeğindendir, aynısını cad.forms.validate verir (ADR 0401); senaryolar cad.forms.test ile çalışır (ADR 0420); Hesapları yenile cad.forms.recompute'tur (ADR 0421)."
     },
     "data.formEdit": {
       "level": "semantic",

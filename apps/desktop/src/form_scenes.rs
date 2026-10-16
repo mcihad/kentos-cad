@@ -516,6 +516,29 @@ fn retired_list(app: &mut App) {
     )));
 }
 
+/// Hesapları yenile (docs/adr/0421): the survey form gains a calculated note after the buildings
+/// were written; one press writes it on every building, the window then closed over the table.
+fn recompute(app: &mut App) {
+    buildings_with_a_form(app);
+    let form = published(
+        "hasar",
+        "Hasar tespiti",
+        "bina",
+        json!([
+            { "type": "field", "id": "durum", "field": "Durum", "visibleWhen": "Kat > 0" },
+            { "type": "field", "id": "kat", "field": "Kat" },
+            { "type": "field", "id": "not", "field": "Not", "calculate": "Kod || ': ' || Kat || ' katlı, ' || Durum" }
+        ]),
+    );
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut settings = doc.model.settings().clone();
+    settings.forms = vec![serde_json::from_value(form).expect("a form")];
+    doc.model.set_settings(settings);
+    run(app, "data.forms");
+    designer(app, designer::Event::Recompute);
+    designer(app, designer::Event::Cancel);
+}
+
 /// Formlar's preview with two scenarios (docs/adr/0420): kept, then the floor count made required, so
 /// that one fails and says why.
 fn scenarios(app: &mut App) {
@@ -1254,6 +1277,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-gorunumu", form_view),
         ("form-baglar", designer_links),
         ("form-senaryolar", scenarios),
+        ("form-hesap-yenile", recompute),
         ("form-hesap-degistir", overridden_height),
         ("form-kalkmis-deger", retired_list),
         ("form-alan-politika", field_policies),
@@ -1432,6 +1456,31 @@ mod tests {
         assert_eq!(
             attrs(&app, 1).get("Yükseklik").map(String::as_str),
             Some("18")
+        );
+    }
+
+    #[test]
+    fn recomputing_writes_the_calculation_on_every_record_as_one_step() {
+        let mut app = crate::files_testing::app_with_drawing();
+        recompute(&mut app);
+        let doc = &mut app.document.as_mut().unwrap().model;
+        let notes = |doc: &kentos_domain::Document| -> Vec<String> {
+            doc.by_layer_with_uids("bina")
+                .map(|(_, e)| e.base().attrs.get("Not").cloned().unwrap_or_default())
+                .collect()
+        };
+        assert!(
+            notes(doc).iter().all(|n| n.contains(" katlı, ")),
+            "{:?}",
+            notes(doc)
+        );
+        assert_eq!(
+            doc.undo().as_deref(),
+            Some("Hesapları yenile: Hasar tespiti")
+        );
+        assert!(
+            !notes(doc).iter().any(|n| n.contains(" katlı, ")),
+            "one step back"
         );
     }
 

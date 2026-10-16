@@ -194,6 +194,8 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-AC` hesapları yenile (ADR 0421, 17 Ekim): web'de gerekenler: `cad.forms.recompute`'un TS işleyicisi
+  (`fixtures/commands/v1/cad.forms.recompute.json`), Formlar penceresinde Hesapları yenile.
 - [ ] `FORM-AB` form senaryoları (ADR 0420, 16 Ekim): web'de gerekenler: gövdenin `tests`'i (TS türleri üretildi), `cad.forms.test`'in TS
   işleyicisi (`fixtures/commands/v1/cad.forms.test.json`), tasarımcının önizlemesinde Senaryolar, `.kcad` okuma.
 - [ ] `FORM-AA` alanın bölme ve birleştirme kuralı (ADR 0419, 16 Ekim): web'de gerekenler: alanın `split` ve `merge`'i (TS türleri
@@ -1490,6 +1492,8 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-AC` Hesapları yenile: formun katmanındaki her kayıt formun bugünkü hesaplarıyla tek adımda; `cad.forms.recompute`. —
+  **17 Ekim, [ADR 0421](docs/adr/0421-recompute-form-calculations.md).**
 - [x] `FORM-AB` Form senaryoları: önizlemenin değerleri ve sonucu senaryo olur, form değişince yeniden çalışır; `cad.forms.test`. —
   **16 Ekim, [ADR 0420](docs/adr/0420-form-scenarios.md).**
 - [x] `FORM-AA` Alanın bölme ve birleştirme kuralı: Kopyala, Boşalt, Varsayılan, Alan oranında paylaştır; İlkinin değeri, Boşalt,

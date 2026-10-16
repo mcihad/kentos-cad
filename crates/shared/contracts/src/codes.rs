@@ -687,6 +687,8 @@ codes! {
     FIELD_NOT_FOUND = "field_not_found", Failed, false, "Katmanda adı verilen alan yok.";
     /// A field a form keeps unique left empty in a copy (Kaydı çoğalt, docs/adr/0415 §1).
     UNIQUE_CLEARED = "unique_cleared", Warning, false, "Formun tekil tuttuğu alan kopyada boş bırakıldı.";
+    /// Records a form's recomputation left as they were (docs/adr/0421).
+    FORM_CALC_FAILED = "form_calc_failed", Warning, false, "Formun hesabı bazı kayıtlarda alanına sığmadı; onlar olduğu gibi kaldı.";
     /// A layer's table rules against their rules (Koşullu biçim, docs/adr/0413 §1).
     INVALID_TABLE_STYLES = "invalid_table_styles", Failed, false, "Katmanın koşullu biçim kuralları kurallarına uymuyor: boş koşul, #RRGGBB olmayan renk, hiçbir şey vermeyen kural ya da 50'den çok kural.";
     /// A template whose braces do not close, are empty, or whose expression

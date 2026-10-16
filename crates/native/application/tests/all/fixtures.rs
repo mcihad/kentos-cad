@@ -56,10 +56,10 @@ use kentos_native_application::{
     styles_impact,
 };
 use kentos_domain::contracts::{
-    FormsAudit, FormsEdit, FormsTest, FormsFill, FormsSubmit, FormsValidate, RecordsCreate, RecordsDuplicate, RelationsEdit,
+    FormsAudit, FormsEdit, FormsRecompute, FormsTest, FormsFill, FormsSubmit, FormsValidate, RecordsCreate, RecordsDuplicate, RelationsEdit,
 };
 use kentos_native_application::{
-    forms_audit, forms_edit, forms_test, forms_fill, forms_submit, forms_validate, records, records_duplicate, relations_edit,
+    forms_audit, forms_edit, forms_recompute, forms_test, forms_fill, forms_submit, forms_validate, records, records_duplicate, relations_edit,
 };
 use serde_json::{Value, json};
 
@@ -369,6 +369,12 @@ impl Input for FormsFill {
 }
 
 impl Input for FormsAudit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for FormsRecompute {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -2150,6 +2156,7 @@ fn run_op(
         kentos_domain::contracts::CAD_FORMS_FILL => run!(forms_fill, FormsFill),
         kentos_domain::contracts::CAD_FORMS_AUDIT => run!(forms_audit, FormsAudit),
         kentos_domain::contracts::CAD_FORMS_TEST => run!(forms_test, FormsTest),
+        kentos_domain::contracts::CAD_FORMS_RECOMPUTE => run!(forms_recompute, FormsRecompute),
         kentos_domain::contracts::CAD_RECORDS_CREATE => run!(records, RecordsCreate),
         kentos_domain::contracts::CAD_RECORDS_DUPLICATE => run!(records_duplicate, RecordsDuplicate),
         kentos_domain::contracts::CAD_RELATIONS_EDIT => run!(relations_edit, RelationsEdit),
