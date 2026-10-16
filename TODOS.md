@@ -188,6 +188,9 @@ Liste:
   katmanın izlemesi (`form_follow.rs`'in kuralı, `cad.polygon.create.forms.json` ve `cad.entities.set.forms.json` durumları);
   Formla düzenle'de hesaplanan alanların kilidi, süzülen listeler, sarı uyarı, kapalı grup, son değer; tasarımcının yeni
   denetçi satırları; kapalı girişin soluk görünüşü ve `Form`'un uyarı satırı web'in form bileşenlerinde.
+- [ ] `FORM-K` ekler, renk ve öneri (ADR 0407, 16 Ekim): web'de gerekenler: sözleşmenin `attachments` öğesi
+  (`AttachmentAccept`), `color` öğe türü, alanın `suggest`'i ve durumun `suggestions`, `attachments`'ı; ön denetimin ve
+  kaydın yeni kodları (`cad.forms.validate`, `.audit` durumları); web formunda renk seçici, öneri listesi ve ekler kutusu.
 - [ ] `FORM-J` kayıt denetimi ve kaydırıcı (ADR 0406, 16 Ekim): web'de gerekenler: `cad.forms.audit`'in TS işleyicisi
   (`cad.forms.audit.json`), ön denetimin `slider`'ı ve `form_widget_needs_range`'i, web formunda kaydırıcı, Kayıtları denetle
   penceresi.
@@ -1430,7 +1433,10 @@ burada aşamaları izlenir.
   [ADR 0405](docs/adr/0405-relations.md).**
 - [x] `FORM-J` Kayıtları formla denetle (`cad.forms.audit`: katmanın bütün kayıtları formun kurallarıyla, uymayanlar listede;
   Git, Aç, Hepsini seç) ve kaydırıcı öğe türü. — **16 Ekim, [ADR 0406](docs/adr/0406-form-audit-and-slider.md).**
-- [ ] `FORM-K` N:M bağlantı tablosu, geometrisiz tablo katmanı, formun içinden yeni alt kayıt.
+- [x] `FORM-K` Formda ekler öğesi (kaydın fotoğrafları ve belgeleri: Ekle, Aç, Kaldır; en az ve en çok sayı), renk öğe türü
+  ve katmanın var olan değerlerinden öneri (QGIS'in Harici kaynak, Renk ve Benzersiz değerler düzenleyicileri). — **16 Ekim,
+  [ADR 0407](docs/adr/0407-form-attachments-colour-suggestions.md).**
+- [ ] `FORM-L` N:M bağlantı tablosu, geometrisiz tablo katmanı, formun içinden yeni alt kayıt.
 - [ ] `FORM-F` Merkezi yayın ve izinler (FM2, plan `FORM-FIRST-14`–`17`): bulutta form taslağı, yayın ve dağıtım kaynakları,
   `forms.design`, `forms.publish`, `forms.use` izinleri, sunucunun yazma bekçisi bütün yollarda.
 

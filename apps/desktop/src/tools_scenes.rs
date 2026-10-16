@@ -281,6 +281,11 @@ impl Objects {
     }
 
     /// An object's attributes and label.
+    /// The object's attachments (docs/adr/0225): its photos and documents.
+    pub(crate) fn attach(&mut self, id: u32, attachments: Value) {
+        self.0[id as usize - 1]["attachments"] = attachments;
+    }
+
     pub(crate) fn data(&mut self, id: u32, attrs: &[(&str, &str)], label: Option<&str>) {
         let e = &mut self.0[id as usize - 1];
         for (k, v) in attrs {

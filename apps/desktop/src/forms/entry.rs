@@ -120,6 +120,8 @@ pub struct Entry {
     members: Vec<Member>,
     /// The fields whose values differ among the records (“Çeşitli değerler”).
     mixed: BTreeSet<String>,
+    /// A suggesting field item's values in the layer, the most used first (docs/adr/0407 §3).
+    suggestions: BTreeMap<String, Vec<String>>,
 }
 
 /// A record of the many-record mode.
@@ -176,6 +178,11 @@ pub enum Event {
     /// the item and the object.
     Link(String, String),
     Unlink(String, String),
+    /// An attachments item's Ekle (docs/adr/0407 §1): photos only when it counts photos.
+    AttachAdd(bool),
+    /// An attachment of the record opened or removed, by its place in the object's list.
+    AttachOpen(usize),
+    AttachRemove(usize),
     FirstIssue,
     Save,
     Cancel,
@@ -197,7 +204,7 @@ impl Entry {
 }
 
 /// The id of a field's text input, for the keyboard to go to it.
-fn input_id(key: &str) -> iced::widget::Id {
+pub(crate) fn input_id(key: &str) -> iced::widget::Id {
     iced::widget::Id::from(format!("form-entry-{key}"))
 }
 
@@ -571,7 +578,17 @@ impl App {
             unique: Vec::new(),
             members: Vec::new(),
             mixed: BTreeSet::new(),
+            suggestions: BTreeMap::new(),
         };
+        if let Some(doc) = &self.document {
+            entry.suggestions = kentos_native_application::forms::suggestions(
+                &doc.model,
+                &f.layer,
+                &entry.screen.prepared,
+            )
+            .into_iter()
+            .collect();
+        }
         if let Some(doc) = &self.document {
             entry.recompute(&doc.model);
         }
@@ -741,7 +758,7 @@ impl App {
 
     /// The window's record prepared again (another object changed): the values typed stay, the
     /// drawing's revision is the new one.
-    fn refresh_entry(&mut self) -> Task<Message> {
+    pub(crate) fn refresh_entry(&mut self) -> Task<Message> {
         let Some(e) = self.form_entry.as_ref() else {
             return Task::none();
         };
@@ -853,6 +870,27 @@ impl App {
             Event::OpenRelated(uid) => return self.open_related(&uid),
             Event::Link(item, uid) => return self.link_related(&item, &uid, true),
             Event::Unlink(item, uid) => return self.link_related(&item, &uid, false),
+            Event::AttachAdd(_) | Event::AttachOpen(_) | Event::AttachRemove(_) if preview => {}
+            Event::AttachAdd(photos) => {
+                if let Some(slot) = record_slot(&doc.model, &e.uid) {
+                    let add = if photos {
+                        crate::attachments::Event::AddPhotos(slot)
+                    } else {
+                        crate::attachments::Event::Add(slot)
+                    };
+                    return Task::done(Message::Attachment(add));
+                }
+            }
+            Event::AttachOpen(index) => {
+                if let Some(slot) = record_slot(&doc.model, &e.uid) {
+                    return self.attachment_event(crate::attachments::Event::Open(slot, index));
+                }
+            }
+            Event::AttachRemove(index) => {
+                if let Some(slot) = record_slot(&doc.model, &e.uid) {
+                    return self.attachment_event(crate::attachments::Event::Remove(slot, index));
+                }
+            }
             Event::ShowObject(uid) => {
                 let slot = kentos_domain::Uuid::parse_str(&uid)
                     .ok()
@@ -1298,6 +1336,24 @@ impl App {
                     out = flush(&mut run, out);
                     out = out.push(self.related_box(e, id, title.as_deref()));
                 }
+                FormItem::Attachments {
+                    id,
+                    label: title,
+                    accept,
+                    min,
+                    max,
+                    ..
+                } => {
+                    out = flush(&mut run, out);
+                    out = out.push(self.attachments_box(
+                        e,
+                        id,
+                        title.as_deref(),
+                        *accept,
+                        *min,
+                        *max,
+                    ));
+                }
                 FormItem::Note { id, text } => {
                     out = flush(&mut run, out);
                     let text = e
@@ -1374,13 +1430,127 @@ impl App {
                         .unwrap_or_else(|| text.clone());
                     form = form.row(container(label::caption(text).style(muted)).width(Fill));
                 }
-                FormItem::Group { .. } | FormItem::Related { .. } => {
+                FormItem::Group { .. }
+                | FormItem::Related { .. }
+                | FormItem::Attachments { .. } => {
                     form = form.row(self.entry_block(e, std::slice::from_ref(*item), locked));
                 }
                 FormItem::Tab { .. } => {}
             }
         }
         form.into()
+    }
+
+    /// An attachments item (docs/adr/0407 §1): the record's photos and documents, opened, removed and
+    /// added in the form (written at once, as Öznitelikler's Ekler; not from the designer's preview).
+    fn attachments_box<'a>(
+        &'a self,
+        e: &'a Entry,
+        id: &str,
+        title: Option<&str>,
+        accept: kentos_contracts::AttachmentAccept,
+        min: Option<u32>,
+        max: Option<u32>,
+    ) -> Element<'a, Message> {
+        use kentos_contracts::{AttachmentAccept, AttachmentKind};
+        let photos = accept == AttachmentAccept::Photo;
+        let documents = accept == AttachmentAccept::Document;
+        let views = self
+            .document
+            .as_ref()
+            .and_then(|d| record_slot(&d.model, &e.uid))
+            .filter(|_| !e.preview)
+            .map(|slot| self.attachment_views(slot))
+            .unwrap_or_default();
+        let shown: Vec<_> = views
+            .into_iter()
+            .filter(|v| match accept {
+                AttachmentAccept::Any => true,
+                AttachmentAccept::Photo => v.kind == AttachmentKind::Photo,
+                AttachmentAccept::Document => v.kind != AttachmentKind::Photo,
+            })
+            .collect();
+        let words = title.map_or_else(
+            || {
+                match accept {
+                    AttachmentAccept::Any => "Ekler",
+                    AttachmentAccept::Photo => "Fotoğraflar",
+                    AttachmentAccept::Document => "Belgeler",
+                }
+                .to_owned()
+            },
+            str::to_owned,
+        );
+        let mut bounds = Vec::new();
+        if let Some(n) = min {
+            bounds.push(format!("en az {n}"));
+        }
+        if let Some(n) = max {
+            bounds.push(format!("en çok {n}"));
+        }
+        let count = if bounds.is_empty() {
+            shown.len().to_string()
+        } else {
+            format!("{} · {}", shown.len(), bounds.join(", "))
+        };
+        let can = !e.preview && e.members.is_empty();
+        let mut col = Column::new().spacing(6).push(
+            row![
+                icon(crate::icons::from_web(Some(if photos {
+                    "photo"
+                } else {
+                    "document"
+                })))
+                .size(13.0),
+                label::strong(words),
+                label::caption(count).style(muted),
+                space::horizontal().width(Fill),
+                words::secondary(
+                    if photos { "Fotoğraf ekle" } else { "Ekle" },
+                    can.then(|| e.msg(Event::AttachAdd(photos)))
+                ),
+            ]
+            .spacing(8)
+            .align_y(Center),
+        );
+        if shown.is_empty() {
+            col = col.push(
+                label::caption(if e.preview {
+                    "Önizlemede ekler gösterilmez."
+                } else if photos {
+                    "Fotoğraf yok."
+                } else if documents {
+                    "Belge yok."
+                } else {
+                    "Ek yok."
+                })
+                .style(muted),
+            );
+        }
+        for v in shown {
+            col = col.push(
+                row![
+                    icon(crate::icons::from_web(Some(crate::attachments::kind_icon(
+                        v.kind
+                    ))))
+                    .size(14.0),
+                    container(label::body(v.attachment.name.clone())).width(Fill),
+                    label::caption(v.source.clone()).style(muted),
+                    words::ghost("Aç", Some(e.msg(Event::AttachOpen(v.index)))),
+                    words::ghost("Kaldır", can.then(|| e.msg(Event::AttachRemove(v.index)))),
+                ]
+                .spacing(8)
+                .align_y(Center),
+            );
+        }
+        if let Some(issue) = e.issues.iter().find(|i| i.item.as_deref() == Some(id)) {
+            col = col.push(words::text_line(Kind::Error, issue.message.clone()));
+        }
+        container(col)
+            .padding(10)
+            .style(style::container::field_box)
+            .width(Fill)
+            .into()
     }
 
     /// A related item (docs/adr/0404 §4): the objects referring to the record, each opened by its own
@@ -1747,6 +1917,7 @@ fn entry_control<'a>(
             .align_y(Center)
             .into()
         }
+        FormWidget::Color if !read_only => colour_control(&value, placeholder, &key, set),
         FormWidget::TextArea if !read_only => {
             let k = key.clone();
             match e.notes.get(&key) {
@@ -1768,6 +1939,28 @@ fn entry_control<'a>(
             } else {
                 value.clone()
             };
+            // The layer's values offered while typing (docs/adr/0407 §3): those holding what is
+            // typed, the value itself left out.
+            if item.suggest && !read_only {
+                let offered: Vec<&String> = e
+                    .suggestions
+                    .get(&item.id)
+                    .map(|all| kentos_forms::suggestions_for(all, &value, 8))
+                    .unwrap_or_default();
+                let picked: Vec<String> = offered.iter().map(|s| (*s).clone()).collect();
+                let on_pick = set.clone();
+                return kentos_ui::widget::Suggest::new(value.as_str(), placeholder.as_str())
+                    .id(input_id(&key))
+                    .on_input(set)
+                    .suggestions(
+                        offered
+                            .into_iter()
+                            .map(|s| kentos_ui::widget::suggest::Suggestion::new(s.as_str())),
+                    )
+                    .on_pick(move |i| on_pick(picked.get(i).cloned().unwrap_or_default()))
+                    .on_submit(e.msg(Event::Save))
+                    .into();
+            }
             let input = text_input(&placeholder, &shown)
                 .size(typography::body())
                 .id(input_id(&key))
@@ -1780,6 +1973,60 @@ fn entry_control<'a>(
             }
         }
     }
+}
+
+/// The record's slot by its persistent id.
+fn record_slot(doc: &Document, uid: &str) -> Option<Slot> {
+    doc.slot_of(kentos_domain::Uuid::parse_str(uid).ok()?)
+}
+
+/// A colour field (docs/adr/0407 §2): the colour's swatch opens the picker, the text takes
+/// `#RRGGBB` as typed.
+fn colour_control<'a>(
+    value: &str,
+    placeholder: String,
+    key: &str,
+    set: impl Fn(String) -> Message + Clone + 'a,
+) -> Element<'a, Message> {
+    use kentos_ui::widget::color::{ColorPicker, parse_hex, to_hex};
+    let shown = parse_hex(value).filter(|_| kentos_forms::is_colour(value));
+    let size = typography::scaled(24.0);
+    let face: Element<'a, Message> = container(space())
+        .width(size)
+        .height(size)
+        .style(move |t: &iced::Theme| container::Style {
+            background: shown.map(iced::Background::Color),
+            border: iced::Border {
+                color: Tokens::of(t).muted,
+                width: 1.0,
+                radius: kentos_ui::theme::shape::radius(3.0).into(),
+            },
+            ..container::Style::default()
+        })
+        .into();
+    let pick = set.clone();
+    let picker = ColorPicker::new(shown.unwrap_or(iced::Color::BLACK), move |c| {
+        pick(to_hex(c))
+    })
+    .alpha()
+    .anchor(face);
+    let input = text_input(
+        if placeholder.is_empty() {
+            "#RRGGBB"
+        } else {
+            &placeholder
+        },
+        value,
+    )
+    .size(typography::body())
+    .id(input_id(key))
+    .padding([5, 8])
+    .style(style::field::input)
+    .on_input(set);
+    row![picker, focus_ring(input)]
+        .spacing(8)
+        .align_y(Center)
+        .into()
 }
 
 fn parse_date(text: &str) -> Option<Date> {

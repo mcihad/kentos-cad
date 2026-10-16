@@ -289,7 +289,7 @@ def text_for(v, f):
 # ── The form ────────────────────────────────────────────────────────────
 
 FITS = {
-    "text": {"text", "textArea", "list", "radio", "segmented"},
+    "text": {"text", "textArea", "list", "radio", "segmented", "color"},
     "integer": {"number", "list", "radio", "segmented", "slider"},
     "decimal": {"number", "list", "radio", "segmented", "slider"},
     "date": {"date"},
@@ -304,6 +304,20 @@ def widget_of(item, f):
         return "list"
     return {"integer": "number", "decimal": "number", "date": "date", "boolean": "check"}.get(
         f["kind"], "textArea" if f.get("length", 0) > 200 else "text")
+
+
+def is_colour(value):
+    """docs/adr/0407 §2: `#RRGGBB` or `#RRGGBBAA`."""
+    v = value.strip()
+    return v.startswith("#") and len(v) in (7, 9) and all(c in "0123456789abcdefABCDEF" for c in v[1:])
+
+
+def counted(obj, accept):
+    """docs/adr/0407 §1: what an attachments item counts of the object's attachments; None where they are not judged."""
+    held = (obj or {}).get("attachments")
+    if held is None:
+        return None
+    return {"photo": held["photos"], "document": held["all"] - held["photos"]}.get(accept, held["all"])
 
 
 def issue(code, error, item=None, field=None, rule=None):
@@ -392,6 +406,10 @@ def preflight(body, fields, variables=(), world=None):
             issues.append(issue("form_widget_needs_values", True, f["id"], key))
         if "default" in f and check_value(layer, f["default"])[1]:
             issues.append(issue("form_default_invalid", True, f["id"], key, "default"))
+        elif "default" in f and w == "color" and not is_colour(f["default"]):
+            issues.append(issue("form_default_invalid", True, f["id"], key, "default"))
+        if f.get("suggest") and (layer["kind"] != "text" or layer.get("values") or "lookup" in f):
+            issues.append(issue("form_suggest_unfit", True, f["id"], key, "suggest"))
         if "default" in f and "defaultExpr" in f:
             issues.append(issue("form_rule_conflict", True, f["id"], key, "defaultExpr"))
         if "calculate" in f and ("default" in f or "defaultExpr" in f or "readOnlyWhen" in f):
@@ -468,6 +486,9 @@ def preflight(body, fields, variables=(), world=None):
                 field(x, hideable)
             elif x["type"] == "related":
                 related(x)
+            elif x["type"] == "attachments":
+                if "visibleWhen" in x:
+                    rule(x["id"], None, None, "visibleWhen", x["visibleWhen"])
             else:
                 note(x)
 
@@ -608,7 +629,7 @@ class Form:
     def states(self, attrs, obj=None):
         shown, out = [], []
         for x, parent in self.nodes:
-            rule = x.get("visibleWhen") if x["type"] in ("group", "field", "related") else None
+            rule = x.get("visibleWhen") if x["type"] in ("group", "field", "related", "attachments") else None
             here = (parent is None or shown[parent]) and (rule is None or holds(rule, self.fields, attrs, self.ctx(obj)))
             shown.append(here)
             state = {"id": x["id"], "shown": here}
@@ -642,6 +663,10 @@ class Form:
                     state["choices"] = c
                 if "lookup" in x:
                     state["options"] = [{"code": r[0], "label": r[1]} for r in self.offered(x, attrs)]
+            elif x["type"] == "attachments":
+                n = counted(obj, x.get("accept", "any"))
+                if n is not None:
+                    state["attachments"] = n
             elif x["type"] == "related":
                 uid = (obj or {}).get("uid")
                 state["related"] = [own for own, held in self.related[x["id"]] if uid is not None and held == uid]
@@ -708,6 +733,12 @@ class Form:
     def validate(self, attrs, obj=None):
         issues = []
         for (x, _), state in zip(self.nodes, self.states(attrs, obj)):
+            if x["type"] == "attachments" and state["shown"]:
+                n = counted(obj, x.get("accept", "any"))
+                if n is not None and "min" in x and n < x["min"]:
+                    issues.append(issue("form_attachments_few", True, x["id"], None, "min"))
+                elif n is not None and "max" in x and n > x["max"]:
+                    issues.append(issue("form_attachments_many", True, x["id"], None, "max"))
             if x["type"] != "field" or not state["shown"]:
                 continue
             f = self.layer(x)
@@ -719,6 +750,9 @@ class Form:
             canonical, why = check_value(f, value)
             if why:
                 issues.append(issue("form_value_invalid", True, x["id"], key_of(f)))
+                continue
+            if widget_of(x, f) == "color" and not is_colour(value):
+                issues.append(issue("form_color_invalid", True, x["id"], key_of(f)))
                 continue
             if "lookup" in x and canonical not in [r[0] for r in self.offered(x, attrs)]:
                 issues.append(issue("form_lookup_missing", True, x["id"], key_of(f), "lookup"))
@@ -1030,6 +1064,9 @@ def core():
     assess.extend(calc_assess)
     enforce.extend(calc_enforce)
     look_pre, look_records, look_assess = lookup_cases()
+    extra_pre, extra_records = extras_core()
+    pre.extend(extra_pre)
+    records.extend(extra_records)
     pre.extend(look_pre)
     records.extend(look_records)
     assess.extend(look_assess)
@@ -2534,6 +2571,184 @@ def audit_cases():
     return cases
 
 
+# ── Attachments, colours and suggestions (docs/adr/0407) ────────────────
+
+EXTRA_FIELDS = [
+    {"name": "Ad", "kind": "text", "required": True},
+    {"name": "Renk", "kind": "text"},
+    {"name": "Cins", "kind": "text", "values": [{"code": "agac", "label": "Ağaç"}, {"code": "cali", "label": "Çalı"}]},
+    {"name": "Boy", "kind": "decimal", "scale": 1, "min": "0", "max": "40"},
+]
+EXTRA_BODY = {"revision": 1, "items": [
+    {"type": "field", "id": "ad", "field": "Ad", "suggest": True},
+    {"type": "field", "id": "renk", "field": "Renk", "widget": "color", "default": "#2E7D32"},
+    {"type": "field", "id": "cins", "field": "Cins"},
+    {"type": "field", "id": "boy", "field": "Boy"},
+    {"type": "attachments", "id": "fotograflar", "label": "Fotoğraflar", "accept": "photo", "min": 1, "max": 3},
+    {"type": "attachments", "id": "belgeler", "label": "Belgeler", "accept": "document", "visibleWhen": "Boy > 10"},
+]}
+
+
+def extra_with(change):
+    b = copy.deepcopy(EXTRA_BODY)
+    change(b)
+    return b
+
+
+def held(n_photos, n_all):
+    return {**SQUARE, "attachments": {"all": n_all, "photos": n_photos}}
+
+
+def extras_core():
+    pre, records = [], []
+
+    def case(name, body=EXTRA_BODY, fields=EXTRA_FIELDS):
+        pre.append({"name": name, "fields": fields, "body": body, "issues": preflight(body, fields)})
+
+    case("ağaç formu: öneri, renk ve ekler; hata yok")
+    case("renk yalnız metin alanında; varsayılan renk olmalı",
+         extra_with(lambda b: (item(b, "boy").update(widget="color"), item(b, "renk").update(default="yeşil"))))
+    case("öneri değer listesi olmayan metin alanında olur",
+         extra_with(lambda b: (item(b, "cins").update(suggest=True), item(b, "boy").update(suggest=True))))
+    case("eklerin görünürlük kuralı okunmazsa hata, bilinmeyen ad uyarı",
+         extra_with(lambda b: (item(b, "fotograflar").update(visibleWhen="Boy >"),
+                               item(b, "belgeler").update(visibleWhen="Yaş > 3"))))
+    case("en az en çoktan büyükse form bozuktur",
+         extra_with(lambda b: item(b, "fotograflar").update(min=4, max=2)))
+    case("küçük harfli ve saydamlıklı renk varsayılanı geçerli",
+         extra_with(lambda b: item(b, "renk").update(default="#2e7d32cc")))
+
+    def record(name, attrs, obj, body=EXTRA_BODY):
+        form = Form(body, EXTRA_FIELDS)
+        records.append({"name": name, "fields": EXTRA_FIELDS, "body": body, "object": obj, "attrs": attrs,
+                        "items": form.described(attrs, obj), "issues": form.validate(attrs, obj)})
+
+    tree = {"Ad": "Çınar", "Renk": "#2E7D32", "Cins": "agac", "Boy": "12"}
+    record("iki fotoğraf ve bir belgeli ağaç: sayılar durumda, sorun yok", tree, held(2, 3))
+    record("fotoğrafsız ağaç: en az bir fotoğraf ister", tree, held(0, 0))
+    record("dört fotoğraf: en çok üç", tree, held(4, 4))
+    record("yalnız fotoğraflar sayılır: iki belge fotoğraf değil", tree, held(0, 2))
+    record("boy 10 ve altı: belgeler gizli ve sınırsız; bir fotoğraf yeter", {**tree, "Boy": "5"}, held(1, 1))
+    record("ekler bilinmeyen kayıt: sayılmaz, sorulmaz", tree, SQUARE)
+    record("renk değil: yeşil", {**tree, "Renk": "yeşil"}, held(1, 1))
+    record("renk #RGB kısa yazımı kabul edilmez", {**tree, "Renk": "#2E7"}, held(1, 1))
+    record("saydamlıklı renk geçerli", {**tree, "Renk": "#2e7d32cc"}, held(1, 1))
+    record("ekler gizli öğede: Fotoğraflar kuralla gizlenince eksiği söylenmez", tree, held(0, 0),
+           body=extra_with(lambda b: item(b, "fotograflar").update(visibleWhen="Boy > 20")))
+    return pre, records
+
+
+TREES = [
+    {"kind": "polygon", "id": 1, "layerId": "bina", "pts": square(0, 0),
+     "attrs": {"Ad": "Çınar", "Renk": "#2E7D32", "Cins": "agac", "Boy": "12"},
+     "attachments": [{"name": "Gövde", "file": "foto/cinar-1.jpg"}, {"name": "Taç", "file": "foto/cinar-2.JPEG"},
+                     {"name": "Rapor", "file": "belge/cinar.pdf"}]},
+    {"kind": "polygon", "id": 2, "layerId": "bina", "pts": square(20, 0), "attrs": {"Ad": "Çınar", "Boy": "8"}},
+    ENTITIES[2],
+    {"kind": "polygon", "id": 4, "layerId": "kilitli", "attrs": {"Durum": "iyi"}, "pts": square(40, 0)},
+    {"kind": "polygon", "id": 5, "layerId": "bina", "pts": square(60, 0), "attrs": {"Ad": "Ihlamur", "Boy": "4"},
+     "attachments": [{"name": f"Foto {k}", "url": f"https://ornek.gov.tr/agac/{k}.png?boy=b"} for k in range(4)]},
+    {"kind": "polygon", "id": 6, "layerId": "bina", "pts": square(80, 0), "attrs": {"Ad": " Ihlamur ", "Renk": "yeşil"},
+     "attachments": [{"name": "Foto", "file": "foto/ihlamur.png"}]},
+    {"kind": "polygon", "id": 7, "layerId": "bina", "pts": square(100, 0), "attrs": {"Ad": "Meşe", "Boy": "15"},
+     "attachments": [{"name": "Foto", "file": "foto/mese.jpg"}, {"name": "Harita", "url": "https://ornek.gov.tr/harita"}]},
+]
+TREE_IDS = [e["id"] for e in TREES]
+TREE_BODY = EXTRA_BODY
+TREE_FORM = {"id": "agac", "name": "Ağaç envanteri", "layer": "bina", "draft": copy.deepcopy(TREE_BODY),
+             "releases": [release_of(TREE_BODY, 1)]}
+
+
+def photo_link(link):
+    path = link.split("?")[0].split("#")[0].lower()
+    return path.endswith((".jpg", ".jpeg", ".png"))
+
+
+def tree_object(e):
+    """The object a command judges: its measures and its attachments counted (docs/adr/0407 §1)."""
+    atts = e.get("attachments", [])
+    photos = sum(1 for a in atts if "asset" in a or photo_link(a.get("file") or a.get("url") or ""))
+    return {**SQUARE, "attachments": {"all": len(atts), "photos": photos}}
+
+
+def tree_suggestions(name):
+    """docs/adr/0407 §3: the layer's values, trimmed, the most used first, a tie by the first held; at most 20."""
+    seen = {}
+    for e in TREES:
+        if e["layerId"] != "bina":
+            continue
+        v = e["attrs"].get(name, "").strip(JS_SPACE)
+        if v:
+            seen[v] = seen.get(v, 0) + 1
+    order = list(seen)
+    return sorted(order, key=lambda v: -seen[v])[:20]
+
+
+def tree_validate_cases():
+    cases = []
+    S = setup([TREE_FORM], EXTRA_FIELDS, TREES)
+    by_id = {e["id"]: e for e in TREES}
+
+    def run(inp, result):
+        return {"op": "execute", "input": inp, "result": result,
+                "expect": {"ids": TREE_IDS, "canUndo": False, "canRedo": False, "dirty": False, "revision": "same"}}
+
+    def answer(slot=None, values=()):
+        out = {"version": 1, "issues": [], "valid": True, "items": []}
+        issues = preflight(TREE_BODY, EXTRA_FIELDS)
+        if slot is not None:
+            f = Form(TREE_BODY, EXTRA_FIELDS)
+            obj = tree_object(by_id[slot])
+            after, found = f.assess(dict(by_id[slot]["attrs"]), utf8_sorted(dict(values)), obj, False)
+            items = f.described(after, obj)
+            for st in items:
+                if st["id"] == "ad":
+                    st["suggestions"] = tree_suggestions("Ad")
+            out["items"] = items
+            issues = issues + found
+            out["attrs"] = after
+        out["issues"] = shown_issues(issues)
+        out["valid"] = not errors(issues)
+        return {"status": "completed", "output": out, "warnings": []}
+
+    for name, slot, values in [
+        ("ağaç: öneriler en çok kullanılandan, fotoğraf ve ek sayıları", 1, ()),
+        ("fotoğrafsız ağaç en az bir fotoğraf ister", 2, ()),
+        ("dört fotoğraf en çok üçü aşar; adresler de fotoğraf sayılır", 5, ()),
+        ("renk değil: yeşil; öneri boşlukları kırpar", 6, ()),
+        ("belgelerden biri adres: ekler sayılır, fotoğraf yalnız biri", 7, ()),
+        ("yazılmış gibi: saydamlıklı renk geçerli", 6, (("Renk", "#2e7d32cc"),)),
+        ("yazılmış gibi: renk adı reddedilir", 1, (("Renk", "kırmızı"),)),
+        ("yazılmış gibi: boy düşünce belgeler gizlenir", 1, (("Boy", "6"),)),
+    ]:
+        cases.append({"name": f"ekler, renk ve öneri: {name}", "setup": S, "steps": [
+            run({"form": "agac", "uid": f"$uidOf:{slot}", "values": dict(values)}, answer(slot, values))]})
+    cases.append({"name": "ekler, renk ve öneri: form tek başına", "setup": S, "steps": [
+        run({"form": "agac"}, answer())]})
+    return cases
+
+
+def tree_audit_cases():
+    S = setup([TREE_FORM], EXTRA_FIELDS, TREES)
+    f = Form(TREE_BODY, EXTRA_FIELDS)
+    out = {"version": 1, "checked": 0, "failing": 0, "warned": 0, "records": []}
+    for e in TREES:
+        if e["layerId"] != "bina":
+            continue
+        out["checked"] += 1
+        obj = tree_object(e)
+        after, issues = f.complete(e["attrs"], obj, False)
+        said = [i.get("field") for i in issues]
+        issues = issues + [i for i in f.validate(after, obj) if i.get("field") not in said]
+        if errors(issues):
+            out["failing"] += 1
+            out["records"].append({"uid": f"$uidOf:{e['id']}", "issues": shown_issues(issues)})
+        elif issues:
+            out["warned"] += 1
+    return [{"name": "ağaçlar: eksik ve fazla fotoğraf, renk olmayan renk", "setup": S, "steps": [
+        {"op": "plan", "input": {"form": "agac"}, "result": {"status": "completed", "output": out, "warnings": []}}]}]
+
+
 # ── Relations (docs/adr/0405) ───────────────────────────────────────────
 
 REL_FIELDS = {"bina": [{"name": "Ad", "kind": "text"}],
@@ -2749,7 +2964,7 @@ def commands():
         d / "cad.forms.validate.json": command_file(
             "cad.forms.validate", "Formu denetle",
             "ADR 0401 §9: formun ön denetimi ve bir kaydın öğeleri ve sorunları, değerler yazılmış gibi; hiçbir şey yazılmaz.",
-            validate_cases() + look_v),
+            validate_cases() + look_v + tree_validate_cases()),
         d / "cad.forms.submit.json": command_file(
             "cad.forms.submit", "Formla kaydet",
             "ADR 0401 §9: kaydın formla yazılması: değerler alan anahtarlarıyla, formun ve alanların kurallarıyla; bütün "
@@ -2765,7 +2980,7 @@ def commands():
         d / "cad.forms.audit.json": command_file(
             "cad.forms.audit", "Kayıtları formla denetle",
             "ADR 0406 §1: formun katmanındaki bütün kayıtlar formun kurallarıyla denetlenir; hiçbir şey yazılmaz.",
-            audit_cases()),
+            audit_cases() + tree_audit_cases()),
         d / "cad.relations.edit.json": command_file(
             "cad.relations.edit", "İlişkiler",
             "ADR 0405 §3: projenin ilişkileri; oluşturma, değiştirme, silme. Proje ayarıdır, geri alma adımı değildir.",

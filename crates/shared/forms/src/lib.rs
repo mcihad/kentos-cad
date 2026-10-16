@@ -27,7 +27,7 @@ pub use generate::{generate, item_id_of, widget_of};
 pub use lookup::{OtherLayer, World};
 pub use object::{kind_label, object_of};
 pub use preflight::{preflight, preflight_in, widget_fits};
-pub use record::{Attrs, Object, schema_in, schema_of};
+pub use record::{Attached, Attrs, Object, schema_in, schema_of};
 pub use session::{CHOICE_CODE, CHOICE_LABEL, HOST_ONLY, MOMENT, Prepared};
 
 use kentos_contracts::{FormIssue, FormSeverity};
@@ -47,6 +47,14 @@ pub mod codes {
     pub const WIDGET_NEEDS_VALUES: &str = "form_widget_needs_values";
     /// A slider on a field without its least and most (docs/adr/0406 §2).
     pub const WIDGET_NEEDS_RANGE: &str = "form_widget_needs_range";
+    /// Suggestions on a field that is not a free text field (docs/adr/0407 §3).
+    pub const SUGGEST_UNFIT: &str = "form_suggest_unfit";
+    /// A colour field's value that is not `#RRGGBB` or `#RRGGBBAA` (docs/adr/0407 §2).
+    pub const COLOR_INVALID: &str = "form_color_invalid";
+    /// Fewer attachments than the item asks for (docs/adr/0407 §1).
+    pub const ATTACHMENTS_FEW: &str = "form_attachments_few";
+    /// More attachments than the item allows.
+    pub const ATTACHMENTS_MANY: &str = "form_attachments_many";
     /// The default does not keep the field's rules.
     pub const DEFAULT_INVALID: &str = "form_default_invalid";
     /// A rule or a check does not compile.
@@ -126,4 +134,59 @@ pub(crate) fn issue(
 /// Whether any of the issues stops a save or a publish.
 pub fn has_errors(issues: &[FormIssue]) -> bool {
     issues.iter().any(|i| i.severity == FormSeverity::Error)
+}
+
+/// Whether `value` is a colour a colour field holds: `#RRGGBB` or `#RRGGBBAA` (docs/adr/0407 §2).
+pub fn is_colour(value: &str) -> bool {
+    let v = value.trim();
+    v.strip_prefix('#')
+        .is_some_and(|hex| matches!(hex.len(), 6 | 8) && hex.bytes().all(|b| b.is_ascii_hexdigit()))
+}
+
+/// What is said of a colour field's value that is not a colour.
+pub fn colour_message(label: &str, value: &str) -> String {
+    format!("“{label}” bir renk ister (#RRGGBB ya da #RRGGBBAA); “{value}” renk değil.")
+}
+
+/// The most suggestions a field offers.
+pub const MOST_SUGGESTIONS: usize = 20;
+
+/// A suggesting field's values in the layer (docs/adr/0407 §3): each distinct trimmed value once, the
+/// most used first, a tie in the order the layer first holds them; at most [`MOST_SUGGESTIONS`].
+pub fn suggestions_of<'a>(values: impl IntoIterator<Item = &'a str>) -> Vec<String> {
+    let mut seen: Vec<(String, usize)> = Vec::new();
+    let mut at: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+    for v in values {
+        let v = kentos_contracts::js_trim(v);
+        if v.is_empty() {
+            continue;
+        }
+        match at.get(v) {
+            Some(&i) => seen[i].1 += 1,
+            None => {
+                at.insert(v.to_owned(), seen.len());
+                seen.push((v.to_owned(), 1));
+            }
+        }
+    }
+    // A stable sort keeps the layer's first order among equal counts.
+    seen.sort_by_key(|s| std::cmp::Reverse(s.1));
+    seen.into_iter()
+        .take(MOST_SUGGESTIONS)
+        .map(|(v, _)| v)
+        .collect()
+}
+
+/// The suggestions offered while `typed` is in the field: those holding it, letters folded the Turkish
+/// way (`ı` finds “Ihlamur”), the value itself left out; at most `most`, in their order.
+pub fn suggestions_for<'a>(all: &'a [String], typed: &str, most: usize) -> Vec<&'a String> {
+    use kentos_expression::js::text::fold_turkish;
+    let typed = fold_turkish(typed);
+    all.iter()
+        .filter(|s| {
+            let s = fold_turkish(s);
+            s != typed && s.contains(&typed)
+        })
+        .take(most)
+        .collect()
 }

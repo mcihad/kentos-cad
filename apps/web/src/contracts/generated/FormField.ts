@@ -82,6 +82,11 @@ unique?: boolean,
  */
 reuseLast?: boolean, 
 /**
+ * The layer's values of the field offered while typing, the value staying free (docs/adr/0407
+ * §3): text fields without a list; written only as `true`.
+ */
+suggest?: boolean, 
+/**
  * The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or
  * `choiceFilter`.
  */

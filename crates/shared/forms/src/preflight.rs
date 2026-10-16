@@ -96,7 +96,7 @@ pub fn widget_fits(widget: FormWidget, field: &LayerField) -> Result<(), &'stati
     let kind_fits = match field.kind {
         LayerFieldKind::Text => matches!(
             widget,
-            W::Text | W::TextArea | W::List | W::Radio | W::Segmented
+            W::Text | W::TextArea | W::List | W::Radio | W::Segmented | W::Color
         ),
         LayerFieldKind::Integer | LayerFieldKind::Decimal => {
             matches!(
@@ -171,6 +171,13 @@ impl Preflight<'_> {
                         self.rule(id, None, None, "visibleWhen", rule);
                     }
                     self.related(id, layer, field);
+                }
+                FormItem::Attachments {
+                    id, visible_when, ..
+                } => {
+                    if let Some(rule) = visible_when {
+                        self.rule(id, None, None, "visibleWhen", rule);
+                    }
                 }
             }
         }
@@ -249,7 +256,28 @@ impl Preflight<'_> {
             if let Err(r) = check_value(&loose, default) {
                 self.issues
                     .push(at(codes::DEFAULT_INVALID, Some("default"), r.message));
+            } else if widget == FormWidget::Color && !crate::is_colour(default) {
+                self.issues.push(at(
+                    codes::DEFAULT_INVALID,
+                    Some("default"),
+                    crate::colour_message(layer.label(), default),
+                ));
             }
+        }
+        // Suggestions are a text field's own values; a list offers its values instead.
+        if f.suggest
+            && (layer.kind != LayerFieldKind::Text
+                || layer.values.as_ref().is_some_and(|v| !v.is_empty())
+                || f.lookup.is_some())
+        {
+            self.issues.push(at(
+                codes::SUGGEST_UNFIT,
+                Some("suggest"),
+                format!(
+                    "“{}” için öneri yalnız değer listesi olmayan metin alanında olur.",
+                    layer.label()
+                ),
+            ));
         }
         if f.default.is_some() && f.default_expr.is_some() {
             self.issues.push(at(

@@ -54,6 +54,7 @@ pub(super) const UP: &str = "Yukarı";
 pub(super) const DOWN: &str = "Aşağı";
 pub(super) const REMOVE_ITEM: &str = "Öğeyi sil";
 pub(super) const ADD_RELATED: &str = "İlişkili";
+pub(super) const ADD_ATTACHMENTS: &str = "Ekler";
 pub(super) const AUDIT: &str = "Kayıtları denetle";
 pub(super) const UNDO: &str = "Geri al";
 pub(super) const PREVIEW: &str = "Önizleme";
@@ -117,6 +118,9 @@ pub enum Text {
     Default,
     Note,
     CheckMessage(usize),
+    /// An attachments item's fewest and most (docs/adr/0407 §1).
+    AttachMin,
+    AttachMax,
 }
 
 /// A new form being made: its name and layer.
@@ -166,6 +170,12 @@ pub enum Event {
     AddField(String),
     /// A related item (docs/adr/0404 §4) where the chosen item is.
     AddRelated,
+    /// An attachments item (docs/adr/0407 §1) where the chosen item is.
+    AddAttachments,
+    /// What an attachments item counts and adds.
+    Accept(kentos_contracts::AttachmentAccept),
+    /// A text field offers the layer's values (docs/adr/0407 §3).
+    Suggest(bool),
     /// A field's list from another layer: its layer, none for the field's own list.
     LookupLayer(Option<String>),
     /// The list's key (`$uid`: the object's persistent id) and its label's field.
@@ -784,6 +794,40 @@ impl App {
                 edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
                 w.item = Some(id);
             }
+            Event::AddAttachments => {
+                let taken = w.body.as_ref().map(|b| ids(&b.items)).unwrap_or_default();
+                let id = kentos_forms::item_id_of("ekler", &taken);
+                let item = FormItem::Attachments {
+                    id: id.clone(),
+                    label: Some("Ekler".into()),
+                    accept: kentos_contracts::AttachmentAccept::Any,
+                    min: None,
+                    max: None,
+                    visible_when: None,
+                };
+                edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
+                w.item = Some(id);
+            }
+            Event::Accept(to) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Attachments { accept, .. }) =
+                            find_mut(&mut b.items, &id)
+                        {
+                            *accept = to;
+                        }
+                    });
+                }
+            }
+            Event::Suggest(on) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Field(f)) = find_mut(&mut b.items, &id) {
+                            f.suggest = on;
+                        }
+                    });
+                }
+            }
             Event::LookupLayer(layer) => {
                 if let Some(id) = chosen_item.clone() {
                     edited(&mut w, &|b| {
@@ -1163,6 +1207,7 @@ impl App {
             Control::Press(ADD_GROUP) => Some(msg(Event::AddGroup)),
             Control::Press(ADD_NOTE) => Some(msg(Event::AddNote)),
             Control::Press(ADD_RELATED) => Some(msg(Event::AddRelated)),
+            Control::Press(ADD_ATTACHMENTS) => Some(msg(Event::AddAttachments)),
             Control::Press(AUDIT) => Some(msg(Event::Audit)),
             Control::Press(ENFORCE) => self.chosen_form().map(|f| msg(Event::Enforce(!f.enforce))),
             Control::Press(UNDO) => Some(msg(Event::Undo)),
@@ -1205,7 +1250,9 @@ fn item_named(items: &[FormItem], words: &str) -> Option<String> {
             FormItem::Group { label, .. } => label.as_deref(),
             FormItem::Field(f) => f.label.as_deref().or(Some(f.field.as_str())),
             FormItem::Note { .. } => None,
-            FormItem::Related { label, .. } => label.as_deref(),
+            FormItem::Related { label, .. } | FormItem::Attachments { label, .. } => {
+                label.as_deref()
+            }
         };
         if i.id() == words || label == Some(words) {
             Some(i.id().to_owned())
@@ -1221,6 +1268,18 @@ fn set_text(body: &mut FormBody, id: &str, which: &Text, text: &str) {
         Some(FormItem::Tab { label, .. }) if *which == Text::Label => *label = text.to_owned(),
         Some(FormItem::Group { label, .. }) if *which == Text::Label => *label = some(text),
         Some(FormItem::Related { label, .. }) if *which == Text::Label => *label = some(text),
+        Some(FormItem::Attachments {
+            label, min, max, ..
+        }) => {
+            // A count that is not a whole number leaves the bound off.
+            let count = || text.trim().parse::<u32>().ok();
+            match which {
+                Text::Label => *label = some(text),
+                Text::AttachMin => *min = count(),
+                Text::AttachMax => *max = count(),
+                _ => {}
+            }
+        }
         Some(FormItem::Note { text: t, .. }) if *which == Text::Note => *t = text.to_owned(),
         Some(FormItem::Field(f)) => match which {
             Text::Label => f.label = some(text),
@@ -1241,7 +1300,8 @@ fn set_text(body: &mut FormBody, id: &str, which: &Text, text: &str) {
 fn rule_text(body: &FormBody, rule: &Rule) -> Option<String> {
     match (find(&body.items, rule.item())?, rule) {
         (FormItem::Group { visible_when, .. }, Rule::Visible(_)) => visible_when.clone(),
-        (FormItem::Related { visible_when, .. }, Rule::Visible(_)) => visible_when.clone(),
+        (FormItem::Related { visible_when, .. }, Rule::Visible(_))
+        | (FormItem::Attachments { visible_when, .. }, Rule::Visible(_)) => visible_when.clone(),
         (FormItem::Field(f), Rule::LookupFilter(_)) => f.lookup.as_ref()?.filter.clone(),
         (FormItem::Field(f), Rule::Visible(_)) => f.visible_when.clone(),
         (FormItem::Field(f), Rule::Required(_)) => f.required_when.clone(),
@@ -1258,7 +1318,10 @@ fn set_rule(body: &mut FormBody, rule: &Rule, text: &str) {
     let value = (!text.trim().is_empty()).then(|| text.to_owned());
     match (find_mut(&mut body.items, rule.item()), rule) {
         (Some(FormItem::Group { visible_when, .. }), Rule::Visible(_)) => *visible_when = value,
-        (Some(FormItem::Related { visible_when, .. }), Rule::Visible(_)) => *visible_when = value,
+        (Some(FormItem::Related { visible_when, .. }), Rule::Visible(_))
+        | (Some(FormItem::Attachments { visible_when, .. }), Rule::Visible(_)) => {
+            *visible_when = value
+        }
         (Some(FormItem::Field(f)), Rule::LookupFilter(_)) => {
             if let Some(l) = f.lookup.as_mut() {
                 l.filter = value;

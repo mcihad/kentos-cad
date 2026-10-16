@@ -15,9 +15,9 @@ use kentos_ui::{label, style};
 use kentos_ui::widget::tree_view::{self, Node, TreeView};
 
 use super::designer::{
-    ADD_GROUP, ADD_NOTE, ADD_RELATED, ADD_TAB, AUDIT, CANCEL, CREATE, DOWN, ENFORCE, Event, NAME,
-    NEW_FORM, PREVIEW, PROPERTIES, PUBLISH, REDO, REMOVE_FORM, REMOVE_ITEM, Rule, SAVE, TITLE,
-    Text, UNDO, UP, Window, bound, find, msg,
+    ADD_ATTACHMENTS, ADD_GROUP, ADD_NOTE, ADD_RELATED, ADD_TAB, AUDIT, CANCEL, CREATE, DOWN,
+    ENFORCE, Event, NAME, NEW_FORM, PREVIEW, PROPERTIES, PUBLISH, REDO, REMOVE_FORM, REMOVE_ITEM,
+    Rule, SAVE, TITLE, Text, UNDO, UP, Window, bound, find, msg,
 };
 use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
@@ -43,6 +43,15 @@ fn item_face(item: &FormItem, fields: &[LayerField]) -> (Icon, String, bool) {
         } => (
             Icon::Link,
             label.clone().unwrap_or_else(|| "İlişkili kayıtlar".into()),
+            visible_when.is_some(),
+        ),
+        FormItem::Attachments {
+            label,
+            visible_when,
+            ..
+        } => (
+            crate::icons::from_web(Some("photo")),
+            label.clone().unwrap_or_else(|| "Ekler".into()),
             visible_when.is_some(),
         ),
         FormItem::Field(f) => {
@@ -311,6 +320,11 @@ impl App {
             tool(ADD_GROUP, Icon::Layout, Some(Event::AddGroup)),
             tool(ADD_NOTE, Icon::Info, Some(Event::AddNote)),
             tool(ADD_RELATED, Icon::Link, Some(Event::AddRelated)),
+            tool(
+                ADD_ATTACHMENTS,
+                crate::icons::from_web(Some("photo")),
+                Some(Event::AddAttachments)
+            ),
             space::horizontal().width(8),
             icon_tool(UP, Icon::ChevronUp, has_item.then_some(Event::Move(-1))),
             icon_tool(DOWN, Icon::ChevronDown, has_item.then_some(Event::Move(1))),
@@ -570,6 +584,59 @@ impl App {
                         visible_when.as_deref().unwrap_or(""),
                     ));
             }
+            FormItem::Attachments {
+                label: text,
+                accept,
+                min,
+                max,
+                visible_when,
+                ..
+            } => {
+                use kentos_contracts::AttachmentAccept as A;
+                let kinds = [A::Any, A::Photo, A::Document];
+                let accepts = Select::new(
+                    ["Hepsi", "Fotoğraflar", "Belgeler ve adresler"].map(Choice::new),
+                    kinds.iter().position(|k| k == accept),
+                    move |i| msg(Event::Accept(kinds[i])),
+                );
+                let count = |n: &Option<u32>| n.map(|n| n.to_string()).unwrap_or_default();
+                col = col
+                    .push(label::strong("Ekler"))
+                    .push(words::field(
+                        "Başlık",
+                        input("Ekler", text.as_deref().unwrap_or(""), Text::Label),
+                        None,
+                    ))
+                    .push(words::field("Ekler", accepts, None))
+                    .push(
+                        row![
+                            container(words::field(
+                                "En az",
+                                input("Sınırsız", &count(min), Text::AttachMin),
+                                None,
+                            ))
+                            .width(Fill),
+                            container(words::field(
+                                "En çok",
+                                input("Sınırsız", &count(max), Text::AttachMax),
+                                None,
+                            ))
+                            .width(Fill),
+                        ]
+                        .spacing(12),
+                    )
+                    .push(
+                        label::caption(
+                            "Kaydın fotoğrafları ve belgeleri formda eklenir, açılır ve kaldırılır; sayı kayıt formla yazılırken ve Kayıtları denetle'de denetlenir.",
+                        )
+                        .style(muted),
+                    )
+                    .push(rule_row(
+                        "Görünürlük",
+                        Rule::Visible(id.clone()),
+                        visible_when.as_deref().unwrap_or(""),
+                    ));
+            }
             FormItem::Note { text, .. } => {
                 col = col
                     .push(label::strong("Not"))
@@ -647,6 +714,16 @@ impl App {
                     .push(
                         row![
                             words::check(f.unique, "Tekil", Some(msg(Event::Unique(!f.unique)))),
+                            words::check(
+                                f.suggest,
+                                "Öneri",
+                                (layer.is_some_and(|l| {
+                                    l.kind == kentos_contracts::LayerFieldKind::Text
+                                        && l.values.as_ref().is_none_or(|v| v.is_empty())
+                                }) && f.lookup.is_none()
+                                    || f.suggest)
+                                    .then(|| msg(Event::Suggest(!f.suggest))),
+                            ),
                             words::check(
                                 f.reuse_last,
                                 "Son değeri kullan",

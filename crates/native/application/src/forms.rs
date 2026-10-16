@@ -225,7 +225,24 @@ pub(crate) fn object(doc: &Document, slot: Slot, e: &Entity) -> Object {
         .map_or("", |n| n.name.as_str());
     let mut object = kentos_forms::object_of(e, layer, f64::from(slot.0));
     object.uid = doc.uid(slot).map(|u| u.to_string());
+    // A command judges the record's attachments (the document's following does not: docs/adr/0407 §1).
+    object.attachments = Some(kentos_forms::Attached::of(&e.base().attachments));
     object
+}
+
+/// The suggesting field items' values in the layer (docs/adr/0407 §3): each item's id and its
+/// suggestions, the most used first.
+pub fn suggestions(doc: &Document, layer: &str, prepared: &Prepared) -> Vec<(String, Vec<String>)> {
+    prepared
+        .suggesting()
+        .into_iter()
+        .map(|(id, name)| {
+            let values = doc
+                .by_layer_with_uids(layer)
+                .filter_map(|(_, e)| e.base().attrs.get(name).map(String::as_str));
+            (id.to_owned(), kentos_forms::suggestions_of(values))
+        })
+        .collect()
 }
 
 /// The attributes of the other objects of the layer: what a unique field is asked against.

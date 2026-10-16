@@ -65,5 +65,6 @@ pub fn object_of(e: &Entity, layer: &str, id: f64) -> Object {
         measured,
         vertices: corners,
         uid: None,
+        attachments: None,
     }
 }

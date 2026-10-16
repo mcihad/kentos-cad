@@ -28,6 +28,39 @@ pub struct Object {
     pub vertices: Option<f64>,
     /// Its persistent id: what a related item finds the objects referring to it by (docs/adr/0404 §4).
     pub uid: Option<String>,
+    /// Its attachments, counted (docs/adr/0407 §1); none where the record's attachments are not
+    /// judged (a new record, the document's following of a write).
+    pub attachments: Option<Attached>,
+}
+
+/// How many attachments an object holds: all of them and its photos.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Attached {
+    pub all: u32,
+    pub photos: u32,
+}
+
+impl Attached {
+    /// The counts of `list`.
+    pub fn of(list: &[kentos_contracts::Attachment]) -> Attached {
+        let photos = list
+            .iter()
+            .filter(|a| a.kind() == kentos_contracts::AttachmentKind::Photo)
+            .count();
+        Attached {
+            all: u32::try_from(list.len()).unwrap_or(u32::MAX),
+            photos: u32::try_from(photos).unwrap_or(u32::MAX),
+        }
+    }
+
+    /// What an item accepting `accept` counts.
+    pub fn counted(&self, accept: kentos_contracts::AttachmentAccept) -> u32 {
+        match accept {
+            kentos_contracts::AttachmentAccept::Any => self.all,
+            kentos_contracts::AttachmentAccept::Photo => self.photos,
+            kentos_contracts::AttachmentAccept::Document => self.all - self.photos,
+        }
+    }
 }
 
 /// The expression schema of a layer's fields: each a user-defined field of its kind, so a rule reads

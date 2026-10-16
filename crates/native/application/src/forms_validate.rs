@@ -47,6 +47,11 @@ fn answer(doc: &Document, input: &FormsValidate) -> Result<FormsValidated, Stop>
         // calculations (docs/adr/0402 §3).
         let (after, found) = prepared.assess(&e.base().attrs, &values, &object, input.defaults);
         items = prepared.described(&after, &object);
+        for (id, offered) in forms::suggestions(doc, &form.layer, &prepared) {
+            if let Some(state) = items.iter_mut().find(|s| s.id == id) {
+                state.suggestions = Some(offered);
+            }
+        }
         issues.extend(found);
         let uid = doc.uid(slot).unwrap_or_default();
         issues.extend(prepared.unique_issues(

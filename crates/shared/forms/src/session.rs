@@ -11,8 +11,8 @@
 //! - A write through the form changes only the form's fields, none hidden or read-only.
 
 use kentos_contracts::{
-    FormBody, FormField, FormIssue, FormItem, FormItemState, FormSeverity, LayerField, check_value,
-    js_trim,
+    AttachmentAccept, FormBody, FormField, FormIssue, FormItem, FormItemState, FormSeverity,
+    FormWidget, LayerField, check_value, js_trim,
 };
 use kentos_expression::js::text::fold_turkish;
 use kentos_expression::template::{self, Template};
@@ -59,6 +59,17 @@ struct Node {
     note: Option<Note>,
     /// A related item's objects (docs/adr/0404 §4).
     related: Option<Related>,
+    /// An attachments item's bounds (docs/adr/0407 §1).
+    attachments: Option<Bounds>,
+}
+
+/// An attachments item: what it counts, its bounds and its name.
+#[derive(Clone, Debug)]
+struct Bounds {
+    accept: AttachmentAccept,
+    min: Option<u32>,
+    max: Option<u32>,
+    label: String,
 }
 
 /// A note whose text puts values in.
@@ -157,6 +168,14 @@ impl Prepared {
             .collect()
     }
 
+    /// The suggesting field items (docs/adr/0407 §3): each item's id and its layer field's name.
+    pub fn suggesting(&self) -> Vec<(&str, &str)> {
+        self.bound()
+            .filter(|(_, b)| b.item.suggest)
+            .map(|(n, b)| (n.id.as_str(), self.fields[b.index].name.as_str()))
+            .collect()
+    }
+
     /// The keys of the fields a new record opens with the session's last value.
     pub fn reuse_keys(&self) -> Vec<&str> {
         self.bound()
@@ -200,6 +219,8 @@ impl Prepared {
                 text: None,
                 options: None,
                 related: None,
+                suggestions: None,
+                attachments: None,
             });
         }
         out
@@ -221,6 +242,9 @@ impl Prepared {
             }
             if let Some(related) = &node.related {
                 state.related = Some(related.of(object));
+            }
+            if let (Some(b), Some(held)) = (&node.attachments, &object.attachments) {
+                state.attachments = Some(held.counted(b.accept));
             }
         }
         states
@@ -411,6 +435,15 @@ impl Prepared {
         let states = self.states(attrs, object);
         let mut issues = Vec::new();
         for (node, state) in self.items.iter().zip(&states) {
+            if let (Some(bounds), Some(held), true) =
+                (&node.attachments, &object.attachments, state.shown)
+            {
+                issues.extend(attachment_issues(
+                    &node.id,
+                    bounds,
+                    held.counted(bounds.accept),
+                ));
+            }
             let Some(b) = &node.field else { continue };
             if !state.shown {
                 continue;
@@ -451,6 +484,15 @@ impl Prepared {
                     continue;
                 }
             };
+            if crate::widget_of(&b.item, field) == FormWidget::Color && !crate::is_colour(value) {
+                issues.push(at(
+                    codes::COLOR_INVALID,
+                    FormSeverity::Error,
+                    None,
+                    crate::colour_message(label, value),
+                ));
+                continue;
+            }
             if let Some(list) = &b.lookup
                 && !list.offered(attrs).iter().any(|r| r.0 == canonical)
             {
@@ -772,7 +814,28 @@ fn walk(list: &[FormItem], parent: Option<usize>, out: &mut Vec<Node>, ctx: &Ctx
     for item in list {
         let at = out.len();
         let mut related = None;
+        let mut attachments = None;
         let (visible, field, note) = match item {
+            FormItem::Attachments {
+                label,
+                accept,
+                min,
+                max,
+                visible_when,
+                ..
+            } => {
+                attachments = Some(Bounds {
+                    accept: *accept,
+                    min: *min,
+                    max: *max,
+                    label: label.clone().unwrap_or_else(|| match accept {
+                        AttachmentAccept::Any => "Ekler".into(),
+                        AttachmentAccept::Photo => "Fotoğraflar".into(),
+                        AttachmentAccept::Document => "Belgeler".into(),
+                    }),
+                });
+                (compile(visible_when), None, None)
+            }
             FormItem::Group { visible_when, .. } => (compile(visible_when), None, None),
             FormItem::Related {
                 layer,
@@ -833,9 +896,50 @@ fn walk(list: &[FormItem], parent: Option<usize>, out: &mut Vec<Node>, ctx: &Ctx
             field,
             note,
             related,
+            attachments,
         });
         walk(item.items(), Some(at), out, ctx);
     }
+}
+
+/// What an attachments item says of a record holding `count` of what it counts.
+fn attachment_issues(id: &str, b: &Bounds, count: u32) -> Option<FormIssue> {
+    let what = match b.accept {
+        AttachmentAccept::Any => "ek",
+        AttachmentAccept::Photo => "fotoğraf",
+        AttachmentAccept::Document => "belge",
+    };
+    let at = |code: &str, rule: &str, message: String| {
+        issue(
+            code,
+            FormSeverity::Error,
+            Some(id),
+            None,
+            Some(rule),
+            message,
+        )
+    };
+    if let Some(min) = b.min.filter(|m| count < *m) {
+        return Some(at(
+            codes::ATTACHMENTS_FEW,
+            "min",
+            format!(
+                "“{}” en az {min} {what} ister; kayıtta {count} var.",
+                b.label
+            ),
+        ));
+    }
+    if let Some(max) = b.max.filter(|m| count > *m) {
+        return Some(at(
+            codes::ATTACHMENTS_MANY,
+            "max",
+            format!(
+                "“{}” en çok {max} {what} alır; kayıtta {count} var.",
+                b.label
+            ),
+        ));
+    }
+    None
 }
 
 /// A note's template and its expressions, when it puts values in.

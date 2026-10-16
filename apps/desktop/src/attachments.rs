@@ -110,6 +110,8 @@ fn base_name(path: &str) -> &str {
 #[derive(Debug, Clone)]
 pub enum Event {
     Add(Slot),
+    /// Ekle of a form's photos item (docs/adr/0407 §1): only photos are offered.
+    AddPhotos(Slot),
     AddLink(Slot),
     Edit(Slot, usize),
     Remove(Slot, usize),
@@ -448,17 +450,27 @@ impl App {
 
     pub(crate) fn attachment_event(&mut self, e: Event) -> Task<Message> {
         match e {
-            Event::Add(slot) => match &self.picker {
+            Event::Add(slot) | Event::AddPhotos(slot) => match &self.picker {
                 Picker::File(path) => {
                     let path = path.clone();
                     return Task::done(msg(Event::Picked(slot, vec![path])));
                 }
                 Picker::Dialog => {
+                    let photos = matches!(e, Event::AddPhotos(_));
                     return Task::perform(
-                        async {
+                        async move {
+                            let (what, kinds): (&str, &[&str]) = if photos {
+                                ("Fotoğraf", &FILES[..3])
+                            } else {
+                                ("Fotoğraf ve belge", &FILES)
+                            };
                             rfd::AsyncFileDialog::new()
-                                .set_title("Dosya ekle")
-                                .add_filter("Fotoğraf ve belge", &FILES)
+                                .set_title(if photos {
+                                    "Fotoğraf ekle"
+                                } else {
+                                    "Dosya ekle"
+                                })
+                                .add_filter(what, kinds)
                                 .pick_files()
                                 .await
                                 .map(|files| {
@@ -470,7 +482,11 @@ impl App {
                     );
                 }
             },
-            Event::Picked(slot, paths) => self.attach_files(slot, paths),
+            Event::Picked(slot, paths) => {
+                self.attach_files(slot, paths);
+                // A form showing the record counts its attachments again (docs/adr/0407 §1).
+                return self.refresh_entry();
+            }
             Event::AddLink(slot) => {
                 self.attachment_form = Some(Form {
                     mode: Mode::Link(slot),
@@ -507,6 +523,7 @@ impl App {
                 if index < list.len() {
                     list.remove(index);
                     self.write_attachments(slot, list);
+                    return self.refresh_entry();
                 }
             }
             Event::Embed(slot, index) => self.embed_attachment(slot, index),
@@ -542,7 +559,8 @@ impl App {
             Event::ViewerOutside => self.viewer_outside(),
             Event::ViewerClose => {
                 self.photo_viewer = None;
-                self.dialog = None;
+                // A photo opened from Formla düzenle goes back to its form.
+                self.dialog = self.form_entry.is_some().then_some(Dialog::FormEntry);
             }
         }
         Task::none()

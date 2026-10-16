@@ -5,7 +5,7 @@
 //!
 //! ```text
 //! KENTOS_SHOTS_ONLY=form-tasarim,form-tasarim-sorun,form-yeni,form-duzenle,form-duzenle-sorun,form-duzenle-sekme,form-oznitelikler cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
-//! KENTOS_SHOTS_ONLY=form-hesap-tasarim,form-hesap-duzenle,form-hesap-sorun,form-onizleme,form-tasarim-tasima,form-toplu,form-adres,form-adres-tasarim,form-iliskiler,form-kayit-denetle,form-kaydirici cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=form-hesap-tasarim,form-hesap-duzenle,form-hesap-sorun,form-onizleme,form-tasarim-tasima,form-toplu,form-adres,form-adres-tasarim,form-iliskiler,form-kayit-denetle,form-kaydirici,form-agac,form-agac-eksik,form-agac-tasarim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! docs/adr/0402's: the calculating form in the designer (the material's choice filter), Formla
@@ -117,6 +117,142 @@ fn calc_form() -> Value {
     let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).expect("a body");
     json!({ "id": "bina-hesabi", "name": "Bina hesabı", "layer": "bina", "draft": body.clone(), "enforce": true,
             "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }] })
+}
+
+/// A file of the shared fixtures, by its path from the repository's root.
+fn fixture(path: &str) -> String {
+    format!("{}/../../{path}", env!("CARGO_MANIFEST_DIR"))
+}
+
+/// The tree inventory (docs/adr/0407; `EXTRA_BODY` of `scripts/fixtures/forms_cases.py`): the name
+/// offered from the layer, the colour picked, the kind listed, the height, the photos counted (one to
+/// three) and the documents shown for a tall tree.
+fn tree_form() -> Value {
+    let body = json!({ "revision": 1, "items": [
+        { "type": "field", "id": "ad", "field": "Ad", "suggest": true },
+        { "type": "field", "id": "renk", "field": "Renk", "widget": "color", "default": "#2E7D32" },
+        { "type": "field", "id": "cins", "field": "Cins" },
+        { "type": "field", "id": "boy", "field": "Boy" },
+        { "type": "attachments", "id": "fotograflar", "label": "Fotoğraflar", "accept": "photo", "min": 1, "max": 3 },
+        { "type": "attachments", "id": "belgeler", "label": "Belgeler", "accept": "document", "visibleWhen": "Boy > 10" }
+    ]});
+    let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).expect("a body");
+    json!({ "id": "agac", "name": "Ağaç envanteri", "layer": "agac", "draft": body.clone(),
+            "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }] })
+}
+
+/// A park's trees under the inventory form: the first with two photos and a report, the second
+/// without a photo, the others named for the suggestions.
+fn trees(app: &mut App) {
+    let mut o = Objects::new();
+    let mut ids = Vec::new();
+    for [x, y] in [
+        [0.0, 0.0],
+        [20.0, 4.0],
+        [6.0, 22.0],
+        [28.0, 24.0],
+        [42.0, 8.0],
+    ] {
+        let ring: Vec<[f64; 2]> = (0..16)
+            .map(|k| {
+                let a = f64::from(k) * std::f64::consts::TAU / 16.0;
+                [x + 6.0 + 5.0 * a.cos(), y + 6.0 + 5.0 * a.sin()]
+            })
+            .collect();
+        ids.push(o.path("agac", &ring, true));
+    }
+    o.data(
+        ids[0],
+        &[
+            ("Ad", "Çınar"),
+            ("Renk", "#2E7D32"),
+            ("Cins", "agac"),
+            ("Boy", "14"),
+        ],
+        Some("Çınar"),
+    );
+    o.attach(
+        ids[0],
+        json!([
+            { "name": "Gövde", "file": fixture("fixtures/exif/v1/konum.jpg") },
+            { "name": "Taç", "file": fixture("fixtures/exif/v1/yarim-gps.jpg") },
+            { "name": "Bakım raporu", "file": fixture("fixtures/interaction/v1/belgeler/tapu-101-5.pdf") }
+        ]),
+    );
+    o.data(
+        ids[1],
+        &[("Ad", "Ihlamur"), ("Cins", "agac"), ("Boy", "6")],
+        None,
+    );
+    o.data(ids[2], &[("Ad", "Çınar"), ("Boy", "11")], None);
+    o.data(ids[3], &[("Ad", "Ihlamur")], None);
+    o.data(ids[4], &[("Ad", "Kuşburnu"), ("Cins", "cali")], None);
+    let fields = json!([
+        { "name": "Ad", "kind": "text", "required": true },
+        { "name": "Renk", "kind": "text" },
+        { "name": "Cins", "kind": "text",
+          "values": [{ "code": "agac", "label": "Ağaç" }, { "code": "cali", "label": "Çalı" }] },
+        { "name": "Boy", "kind": "decimal", "scale": 1, "min": "0", "max": "40" }
+    ]);
+    let form = tree_form();
+    open_edited(app, o, move |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut agac = crate::tools_scenes::layer("agac", "Ağaç", "#2F9E44", 0.35);
+        agac["fields"] = fields;
+        layers.push(agac);
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("agac");
+        d["settings"]["forms"] = json!([form]);
+    });
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 8.0,
+            min_y: N - 8.0,
+            max_x: E + 62.0,
+            max_y: N + 42.0,
+        },
+        24.0,
+    );
+}
+
+/// Formla düzenle on the first tree: its colour, its photos and report.
+fn tree_editing(app: &mut App) {
+    trees(app);
+    app.selection.set([Slot(1)]);
+    run(app, "data.formEdit");
+}
+
+/// The second tree: no photo yet, and a name being typed: the layer's names offered.
+fn tree_missing(app: &mut App) {
+    trees(app);
+    app.selection.set([Slot(2)]);
+    run(app, "data.formEdit");
+    entry(app, entry::Event::Value("Ad".into(), "ı".into()));
+}
+
+/// The name field focused: the layer's names holding what is typed are offered (docs/adr/0407 §3).
+fn name_focused(s: &mut kentos_ui::snapshot::Snapshot, app: &mut App) {
+    use iced::futures::StreamExt as _;
+    let task: iced::Task<Message> = iced::widget::operation::focus(entry::input_id("Ad"));
+    if let Some(mut stream) = iced_runtime::task::into_stream(task) {
+        while let Some(action) = iced::futures::executor::block_on(stream.next()) {
+            if let iced_runtime::Action::Widget(operation) = action {
+                s.operate(app.view(), operation);
+            }
+        }
+    }
+}
+
+/// The pictures that need the window: the suggestions open under a focused field.
+pub(crate) fn pointed() -> Vec<crate::tools_screens::Pointed> {
+    vec![("form-agac-oneri", tree_missing, name_focused)]
+}
+
+/// Formlar on the tree form: the photos item chosen.
+fn tree_designing(app: &mut App) {
+    trees(app);
+    run(app, "data.forms");
+    designer(app, designer::Event::SelectItem("fotograflar".into()));
 }
 
 /// The block of buildings under the calculating form: the first one's record already written (code
@@ -622,6 +758,9 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-iliskiler", relations_window),
         ("form-kayit-denetle", records_audit),
         ("form-kaydirici", slider_editing),
+        ("form-agac", tree_editing),
+        ("form-agac-eksik", tree_missing),
+        ("form-agac-tasarim", tree_designing),
     ]
 }
 
@@ -1114,6 +1253,40 @@ mod tests {
         assert_eq!(
             attrs(&app, 1).get("Yükseklik").map(String::as_str),
             Some("21")
+        );
+    }
+
+    /// docs/adr/0407: a tree without a photo cannot be saved; a photo added in the form lets it; a
+    /// colour that is not one is refused; the name field offers the layer's names.
+    #[test]
+    fn photos_are_counted_and_colours_checked() {
+        let mut app = crate::files_testing::app_with_drawing();
+        trees(&mut app);
+        app.selection.set([Slot(2)]);
+        run(&mut app, "data.formEdit");
+        entry(&mut app, entry::Event::Save);
+        assert!(
+            app.form_entry.is_some(),
+            "a tree without a photo is not saved"
+        );
+        assert!(!attrs(&app, 2).contains_key("Renk"));
+        let photo = fixture("fixtures/exif/v1/konum.jpg");
+        let _ = app.update(Message::Attachment(crate::attachments::Event::Picked(
+            Slot(2),
+            vec![photo.into()],
+        )));
+        entry(&mut app, entry::Event::Value("Renk".into(), "yeşil".into()));
+        entry(&mut app, entry::Event::Save);
+        assert!(app.form_entry.is_some(), "yeşil is not a colour");
+        entry(
+            &mut app,
+            entry::Event::Value("Renk".into(), "#2e7d32cc".into()),
+        );
+        entry(&mut app, entry::Event::Save);
+        assert!(app.form_entry.is_none(), "saved with a photo and a colour");
+        assert_eq!(
+            attrs(&app, 2).get("Renk").map(String::as_str),
+            Some("#2e7d32cc")
         );
     }
 

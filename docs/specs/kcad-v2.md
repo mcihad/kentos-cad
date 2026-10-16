@@ -626,11 +626,13 @@ tam sayı, anahtarlar kanonik sırada). Yazıcı varsayılan değerindeki alanı
   alanın değeri silinir, ADR 0402 §3). Öğenin türü `type`'tadır: `tab` (yalnız üstte; üstte sekme varsa hepsi sekme;
   `broken/forms-tab-in-group.kcad`), `group` (`label`, `columns` 1 ya da 2, `visibleWhen`, `collapsed` yalnız `true`), `field`
   (`field` alanın anahtarı: kimliği ya da adı; `label`, `help`, `placeholder`, `widget`, `readOnly`, `required`, `visibleWhen`,
-  `requiredWhen`, `readOnlyWhen`, `default`, `defaultExpr`, `calculate`, `choiceFilter`, `unique` ve `reuseLast` yalnız
-  `true`, `lookup`: başka katmandan değer listesi, `layer`, `key` (alanın anahtarı ya da nesnenin kimliği için `$uid`), `label`,
+  `requiredWhen`, `readOnlyWhen`, `default`, `defaultExpr`, `calculate`, `choiceFilter`, `unique`, `reuseLast` ve `suggest`
+  (ADR 0407 §3) yalnız `true`, `widget`'ın değerleri `text`, `textArea`, `number`, `date`, `check`, `switch`, `list`, `radio`,
+  `segmented`, `slider` (ADR 0406) ve `color` (ADR 0407), `lookup`: başka katmandan değer listesi, `layer`, `key` (alanın anahtarı ya da nesnenin kimliği için `$uid`), `label`,
   en çok 20 `matches` (`field`, `record`) ve `filter`, ADR 0404 §1; `checks`: `rule`, `message` ve yalnız `true` olarak
   `warning`, en çok 20), `note` (`text`; `{…}` ifadeleriyle şablon), `related` (`label`, `layer`, `field`, `visibleWhen`:
-  başka katmanın bu kayda başvuran nesneleri, ADR 0404 §4). Her öğenin `id`'si form içinde tekildir; en çok 4 düzey, 500 öğe; kurallar İfadeyle seç'in dilindedir, en çok 2000
+  başka katmanın bu kayda başvuran nesneleri, ADR 0404 §4), `attachments` (`label`, `accept`: `photo` ya da `document`, `any`
+  varsayılandır, yazılmaz; `min`, `max` 0–100, en az en çoktan büyük olamaz; `visibleWhen`: kaydın ekleri, ADR 0407 §1). Her öğenin `id`'si form içinde tekildir; en çok 4 düzey, 500 öğe; kurallar İfadeyle seç'in dilindedir, en çok 2000
   karakter.
 - **Yayın:** `version` (1'den ya da ilk yayının numarasından sırayla), `digest` (gövdenin kanonik JSON'unun, ADR 0253 §2,
   SHA-256'sının ilk 32 onaltılık hanesi; içeriğe uymayan özet `bad_value`, `broken/forms-digest.kcad`), `body`, `note`.

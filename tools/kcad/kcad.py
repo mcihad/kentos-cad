@@ -1523,6 +1523,14 @@ def body_problem(body):
                 return f"“{iid}” öğesinin katmanı ve alanı yazılmalı"
             if "visibleWhen" in i and not _rule_ok(i["visibleWhen"]):
                 return f"“{iid}” öğesinin kuralı geçersiz"
+        if t == "attachments":
+            if "label" in i and not _form_name_ok(i["label"]):
+                return f"“{iid}” öğesinin adı geçersiz"
+            lo, hi = i.get("min"), i.get("max")
+            if any(n is not None and n > 100 for n in (lo, hi)) or (lo is not None and hi is not None and lo > hi):
+                return f"“{iid}” öğesinin sayıları geçersiz"
+            if "visibleWhen" in i and not _rule_ok(i["visibleWhen"]):
+                return f"“{iid}” öğesinin kuralı geçersiz"
         if t == "field":
             if not i["field"].strip() or len(i["field"]) > MOST_FORM_NAME:
                 return f"“{iid}” öğesinin alanı yazılmamış"
@@ -3253,7 +3261,8 @@ class _Schema:
                 return lst
             return check
 
-        widgets = ("text", "textArea", "number", "date", "check", "switch", "list", "radio", "segmented", "slider")
+        widgets = ("text", "textArea", "number", "date", "check", "switch", "list", "radio", "segmented", "slider",
+                   "color")
         check = self.fields({"rule": (self.text, True), "message": (self.text, True), "warning": (true_, False)})
         # docs/adr/0404 §1: a field's list from another layer, its chain's matches.
         match = self.fields({"field": (self.text, True), "record": (self.text, True)})
@@ -3296,6 +3305,7 @@ class _Schema:
                     "choiceFilter": (self.text, False),
                     "unique": (true_, False),
                     "reuseLast": (true_, False),
+                    "suggest": (true_, False),
                     "lookup": (lookup, False),
                     "checks": (nonempty(self.array(check)), False),
                 },
@@ -3305,6 +3315,15 @@ class _Schema:
                     "label": (self.text, False),
                     "layer": (self.text, True),
                     "field": (self.text, True),
+                    "visibleWhen": (self.text, False),
+                },
+                # docs/adr/0407 §1: the record's photos and documents.
+                "attachments": {
+                    "id": (self.text, True),
+                    "label": (self.text, False),
+                    "accept": (self.enum(("any", "photo", "document")), False),
+                    "min": (self.uint(32), False),
+                    "max": (self.uint(32), False),
                     "visibleWhen": (self.text, False),
                 },
             }

@@ -751,6 +751,26 @@
             ],
             "type": "object"
           },
+          "AttachmentAccept": {
+            "description": "What an attachments item counts and adds.",
+            "oneOf": [
+              {
+                "const": "any",
+                "description": "Photos, files and addresses.",
+                "type": "string"
+              },
+              {
+                "const": "photo",
+                "description": "Only photos (a PNG or JPEG asset, or a link ending in one).",
+                "type": "string"
+              },
+              {
+                "const": "document",
+                "description": "Only what is not a photo: documents and addresses.",
+                "type": "string"
+              }
+            ]
+          },
           "AttributeDefinition": {
             "description": "One attribute an insert shows as text (docs/adr/0144 §7): the insert's\nattribute `tag`, else `value`, written at `p` in the definition's\ncoordinates, moved with the insert.",
             "properties": {
@@ -3914,6 +3934,10 @@
                     "description": "A new record's field opens with the value last written through the form in the session (the\nform's interface keeps it); written only as `true`.",
                     "type": "boolean"
                   },
+                  "suggest": {
+                    "description": "The layer's values of the field offered while typing, the value staying free (docs/adr/0407\n§3): text fields without a list; written only as `true`.",
+                    "type": "boolean"
+                  },
                   "type": {
                     "const": "field",
                     "type": "string"
@@ -4005,6 +4029,59 @@
                   "id",
                   "layer",
                   "field"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The record's photos and documents (docs/adr/0407 §1): the object's own attachments, added\nand removed in the form; their count may be bounded.",
+                "properties": {
+                  "accept": {
+                    "$ref": "#/$defs/AttachmentAccept",
+                    "description": "What counts and is added: every attachment, only photos or only documents and addresses."
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "max": {
+                    "description": "The most (0–100).",
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "count"
+                  },
+                  "min": {
+                    "description": "The fewest (0–100) the record holds while the item is shown.",
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "count"
+                  },
+                  "type": {
+                    "const": "attachments",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
                 ],
                 "type": "object"
               }
@@ -4134,6 +4211,11 @@
               {
                 "const": "slider",
                 "description": "A slider between the field's least and most (docs/adr/0406 §2): number fields with both.",
+                "type": "string"
+              },
+              {
+                "const": "color",
+                "description": "A colour, `#RRGGBB` or `#RRGGBBAA` (docs/adr/0407 §2): text fields.",
                 "type": "string"
               }
             ]
@@ -12449,6 +12531,26 @@
             ],
             "type": "object"
           },
+          "AttachmentAccept": {
+            "description": "What an attachments item counts and adds.",
+            "oneOf": [
+              {
+                "const": "any",
+                "description": "Photos, files and addresses.",
+                "type": "string"
+              },
+              {
+                "const": "photo",
+                "description": "Only photos (a PNG or JPEG asset, or a link ending in one).",
+                "type": "string"
+              },
+              {
+                "const": "document",
+                "description": "Only what is not a photo: documents and addresses.",
+                "type": "string"
+              }
+            ]
+          },
           "AuthKind": {
             "description": "The proof a service asks for (docs/adr/0208 §12).",
             "oneOf": [
@@ -13510,6 +13612,10 @@
                     "description": "A new record's field opens with the value last written through the form in the session (the\nform's interface keeps it); written only as `true`.",
                     "type": "boolean"
                   },
+                  "suggest": {
+                    "description": "The layer's values of the field offered while typing, the value staying free (docs/adr/0407\n§3): text fields without a list; written only as `true`.",
+                    "type": "boolean"
+                  },
                   "type": {
                     "const": "field",
                     "type": "string"
@@ -13601,6 +13707,59 @@
                   "id",
                   "layer",
                   "field"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The record's photos and documents (docs/adr/0407 §1): the object's own attachments, added\nand removed in the form; their count may be bounded.",
+                "properties": {
+                  "accept": {
+                    "$ref": "#/$defs/AttachmentAccept",
+                    "description": "What counts and is added: every attachment, only photos or only documents and addresses."
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "max": {
+                    "description": "The most (0–100).",
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "count"
+                  },
+                  "min": {
+                    "description": "The fewest (0–100) the record holds while the item is shown.",
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "count"
+                  },
+                  "type": {
+                    "const": "attachments",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
                 ],
                 "type": "object"
               }
@@ -13730,6 +13889,11 @@
               {
                 "const": "slider",
                 "description": "A slider between the field's least and most (docs/adr/0406 §2): number fields with both.",
+                "type": "string"
+              },
+              {
+                "const": "color",
+                "description": "A colour, `#RRGGBB` or `#RRGGBBAA` (docs/adr/0407 §2): text fields.",
                 "type": "string"
               }
             ]
@@ -18116,6 +18280,26 @@
             ],
             "type": "object"
           },
+          "AttachmentAccept": {
+            "description": "What an attachments item counts and adds.",
+            "oneOf": [
+              {
+                "const": "any",
+                "description": "Photos, files and addresses.",
+                "type": "string"
+              },
+              {
+                "const": "photo",
+                "description": "Only photos (a PNG or JPEG asset, or a link ending in one).",
+                "type": "string"
+              },
+              {
+                "const": "document",
+                "description": "Only what is not a photo: documents and addresses.",
+                "type": "string"
+              }
+            ]
+          },
           "AttributeDefinition": {
             "description": "One attribute an insert shows as text (docs/adr/0144 §7): the insert's\nattribute `tag`, else `value`, written at `p` in the definition's\ncoordinates, moved with the insert.",
             "properties": {
@@ -21206,6 +21390,10 @@
                     "description": "A new record's field opens with the value last written through the form in the session (the\nform's interface keeps it); written only as `true`.",
                     "type": "boolean"
                   },
+                  "suggest": {
+                    "description": "The layer's values of the field offered while typing, the value staying free (docs/adr/0407\n§3): text fields without a list; written only as `true`.",
+                    "type": "boolean"
+                  },
                   "type": {
                     "const": "field",
                     "type": "string"
@@ -21297,6 +21485,59 @@
                   "id",
                   "layer",
                   "field"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The record's photos and documents (docs/adr/0407 §1): the object's own attachments, added\nand removed in the form; their count may be bounded.",
+                "properties": {
+                  "accept": {
+                    "$ref": "#/$defs/AttachmentAccept",
+                    "description": "What counts and is added: every attachment, only photos or only documents and addresses."
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "max": {
+                    "description": "The most (0–100).",
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "count"
+                  },
+                  "min": {
+                    "description": "The fewest (0–100) the record holds while the item is shown.",
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "count"
+                  },
+                  "type": {
+                    "const": "attachments",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
                 ],
                 "type": "object"
               }
@@ -21426,6 +21667,11 @@
               {
                 "const": "slider",
                 "description": "A slider between the field's least and most (docs/adr/0406 §2): number fields with both.",
+                "type": "string"
+              },
+              {
+                "const": "color",
+                "description": "A colour, `#RRGGBB` or `#RRGGBBAA` (docs/adr/0407 §2): text fields.",
                 "type": "string"
               }
             ]
@@ -323313,6 +323559,26 @@
       "cost": "instant",
       "input": {
         "$defs": {
+          "AttachmentAccept": {
+            "description": "What an attachments item counts and adds.",
+            "oneOf": [
+              {
+                "const": "any",
+                "description": "Photos, files and addresses.",
+                "type": "string"
+              },
+              {
+                "const": "photo",
+                "description": "Only photos (a PNG or JPEG asset, or a link ending in one).",
+                "type": "string"
+              },
+              {
+                "const": "document",
+                "description": "Only what is not a photo: documents and addresses.",
+                "type": "string"
+              }
+            ]
+          },
           "FormBody": {
             "additionalProperties": false,
             "description": "A form's content: its items and the draft's revision (each kept change adds one).",
@@ -323549,6 +323815,10 @@
                     "description": "A new record's field opens with the value last written through the form in the session (the\nform's interface keeps it); written only as `true`.",
                     "type": "boolean"
                   },
+                  "suggest": {
+                    "description": "The layer's values of the field offered while typing, the value staying free (docs/adr/0407\n§3): text fields without a list; written only as `true`.",
+                    "type": "boolean"
+                  },
                   "type": {
                     "const": "field",
                     "type": "string"
@@ -323640,6 +323910,59 @@
                   "id",
                   "layer",
                   "field"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The record's photos and documents (docs/adr/0407 §1): the object's own attachments, added\nand removed in the form; their count may be bounded.",
+                "properties": {
+                  "accept": {
+                    "$ref": "#/$defs/AttachmentAccept",
+                    "description": "What counts and is added: every attachment, only photos or only documents and addresses."
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "max": {
+                    "description": "The most (0–100).",
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "count"
+                  },
+                  "min": {
+                    "description": "The fewest (0–100) the record holds while the item is shown.",
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "count"
+                  },
+                  "type": {
+                    "const": "attachments",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
                 ],
                 "type": "object"
               }
@@ -323736,6 +324059,11 @@
               {
                 "const": "slider",
                 "description": "A slider between the field's least and most (docs/adr/0406 §2): number fields with both.",
+                "type": "string"
+              },
+              {
+                "const": "color",
+                "description": "A colour, `#RRGGBB` or `#RRGGBBAA` (docs/adr/0407 §2): text fields.",
                 "type": "string"
               }
             ]
@@ -323930,6 +324258,26 @@
       },
       "output": {
         "$defs": {
+          "AttachmentAccept": {
+            "description": "What an attachments item counts and adds.",
+            "oneOf": [
+              {
+                "const": "any",
+                "description": "Photos, files and addresses.",
+                "type": "string"
+              },
+              {
+                "const": "photo",
+                "description": "Only photos (a PNG or JPEG asset, or a link ending in one).",
+                "type": "string"
+              },
+              {
+                "const": "document",
+                "description": "Only what is not a photo: documents and addresses.",
+                "type": "string"
+              }
+            ]
+          },
           "FormBody": {
             "additionalProperties": false,
             "description": "A form's content: its items and the draft's revision (each kept change adds one).",
@@ -324209,6 +324557,10 @@
                     "description": "A new record's field opens with the value last written through the form in the session (the\nform's interface keeps it); written only as `true`.",
                     "type": "boolean"
                   },
+                  "suggest": {
+                    "description": "The layer's values of the field offered while typing, the value staying free (docs/adr/0407\n§3): text fields without a list; written only as `true`.",
+                    "type": "boolean"
+                  },
                   "type": {
                     "const": "field",
                     "type": "string"
@@ -324300,6 +324652,59 @@
                   "id",
                   "layer",
                   "field"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The record's photos and documents (docs/adr/0407 §1): the object's own attachments, added\nand removed in the form; their count may be bounded.",
+                "properties": {
+                  "accept": {
+                    "$ref": "#/$defs/AttachmentAccept",
+                    "description": "What counts and is added: every attachment, only photos or only documents and addresses."
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "max": {
+                    "description": "The most (0–100).",
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "count"
+                  },
+                  "min": {
+                    "description": "The fewest (0–100) the record holds while the item is shown.",
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "count"
+                  },
+                  "type": {
+                    "const": "attachments",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
                 ],
                 "type": "object"
               }
@@ -324478,6 +324883,11 @@
               {
                 "const": "slider",
                 "description": "A slider between the field's least and most (docs/adr/0406 §2): number fields with both.",
+                "type": "string"
+              },
+              {
+                "const": "color",
+                "description": "A colour, `#RRGGBB` or `#RRGGBBAA` (docs/adr/0407 §2): text fields.",
                 "type": "string"
               }
             ]
@@ -324591,6 +325001,26 @@
       },
       "plan": {
         "$defs": {
+          "AttachmentAccept": {
+            "description": "What an attachments item counts and adds.",
+            "oneOf": [
+              {
+                "const": "any",
+                "description": "Photos, files and addresses.",
+                "type": "string"
+              },
+              {
+                "const": "photo",
+                "description": "Only photos (a PNG or JPEG asset, or a link ending in one).",
+                "type": "string"
+              },
+              {
+                "const": "document",
+                "description": "Only what is not a photo: documents and addresses.",
+                "type": "string"
+              }
+            ]
+          },
           "FormBody": {
             "additionalProperties": false,
             "description": "A form's content: its items and the draft's revision (each kept change adds one).",
@@ -324870,6 +325300,10 @@
                     "description": "A new record's field opens with the value last written through the form in the session (the\nform's interface keeps it); written only as `true`.",
                     "type": "boolean"
                   },
+                  "suggest": {
+                    "description": "The layer's values of the field offered while typing, the value staying free (docs/adr/0407\n§3): text fields without a list; written only as `true`.",
+                    "type": "boolean"
+                  },
                   "type": {
                     "const": "field",
                     "type": "string"
@@ -324961,6 +325395,59 @@
                   "id",
                   "layer",
                   "field"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The record's photos and documents (docs/adr/0407 §1): the object's own attachments, added\nand removed in the form; their count may be bounded.",
+                "properties": {
+                  "accept": {
+                    "$ref": "#/$defs/AttachmentAccept",
+                    "description": "What counts and is added: every attachment, only photos or only documents and addresses."
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "max": {
+                    "description": "The most (0–100).",
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "count"
+                  },
+                  "min": {
+                    "description": "The fewest (0–100) the record holds while the item is shown.",
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "count"
+                  },
+                  "type": {
+                    "const": "attachments",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
                 ],
                 "type": "object"
               }
@@ -325139,6 +325626,11 @@
               {
                 "const": "slider",
                 "description": "A slider between the field's least and most (docs/adr/0406 §2): number fields with both.",
+                "type": "string"
+              },
+              {
+                "const": "color",
+                "description": "A colour, `#RRGGBB` or `#RRGGBBAA` (docs/adr/0407 §2): text fields.",
                 "type": "string"
               }
             ]
@@ -325438,6 +325930,16 @@
             "additionalProperties": false,
             "description": "An item's state for a record: shown (its own rule and its group's), required, read-only.",
             "properties": {
+              "attachments": {
+                "description": "An attachments item's count of what it counts (docs/adr/0407 §1).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
               "choices": {
                 "description": "The listed values a field with a choice filter offers for the record, in the list's order.",
                 "items": {
@@ -325479,6 +325981,16 @@
               },
               "shown": {
                 "type": "boolean"
+              },
+              "suggestions": {
+                "description": "A suggesting field's values in the layer, the most used first (docs/adr/0407 §3).",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "text": {
                 "description": "A note's text with the record's values put in (a note whose text has `{…}`).",
@@ -325618,6 +326130,16 @@
             "additionalProperties": false,
             "description": "An item's state for a record: shown (its own rule and its group's), required, read-only.",
             "properties": {
+              "attachments": {
+                "description": "An attachments item's count of what it counts (docs/adr/0407 §1).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
               "choices": {
                 "description": "The listed values a field with a choice filter offers for the record, in the list's order.",
                 "items": {
@@ -325659,6 +326181,16 @@
               },
               "shown": {
                 "type": "boolean"
+              },
+              "suggestions": {
+                "description": "A suggesting field's values in the layer, the most used first (docs/adr/0407 §3).",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "text": {
                 "description": "A note's text with the record's values put in (a note whose text has `{…}`).",

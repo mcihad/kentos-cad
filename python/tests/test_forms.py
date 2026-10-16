@@ -225,6 +225,46 @@ class FormsTests(unittest.TestCase):
             cad.forms.submit(doc, form="adres", draft=True, uid=poly.uid, values={"İl": "35"})
         self.assertEqual(refused.exception.code, "form_invalid")
 
+    def test_photos_colours_and_suggestions(self) -> None:
+        """docs/adr/0407: a tree's photos counted, its colour checked, the layer's names offered."""
+        doc = cad.Document.new("Park", srid=5256)
+        cad.layers.edit(doc, operation="add", name="Ağaç", activate=True)
+        layer = next(n.id for n in doc.layers() if n.name == "Ağaç")
+        cad.layers.edit(
+            doc, operation="fields", layer=layer,
+            fields=[cad.LayerField(name="Ad", kind="text"), cad.LayerField(name="Renk", kind="text")],
+        )
+        body = cad.FormBody(
+            revision=1,
+            items=[
+                cad.FieldFormItem(id="ad", field="Ad", suggest=True),
+                cad.FieldFormItem(id="renk", field="Renk", widget="color"),
+                cad.AttachmentsFormItem(id="fotograflar", label="Fotoğraflar", accept="photo", min=1, max=2),
+            ],
+        )
+        cad.forms.edit(doc, edit=cad.CreateFormsOp(name="Ağaç", layer=layer, id="agac", body=body))
+        cad.forms.edit(doc, edit=cad.PublishFormsOp(id="agac"))
+        square = lambda x: [cad.Vec2(x, 0.0), cad.Vec2(x + 5.0, 0.0), cad.Vec2(x + 5.0, 5.0)]  # noqa: E731
+        for x, name in ((0.0, "Çınar"), (10.0, "Ihlamur"), (20.0, "Çınar")):
+            cad.polygon.create(doc, pts=square(x), layer_id=layer, attrs={"Ad": name})
+        tree = next(iter(doc.entities(layer=layer))).uid
+
+        asked = cad.forms.validate(doc, form="agac", uid=tree)
+        states = {s.id: s for s in asked.items}
+        self.assertEqual(states["ad"].suggestions, ["Çınar", "Ihlamur"])
+        self.assertEqual(states["fotograflar"].attachments, 0)
+        self.assertEqual([i.code for i in asked.issues], ["form_attachments_few"])
+
+        cad.entities.set(
+            doc, uids=[tree], operation="attachments",
+            attachments=[cad.Attachment(name="Gövde", file="foto/govde.jpg"), cad.Attachment(name="Rapor", file="rapor.pdf")],
+        )
+        asked = cad.forms.validate(doc, form="agac", uid=tree, values={"Renk": "yeşil"})
+        self.assertEqual({s.id: s.attachments for s in asked.items}["fotograflar"], 1)
+        self.assertEqual([i.code for i in asked.issues], ["form_color_invalid"])
+        written = cad.forms.submit(doc, form="agac", uid=tree, values={"Renk": "#2E7D32"})
+        self.assertEqual(written.attrs, {"Ad": "Çınar", "Renk": "#2E7D32"})
+
     def test_a_relation_keeps_its_children(self) -> None:
         """docs/adr/0405: a meter refers to its building; the building deleted, its meters go with it (cascade); a
         restricting relation keeps a building with meters."""

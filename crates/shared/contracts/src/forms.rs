@@ -157,7 +157,57 @@ pub enum FormItem {
         #[cfg_attr(feature = "ts", ts(optional))]
         visible_when: Option<String>,
     },
+    /// The record's photos and documents (docs/adr/0407 §1): the object's own attachments, added
+    /// and removed in the form; their count may be bounded.
+    Attachments {
+        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        label: Option<String>,
+        /// What counts and is added: every attachment, only photos or only documents and addresses.
+        #[serde(default, skip_serializing_if = "AttachmentAccept::is_any")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<AttachmentAccept>", optional))]
+        accept: AttachmentAccept,
+        /// The fewest (0–100) the record holds while the item is shown.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+        min: Option<u32>,
+        /// The most (0–100).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+        max: Option<u32>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        visible_when: Option<String>,
+    },
 }
+
+/// What an attachments item counts and adds.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum AttachmentAccept {
+    /// Photos, files and addresses.
+    #[default]
+    Any,
+    /// Only photos (a PNG or JPEG asset, or a link ending in one).
+    Photo,
+    /// Only what is not a photo: documents and addresses.
+    Document,
+}
+
+impl AttachmentAccept {
+    pub fn is_any(&self) -> bool {
+        *self == AttachmentAccept::Any
+    }
+}
+
+/// The most attachments an attachments item may ask for.
+pub const MOST_FORM_ATTACHMENTS: u32 = 100;
 
 /// A field's list of values from another layer (docs/adr/0404 §1).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -277,6 +327,11 @@ pub struct FormField {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub reuse_last: bool,
+    /// The layer's values of the field offered while typing, the value staying free (docs/adr/0407
+    /// §3): text fields without a list; written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub suggest: bool,
     /// The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or
     /// `choiceFilter`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -309,6 +364,7 @@ impl FormField {
             choice_filter: None,
             unique: false,
             reuse_last: false,
+            suggest: false,
             lookup: None,
             checks: Vec::new(),
         }
@@ -358,10 +414,12 @@ pub enum FormWidget {
     Segmented,
     /// A slider between the field's least and most (docs/adr/0406 §2): number fields with both.
     Slider,
+    /// A colour, `#RRGGBB` or `#RRGGBBAA` (docs/adr/0407 §2): text fields.
+    Color,
 }
 
 impl FormWidget {
-    pub const ALL: [FormWidget; 10] = [
+    pub const ALL: [FormWidget; 11] = [
         FormWidget::Text,
         FormWidget::TextArea,
         FormWidget::Number,
@@ -372,6 +430,7 @@ impl FormWidget {
         FormWidget::Radio,
         FormWidget::Segmented,
         FormWidget::Slider,
+        FormWidget::Color,
     ];
 
     /// Its name in the interface.
@@ -387,6 +446,7 @@ impl FormWidget {
             FormWidget::Radio => "Seçenek düğmeleri",
             FormWidget::Segmented => "Parçalı seçim",
             FormWidget::Slider => "Kaydırıcı",
+            FormWidget::Color => "Renk",
         }
     }
 }
@@ -459,6 +519,15 @@ pub struct FormItemState {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub related: Option<Vec<String>>,
+    /// A suggesting field's values in the layer, the most used first (docs/adr/0407 §3).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub suggestions: Option<Vec<String>>,
+    /// An attachments item's count of what it counts (docs/adr/0407 §1).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub attachments: Option<u32>,
 }
 
 impl FormItem {
@@ -468,7 +537,8 @@ impl FormItem {
             FormItem::Tab { id, .. }
             | FormItem::Group { id, .. }
             | FormItem::Note { id, .. }
-            | FormItem::Related { id, .. } => id,
+            | FormItem::Related { id, .. }
+            | FormItem::Attachments { id, .. } => id,
             FormItem::Field(f) => &f.id,
         }
     }
@@ -656,6 +726,31 @@ pub fn body_problem(body: &FormBody) -> Option<String> {
                 {
                     return Some(format!(
                         "“{id}” öğesinin katmanı ve alanı yazılmalı, en çok {MOST_FORM_NAME} karakterdir."
+                    ));
+                }
+                if visible_when.as_deref().is_some_and(|r| !rule_ok(r)) {
+                    return Some(rule_problem(id));
+                }
+            }
+            FormItem::Attachments {
+                label,
+                min,
+                max,
+                visible_when,
+                ..
+            } => {
+                if label.as_deref().is_some_and(|l| !form_name_ok(l)) {
+                    return Some(format!(
+                        "“{id}” öğesinin adı boş olamaz ve en çok {MOST_FORM_NAME} karakterdir."
+                    ));
+                }
+                if [min, max]
+                    .iter()
+                    .any(|n| n.is_some_and(|n| n > MOST_FORM_ATTACHMENTS))
+                    || matches!((min, max), (Some(a), Some(b)) if a > b)
+                {
+                    return Some(format!(
+                        "“{id}” öğesinin en az ve en çok sayısı 0 ile {MOST_FORM_ATTACHMENTS} arasındadır, en az en çoktan büyük olamaz."
                     ));
                 }
                 if visible_when.as_deref().is_some_and(|r| !rule_ok(r)) {

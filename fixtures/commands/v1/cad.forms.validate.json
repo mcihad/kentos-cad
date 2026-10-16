@@ -16275,6 +16275,5186 @@
      }
     }
    ]
+  },
+  {
+   "name": "ekler, renk ve öneri: ağaç: öneriler en çok kullanılandan, fotoğraf ve ek sayıları",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Formlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "forms": [
+      {
+       "id": "agac",
+       "name": "Ağaç envanteri",
+       "layer": "bina",
+       "draft": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "ad",
+          "field": "Ad",
+          "suggest": true
+         },
+         {
+          "type": "field",
+          "id": "renk",
+          "field": "Renk",
+          "widget": "color",
+          "default": "#2E7D32"
+         },
+         {
+          "type": "field",
+          "id": "cins",
+          "field": "Cins"
+         },
+         {
+          "type": "field",
+          "id": "boy",
+          "field": "Boy"
+         },
+         {
+          "type": "attachments",
+          "id": "fotograflar",
+          "label": "Fotoğraflar",
+          "accept": "photo",
+          "min": 1,
+          "max": 3
+         },
+         {
+          "type": "attachments",
+          "id": "belgeler",
+          "label": "Belgeler",
+          "accept": "document",
+          "visibleWhen": "Boy > 10"
+         }
+        ]
+       },
+       "releases": [
+        {
+         "version": 1,
+         "digest": "2c17fe48a444c28eddda2ceb1c0a17dc",
+         "body": {
+          "revision": 1,
+          "items": [
+           {
+            "type": "field",
+            "id": "ad",
+            "field": "Ad",
+            "suggest": true
+           },
+           {
+            "type": "field",
+            "id": "renk",
+            "field": "Renk",
+            "widget": "color",
+            "default": "#2E7D32"
+           },
+           {
+            "type": "field",
+            "id": "cins",
+            "field": "Cins"
+           },
+           {
+            "type": "field",
+            "id": "boy",
+            "field": "Boy"
+           },
+           {
+            "type": "attachments",
+            "id": "fotograflar",
+            "label": "Fotoğraflar",
+            "accept": "photo",
+            "min": 1,
+            "max": 3
+           },
+           {
+            "type": "attachments",
+            "id": "belgeler",
+            "label": "Belgeler",
+            "accept": "document",
+            "visibleWhen": "Boy > 10"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text",
+        "required": true
+       },
+       {
+        "name": "Renk",
+        "kind": "text"
+       },
+       {
+        "name": "Cins",
+        "kind": "text",
+        "values": [
+         {
+          "code": "agac",
+          "label": "Ağaç"
+         },
+         {
+          "code": "cali",
+          "label": "Çalı"
+         }
+        ]
+       },
+       {
+        "name": "Boy",
+        "kind": "decimal",
+        "scale": 1,
+        "min": "0",
+        "max": "40"
+       }
+      ]
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli bina",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ],
+        "required": true
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+       },
+       {
+        "name": "Açıklama",
+        "kind": "text",
+        "length": 500
+       },
+       {
+        "name": "Tarih",
+        "kind": "date"
+       },
+       {
+        "name": "Onaylı",
+        "kind": "boolean"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Çınar",
+       "Renk": "#2E7D32",
+       "Cins": "agac",
+       "Boy": "12"
+      },
+      "attachments": [
+       {
+        "name": "Gövde",
+        "file": "foto/cinar-1.jpg"
+       },
+       {
+        "name": "Taç",
+        "file": "foto/cinar-2.JPEG"
+       },
+       {
+        "name": "Rapor",
+        "file": "belge/cinar.pdf"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Çınar",
+       "Boy": "8"
+      }
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Atatürk Caddesi"
+      },
+      "a": {
+       "x": 486990,
+       "y": 4419995
+      },
+      "b": {
+       "x": 487060,
+       "y": 4419995
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "kilitli",
+      "attrs": {
+       "Durum": "iyi"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420010
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Ihlamur",
+       "Boy": "4"
+      },
+      "attachments": [
+       {
+        "name": "Foto 0",
+        "url": "https://ornek.gov.tr/agac/0.png?boy=b"
+       },
+       {
+        "name": "Foto 1",
+        "url": "https://ornek.gov.tr/agac/1.png?boy=b"
+       },
+       {
+        "name": "Foto 2",
+        "url": "https://ornek.gov.tr/agac/2.png?boy=b"
+       },
+       {
+        "name": "Foto 3",
+        "url": "https://ornek.gov.tr/agac/3.png?boy=b"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487080,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420010
+       },
+       {
+        "x": 487080,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": " Ihlamur ",
+       "Renk": "yeşil"
+      },
+      "attachments": [
+       {
+        "name": "Foto",
+        "file": "foto/ihlamur.png"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487110,
+        "y": 4420000
+       },
+       {
+        "x": 487110,
+        "y": 4420010
+       },
+       {
+        "x": 487100,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Meşe",
+       "Boy": "15"
+      },
+      "attachments": [
+       {
+        "name": "Foto",
+        "file": "foto/mese.jpg"
+       },
+       {
+        "name": "Harita",
+        "url": "https://ornek.gov.tr/harita"
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "agac",
+      "uid": "$uidOf:1",
+      "values": {}
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "version": 1,
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "ad",
+         "shown": true,
+         "required": true,
+         "suggestions": [
+          "Çınar",
+          "Ihlamur",
+          "Meşe"
+         ]
+        },
+        {
+         "id": "renk",
+         "shown": true
+        },
+        {
+         "id": "cins",
+         "shown": true
+        },
+        {
+         "id": "boy",
+         "shown": true
+        },
+        {
+         "id": "fotograflar",
+         "shown": true,
+         "attachments": 2
+        },
+        {
+         "id": "belgeler",
+         "shown": true,
+         "attachments": 1
+        }
+       ],
+       "attrs": {
+        "Ad": "Çınar",
+        "Renk": "#2E7D32",
+        "Cins": "agac",
+        "Boy": "12"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ekler, renk ve öneri: fotoğrafsız ağaç en az bir fotoğraf ister",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Formlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "forms": [
+      {
+       "id": "agac",
+       "name": "Ağaç envanteri",
+       "layer": "bina",
+       "draft": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "ad",
+          "field": "Ad",
+          "suggest": true
+         },
+         {
+          "type": "field",
+          "id": "renk",
+          "field": "Renk",
+          "widget": "color",
+          "default": "#2E7D32"
+         },
+         {
+          "type": "field",
+          "id": "cins",
+          "field": "Cins"
+         },
+         {
+          "type": "field",
+          "id": "boy",
+          "field": "Boy"
+         },
+         {
+          "type": "attachments",
+          "id": "fotograflar",
+          "label": "Fotoğraflar",
+          "accept": "photo",
+          "min": 1,
+          "max": 3
+         },
+         {
+          "type": "attachments",
+          "id": "belgeler",
+          "label": "Belgeler",
+          "accept": "document",
+          "visibleWhen": "Boy > 10"
+         }
+        ]
+       },
+       "releases": [
+        {
+         "version": 1,
+         "digest": "2c17fe48a444c28eddda2ceb1c0a17dc",
+         "body": {
+          "revision": 1,
+          "items": [
+           {
+            "type": "field",
+            "id": "ad",
+            "field": "Ad",
+            "suggest": true
+           },
+           {
+            "type": "field",
+            "id": "renk",
+            "field": "Renk",
+            "widget": "color",
+            "default": "#2E7D32"
+           },
+           {
+            "type": "field",
+            "id": "cins",
+            "field": "Cins"
+           },
+           {
+            "type": "field",
+            "id": "boy",
+            "field": "Boy"
+           },
+           {
+            "type": "attachments",
+            "id": "fotograflar",
+            "label": "Fotoğraflar",
+            "accept": "photo",
+            "min": 1,
+            "max": 3
+           },
+           {
+            "type": "attachments",
+            "id": "belgeler",
+            "label": "Belgeler",
+            "accept": "document",
+            "visibleWhen": "Boy > 10"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text",
+        "required": true
+       },
+       {
+        "name": "Renk",
+        "kind": "text"
+       },
+       {
+        "name": "Cins",
+        "kind": "text",
+        "values": [
+         {
+          "code": "agac",
+          "label": "Ağaç"
+         },
+         {
+          "code": "cali",
+          "label": "Çalı"
+         }
+        ]
+       },
+       {
+        "name": "Boy",
+        "kind": "decimal",
+        "scale": 1,
+        "min": "0",
+        "max": "40"
+       }
+      ]
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli bina",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ],
+        "required": true
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+       },
+       {
+        "name": "Açıklama",
+        "kind": "text",
+        "length": 500
+       },
+       {
+        "name": "Tarih",
+        "kind": "date"
+       },
+       {
+        "name": "Onaylı",
+        "kind": "boolean"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Çınar",
+       "Renk": "#2E7D32",
+       "Cins": "agac",
+       "Boy": "12"
+      },
+      "attachments": [
+       {
+        "name": "Gövde",
+        "file": "foto/cinar-1.jpg"
+       },
+       {
+        "name": "Taç",
+        "file": "foto/cinar-2.JPEG"
+       },
+       {
+        "name": "Rapor",
+        "file": "belge/cinar.pdf"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Çınar",
+       "Boy": "8"
+      }
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Atatürk Caddesi"
+      },
+      "a": {
+       "x": 486990,
+       "y": 4419995
+      },
+      "b": {
+       "x": 487060,
+       "y": 4419995
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "kilitli",
+      "attrs": {
+       "Durum": "iyi"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420010
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Ihlamur",
+       "Boy": "4"
+      },
+      "attachments": [
+       {
+        "name": "Foto 0",
+        "url": "https://ornek.gov.tr/agac/0.png?boy=b"
+       },
+       {
+        "name": "Foto 1",
+        "url": "https://ornek.gov.tr/agac/1.png?boy=b"
+       },
+       {
+        "name": "Foto 2",
+        "url": "https://ornek.gov.tr/agac/2.png?boy=b"
+       },
+       {
+        "name": "Foto 3",
+        "url": "https://ornek.gov.tr/agac/3.png?boy=b"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487080,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420010
+       },
+       {
+        "x": 487080,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": " Ihlamur ",
+       "Renk": "yeşil"
+      },
+      "attachments": [
+       {
+        "name": "Foto",
+        "file": "foto/ihlamur.png"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487110,
+        "y": 4420000
+       },
+       {
+        "x": 487110,
+        "y": 4420010
+       },
+       {
+        "x": 487100,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Meşe",
+       "Boy": "15"
+      },
+      "attachments": [
+       {
+        "name": "Foto",
+        "file": "foto/mese.jpg"
+       },
+       {
+        "name": "Harita",
+        "url": "https://ornek.gov.tr/harita"
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "agac",
+      "uid": "$uidOf:2",
+      "values": {}
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "version": 1,
+       "issues": [
+        {
+         "code": "form_attachments_few",
+         "severity": "error",
+         "item": "fotograflar",
+         "rule": "min",
+         "message": "$any"
+        }
+       ],
+       "valid": false,
+       "items": [
+        {
+         "id": "ad",
+         "shown": true,
+         "required": true,
+         "suggestions": [
+          "Çınar",
+          "Ihlamur",
+          "Meşe"
+         ]
+        },
+        {
+         "id": "renk",
+         "shown": true
+        },
+        {
+         "id": "cins",
+         "shown": true
+        },
+        {
+         "id": "boy",
+         "shown": true
+        },
+        {
+         "id": "fotograflar",
+         "shown": true,
+         "attachments": 0
+        },
+        {
+         "id": "belgeler",
+         "shown": false,
+         "attachments": 0
+        }
+       ],
+       "attrs": {
+        "Ad": "Çınar",
+        "Boy": "8"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ekler, renk ve öneri: dört fotoğraf en çok üçü aşar; adresler de fotoğraf sayılır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Formlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "forms": [
+      {
+       "id": "agac",
+       "name": "Ağaç envanteri",
+       "layer": "bina",
+       "draft": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "ad",
+          "field": "Ad",
+          "suggest": true
+         },
+         {
+          "type": "field",
+          "id": "renk",
+          "field": "Renk",
+          "widget": "color",
+          "default": "#2E7D32"
+         },
+         {
+          "type": "field",
+          "id": "cins",
+          "field": "Cins"
+         },
+         {
+          "type": "field",
+          "id": "boy",
+          "field": "Boy"
+         },
+         {
+          "type": "attachments",
+          "id": "fotograflar",
+          "label": "Fotoğraflar",
+          "accept": "photo",
+          "min": 1,
+          "max": 3
+         },
+         {
+          "type": "attachments",
+          "id": "belgeler",
+          "label": "Belgeler",
+          "accept": "document",
+          "visibleWhen": "Boy > 10"
+         }
+        ]
+       },
+       "releases": [
+        {
+         "version": 1,
+         "digest": "2c17fe48a444c28eddda2ceb1c0a17dc",
+         "body": {
+          "revision": 1,
+          "items": [
+           {
+            "type": "field",
+            "id": "ad",
+            "field": "Ad",
+            "suggest": true
+           },
+           {
+            "type": "field",
+            "id": "renk",
+            "field": "Renk",
+            "widget": "color",
+            "default": "#2E7D32"
+           },
+           {
+            "type": "field",
+            "id": "cins",
+            "field": "Cins"
+           },
+           {
+            "type": "field",
+            "id": "boy",
+            "field": "Boy"
+           },
+           {
+            "type": "attachments",
+            "id": "fotograflar",
+            "label": "Fotoğraflar",
+            "accept": "photo",
+            "min": 1,
+            "max": 3
+           },
+           {
+            "type": "attachments",
+            "id": "belgeler",
+            "label": "Belgeler",
+            "accept": "document",
+            "visibleWhen": "Boy > 10"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text",
+        "required": true
+       },
+       {
+        "name": "Renk",
+        "kind": "text"
+       },
+       {
+        "name": "Cins",
+        "kind": "text",
+        "values": [
+         {
+          "code": "agac",
+          "label": "Ağaç"
+         },
+         {
+          "code": "cali",
+          "label": "Çalı"
+         }
+        ]
+       },
+       {
+        "name": "Boy",
+        "kind": "decimal",
+        "scale": 1,
+        "min": "0",
+        "max": "40"
+       }
+      ]
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli bina",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ],
+        "required": true
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+       },
+       {
+        "name": "Açıklama",
+        "kind": "text",
+        "length": 500
+       },
+       {
+        "name": "Tarih",
+        "kind": "date"
+       },
+       {
+        "name": "Onaylı",
+        "kind": "boolean"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Çınar",
+       "Renk": "#2E7D32",
+       "Cins": "agac",
+       "Boy": "12"
+      },
+      "attachments": [
+       {
+        "name": "Gövde",
+        "file": "foto/cinar-1.jpg"
+       },
+       {
+        "name": "Taç",
+        "file": "foto/cinar-2.JPEG"
+       },
+       {
+        "name": "Rapor",
+        "file": "belge/cinar.pdf"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Çınar",
+       "Boy": "8"
+      }
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Atatürk Caddesi"
+      },
+      "a": {
+       "x": 486990,
+       "y": 4419995
+      },
+      "b": {
+       "x": 487060,
+       "y": 4419995
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "kilitli",
+      "attrs": {
+       "Durum": "iyi"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420010
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Ihlamur",
+       "Boy": "4"
+      },
+      "attachments": [
+       {
+        "name": "Foto 0",
+        "url": "https://ornek.gov.tr/agac/0.png?boy=b"
+       },
+       {
+        "name": "Foto 1",
+        "url": "https://ornek.gov.tr/agac/1.png?boy=b"
+       },
+       {
+        "name": "Foto 2",
+        "url": "https://ornek.gov.tr/agac/2.png?boy=b"
+       },
+       {
+        "name": "Foto 3",
+        "url": "https://ornek.gov.tr/agac/3.png?boy=b"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487080,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420010
+       },
+       {
+        "x": 487080,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": " Ihlamur ",
+       "Renk": "yeşil"
+      },
+      "attachments": [
+       {
+        "name": "Foto",
+        "file": "foto/ihlamur.png"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487110,
+        "y": 4420000
+       },
+       {
+        "x": 487110,
+        "y": 4420010
+       },
+       {
+        "x": 487100,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Meşe",
+       "Boy": "15"
+      },
+      "attachments": [
+       {
+        "name": "Foto",
+        "file": "foto/mese.jpg"
+       },
+       {
+        "name": "Harita",
+        "url": "https://ornek.gov.tr/harita"
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "agac",
+      "uid": "$uidOf:5",
+      "values": {}
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "version": 1,
+       "issues": [
+        {
+         "code": "form_attachments_many",
+         "severity": "error",
+         "item": "fotograflar",
+         "rule": "max",
+         "message": "$any"
+        }
+       ],
+       "valid": false,
+       "items": [
+        {
+         "id": "ad",
+         "shown": true,
+         "required": true,
+         "suggestions": [
+          "Çınar",
+          "Ihlamur",
+          "Meşe"
+         ]
+        },
+        {
+         "id": "renk",
+         "shown": true
+        },
+        {
+         "id": "cins",
+         "shown": true
+        },
+        {
+         "id": "boy",
+         "shown": true
+        },
+        {
+         "id": "fotograflar",
+         "shown": true,
+         "attachments": 4
+        },
+        {
+         "id": "belgeler",
+         "shown": false,
+         "attachments": 0
+        }
+       ],
+       "attrs": {
+        "Ad": "Ihlamur",
+        "Boy": "4"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ekler, renk ve öneri: renk değil: yeşil; öneri boşlukları kırpar",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Formlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "forms": [
+      {
+       "id": "agac",
+       "name": "Ağaç envanteri",
+       "layer": "bina",
+       "draft": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "ad",
+          "field": "Ad",
+          "suggest": true
+         },
+         {
+          "type": "field",
+          "id": "renk",
+          "field": "Renk",
+          "widget": "color",
+          "default": "#2E7D32"
+         },
+         {
+          "type": "field",
+          "id": "cins",
+          "field": "Cins"
+         },
+         {
+          "type": "field",
+          "id": "boy",
+          "field": "Boy"
+         },
+         {
+          "type": "attachments",
+          "id": "fotograflar",
+          "label": "Fotoğraflar",
+          "accept": "photo",
+          "min": 1,
+          "max": 3
+         },
+         {
+          "type": "attachments",
+          "id": "belgeler",
+          "label": "Belgeler",
+          "accept": "document",
+          "visibleWhen": "Boy > 10"
+         }
+        ]
+       },
+       "releases": [
+        {
+         "version": 1,
+         "digest": "2c17fe48a444c28eddda2ceb1c0a17dc",
+         "body": {
+          "revision": 1,
+          "items": [
+           {
+            "type": "field",
+            "id": "ad",
+            "field": "Ad",
+            "suggest": true
+           },
+           {
+            "type": "field",
+            "id": "renk",
+            "field": "Renk",
+            "widget": "color",
+            "default": "#2E7D32"
+           },
+           {
+            "type": "field",
+            "id": "cins",
+            "field": "Cins"
+           },
+           {
+            "type": "field",
+            "id": "boy",
+            "field": "Boy"
+           },
+           {
+            "type": "attachments",
+            "id": "fotograflar",
+            "label": "Fotoğraflar",
+            "accept": "photo",
+            "min": 1,
+            "max": 3
+           },
+           {
+            "type": "attachments",
+            "id": "belgeler",
+            "label": "Belgeler",
+            "accept": "document",
+            "visibleWhen": "Boy > 10"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text",
+        "required": true
+       },
+       {
+        "name": "Renk",
+        "kind": "text"
+       },
+       {
+        "name": "Cins",
+        "kind": "text",
+        "values": [
+         {
+          "code": "agac",
+          "label": "Ağaç"
+         },
+         {
+          "code": "cali",
+          "label": "Çalı"
+         }
+        ]
+       },
+       {
+        "name": "Boy",
+        "kind": "decimal",
+        "scale": 1,
+        "min": "0",
+        "max": "40"
+       }
+      ]
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli bina",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ],
+        "required": true
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+       },
+       {
+        "name": "Açıklama",
+        "kind": "text",
+        "length": 500
+       },
+       {
+        "name": "Tarih",
+        "kind": "date"
+       },
+       {
+        "name": "Onaylı",
+        "kind": "boolean"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Çınar",
+       "Renk": "#2E7D32",
+       "Cins": "agac",
+       "Boy": "12"
+      },
+      "attachments": [
+       {
+        "name": "Gövde",
+        "file": "foto/cinar-1.jpg"
+       },
+       {
+        "name": "Taç",
+        "file": "foto/cinar-2.JPEG"
+       },
+       {
+        "name": "Rapor",
+        "file": "belge/cinar.pdf"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Çınar",
+       "Boy": "8"
+      }
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Atatürk Caddesi"
+      },
+      "a": {
+       "x": 486990,
+       "y": 4419995
+      },
+      "b": {
+       "x": 487060,
+       "y": 4419995
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "kilitli",
+      "attrs": {
+       "Durum": "iyi"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420010
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Ihlamur",
+       "Boy": "4"
+      },
+      "attachments": [
+       {
+        "name": "Foto 0",
+        "url": "https://ornek.gov.tr/agac/0.png?boy=b"
+       },
+       {
+        "name": "Foto 1",
+        "url": "https://ornek.gov.tr/agac/1.png?boy=b"
+       },
+       {
+        "name": "Foto 2",
+        "url": "https://ornek.gov.tr/agac/2.png?boy=b"
+       },
+       {
+        "name": "Foto 3",
+        "url": "https://ornek.gov.tr/agac/3.png?boy=b"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487080,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420010
+       },
+       {
+        "x": 487080,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": " Ihlamur ",
+       "Renk": "yeşil"
+      },
+      "attachments": [
+       {
+        "name": "Foto",
+        "file": "foto/ihlamur.png"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487110,
+        "y": 4420000
+       },
+       {
+        "x": 487110,
+        "y": 4420010
+       },
+       {
+        "x": 487100,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Meşe",
+       "Boy": "15"
+      },
+      "attachments": [
+       {
+        "name": "Foto",
+        "file": "foto/mese.jpg"
+       },
+       {
+        "name": "Harita",
+        "url": "https://ornek.gov.tr/harita"
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "agac",
+      "uid": "$uidOf:6",
+      "values": {}
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "version": 1,
+       "issues": [
+        {
+         "code": "form_color_invalid",
+         "severity": "error",
+         "item": "renk",
+         "field": "Renk",
+         "message": "$any"
+        }
+       ],
+       "valid": false,
+       "items": [
+        {
+         "id": "ad",
+         "shown": true,
+         "required": true,
+         "suggestions": [
+          "Çınar",
+          "Ihlamur",
+          "Meşe"
+         ]
+        },
+        {
+         "id": "renk",
+         "shown": true
+        },
+        {
+         "id": "cins",
+         "shown": true
+        },
+        {
+         "id": "boy",
+         "shown": true
+        },
+        {
+         "id": "fotograflar",
+         "shown": true,
+         "attachments": 1
+        },
+        {
+         "id": "belgeler",
+         "shown": false,
+         "attachments": 0
+        }
+       ],
+       "attrs": {
+        "Ad": " Ihlamur ",
+        "Renk": "yeşil"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ekler, renk ve öneri: belgelerden biri adres: ekler sayılır, fotoğraf yalnız biri",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Formlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "forms": [
+      {
+       "id": "agac",
+       "name": "Ağaç envanteri",
+       "layer": "bina",
+       "draft": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "ad",
+          "field": "Ad",
+          "suggest": true
+         },
+         {
+          "type": "field",
+          "id": "renk",
+          "field": "Renk",
+          "widget": "color",
+          "default": "#2E7D32"
+         },
+         {
+          "type": "field",
+          "id": "cins",
+          "field": "Cins"
+         },
+         {
+          "type": "field",
+          "id": "boy",
+          "field": "Boy"
+         },
+         {
+          "type": "attachments",
+          "id": "fotograflar",
+          "label": "Fotoğraflar",
+          "accept": "photo",
+          "min": 1,
+          "max": 3
+         },
+         {
+          "type": "attachments",
+          "id": "belgeler",
+          "label": "Belgeler",
+          "accept": "document",
+          "visibleWhen": "Boy > 10"
+         }
+        ]
+       },
+       "releases": [
+        {
+         "version": 1,
+         "digest": "2c17fe48a444c28eddda2ceb1c0a17dc",
+         "body": {
+          "revision": 1,
+          "items": [
+           {
+            "type": "field",
+            "id": "ad",
+            "field": "Ad",
+            "suggest": true
+           },
+           {
+            "type": "field",
+            "id": "renk",
+            "field": "Renk",
+            "widget": "color",
+            "default": "#2E7D32"
+           },
+           {
+            "type": "field",
+            "id": "cins",
+            "field": "Cins"
+           },
+           {
+            "type": "field",
+            "id": "boy",
+            "field": "Boy"
+           },
+           {
+            "type": "attachments",
+            "id": "fotograflar",
+            "label": "Fotoğraflar",
+            "accept": "photo",
+            "min": 1,
+            "max": 3
+           },
+           {
+            "type": "attachments",
+            "id": "belgeler",
+            "label": "Belgeler",
+            "accept": "document",
+            "visibleWhen": "Boy > 10"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text",
+        "required": true
+       },
+       {
+        "name": "Renk",
+        "kind": "text"
+       },
+       {
+        "name": "Cins",
+        "kind": "text",
+        "values": [
+         {
+          "code": "agac",
+          "label": "Ağaç"
+         },
+         {
+          "code": "cali",
+          "label": "Çalı"
+         }
+        ]
+       },
+       {
+        "name": "Boy",
+        "kind": "decimal",
+        "scale": 1,
+        "min": "0",
+        "max": "40"
+       }
+      ]
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli bina",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ],
+        "required": true
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+       },
+       {
+        "name": "Açıklama",
+        "kind": "text",
+        "length": 500
+       },
+       {
+        "name": "Tarih",
+        "kind": "date"
+       },
+       {
+        "name": "Onaylı",
+        "kind": "boolean"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Çınar",
+       "Renk": "#2E7D32",
+       "Cins": "agac",
+       "Boy": "12"
+      },
+      "attachments": [
+       {
+        "name": "Gövde",
+        "file": "foto/cinar-1.jpg"
+       },
+       {
+        "name": "Taç",
+        "file": "foto/cinar-2.JPEG"
+       },
+       {
+        "name": "Rapor",
+        "file": "belge/cinar.pdf"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Çınar",
+       "Boy": "8"
+      }
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Atatürk Caddesi"
+      },
+      "a": {
+       "x": 486990,
+       "y": 4419995
+      },
+      "b": {
+       "x": 487060,
+       "y": 4419995
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "kilitli",
+      "attrs": {
+       "Durum": "iyi"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420010
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Ihlamur",
+       "Boy": "4"
+      },
+      "attachments": [
+       {
+        "name": "Foto 0",
+        "url": "https://ornek.gov.tr/agac/0.png?boy=b"
+       },
+       {
+        "name": "Foto 1",
+        "url": "https://ornek.gov.tr/agac/1.png?boy=b"
+       },
+       {
+        "name": "Foto 2",
+        "url": "https://ornek.gov.tr/agac/2.png?boy=b"
+       },
+       {
+        "name": "Foto 3",
+        "url": "https://ornek.gov.tr/agac/3.png?boy=b"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487080,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420010
+       },
+       {
+        "x": 487080,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": " Ihlamur ",
+       "Renk": "yeşil"
+      },
+      "attachments": [
+       {
+        "name": "Foto",
+        "file": "foto/ihlamur.png"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487110,
+        "y": 4420000
+       },
+       {
+        "x": 487110,
+        "y": 4420010
+       },
+       {
+        "x": 487100,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Meşe",
+       "Boy": "15"
+      },
+      "attachments": [
+       {
+        "name": "Foto",
+        "file": "foto/mese.jpg"
+       },
+       {
+        "name": "Harita",
+        "url": "https://ornek.gov.tr/harita"
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "agac",
+      "uid": "$uidOf:7",
+      "values": {}
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "version": 1,
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "ad",
+         "shown": true,
+         "required": true,
+         "suggestions": [
+          "Çınar",
+          "Ihlamur",
+          "Meşe"
+         ]
+        },
+        {
+         "id": "renk",
+         "shown": true
+        },
+        {
+         "id": "cins",
+         "shown": true
+        },
+        {
+         "id": "boy",
+         "shown": true
+        },
+        {
+         "id": "fotograflar",
+         "shown": true,
+         "attachments": 1
+        },
+        {
+         "id": "belgeler",
+         "shown": true,
+         "attachments": 1
+        }
+       ],
+       "attrs": {
+        "Ad": "Meşe",
+        "Boy": "15"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ekler, renk ve öneri: yazılmış gibi: saydamlıklı renk geçerli",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Formlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "forms": [
+      {
+       "id": "agac",
+       "name": "Ağaç envanteri",
+       "layer": "bina",
+       "draft": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "ad",
+          "field": "Ad",
+          "suggest": true
+         },
+         {
+          "type": "field",
+          "id": "renk",
+          "field": "Renk",
+          "widget": "color",
+          "default": "#2E7D32"
+         },
+         {
+          "type": "field",
+          "id": "cins",
+          "field": "Cins"
+         },
+         {
+          "type": "field",
+          "id": "boy",
+          "field": "Boy"
+         },
+         {
+          "type": "attachments",
+          "id": "fotograflar",
+          "label": "Fotoğraflar",
+          "accept": "photo",
+          "min": 1,
+          "max": 3
+         },
+         {
+          "type": "attachments",
+          "id": "belgeler",
+          "label": "Belgeler",
+          "accept": "document",
+          "visibleWhen": "Boy > 10"
+         }
+        ]
+       },
+       "releases": [
+        {
+         "version": 1,
+         "digest": "2c17fe48a444c28eddda2ceb1c0a17dc",
+         "body": {
+          "revision": 1,
+          "items": [
+           {
+            "type": "field",
+            "id": "ad",
+            "field": "Ad",
+            "suggest": true
+           },
+           {
+            "type": "field",
+            "id": "renk",
+            "field": "Renk",
+            "widget": "color",
+            "default": "#2E7D32"
+           },
+           {
+            "type": "field",
+            "id": "cins",
+            "field": "Cins"
+           },
+           {
+            "type": "field",
+            "id": "boy",
+            "field": "Boy"
+           },
+           {
+            "type": "attachments",
+            "id": "fotograflar",
+            "label": "Fotoğraflar",
+            "accept": "photo",
+            "min": 1,
+            "max": 3
+           },
+           {
+            "type": "attachments",
+            "id": "belgeler",
+            "label": "Belgeler",
+            "accept": "document",
+            "visibleWhen": "Boy > 10"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text",
+        "required": true
+       },
+       {
+        "name": "Renk",
+        "kind": "text"
+       },
+       {
+        "name": "Cins",
+        "kind": "text",
+        "values": [
+         {
+          "code": "agac",
+          "label": "Ağaç"
+         },
+         {
+          "code": "cali",
+          "label": "Çalı"
+         }
+        ]
+       },
+       {
+        "name": "Boy",
+        "kind": "decimal",
+        "scale": 1,
+        "min": "0",
+        "max": "40"
+       }
+      ]
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli bina",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ],
+        "required": true
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+       },
+       {
+        "name": "Açıklama",
+        "kind": "text",
+        "length": 500
+       },
+       {
+        "name": "Tarih",
+        "kind": "date"
+       },
+       {
+        "name": "Onaylı",
+        "kind": "boolean"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Çınar",
+       "Renk": "#2E7D32",
+       "Cins": "agac",
+       "Boy": "12"
+      },
+      "attachments": [
+       {
+        "name": "Gövde",
+        "file": "foto/cinar-1.jpg"
+       },
+       {
+        "name": "Taç",
+        "file": "foto/cinar-2.JPEG"
+       },
+       {
+        "name": "Rapor",
+        "file": "belge/cinar.pdf"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Çınar",
+       "Boy": "8"
+      }
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Atatürk Caddesi"
+      },
+      "a": {
+       "x": 486990,
+       "y": 4419995
+      },
+      "b": {
+       "x": 487060,
+       "y": 4419995
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "kilitli",
+      "attrs": {
+       "Durum": "iyi"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420010
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Ihlamur",
+       "Boy": "4"
+      },
+      "attachments": [
+       {
+        "name": "Foto 0",
+        "url": "https://ornek.gov.tr/agac/0.png?boy=b"
+       },
+       {
+        "name": "Foto 1",
+        "url": "https://ornek.gov.tr/agac/1.png?boy=b"
+       },
+       {
+        "name": "Foto 2",
+        "url": "https://ornek.gov.tr/agac/2.png?boy=b"
+       },
+       {
+        "name": "Foto 3",
+        "url": "https://ornek.gov.tr/agac/3.png?boy=b"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487080,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420010
+       },
+       {
+        "x": 487080,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": " Ihlamur ",
+       "Renk": "yeşil"
+      },
+      "attachments": [
+       {
+        "name": "Foto",
+        "file": "foto/ihlamur.png"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487110,
+        "y": 4420000
+       },
+       {
+        "x": 487110,
+        "y": 4420010
+       },
+       {
+        "x": 487100,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Meşe",
+       "Boy": "15"
+      },
+      "attachments": [
+       {
+        "name": "Foto",
+        "file": "foto/mese.jpg"
+       },
+       {
+        "name": "Harita",
+        "url": "https://ornek.gov.tr/harita"
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "agac",
+      "uid": "$uidOf:6",
+      "values": {
+       "Renk": "#2e7d32cc"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "version": 1,
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "ad",
+         "shown": true,
+         "required": true,
+         "suggestions": [
+          "Çınar",
+          "Ihlamur",
+          "Meşe"
+         ]
+        },
+        {
+         "id": "renk",
+         "shown": true
+        },
+        {
+         "id": "cins",
+         "shown": true
+        },
+        {
+         "id": "boy",
+         "shown": true
+        },
+        {
+         "id": "fotograflar",
+         "shown": true,
+         "attachments": 1
+        },
+        {
+         "id": "belgeler",
+         "shown": false,
+         "attachments": 0
+        }
+       ],
+       "attrs": {
+        "Ad": " Ihlamur ",
+        "Renk": "#2e7d32cc"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ekler, renk ve öneri: yazılmış gibi: renk adı reddedilir",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Formlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "forms": [
+      {
+       "id": "agac",
+       "name": "Ağaç envanteri",
+       "layer": "bina",
+       "draft": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "ad",
+          "field": "Ad",
+          "suggest": true
+         },
+         {
+          "type": "field",
+          "id": "renk",
+          "field": "Renk",
+          "widget": "color",
+          "default": "#2E7D32"
+         },
+         {
+          "type": "field",
+          "id": "cins",
+          "field": "Cins"
+         },
+         {
+          "type": "field",
+          "id": "boy",
+          "field": "Boy"
+         },
+         {
+          "type": "attachments",
+          "id": "fotograflar",
+          "label": "Fotoğraflar",
+          "accept": "photo",
+          "min": 1,
+          "max": 3
+         },
+         {
+          "type": "attachments",
+          "id": "belgeler",
+          "label": "Belgeler",
+          "accept": "document",
+          "visibleWhen": "Boy > 10"
+         }
+        ]
+       },
+       "releases": [
+        {
+         "version": 1,
+         "digest": "2c17fe48a444c28eddda2ceb1c0a17dc",
+         "body": {
+          "revision": 1,
+          "items": [
+           {
+            "type": "field",
+            "id": "ad",
+            "field": "Ad",
+            "suggest": true
+           },
+           {
+            "type": "field",
+            "id": "renk",
+            "field": "Renk",
+            "widget": "color",
+            "default": "#2E7D32"
+           },
+           {
+            "type": "field",
+            "id": "cins",
+            "field": "Cins"
+           },
+           {
+            "type": "field",
+            "id": "boy",
+            "field": "Boy"
+           },
+           {
+            "type": "attachments",
+            "id": "fotograflar",
+            "label": "Fotoğraflar",
+            "accept": "photo",
+            "min": 1,
+            "max": 3
+           },
+           {
+            "type": "attachments",
+            "id": "belgeler",
+            "label": "Belgeler",
+            "accept": "document",
+            "visibleWhen": "Boy > 10"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text",
+        "required": true
+       },
+       {
+        "name": "Renk",
+        "kind": "text"
+       },
+       {
+        "name": "Cins",
+        "kind": "text",
+        "values": [
+         {
+          "code": "agac",
+          "label": "Ağaç"
+         },
+         {
+          "code": "cali",
+          "label": "Çalı"
+         }
+        ]
+       },
+       {
+        "name": "Boy",
+        "kind": "decimal",
+        "scale": 1,
+        "min": "0",
+        "max": "40"
+       }
+      ]
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli bina",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ],
+        "required": true
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+       },
+       {
+        "name": "Açıklama",
+        "kind": "text",
+        "length": 500
+       },
+       {
+        "name": "Tarih",
+        "kind": "date"
+       },
+       {
+        "name": "Onaylı",
+        "kind": "boolean"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Çınar",
+       "Renk": "#2E7D32",
+       "Cins": "agac",
+       "Boy": "12"
+      },
+      "attachments": [
+       {
+        "name": "Gövde",
+        "file": "foto/cinar-1.jpg"
+       },
+       {
+        "name": "Taç",
+        "file": "foto/cinar-2.JPEG"
+       },
+       {
+        "name": "Rapor",
+        "file": "belge/cinar.pdf"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Çınar",
+       "Boy": "8"
+      }
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Atatürk Caddesi"
+      },
+      "a": {
+       "x": 486990,
+       "y": 4419995
+      },
+      "b": {
+       "x": 487060,
+       "y": 4419995
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "kilitli",
+      "attrs": {
+       "Durum": "iyi"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420010
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Ihlamur",
+       "Boy": "4"
+      },
+      "attachments": [
+       {
+        "name": "Foto 0",
+        "url": "https://ornek.gov.tr/agac/0.png?boy=b"
+       },
+       {
+        "name": "Foto 1",
+        "url": "https://ornek.gov.tr/agac/1.png?boy=b"
+       },
+       {
+        "name": "Foto 2",
+        "url": "https://ornek.gov.tr/agac/2.png?boy=b"
+       },
+       {
+        "name": "Foto 3",
+        "url": "https://ornek.gov.tr/agac/3.png?boy=b"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487080,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420010
+       },
+       {
+        "x": 487080,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": " Ihlamur ",
+       "Renk": "yeşil"
+      },
+      "attachments": [
+       {
+        "name": "Foto",
+        "file": "foto/ihlamur.png"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487110,
+        "y": 4420000
+       },
+       {
+        "x": 487110,
+        "y": 4420010
+       },
+       {
+        "x": 487100,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Meşe",
+       "Boy": "15"
+      },
+      "attachments": [
+       {
+        "name": "Foto",
+        "file": "foto/mese.jpg"
+       },
+       {
+        "name": "Harita",
+        "url": "https://ornek.gov.tr/harita"
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "agac",
+      "uid": "$uidOf:1",
+      "values": {
+       "Renk": "kırmızı"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "version": 1,
+       "issues": [
+        {
+         "code": "form_color_invalid",
+         "severity": "error",
+         "item": "renk",
+         "field": "Renk",
+         "message": "$any"
+        }
+       ],
+       "valid": false,
+       "items": [
+        {
+         "id": "ad",
+         "shown": true,
+         "required": true,
+         "suggestions": [
+          "Çınar",
+          "Ihlamur",
+          "Meşe"
+         ]
+        },
+        {
+         "id": "renk",
+         "shown": true
+        },
+        {
+         "id": "cins",
+         "shown": true
+        },
+        {
+         "id": "boy",
+         "shown": true
+        },
+        {
+         "id": "fotograflar",
+         "shown": true,
+         "attachments": 2
+        },
+        {
+         "id": "belgeler",
+         "shown": true,
+         "attachments": 1
+        }
+       ],
+       "attrs": {
+        "Ad": "Çınar",
+        "Renk": "kırmızı",
+        "Cins": "agac",
+        "Boy": "12"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ekler, renk ve öneri: yazılmış gibi: boy düşünce belgeler gizlenir",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Formlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "forms": [
+      {
+       "id": "agac",
+       "name": "Ağaç envanteri",
+       "layer": "bina",
+       "draft": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "ad",
+          "field": "Ad",
+          "suggest": true
+         },
+         {
+          "type": "field",
+          "id": "renk",
+          "field": "Renk",
+          "widget": "color",
+          "default": "#2E7D32"
+         },
+         {
+          "type": "field",
+          "id": "cins",
+          "field": "Cins"
+         },
+         {
+          "type": "field",
+          "id": "boy",
+          "field": "Boy"
+         },
+         {
+          "type": "attachments",
+          "id": "fotograflar",
+          "label": "Fotoğraflar",
+          "accept": "photo",
+          "min": 1,
+          "max": 3
+         },
+         {
+          "type": "attachments",
+          "id": "belgeler",
+          "label": "Belgeler",
+          "accept": "document",
+          "visibleWhen": "Boy > 10"
+         }
+        ]
+       },
+       "releases": [
+        {
+         "version": 1,
+         "digest": "2c17fe48a444c28eddda2ceb1c0a17dc",
+         "body": {
+          "revision": 1,
+          "items": [
+           {
+            "type": "field",
+            "id": "ad",
+            "field": "Ad",
+            "suggest": true
+           },
+           {
+            "type": "field",
+            "id": "renk",
+            "field": "Renk",
+            "widget": "color",
+            "default": "#2E7D32"
+           },
+           {
+            "type": "field",
+            "id": "cins",
+            "field": "Cins"
+           },
+           {
+            "type": "field",
+            "id": "boy",
+            "field": "Boy"
+           },
+           {
+            "type": "attachments",
+            "id": "fotograflar",
+            "label": "Fotoğraflar",
+            "accept": "photo",
+            "min": 1,
+            "max": 3
+           },
+           {
+            "type": "attachments",
+            "id": "belgeler",
+            "label": "Belgeler",
+            "accept": "document",
+            "visibleWhen": "Boy > 10"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text",
+        "required": true
+       },
+       {
+        "name": "Renk",
+        "kind": "text"
+       },
+       {
+        "name": "Cins",
+        "kind": "text",
+        "values": [
+         {
+          "code": "agac",
+          "label": "Ağaç"
+         },
+         {
+          "code": "cali",
+          "label": "Çalı"
+         }
+        ]
+       },
+       {
+        "name": "Boy",
+        "kind": "decimal",
+        "scale": 1,
+        "min": "0",
+        "max": "40"
+       }
+      ]
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli bina",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ],
+        "required": true
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+       },
+       {
+        "name": "Açıklama",
+        "kind": "text",
+        "length": 500
+       },
+       {
+        "name": "Tarih",
+        "kind": "date"
+       },
+       {
+        "name": "Onaylı",
+        "kind": "boolean"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Çınar",
+       "Renk": "#2E7D32",
+       "Cins": "agac",
+       "Boy": "12"
+      },
+      "attachments": [
+       {
+        "name": "Gövde",
+        "file": "foto/cinar-1.jpg"
+       },
+       {
+        "name": "Taç",
+        "file": "foto/cinar-2.JPEG"
+       },
+       {
+        "name": "Rapor",
+        "file": "belge/cinar.pdf"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Çınar",
+       "Boy": "8"
+      }
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Atatürk Caddesi"
+      },
+      "a": {
+       "x": 486990,
+       "y": 4419995
+      },
+      "b": {
+       "x": 487060,
+       "y": 4419995
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "kilitli",
+      "attrs": {
+       "Durum": "iyi"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420010
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Ihlamur",
+       "Boy": "4"
+      },
+      "attachments": [
+       {
+        "name": "Foto 0",
+        "url": "https://ornek.gov.tr/agac/0.png?boy=b"
+       },
+       {
+        "name": "Foto 1",
+        "url": "https://ornek.gov.tr/agac/1.png?boy=b"
+       },
+       {
+        "name": "Foto 2",
+        "url": "https://ornek.gov.tr/agac/2.png?boy=b"
+       },
+       {
+        "name": "Foto 3",
+        "url": "https://ornek.gov.tr/agac/3.png?boy=b"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487080,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420010
+       },
+       {
+        "x": 487080,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": " Ihlamur ",
+       "Renk": "yeşil"
+      },
+      "attachments": [
+       {
+        "name": "Foto",
+        "file": "foto/ihlamur.png"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487110,
+        "y": 4420000
+       },
+       {
+        "x": 487110,
+        "y": 4420010
+       },
+       {
+        "x": 487100,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Meşe",
+       "Boy": "15"
+      },
+      "attachments": [
+       {
+        "name": "Foto",
+        "file": "foto/mese.jpg"
+       },
+       {
+        "name": "Harita",
+        "url": "https://ornek.gov.tr/harita"
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "agac",
+      "uid": "$uidOf:1",
+      "values": {
+       "Boy": "6"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "version": 1,
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "ad",
+         "shown": true,
+         "required": true,
+         "suggestions": [
+          "Çınar",
+          "Ihlamur",
+          "Meşe"
+         ]
+        },
+        {
+         "id": "renk",
+         "shown": true
+        },
+        {
+         "id": "cins",
+         "shown": true
+        },
+        {
+         "id": "boy",
+         "shown": true
+        },
+        {
+         "id": "fotograflar",
+         "shown": true,
+         "attachments": 2
+        },
+        {
+         "id": "belgeler",
+         "shown": false,
+         "attachments": 1
+        }
+       ],
+       "attrs": {
+        "Ad": "Çınar",
+        "Renk": "#2E7D32",
+        "Cins": "agac",
+        "Boy": "6"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ekler, renk ve öneri: form tek başına",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Formlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "forms": [
+      {
+       "id": "agac",
+       "name": "Ağaç envanteri",
+       "layer": "bina",
+       "draft": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "ad",
+          "field": "Ad",
+          "suggest": true
+         },
+         {
+          "type": "field",
+          "id": "renk",
+          "field": "Renk",
+          "widget": "color",
+          "default": "#2E7D32"
+         },
+         {
+          "type": "field",
+          "id": "cins",
+          "field": "Cins"
+         },
+         {
+          "type": "field",
+          "id": "boy",
+          "field": "Boy"
+         },
+         {
+          "type": "attachments",
+          "id": "fotograflar",
+          "label": "Fotoğraflar",
+          "accept": "photo",
+          "min": 1,
+          "max": 3
+         },
+         {
+          "type": "attachments",
+          "id": "belgeler",
+          "label": "Belgeler",
+          "accept": "document",
+          "visibleWhen": "Boy > 10"
+         }
+        ]
+       },
+       "releases": [
+        {
+         "version": 1,
+         "digest": "2c17fe48a444c28eddda2ceb1c0a17dc",
+         "body": {
+          "revision": 1,
+          "items": [
+           {
+            "type": "field",
+            "id": "ad",
+            "field": "Ad",
+            "suggest": true
+           },
+           {
+            "type": "field",
+            "id": "renk",
+            "field": "Renk",
+            "widget": "color",
+            "default": "#2E7D32"
+           },
+           {
+            "type": "field",
+            "id": "cins",
+            "field": "Cins"
+           },
+           {
+            "type": "field",
+            "id": "boy",
+            "field": "Boy"
+           },
+           {
+            "type": "attachments",
+            "id": "fotograflar",
+            "label": "Fotoğraflar",
+            "accept": "photo",
+            "min": 1,
+            "max": 3
+           },
+           {
+            "type": "attachments",
+            "id": "belgeler",
+            "label": "Belgeler",
+            "accept": "document",
+            "visibleWhen": "Boy > 10"
+           }
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text",
+        "required": true
+       },
+       {
+        "name": "Renk",
+        "kind": "text"
+       },
+       {
+        "name": "Cins",
+        "kind": "text",
+        "values": [
+         {
+          "code": "agac",
+          "label": "Ağaç"
+         },
+         {
+          "code": "cali",
+          "label": "Çalı"
+         }
+        ]
+       },
+       {
+        "name": "Boy",
+        "kind": "decimal",
+        "scale": 1,
+        "min": "0",
+        "max": "40"
+       }
+      ]
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli bina",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ],
+        "required": true
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+       },
+       {
+        "name": "Açıklama",
+        "kind": "text",
+        "length": 500
+       },
+       {
+        "name": "Tarih",
+        "kind": "date"
+       },
+       {
+        "name": "Onaylı",
+        "kind": "boolean"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Çınar",
+       "Renk": "#2E7D32",
+       "Cins": "agac",
+       "Boy": "12"
+      },
+      "attachments": [
+       {
+        "name": "Gövde",
+        "file": "foto/cinar-1.jpg"
+       },
+       {
+        "name": "Taç",
+        "file": "foto/cinar-2.JPEG"
+       },
+       {
+        "name": "Rapor",
+        "file": "belge/cinar.pdf"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Çınar",
+       "Boy": "8"
+      }
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Atatürk Caddesi"
+      },
+      "a": {
+       "x": 486990,
+       "y": 4419995
+      },
+      "b": {
+       "x": 487060,
+       "y": 4419995
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "kilitli",
+      "attrs": {
+       "Durum": "iyi"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420010
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Ihlamur",
+       "Boy": "4"
+      },
+      "attachments": [
+       {
+        "name": "Foto 0",
+        "url": "https://ornek.gov.tr/agac/0.png?boy=b"
+       },
+       {
+        "name": "Foto 1",
+        "url": "https://ornek.gov.tr/agac/1.png?boy=b"
+       },
+       {
+        "name": "Foto 2",
+        "url": "https://ornek.gov.tr/agac/2.png?boy=b"
+       },
+       {
+        "name": "Foto 3",
+        "url": "https://ornek.gov.tr/agac/3.png?boy=b"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487080,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420010
+       },
+       {
+        "x": 487080,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": " Ihlamur ",
+       "Renk": "yeşil"
+      },
+      "attachments": [
+       {
+        "name": "Foto",
+        "file": "foto/ihlamur.png"
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487110,
+        "y": 4420000
+       },
+       {
+        "x": 487110,
+        "y": 4420010
+       },
+       {
+        "x": 487100,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ad": "Meşe",
+       "Boy": "15"
+      },
+      "attachments": [
+       {
+        "name": "Foto",
+        "file": "foto/mese.jpg"
+       },
+       {
+        "name": "Harita",
+        "url": "https://ornek.gov.tr/harita"
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "agac"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "version": 1,
+       "issues": [],
+       "valid": true,
+       "items": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
   }
  ]
 }

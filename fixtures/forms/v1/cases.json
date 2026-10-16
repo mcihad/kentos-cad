@@ -5184,6 +5184,531 @@
    ]
   },
   {
+   "name": "ağaç formu: öneri, renk ve ekler; hata yok",
+   "fields": [
+    {
+     "name": "Ad",
+     "kind": "text",
+     "required": true
+    },
+    {
+     "name": "Renk",
+     "kind": "text"
+    },
+    {
+     "name": "Cins",
+     "kind": "text",
+     "values": [
+      {
+       "code": "agac",
+       "label": "Ağaç"
+      },
+      {
+       "code": "cali",
+       "label": "Çalı"
+      }
+     ]
+    },
+    {
+     "name": "Boy",
+     "kind": "decimal",
+     "scale": 1,
+     "min": "0",
+     "max": "40"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad",
+      "suggest": true
+     },
+     {
+      "type": "field",
+      "id": "renk",
+      "field": "Renk",
+      "widget": "color",
+      "default": "#2E7D32"
+     },
+     {
+      "type": "field",
+      "id": "cins",
+      "field": "Cins"
+     },
+     {
+      "type": "field",
+      "id": "boy",
+      "field": "Boy"
+     },
+     {
+      "type": "attachments",
+      "id": "fotograflar",
+      "label": "Fotoğraflar",
+      "accept": "photo",
+      "min": 1,
+      "max": 3
+     },
+     {
+      "type": "attachments",
+      "id": "belgeler",
+      "label": "Belgeler",
+      "accept": "document",
+      "visibleWhen": "Boy > 10"
+     }
+    ]
+   },
+   "issues": []
+  },
+  {
+   "name": "renk yalnız metin alanında; varsayılan renk olmalı",
+   "fields": [
+    {
+     "name": "Ad",
+     "kind": "text",
+     "required": true
+    },
+    {
+     "name": "Renk",
+     "kind": "text"
+    },
+    {
+     "name": "Cins",
+     "kind": "text",
+     "values": [
+      {
+       "code": "agac",
+       "label": "Ağaç"
+      },
+      {
+       "code": "cali",
+       "label": "Çalı"
+      }
+     ]
+    },
+    {
+     "name": "Boy",
+     "kind": "decimal",
+     "scale": 1,
+     "min": "0",
+     "max": "40"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad",
+      "suggest": true
+     },
+     {
+      "type": "field",
+      "id": "renk",
+      "field": "Renk",
+      "widget": "color",
+      "default": "yeşil"
+     },
+     {
+      "type": "field",
+      "id": "cins",
+      "field": "Cins"
+     },
+     {
+      "type": "field",
+      "id": "boy",
+      "field": "Boy",
+      "widget": "color"
+     },
+     {
+      "type": "attachments",
+      "id": "fotograflar",
+      "label": "Fotoğraflar",
+      "accept": "photo",
+      "min": 1,
+      "max": 3
+     },
+     {
+      "type": "attachments",
+      "id": "belgeler",
+      "label": "Belgeler",
+      "accept": "document",
+      "visibleWhen": "Boy > 10"
+     }
+    ]
+   },
+   "issues": [
+    {
+     "code": "form_default_invalid",
+     "severity": "error",
+     "item": "renk",
+     "field": "Renk",
+     "rule": "default"
+    },
+    {
+     "code": "form_widget_unfit",
+     "severity": "error",
+     "item": "boy",
+     "field": "Boy"
+    }
+   ]
+  },
+  {
+   "name": "öneri değer listesi olmayan metin alanında olur",
+   "fields": [
+    {
+     "name": "Ad",
+     "kind": "text",
+     "required": true
+    },
+    {
+     "name": "Renk",
+     "kind": "text"
+    },
+    {
+     "name": "Cins",
+     "kind": "text",
+     "values": [
+      {
+       "code": "agac",
+       "label": "Ağaç"
+      },
+      {
+       "code": "cali",
+       "label": "Çalı"
+      }
+     ]
+    },
+    {
+     "name": "Boy",
+     "kind": "decimal",
+     "scale": 1,
+     "min": "0",
+     "max": "40"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad",
+      "suggest": true
+     },
+     {
+      "type": "field",
+      "id": "renk",
+      "field": "Renk",
+      "widget": "color",
+      "default": "#2E7D32"
+     },
+     {
+      "type": "field",
+      "id": "cins",
+      "field": "Cins",
+      "suggest": true
+     },
+     {
+      "type": "field",
+      "id": "boy",
+      "field": "Boy",
+      "suggest": true
+     },
+     {
+      "type": "attachments",
+      "id": "fotograflar",
+      "label": "Fotoğraflar",
+      "accept": "photo",
+      "min": 1,
+      "max": 3
+     },
+     {
+      "type": "attachments",
+      "id": "belgeler",
+      "label": "Belgeler",
+      "accept": "document",
+      "visibleWhen": "Boy > 10"
+     }
+    ]
+   },
+   "issues": [
+    {
+     "code": "form_suggest_unfit",
+     "severity": "error",
+     "item": "cins",
+     "field": "Cins",
+     "rule": "suggest"
+    },
+    {
+     "code": "form_suggest_unfit",
+     "severity": "error",
+     "item": "boy",
+     "field": "Boy",
+     "rule": "suggest"
+    }
+   ]
+  },
+  {
+   "name": "eklerin görünürlük kuralı okunmazsa hata, bilinmeyen ad uyarı",
+   "fields": [
+    {
+     "name": "Ad",
+     "kind": "text",
+     "required": true
+    },
+    {
+     "name": "Renk",
+     "kind": "text"
+    },
+    {
+     "name": "Cins",
+     "kind": "text",
+     "values": [
+      {
+       "code": "agac",
+       "label": "Ağaç"
+      },
+      {
+       "code": "cali",
+       "label": "Çalı"
+      }
+     ]
+    },
+    {
+     "name": "Boy",
+     "kind": "decimal",
+     "scale": 1,
+     "min": "0",
+     "max": "40"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad",
+      "suggest": true
+     },
+     {
+      "type": "field",
+      "id": "renk",
+      "field": "Renk",
+      "widget": "color",
+      "default": "#2E7D32"
+     },
+     {
+      "type": "field",
+      "id": "cins",
+      "field": "Cins"
+     },
+     {
+      "type": "field",
+      "id": "boy",
+      "field": "Boy"
+     },
+     {
+      "type": "attachments",
+      "id": "fotograflar",
+      "label": "Fotoğraflar",
+      "accept": "photo",
+      "min": 1,
+      "max": 3,
+      "visibleWhen": "Boy >"
+     },
+     {
+      "type": "attachments",
+      "id": "belgeler",
+      "label": "Belgeler",
+      "accept": "document",
+      "visibleWhen": "Yaş > 3"
+     }
+    ]
+   },
+   "issues": [
+    {
+     "code": "form_rule_invalid",
+     "severity": "error",
+     "item": "fotograflar",
+     "rule": "visibleWhen"
+    },
+    {
+     "code": "form_rule_unknown_name",
+     "severity": "warning",
+     "item": "belgeler",
+     "rule": "visibleWhen"
+    }
+   ]
+  },
+  {
+   "name": "en az en çoktan büyükse form bozuktur",
+   "fields": [
+    {
+     "name": "Ad",
+     "kind": "text",
+     "required": true
+    },
+    {
+     "name": "Renk",
+     "kind": "text"
+    },
+    {
+     "name": "Cins",
+     "kind": "text",
+     "values": [
+      {
+       "code": "agac",
+       "label": "Ağaç"
+      },
+      {
+       "code": "cali",
+       "label": "Çalı"
+      }
+     ]
+    },
+    {
+     "name": "Boy",
+     "kind": "decimal",
+     "scale": 1,
+     "min": "0",
+     "max": "40"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad",
+      "suggest": true
+     },
+     {
+      "type": "field",
+      "id": "renk",
+      "field": "Renk",
+      "widget": "color",
+      "default": "#2E7D32"
+     },
+     {
+      "type": "field",
+      "id": "cins",
+      "field": "Cins"
+     },
+     {
+      "type": "field",
+      "id": "boy",
+      "field": "Boy"
+     },
+     {
+      "type": "attachments",
+      "id": "fotograflar",
+      "label": "Fotoğraflar",
+      "accept": "photo",
+      "min": 4,
+      "max": 2
+     },
+     {
+      "type": "attachments",
+      "id": "belgeler",
+      "label": "Belgeler",
+      "accept": "document",
+      "visibleWhen": "Boy > 10"
+     }
+    ]
+   },
+   "issues": [
+    {
+     "code": "form_body_invalid",
+     "severity": "error"
+    }
+   ]
+  },
+  {
+   "name": "küçük harfli ve saydamlıklı renk varsayılanı geçerli",
+   "fields": [
+    {
+     "name": "Ad",
+     "kind": "text",
+     "required": true
+    },
+    {
+     "name": "Renk",
+     "kind": "text"
+    },
+    {
+     "name": "Cins",
+     "kind": "text",
+     "values": [
+      {
+       "code": "agac",
+       "label": "Ağaç"
+      },
+      {
+       "code": "cali",
+       "label": "Çalı"
+      }
+     ]
+    },
+    {
+     "name": "Boy",
+     "kind": "decimal",
+     "scale": 1,
+     "min": "0",
+     "max": "40"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad",
+      "suggest": true
+     },
+     {
+      "type": "field",
+      "id": "renk",
+      "field": "Renk",
+      "widget": "color",
+      "default": "#2e7d32cc"
+     },
+     {
+      "type": "field",
+      "id": "cins",
+      "field": "Cins"
+     },
+     {
+      "type": "field",
+      "id": "boy",
+      "field": "Boy"
+     },
+     {
+      "type": "attachments",
+      "id": "fotograflar",
+      "label": "Fotoğraflar",
+      "accept": "photo",
+      "min": 1,
+      "max": 3
+     },
+     {
+      "type": "attachments",
+      "id": "belgeler",
+      "label": "Belgeler",
+      "accept": "document",
+      "visibleWhen": "Boy > 10"
+     }
+    ]
+   },
+   "issues": []
+  },
+  {
    "name": "başka katmandan liste, zincir, süzgeç, nesneye bağ ve ilişkili kayıtlar: sorun yok",
    "fields": [
     {
@@ -9988,6 +10513,1266 @@
     {
      "id": "kayit",
      "shown": true
+    }
+   ],
+   "issues": []
+  },
+  {
+   "name": "iki fotoğraf ve bir belgeli ağaç: sayılar durumda, sorun yok",
+   "fields": [
+    {
+     "name": "Ad",
+     "kind": "text",
+     "required": true
+    },
+    {
+     "name": "Renk",
+     "kind": "text"
+    },
+    {
+     "name": "Cins",
+     "kind": "text",
+     "values": [
+      {
+       "code": "agac",
+       "label": "Ağaç"
+      },
+      {
+       "code": "cali",
+       "label": "Çalı"
+      }
+     ]
+    },
+    {
+     "name": "Boy",
+     "kind": "decimal",
+     "scale": 1,
+     "min": "0",
+     "max": "40"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad",
+      "suggest": true
+     },
+     {
+      "type": "field",
+      "id": "renk",
+      "field": "Renk",
+      "widget": "color",
+      "default": "#2E7D32"
+     },
+     {
+      "type": "field",
+      "id": "cins",
+      "field": "Cins"
+     },
+     {
+      "type": "field",
+      "id": "boy",
+      "field": "Boy"
+     },
+     {
+      "type": "attachments",
+      "id": "fotograflar",
+      "label": "Fotoğraflar",
+      "accept": "photo",
+      "min": 1,
+      "max": 3
+     },
+     {
+      "type": "attachments",
+      "id": "belgeler",
+      "label": "Belgeler",
+      "accept": "document",
+      "visibleWhen": "Boy > 10"
+     }
+    ]
+   },
+   "object": {
+    "length": 40,
+    "area": 100,
+    "vertices": 4,
+    "attachments": {
+     "all": 3,
+     "photos": 2
+    }
+   },
+   "attrs": {
+    "Ad": "Çınar",
+    "Renk": "#2E7D32",
+    "Cins": "agac",
+    "Boy": "12"
+   },
+   "items": [
+    {
+     "id": "ad",
+     "shown": true,
+     "required": true
+    },
+    {
+     "id": "renk",
+     "shown": true
+    },
+    {
+     "id": "cins",
+     "shown": true
+    },
+    {
+     "id": "boy",
+     "shown": true
+    },
+    {
+     "id": "fotograflar",
+     "shown": true,
+     "attachments": 2
+    },
+    {
+     "id": "belgeler",
+     "shown": true,
+     "attachments": 1
+    }
+   ],
+   "issues": []
+  },
+  {
+   "name": "fotoğrafsız ağaç: en az bir fotoğraf ister",
+   "fields": [
+    {
+     "name": "Ad",
+     "kind": "text",
+     "required": true
+    },
+    {
+     "name": "Renk",
+     "kind": "text"
+    },
+    {
+     "name": "Cins",
+     "kind": "text",
+     "values": [
+      {
+       "code": "agac",
+       "label": "Ağaç"
+      },
+      {
+       "code": "cali",
+       "label": "Çalı"
+      }
+     ]
+    },
+    {
+     "name": "Boy",
+     "kind": "decimal",
+     "scale": 1,
+     "min": "0",
+     "max": "40"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad",
+      "suggest": true
+     },
+     {
+      "type": "field",
+      "id": "renk",
+      "field": "Renk",
+      "widget": "color",
+      "default": "#2E7D32"
+     },
+     {
+      "type": "field",
+      "id": "cins",
+      "field": "Cins"
+     },
+     {
+      "type": "field",
+      "id": "boy",
+      "field": "Boy"
+     },
+     {
+      "type": "attachments",
+      "id": "fotograflar",
+      "label": "Fotoğraflar",
+      "accept": "photo",
+      "min": 1,
+      "max": 3
+     },
+     {
+      "type": "attachments",
+      "id": "belgeler",
+      "label": "Belgeler",
+      "accept": "document",
+      "visibleWhen": "Boy > 10"
+     }
+    ]
+   },
+   "object": {
+    "length": 40,
+    "area": 100,
+    "vertices": 4,
+    "attachments": {
+     "all": 0,
+     "photos": 0
+    }
+   },
+   "attrs": {
+    "Ad": "Çınar",
+    "Renk": "#2E7D32",
+    "Cins": "agac",
+    "Boy": "12"
+   },
+   "items": [
+    {
+     "id": "ad",
+     "shown": true,
+     "required": true
+    },
+    {
+     "id": "renk",
+     "shown": true
+    },
+    {
+     "id": "cins",
+     "shown": true
+    },
+    {
+     "id": "boy",
+     "shown": true
+    },
+    {
+     "id": "fotograflar",
+     "shown": true,
+     "attachments": 0
+    },
+    {
+     "id": "belgeler",
+     "shown": true,
+     "attachments": 0
+    }
+   ],
+   "issues": [
+    {
+     "code": "form_attachments_few",
+     "severity": "error",
+     "item": "fotograflar",
+     "rule": "min"
+    }
+   ]
+  },
+  {
+   "name": "dört fotoğraf: en çok üç",
+   "fields": [
+    {
+     "name": "Ad",
+     "kind": "text",
+     "required": true
+    },
+    {
+     "name": "Renk",
+     "kind": "text"
+    },
+    {
+     "name": "Cins",
+     "kind": "text",
+     "values": [
+      {
+       "code": "agac",
+       "label": "Ağaç"
+      },
+      {
+       "code": "cali",
+       "label": "Çalı"
+      }
+     ]
+    },
+    {
+     "name": "Boy",
+     "kind": "decimal",
+     "scale": 1,
+     "min": "0",
+     "max": "40"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad",
+      "suggest": true
+     },
+     {
+      "type": "field",
+      "id": "renk",
+      "field": "Renk",
+      "widget": "color",
+      "default": "#2E7D32"
+     },
+     {
+      "type": "field",
+      "id": "cins",
+      "field": "Cins"
+     },
+     {
+      "type": "field",
+      "id": "boy",
+      "field": "Boy"
+     },
+     {
+      "type": "attachments",
+      "id": "fotograflar",
+      "label": "Fotoğraflar",
+      "accept": "photo",
+      "min": 1,
+      "max": 3
+     },
+     {
+      "type": "attachments",
+      "id": "belgeler",
+      "label": "Belgeler",
+      "accept": "document",
+      "visibleWhen": "Boy > 10"
+     }
+    ]
+   },
+   "object": {
+    "length": 40,
+    "area": 100,
+    "vertices": 4,
+    "attachments": {
+     "all": 4,
+     "photos": 4
+    }
+   },
+   "attrs": {
+    "Ad": "Çınar",
+    "Renk": "#2E7D32",
+    "Cins": "agac",
+    "Boy": "12"
+   },
+   "items": [
+    {
+     "id": "ad",
+     "shown": true,
+     "required": true
+    },
+    {
+     "id": "renk",
+     "shown": true
+    },
+    {
+     "id": "cins",
+     "shown": true
+    },
+    {
+     "id": "boy",
+     "shown": true
+    },
+    {
+     "id": "fotograflar",
+     "shown": true,
+     "attachments": 4
+    },
+    {
+     "id": "belgeler",
+     "shown": true,
+     "attachments": 0
+    }
+   ],
+   "issues": [
+    {
+     "code": "form_attachments_many",
+     "severity": "error",
+     "item": "fotograflar",
+     "rule": "max"
+    }
+   ]
+  },
+  {
+   "name": "yalnız fotoğraflar sayılır: iki belge fotoğraf değil",
+   "fields": [
+    {
+     "name": "Ad",
+     "kind": "text",
+     "required": true
+    },
+    {
+     "name": "Renk",
+     "kind": "text"
+    },
+    {
+     "name": "Cins",
+     "kind": "text",
+     "values": [
+      {
+       "code": "agac",
+       "label": "Ağaç"
+      },
+      {
+       "code": "cali",
+       "label": "Çalı"
+      }
+     ]
+    },
+    {
+     "name": "Boy",
+     "kind": "decimal",
+     "scale": 1,
+     "min": "0",
+     "max": "40"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad",
+      "suggest": true
+     },
+     {
+      "type": "field",
+      "id": "renk",
+      "field": "Renk",
+      "widget": "color",
+      "default": "#2E7D32"
+     },
+     {
+      "type": "field",
+      "id": "cins",
+      "field": "Cins"
+     },
+     {
+      "type": "field",
+      "id": "boy",
+      "field": "Boy"
+     },
+     {
+      "type": "attachments",
+      "id": "fotograflar",
+      "label": "Fotoğraflar",
+      "accept": "photo",
+      "min": 1,
+      "max": 3
+     },
+     {
+      "type": "attachments",
+      "id": "belgeler",
+      "label": "Belgeler",
+      "accept": "document",
+      "visibleWhen": "Boy > 10"
+     }
+    ]
+   },
+   "object": {
+    "length": 40,
+    "area": 100,
+    "vertices": 4,
+    "attachments": {
+     "all": 2,
+     "photos": 0
+    }
+   },
+   "attrs": {
+    "Ad": "Çınar",
+    "Renk": "#2E7D32",
+    "Cins": "agac",
+    "Boy": "12"
+   },
+   "items": [
+    {
+     "id": "ad",
+     "shown": true,
+     "required": true
+    },
+    {
+     "id": "renk",
+     "shown": true
+    },
+    {
+     "id": "cins",
+     "shown": true
+    },
+    {
+     "id": "boy",
+     "shown": true
+    },
+    {
+     "id": "fotograflar",
+     "shown": true,
+     "attachments": 0
+    },
+    {
+     "id": "belgeler",
+     "shown": true,
+     "attachments": 2
+    }
+   ],
+   "issues": [
+    {
+     "code": "form_attachments_few",
+     "severity": "error",
+     "item": "fotograflar",
+     "rule": "min"
+    }
+   ]
+  },
+  {
+   "name": "boy 10 ve altı: belgeler gizli ve sınırsız; bir fotoğraf yeter",
+   "fields": [
+    {
+     "name": "Ad",
+     "kind": "text",
+     "required": true
+    },
+    {
+     "name": "Renk",
+     "kind": "text"
+    },
+    {
+     "name": "Cins",
+     "kind": "text",
+     "values": [
+      {
+       "code": "agac",
+       "label": "Ağaç"
+      },
+      {
+       "code": "cali",
+       "label": "Çalı"
+      }
+     ]
+    },
+    {
+     "name": "Boy",
+     "kind": "decimal",
+     "scale": 1,
+     "min": "0",
+     "max": "40"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad",
+      "suggest": true
+     },
+     {
+      "type": "field",
+      "id": "renk",
+      "field": "Renk",
+      "widget": "color",
+      "default": "#2E7D32"
+     },
+     {
+      "type": "field",
+      "id": "cins",
+      "field": "Cins"
+     },
+     {
+      "type": "field",
+      "id": "boy",
+      "field": "Boy"
+     },
+     {
+      "type": "attachments",
+      "id": "fotograflar",
+      "label": "Fotoğraflar",
+      "accept": "photo",
+      "min": 1,
+      "max": 3
+     },
+     {
+      "type": "attachments",
+      "id": "belgeler",
+      "label": "Belgeler",
+      "accept": "document",
+      "visibleWhen": "Boy > 10"
+     }
+    ]
+   },
+   "object": {
+    "length": 40,
+    "area": 100,
+    "vertices": 4,
+    "attachments": {
+     "all": 1,
+     "photos": 1
+    }
+   },
+   "attrs": {
+    "Ad": "Çınar",
+    "Renk": "#2E7D32",
+    "Cins": "agac",
+    "Boy": "5"
+   },
+   "items": [
+    {
+     "id": "ad",
+     "shown": true,
+     "required": true
+    },
+    {
+     "id": "renk",
+     "shown": true
+    },
+    {
+     "id": "cins",
+     "shown": true
+    },
+    {
+     "id": "boy",
+     "shown": true
+    },
+    {
+     "id": "fotograflar",
+     "shown": true,
+     "attachments": 1
+    },
+    {
+     "id": "belgeler",
+     "shown": false,
+     "attachments": 0
+    }
+   ],
+   "issues": []
+  },
+  {
+   "name": "ekler bilinmeyen kayıt: sayılmaz, sorulmaz",
+   "fields": [
+    {
+     "name": "Ad",
+     "kind": "text",
+     "required": true
+    },
+    {
+     "name": "Renk",
+     "kind": "text"
+    },
+    {
+     "name": "Cins",
+     "kind": "text",
+     "values": [
+      {
+       "code": "agac",
+       "label": "Ağaç"
+      },
+      {
+       "code": "cali",
+       "label": "Çalı"
+      }
+     ]
+    },
+    {
+     "name": "Boy",
+     "kind": "decimal",
+     "scale": 1,
+     "min": "0",
+     "max": "40"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad",
+      "suggest": true
+     },
+     {
+      "type": "field",
+      "id": "renk",
+      "field": "Renk",
+      "widget": "color",
+      "default": "#2E7D32"
+     },
+     {
+      "type": "field",
+      "id": "cins",
+      "field": "Cins"
+     },
+     {
+      "type": "field",
+      "id": "boy",
+      "field": "Boy"
+     },
+     {
+      "type": "attachments",
+      "id": "fotograflar",
+      "label": "Fotoğraflar",
+      "accept": "photo",
+      "min": 1,
+      "max": 3
+     },
+     {
+      "type": "attachments",
+      "id": "belgeler",
+      "label": "Belgeler",
+      "accept": "document",
+      "visibleWhen": "Boy > 10"
+     }
+    ]
+   },
+   "object": {
+    "length": 40,
+    "area": 100,
+    "vertices": 4
+   },
+   "attrs": {
+    "Ad": "Çınar",
+    "Renk": "#2E7D32",
+    "Cins": "agac",
+    "Boy": "12"
+   },
+   "items": [
+    {
+     "id": "ad",
+     "shown": true,
+     "required": true
+    },
+    {
+     "id": "renk",
+     "shown": true
+    },
+    {
+     "id": "cins",
+     "shown": true
+    },
+    {
+     "id": "boy",
+     "shown": true
+    },
+    {
+     "id": "fotograflar",
+     "shown": true
+    },
+    {
+     "id": "belgeler",
+     "shown": true
+    }
+   ],
+   "issues": []
+  },
+  {
+   "name": "renk değil: yeşil",
+   "fields": [
+    {
+     "name": "Ad",
+     "kind": "text",
+     "required": true
+    },
+    {
+     "name": "Renk",
+     "kind": "text"
+    },
+    {
+     "name": "Cins",
+     "kind": "text",
+     "values": [
+      {
+       "code": "agac",
+       "label": "Ağaç"
+      },
+      {
+       "code": "cali",
+       "label": "Çalı"
+      }
+     ]
+    },
+    {
+     "name": "Boy",
+     "kind": "decimal",
+     "scale": 1,
+     "min": "0",
+     "max": "40"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad",
+      "suggest": true
+     },
+     {
+      "type": "field",
+      "id": "renk",
+      "field": "Renk",
+      "widget": "color",
+      "default": "#2E7D32"
+     },
+     {
+      "type": "field",
+      "id": "cins",
+      "field": "Cins"
+     },
+     {
+      "type": "field",
+      "id": "boy",
+      "field": "Boy"
+     },
+     {
+      "type": "attachments",
+      "id": "fotograflar",
+      "label": "Fotoğraflar",
+      "accept": "photo",
+      "min": 1,
+      "max": 3
+     },
+     {
+      "type": "attachments",
+      "id": "belgeler",
+      "label": "Belgeler",
+      "accept": "document",
+      "visibleWhen": "Boy > 10"
+     }
+    ]
+   },
+   "object": {
+    "length": 40,
+    "area": 100,
+    "vertices": 4,
+    "attachments": {
+     "all": 1,
+     "photos": 1
+    }
+   },
+   "attrs": {
+    "Ad": "Çınar",
+    "Renk": "yeşil",
+    "Cins": "agac",
+    "Boy": "12"
+   },
+   "items": [
+    {
+     "id": "ad",
+     "shown": true,
+     "required": true
+    },
+    {
+     "id": "renk",
+     "shown": true
+    },
+    {
+     "id": "cins",
+     "shown": true
+    },
+    {
+     "id": "boy",
+     "shown": true
+    },
+    {
+     "id": "fotograflar",
+     "shown": true,
+     "attachments": 1
+    },
+    {
+     "id": "belgeler",
+     "shown": true,
+     "attachments": 0
+    }
+   ],
+   "issues": [
+    {
+     "code": "form_color_invalid",
+     "severity": "error",
+     "item": "renk",
+     "field": "Renk"
+    }
+   ]
+  },
+  {
+   "name": "renk #RGB kısa yazımı kabul edilmez",
+   "fields": [
+    {
+     "name": "Ad",
+     "kind": "text",
+     "required": true
+    },
+    {
+     "name": "Renk",
+     "kind": "text"
+    },
+    {
+     "name": "Cins",
+     "kind": "text",
+     "values": [
+      {
+       "code": "agac",
+       "label": "Ağaç"
+      },
+      {
+       "code": "cali",
+       "label": "Çalı"
+      }
+     ]
+    },
+    {
+     "name": "Boy",
+     "kind": "decimal",
+     "scale": 1,
+     "min": "0",
+     "max": "40"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad",
+      "suggest": true
+     },
+     {
+      "type": "field",
+      "id": "renk",
+      "field": "Renk",
+      "widget": "color",
+      "default": "#2E7D32"
+     },
+     {
+      "type": "field",
+      "id": "cins",
+      "field": "Cins"
+     },
+     {
+      "type": "field",
+      "id": "boy",
+      "field": "Boy"
+     },
+     {
+      "type": "attachments",
+      "id": "fotograflar",
+      "label": "Fotoğraflar",
+      "accept": "photo",
+      "min": 1,
+      "max": 3
+     },
+     {
+      "type": "attachments",
+      "id": "belgeler",
+      "label": "Belgeler",
+      "accept": "document",
+      "visibleWhen": "Boy > 10"
+     }
+    ]
+   },
+   "object": {
+    "length": 40,
+    "area": 100,
+    "vertices": 4,
+    "attachments": {
+     "all": 1,
+     "photos": 1
+    }
+   },
+   "attrs": {
+    "Ad": "Çınar",
+    "Renk": "#2E7",
+    "Cins": "agac",
+    "Boy": "12"
+   },
+   "items": [
+    {
+     "id": "ad",
+     "shown": true,
+     "required": true
+    },
+    {
+     "id": "renk",
+     "shown": true
+    },
+    {
+     "id": "cins",
+     "shown": true
+    },
+    {
+     "id": "boy",
+     "shown": true
+    },
+    {
+     "id": "fotograflar",
+     "shown": true,
+     "attachments": 1
+    },
+    {
+     "id": "belgeler",
+     "shown": true,
+     "attachments": 0
+    }
+   ],
+   "issues": [
+    {
+     "code": "form_color_invalid",
+     "severity": "error",
+     "item": "renk",
+     "field": "Renk"
+    }
+   ]
+  },
+  {
+   "name": "saydamlıklı renk geçerli",
+   "fields": [
+    {
+     "name": "Ad",
+     "kind": "text",
+     "required": true
+    },
+    {
+     "name": "Renk",
+     "kind": "text"
+    },
+    {
+     "name": "Cins",
+     "kind": "text",
+     "values": [
+      {
+       "code": "agac",
+       "label": "Ağaç"
+      },
+      {
+       "code": "cali",
+       "label": "Çalı"
+      }
+     ]
+    },
+    {
+     "name": "Boy",
+     "kind": "decimal",
+     "scale": 1,
+     "min": "0",
+     "max": "40"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad",
+      "suggest": true
+     },
+     {
+      "type": "field",
+      "id": "renk",
+      "field": "Renk",
+      "widget": "color",
+      "default": "#2E7D32"
+     },
+     {
+      "type": "field",
+      "id": "cins",
+      "field": "Cins"
+     },
+     {
+      "type": "field",
+      "id": "boy",
+      "field": "Boy"
+     },
+     {
+      "type": "attachments",
+      "id": "fotograflar",
+      "label": "Fotoğraflar",
+      "accept": "photo",
+      "min": 1,
+      "max": 3
+     },
+     {
+      "type": "attachments",
+      "id": "belgeler",
+      "label": "Belgeler",
+      "accept": "document",
+      "visibleWhen": "Boy > 10"
+     }
+    ]
+   },
+   "object": {
+    "length": 40,
+    "area": 100,
+    "vertices": 4,
+    "attachments": {
+     "all": 1,
+     "photos": 1
+    }
+   },
+   "attrs": {
+    "Ad": "Çınar",
+    "Renk": "#2e7d32cc",
+    "Cins": "agac",
+    "Boy": "12"
+   },
+   "items": [
+    {
+     "id": "ad",
+     "shown": true,
+     "required": true
+    },
+    {
+     "id": "renk",
+     "shown": true
+    },
+    {
+     "id": "cins",
+     "shown": true
+    },
+    {
+     "id": "boy",
+     "shown": true
+    },
+    {
+     "id": "fotograflar",
+     "shown": true,
+     "attachments": 1
+    },
+    {
+     "id": "belgeler",
+     "shown": true,
+     "attachments": 0
+    }
+   ],
+   "issues": []
+  },
+  {
+   "name": "ekler gizli öğede: Fotoğraflar kuralla gizlenince eksiği söylenmez",
+   "fields": [
+    {
+     "name": "Ad",
+     "kind": "text",
+     "required": true
+    },
+    {
+     "name": "Renk",
+     "kind": "text"
+    },
+    {
+     "name": "Cins",
+     "kind": "text",
+     "values": [
+      {
+       "code": "agac",
+       "label": "Ağaç"
+      },
+      {
+       "code": "cali",
+       "label": "Çalı"
+      }
+     ]
+    },
+    {
+     "name": "Boy",
+     "kind": "decimal",
+     "scale": 1,
+     "min": "0",
+     "max": "40"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad",
+      "suggest": true
+     },
+     {
+      "type": "field",
+      "id": "renk",
+      "field": "Renk",
+      "widget": "color",
+      "default": "#2E7D32"
+     },
+     {
+      "type": "field",
+      "id": "cins",
+      "field": "Cins"
+     },
+     {
+      "type": "field",
+      "id": "boy",
+      "field": "Boy"
+     },
+     {
+      "type": "attachments",
+      "id": "fotograflar",
+      "label": "Fotoğraflar",
+      "accept": "photo",
+      "min": 1,
+      "max": 3,
+      "visibleWhen": "Boy > 20"
+     },
+     {
+      "type": "attachments",
+      "id": "belgeler",
+      "label": "Belgeler",
+      "accept": "document",
+      "visibleWhen": "Boy > 10"
+     }
+    ]
+   },
+   "object": {
+    "length": 40,
+    "area": 100,
+    "vertices": 4,
+    "attachments": {
+     "all": 0,
+     "photos": 0
+    }
+   },
+   "attrs": {
+    "Ad": "Çınar",
+    "Renk": "#2E7D32",
+    "Cins": "agac",
+    "Boy": "12"
+   },
+   "items": [
+    {
+     "id": "ad",
+     "shown": true,
+     "required": true
+    },
+    {
+     "id": "renk",
+     "shown": true
+    },
+    {
+     "id": "cins",
+     "shown": true
+    },
+    {
+     "id": "boy",
+     "shown": true
+    },
+    {
+     "id": "fotograflar",
+     "shown": false,
+     "attachments": 0
+    },
+    {
+     "id": "belgeler",
+     "shown": true,
+     "attachments": 0
     }
    ],
    "issues": []

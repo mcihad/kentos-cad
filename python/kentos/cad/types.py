@@ -185,6 +185,22 @@ ArrangeModeName = Literal["left", "center", "right", "top", "middle", "bottom", 
 """The names of :class:`ArrangeMode`, for a plain string."""
 
 
+class AttachmentAccept(_StrEnum):
+    """What an attachments item counts and adds.
+
+    - ``any``: Photos, files and addresses.
+    - ``photo``: Only photos (a PNG or JPEG asset, or a link ending in one).
+    - ``document``: Only what is not a photo: documents and addresses.
+    """
+    ANY = "any"
+    PHOTO = "photo"
+    DOCUMENT = "document"
+
+
+AttachmentAcceptName = Literal["any", "photo", "document"]
+"""The names of :class:`AttachmentAccept`, for a plain string."""
+
+
 class AttributeOp(_StrEnum):
     """How an attribute's value is compared (docs/adr/0317 §3). Text comparisons fold Turkish case; `lt` and `gt` compare
     numbers (a value that is not a number does not match).
@@ -891,6 +907,7 @@ class FormWidget(_StrEnum):
     - ``radio``: Radio buttons: fields with a value list.
     - ``segmented``: A segmented choice: fields with a short value list.
     - ``slider``: A slider between the field's least and most (docs/adr/0406 §2): number fields with both.
+    - ``color``: A colour, `#RRGGBB` or `#RRGGBBAA` (docs/adr/0407 §2): text fields.
     """
     TEXT = "text"
     TEXT_AREA = "textArea"
@@ -902,9 +919,10 @@ class FormWidget(_StrEnum):
     RADIO = "radio"
     SEGMENTED = "segmented"
     SLIDER = "slider"
+    COLOR = "color"
 
 
-FormWidgetName = Literal["text", "textArea", "number", "date", "check", "switch", "list", "radio", "segmented", "slider"]
+FormWidgetName = Literal["text", "textArea", "number", "date", "check", "switch", "list", "radio", "segmented", "slider", "color"]
 """The names of :class:`FormWidget`, for a plain string."""
 
 
@@ -2789,6 +2807,7 @@ class FormItem(_Union):
     - :class:`FieldFormItem` (``type: field``)
     - :class:`NoteFormItem` (``type: note``)
     - :class:`RelatedFormItem` (``type: related``)
+    - :class:`AttachmentsFormItem` (``type: attachments``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "type"
@@ -10638,24 +10657,30 @@ class FormIssue(_Model):
 class FormItemState(_Model):
     """An item's state for a record: shown (its own rule and its group's), required, read-only.
     Attributes:
+        attachments: An attachments item's count of what it counts (docs/adr/0407 §1). Unit: count.
         choices: The listed values a field with a choice filter offers for the record, in the list's order.
         options: A field's list from another layer for the record: codes and labels (docs/adr/0404 §2).
         related: A related item's objects: their persistent ids (docs/adr/0404 §4).
+        suggestions: A suggesting field's values in the layer, the most used first (docs/adr/0407 §3).
         text: A note's text with the record's values put in (a note whose text has `{…}`).
     """
     id: str
     shown: bool
+    attachments: int | None | Unset = UNSET
     choices: list[str] | None | Unset = UNSET
     options: list[FieldChoice] | None | Unset = UNSET
     read_only: bool | Unset = UNSET
     related: list[str] | None | Unset = UNSET
     required: bool | Unset = UNSET
+    suggestions: list[str] | None | Unset = UNSET
     text: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["id"] = self.id
         out["shown"] = self.shown
+        if self.attachments is not UNSET:
+            out["attachments"] = self.attachments
         if self.choices is not UNSET:
             out["choices"] = None if self.choices is None else list(self.choices)
         if self.options is not UNSET:
@@ -10666,6 +10691,8 @@ class FormItemState(_Model):
             out["related"] = None if self.related is None else list(self.related)
         if self.required is not UNSET:
             out["required"] = self.required
+        if self.suggestions is not UNSET:
+            out["suggestions"] = None if self.suggestions is None else list(self.suggestions)
         if self.text is not UNSET:
             out["text"] = self.text
         return out
@@ -10675,11 +10702,13 @@ class FormItemState(_Model):
         return cls(
             id=data["id"],
             shown=data["shown"],
+            attachments=data.get("attachments", UNSET),
             choices=UNSET if "choices" not in data else None if data["choices"] is None else list(data["choices"]),
             options=UNSET if "options" not in data else None if data["options"] is None else [FieldChoice.from_json(e0) for e0 in data["options"]],
             read_only=data.get("readOnly", UNSET),
             related=UNSET if "related" not in data else None if data["related"] is None else list(data["related"]),
             required=data.get("required", UNSET),
+            suggestions=UNSET if "suggestions" not in data else None if data["suggestions"] is None else list(data["suggestions"]),
             text=data.get("text", UNSET),
         )
 
@@ -25864,6 +25893,8 @@ class FieldFormItem(FormItem):
         required_when: Required when this expression is true (and the field is shown).
         reuse_last: A new record's field opens with the value last written through the form in the session (the
             form's interface keeps it); written only as `true`.
+        suggest: The layer's values of the field offered while typing, the value staying free (docs/adr/0407
+            §3): text fields without a list; written only as `true`.
         unique: No two objects of the layer have the same value (empty ones aside); written only as `true`.
         visible_when: Shown only when this expression is true (the record's fields by name).
         widget: How it is edited; none: the field kind's own.
@@ -25885,6 +25916,7 @@ class FieldFormItem(FormItem):
     required: bool | Unset = UNSET
     required_when: str | None | Unset = UNSET
     reuse_last: bool | Unset = UNSET
+    suggest: bool | Unset = UNSET
     unique: bool | Unset = UNSET
     visible_when: str | None | Unset = UNSET
     widget: FormWidget | FormWidgetName | None | Unset = UNSET
@@ -25921,6 +25953,8 @@ class FieldFormItem(FormItem):
             out["requiredWhen"] = self.required_when
         if self.reuse_last is not UNSET:
             out["reuseLast"] = self.reuse_last
+        if self.suggest is not UNSET:
+            out["suggest"] = self.suggest
         if self.unique is not UNSET:
             out["unique"] = self.unique
         if self.visible_when is not UNSET:
@@ -25948,6 +25982,7 @@ class FieldFormItem(FormItem):
             required=data.get("required", UNSET),
             required_when=data.get("requiredWhen", UNSET),
             reuse_last=data.get("reuseLast", UNSET),
+            suggest=data.get("suggest", UNSET),
             unique=data.get("unique", UNSET),
             visible_when=data.get("visibleWhen", UNSET),
             widget=UNSET if "widget" not in data else None if data["widget"] is None else _enum_in(FormWidget, data["widget"]),
@@ -26010,6 +26045,50 @@ class RelatedFormItem(FormItem):
             layer=data["layer"],
             field=data["field"],
             label=data.get("label", UNSET),
+            visible_when=data.get("visibleWhen", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AttachmentsFormItem(FormItem):
+    """The record's photos and documents (docs/adr/0407 §1): the object's own attachments, added
+    and removed in the form; their count may be bounded.
+    Attributes:
+        accept: What counts and is added: every attachment, only photos or only documents and addresses.
+        max: The most (0–100). Unit: count.
+        min: The fewest (0–100) the record holds while the item is shown. Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "attachments"
+    id: str
+    accept: AttachmentAccept | AttachmentAcceptName | Unset = UNSET
+    label: str | None | Unset = UNSET
+    max: int | None | Unset = UNSET
+    min: int | None | Unset = UNSET
+    visible_when: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "attachments"}
+        out["id"] = self.id
+        if self.accept is not UNSET:
+            out["accept"] = _enum_out(self.accept)
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.max is not UNSET:
+            out["max"] = self.max
+        if self.min is not UNSET:
+            out["min"] = self.min
+        if self.visible_when is not UNSET:
+            out["visibleWhen"] = self.visible_when
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AttachmentsFormItem:
+        return cls(
+            id=data["id"],
+            accept=_enum_in(AttachmentAccept, data["accept"]) if "accept" in data else UNSET,
+            label=data.get("label", UNSET),
+            max=data.get("max", UNSET),
+            min=data.get("min", UNSET),
             visible_when=data.get("visibleWhen", UNSET),
         )
 
@@ -28196,7 +28275,7 @@ _EXPLODE_DENSITY: dict[str, type[ExplodeDensity]] = {"count": CountExplodeDensit
 _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange, "update": UpdateFeatureChange, "delete": DeleteFeatureChange}
 
 
-_FORM_ITEM: dict[str, type[FormItem]] = {"tab": TabFormItem, "group": GroupFormItem, "field": FieldFormItem, "note": NoteFormItem, "related": RelatedFormItem}
+_FORM_ITEM: dict[str, type[FormItem]] = {"tab": TabFormItem, "group": GroupFormItem, "field": FieldFormItem, "note": NoteFormItem, "related": RelatedFormItem, "attachments": AttachmentsFormItem}
 
 
 _FORMS_OP: dict[str, type[FormsOp]] = {"create": CreateFormsOp, "update": UpdateFormsOp, "rename": RenameFormsOp, "remove": RemoveFormsOp, "publish": PublishFormsOp, "enforce": EnforceFormsOp}
@@ -28321,6 +28400,9 @@ __all__ = [
     "AssocArray",
     "AtMeasuredPoint",
     "Attachment",
+    "AttachmentAccept",
+    "AttachmentAcceptName",
+    "AttachmentsFormItem",
     "AttributeDefinition",
     "AttributeFilter",
     "AttributeOp",

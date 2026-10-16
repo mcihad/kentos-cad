@@ -20,4 +20,12 @@ options?: Array<FieldChoice>,
 /**
  * A related item's objects: their persistent ids (docs/adr/0404 §4).
  */
-related?: Array<string>, };
+related?: Array<string>, 
+/**
+ * A suggesting field's values in the layer, the most used first (docs/adr/0407 §3).
+ */
+suggestions?: Array<string>, 
+/**
+ * An attachments item's count of what it counts (docs/adr/0407 §1).
+ */
+attachments?: number, };

@@ -88,6 +88,10 @@ fn object(c: &Value) -> Object {
         },
         vertices: o["vertices"].as_f64(),
         uid: o["uid"].as_str().map(str::to_owned),
+        attachments: o.get("attachments").map(|a| kentos_forms::Attached {
+            all: a["all"].as_u64().unwrap_or(0) as u32,
+            photos: a["photos"].as_u64().unwrap_or(0) as u32,
+        }),
         ..Object::default()
     }
 }
@@ -229,4 +233,25 @@ fn a_form_with_an_error_is_not_prepared() {
         .expect("a case without the other layers");
     assert!(Prepared::new(&body(&looks), &fields(&looks), &[]).is_err());
     assert!(kentos_forms::has_errors(&issues));
+}
+
+/// docs/adr/0407 §3: the layer's values the most used first, a tie by the first held; those holding
+/// what is typed, Turkish letters folded.
+#[test]
+fn suggestions_are_counted_and_matched() {
+    let all = kentos_forms::suggestions_of(["Çınar", " Ihlamur", "Ihlamur", "Çınar", "", "Meşe"]);
+    assert_eq!(all, ["Çınar", "Ihlamur", "Meşe"]);
+    assert_eq!(
+        kentos_forms::suggestions_for(&all, "ı", 8),
+        ["Çınar", "Ihlamur"]
+    );
+    assert_eq!(
+        kentos_forms::suggestions_for(&all, "çinar", 8),
+        Vec::<&String>::new()
+    );
+    assert_eq!(kentos_forms::suggestions_for(&all, "mes", 8), ["Meşe"]);
+    assert_eq!(
+        kentos_forms::suggestions_for(&all, "", 2),
+        ["Çınar", "Ihlamur"]
+    );
 }
